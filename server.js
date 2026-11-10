@@ -128,6 +128,7 @@ for (const s of db.servers) {
   if (s.id === 's1' && !s.channels.some(c => c.type === 'voice')) s.channels.push({ id: 'v1', name: 'Sohbet', type: 'voice' });
   // Resmi sunucunun afişi ve simgesi (bir kez uygulanır; yönetici sonra değiştirebilir)
   if (s.id === 's1' && !s.brandV1) { s.banner ||= '/marka/hq-afis.png'; s.iconImg ||= '/marka/hq-simge.png'; s.brandV1 = true; }
+  if (s.id === 's1' && !s.brandV2) { if (s.banner === '/marka/hq-afis.png') s.banner = '/marka/hq-afis.gif'; if (s.iconImg === '/marka/hq-simge.png') s.iconImg = '/marka/hq-simge.gif'; s.brandV2 = true; } // hareketli sürüm
 }
 
 function ensureOwners() {
