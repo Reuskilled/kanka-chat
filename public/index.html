@@ -504,18 +504,35 @@
   #vns.off { opacity: .55; color: var(--muted); background: none; }
 
   /* ================= Canlı yayın ================= */
-  .golive { width: min(640px, 94vw); }
-  .src-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; max-height: 290px; overflow-y: auto; margin: 6px 0 4px; padding: 2px; }
-  .src { border-radius: 12px; border: 2px solid var(--line); background: var(--card); padding: 6px; text-align: left; font-weight: 700; font-size: 12.5px; }
-  .src img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000; display: block; margin-bottom: 6px; }
-  .src span { display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .src span img { width: 16px; height: 16px; margin: 0; aspect-ratio: auto; background: none; }
-  .src.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  #modal .box.golive { width: min(960px, 94vw); max-width: none; padding: 18px 22px 16px; max-height: 90vh; display: flex; flex-direction: column; }
+  .gl-tabs { display: flex; gap: 6px; padding: 5px; border-radius: 14px; background: var(--bg); }
+  .gl-tabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; border-radius: 10px; font-weight: 800; color: var(--muted); }
+  .gl-tabs button .ic { width: 17px; height: 17px; }
+  .gl-tabs button.on { background: var(--card); color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  .gl-tabs button:hover:not(.on) { color: var(--ink); }
+  .gl-body { flex: 1; min-height: 200px; overflow-y: auto; margin: 16px -6px 0; padding: 0 6px; }
+  .gl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px 16px; }
+  .gl-card { text-align: left; border-radius: 14px; padding: 0; background: none; }
+  .gl-card > img, .gl-card .gl-ph { width: 100%; aspect-ratio: 16/9; object-fit: contain; background: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; transition: border-color .15s, transform .15s var(--ease-out); }
+  .gl-card .gl-ph { background: var(--card); color: var(--muted); } .gl-card .gl-ph .ic { width: 42px; height: 42px; }
+  .gl-card:hover > img, .gl-card:hover .gl-ph { border-color: var(--accent); transform: translateY(-2px); }
+  .gl-card > span { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 800; font-size: 13.5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .gl-card > span .ic, .gl-card > span .ico { width: 18px; height: 18px; flex-shrink: 0; border-radius: 4px; }
+  .gl-empty { text-align: center; padding: 60px 0; }
+  .gl-web { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 40px 20px; }
+  .gl-web > .ic { width: 54px; height: 54px; color: var(--accent); } .gl-web .primary { width: auto; padding: 12px 24px; }
+  .gl-set { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--bg); }
+  .gl-set[hidden] { display: none; }
+  .gl-set h4 { margin: 0 0 8px; font-size: 11.5px; letter-spacing: .06em; color: var(--muted); }
+  .gl-foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .gl-foot > div { flex: 1; } .gl-foot b { display: block; font-size: 15px; } .gl-foot small { color: var(--muted); font-weight: 700; font-size: 12.5px; }
+  .gl-gear, .gl-x { width: 42px; height: 42px; border-radius: 12px; background: var(--card); display: flex; align-items: center; justify-content: center; }
+  .gl-gear.on { background: var(--accent-soft); color: var(--accent); } .gl-gear .ic, .gl-x .ic { width: 20px; height: 20px; }
   .pills { display: flex; flex-wrap: wrap; gap: 8px; }
   .pills button { padding: 9px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); font-weight: 800; font-size: 13px; text-align: left; }
   .pills button small { display: block; color: var(--muted); font-weight: 700; font-size: 11px; }
   .pills button.on { border-color: var(--accent); background: var(--accent-soft); }
-  .golive h4 { margin: 14px 0 6px; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+  @media (max-width: 700px) { .gl-set { grid-template-columns: 1fr; } }
   .livebadge { display: inline-flex; align-items: center; margin-left: auto; padding: 1px 7px; border-radius: 6px; background: #f23f43; color: #fff; font-size: 10.5px; font-weight: 900; letter-spacing: .04em; cursor: pointer; }
   .tile .live-ov { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.6)); color: #fff; z-index: 2; }
   .tile .live-ov[hidden], .tile .tbadge [hidden] { display: none; }
@@ -918,6 +935,7 @@ const ICON = {
   eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   live: '<circle cx="12" cy="12" r="2.5"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/>',
+  window: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M6.5 6.5h.01M9 6.5h.01"/>',
   usersPlus: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>',
   arrowDown: '<path d="M12 5v14M6 13l6 6 6-6"/>',
   bellOff: '<path d="M6 16v-5a6 6 0 0 1 9.2-5.1M18 11v5l2 2H8M10 21h4M3 3l18 18"/>',
@@ -2473,23 +2491,42 @@ async function startVideo(kind) {
 }
 async function showGoLive() {
   const desk = !!window.kankaDesktop?.sources;
-  let sources = [], pick = null;
-  if (desk) { try { sources = await window.kankaDesktop.sources(); pick = sources.find(x => !x.screen)?.id || sources[0]?.id; } catch {} }
+  let sources = [], cams = [];
+  if (desk) { try { sources = await window.kankaDesktop.sources(); } catch {} }
+  try { cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput'); } catch {}
   const o = { ...goOpts };
+  let tab = 'apps', gear = !desk;
+  const tabs = desk ? [['apps', 'Uygulamalar', 'window'], ['screens', 'Tüm ekran', 'screen'], ['devices', 'Cihazlar', 'video']] : [['web', 'Ekran / pencere', 'screen'], ['devices', 'Cihazlar', 'video']];
+  if (!desk) tab = 'web';
+  const start = id => { goOpts = o; store.set('kanka-golive', JSON.stringify(o)); closeModal(); goLive(o, id); };
+  const card = (id, name, thumb, icon) => `<button class="gl-card" data-src="${esc(id)}">${thumb ? `<img src="${thumb}" alt="">` : `<div class="gl-ph">${ic(icon)}</div>`}<span>${icon && !thumb ? '' : ''}${esc(name)}</span></button>`;
+  const body = () => {
+    if (tab === 'apps') { const l = sources.filter(x => !x.screen); return l.length ? `<div class="gl-grid">${l.map(x => `<button class="gl-card" data-src="${esc(x.id)}"><img src="${x.thumb}" alt=""><span>${x.icon ? `<img class="ico" src="${x.icon}" alt="">` : ic('window')}${esc(x.name)}</span></button>`).join('')}</div>` : '<p class="hint gl-empty">Paylaşılabilecek açık pencere yok.</p>'; }
+    if (tab === 'screens') return `<div class="gl-grid">${sources.filter(x => x.screen).map((x, i, arr) => `<button class="gl-card" data-src="${esc(x.id)}"><img src="${x.thumb}" alt=""><span>${ic('screen')}${arr.length > 1 ? `Ekran ${i + 1}` : 'Tüm ekran'}</span></button>`).join('')}</div>`;
+    if (tab === 'devices') return cams.length ? `<div class="gl-grid">${cams.map((c, i) => `<button class="gl-card" data-cam="${esc(c.deviceId)}"><div class="gl-ph">${ic('video')}</div><span>${ic('video')}${esc(c.label || 'Kamera ' + (i + 1))}</span></button>`).join('')}</div>` : '<p class="hint gl-empty">Bağlı kamera ya da yakalama kartı yok.</p>';
+    return `<div class="gl-web">${ic('screen')}<b>Neyi paylaşacağını tarayıcın soracak</b><p class="hint">Bir sekmeyi, pencereyi ya da tüm ekranı seçebilirsin. Ses için "Sistem sesini paylaş" kutusunu işaretle.</p><button class="primary" id="gl-go">${ic('live')}Yayına başla</button></div>`;
+  };
   const draw = () => {
-    modal(`<div class="golive"><h3>${ic('live')}Yayın başlat</h3><p class="hint">Sesli odadakiler yayınını görür, "İzle"ye basan izler. ${desk ? '' : 'Neyi paylaşacağını bir sonraki adımda tarayıcı soracak.'}</p>
-      ${desk && sources.length ? `<h4>NEYİ PAYLAŞACAKSIN?</h4><div class="src-grid">${sources.map(x => `<button class="src ${x.id === pick ? 'on' : ''}" data-src="${esc(x.id)}"><img src="${x.thumb}" alt=""><span>${x.icon ? `<img src="${x.icon}" alt="">` : ''}${x.screen ? ic('screen') : ''}${esc(x.name)}</span></button>`).join('')}</div>` : ''}
-      <h4>YAYIN KALİTESİ</h4><div class="pills" id="gl-q">${Object.entries(GO_Q).map(([k, q]) => `<button data-q="${k}" class="${o.q === k ? 'on' : ''}">${q[4]}<small>${q[5]}</small></button>`).join('')}</div>
-      <p class="hint" style="margin-top:6px">Her izleyici için yaklaşık ${(GO_Q[o.q][3] / 1000).toFixed(1)} Mbps yükleme hızı gerekir. İnternetin yavaşsa 720p seç.</p>
-      <h4>İÇERİK</h4><div class="pills" id="gl-m"><button data-m="1" class="${o.motion ? 'on' : ''}">Oyun / video<small>Akıcılık öncelikli</small></button><button data-m="0" class="${o.motion ? '' : 'on'}">Metin / kod / sunum<small>Netlik öncelikli</small></button></div>
-      <label class="chk" style="margin-top:8px"><input type="checkbox" id="gl-a" ${o.audio ? 'checked' : ''}><span>Bilgisayar sesini de paylaş<small>${desk ? 'Oyun ve video sesi yayına eklenir. Kulaklıksız kullanırsan arkadaşlarının sesi de karışabilir.' : 'Tarayıcının penceresinde "Sistem sesini paylaş" kutusunu da işaretle.'}</small></span></label>
-      <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="gl-go">${ic('live')}Yayına başla</button></div></div>`);
+    const q = GO_Q[o.q];
+    modal(`<div class="gl-tabs">${tabs.map(([k, t, i]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${ic(i)}${t}</button>`).join('')}</div>
+      <div class="gl-body">${body()}</div>
+      <div class="gl-set" ${gear ? '' : 'hidden'}>
+        <div><h4>YAYIN KALİTESİ</h4><div class="pills" id="gl-q">${Object.entries(GO_Q).map(([k, v]) => `<button data-q="${k}" class="${o.q === k ? 'on' : ''}">${v[4]}<small>${v[5]}</small></button>`).join('')}</div>
+          <p class="hint" style="margin-top:6px">Her izleyici için ~${(q[3] / 1000).toFixed(1)} Mbps yükleme gerekir. İnternetin yavaşsa 720p seç.</p></div>
+        <div><h4>İÇERİK</h4><div class="pills" id="gl-m"><button data-m="1" class="${o.motion ? 'on' : ''}">Oyun / video<small>Akıcılık öncelikli</small></button><button data-m="0" class="${o.motion ? '' : 'on'}">Metin / kod<small>Netlik öncelikli</small></button></div>
+          <label class="chk" style="margin-top:8px"><input type="checkbox" id="gl-a" ${o.audio ? 'checked' : ''}><span>Bilgisayar sesini de paylaş<small>Oyun ve video sesi yayına eklenir</small></span></label></div>
+      </div>
+      <div class="gl-foot"><div><b>${o.motion ? 'Oyun' : 'Metin'}</b><small>${q[4]} · ${q[5].replace(/^1440p /, '')}${o.audio ? ' · Sesli' : ''}</small></div>
+        <button class="gl-gear ${gear ? 'on' : ''}" id="gl-gear" title="Yayın ayarları" aria-label="Yayın ayarları">${ic('gear')}</button><button class="gl-x" id="mx" title="Kapat" aria-label="Kapat">${ic('x')}</button></div>`, 'golive');
     $('#mx').onclick = closeModal;
-    $('#modal-box').querySelectorAll('[data-src]').forEach(b => b.onclick = () => { pick = b.dataset.src; $('#modal-box').querySelectorAll('[data-src]').forEach(x => x.classList.toggle('on', x === b)); });
+    $('#modal-box').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; draw(); });
+    $('#modal-box').querySelectorAll('[data-src]').forEach(b => b.onclick = () => start(b.dataset.src));
+    $('#modal-box').querySelectorAll('[data-cam]').forEach(b => b.onclick = () => start('cam:' + b.dataset.cam));
+    if ($('#gl-go')) $('#gl-go').onclick = () => start(null);
+    $('#gl-gear').onclick = () => { gear = !gear; draw(); };
     $('#gl-q').onclick = e => { const b = e.target.closest('[data-q]'); if (b) { o.q = b.dataset.q; draw(); } };
     $('#gl-m').onclick = e => { const b = e.target.closest('[data-m]'); if (b) { o.motion = b.dataset.m === '1'; draw(); } };
-    $('#gl-a').onchange = e => o.audio = e.target.checked;
-    $('#gl-go').onclick = () => { goOpts = o; store.set('kanka-golive', JSON.stringify(o)); closeModal(); goLive(o, pick); };
+    $('#gl-a').onchange = e => { o.audio = e.target.checked; draw(); };
   };
   draw();
 }
@@ -2497,12 +2534,15 @@ async function goLive(o, sourceId) {
   const [w, h, fps] = GO_Q[o.q];
   let stream;
   try {
+    if (sourceId?.startsWith('cam:')) stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: sourceId.slice(4) }, width: { ideal: w }, height: { ideal: h }, frameRate: { ideal: fps } }, audio: o.audio ? { deviceId: undefined, echoCancellation: false, noiseSuppression: false, autoGainControl: false } : false });
+    else {
     if (sourceId && window.kankaDesktop?.pickSource) await window.kankaDesktop.pickSource(sourceId, o.audio);
     stream = await navigator.mediaDevices.getDisplayMedia({
       video: { width: { ideal: w, max: w }, height: { ideal: h, max: h }, frameRate: { ideal: fps, max: fps } },
       audio: o.audio ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false, restrictOwnAudio: true, suppressLocalAudioPlayback: false } : false,
       systemAudio: o.audio ? 'include' : 'exclude', selfBrowserSurface: 'exclude', surfaceSwitching: 'include'
     });
+    }
   } catch { return toast('Yayın başlatılmadı'); }
   if (!myVoice) { stream.getTracks().forEach(t => t.stop()); return; }
   const track = stream.getVideoTracks()[0];
