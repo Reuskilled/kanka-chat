@@ -126,6 +126,8 @@ for (const s of db.servers) {
   s.roles ||= {}; s.customRoles ||= []; s.memberRoles ||= {}; s.bans ||= {}; s.timeouts ||= {};
   for (const c of s.channels) c.type ||= 'text';
   if (s.id === 's1' && !s.channels.some(c => c.type === 'voice')) s.channels.push({ id: 'v1', name: 'Sohbet', type: 'voice' });
+  // Resmi sunucunun afişi ve simgesi (bir kez uygulanır; yönetici sonra değiştirebilir)
+  if (s.id === 's1' && !s.brandV1) { s.banner ||= '/marka/hq-afis.png'; s.iconImg ||= '/marka/hq-simge.png'; s.brandV1 = true; }
 }
 
 function ensureOwners() {
