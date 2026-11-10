@@ -127,6 +127,56 @@ function ensureOwners() {
 }
 ensureOwners();
 
+// ---------- Gece yedeği: her gün bir kopya, son 7 gün saklanır ----------
+const BACKUPS = path.join(DATA_DIR, 'yedekler');
+function backup() {
+  try {
+    if (!fs.existsSync(DATA_FILE)) return;
+    fs.mkdirSync(BACKUPS, { recursive: true });
+    const f = path.join(BACKUPS, `data-${new Date().toISOString().slice(0, 10)}.json`);
+    if (!fs.existsSync(f)) { fs.copyFileSync(DATA_FILE, f); console.log('Yedek alındı:', path.basename(f)); }
+    const all = fs.readdirSync(BACKUPS).filter(n => /^data-\d{4}-\d{2}-\d{2}\.json$/.test(n)).sort();
+    for (const old of all.slice(0, Math.max(0, all.length - 7))) fs.unlinkSync(path.join(BACKUPS, old));
+  } catch (e) { console.error('Yedek alınamadı', e.message); }
+}
+backup(); setInterval(backup, 60 * 60e3);
+
+// ---------- Kötüye kullanım koruması ----------
+const limits = new Map();
+// key için pencere içinde en fazla max deneme; aşılırsa kalan bekleme süresini (sn) döndürür
+function limited(key, max, windowMs) {
+  const now = Date.now(), arr = (limits.get(key) || []).filter(t => now - t < windowMs);
+  if (arr.length >= max) { limits.set(key, arr); return Math.ceil((windowMs - (now - arr[0])) / 1000); }
+  arr.push(now); limits.set(key, arr); return 0;
+}
+setInterval(() => { const now = Date.now(); for (const [k, v] of limits) if (!v.length || now - v[v.length - 1] > 3600e3) limits.delete(k); }, 600e3);
+
+// ---------- TURN: farklı ağlardaki kişiler sesli odada birbirini duysun ----------
+const TURN_FILE = path.join(DATA_DIR, 'turn.json');
+let turnInfo = null;
+async function startTurn() {
+  if (process.env.TURN === 'off' || (process.platform !== 'win32' && process.env.TURN !== 'on')) return;
+  try {
+    const Turn = require('node-turn');
+    let cfg = {}; try { cfg = JSON.parse(fs.readFileSync(TURN_FILE, 'utf8')); } catch {}
+    if (!cfg.pass) { cfg = { user: 'kanka', pass: crypto.randomBytes(16).toString('hex') }; fs.writeFileSync(TURN_FILE, JSON.stringify(cfg)); }
+    let ip = process.env.PUBLIC_IP;
+    if (!ip) { const r = await fetch('https://api.ipify.org', { signal: AbortSignal.timeout(8000) }); ip = (await r.text()).trim(); }
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) throw new Error('Genel IP bulunamadı');
+    if (process.platform === 'win32') { // güvenlik duvarında TURN portlarını aç (bir kez)
+      const { execFileSync } = require('child_process');
+      try { execFileSync('netsh', ['advfirewall', 'firewall', 'show', 'rule', 'name=Kanka Chat TURN'], { stdio: 'ignore' }); }
+      catch { try { execFileSync('netsh', ['advfirewall', 'firewall', 'add', 'rule', 'name=Kanka Chat TURN', 'dir=in', 'action=allow', 'protocol=UDP', 'localport=3478,50000-50200'], { stdio: 'ignore' }); } catch {} }
+    }
+    const server = new Turn({ authMech: 'long-term', credentials: { [cfg.user]: cfg.pass }, realm: 'kanka', listeningPort: 3478, minPort: 50000, maxPort: 50200, externalIps: ip, debugLevel: 'OFF' });
+    server.start();
+    turnInfo = { urls: [`turn:${ip}:3478?transport=udp`], username: cfg.user, credential: cfg.pass };
+    console.log('TURN sunucusu çalışıyor:', ip + ':3478');
+  } catch (e) { console.error('TURN başlatılamadı:', e.message); }
+}
+startTurn();
+const iceServers = () => [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }, ...(turnInfo ? [turnInfo] : [])];
+
 let saveTimer = null;
 function save() {
   clearTimeout(saveTimer);
@@ -350,6 +400,7 @@ try {
 // ---------- Bağlantı ----------
 io.on('connection', socket => {
   socket.emit('build', build);
+  const ip = String(socket.handshake.headers['x-forwarded-for'] || socket.handshake.address || '').split(',')[0].trim();
   let me = null, cur = null, myVoice = null;
 
   function start(name) {
@@ -369,13 +420,15 @@ io.on('connection', socket => {
     }
     const token = crypto.randomBytes(24).toString('hex');
     db.sessions[token] = name; save();
-    return { reward, social: social(name), badgeInfo: BADGES,
+    return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: onlineNames(),
       servers: serversFor(name).map(serverView), dms: dmsFor(name), voice: voiceState()
     };
   }
 
   socket.on('register', ({ name, password } = {}, cb) => {
+    const w = limited('reg|' + ip, 5, 3600e3);
+    if (w) return cb({ error: `Bu bağlantıdan çok fazla hesap açıldı. ${Math.ceil(w / 60)} dakika sonra tekrar dene.` });
     name = clean(name, 20); password = String(password ?? '');
     if (!NAME_RE.test(name)) return cb({ error: 'Kullanıcı adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin.' });
     if (password.length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
@@ -389,8 +442,12 @@ io.on('connection', socket => {
   });
 
   socket.on('login', ({ name, password } = {}, cb) => {
+    const key = 'login|' + ip + '|' + clean(name, 20).toLowerCase(), now = Date.now();
+    const fails = (limits.get(key) || []).filter(t => now - t < 600e3);
+    if (fails.length >= 5) return cb({ error: `Çok fazla hatalı deneme. ${Math.ceil((600e3 - (now - fails[0])) / 60000)} dakika sonra tekrar dene.` });
     const u = Object.values(db.users).find(u => u.name.toLowerCase() === clean(name, 20).toLowerCase());
-    if (!u || hashPw(String(password ?? ''), u.salt) !== u.hash) return cb({ error: 'Kullanıcı adı ya da şifre yanlış.' });
+    if (!u || hashPw(String(password ?? ''), u.salt) !== u.hash) { fails.push(now); limits.set(key, fails); return cb({ error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Kullanıcı adı ya da şifre yanlış.' }); }
+    limits.delete(key);
     cb(start(u.name));
   });
 
@@ -420,6 +477,7 @@ io.on('connection', socket => {
   // ----- Mesaj gönderme -----
   socket.on('message', (p = {}, cb = () => {}) => {
     if (!me || !cur || !canAccess(me, cur)) return cb({ error: 'Önce bir odaya gir' });
+    if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun, biraz yavaşla 🙂' });
     if (cur.startsWith('dm:')) {
       const other = dmPeers(cur).find(n => n !== me) || me, u = db.users[me], o = db.users[other];
       if (u?.blocked?.includes(other)) return cb({ error: 'Bu kişiyi engelledin. Mesaj göndermek için engeli kaldır.' });
@@ -436,6 +494,7 @@ io.on('connection', socket => {
 
   socket.on('upload', ({ data } = {}, cb) => {
     if (!me) return cb({ error: 'Giriş yapmalısın' });
+    if (limited('up|' + me, 15, 60e3)) return cb({ error: 'Çok fazla dosya yükledin, bir dakika bekle' });
     let m = /^data:image\/(png|jpeg|gif|webp);base64,(.+)$/.exec(String(data || ''));
     if (!m) {
       const a = /^data:audio\/(webm|ogg|mp4|x-m4a)(?:;[^,]*)?;base64,(.+)$/.exec(String(data || ''));
@@ -575,6 +634,7 @@ io.on('connection', socket => {
   });
   socket.on('changePassword', ({ old, next } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
+    if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
     if (hashPw(String(old ?? ''), u.salt) !== u.hash) return cb({ error: 'Mevcut şifre yanlış' });
     if (String(next ?? '').length < 6) return cb({ error: 'Yeni şifre en az 6 karakter olmalı' });
     u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(String(next), u.salt);
@@ -637,6 +697,7 @@ io.on('connection', socket => {
   const U = n => { const u = db.users[n]; if (u) { u.friends ||= []; u.reqIn ||= []; u.reqOut ||= []; u.blocked ||= []; } return u; };
   const pull = (arr, n) => { const i = arr.indexOf(n); if (i >= 0) arr.splice(i, 1); };
   socket.on('friendRequest', (name, cb = () => {}) => {
+    if (limited('fr|' + me, 20, 3600e3)) return cb({ error: 'Çok fazla istek gönderdin, sonra tekrar dene' });
     const a = U(me), b = U(name);
     if (!a || !b || name === me) return cb({ error: 'Kullanıcı bulunamadı' });
     if (a.friends.includes(name)) return cb({ error: 'Zaten arkadaşsınız' });
@@ -704,6 +765,7 @@ io.on('connection', socket => {
   // ----- Konular -----
   socket.on('threadReply', ({ msgId, text } = {}, cb = () => {}) => {
     if (!canAccess(me, cur)) return cb({ error: 'Erişim yok' });
+    if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun' });
     const msg = findMsg(cur, msgId); text = clean(text, 1000);
     if (!msg || !text || msg.kind === 'system') return cb({ error: 'Gönderilemedi' });
     if (serverOf(cur)?.filter) text = filterText(text);

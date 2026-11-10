@@ -864,6 +864,7 @@ function onAuth(res) {
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
   S.online = new Set(res.online); S.servers = res.servers; S.dms = res.dms; S.voice = res.voice;
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
+  if (res.ice?.length) ICE.iceServers = res.ice;
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
   if (res.reward) setTimeout(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); }, 600);
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
@@ -1780,6 +1781,7 @@ let myVoice = null, localStream = null, muted = false, videoStream = null, video
 const peers = {}, peerNames = {}, peerMedia = {}, peerVideo = {}, speaking = new Set();
 const vol = JSON.parse(store.get('kanka-vol') || '{}');
 const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+
 async function joinVoice(chId) {
   if (myVoice === chId) return;
   if (!navigator.mediaDevices?.getUserMedia) return toast('Tarayıcın mikrofon erişimini desteklemiyor (localhost ya da https gerekli).');
