@@ -48,7 +48,7 @@ app.get('/api/davet/:code', (req, res) => {
   const s = db.servers.find(x => x.invite === req.params.code);
   if (!s) return res.status(404).json({ error: 'Davet geçersiz ya da süresi dolmuş' });
   const mem = membersOf(s), on = new Set(onlineNames());
-  res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
+  res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
 });
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 app.get('/api/surum', (req, res) => {
@@ -223,7 +223,7 @@ function seesChannel(s, c, n) {
   return (s.memberRoles?.[n] || []).some(r => (c.allow || []).includes(r)) || (c.allowUsers || []).includes(n);
 }
 const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
-  id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, owner: s.owner || null, invite: s.invite, public: s.public, roles: s.roles,
+  id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, public: s.public, roles: s.roles,
   emojis: s.emojis || {}, filter: !!s.filter, slow: s.slow || 0,
   channels: viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels, members: s.public ? Object.keys(db.users) : s.members,
   customRoles: s.customRoles, memberRoles: s.memberRoles, timeouts: Object.fromEntries(Object.entries(s.timeouts || {}).filter(([, t]) => t > Date.now())),
@@ -761,7 +761,7 @@ io.on('connection', socket => {
     if (!me || !s) return null;
     return (needAdmin ? roleOf(s, me) === 'admin' : isMod(s, me)) ? s : null;
   };
-  socket.on('updateServer', ({ serverId, name, icon, iconImg, filter, slow } = {}, cb = () => {}) => {
+  socket.on('updateServer', ({ serverId, name, icon, iconImg, banner, bannerColor, filter, slow } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
     if (filter !== undefined) { s.filter = !!filter; audit(s, me, filter ? 'Küfür filtresini açtı' : 'Küfür filtresini kapattı'); }
     if (slow !== undefined) { s.slow = [0, 5, 10, 30, 60, 300].includes(+slow) ? +slow : 0; audit(s, me, 'Yavaş modu ayarladı', s.slow ? s.slow + ' sn' : 'kapalı'); }
@@ -769,6 +769,8 @@ io.on('connection', socket => {
     if (name !== undefined) { name = clean(name, 40); if (name) s.name = name; }
     if (icon !== undefined) { icon = clean(icon, 4); if (icon) s.icon = icon; }
     if (iconImg !== undefined) s.iconImg = iconImg && UPLOAD_RE.test(iconImg) ? iconImg : null;
+    if (banner !== undefined) { s.banner = banner && UPLOAD_RE.test(banner) ? banner : null; audit(s, me, s.banner ? 'Sunucu afişini değiştirdi' : 'Sunucu afişini kaldırdı'); }
+    if (bannerColor !== undefined) s.bannerColor = /^#[0-9a-f]{6}$/i.test(bannerColor || '') ? bannerColor : null;
     save(); pushServers(membersOf(s)); cb({ ok: true });
   });
   socket.on('setRole', ({ serverId, name, role } = {}, cb = () => {}) => {

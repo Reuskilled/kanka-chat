@@ -226,6 +226,7 @@
   .song small { display: block; color: var(--muted); }
   #toasts { position: fixed; right: 20px; top: 20px; z-index: 90; display: flex; flex-direction: column; gap: 8px; max-width: min(380px, calc(100vw - 40px)); }
   body.has-tb #toasts { top: 46px; }
+  body:has(#modal.open .box.settings) #toasts { top: auto; bottom: 20px; }
   .toast { background: var(--card); border: 1px solid var(--accent); border-radius: 16px; padding: 12px 16px; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,.5); cursor: pointer; animation: pop .2s ease-out; }
   .toast b { color: var(--accent-2); }
   .toast small { display: block; color: var(--muted); font-size: 12px; }
@@ -595,6 +596,14 @@
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
   .shead.srvbtn:hover, .shead.srvbtn.open { background: var(--hover); }
+  .shead.srvbtn.has-banner { height: 128px; align-items: flex-start; padding: 12px 14px; margin: 0 0 4px; border-radius: 22px 22px 14px 14px; background-size: cover; background-position: center; overflow: hidden; }
+  .shead.srvbtn.has-banner::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0) 55%); pointer-events: none; }
+  .shead.srvbtn.has-banner > * { position: relative; z-index: 1; }
+  .shead.srvbtn.has-banner h3, .shead.srvbtn.has-banner .chev, .shead.srvbtn.has-banner .hinv { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+  .shead.srvbtn.has-banner:hover { filter: brightness(1.08); }
+  .bn-prev { height: 140px; border-radius: 16px; background: var(--card); background-size: cover; background-position: center; border: 1px solid var(--line); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-weight: 700; }
+  .invite-prev.has-banner { flex-wrap: wrap; padding-top: 0; overflow: hidden; }
+  .invite-prev .ib { width: calc(100% + 24px); margin: 0 -12px 2px; height: 90px; background-size: cover; background-position: center; }
   .shead.srvbtn .chev { width: 18px; height: 18px; color: var(--muted); transition: transform .25s var(--ease-out); flex-shrink: 0; }
   .shead.srvbtn.open .chev { transform: rotate(180deg); }
   #srvmenu { position: absolute; left: 10px; right: 10px; top: 62px; z-index: 12; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 6px;
@@ -1251,7 +1260,7 @@ function renderRail() {
 async function invitePreview(code) {
   try { const r = await fetch('/api/davet/' + encodeURIComponent(code)); return await r.json(); } catch { return { error: 'Davet okunamadı' }; }
 }
-const inviteHTML = p => `<div class="invite-prev"><div class="si">${p.iconImg ? `<img src="${esc(p.iconImg)}" alt="">` : esc(p.icon)}</div><div><small>Sunucuya davet edildin</small><b style="font-size:17px">${esc(p.name)}</b><small><span class="on"></span>${p.online} çevrimiçi · ${p.members} üye</small></div></div>`;
+const inviteHTML = p => `<div class="invite-prev ${p.banner || p.bannerColor ? 'has-banner' : ''}">${p.banner || p.bannerColor ? `<div class="ib" style="background-image:${p.banner ? `url('${esc(p.banner)}')` : `linear-gradient(135deg, ${p.bannerColor}, ${p.bannerColor}99)`}"></div>` : ''}<div class="si">${p.iconImg ? `<img src="${esc(p.iconImg)}" alt="">` : esc(p.icon)}</div><div><small>Sunucuya davet edildin</small><b style="font-size:17px">${esc(p.name)}</b><small><span class="on"></span>${p.online} çevrimiçi · ${p.members} üye</small></div></div>`;
 (async () => {
   const code = new URLSearchParams(location.search).get('davet'); if (!code) return;
   const p = await invitePreview(code);
@@ -1291,7 +1300,8 @@ function selectServer(id, channelId) {
 function renderSide() {
   if (S.view === 'dm') return renderDMSide();
   const s = S.server;
-  $('#side-head').className = 'shead srvbtn';
+  $('#side-head').className = 'shead srvbtn' + (s.banner || s.bannerColor ? ' has-banner' : '');
+  $('#side-head').style.backgroundImage = s.banner ? `url("${s.banner}")` : s.bannerColor ? `linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)` : '';
   $('#side-head').setAttribute('role', 'button'); $('#side-head').tabIndex = 0;
   $('#side-head').innerHTML = `<h3>${esc(s.name)}</h3><button class="hinv" id="sh-inv" title="İnsanları davet et" aria-label="İnsanları davet et">${ic('userplus')}</button>${ic('chevron', 'chev')}`;
   $('#sh-inv').onclick = e => { e.stopPropagation(); showInvite(s); };
@@ -1499,7 +1509,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSrvMenu
 function showServerInfo(s) {
   const members = s.members || [], on = members.filter(n => S.online.has(n)).length;
   const text = s.channels.filter(c => c.type !== 'voice').length, voice = s.channels.length - text;
-  modal(`<div style="text-align:center"><div class="srv active" style="width:72px;height:72px;margin:0 auto 10px;font-size:28px;cursor:default">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div>
+  modal(`${s.banner || s.bannerColor ? `<div class="bn-prev" style="margin:-8px -8px 14px;background-image:${s.banner ? `url('${esc(s.banner)}')` : `linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)`}"></div>` : ''}<div style="text-align:center"><div class="srv active" style="width:72px;height:72px;margin:0 auto 10px;font-size:28px;cursor:default">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div>
     <h3>${esc(s.name)}</h3><p class="hint">${s.public ? 'Herkese açık sunucu' : `Kurucu: <b>${esc(s.owner || '—')}</b>`}</p></div>
     <div class="srvinfo"><div><b>${members.length}</b><span>Üye</span></div><div><b style="color:var(--green)">${on}</b><span>Çevrimiçi</span></div><div><b>${text}+${voice}</b><span>Oda</span></div></div>
     <div class="lrow"><span>Senin rolün</span>${badge(roleOf(s, S.me)) || '<span style="flex:0;color:var(--muted)">Üye</span>'}</div>
@@ -1532,7 +1542,7 @@ function showServerSettings(s, tab, focus) {
       ${s.public ? '' : `<button class="out" id="ss-leave">${ic('door')}Sunucudan ayrıl</button>`}<button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="ss-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>SUNUCU</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div>
-      <div class="srv-card"><div class="sb"></div><div class="si">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div><div class="sx"><b>${esc(s.name)}</b><p>${s.members.length} üye · ${s.channels.length} oda · ${(s.customRoles || []).length} rol</p></div></div></aside>`, 'settings');
+      <div class="srv-card"><div class="sb" style="${s.banner ? `background:url('${esc(s.banner)}') center/cover` : s.bannerColor ? `background:linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)` : ''}"></div><div class="si">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div><div class="sx"><b>${esc(s.name)}</b><p>${s.members.length} üye · ${s.channels.length} oda · ${(s.customRoles || []).length} rol</p></div></div></aside>`, 'settings');
   const close = () => { ssOpen = null; closeModal(); };
   $('#mx').onclick = close; $('#st-x').onclick = close;
   if ($('#ss-leave')) $('#ss-leave').onclick = () => confirmBox(`${s.name} sunucusundan ayrılmak istiyor musun?`, () => socket.emit('leaveServer', s.id, r => r.error ? toast(r.error) : (ssOpen = null, toast('Sunucudan ayrıldın'))));
@@ -1545,12 +1555,18 @@ function showServerSettings(s, tab, focus) {
       main.innerHTML = `<div class="st-page"><h3>Genel</h3><p class="hint">Sunucunun adı, simgesi ve temel kuralları.</p>
         <div class="st-field"><label>Sunucu adı</label><input class="field" id="sv-name" maxlength="40" value="${esc(s.name)}"></div>
         <div class="st-field"><label>Simge</label><div style="display:flex;gap:8px"><input class="field" id="sv-icon" maxlength="2" value="${esc(s.icon)}" style="width:90px;text-align:center;margin:0" title="Harf ya da emoji"><button class="lrow" id="sv-img" style="margin:0">${ic('image')}Resim yükle</button>${s.iconImg ? '<button class="lrow" id="sv-rmimg" style="margin:0">Kaldır</button>' : ''}</div></div>
+        <div class="st-field"><label>Sunucu afişi</label><div class="bn-prev" id="sv-bnp" style="${s.banner ? `background-image:url('${esc(s.banner)}')` : s.bannerColor ? `background-image:linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)` : ''}">${s.banner || s.bannerColor ? '' : 'Afiş yok'}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="lrow" id="sv-bn" style="margin:0">${ic('image')}Resim yükle</button><span class="lrow" style="margin:0;cursor:pointer">${ic('palette')}Düz renk <input type="color" aria-label="Afiş rengi" id="sv-bnc" value="${esc(s.bannerColor || '#f2652f')}" style="width:28px;height:22px;border:none;background:none;padding:0;margin-left:6px"></span>${s.banner || s.bannerColor ? '<button class="lrow" id="sv-bnrm" style="margin:0">Kaldır</button>' : ''}</div>
+          <p class="hint" style="margin-top:6px">Oda listesinin üstünde ve davet sayfasında görünür. En iyi 960×540 (16:9) resim.</p></div>
         <div class="st-field"><button class="primary" id="sv-save" style="width:auto;padding:11px 22px">Kaydet</button></div>
         <div class="st-field"><label>Moderasyon</label><label class="switch">Küfür filtresi (kötü kelimeler yıldızla gizlenir)<input type="checkbox" id="sv-filter" ${s.filter ? 'checked' : ''}></label>
         <label class="switch">Yavaş mod (üyeler için mesaj arası bekleme)<select class="field" id="sv-slow" style="width:120px;margin:0">${[[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [30, '30 sn'], [60, '1 dk'], [300, '5 dk']].map(([v, t]) => `<option value="${v}" ${s.slow === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label></div>
         ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${location.origin}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}</div>`;
       $('#sv-save').onclick = () => socket.emit('updateServer', { serverId: s.id, name: $('#sv-name').value, icon: $('#sv-icon').value }, done('Kaydedildi'));
       $('#sv-img').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, iconImg: url }, done()));
+      $('#sv-bn').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, banner: url }, done('Afiş güncellendi')));
+      $('#sv-bnc').onchange = e => socket.emit('updateServer', { serverId: s.id, banner: null, bannerColor: e.target.value }, done('Afiş rengi ayarlandı'));
+      if ($('#sv-bnrm')) $('#sv-bnrm').onclick = () => socket.emit('updateServer', { serverId: s.id, banner: null, bannerColor: null }, done('Afiş kaldırıldı'));
       if ($('#sv-rmimg')) $('#sv-rmimg').onclick = () => socket.emit('updateServer', { serverId: s.id, iconImg: null }, done());
       $('#sv-filter').onchange = e => socket.emit('updateServer', { serverId: s.id, filter: e.target.checked }, r => r.error ? toast(r.error) : toast(e.target.checked ? 'Küfür filtresi açıldı' : 'Küfür filtresi kapandı'));
       $('#sv-slow').onchange = e => socket.emit('updateServer', { serverId: s.id, slow: +e.target.value }, r => r.error ? toast(r.error) : toast('Yavaş mod güncellendi'));
