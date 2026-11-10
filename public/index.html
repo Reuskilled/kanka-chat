@@ -2489,11 +2489,14 @@ async function startVideo(kind) {
   stream.getVideoTracks()[0].onended = () => { if (videoStream === stream) stopVideo(); };
   feedAll(); sendMedia(); updateVoiceBtns(); renderStage();
 }
+let updReady = false;
+try { window.kankaDesktop?.onUpdateReady?.(() => { updReady = true; }); } catch {}
 async function showGoLive() {
   const desk = !!window.kankaDesktop?.sources;
   let sources = [], cams = [];
   if (desk) { try { sources = await window.kankaDesktop.sources(); } catch {} }
   try { cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput'); } catch {}
+  let deskVer = null; try { deskVer = (await window.kankaDesktop?.info?.())?.version || null; } catch {}
   const o = { ...goOpts };
   let tab = 'apps', gear = !desk;
   const tabs = desk ? [['apps', 'Uygulamalar', 'window'], ['screens', 'Tüm ekran', 'screen'], ['devices', 'Cihazlar', 'video']] : [['web', 'Ekran / pencere', 'screen'], ['devices', 'Cihazlar', 'video']];
@@ -2504,6 +2507,8 @@ async function showGoLive() {
     if (tab === 'apps') { const l = sources.filter(x => !x.screen); return l.length ? `<div class="gl-grid">${l.map(x => `<button class="gl-card" data-src="${esc(x.id)}"><img src="${x.thumb}" alt=""><span>${x.icon ? `<img class="ico" src="${x.icon}" alt="">` : ic('window')}${esc(x.name)}</span></button>`).join('')}</div>` : '<p class="hint gl-empty">Paylaşılabilecek açık pencere yok.</p>'; }
     if (tab === 'screens') return `<div class="gl-grid">${sources.filter(x => x.screen).map((x, i, arr) => `<button class="gl-card" data-src="${esc(x.id)}"><img src="${x.thumb}" alt=""><span>${ic('screen')}${arr.length > 1 ? `Ekran ${i + 1}` : 'Tüm ekran'}</span></button>`).join('')}</div>`;
     if (tab === 'devices') return cams.length ? `<div class="gl-grid">${cams.map((c, i) => `<button class="gl-card" data-cam="${esc(c.deviceId)}"><div class="gl-ph">${ic('video')}</div><span>${ic('video')}${esc(c.label || 'Kamera ' + (i + 1))}</span></button>`).join('')}</div>` : '<p class="hint gl-empty">Bağlı kamera ya da yakalama kartı yok.</p>';
+    if (window.kankaDesktop) return `<div class="gl-web">${ic('download')}<b>Pencereleri burada görmek için uygulamayı güncelle</b><p class="hint">Bu seçici Kanka Chat 1.0.5 ile geliyor${deskVer ? `, sende ${esc(deskVer)} var` : ''}. ${updReady ? 'Güncelleme indi, tek tıkla kurulur (uygulama yeniden açılır).' : 'Güncelleme arka planda iniyor, hazır olunca burada buton çıkacak. Beklemek istemezsen eski seçiciyle başlayabilirsin.'}</p>
+      ${updReady ? `<button class="primary" id="gl-upd">${ic('download')}Şimdi güncelle</button>` : ''}<button class="lrow" id="gl-go" style="margin-top:4px">Eski seçiciyle yayına başla</button></div>`;
     return `<div class="gl-web">${ic('screen')}<b>Neyi paylaşacağını tarayıcın soracak</b><p class="hint">Bir sekmeyi, pencereyi ya da tüm ekranı seçebilirsin. Ses için "Sistem sesini paylaş" kutusunu işaretle.</p><button class="primary" id="gl-go">${ic('live')}Yayına başla</button></div>`;
   };
   const draw = () => {
@@ -2523,6 +2528,7 @@ async function showGoLive() {
     $('#modal-box').querySelectorAll('[data-src]').forEach(b => b.onclick = () => start(b.dataset.src));
     $('#modal-box').querySelectorAll('[data-cam]').forEach(b => b.onclick = () => start('cam:' + b.dataset.cam));
     if ($('#gl-go')) $('#gl-go').onclick = () => start(null);
+    if ($('#gl-upd')) $('#gl-upd').onclick = () => window.kankaDesktop.installUpdate?.();
     $('#gl-gear').onclick = () => { gear = !gear; draw(); };
     $('#gl-q').onclick = e => { const b = e.target.closest('[data-q]'); if (b) { o.q = b.dataset.q; draw(); } };
     $('#gl-m').onclick = e => { const b = e.target.closest('[data-m]'); if (b) { o.motion = b.dataset.m === '1'; draw(); } };
