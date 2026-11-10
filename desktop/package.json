@@ -1,0 +1,50 @@
+{
+  "name": "kanka-chat",
+  "version": "1.0.3",
+  "description": "Kanka Chat masaüstü uygulaması",
+  "main": "main.js",
+  "author": "Kanka Chat",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0",
+    "electron-builder-squirrel-windows": "^26.18.0"
+  },
+  "productName": "Kanka Chat",
+  "build": {
+    "appId": "com.kanka.chat",
+    "productName": "Kanka Chat",
+    "copyright": "Kanka Chat",
+    "files": [
+      "main.js",
+      "preload.js",
+      "splash.html",
+      "icon.png",
+      "dot.png"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "squirrel",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "squirrelWindows": {
+      "iconUrl": "https://raw.githubusercontent.com/electron/electron/main/default_app/icon.png",
+      "artifactName": "KankaChat-Kurulum.${ext}",
+      "msi": false
+    },
+    "publish": null
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.1"
+  }
+}

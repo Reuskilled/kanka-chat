@@ -1,0 +1,13 @@
+// Sayfa ile masaüstü uygulaması arasındaki güvenli köprü
+const { contextBridge, ipcRenderer } = require('electron');
+contextBridge.exposeInMainWorld('kankaDesktop', {
+  isDesktop: true,
+  customTitlebar: true,
+  setTitlebar: (color, symbol) => ipcRenderer.send('kanka:titlebar', color, symbol),
+  setPresenceKey: key => ipcRenderer.invoke('kanka:presenceKey', key),
+  info: () => ipcRenderer.invoke('kanka:info'),
+  logout: () => ipcRenderer.invoke('kanka:logout'),
+  badge: n => ipcRenderer.send('kanka:badge', n),
+  onUpdateReady: cb => { ipcRenderer.on('kanka:update-ready', (e, v) => cb(v)); ipcRenderer.invoke('kanka:update-pending').then(p => p && cb('')); },
+  installUpdate: () => ipcRenderer.invoke('kanka:install-update'),
+});

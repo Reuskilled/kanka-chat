@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; -webkit-user-select: none; user-select: none; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; -webkit-app-region: drag; }
+  .card { position: absolute; inset: 8px; border-radius: 14px; background: #1c1512; box-shadow: 0 8px 28px rgba(0,0,0,.45); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #f4e6d8; }
+  .logo { width: 84px; height: 84px; border-radius: 24px; background: linear-gradient(160deg, #f26b3a, #ff8f5a); display: flex; align-items: center; justify-content: center; animation: bob 1.8s ease-in-out infinite; box-shadow: 0 10px 24px rgba(242,107,58,.28); }
+  .logo svg { width: 50px; height: 50px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .eyes { animation: blink 3.6s infinite; transform-origin: 12px 10px; }
+  .shadow { width: 64px; height: 8px; border-radius: 50%; background: #120d0b; margin-top: 14px; animation: shadow 1.8s ease-in-out infinite; }
+  .status { margin-top: 26px; font-size: 14px; font-weight: 600; letter-spacing: .2px; min-height: 20px; transition: opacity .2s; }
+  .sub { margin-top: 6px; font-size: 11.5px; color: #b49c89; min-height: 16px; }
+  .bar { width: 150px; height: 4px; border-radius: 4px; background: #33271f; margin-top: 18px; overflow: hidden; position: relative; }
+  .bar i { position: absolute; top: 0; bottom: 0; width: 40%; border-radius: 4px; background: #ff8a4c; animation: slide 1.2s ease-in-out infinite; }
+  .bar.det i { animation: none; left: 0; transition: width .2s; }
+  @keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
+  @keyframes shadow { 0%, 100% { transform: scaleX(1); opacity: .9; } 50% { transform: scaleX(.75); opacity: .6; } }
+  @keyframes blink { 0%, 46%, 50%, 100% { transform: scaleY(1); } 48% { transform: scaleY(.1); } }
+  @keyframes slide { 0% { left: -40%; } 100% { left: 100%; } }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><svg viewBox="0 0 24 24"><path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><g class="eyes"><path d="M9 9.5v1M15 9.5v1"/></g><path d="M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/></svg></div>
+    <div class="shadow"></div>
+    <div class="status" id="st">Başlatılıyor…</div>
+    <div class="sub" id="sub"></div>
+    <div class="bar" id="bar"><i id="fill"></i></div>
+  </div>
+<script>
+  window.addEventListener('message', () => {});
+  window.setStatus = (text, sub = '', pct = null) => {
+    document.getElementById('st').textContent = text;
+    document.getElementById('sub').textContent = sub;
+    const bar = document.getElementById('bar'), fill = document.getElementById('fill');
+    if (pct == null) { bar.classList.remove('det'); fill.style.width = ''; }
+    else { bar.classList.add('det'); fill.style.width = Math.max(4, Math.min(100, pct)) + '%'; }
+  };
+</script>
+</body>
+</html>
