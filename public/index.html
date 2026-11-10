@@ -31,7 +31,9 @@
   #auth { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
     background: radial-gradient(circle at 20% 20%, rgba(255,138,76,.18) 0, transparent 40%), radial-gradient(circle at 80% 80%, rgba(255,179,71,.12) 0, transparent 40%), var(--bg); }
   #auth .card { background: var(--panel); width: 400px; padding: 36px; border-radius: 28px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.45); border: 1px solid var(--line); }
-  .logo { width: 72px; height: 72px; margin: 0 auto 14px; border-radius: 22px; background: var(--mine); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 36px; transform: rotate(-6deg); }
+  .logo { width: 76px; height: 76px; margin: 0 auto 14px; border-radius: 22px; background: #F2652F; color: #fff; display: flex; align-items: center; justify-content: center; }
+  .logo .klogo { width: 56px; height: 56px; }
+  .ic.klogo { stroke: none; }
   #auth h1 { font-size: 28px; font-weight: 800; }
   #auth p { color: var(--muted); margin: 6px 0 20px; }
   .tabs { display: flex; background: var(--card); border-radius: 14px; padding: 4px; margin-bottom: 16px; }
@@ -50,7 +52,7 @@
   .srv { width: 48px; height: 48px; border-radius: 50%; background: var(--card); border: 2px solid var(--line); font-weight: 800; font-size: 17px; transition: all .15s; position: relative; flex-shrink: 0; }
   .srv:hover { border-radius: 16px; border-color: var(--accent-2); }
   .srv.active { border-radius: 16px; background: var(--accent); border-color: var(--accent); color: #fff; }
-  .srv.home { background: var(--mine); border: none; color: #fff; font-size: 22px; border-radius: 16px; }
+  .srv.home { background: #F2652F; border: none; color: #fff; font-size: 22px; border-radius: 16px; }
   .srv.dash { border-style: dashed; color: var(--accent); font-size: 20px; }
   .srv .dot { position: absolute; right: -2px; top: -2px; width: 14px; height: 14px; border-radius: 50%; background: var(--red); border: 3px solid var(--panel); }
   .rsep { width: 30px; height: 2px; background: var(--line); border-radius: 2px; flex-shrink: 0; }
@@ -351,7 +353,7 @@
   .ic.fill { fill: currentColor; stroke: none; }
   button .ic + span, .ic + span { margin-left: 6px; }
   .logo .ic { width: 40px; height: 40px; stroke-width: 1.8; }
-  .srv.home .ic { width: 26px; height: 26px; }
+  .srv.home .ic { width: 30px; height: 30px; }
   .room .ico .ic { width: 17px; height: 17px; color: var(--accent); }
   .room.active .ico .ic { color: #fff; }
   .hbtn .ic, .ibtn .ic { width: 19px; height: 19px; }
@@ -415,8 +417,8 @@
   #titlebar { display: none; }
   body.has-tb #titlebar { display: flex; position: fixed; top: 0; left: 0; right: 0; height: 34px; align-items: center; gap: 8px; padding-left: 14px; -webkit-app-region: drag; user-select: none;
     font-size: 12.5px; font-weight: 800; letter-spacing: .02em; color: var(--muted); z-index: 60; background: var(--bg); }
-  #titlebar .tb-logo { width: 18px; height: 18px; border-radius: 6px; background: var(--mine); display: flex; align-items: center; justify-content: center; }
-  #titlebar .tb-logo .ic { width: 13px; height: 13px; color: #fff; stroke-width: 2.4; }
+  #titlebar .tb-logo { width: 18px; height: 18px; border-radius: 5px; background: #F2652F; display: flex; align-items: center; justify-content: center; }
+  #titlebar .tb-logo .ic { width: 14px; height: 14px; color: #fff; }
   #titlebar .tb-where { margin-left: 4px; font-weight: 700; opacity: .7; }
   body.has-tb #app { height: calc(100vh - 34px); margin-top: 34px; padding-top: 2px; }
   body.has-tb #auth { top: 34px; }
@@ -708,7 +710,10 @@
   .xox button.x, .xox button.o { animation: pop .3s var(--ease); }
   #auth .card { animation: authIn .6s var(--ease-out); }
   @keyframes authIn { from { opacity: 0; transform: translateY(24px) scale(.96); } }
-  .logo { animation: wave 2.4s ease-in-out infinite; }
+  .logo { animation: none; }
+  #boot { position: fixed; inset: 0; z-index: 100; background: #17110e; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: opacity .3s; }
+  #boot.out { opacity: 0; pointer-events: none; }
+  #boot div { color: #b49c89; font-weight: 700; font-size: 14px; }
   @keyframes wave { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg) translateY(-3px); } }
   #auth-err:not(:empty) { animation: shake .4s; }
   @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
@@ -828,10 +833,11 @@
 </head>
 <body>
 
-<div id="titlebar"><span class="tb-logo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><path d="M9 9.5v1M15 9.5v1M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/></svg></span>Kanka Chat<span class="tb-where" id="tb-where"></span></div>
+<div id="titlebar"><span class="tb-logo"><svg class="ic klogo" viewBox="0 0 100 100" aria-hidden="true"><defs><mask id="klm-tb" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#000"/><path d="M18 46 L20 17 C20.4 12.6 24.6 10.8 28 13.4 L44 28 Z" fill="#fff"/><path d="M82 46 L80 17 C79.6 12.6 75.4 10.8 72 13.4 L56 28 Z" fill="#fff"/><path d="M50 25 C72 25 86 37 89 53 L95 61 L88.5 63.5 C86 78 70 87 50 87 C30 87 14 78 11.5 63.5 L5 61 L11 53 C14 37 28 25 50 25 Z" fill="#fff"/><path d="M50 31 L53.2 45 L46.8 45 Z" fill="#000"/><path d="M15 56 C21 46 36 44.5 46 52 L50 55 L54 52 C64 44.5 79 46 85 56 C81 66.5 67 70.5 57.5 64.5 L50 60.5 L42.5 64.5 C33 70.5 19 66.5 15 56 Z" fill="#000"/><circle cx="33.5" cy="56" r="5.2" fill="#fff"/><circle cx="66.5" cy="56" r="5.2" fill="#fff"/><path d="M44.5 70 L55.5 70 C55.5 74.2 52.4 77.2 50 77.2 C47.6 77.2 44.5 74.2 44.5 70 Z" fill="#000"/></mask></defs><rect width="100" height="100" fill="currentColor" mask="url(#klm-tb)"/></svg></span>Kanka Chat<span class="tb-where" id="tb-where"></span></div>
+<div id="boot" role="status" aria-live="polite"><img src="/yukleniyor.gif" width="160" height="160" alt=""><div id="boot-t">Bağlanılıyor…</div></div>
 <div id="auth">
   <form class="card" id="auth-form">
-    <div class="logo"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><path d="M9 9.5v1M15 9.5v1M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/></svg></div>
+    <div class="logo"><svg class="ic klogo" viewBox="0 0 100 100" aria-hidden="true"><defs><mask id="klm-auth" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#000"/><path d="M18 46 L20 17 C20.4 12.6 24.6 10.8 28 13.4 L44 28 Z" fill="#fff"/><path d="M82 46 L80 17 C79.6 12.6 75.4 10.8 72 13.4 L56 28 Z" fill="#fff"/><path d="M50 25 C72 25 86 37 89 53 L95 61 L88.5 63.5 C86 78 70 87 50 87 C30 87 14 78 11.5 63.5 L5 61 L11 53 C14 37 28 25 50 25 Z" fill="#fff"/><path d="M50 31 L53.2 45 L46.8 45 Z" fill="#000"/><path d="M15 56 C21 46 36 44.5 46 52 L50 55 L54 52 C64 44.5 79 46 85 56 C81 66.5 67 70.5 57.5 64.5 L50 60.5 L42.5 64.5 C33 70.5 19 66.5 15 56 Z" fill="#000"/><circle cx="33.5" cy="56" r="5.2" fill="#fff"/><circle cx="66.5" cy="56" r="5.2" fill="#fff"/><path d="M44.5 70 L55.5 70 C55.5 74.2 52.4 77.2 50 77.2 C47.6 77.2 44.5 74.2 44.5 70 Z" fill="#000"/></mask></defs><rect width="100" height="100" fill="currentColor" mask="url(#klm-auth)"/></svg></div>
     <h1>Selam kanka!</h1>
     <p>Hesabına gir ya da yeni hesap aç.</p>
     <div class="tabs"><button type="button" class="on" data-m="login">Giriş yap</button><button type="button" data-m="register">Kayıt ol</button></div>
@@ -980,7 +986,11 @@ const ICON = {
   idcopy: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h4M7 14h7M15 10h2"/>',
   folderPlus: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v5M9.5 13.5h5"/>'
 };
-const ic = (n, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[n] || ''}</svg>`;
+// Kanka rakun işareti: tek renk (currentColor), yüz maskeyle oyulur
+let logoN = 0;
+const LOGO_IN = id => `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#000"/><path d="M18 46 L20 17 C20.4 12.6 24.6 10.8 28 13.4 L44 28 Z" fill="#fff"/><path d="M82 46 L80 17 C79.6 12.6 75.4 10.8 72 13.4 L56 28 Z" fill="#fff"/><path d="M50 25 C72 25 86 37 89 53 L95 61 L88.5 63.5 C86 78 70 87 50 87 C30 87 14 78 11.5 63.5 L5 61 L11 53 C14 37 28 25 50 25 Z" fill="#fff"/><path d="M50 31 L53.2 45 L46.8 45 Z" fill="#000"/><path d="M15 56 C21 46 36 44.5 46 52 L50 55 L54 52 C64 44.5 79 46 85 56 C81 66.5 67 70.5 57.5 64.5 L50 60.5 L42.5 64.5 C33 70.5 19 66.5 15 56 Z" fill="#000"/><circle cx="33.5" cy="56" r="5.2" fill="#fff"/><circle cx="66.5" cy="56" r="5.2" fill="#fff"/><path d="M44.5 70 L55.5 70 C55.5 74.2 52.4 77.2 50 77.2 C47.6 77.2 44.5 74.2 44.5 70 Z" fill="#000"/></mask></defs><rect width="100" height="100" fill="currentColor" mask="url(#${id})"/>`;
+const logoSvg = (cls = '') => `<svg class="ic klogo ${cls}" viewBox="0 0 100 100" aria-hidden="true">${LOGO_IN('klm' + (++logoN))}</svg>`;
+const ic = (n, cls = '') => n === 'logo' ? logoSvg(cls) : `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[n] || ''}</svg>`;
 const $ = s => document.querySelector(s);
 const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} } };
 
@@ -1050,7 +1060,10 @@ $('#auth-form').onsubmit = e => {
   if (!name || !password) return $('#auth-err').textContent = 'Kullanıcı adı ve şifre gerekli.';
   socket.emit(authMode, { name, password }, onAuth);
 };
+function hideBoot() { const b = $('#boot'); if (!b || b.classList.contains('out')) return; b.classList.add('out'); setTimeout(() => b.remove(), 400); }
+setTimeout(() => { const t = $('#boot-t'); if (t && $('#boot')) t.textContent = 'Sunucuya ulaşılamıyor, tekrar deneniyor…'; }, 7000);
 function onAuth(res) {
+  hideBoot();
   if (res.error) { store.set('kanka-token', null); $('#auth').style.display = 'flex'; return $('#auth-err').textContent = res.error; }
   store.set('kanka-token', res.token);
   S.me = res.user.name;
@@ -1072,7 +1085,7 @@ function onAuth(res) {
 }
 socket.on('connect', () => {
   const t = store.get('kanka-token');
-  if (t) socket.emit('auth', t, onAuth); else $('#auth').style.display = 'flex';
+  if (t) socket.emit('auth', t, onAuth); else { $('#auth').style.display = 'flex'; hideBoot(); }
   if (myVoice) { const ch = myVoice; cleanupVoice(); joinVoice(ch); }
 });
 function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); location.reload(); }
