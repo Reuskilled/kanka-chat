@@ -480,6 +480,23 @@
   .invite-prev small { display: block; color: var(--muted); font-weight: 700; font-size: 12px; }
   .invite-prev .on::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #23a55a; margin: 0 4px 0 8px; }
 
+  /* ================= Kullanıcı sağ tık menüsü ================= */
+  .umenu { position: fixed; z-index: 90; width: 290px; max-height: calc(100vh - 16px); overflow-y: auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 18px 50px rgba(0,0,0,.55); animation: popIn .14s var(--ease-out); }
+  .umenu button, .umenu .ui { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 9px 12px; border-radius: 9px; text-align: left; font-weight: 700; font-size: 14px; color: var(--ink); }
+  .umenu button:hover { background: var(--accent); color: #1a120c; }
+  .umenu button small, .umenu .ui small { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+  .umenu button:hover small { color: #3a2a1c; }
+  .umenu .danger { color: var(--red); } .umenu .danger:hover { background: var(--red); color: #fff; }
+  .umenu hr { border: none; height: 1px; background: var(--line); margin: 5px 8px; }
+  .umenu .box2 { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .umenu .box2.on { background: var(--accent); border-color: var(--accent); }
+  .umenu .box2.on::after { content: ''; width: 5px; height: 9px; border: solid #1a120c; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px,-1px); }
+  .umenu .ui { flex-direction: column; align-items: stretch; }
+  .umenu input[type=range] { width: 100%; accent-color: var(--accent); }
+  .umenu .sub { display: none; padding-left: 8px; } .umenu .sub.open { display: block; }
+  .umenu .arr .ic { width: 14px; height: 14px; transform: rotate(-90deg); transition: transform .15s; } .umenu .arr.open .ic { transform: none; }
+  .unote { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 4px; }
+
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
   .shead.srvbtn:hover, .shead.srvbtn.open { background: var(--hover); }
@@ -1172,6 +1189,78 @@ function renderSide() {
       socket.emit('createChannel', { serverId: s.id, name: v.name, type: b.dataset.t }, c => c.error ? toast(c.error) : !voiceRoom && selectChannel(c.id)));
   });
 }
+// ---- Kullanıcıya sağ tık (Discord gibi) ----
+const uNotes = JSON.parse(store.get('kanka-notes') || '{}'), uNicks = JSON.parse(store.get('kanka-nicks') || '{}'), uMuted = new Set(JSON.parse(store.get('kanka-umute') || '[]')), uNoVid = new Set(JSON.parse(store.get('kanka-novid') || '[]')), uIgnored = new Set(JSON.parse(store.get('kanka-ignore') || '[]'));
+const saveU = () => { store.set('kanka-notes', JSON.stringify(uNotes)); store.set('kanka-nicks', JSON.stringify(uNicks)); store.set('kanka-umute', JSON.stringify([...uMuted])); store.set('kanka-novid', JSON.stringify([...uNoVid])); store.set('kanka-ignore', JSON.stringify([...uIgnored])); };
+const applyPeerAudio = () => Object.entries(peerNames).forEach(([sid, n]) => { const a = document.getElementById('a-' + sid); if (a) { a.volume = vol[n] ?? 1; a.muted = uMuted.has(n); } });
+function closeUMenu() { document.querySelector('.umenu')?.remove(); }
+function userMenu(n, x, y) {
+  closeUMenu();
+  const srv = S.view === 'server' ? S.server : null, self = n === S.me, sc = S.social, fr = sc.friends.includes(n);
+  const inVoice = !!myVoice && Object.values(peerNames).includes(n);
+  const others = S.servers.filter(s => !s.public && s.id !== srv?.id && !s.members.includes(n));
+  const tgt = srv && !srv.public && !self && n !== srv.owner && roleOf(srv, n) !== 'admin';
+  const b = (id, t, cls = '', extra = '') => `<button data-u="${id}" class="${cls}">${t}${extra}</button>`;
+  const chk = (id, t, on) => `<button data-u="${id}"><span>${t}</span><span class="box2 ${on ? 'on' : ''}"></span></button>`;
+  const m = document.createElement('div'); m.className = 'umenu'; m.setAttribute('role', 'menu');
+  m.innerHTML =
+    b('profile', 'Profil') + (srv ? b('mention', 'Bahset') : '') + (self ? '' : b('dm', 'Mesaj gönder')) +
+    (self ? '' : b('note', `<span>Not ekle<small>${uNotes[n] ? esc(uNotes[n].slice(0, 40)) : 'Sadece sana görünür'}</small></span>`)) +
+    (self ? '' : b('nick', `<span>Arkadaş takma adı ${uNicks[n] ? 'değiştir' : 'ekle'}${uNicks[n] ? `<small>${esc(uNicks[n])}</small>` : ''}</span>`)) +
+    (inVoice ? `<hr><div class="ui">Kullanıcı ses seviyesi<input type="range" id="u-vol" min="0" max="1" step="0.05" value="${vol[n] ?? 1}"></div>` : '') +
+    (self ? '' : '<hr>' + chk('mute', 'Sustur', uMuted.has(n)) + chk('novid', 'Görüntüyü devre dışı bırak', uNoVid.has(n))) +
+    (self ? '' : '<hr>' + (others.length ? `<button data-u="invsub" class="arr">Sunucuya davet et${ic('chevron')}</button><div class="sub" id="u-inv">${others.map(s => `<button data-inv="${s.id}">${esc(s.name)}</button>`).join('')}</div>` : '') +
+      b('friend', fr ? 'Arkadaşı çıkar' : sc.reqOut.includes(n) ? 'İsteği geri çek' : sc.reqIn.includes(n) ? 'İsteği kabul et' : 'Arkadaş ekle') +
+      b('ignore', uIgnored.has(n) ? 'Yok saymayı bırak' : 'Yok say') + b('block', sc.blocked.includes(n) ? 'Engeli kaldır' : 'Engelle', 'danger')) +
+    (srv && perm(srv, 'manageRoles') && (srv.customRoles || []).length && !self ? `<hr><button data-u="rolesub" class="arr">Roller${ic('chevron')}</button><div class="sub" id="u-roles">${srv.customRoles.map(r => chk('role:' + r.id, `<span class="rdot" style="background:${r.color};margin-right:8px"></span>${esc(r.name)}`, (srv.memberRoles?.[n] || []).includes(r.id))).join('')}</div>` : '') +
+    (tgt && (perm(srv, 'timeout') || perm(srv, 'kick') || perm(srv, 'ban')) ? '<hr>' + (perm(srv, 'timeout') ? b('to', timedOutLeft(srv, n) ? `${esc(n)} susturmasını kaldır` : `${esc(n)} kullanıcısını sustur`, 'danger') : '') +
+      (perm(srv, 'kick') ? b('kick', `${esc(n)} kullanıcısını at`, 'danger') : '') + (perm(srv, 'ban') ? b('ban', `${esc(n)} kullanıcısını yasakla`, 'danger') : '') : '') +
+    '<hr>' + b('copy', `<span>Kullanıcı adını kopyala</span>${ic('idcopy')}`);
+  document.body.appendChild(m);
+  const place = () => { const w = m.offsetWidth, h = m.offsetHeight; m.style.left = Math.max(8, x + w + 8 > innerWidth ? x - w : x) + 'px'; m.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + 'px'; };
+  place();
+  if ($('#u-vol')) $('#u-vol').oninput = e => { vol[n] = +e.target.value; store.set('kanka-vol', JSON.stringify(vol)); applyPeerAudio(); };
+  m.onclick = e => {
+    const inv = e.target.closest('[data-inv]');
+    if (inv) { const s = S.servers.find(x => x.id === inv.dataset.inv); closeUMenu(); openDM(n); return setTimeout(() => { $('#input').value = `${location.origin}/davet/${s.invite}`; $('#input').focus(); toast('Davet linki mesaj kutusuna kondu, göndermen yeterli'); }, 400); }
+    const t = e.target.closest('[data-u]'); if (!t) return;
+    const a = t.dataset.u; e.stopPropagation();
+    if (a === 'invsub') { t.classList.toggle('open'); $('#u-inv').classList.toggle('open'); return place(); }
+    if (a === 'rolesub') { t.classList.toggle('open'); $('#u-roles').classList.toggle('open'); return place(); }
+    if (a.startsWith('role:')) {
+      const rid = a.slice(5), cur = srv.memberRoles?.[n] || [], next = cur.includes(rid) ? cur.filter(x => x !== rid) : [...cur, rid];
+      return socket.emit('memberRoles', { serverId: srv.id, name: n, roles: next }, r => { if (r.error) return toast(r.error); t.querySelector('.box2').classList.toggle('on'); });
+    }
+    if (a === 'mute' || a === 'novid') {
+      const set = a === 'mute' ? uMuted : uNoVid; set.has(n) ? set.delete(n) : set.add(n); saveU(); t.querySelector('.box2').classList.toggle('on');
+      applyPeerAudio(); if (a === 'novid') renderStage?.(); return;
+    }
+    closeUMenu();
+    if (a === 'profile') showProfile(n);
+    else if (a === 'mention') { const i = $('#input'); i.value = (i.value && !i.value.endsWith(' ') ? i.value + ' ' : i.value) + '@' + n + ' '; i.focus(); }
+    else if (a === 'dm') openDM(n);
+    else if (a === 'note') form(`${esc(n)} için not`, 'Bu notu sadece sen görürsün.', [{ k: 'note', p: 'Notun', v: uNotes[n] || '', opt: true }], v => { v.note ? uNotes[n] = v.note : delete uNotes[n]; saveU(); toast('Not kaydedildi'); });
+    else if (a === 'nick') form('Arkadaş takma adı', `${esc(n)} sana bu adla görünecek. Sadece sen görürsün.`, [{ k: 'nick', p: 'Takma ad', v: uNicks[n] || '', opt: true }], v => { v.nick ? uNicks[n] = v.nick.slice(0, 32) : delete uNicks[n]; saveU(); renderMembers(); if (S.channel) renderMessages(); toast('Takma ad kaydedildi'); });
+    else if (a === 'friend') { const act = fr || sc.reqOut.includes(n) ? 'friendRemove' : sc.reqIn.includes(n) ? 'friendAccept' : 'friendRequest'; const go = () => socket.emit(act, n, r => r.error ? toast(r.error) : toast(act === 'friendRemove' ? 'Tamam' : act === 'friendAccept' ? 'Artık arkadaşsınız' : 'İstek gönderildi')); fr ? confirmBox(`${n} arkadaşlıktan çıkarılsın mı?`, go) : go(); }
+    else if (a === 'ignore') { uIgnored.has(n) ? uIgnored.delete(n) : uIgnored.add(n); saveU(); if (S.channel) renderMessages(); toast(uIgnored.has(n) ? `${n} yok sayılıyor. Mesajları gizlenir.` : 'Yok sayma kaldırıldı'); }
+    else if (a === 'block') { const on = !sc.blocked.includes(n); const go = () => socket.emit('block', { name: n, on }, r => r.error ? toast(r.error) : toast(on ? `${n} engellendi` : 'Engel kaldırıldı')); on ? confirmBox(`${n} engellensin mi?`, go) : go(); }
+    else if (a === 'to') timedOutLeft(srv, n) ? socket.emit('timeout', { serverId: srv.id, name: n, minutes: 0 }, r => r.error ? toast(r.error) : toast('Susturma kaldırıldı')) : askTimeout(srv, n);
+    else if (a === 'kick') confirmBox(`${n} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: srv.id, name: n }, r => r.error ? toast(r.error) : toast(`${n} atıldı`)));
+    else if (a === 'ban') askBan(srv, n);
+    else if (a === 'copy') navigator.clipboard?.writeText(n).then(() => toast('Kopyalandı'));
+  };
+}
+document.addEventListener('contextmenu', e => {
+  const el = e.target.closest('#members .mem[data-n], .row[data-au] .who, .row[data-au] > .av, .row[data-au] .av, .vuser[data-vu], .pick[data-n]');
+  if (!el) return;
+  const n = el.dataset.n || el.dataset.vu || el.closest('[data-au]')?.dataset.au;
+  if (!n || !S.users[n]) return;
+  e.preventDefault(); userMenu(n, e.clientX, e.clientY);
+});
+document.addEventListener('click', e => { if (!e.target.closest('.umenu')) closeUMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUMenu(); });
+window.addEventListener('blur', closeUMenu);
+
 // ---- Sunucu menüsü (sunucu adına tıklayınca) ----
 const mutedServers = new Set(JSON.parse(store.get('kanka-muted') || '[]'));
 const saveMuted = () => store.set('kanka-muted', JSON.stringify([...mutedServers]));
@@ -1606,6 +1695,7 @@ function renderMessages(toBottom) {
 function msgHTML(m, prev) {
   const newDay = !prev || new Date(prev.time).toDateString() !== new Date(m.time).toDateString();
   const day = newDay ? `<div class="day">${dayLabel(m.time)}</div>` : '';
+  if (m.author && uIgnored.has(m.author)) return day + `<div class="sys" style="opacity:.6">${ic('ban')}${esc(uNicks[m.author] || m.author)} yok sayıldığı için mesaj gizlendi</div>`;
   if (m.kind === 'system') return day + `<div class="sys">${ic('star')}${esc(m.text.replace(/\s*\p{Extended_Pictographic}\ufe0f?/gu, ''))}</div>`;
   if (m.kind === 'birthday') return day + `<div class="bday" data-id="${m.id}"><span class="big">${ic('cake')}</span><p>Bugün ${esc(m.text)} kankamızın doğum günü!</p><span class="hint">İyi ki doğdun ${esc(m.text)} 🎉 Kutlamayı unutmayın!</span></div>`;
   if (m.kind === 'daily') return day + `<div class="daily" data-id="${m.id}"><div class="kt">${ic('sun')}GÜNÜN SORUSU</div><p>${esc(m.text)}</p></div>`;
@@ -1650,8 +1740,8 @@ function msgHTML(m, prev) {
   const reacts = Object.entries(m.reactions || {}).map(([e, us]) =>
     `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}" title="${esc(us.join(', '))}">${e}<span>${us.length}</span></button>`).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
-  return day + `<div class="row ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}">${av(m.author)}
-    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!mine && !cont ? `<div class="who" style="color:${userColor(m.author)}">${esc(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}<span class="t">${m.kind === 'text' ? '' : hm(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+  return day + `<div class="row ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}
+    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!mine && !cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}">${esc(uNicks[m.author] || m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}<span class="t">${m.kind === 'text' ? '' : hm(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 let pop = null;
@@ -1888,7 +1978,7 @@ function renderMembers() {
   const item = n => {
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n);
-    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(n)}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}</div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(uNicks[n] || n)}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}</div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
@@ -1961,7 +2051,7 @@ function showProfile(n) {
   const meAdmin = srv && roleOf(srv, S.me) === 'admin', meMod = srv && isMod(srv, S.me);
   const canKick = srv && !srv.public && meMod && n !== S.me && r !== 'admin' && !(r === 'mod' && !meAdmin);
   modal(`<button class="pc-close" id="mx" aria-label="Kapat">${ic('x')}</button>${cardHTML(n, u, { srv, online: S.online.has(n) })}
-    <div class="pc-body" style="padding-top:0">
+    <div class="pc-body" style="padding-top:0">${uNotes[n] && n !== S.me ? `<div class="pc-sec"><h5>Notun</h5><div class="unote">${esc(uNotes[n])}</div></div>` : ''}
       <div class="pc-actions">${n !== S.me ? `<button class="primary" id="pf-dm">${ic('chat')}Mesaj gönder</button>` + friendBtn(n) : `<button class="primary" id="pf-set">${ic('edit')}Profili düzenle</button>`}</div>
       ${n !== S.me ? `<div class="pc-actions"><button class="btn-danger" id="pf-block">${S.social.blocked.includes(n) ? ic('unlock') + 'Engeli kaldır' : ic('ban') + 'Engelle'}</button></div>` : ''}
       ${srv && rolesOf(srv, n).length ? `<div class="pc-sec" style="margin-top:12px"><h5>Roller</h5><div class="chips">${rolesOf(srv, n).map(x => `<span class="chip"><span class="rdot" style="background:${x.color}"></span>${esc(x.name)}</span>`).join('')}</div></div>` : ''}
@@ -2126,7 +2216,7 @@ function makePeer(sid) {
       let a = document.getElementById('a-' + sid);
       if (!a) { a = document.createElement('audio'); a.id = 'a-' + sid; a.autoplay = true; document.body.appendChild(a); }
       a.srcObject = e.streams[0] || new MediaStream([e.track]);
-      a.volume = vol[peerNames[sid]] ?? 1;
+      a.volume = vol[peerNames[sid]] ?? 1; a.muted = uMuted.has(peerNames[sid]);
     } else {
       peerVideo[sid] = new MediaStream([e.track]);
       e.track.onunmute = renderStage; e.track.onended = renderStage;
@@ -2287,7 +2377,7 @@ function renderStage() {
   if (!myVoice) { st.classList.remove('on'); st.innerHTML = ''; return; }
   st.classList.add('on');
   const tiles = [{ sid: 'me', name: S.me, stream: videoStream, kind: videoKind }, ...Object.keys(peers).map(sid => ({
-    sid, name: peerNames[sid] || '...', stream: (peerMedia[sid]?.cam || peerMedia[sid]?.screen) ? peerVideo[sid] : null, kind: peerMedia[sid]?.screen ? 'screen' : peerMedia[sid]?.cam ? 'cam' : null
+    sid, name: peerNames[sid] || '...', stream: (peerMedia[sid]?.cam || peerMedia[sid]?.screen) && !uNoVid.has(peerNames[sid]) ? peerVideo[sid] : null, kind: peerMedia[sid]?.screen ? 'screen' : peerMedia[sid]?.cam ? 'cam' : null
   }))];
   const hasVideo = tiles.some(t => t.stream);
   st.classList.toggle('video', hasVideo);
