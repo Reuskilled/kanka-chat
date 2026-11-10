@@ -43,6 +43,12 @@ const GAME_PROCS = {
   'bf2042': ['Battlefield 2042', ''], 'bf6': ['Battlefield 6', ''], 'Minecraft Launcher': ['Minecraft', 'Başlatıcıda'],
 };
 app.get('/api/presence/games', (req, res) => res.json(GAME_PROCS));
+const STARTED = Date.now();
+app.get('/api/surum', (req, res) => {
+  let sha = null;
+  try { sha = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'guncelleme.json'), 'utf8')).sha; } catch {}
+  res.json({ surum: sha ? sha.slice(0, 7) : 'yerel', baslama: STARTED });
+});
 const artCache = new Map();
 async function albumArt(title, artist) {
   const k = (artist + ' ' + title).toLowerCase();

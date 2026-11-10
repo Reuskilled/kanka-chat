@@ -591,6 +591,7 @@
   .box.settings .st-main .st-page { max-width: 640px; }
   .box.settings .st-prev { padding: 60px 24px 24px; display: flex; flex-direction: column; align-items: flex-start; }
   .box.settings .st-prev > * { width: 320px; }
+  .st-ver { font-size: 11px; color: var(--muted); padding: 10px 12px 0; opacity: .7; font-weight: 700; }
   .prev-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
   .prev-head h4 { margin: 10px 0 0 !important; }
   .st-close { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 800; z-index: 3; }
@@ -900,7 +901,7 @@ function showSettings(tab = 'profile') {
   const dirty = () => KEYS.some(k => (draft[k] || '') !== (u[k] || ''));
   modal(`<nav class="st-nav"><h4>KULLANICI AYARLARI</h4>
       <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirimler</button>
-      <button class="out" id="st-out">${ic('logout')}Çıkış yap</button><button id="mx">${ic('x')}Kapat</button></nav>
+      <button class="out" id="st-out">${ic('logout')}Çıkış yap</button><div class="st-ver" id="st-ver">Kanka Chat</div><button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="st-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div><div class="mini-card" id="st-card"></div></aside>`, 'settings');
   const preview = () => {
@@ -1002,6 +1003,7 @@ function showSettings(tab = 'profile') {
     preview();
   };
   document.querySelectorAll('.st-nav [data-tab]').forEach(b => b.onclick = () => open(b.dataset.tab));
+  fetch('/api/surum').then(r => r.json()).then(v => { const e = $('#st-ver'); if (e) e.textContent = `Kanka Chat · sürüm ${v.surum}${window.kankaDesktop ? ' · masaüstü' : ''}`; }).catch(() => {});
   $('#st-out').onclick = logout;
   $('#mx').onclick = $('#st-x').onclick = () => dirty() ? confirmBox('Kaydedilmemiş değişikliklerin silinecek.', closeModal) : closeModal();
   open(tab);
