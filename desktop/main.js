@@ -40,7 +40,7 @@ function finishSplash() {
   setSplash('Hazır!');
   const wait = Math.max(0, 1400 - (Date.now() - splashShown)); // çok hızlı açılsa bile animasyon görünsün
   setTimeout(() => {
-    if (!(config.startHidden && process.argv.includes('--hidden'))) { win.show(); win.focus(); }
+    if (!(config.startHidden && (process.argv.includes('--hidden') || process.argv.includes('--autostart')))) { win.show(); win.focus(); }
     splash?.destroy(); splash = null;
   }, wait);
 }
@@ -145,8 +145,8 @@ function buildTray() {
     { label: 'Kanka Chat\'i aç', click: showWindow },
     { type: 'separator' },
     { label: lastStatus, enabled: false },
-    { label: 'Bilgisayar açılınca başlat', type: 'checkbox', checked: app.getLoginItemSettings().openAtLogin,
-      click: i => app.setLoginItemSettings({ openAtLogin: i.checked, args: ['--hidden'] }) },
+    { label: 'Bilgisayar açılınca başlat', type: 'checkbox', checked: autostartOn(),
+      click: i => { setAutostart(i.checked); } },
     { label: 'Sunucu adresini değiştir…', click: changeServer },
     { type: 'separator' },
     { label: 'Çıkış', click: () => { quitting = true; app.quit(); } },
@@ -230,11 +230,33 @@ ipcMain.on('kanka:titlebar', (e, color, symbol) => {
   try { win?.setTitleBarOverlay({ color, symbolColor: symbol, height: 34 }); win?.setBackgroundColor(color); } catch {}
   if (config.tbColor !== color || config.tbSymbol !== symbol) { config.tbColor = color; config.tbSymbol = symbol; saveConfig(); }
 });
+// ---------------- Bilgisayar açılınca başlat ----------------
+// Squirrel kurulumunda uygulama klasörü her güncellemede değişir; bu yüzden kalıcı Update.exe üzerinden başlatılır.
+const UPDATE_EXE = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
+const loginOpts = () => fs.existsSync(UPDATE_EXE)
+  ? { path: UPDATE_EXE, args: ['--processStart', `"${path.basename(process.execPath)}"`, '--process-start-args', '"--autostart"'] }
+  : { args: ['--autostart'] };
+const autostartOn = () => { try { return app.getLoginItemSettings(loginOpts()).openAtLogin; } catch { return false; } };
+function setAutostart(on) {
+  if (!app.isPackaged) return;
+  try { app.setLoginItemSettings({ ...loginOpts(), openAtLogin: !!on }); } catch {}
+  try { app.setLoginItemSettings({ openAtLogin: false, args: ['--hidden'] }); } catch {} // eski sürümün (klasöre bağlı) kaydını temizle
+  if (!!on) app.setLoginItemSettings({ ...loginOpts(), openAtLogin: true });
+  config.autostart = !!on; saveConfig();
+}
+ipcMain.handle('kanka:autostart', (e, p) => {
+  if (p && typeof p.on === 'boolean') setAutostart(p.on);
+  if (p && typeof p.hidden === 'boolean') { config.startHidden = p.hidden; saveConfig(); }
+  return { on: autostartOn(), hidden: !!config.startHidden };
+});
 ipcMain.handle('kanka:logout', () => { config.presenceKey = null; saveConfig(); return { ok: true }; });
 ipcMain.on('kanka:badge', (e, n) => { if (win && process.platform === 'win32') win.setOverlayIcon(n ? nativeImage.createFromPath(path.join(__dirname, 'dot.png')) : null, n ? `${n} okunmamış` : ''); win?.flashFrame(!!n && !win.isFocused()); });
 
 app.whenReady().then(async () => {
-  const hidden = config.startHidden && process.argv.includes('--hidden');
+  // İlk açılışta varsayılan olarak "bilgisayar açılınca başlat" açık
+  if (config.autostart === undefined) setAutostart(true);
+  else if (config.autostart && !autostartOn()) setAutostart(true); // güncellemeden sonra kayıt bozulduysa onar
+  const hidden = config.startHidden && (process.argv.includes('--hidden') || process.argv.includes('--autostart'));
   if (!hidden) createSplash();
   await new Promise(r => setTimeout(r, 350));
   setSplash('Güncellemeler denetleniyor…');

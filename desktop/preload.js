@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('kankaDesktop', {
   setPresenceKey: key => ipcRenderer.invoke('kanka:presenceKey', key),
   info: () => ipcRenderer.invoke('kanka:info'),
   sources: () => ipcRenderer.invoke('kanka:sources'),
+  autostart: p => ipcRenderer.invoke('kanka:autostart', p || null),
   pickSource: (id, audio) => ipcRenderer.invoke('kanka:pick', { id, audio }),
   logout: () => ipcRenderer.invoke('kanka:logout'),
   badge: n => ipcRenderer.send('kanka:badge', n),

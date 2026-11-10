@@ -1094,7 +1094,7 @@ function showSettings(tab = 'profile') {
   const draft = initDraft();
   const dirty = () => KEYS.some(k => (draft[k] || '') !== (u[k] || ''));
   modal(`<nav class="st-nav"><h4>KULLANICI AYARLARI</h4>
-      <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirimler</button>
+      <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button>
       <button class="out" id="st-out">${ic('logout')}Çıkış yap</button><div class="st-ver" id="st-ver">Kanka Chat</div><button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="st-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div><div class="mini-card" id="st-card"></div></aside>`, 'settings');
@@ -1136,7 +1136,10 @@ function showSettings(tab = 'profile') {
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'turuncu') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
       <div class="pc-sec" style="margin-top:18px"><label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
-    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Gürültü engelleme (mikrofon)</label>
+    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
+        <label class="switch">Bilgisayar açılınca Kanka Chat'i başlat<input type="checkbox" id="as-on"></label>
+        <label class="switch">Açılışta simge durumunda başlasın (saatin yanında)<input type="checkbox" id="as-hid"></label>
+        <p class="hint" id="as-note">${window.kankaDesktop.autostart ? '' : 'Bu ayar Kanka Chat 1.0.6 ile geliyor. Şimdilik saatin yanındaki simgeye sağ tıklayıp "Bilgisayar açılınca başlat"ı işaretleyebilirsin.'}</p></div>` : ''}<div class="st-field"><label>Gürültü engelleme (mikrofon)</label>
         ${[['gt', 'Yapay zekâ (önerilen)', 'Alkış, klavye, köpek, fan, kapı gibi sesleri bastırır, sadece konuşman gider. Discord\'daki Krisp gibi.'], ['rnn', 'Hafif', 'Sadece fan ve uğultu gibi sabit gürültüleri azaltır. Eski bilgisayarlar için.'], ['std', 'Standart', 'Tarayıcının kendi hafif gürültü azaltması.'], ['off', 'Kapalı', 'Mikrofon sesi olduğu gibi gider (stüdyo mikrofonu için).']]
           .map(([k, t, d]) => `<label class="chk"><input type="radio" name="ns" value="${k}" ${nsMode() === k ? 'checked' : ''}><span>${t}<small>${d}</small></span></label>`).join('')}</div>
       <p class="hint">Neler için haber verelim?</p>
@@ -1177,6 +1180,15 @@ function showSettings(tab = 'profile') {
       if (r.error) return toast(r.error);
       toast('Şifre değişti, tekrar giriş yap'); setTimeout(() => { store.set('kanka-token', null); location.reload(); }, 1200);
     });
+    if (t === 'notif' && $('#as-on')) {
+      const A = window.kankaDesktop.autostart;
+      if (!A) { $('#as-on').disabled = $('#as-hid').disabled = true; }
+      else {
+        A().then(r => { $('#as-on').checked = r.on; $('#as-hid').checked = r.hidden; $('#as-hid').disabled = !r.on; });
+        $('#as-on').onchange = e => A({ on: e.target.checked }).then(r => { $('#as-on').checked = r.on; $('#as-hid').disabled = !r.on; toast(r.on ? 'Bilgisayar açılınca Kanka Chat de açılacak' : 'Otomatik başlatma kapatıldı'); });
+        $('#as-hid').onchange = e => A({ hidden: e.target.checked }).then(() => toast(e.target.checked ? 'Açılışta saatin yanında, arka planda başlayacak' : 'Açılışta pencere açık başlayacak'));
+      }
+    }
     if (t === 'notif') $('#st-main').querySelectorAll('input[name=ns]').forEach(r => r.onchange = () => { setNS(r.value); toast('Gürültü engelleme ayarlandı'); });
     if (t === 'act') {
       const manual = () => ({ game: u.activities && !u.activities.auto ? u.activities.game?.name || '' : '', music: u.activities && !u.activities.auto ? u.activities.music : null });
