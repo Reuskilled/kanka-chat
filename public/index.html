@@ -1045,7 +1045,7 @@ function showSettings(tab = 'profile') {
       <div class="pc-sec" style="margin-top:18px"><label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
     notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Gürültü engelleme (mikrofon)</label>
-        ${[['rnn', 'Yapay zekâ (önerilen)', 'Klavye, fan, köpek, arka plan konuşması gibi sesleri bastırır. Discord\'daki Krisp gibi.'], ['std', 'Standart', 'Tarayıcının kendi hafif gürültü azaltması.'], ['off', 'Kapalı', 'Mikrofon sesi olduğu gibi gider (stüdyo mikrofonu için).']]
+        ${[['gt', 'Yapay zekâ (önerilen)', 'Alkış, klavye, köpek, fan, kapı gibi sesleri bastırır, sadece konuşman gider. Discord\'daki Krisp gibi.'], ['rnn', 'Hafif', 'Sadece fan ve uğultu gibi sabit gürültüleri azaltır. Eski bilgisayarlar için.'], ['std', 'Standart', 'Tarayıcının kendi hafif gürültü azaltması.'], ['off', 'Kapalı', 'Mikrofon sesi olduğu gibi gider (stüdyo mikrofonu için).']]
           .map(([k, t, d]) => `<label class="chk"><input type="radio" name="ns" value="${k}" ${nsMode() === k ? 'checked' : ''}><span>${t}<small>${d}</small></span></label>`).join('')}</div>
       <p class="hint">Neler için haber verelim?</p>
       <div class="pc-sec"><label class="switch">Etiketlendiğimde ve özel mesaj geldiğinde bildir<input type="checkbox" id="p-nt" ${notifOn() ? 'checked' : ''}></label>
@@ -2188,60 +2188,70 @@ function showPlaylist_() {
 }
 
 // ================= Sesli odalar =================
-// --- Gürültü engelleme (RNNoise, Krisp benzeri) ---
-const nsMode = () => store.get('kanka-ns') || 'rnn'; // rnn: yapay zekâ, std: tarayıcı, off: kapalı
-let nsCtx = null, nsWasm = null, nsNode = null, nsSrc = null, nsDest = null, rawStream = null;
-async function loadNS() {
-  if (nsWasm) return;
+// --- Gürültü engelleme ---
+// gt: GTCRN yapay zekâ modeli (alkış, klavye, köpek, fan; önerilen), rnn: RNNoise (hafif, sadece sabit uğultu), std: tarayıcı, off: kapalı
+const NS_AI = { gt: ['/vendor/ns/gtcrn.js', ['/vendor/ns/gtcrn.wasm'], '@sapphi-red/web-noise-suppressor/gtcrn'], rnn: ['/vendor/ns/rnnoise.js', ['/vendor/ns/rnnoise_simd.wasm', '/vendor/ns/rnnoise.wasm'], '@sapphi-red/web-noise-suppressor/rnnoise'] };
+const nsMode = () => { const m = store.get('kanka-ns'); return NS_AI[m] || m === 'std' || m === 'off' ? m : 'gt'; };
+let nsCtx = null, nsWasm = {}, nsNode = null, nsNodes = {}, nsSrc = null, nsDest = null, rawStream = null;
+async function loadNS(mode) {
   nsCtx ||= new AudioContext({ sampleRate: 48000 });
-  await nsCtx.audioWorklet.addModule('/vendor/ns/rnnoise.js');
-  let buf = await (await fetch('/vendor/ns/rnnoise_simd.wasm')).arrayBuffer();
-  if (!WebAssembly.validate(buf)) buf = await (await fetch('/vendor/ns/rnnoise.wasm')).arrayBuffer();
-  nsWasm = buf;
+  if (nsWasm[mode]) return;
+  const [js, wasms] = NS_AI[mode];
+  await nsCtx.audioWorklet.addModule(js);
+  for (const w of wasms) { const buf = await (await fetch(w)).arrayBuffer(); if (WebAssembly.validate(buf)) { nsWasm[mode] = buf; break; } }
+  if (!nsWasm[mode]) throw new Error('Model yüklenemedi');
 }
-function routeNS() {
+async function nodeFor(mode) {
+  if (nsNodes[mode]) return nsNodes[mode];
+  await loadNS(mode);
+  const n = new AudioWorkletNode(nsCtx, NS_AI[mode][2], { processorOptions: { maxChannels: 1, wasmBinary: nsWasm[mode].slice(0) } });
+  n.connect(nsDest); return nsNodes[mode] = n;
+}
+async function routeNS() {
   if (!nsSrc) return;
-  try { nsSrc.disconnect(nsNode); } catch {} try { nsSrc.disconnect(nsDest); } catch {}
-  nsSrc.connect(nsMode() === 'rnn' ? nsNode : nsDest);
+  const m = nsMode(); let target = nsDest;
+  if (NS_AI[m]) try { target = await nodeFor(m); } catch (e) { console.warn(e); }
+  for (const n of [nsDest, ...Object.values(nsNodes)]) try { nsSrc.disconnect(n); } catch {}
+  nsSrc.connect(target); nsNode = target === nsDest ? null : target;
 }
 async function getMic() {
   rawStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: nsMode() !== 'off', autoGainControl: true } });
   try {
-    await loadNS(); if (nsCtx.state === 'suspended') await nsCtx.resume();
-    nsSrc = nsCtx.createMediaStreamSource(rawStream); nsDest = nsCtx.createMediaStreamDestination();
-    nsNode = new AudioWorkletNode(nsCtx, '@sapphi-red/web-noise-suppressor/rnnoise', { processorOptions: { maxChannels: 1, wasmBinary: nsWasm.slice(0) } });
-    nsNode.connect(nsDest); routeNS();
+    nsCtx ||= new AudioContext({ sampleRate: 48000 }); if (nsCtx.state === 'suspended') await nsCtx.resume();
     if (nsCtx.state !== 'running') throw new Error('Ses motoru başlamadı: ' + nsCtx.state);
-    nsWatch();
+    nsSrc = nsCtx.createMediaStreamSource(rawStream); nsDest = nsCtx.createMediaStreamDestination();
+    await routeNS(); nsWatch();
     return nsDest.stream;
   } catch (e) { console.warn('Gürültü engelleme açılamadı', e); return rawStream; }
 }
 // Güvenlik: mikrofona ses geliyor ama işlenmiş çıkış sessizse, işlemeyi atla (sesin hiç gitmemesindense gürültülü gitsin)
 function nsWatch() {
-  const ain = nsCtx.createAnalyser(), aout = nsCtx.createAnalyser(); nsSrc.connect(ain); nsDest && nsNode.connect(aout);
+  const ain = nsCtx.createAnalyser(), aout = nsCtx.createAnalyser(); nsSrc.connect(ain);
+  const dst = nsCtx.createMediaStreamSource(nsDest.stream); dst.connect(aout);
   let tries = 0, heard = 0, passed = 0;
   const t = setInterval(() => {
     if (!nsSrc || !rawStream) return clearInterval(t);
-    const d = new Float32Array(1024); ain.getFloatTimeDomainData(d); const i = Math.max(...d.map(Math.abs));
-    aout.getFloatTimeDomainData(d); const o = Math.max(...d.map(Math.abs));
+    const d = new Float32Array(1024); ain.getFloatTimeDomainData(d); let i = 0; for (const v of d) i = Math.max(i, Math.abs(v));
+    aout.getFloatTimeDomainData(d); let o = 0; for (const v of d) o = Math.max(o, Math.abs(v));
     if (nsCtx.state !== 'running') nsCtx.resume().catch(() => {});
-    if (nsMode() === 'rnn' && i > .05) { heard++; if (o > .005) passed++; }
-    if (++tries > 600 || passed > 3) return clearInterval(t);
-    if (heard >= 25 && passed === 0) { clearInterval(t); store.set('kanka-ns', 'std'); routeNS(); renderNSBtn(); toast('Yapay zekâ gürültü engelleme bu cihazda çalışmadı, standart moda geçildi.'); }
+    if (NS_AI[nsMode()] && i > .05) { heard++; if (o > .005) passed++; }
+    if (++tries > 900 || passed > 3) return clearInterval(t);
+    if (heard >= 40 && passed === 0) { clearInterval(t); store.set('kanka-ns', 'std'); routeNS(); renderNSBtn(); toast('Yapay zekâ gürültü engelleme bu cihazda çalışmadı, standart moda geçildi.'); }
   }, 200);
 }
 function stopMic() {
   rawStream?.getTracks().forEach(t => t.stop()); rawStream = null;
-  try { nsSrc?.disconnect(); nsNode?.port.postMessage('destroy'); nsNode?.disconnect(); } catch {}
-  nsSrc = nsNode = nsDest = null;
+  try { nsSrc?.disconnect(); } catch {}
+  for (const n of Object.values(nsNodes)) try { n.port.postMessage('destroy'); n.disconnect(); } catch {}
+  nsSrc = nsNode = nsDest = null; nsNodes = {};
 }
 function setNS(mode) {
-  store.set('kanka-ns', mode === 'rnn' ? null : mode);
+  store.set('kanka-ns', mode === 'gt' ? null : mode);
   routeNS();
   rawStream?.getAudioTracks().forEach(t => t.applyConstraints({ echoCancellation: true, noiseSuppression: mode !== 'off', autoGainControl: true }).catch(() => {}));
   renderNSBtn();
 }
-function renderNSBtn() { const b = $('#vns'); if (!b) return; const on = nsMode() === 'rnn'; b.classList.toggle('off', !on); b.title = on ? 'Gürültü engelleme: açık' : 'Gürültü engelleme: kapalı'; }
+function renderNSBtn() { const b = $('#vns'); if (!b) return; const on = !!NS_AI[nsMode()]; b.classList.toggle('off', !on); b.title = on ? 'Gürültü engelleme: açık' : 'Gürültü engelleme: kapalı'; }
 let myVoice = null, localStream = null, muted = false, videoStream = null, videoKind = null, pttDown = false;
 const peers = {}, peerNames = {}, peerMedia = {}, peerVideo = {}, speaking = new Set();
 const vol = JSON.parse(store.get('kanka-vol') || '{}');
@@ -2320,7 +2330,7 @@ function closePeer(sid) {
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
 function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; }
-$('#vns').onclick = () => { const on = nsMode() !== 'rnn'; setNS(on ? 'rnn' : 'std'); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
+$('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
   socket.emit('voiceLeave'); cleanupVoice();
