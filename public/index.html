@@ -2437,7 +2437,7 @@ socket.on('media', ({ sid, name, cam, screen, streamId, viewers, q, audio }) => 
 const svol = JSON.parse(store.get('kanka-svol') || '{}');
 function closePeer(sid) {
   peers[sid]?.close(); delete peers[sid]; delete peerMedia[sid]; delete peerVideo[sid];
-  watchers.delete(sid); if (watching === sid) watching = null;
+  watchers.delete(sid); if (watching === sid) watching = null; if (focusSid === sid) focusSid = null;
   document.getElementById('a-' + sid)?.remove(); document.getElementById('as-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
@@ -2607,7 +2607,7 @@ function stopVideo(silent) {
 }
 function watchStream(sid, on = true) {
   if (on && watching && watching !== sid && peers[watching]) socket.emit('streamWatch', { to: watching, on: false });
-  if (on) watching = sid; else if (watching === sid) watching = null;
+  if (on) { watching = sid; focusSid = sid; } else { if (watching === sid) watching = null; if (focusSid === sid) focusSid = null; }
   socket.emit('streamWatch', { to: sid, on });
   const a = document.getElementById('as-' + sid); if (a) a.muted = !on;
   renderStage();
@@ -2683,7 +2683,7 @@ $('#vscreen').onclick = () => startVideo('screen');
 function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'cam'); $('#vscreen').classList.toggle('on', videoKind === 'screen'); }
 
 // --- Sahne (ses/görüntü kutucukları) ---
-let stageStats = null, pipClosed = null;
+let stageStats = null, pipClosed = null, focusSid = null;
 // Sesli oda görünümü: kutucukları ekranı dolduracak en büyük boyuta yerleştir (Discord gibi)
 function layoutStage() {
   const st = $('#stage'); if (!vview() || !st) return;
@@ -2775,7 +2775,8 @@ function renderStage() {
     return { sid, name: peerNames[sid] || '...', stream: show ? peerVideo[sid] : null, kind, m };
   })];
   st.classList.toggle('video', tiles.some(t => t.stream || t.kind === 'screen'));
-  st.classList.toggle('focus', !!watching && !!peers[watching]);
+  if (focusSid && !tiles.some(t => t.sid === focusSid && (t.stream || t.kind === 'screen'))) focusSid = null;
+  st.classList.toggle('focus', !!focusSid);
   const keep = new Set();
   for (const t of tiles) {
     keep.add(t.sid);
@@ -2784,11 +2785,21 @@ function renderStage() {
       el = document.createElement('div'); el.className = 'tile'; el.dataset.sid = t.sid;
       el.innerHTML = `<video autoplay playsinline muted></video><div class="tav"></div><div class="tbadge"></div><div class="live-ov" hidden></div><div class="tname"></div><div class="tctl"></div>${t.sid !== 'me' ? '<input class="tvol" type="range" min="0" max="1" step="0.05" title="Ses seviyesi" aria-label="Ses seviyesi">' : ''}`;
       el.ondblclick = () => el.querySelector('video').srcObject && (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.());
+      el.onclick = e => {
+        if (e.target.closest('button, input') || !vview()) return;
+        const sid = el.dataset.sid;
+        if (focusSid === sid) focusSid = null;                                        // büyükse ızgaraya dön
+        else if (sid !== 'me' && peerMedia[sid]?.screen && watching !== sid) return watchStream(sid);
+        else if (el.classList.contains('has-video') || el.classList.contains('screen')) focusSid = sid;
+        else return;
+        renderStage();
+      };
       st.appendChild(el);
       const r = el.querySelector('.tvol');
       if (r) r.oninput = e => { const a = document.getElementById('a-' + t.sid); if (a) a.volume = +e.target.value; vol[peerNames[t.sid]] = +e.target.value; store.set('kanka-vol', JSON.stringify(vol)); };
     }
-    const live = t.kind === 'screen', focus = t.sid !== 'me' && watching === t.sid;
+    const live = t.kind === 'screen', focus = focusSid === t.sid;
+    el.style.cursor = vview() && (t.stream || live) ? 'pointer' : '';
     el.dataset.vu = t.name;
     el.classList.toggle('speaking', speaking.has(t.name));
     el.classList.toggle('screen', live);
@@ -2800,12 +2811,12 @@ function renderStage() {
     el.querySelector('.tav').innerHTML = av(t.name);
     el.querySelector('.tname').textContent = t.sid === 'me' ? t.name + ' (sen)' : t.name;
     const viewers = t.sid === 'me' ? watchers.size : t.m?.viewers || 0, q = GO_Q[t.sid === 'me' ? goCur?.q : t.m?.q];
-    el.querySelector('.tbadge').innerHTML = live ? `<span class="red">${ic('live')}CANLI</span><span title="İzleyen">${ic('eye')}${viewers}</span>${q && !focus ? `<span>${q[4]} · ${q[5].replace(/^1440p /, '')}</span>` : ''}${focus ? '<span class="fpsx" hidden></span>' : ''}` : '';
+    el.querySelector('.tbadge').innerHTML = live ? `<span class="red">${ic('live')}CANLI</span><span title="İzleyen">${ic('eye')}${viewers}</span>${q && t.sid !== watching ? `<span>${q[4]} · ${q[5].replace(/^1440p /, '')}</span>` : ''}${t.sid === watching ? '<span class="fpsx" hidden></span>' : ''}` : '';
     const ov = el.querySelector('.live-ov');
-    ov.hidden = !(live && t.sid !== 'me' && !focus);
+    ov.hidden = !(live && t.sid !== 'me' && watching !== t.sid);
     if (!ov.hidden) { ov.innerHTML = `${ic('live')}<b>${esc(t.name)} yayında</b><button>Yayını izle</button>`; ov.querySelector('button').onclick = e => { e.stopPropagation(); watchStream(t.sid); }; }
     const ctl = el.querySelector('.tctl');
-    if (focus) {
+    if (t.sid !== 'me' && watching === t.sid) {
       if (!ctl.dataset.f) {
         ctl.dataset.f = '1';
         ctl.innerHTML = `${t.m?.audio ? `<input type="range" min="0" max="1" step="0.05" title="Yayın sesi" aria-label="Yayın sesi" value="${svol[t.name] ?? 1}">` : ''}<button data-fs title="Tam ekran" aria-label="Tam ekran">${ic('expand')}</button><button class="stop" data-stop>Yayından ayrıl</button>`;
