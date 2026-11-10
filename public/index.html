@@ -1083,6 +1083,7 @@ function showSettings(tab = 'profile') {
       const manual = () => ({ game: u.activities && !u.activities.auto ? u.activities.game?.name || '' : '', music: u.activities && !u.activities.auto ? u.activities.music : null });
       const setAct = (p, msg) => socket.emit('setActivity', p, () => { toast(msg); setTimeout(() => open('act'), 300); });
       socket.emit('presenceKey', {}, r => { const e = $('#kd-st'); if (!e) return; e.textContent = r.connected ? 'Bağlı' : 'Bağlı değil'; e.className = 'st ' + (r.connected ? 'on' : 'off'); });
+      window.kankaDesktop?.info?.().then(i => { const c = $('#kd-st')?.closest('.conn'); if (!c || !i) return; c.insertAdjacentHTML('afterend', `<p class="hint" style="margin-top:8px">Uygulama sürümü: <b>${esc(i.version)}</b>${i.version < '1.0.4' ? ' · <span style="color:var(--red)">eski, uygulamayı kapatıp açınca güncellenir</span>' : ''}<br>Şu an algılanan: <b>${esc(i.status || '-')}</b></p>`); }).catch(() => {});
       $('#gg').onclick = e => { const b = e.target.closest('[data-g]'); if (!b) return; const on = b.classList.contains('on'); setAct({ game: on ? '' : b.dataset.g, music: manual().music }, on ? 'Oyun kaldırıldı' : `${b.dataset.g} oynuyorsun`); };
       $('#g-set').onclick = () => setAct({ game: $('#g-custom').value, music: manual().music }, 'Oyun ayarlandı');
       $('#m-set').onclick = () => setAct({ game: manual().game, music: { title: $('#m-title').value, artist: $('#m-artist').value } }, 'Müzik ayarlandı');
