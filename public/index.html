@@ -554,6 +554,26 @@
   .tile video { background: #000; }
   .tile:fullscreen { border: none; border-radius: 0; } .tile:fullscreen video { object-fit: contain; }
 
+  /* ================= Sesli oda görünümü ve küçük pencere ================= */
+  body:not(.vview) #stage { display: none !important; }
+  body.vview #stage { flex: 1; max-height: none; border-bottom: none; align-content: center; padding: 16px; }
+  body.vview #messages, body.vview #typing, body.vview #replybar, body.vview #compose, body.vview #watch { display: none !important; }
+  body.vview #stage.focus .tile.focus { height: calc(100% - 130px) !important; max-height: none; }
+  body.vview #stage.video .tile:not(.focus) { width: 280px; height: 170px; }
+  .vv-bar { width: 100%; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; order: -2; }
+  .vv-bar b { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 15px; } .vv-bar .ic { width: 18px; height: 18px; color: var(--green); }
+  .vv-bar button { padding: 8px 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-weight: 800; font-size: 13px; }
+  #pip { position: fixed; z-index: 60; width: 360px; aspect-ratio: 16 / 9; min-width: 220px; max-width: 80vw; border-radius: 14px; overflow: hidden; background: #000; border: 1px solid var(--line);
+    box-shadow: 0 16px 40px rgba(0,0,0,.55); cursor: grab; touch-action: none; resize: horizontal; animation: popIn .2s var(--ease-out); }
+  #pip.drag { cursor: grabbing; transition: none; }
+  #pip video { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
+  #pip .plabel { position: absolute; left: 8px; bottom: 8px; padding: 3px 9px; border-radius: 8px; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+  #pip .plabel .red { background: #f23f43; padding: 1px 6px; border-radius: 5px; font-size: 10.5px; }
+  #pip .pbar { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
+  #pip:hover .pbar { opacity: 1; }
+  #pip .pbar button { width: 32px; height: 32px; border-radius: 9px; background: rgba(0,0,0,.65); color: #fff; display: flex; align-items: center; justify-content: center; }
+  #pip .pbar .ic { width: 16px; height: 16px; }
+
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
   .shead.srvbtn:hover, .shead.srvbtn.open { background: var(--hover); }
@@ -1249,11 +1269,11 @@ function renderSide() {
       return `<div class="label cat-label ${closed ? 'shut' : ''}" data-cat="${esc(k)}">${ic('chevron')}${esc(cat)}</div>` + list.filter(c => !closed || c.id === S.channel?.id || c.id === myVoice).map(row).join(''); }).join('');
   $('#side-list').querySelectorAll('[data-cat]').forEach(l => l.onclick = () => { const k = l.dataset.cat; shut.has(k) ? shut.delete(k) : shut.add(k); store.set('kanka-cats', JSON.stringify([...shut])); renderSide(); });
   $('#side-list').querySelectorAll('.room[data-id]:not(.vroom)').forEach(d => d.onclick = () => selectChannel(d.dataset.id));
-  $('#side-list').querySelectorAll('.vroom').forEach(d => d.onclick = () => joinVoice(d.dataset.id));
+  $('#side-list').querySelectorAll('.vroom').forEach(d => d.onclick = () => myVoice === d.dataset.id ? setVView(!vview()) : joinVoice(d.dataset.id));
   $('#side-list').querySelectorAll('[data-live]').forEach(b => b.onclick = e => {
     e.stopPropagation(); const n = b.dataset.live;
-    if (myVoice === b.dataset.ch) { const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); }
-    else { autoWatch = n; joinVoice(b.dataset.ch); }
+    if (myVoice === b.dataset.ch) { const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); setVView(true); }
+    else { autoWatch = n; joinVoice(b.dataset.ch).then(ok => ok && setVView(true)); }
   });
   $('#side-list').querySelectorAll('.label button').forEach(b => b.onclick = () => {
     const voiceRoom = b.dataset.t === 'voice';
@@ -1555,6 +1575,7 @@ function showInvite(s) {
 $('#menu-btn').onclick = e => { e.stopPropagation(); document.body.classList.toggle('drawer'); };
 document.addEventListener('click', e => { if (document.body.classList.contains('drawer') && !e.target.closest('#rail, #side, #menu-btn, #modal')) document.body.classList.remove('drawer'); });
 function selectChannel(id) {
+  document.body.classList.remove('vview'); renderPip();
   document.body.classList.remove('drawer');
   S.channel = S.server.channels.find(c => c.id === id);
   S.unread.delete(id);
@@ -1573,6 +1594,7 @@ function openDMHome() {
 }
 let friendTab = 'online';
 function showFriends(tab = friendTab) {
+  document.body.classList.remove('vview'); renderPip();
   friendTab = tab;
   S.view = 'dm'; S.channel = null; renderRail(); renderDMSide(); renderMembers();
   setWatch(null);
@@ -1622,6 +1644,7 @@ function openChat(id, other) {
   openDMChannel(id, other || id.slice(3).split('|').find(n => n !== S.me) || S.me);
 }
 function openDMChannel(id, other) {
+  document.body.classList.remove('vview'); renderPip();
   document.body.classList.remove('drawer');
   S.view = 'dm'; renderRail();
   S.channel = { id, with: other, dm: true };
@@ -1634,6 +1657,7 @@ function openDMChannel(id, other) {
 }
 const groupName = g => g.name || g.members.filter(n => n !== S.me).slice(0, 3).join(', ') + (g.members.length > 4 ? '…' : '');
 function openGroup(id) {
+  document.body.classList.remove('vview'); renderPip();
   const g = S.dms.find(d => d.id === id); if (!g) return;
   document.body.classList.remove('drawer');
   S.view = 'dm'; renderRail();
@@ -2408,7 +2432,7 @@ socket.on('media', ({ sid, name, cam, screen, streamId, viewers, q, audio }) => 
   peerNames[sid] = name; peerMedia[sid] = { cam, screen, streamId, viewers, q, audio };
   if (!screen && watching === sid) watching = null;
   if (screen && !was && autoWatch === name) { autoWatch = null; watchStream(sid); }
-  else if (screen && !was && watching !== sid) toast(`${esc(name)} yayın başlattı · izlemek için kutucuğuna tıkla`);
+  else if (screen && !was && watching !== sid) toast(`${esc(name)} yayın başlattı · izlemek için yanındaki CANLI rozetine tıkla`);
   renderStage();
 });
 const svol = JSON.parse(store.get('kanka-svol') || '{}');
@@ -2660,11 +2684,62 @@ $('#vscreen').onclick = () => startVideo('screen');
 function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'cam'); $('#vscreen').classList.toggle('on', videoKind === 'screen'); }
 
 // --- Sahne (ses/görüntü kutucukları) ---
-let stageStats = null;
+let stageStats = null, pipClosed = null;
+function setVView(on) {
+  on = !!on && !!myVoice;
+  document.body.classList.toggle('vview', on);
+  if (on) document.body.classList.remove('drawer');
+  renderStage();
+}
+const vview = () => document.body.classList.contains('vview');
+function pipSource() {
+  if (watching && peers[watching] && peerVideo[watching]) return { key: 'w' + watching, stream: peerVideo[watching], name: peerNames[watching], live: true };
+  for (const sid of Object.keys(peers)) if (peerMedia[sid]?.cam && peerVideo[sid] && !uNoVid.has(peerNames[sid])) return { key: 'c' + sid, stream: peerVideo[sid], name: peerNames[sid] };
+  if (videoStream) return { key: 'me' + videoKind, stream: videoStream, name: 'Sen', live: videoKind === 'screen', mine: true };
+  return null;
+}
+function renderPip() {
+  const src = myVoice && !vview() ? pipSource() : null;
+  let p = $('#pip');
+  if (!src || pipClosed === src.key) { p?.remove(); return; }
+  if (!p) {
+    p = document.createElement('div'); p.id = 'pip'; p.setAttribute('role', 'region'); p.setAttribute('aria-label', 'Küçük pencere');
+    p.innerHTML = `<video autoplay playsinline muted></video><div class="plabel"></div><div class="pbar"><button data-p="big" title="Büyüt" aria-label="Sesli oda görünümünü aç">${ic('expand')}</button><button data-p="x" title="Kapat" aria-label="Küçük pencereyi kapat">${ic('x')}</button></div>`;
+    document.body.appendChild(p);
+    let pos = null; try { pos = JSON.parse(store.get('kanka-pip') || 'null'); } catch {}
+    const place = (x, y) => { const r = p.getBoundingClientRect(); p.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px'; p.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px'; };
+    if (pos?.w) p.style.width = pos.w + 'px';
+    requestAnimationFrame(() => place(pos?.x ?? innerWidth - p.offsetWidth - 300, pos?.y ?? innerHeight - p.offsetHeight - 110));
+    let d = null;
+    p.onpointerdown = e => {
+      if (e.target.closest('button')) return;
+      const r = p.getBoundingClientRect();
+      if (e.clientX > r.right - 18 && e.clientY > r.bottom - 18) return; // köşeden boyutlandırma
+      d = { dx: e.clientX - r.left, dy: e.clientY - r.top, x0: e.clientX, y0: e.clientY, moved: false }; p.setPointerCapture(e.pointerId); p.classList.add('drag');
+    };
+    p.onpointermove = e => { if (!d) return; if (Math.abs(e.clientX - d.x0) + Math.abs(e.clientY - d.y0) > 4) d.moved = true; if (d.moved) place(e.clientX - d.dx, e.clientY - d.dy); };
+    p.onpointerup = () => {
+      if (!d) return; p.classList.remove('drag');
+      const r = p.getBoundingClientRect(); store.set('kanka-pip', JSON.stringify({ x: r.left, y: r.top, w: r.width }));
+      if (!d.moved) setVView(true);
+      d = null;
+    };
+    new ResizeObserver(() => { const r = p.getBoundingClientRect(); if (r.width) store.set('kanka-pip', JSON.stringify({ x: r.left, y: r.top, w: r.width })); }).observe(p);
+    p.querySelector('.pbar').onclick = e => { const b = e.target.closest('[data-p]'); if (!b) return; e.stopPropagation(); if (b.dataset.p === 'big') setVView(true); else { pipClosed = p.dataset.key; p.remove(); } };
+  }
+  p.dataset.key = src.key;
+  const v = p.querySelector('video'); if (v.srcObject !== src.stream) v.srcObject = src.stream;
+  p.querySelector('.plabel').innerHTML = `${src.live ? '<span class="red">CANLI</span>' : ''}${esc(src.name)}`;
+}
 function renderStage() {
   const st = $('#stage');
-  if (!myVoice) { st.classList.remove('on', 'focus'); st.innerHTML = ''; clearInterval(stageStats); stageStats = null; return; }
+  if (!myVoice) { st.classList.remove('on', 'focus'); st.innerHTML = ''; clearInterval(stageStats); stageStats = null; document.body.classList.remove('vview'); renderPip(); return; }
   st.classList.add('on');
+  renderPip();
+  let bar = st.querySelector('.vv-bar');
+  if (!bar) { bar = document.createElement('div'); bar.className = 'vv-bar'; st.prepend(bar); }
+  bar.innerHTML = `<b>${ic('volume')}${esc($('#vname')?.textContent || 'Sesli oda')}</b><button>${ic('chat')} Sohbete dön</button>`;
+  bar.querySelector('button').onclick = () => setVView(false);
   const tiles = [{ sid: 'me', name: S.me, stream: videoStream, kind: videoKind }, ...Object.keys(peers).map(sid => {
     const m = peerMedia[sid] || {}, kind = m.screen ? 'screen' : m.cam ? 'cam' : null;
     const show = kind === 'cam' ? !uNoVid.has(peerNames[sid]) : kind === 'screen' ? watching === sid : false;
