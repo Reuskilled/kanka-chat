@@ -500,7 +500,8 @@
   .hinv { margin-left: auto; margin-right: 6px; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--accent); }
   .hinv:hover { background: var(--hover); } .hinv .ic { width: 18px; height: 18px; }
 
-  #vns.off { opacity: .45; } #vns.off .ic { color: var(--muted); }
+  #vns { color: #23a55a; } #vns:not(.off) { background: rgba(35,165,90,.18); }
+  #vns.off { opacity: .55; color: var(--muted); background: none; }
 
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
@@ -2200,7 +2201,7 @@ async function loadNS() {
 }
 function routeNS() {
   if (!nsSrc) return;
-  try { nsSrc.disconnect(); } catch {}
+  try { nsSrc.disconnect(nsNode); } catch {} try { nsSrc.disconnect(nsDest); } catch {}
   nsSrc.connect(nsMode() === 'rnn' ? nsNode : nsDest);
 }
 async function getMic() {
@@ -2210,8 +2211,24 @@ async function getMic() {
     nsSrc = nsCtx.createMediaStreamSource(rawStream); nsDest = nsCtx.createMediaStreamDestination();
     nsNode = new AudioWorkletNode(nsCtx, '@sapphi-red/web-noise-suppressor/rnnoise', { processorOptions: { maxChannels: 1, wasmBinary: nsWasm.slice(0) } });
     nsNode.connect(nsDest); routeNS();
+    if (nsCtx.state !== 'running') throw new Error('Ses motoru başlamadı: ' + nsCtx.state);
+    nsWatch();
     return nsDest.stream;
   } catch (e) { console.warn('Gürültü engelleme açılamadı', e); return rawStream; }
+}
+// Güvenlik: mikrofona ses geliyor ama işlenmiş çıkış sessizse, işlemeyi atla (sesin hiç gitmemesindense gürültülü gitsin)
+function nsWatch() {
+  const ain = nsCtx.createAnalyser(), aout = nsCtx.createAnalyser(); nsSrc.connect(ain); nsDest && nsNode.connect(aout);
+  let tries = 0, heard = 0, passed = 0;
+  const t = setInterval(() => {
+    if (!nsSrc || !rawStream) return clearInterval(t);
+    const d = new Float32Array(1024); ain.getFloatTimeDomainData(d); const i = Math.max(...d.map(Math.abs));
+    aout.getFloatTimeDomainData(d); const o = Math.max(...d.map(Math.abs));
+    if (nsCtx.state !== 'running') nsCtx.resume().catch(() => {});
+    if (nsMode() === 'rnn' && i > .05) { heard++; if (o > .005) passed++; }
+    if (++tries > 600 || passed > 3) return clearInterval(t);
+    if (heard >= 25 && passed === 0) { clearInterval(t); store.set('kanka-ns', 'std'); routeNS(); renderNSBtn(); toast('Yapay zekâ gürültü engelleme bu cihazda çalışmadı, standart moda geçildi.'); }
+  }, 200);
 }
 function stopMic() {
   rawStream?.getTracks().forEach(t => t.stop()); rawStream = null;
