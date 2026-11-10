@@ -1261,6 +1261,20 @@ function renderSide() {
       socket.emit('createChannel', { serverId: s.id, name: v.name, type: b.dataset.t }, c => c.error ? toast(c.error) : !voiceRoom && selectChannel(c.id)));
   });
 }
+// ---- Yazmaya başlayınca mesaj kutusuna odaklan (Discord gibi) ----
+document.addEventListener('keydown', e => {
+  const inp = $('#input');
+  if (!inp || inp.disabled || document.activeElement === inp) return;
+  if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+  if (e.key.length !== 1 && e.key !== 'Backspace') return;              // sadece yazı tuşları (oklar, F tuşları, Esc vb. değil)
+  if (e.key === ' ' && document.activeElement?.closest('button, [role=button], a')) return;
+  if (typingTarget(e) || document.activeElement?.isContentEditable) return;
+  if ($('#modal').classList.contains('open') || $('.umenu') || $('#statusmenu') || $('#srvmenu')) return;
+  if ($('#compose').style.display === 'none' || !inp.offsetParent) return;
+  if (myVoice && pttOn() && e.code === 'KeyV') return;                 // bas-konuş tuşu yazıya dönüşmesin
+  inp.focus();                                                          // tuş, odak değiştikten sonra kutuya yazılır
+}, true);
+
 // ---- Kullanıcıya sağ tık (Discord gibi) ----
 const uNotes = JSON.parse(store.get('kanka-notes') || '{}'), uNicks = JSON.parse(store.get('kanka-nicks') || '{}'), uMuted = new Set(JSON.parse(store.get('kanka-umute') || '[]')), uNoVid = new Set(JSON.parse(store.get('kanka-novid') || '[]')), uIgnored = new Set(JSON.parse(store.get('kanka-ignore') || '[]'));
 const saveU = () => { store.set('kanka-notes', JSON.stringify(uNotes)); store.set('kanka-nicks', JSON.stringify(uNicks)); store.set('kanka-umute', JSON.stringify([...uMuted])); store.set('kanka-novid', JSON.stringify([...uNoVid])); store.set('kanka-ignore', JSON.stringify([...uIgnored])); };
