@@ -2293,6 +2293,7 @@ function makePeer(sid) {
       if (!a) { a = document.createElement('audio'); a.id = 'a-' + sid; a.autoplay = true; document.body.appendChild(a); }
       a.srcObject = e.streams[0] || new MediaStream([e.track]);
       a.volume = vol[peerNames[sid]] ?? 1; a.muted = uMuted.has(peerNames[sid]);
+      meter(sid, () => peerNames[sid], new MediaStream([e.track]));
     } else {
       peerVideo[sid] = new MediaStream([e.track]);
       e.track.onunmute = renderStage; e.track.onended = renderStage;
@@ -2326,7 +2327,7 @@ socket.on('signal', async ({ from, data }) => {
 socket.on('media', ({ sid, name, cam, screen }) => { peerNames[sid] = name; peerMedia[sid] = { cam, screen }; renderStage(); });
 function closePeer(sid) {
   peers[sid]?.close(); delete peers[sid]; delete peerMedia[sid]; delete peerVideo[sid];
-  document.getElementById('a-' + sid)?.remove(); renderStage();
+  document.getElementById('a-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
 function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; }
@@ -2405,30 +2406,49 @@ function stopVideo(silent) {
 }
 
 // --- Konuşma algılama ---
-let sdCtx = null, sdTimer = null, amSpeaking = false, quietSince = 0;
-function startSpeakDetect() {
-  stopSpeakDetect();
+// Herkes, duyduğu sesin kendisinden ölçer: yeşil halka sesle aynı anda yanar (sunucu üzerinden gecikmeli sinyal yok).
+let vaCtx = null, vaTimer = null;
+const vaMeters = {};
+function meter(key, nameOf, stream) {
   try {
-    sdCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const an = sdCtx.createAnalyser(); an.fftSize = 512;
-    sdCtx.createMediaStreamSource(localStream).connect(an);
-    const buf = new Uint8Array(an.fftSize);
-    sdTimer = setInterval(() => {
-      an.getByteTimeDomainData(buf);
-      let sum = 0; for (const v of buf) sum += (v - 128) ** 2;
-      const loud = Math.sqrt(sum / buf.length) > 6 && micLive();
-      if (loud) quietSince = Date.now();
-      const on = loud || (amSpeaking && Date.now() - quietSince < 350);
-      if (on !== amSpeaking) { amSpeaking = on; socket.emit('speaking', on); setSpeaking(S.me, socket.id, on); }
-    }, 90);
-  } catch {}
+    vaCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    if (vaCtx.state === 'suspended') vaCtx.resume().catch(() => {});
+    dropMeter(key);
+    const src = vaCtx.createMediaStreamSource(stream), an = vaCtx.createAnalyser();
+    an.fftSize = 512; an.smoothingTimeConstant = 0; src.connect(an);
+    vaMeters[key] = { src, an, buf: new Float32Array(512), nameOf, last: 0, on: false, floor: -60 };
+    vaTimer ||= setInterval(vaTick, 30);
+  } catch (e) { console.warn('Konuşma ölçer açılamadı', e); }
 }
-function stopSpeakDetect() { clearInterval(sdTimer); sdCtx?.close().catch(() => {}); sdCtx = null; if (amSpeaking) { amSpeaking = false; socket.emit('speaking', false); } }
+function dropMeter(key) {
+  const m = vaMeters[key]; if (!m) return;
+  try { m.src.disconnect(); } catch {}
+  if (m.on) setSpeaking(m.nameOf(), key, false);
+  delete vaMeters[key];
+  if (!Object.keys(vaMeters).length) { clearInterval(vaTimer); vaTimer = null; }
+}
+function vaTick() {
+  const now = performance.now();
+  if (vaCtx?.state === 'suspended') vaCtx.resume().catch(() => {});
+  for (const [key, m] of Object.entries(vaMeters)) {
+    m.an.getFloatTimeDomainData(m.buf);
+    let e = 0; for (const v of m.buf) e += v * v;
+    const db = 10 * Math.log10(e / m.buf.length + 1e-12);
+    // Gürültü tabanını yavaşça izle; konuşma tabanın 12 dB üstünde ve en az -50 dB olmalı
+    m.floor = db < m.floor ? db : m.floor + 0.02;
+    const loud = db > Math.max(-50, Math.min(m.floor, -55) + 12) && (key !== 'me' || micLive());
+    if (loud) m.last = now;
+    const on = loud || (m.on && now - m.last < 220);
+    if (on !== m.on) { m.on = on; setSpeaking(m.nameOf(), key, on); }
+  }
+}
+function startSpeakDetect() { meter('me', () => S.me, localStream); }
+function stopSpeakDetect() { dropMeter('me'); }
 function setSpeaking(name, sid, on) {
   on ? speaking.add(name) : speaking.delete(name);
   document.querySelectorAll(`[data-vu="${CSS.escape(name)}"]`).forEach(el => el.classList.toggle('speaking', on));
 }
-socket.on('speaking', ({ name, on, sid }) => setSpeaking(name, sid, on));
+
 
 // --- Bas-konuş ve susturma ---
 const pttOn = () => store.get('kanka-ptt') === 'on';
