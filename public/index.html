@@ -537,6 +537,7 @@
   .tile .live-ov { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.6)); color: #fff; z-index: 2; }
   .tile .live-ov[hidden], .tile .tbadge [hidden] { display: none; }
   .tile.focus .tvol { display: none; }
+  .tile:has(.live-ov:not([hidden])) .tav { display: none; }
   .tile .live-ov button { padding: 8px 16px; border-radius: 10px; background: #fff; color: #111; font-weight: 900; font-size: 13px; }
   .tile .tbadge { position: absolute; top: 6px; left: 6px; z-index: 3; display: flex; gap: 5px; }
   .tile .tbadge span { padding: 2px 7px; border-radius: 6px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 4px; }
@@ -548,19 +549,17 @@
   .tile .tctl button .ic { width: 16px; height: 16px; }
   .tile .tctl input { width: 90px; accent-color: #fff; }
   .tile .tctl .stop { width: auto; padding: 0 12px; font-weight: 800; font-size: 12.5px; background: #f23f43; }
-  #stage.focus { max-height: 72vh; }
-  #stage.focus .tile.focus { width: 100% !important; height: min(62vh, calc((100vw - 760px) * .5625)) !important; min-height: 240px; order: -1; border-radius: 14px; }
-  #stage.focus .tile:not(.focus) { width: 150px !important; height: 92px !important; }
+  #stage.focus .tile.focus { order: -1; border-radius: 14px; }
   .tile video { background: #000; }
   .tile:fullscreen { border: none; border-radius: 0; } .tile:fullscreen video { object-fit: contain; }
 
   /* ================= Sesli oda görünümü ve küçük pencere ================= */
   body:not(.vview) #stage { display: none !important; }
-  body.vview #stage { flex: 1; max-height: none; border-bottom: none; align-content: center; padding: 16px; }
+  body.vview #stage { flex: 1; max-height: none; border-bottom: none; align-content: flex-start; padding: 16px; position: relative; gap: 12px; overflow: hidden; }
+  body.vview #stage .tile { transition: none; }
+  body.vview #stage.on { animation: none; }
   body.vview #messages, body.vview #typing, body.vview #replybar, body.vview #compose, body.vview #watch { display: none !important; }
-  body.vview #stage.focus .tile.focus { height: calc(100% - 130px) !important; max-height: none; }
-  body.vview #stage.video .tile:not(.focus) { width: 280px; height: 170px; }
-  .vv-bar { width: 100%; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; order: -2; }
+  .vv-bar { position: absolute; top: 12px; left: 16px; right: 16px; display: flex; align-items: center; gap: 10px; z-index: 4; }
   .vv-bar b { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 15px; } .vv-bar .ic { width: 18px; height: 18px; color: var(--green); }
   .vv-bar button { padding: 8px 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-weight: 800; font-size: 13px; }
   #pip { position: fixed; z-index: 60; width: 360px; aspect-ratio: 16 / 9; min-width: 220px; max-width: 80vw; border-radius: 14px; overflow: hidden; background: #000; border: 1px solid var(--line);
@@ -2685,10 +2684,40 @@ function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'ca
 
 // --- Sahne (ses/görüntü kutucukları) ---
 let stageStats = null, pipClosed = null;
+// Sesli oda görünümü: kutucukları ekranı dolduracak en büyük boyuta yerleştir (Discord gibi)
+function layoutStage() {
+  const st = $('#stage'); if (!vview() || !st) return;
+  const tiles = [...st.querySelectorAll('.tile')], gap = 12, top = 64, pad = 16;
+  const W = st.clientWidth - pad * 2, H = st.clientHeight - top - pad;
+  if (!tiles.length || W <= 0 || H <= 0) return;
+  const size = (el, w, h) => { el.style.width = Math.floor(w) + 'px'; el.style.height = Math.floor(h) + 'px'; };
+  const focus = tiles.find(t => t.classList.contains('focus')), rest = tiles.filter(t => t !== focus);
+  let usedH;
+  if (focus) {
+    const sh = rest.length ? Math.min(150, H * .2) : 0;
+    const fh = H - (sh ? sh + gap : 0); size(focus, W, fh);
+    rest.forEach(t => size(t, sh * 16 / 9, sh));
+    usedH = H;
+  } else {
+    let best = { w: 0 };
+    for (let cols = 1; cols <= tiles.length; cols++) {
+      const rows = Math.ceil(tiles.length / cols);
+      let w = (W - gap * (cols - 1)) / cols, h = w * 9 / 16;
+      if (h * rows + gap * (rows - 1) > H) { h = (H - gap * (rows - 1)) / rows; w = h * 16 / 9; }
+      const score = w * (cols >= rows ? 1.25 : 1); // yan yana dizilim tercih edilir
+      if (score > (best.score || 0)) best = { w, h, rows, score };
+    }
+    tiles.forEach(t => size(t, best.w, best.h));
+    usedH = best.h * best.rows + gap * (best.rows - 1);
+  }
+  st.style.paddingTop = (top + Math.max(0, (H - usedH) / 2)) + 'px';
+}
+try { new ResizeObserver(() => layoutStage()).observe($('#stage')); } catch { window.addEventListener('resize', () => layoutStage()); }
 function setVView(on) {
   on = !!on && !!myVoice;
   document.body.classList.toggle('vview', on);
   if (on) document.body.classList.remove('drawer');
+  if (!on) { const st = $('#stage'); st.style.paddingTop = ''; st.querySelectorAll('.tile').forEach(t => t.style.width = t.style.height = ''); }
   renderStage();
 }
 const vview = () => document.body.classList.contains('vview');
@@ -2790,6 +2819,7 @@ function renderStage() {
     const r = el.querySelector('.tvol'); if (r) r.value = vol[t.name] ?? 1;
   }
   st.querySelectorAll('.tile').forEach(el => { if (!keep.has(el.dataset.sid)) el.remove(); });
+  layoutStage();
   // İzlenen yayının gerçek çözünürlüğü ve FPS'i
   if (watching && !stageStats) {
     let last = 0, lt = performance.now();
