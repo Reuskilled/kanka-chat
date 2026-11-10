@@ -500,6 +500,8 @@
   .hinv { margin-left: auto; margin-right: 6px; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--accent); }
   .hinv:hover { background: var(--hover); } .hinv .ic { width: 18px; height: 18px; }
 
+  #vns.off { opacity: .45; } #vns.off .ic { color: var(--muted); }
+
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
   .shead.srvbtn:hover, .shead.srvbtn.open { background: var(--hover); }
@@ -759,7 +761,7 @@
     <div id="side-list"></div>
     <div id="me">
       <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı</div><div class="vc" id="vname"></div>
-        <div class="btns"><button id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button></div></div>
+        <div class="btns"><button id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="vns" title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button></div></div>
       <div class="row1"><div id="me-av"></div><div><div class="n" id="me-name"></div><div class="s" id="me-lvl"></div></div>
         <button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
     </div>
@@ -1041,7 +1043,10 @@ function showSettings(tab = 'profile') {
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'turuncu') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
       <div class="pc-sec" style="margin-top:18px"><label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
-    notif: () => `<div class="st-page"><h3>Bildirimler</h3><p class="hint">Neler için haber verelim?</p>
+    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Gürültü engelleme (mikrofon)</label>
+        ${[['rnn', 'Yapay zekâ (önerilen)', 'Klavye, fan, köpek, arka plan konuşması gibi sesleri bastırır. Discord\'daki Krisp gibi.'], ['std', 'Standart', 'Tarayıcının kendi hafif gürültü azaltması.'], ['off', 'Kapalı', 'Mikrofon sesi olduğu gibi gider (stüdyo mikrofonu için).']]
+          .map(([k, t, d]) => `<label class="chk"><input type="radio" name="ns" value="${k}" ${nsMode() === k ? 'checked' : ''}><span>${t}<small>${d}</small></span></label>`).join('')}</div>
+      <p class="hint">Neler için haber verelim?</p>
       <div class="pc-sec"><label class="switch">Etiketlendiğimde ve özel mesaj geldiğinde bildir<input type="checkbox" id="p-nt" ${notifOn() ? 'checked' : ''}></label>
       <label class="switch">Tarayıcı bildirimleri (sekme arka plandayken)<input type="checkbox" id="p-bn" ${'Notification' in window && Notification.permission === 'granted' ? 'checked' : ''}></label></div></div>`,
   };
@@ -1079,6 +1084,7 @@ function showSettings(tab = 'profile') {
       if (r.error) return toast(r.error);
       toast('Şifre değişti, tekrar giriş yap'); setTimeout(() => { store.set('kanka-token', null); location.reload(); }, 1200);
     });
+    if (t === 'notif') $('#st-main').querySelectorAll('input[name=ns]').forEach(r => r.onchange = () => { setNS(r.value); toast('Gürültü engelleme ayarlandı'); });
     if (t === 'act') {
       const manual = () => ({ game: u.activities && !u.activities.auto ? u.activities.game?.name || '' : '', music: u.activities && !u.activities.auto ? u.activities.music : null });
       const setAct = (p, msg) => socket.emit('setActivity', p, () => { toast(msg); setTimeout(() => open('act'), 300); });
@@ -2181,6 +2187,44 @@ function showPlaylist_() {
 }
 
 // ================= Sesli odalar =================
+// --- Gürültü engelleme (RNNoise, Krisp benzeri) ---
+const nsMode = () => store.get('kanka-ns') || 'rnn'; // rnn: yapay zekâ, std: tarayıcı, off: kapalı
+let nsCtx = null, nsWasm = null, nsNode = null, nsSrc = null, nsDest = null, rawStream = null;
+async function loadNS() {
+  if (nsWasm) return;
+  nsCtx ||= new AudioContext({ sampleRate: 48000 });
+  await nsCtx.audioWorklet.addModule('/vendor/ns/rnnoise.js');
+  let buf = await (await fetch('/vendor/ns/rnnoise_simd.wasm')).arrayBuffer();
+  if (!WebAssembly.validate(buf)) buf = await (await fetch('/vendor/ns/rnnoise.wasm')).arrayBuffer();
+  nsWasm = buf;
+}
+function routeNS() {
+  if (!nsSrc) return;
+  try { nsSrc.disconnect(); } catch {}
+  nsSrc.connect(nsMode() === 'rnn' ? nsNode : nsDest);
+}
+async function getMic() {
+  rawStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: nsMode() !== 'off', autoGainControl: true } });
+  try {
+    await loadNS(); if (nsCtx.state === 'suspended') await nsCtx.resume();
+    nsSrc = nsCtx.createMediaStreamSource(rawStream); nsDest = nsCtx.createMediaStreamDestination();
+    nsNode = new AudioWorkletNode(nsCtx, '@sapphi-red/web-noise-suppressor/rnnoise', { processorOptions: { maxChannels: 1, wasmBinary: nsWasm.slice(0) } });
+    nsNode.connect(nsDest); routeNS();
+    return nsDest.stream;
+  } catch (e) { console.warn('Gürültü engelleme açılamadı', e); return rawStream; }
+}
+function stopMic() {
+  rawStream?.getTracks().forEach(t => t.stop()); rawStream = null;
+  try { nsSrc?.disconnect(); nsNode?.port.postMessage('destroy'); nsNode?.disconnect(); } catch {}
+  nsSrc = nsNode = nsDest = null;
+}
+function setNS(mode) {
+  store.set('kanka-ns', mode === 'rnn' ? null : mode);
+  routeNS();
+  rawStream?.getAudioTracks().forEach(t => t.applyConstraints({ echoCancellation: true, noiseSuppression: mode !== 'off', autoGainControl: true }).catch(() => {}));
+  renderNSBtn();
+}
+function renderNSBtn() { const b = $('#vns'); if (!b) return; const on = nsMode() === 'rnn'; b.classList.toggle('off', !on); b.title = on ? 'Gürültü engelleme: açık' : 'Gürültü engelleme: kapalı'; }
 let myVoice = null, localStream = null, muted = false, videoStream = null, videoKind = null, pttDown = false;
 const peers = {}, peerNames = {}, peerMedia = {}, peerVideo = {}, speaking = new Set();
 const vol = JSON.parse(store.get('kanka-vol') || '{}');
@@ -2189,7 +2233,7 @@ const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'st
 async function joinVoice(chId) {
   if (myVoice === chId) return true;
   if (!navigator.mediaDevices?.getUserMedia) return toast('Tarayıcın mikrofon erişimini desteklemiyor (localhost ya da https gerekli).');
-  try { if (!localStream) localStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  try { if (!localStream) localStream = await getMic(); }
   catch { toast('Mikrofon izni verilmedi.'); return false; }
   if (myVoice) leaveVoice(true);
   return new Promise(resolve => socket.emit('voiceJoin', chId, r => {
@@ -2259,10 +2303,12 @@ function closePeer(sid) {
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
 function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; }
+$('#vns').onclick = () => { const on = nsMode() !== 'rnn'; setNS(on ? 'rnn' : 'std'); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
+renderNSBtn();
 function leaveVoice(switching) {
   socket.emit('voiceLeave'); cleanupVoice();
   if (!switching) {
-    stopVideo(true); localStream?.getTracks().forEach(t => t.stop()); localStream = null; stopSpeakDetect();
+    stopVideo(true); localStream?.getTracks().forEach(t => t.stop()); localStream = null; stopMic(); stopSpeakDetect();
     $('#voicebar').style.display = 'none'; playSound('leave');
   }
   renderStage();
