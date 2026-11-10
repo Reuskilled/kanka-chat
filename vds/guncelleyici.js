@@ -66,14 +66,23 @@ async function checkCode() {
     const changed = [];
     for (const [a, b] of SYNC) syncPath(path.join(root, a), path.join(APP, b), changed);
     if (changed.length) log('Güncellenen dosyalar: ' + changed.join(', '));
-    if (changed.some(f => /^package(-lock)?\.json$/.test(f))) {
-      log('Paketler kuruluyor...');
-      execFileSync('cmd.exe', ['/c', 'npm install --omit=dev --no-audit --no-fund'], { cwd: APP, stdio: 'ignore', windowsHide: true });
-    }
+    if (changed.some(f => /^package(-lock)?\.json$/.test(f))) st.needNpm = true;
+    if (changed.some(f => f === 'server.js' || /^package/.test(f))) st.needRestart = true;
     st.sha = j.sha; save();
-    if (changed.some(f => f === 'server.js' || /^package/.test(f))) restartServer();
+    await finishPending();
     if (changed.includes('guncelleyici.js')) { log('Güncelleyici kendini güncelledi, yeniden başlıyor'); process.exit(0); }
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+}
+
+// Yarıda kalan işler (paket kurulumu, yeniden başlatma) bir sonraki turda tekrar denenir
+async function finishPending() {
+  if (st.needNpm) {
+    log('Paketler kuruluyor...');
+    if (process.platform === 'win32') execFileSync('cmd.exe', ['/c', 'npm install --omit=dev --no-audit --no-fund'], { cwd: APP, stdio: 'ignore', windowsHide: true });
+    else execFileSync('npm', ['install', '--omit=dev', '--no-audit', '--no-fund'], { cwd: APP, stdio: 'ignore' });
+    st.needNpm = false; save(); log('Paketler kuruldu');
+  }
+  if (st.needRestart) { restartServer(); st.needRestart = false; save(); }
 }
 
 async function checkDesktop() {
@@ -101,7 +110,7 @@ async function checkDesktop() {
 let busy = false, n = 0;
 async function tick() {
   if (busy) return; busy = true;
-  try { await checkCode(); } catch (e) { log('Hata (kod): ' + e.message); }
+  try { await finishPending(); await checkCode(); } catch (e) { log('Hata (kod): ' + e.message); }
   if (n++ % 5 === 0) try { await checkDesktop(); } catch (e) { log('Hata (masaüstü): ' + e.message); } // GitHub sınırı için 5 dakikada bir
   busy = false;
 }
