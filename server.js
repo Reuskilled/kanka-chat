@@ -48,7 +48,7 @@ app.get('/api/davet/:code', (req, res) => {
   const s = db.servers.find(x => x.invite === req.params.code);
   if (!s) return res.status(404).json({ error: 'Davet geçersiz ya da süresi dolmuş' });
   const mem = membersOf(s), on = new Set(onlineNames());
-  res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
+  res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, badges: srvBadges(s), banner: s.banner || null, bannerColor: s.bannerColor || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
 });
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 app.get('/api/surum', (req, res) => {
@@ -225,12 +225,24 @@ function seesChannel(s, c, n) {
   if (s.owner === n || can(s, n, 'manageChannels')) return true;
   return (s.memberRoles?.[n] || []).some(r => (c.allow || []).includes(r)) || (c.allowUsers || []).includes(n);
 }
+// ---------- Sunucu rozetleri ----------
+// resmi: Kanka HQ · dogrulanmis/partner: site yöneticisi verir · topluluk: 15+ üye ve 7+ gün
+const siteAdmin = n => !!n && (db.servers.find(x => x.id === 's1')?.owner === n || (db.siteAdmins || []).includes(n));
+function srvBadges(s) {
+  const b = [];
+  if (s.id === 's1') b.push({ id: 'resmi', since: s.createdAt || null });
+  for (const id of ['dogrulanmis', 'partner']) if (s.badges?.[id]) b.push({ id, by: s.badges[id].by, since: s.badges[id].time });
+  const age = Date.now() - (s.createdAt || 0);
+  if (s.id !== 's1' && membersOf(s).length >= 15 && (!s.createdAt || age > 7 * 864e5)) b.push({ id: 'topluluk' });
+  return b;
+}
 const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
   id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, public: s.public, roles: s.roles,
   emojis: s.emojis || {}, filter: !!s.filter, slow: s.slow || 0,
   channels: viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels, members: s.public ? Object.keys(db.users) : s.members,
   customRoles: s.customRoles, memberRoles: s.memberRoles, timeouts: Object.fromEntries(Object.entries(s.timeouts || {}).filter(([, t]) => t > Date.now())),
-  bans: viewer && (s.owner === viewer || can(s, viewer, 'ban')) ? s.bans : {}, myPerms: viewer ? [...permsOf(s, viewer)] : []
+  bans: viewer && (s.owner === viewer || can(s, viewer, 'ban')) ? s.bans : {}, myPerms: viewer ? [...permsOf(s, viewer)] : [],
+  badges: srvBadges(s), createdAt: s.createdAt || null, siteAdmin: siteAdmin(viewer)
 });
 const findChannel = chId => {
   for (const s of db.servers) { const c = s.channels.find(c => c.id === chId); if (c) return { s, c }; }
@@ -764,6 +776,17 @@ io.on('connection', socket => {
     if (!me || !s) return null;
     return (needAdmin ? roleOf(s, me) === 'admin' : isMod(s, me)) ? s : null;
   };
+  socket.on('serverBadge', ({ serverId, badge, on } = {}, cb = () => {}) => {
+    if (!siteAdmin(me)) return cb({ error: 'Rozetleri sadece Kanka Chat yönetimi verebilir' });
+    const s = db.servers.find(x => x.id === serverId);
+    if (!s || !['dogrulanmis', 'partner'].includes(badge)) return cb({ error: 'Geçersiz' });
+    s.badges ||= {};
+    if (on) s.badges[badge] = { by: me, time: Date.now() }; else delete s.badges[badge];
+    audit(s, me, on ? 'Rozet verdi' : 'Rozeti kaldırdı', badge === 'partner' ? 'Kanka Partner' : 'Doğrulanmış');
+    save(); pushServers(membersOf(s));
+    for (const n of membersOf(s)) if (on) io.to('user:' + n).emit('toast', `${s.name} artık ${badge === 'partner' ? 'Kanka Partner' : 'Doğrulanmış'} bir sunucu`);
+    cb({ ok: true });
+  });
   socket.on('updateServer', ({ serverId, name, icon, iconImg, banner, bannerColor, filter, slow } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
     if (filter !== undefined) { s.filter = !!filter; audit(s, me, filter ? 'Küfür filtresini açtı' : 'Küfür filtresini kapattı'); }
@@ -1021,7 +1044,7 @@ io.on('connection', socket => {
     if (!me) return;
     name = clean(name, 40); if (!name) return cb({ error: 'Sunucu adı gerekli' });
     const s = {
-      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: crypto.randomBytes(4).toString('hex'),
+      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], createdAt: Date.now(), roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: crypto.randomBytes(4).toString('hex'),
       channels: [{ id: id(), name: 'genel', type: 'text' }, { id: id(), name: 'Sohbet', type: 'voice' }]
     };
     db.servers.push(s); save();

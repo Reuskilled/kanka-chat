@@ -593,6 +593,22 @@
   #qs .qs-hint { margin-top: 8px; font-size: 12px; color: var(--muted); text-align: center; }
   .tm[title] { cursor: default; }
 
+  /* ================= Sunucu rozetleri ================= */
+  .sbadge-btn { display: inline-flex; padding: 0; background: none; border: none; cursor: pointer; flex-shrink: 0; border-radius: 50%; transition: transform .15s var(--ease-out); }
+  .sbadge-btn:hover { transform: scale(1.15); }
+  .sbadge { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+  .shead h3 { display: flex; align-items: center; gap: 6px; min-width: 0; } .shead h3 .sname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bcard { position: fixed; z-index: 95; width: 290px; padding: 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 18px 44px rgba(0,0,0,.55); animation: popIn .15s var(--ease-out); }
+  .bcard .bc-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .bcard .bc-top b { display: block; font-size: 17px; } .bcard .bc-top small { color: var(--muted); font-weight: 700; }
+  .bcard p { color: var(--ink); opacity: .85; font-size: 13.5px; line-height: 1.5; margin: 0; }
+  .bcard .bc-meta { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12.5px; color: var(--muted); font-weight: 700; } .bcard .bc-meta .ic { width: 14px; height: 14px; }
+  .bcard .bc-adm { margin-top: 12px; width: 100%; padding: 9px; border-radius: 10px; background: var(--hover); color: var(--red); font-weight: 800; }
+  #modal .srv.active::before, #modal .srv.active::after { display: none; }
+  .adm-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .adm-badges button { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 12px; background: var(--hover); font-weight: 800; }
+  .adm-badges button.on { box-shadow: inset 0 0 0 2px var(--accent); }
+
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
   .shead.srvbtn:hover, .shead.srvbtn.open { background: var(--hover); }
@@ -995,6 +1011,40 @@ const ICON = {
   idcopy: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h4M7 14h7M15 10h2"/>',
   folderPlus: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v5M9.5 13.5h5"/>'
 };
+// ---- Sunucu rozetleri (Discord'daki doğrulanmış/partner gibi) ----
+const BADGE_SHAPE = 'M23.75 12.00 L23.57 12.76 L23.08 13.46 L22.40 14.07 L21.68 14.59 L21.09 15.09 L20.73 15.62 L20.61 16.25 L20.68 17.01 L20.81 17.89 L20.87 18.80 L20.72 19.65 L20.31 20.31 L19.65 20.72 L18.80 20.87 L17.89 20.81 L17.01 20.68 L16.25 20.61 L15.62 20.73 L15.09 21.09 L14.59 21.68 L14.07 22.40 L13.46 23.08 L12.76 23.57 L12.00 23.75 L11.24 23.57 L10.54 23.08 L9.93 22.40 L9.41 21.68 L8.91 21.09 L8.38 20.73 L7.75 20.61 L6.99 20.68 L6.11 20.81 L5.20 20.87 L4.35 20.72 L3.69 20.31 L3.28 19.65 L3.13 18.80 L3.19 17.89 L3.32 17.01 L3.39 16.25 L3.27 15.62 L2.91 15.09 L2.32 14.59 L1.60 14.07 L0.92 13.46 L0.43 12.76 L0.25 12.00 L0.43 11.24 L0.92 10.54 L1.60 9.93 L2.32 9.41 L2.91 8.91 L3.27 8.38 L3.39 7.75 L3.32 6.99 L3.19 6.11 L3.13 5.20 L3.28 4.35 L3.69 3.69 L4.35 3.28 L5.20 3.13 L6.11 3.19 L6.99 3.32 L7.75 3.39 L8.38 3.27 L8.91 2.91 L9.41 2.32 L9.93 1.60 L10.54 0.92 L11.24 0.43 L12.00 0.25 L12.76 0.43 L13.46 0.92 L14.07 1.60 L14.59 2.32 L15.09 2.91 L15.62 3.27 L16.25 3.39 L17.01 3.32 L17.89 3.19 L18.80 3.13 L19.65 3.28 L20.31 3.69 L20.72 4.35 L20.87 5.20 L20.81 6.11 L20.68 6.99 L20.61 7.75 L20.73 8.38 L21.09 8.91 L21.68 9.41 L22.40 9.93 L23.08 10.54 L23.57 11.24 L23.75 12.00Z';
+const SRV_BADGES = {
+  resmi: { t: 'Resmi sunucu', c: '#F2652F', fg: '#fff', icon: '<path d="M6.5 15.5h11l1-7-3.6 2.6L12 6.8l-2.9 4.3L5.5 8.5z" fill="currentColor"/><rect x="6.6" y="16.4" width="10.8" height="1.8" rx=".9" fill="currentColor"/>',
+    d: 'Kanka Chat ekibinin yönettiği resmi sunucu. Duyurular, güncellemeler ve yeni özellikler ilk burada paylaşılır.' },
+  dogrulanmis: { t: 'Doğrulanmış', c: '#23a55a', fg: '#fff', icon: '<path d="M7 12.5l3.2 3.2L17.2 8.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
+    d: 'Bu sunucunun adını taşıdığı kişiye, ekibe ya da topluluğa gerçekten ait olduğu Kanka Chat yönetimi tarafından doğrulandı. Taklit sunuculara karşı güvence.' },
+  partner: { t: 'Kanka Partner', c: '#7c5cff', fg: '#fff', icon: '<path d="M8.6 9.2a3 3 0 1 0 0 5.6c1.6 0 2.4-1.4 3.4-2.8s1.8-2.8 3.4-2.8a3 3 0 1 1 0 5.6c-1.6 0-2.4-1.4-3.4-2.8S10.2 9.2 8.6 9.2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    d: 'Kanka Chat\'in öne çıkardığı, aktif ve iyi yönetilen topluluklardan biri. Partner sunucuları yönetim seçer.' },
+  topluluk: { t: 'Topluluk', c: '#f4e6d8', fg: '#2b1a12', icon: '<circle cx="12" cy="12" r="5.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.4 12h11.2M12 6.4c1.7 1.6 2.4 3.6 2.4 5.6s-.7 4-2.4 5.6c-1.7-1.6-2.4-3.6-2.4-5.6s.7-4 2.4-5.6z" fill="none" stroke="currentColor" stroke-width="1.6"/>',
+    d: 'En az 15 üyesi olan ve bir haftadan uzun süredir büyüyen bir topluluk. Bu rozet kendiliğinden kazanılır.' },
+};
+const badgeSvg = (id, size = 18) => { const b = SRV_BADGES[id]; return b ? `<svg class="sbadge" width="${size}" height="${size}" viewBox="0 0 24 24" style="color:${b.fg}" aria-hidden="true"><path d="${BADGE_SHAPE}" fill="${b.c}"/>${b.icon}</svg>` : ''; };
+const badgeRow = (s, size = 18) => (s?.badges || []).map(b => `<button type="button" class="sbadge-btn" data-sbadge="${b.id}" data-srv="${esc(s.id || '')}" title="${SRV_BADGES[b.id]?.t || ''}" aria-label="${SRV_BADGES[b.id]?.t || ''} rozeti">${badgeSvg(b.id, size)}</button>`).join('');
+function showBadgeCard(el, srv, id) {
+  document.querySelector('.bcard')?.remove();
+  const b = SRV_BADGES[id], info = (srv?.badges || []).find(x => x.id === id) || {};
+  const card = document.createElement('div'); card.className = 'bcard'; card.setAttribute('role', 'dialog');
+  card.innerHTML = `<div class="bc-top">${badgeSvg(id, 46)}<div><b>${b.t}</b><small>${esc(srv?.name || '')}</small></div></div><p>${b.d}</p>` +
+    (info.since && id !== 'topluluk' ? `<div class="bc-meta">${ic('clock')}${new Date(info.since).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}${id === 'resmi' ? ' tarihinden beri' : ' tarihinde verildi'}</div>` : '') +
+    (srv?.siteAdmin && (id === 'dogrulanmis' || id === 'partner') ? `<button class="bc-adm" data-rm="${id}">Rozeti kaldır</button>` : '');
+  document.body.appendChild(card);
+  const r = el.getBoundingClientRect(), w = card.offsetWidth;
+  card.style.left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8)) + 'px';
+  card.style.top = (r.bottom + 8 + card.offsetHeight > innerHeight ? r.top - card.offsetHeight - 8 : r.bottom + 8) + 'px';
+  const rm = card.querySelector('[data-rm]'); if (rm) rm.onclick = () => socket.emit('serverBadge', { serverId: srv.id, badge: id, on: false }, x => { card.remove(); x.error ? toast(x.error) : toast('Rozet kaldırıldı'); });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-sbadge]');
+  if (b) { e.stopPropagation(); e.preventDefault(); const srv = S.servers.find(x => x.id === b.dataset.srv) || window.__invSrv; return showBadgeCard(b, srv, b.dataset.sbadge); }
+  if (!e.target.closest('.bcard')) document.querySelector('.bcard')?.remove();
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelector('.bcard')?.remove(); });
+
 // Kanka rakun işareti: tek renk (currentColor), yüz maskeyle oyulur
 let logoN = 0;
 const LOGO_IN = id => `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#000"/><path d="M18 46 L20 17 C20.4 12.6 24.6 10.8 28 13.4 L44 28 Z" fill="#fff"/><path d="M82 46 L80 17 C79.6 12.6 75.4 10.8 72 13.4 L56 28 Z" fill="#fff"/><path d="M50 25 C72 25 86 37 89 53 L95 61 L88.5 63.5 C86 78 70 87 50 87 C30 87 14 78 11.5 63.5 L5 61 L11 53 C14 37 28 25 50 25 Z" fill="#fff"/><path d="M50 31 L53.2 45 L46.8 45 Z" fill="#000"/><path d="M15 56 C21 46 36 44.5 46 52 L50 55 L54 52 C64 44.5 79 46 85 56 C81 66.5 67 70.5 57.5 64.5 L50 60.5 L42.5 64.5 C33 70.5 19 66.5 15 56 Z" fill="#000"/><circle cx="33.5" cy="56" r="5.2" fill="#fff"/><circle cx="66.5" cy="56" r="5.2" fill="#fff"/><path d="M44.5 70 L55.5 70 C55.5 74.2 52.4 77.2 50 77.2 C47.6 77.2 44.5 74.2 44.5 70 Z" fill="#000"/></mask></defs><rect width="100" height="100" fill="currentColor" mask="url(#${id})"/>`;
@@ -1258,9 +1308,9 @@ function renderRail() {
   $('#join-srv').onclick = () => form('Sunucuya katıl', 'Arkadaşının gönderdiği davet linkini ya da kodunu yapıştır.', [{ k: 'code', p: 'Davet linki ya da kodu' }], v => joinInvite(v.code));
 }
 async function invitePreview(code) {
-  try { const r = await fetch('/api/davet/' + encodeURIComponent(code)); return await r.json(); } catch { return { error: 'Davet okunamadı' }; }
+  try { const r = await fetch('/api/davet/' + encodeURIComponent(code)); const p = await r.json(); window.__invSrv = { ...p, id: '__inv' }; return p; } catch { return { error: 'Davet okunamadı' }; }
 }
-const inviteHTML = p => `<div class="invite-prev ${p.banner || p.bannerColor ? 'has-banner' : ''}">${p.banner || p.bannerColor ? `<div class="ib" style="background-image:${p.banner ? `url('${esc(p.banner)}')` : `linear-gradient(135deg, ${p.bannerColor}, ${p.bannerColor}99)`}"></div>` : ''}<div class="si">${p.iconImg ? `<img src="${esc(p.iconImg)}" alt="">` : esc(p.icon)}</div><div><small>Sunucuya davet edildin</small><b style="font-size:17px">${esc(p.name)}</b><small><span class="on"></span>${p.online} çevrimiçi · ${p.members} üye</small></div></div>`;
+const inviteHTML = p => `<div class="invite-prev ${p.banner || p.bannerColor ? 'has-banner' : ''}">${p.banner || p.bannerColor ? `<div class="ib" style="background-image:${p.banner ? `url('${esc(p.banner)}')` : `linear-gradient(135deg, ${p.bannerColor}, ${p.bannerColor}99)`}"></div>` : ''}<div class="si">${p.iconImg ? `<img src="${esc(p.iconImg)}" alt="">` : esc(p.icon)}</div><div><small>Sunucuya davet edildin</small><b style="font-size:17px;display:flex;align-items:center;gap:6px">${badgeRow({ ...p, id: '__inv' }, 18)}${esc(p.name)}</b><small><span class="on"></span>${p.online} çevrimiçi · ${p.members} üye</small></div></div>`;
 (async () => {
   const code = new URLSearchParams(location.search).get('davet'); if (!code) return;
   const p = await invitePreview(code);
@@ -1303,7 +1353,7 @@ function renderSide() {
   $('#side-head').className = 'shead srvbtn' + (s.banner || s.bannerColor ? ' has-banner' : '');
   $('#side-head').style.backgroundImage = s.banner ? `url("${s.banner}")` : s.bannerColor ? `linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)` : '';
   $('#side-head').setAttribute('role', 'button'); $('#side-head').tabIndex = 0;
-  $('#side-head').innerHTML = `<h3>${esc(s.name)}</h3><button class="hinv" id="sh-inv" title="İnsanları davet et" aria-label="İnsanları davet et">${ic('userplus')}</button>${ic('chevron', 'chev')}`;
+  $('#side-head').innerHTML = `<h3>${badgeRow(s, 20)}<span class="sname">${esc(s.name)}</span></h3><button class="hinv" id="sh-inv" title="İnsanları davet et" aria-label="İnsanları davet et">${ic('userplus')}</button>${ic('chevron', 'chev')}`;
   $('#sh-inv').onclick = e => { e.stopPropagation(); showInvite(s); };
   $('#side-head').onclick = e => { e.stopPropagation(); toggleSrvMenu(); };
   $('#side-head').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSrvMenu(); } };
@@ -1510,7 +1560,9 @@ function showServerInfo(s) {
   const members = s.members || [], on = members.filter(n => S.online.has(n)).length;
   const text = s.channels.filter(c => c.type !== 'voice').length, voice = s.channels.length - text;
   modal(`${s.banner || s.bannerColor ? `<div class="bn-prev" style="margin:-8px -8px 14px;background-image:${s.banner ? `url('${esc(s.banner)}')` : `linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)`}"></div>` : ''}<div style="text-align:center"><div class="srv active" style="width:72px;height:72px;margin:0 auto 10px;font-size:28px;cursor:default">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div>
-    <h3>${esc(s.name)}</h3><p class="hint">${s.public ? 'Herkese açık sunucu' : `Kurucu: <b>${esc(s.owner || '—')}</b>`}</p></div>
+    <h3 style="display:flex;align-items:center;justify-content:center;gap:8px">${badgeRow(s, 22)}${esc(s.name)}</h3><p class="hint">${s.public ? 'Herkese açık sunucu' : `Kurucu: <b>${esc(s.owner || '—')}</b>`}</p></div>
+    ${(s.badges || []).length ? `<div class="sect" style="margin-top:6px"><h4>Rozetler</h4>${s.badges.map(b => `<div class="lrow" style="align-items:flex-start;gap:12px">${badgeSvg(b.id, 28)}<span><b>${SRV_BADGES[b.id].t}</b><br><small style="color:var(--muted)">${SRV_BADGES[b.id].d}</small></span></div>`).join('')}</div>` : ''}
+    ${s.siteAdmin ? `<div class="sect"><h4>Kanka Chat yönetimi</h4><div class="adm-badges">${['dogrulanmis', 'partner'].map(id => `<button data-adm="${id}" class="${(s.badges || []).some(b => b.id === id) ? 'on' : ''}">${badgeSvg(id, 20)}${(s.badges || []).some(b => b.id === id) ? SRV_BADGES[id].t + ' rozetini kaldır' : SRV_BADGES[id].t + ' yap'}</button>`).join('')}</div></div>` : ''}
     <div class="srvinfo"><div><b>${members.length}</b><span>Üye</span></div><div><b style="color:var(--green)">${on}</b><span>Çevrimiçi</span></div><div><b>${text}+${voice}</b><span>Oda</span></div></div>
     <div class="lrow"><span>Senin rolün</span>${badge(roleOf(s, S.me)) || '<span style="flex:0;color:var(--muted)">Üye</span>'}</div>
     <div class="lrow"><span>Özel emoji</span><span style="flex:0">${Object.keys(s.emojis || {}).length}</span></div>
@@ -1518,6 +1570,7 @@ function showServerInfo(s) {
     <div class="rowb"><button id="mx">Kapat</button>${s.public ? '' : `<button class="primary" id="si-inv">${ic('userplus')}Davet et</button>`}</div>`);
   $('#mx').onclick = closeModal;
   if (!s.public) $('#si-inv').onclick = () => showInvite(s);
+  $('#modal-box').querySelectorAll('[data-adm]').forEach(b => b.onclick = () => { const on = !b.classList.contains('on'); socket.emit('serverBadge', { serverId: s.id, badge: b.dataset.adm, on }, x => { if (x.error) return toast(x.error); toast(on ? 'Rozet verildi' : 'Rozet kaldırıldı'); setTimeout(() => showServerInfo(S.servers.find(y => y.id === s.id) || s), 250); }); });
 }
 function askTimeout(srv, n, after) {
   modal(`<h3>${ic('hourglass')}${esc(n)} susturulsun mu?</h3><p class="hint">Süre boyunca mesaj yazamaz ve sesli odalara giremez.</p>
@@ -1542,7 +1595,7 @@ function showServerSettings(s, tab, focus) {
       ${s.public ? '' : `<button class="out" id="ss-leave">${ic('door')}Sunucudan ayrıl</button>`}<button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="ss-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>SUNUCU</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div>
-      <div class="srv-card"><div class="sb" style="${s.banner ? `background:url('${esc(s.banner)}') center/cover` : s.bannerColor ? `background:linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)` : ''}"></div><div class="si">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div><div class="sx"><b>${esc(s.name)}</b><p>${s.members.length} üye · ${s.channels.length} oda · ${(s.customRoles || []).length} rol</p></div></div></aside>`, 'settings');
+      <div class="srv-card"><div class="sb" style="${s.banner ? `background:url('${esc(s.banner)}') center/cover` : s.bannerColor ? `background:linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)` : ''}"></div><div class="si">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div><div class="sx"><b style="display:flex;align-items:center;gap:6px">${badgeRow(s, 20)}${esc(s.name)}</b><p>${s.members.length} üye · ${s.channels.length} oda · ${(s.customRoles || []).length} rol</p></div></div></aside>`, 'settings');
   const close = () => { ssOpen = null; closeModal(); };
   $('#mx').onclick = close; $('#st-x').onclick = close;
   if ($('#ss-leave')) $('#ss-leave').onclick = () => confirmBox(`${s.name} sunucusundan ayrılmak istiyor musun?`, () => socket.emit('leaveServer', s.id, r => r.error ? toast(r.error) : (ssOpen = null, toast('Sunucudan ayrıldın'))));
@@ -3222,7 +3275,7 @@ socket.on('watch', ({ channelId, state }) => {
 });
 
 // ================= Küçük yardımcılar =================
-function modal(html, cls = '') { $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); }
+function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); }
 function closeModal() { $('#modal').classList.remove('open'); }
 $('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
 function form(title, hint, fields, onOk) {
