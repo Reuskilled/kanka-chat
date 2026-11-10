@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('kankaDesktop', {
   setTitlebar: (color, symbol) => ipcRenderer.send('kanka:titlebar', color, symbol),
   setPresenceKey: key => ipcRenderer.invoke('kanka:presenceKey', key),
   info: () => ipcRenderer.invoke('kanka:info'),
+  sources: () => ipcRenderer.invoke('kanka:sources'),
+  pickSource: (id, audio) => ipcRenderer.invoke('kanka:pick', { id, audio }),
   logout: () => ipcRenderer.invoke('kanka:logout'),
   badge: n => ipcRenderer.send('kanka:badge', n),
   onUpdateReady: cb => { ipcRenderer.on('kanka:update-ready', (e, v) => cb(v)); ipcRenderer.invoke('kanka:update-pending').then(p => p && cb('')); },

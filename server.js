@@ -345,7 +345,9 @@ function statusOf(name) {
 const presenceList = () => onlineNames().map(n => [n, statusOf(n)]).filter(x => x[1]);
 const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.startsWith('call:')).map(([k, m]) => [k, [...new Set(m.values())]]));
 const pushPresence = () => io.emit('presence', presenceList());
-const pushVoice = () => io.emit('voiceState', voiceState());
+const voiceMedia = new Map();       // socket.id -> { cam, screen } (yayın rozetleri için)
+const liveState = () => { const o = {}; for (const [ch, m] of voice) { if (ch.startsWith('call:')) continue; const l = [...m].filter(([sid]) => voiceMedia.get(sid)?.screen).map(([, n]) => n); if (l.length) o[ch] = l; } return o; };
+const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceLive', liveState()); };
 function pushServers(names) {
   for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
 }
@@ -469,7 +471,7 @@ io.on('connection', socket => {
     db.sessions[token] = name; save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), myStatus: db.users[name].presence || 'online',
-      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState()
+      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), live: liveState()
     };
   }
 
@@ -994,8 +996,18 @@ io.on('connection', socket => {
   });
 
   // ----- Ses: konuşma göstergesi -----
-  socket.on('speaking', on => { if (myVoice) io.emit('speaking', { name: me, on: !!on, sid: socket.id }); });
-  socket.on('media', st => { if (myVoice) socket.to('v:' + myVoice).emit('media', { sid: socket.id, name: me, cam: !!st?.cam, screen: !!st?.screen }); });
+  socket.on('media', st => {
+    if (!myVoice) return;
+    const was = voiceMedia.get(socket.id)?.screen, now = { cam: !!st?.cam, screen: !!st?.screen };
+    voiceMedia.set(socket.id, now);
+    socket.to('v:' + myVoice).emit('media', { sid: socket.id, name: me, ...now, streamId: clean(st?.streamId, 80), viewers: Math.min(+st?.viewers || 0, 99), q: clean(st?.q, 12), audio: !!st?.audio });
+    if (!!was !== now.screen) pushVoice();
+  });
+  // Yayın izleme: izleyici yayıncıya "izliyorum / bıraktım" der; yayıncı görüntüyü sadece izleyenlere gönderir
+  socket.on('streamWatch', ({ to, on } = {}) => {
+    if (!myVoice || !voice.get(myVoice)?.has(to)) return;
+    io.to(to).emit('streamWatch', { from: socket.id, name: me, on: !!on });
+  });
 
   socket.on('typing', () => { if (me && cur) socket.to(cur).emit('typing', { channelId: cur, name: me }); });
 
@@ -1050,6 +1062,7 @@ io.on('connection', socket => {
     if (room) { room.delete(socket.id); if (!room.size) voice.delete(myVoice); }
     socket.to('v:' + myVoice).emit('voiceLeft', socket.id);
     socket.leave('v:' + myVoice);
+    voiceMedia.delete(socket.id);
     myVoice = null;
     pushVoice();
   }

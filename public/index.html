@@ -503,6 +503,40 @@
   #vns { color: #23a55a; } #vns:not(.off) { background: rgba(35,165,90,.18); }
   #vns.off { opacity: .55; color: var(--muted); background: none; }
 
+  /* ================= Canlı yayın ================= */
+  .golive { width: min(640px, 94vw); }
+  .src-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; max-height: 290px; overflow-y: auto; margin: 6px 0 4px; padding: 2px; }
+  .src { border-radius: 12px; border: 2px solid var(--line); background: var(--card); padding: 6px; text-align: left; font-weight: 700; font-size: 12.5px; }
+  .src img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000; display: block; margin-bottom: 6px; }
+  .src span { display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .src span img { width: 16px; height: 16px; margin: 0; aspect-ratio: auto; background: none; }
+  .src.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pills button { padding: 9px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); font-weight: 800; font-size: 13px; text-align: left; }
+  .pills button small { display: block; color: var(--muted); font-weight: 700; font-size: 11px; }
+  .pills button.on { border-color: var(--accent); background: var(--accent-soft); }
+  .golive h4 { margin: 14px 0 6px; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+  .livebadge { display: inline-flex; align-items: center; margin-left: auto; padding: 1px 7px; border-radius: 6px; background: #f23f43; color: #fff; font-size: 10.5px; font-weight: 900; letter-spacing: .04em; cursor: pointer; }
+  .tile .live-ov { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.6)); color: #fff; z-index: 2; }
+  .tile .live-ov[hidden], .tile .tbadge [hidden] { display: none; }
+  .tile.focus .tvol { display: none; }
+  .tile .live-ov button { padding: 8px 16px; border-radius: 10px; background: #fff; color: #111; font-weight: 900; font-size: 13px; }
+  .tile .tbadge { position: absolute; top: 6px; left: 6px; z-index: 3; display: flex; gap: 5px; }
+  .tile .tbadge span { padding: 2px 7px; border-radius: 6px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 4px; }
+  .tile .tbadge .red { background: #f23f43; }
+  .tile .tbadge .ic { width: 12px; height: 12px; }
+  .tile .tctl { position: absolute; right: 6px; bottom: 6px; z-index: 3; display: flex; gap: 6px; align-items: center; opacity: 0; transition: opacity .15s; }
+  .tile:hover .tctl, .tile.focus .tctl { opacity: 1; }
+  .tile .tctl button { width: 32px; height: 32px; border-radius: 9px; background: rgba(0,0,0,.6); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .tile .tctl button .ic { width: 16px; height: 16px; }
+  .tile .tctl input { width: 90px; accent-color: #fff; }
+  .tile .tctl .stop { width: auto; padding: 0 12px; font-weight: 800; font-size: 12.5px; background: #f23f43; }
+  #stage.focus { max-height: 72vh; }
+  #stage.focus .tile.focus { width: 100% !important; height: min(62vh, calc((100vw - 760px) * .5625)) !important; min-height: 240px; order: -1; border-radius: 14px; }
+  #stage.focus .tile:not(.focus) { width: 150px !important; height: 92px !important; }
+  .tile video { background: #000; }
+  .tile:fullscreen { border: none; border-radius: 0; } .tile:fullscreen video { object-fit: contain; }
+
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
   .shead.srvbtn:hover, .shead.srvbtn.open { background: var(--hover); }
@@ -881,6 +915,9 @@ const ICON = {
   tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
   hourglass: '<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9"/>',
   up: '<path d="m6 15 6-6 6 6"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  live: '<circle cx="12" cy="12" r="2.5"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/>',
   usersPlus: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>',
   arrowDown: '<path d="M12 5v14M6 13l6 6 6-6"/>',
   bellOff: '<path d="M6 16v-5a6 6 0 0 1 9.2-5.1M18 11v5l2 2H8M10 21h4M3 3l18 18"/>',
@@ -963,7 +1000,7 @@ function onAuth(res) {
   store.set('kanka-token', res.token);
   S.me = res.user.name;
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
-  setPresence(res.online); S.myStatus = res.myStatus || 'online'; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice;
+  setPresence(res.online); S.myStatus = res.myStatus || 'online'; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {};
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ice?.length) ICE.iceServers = res.ice;
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
@@ -1182,7 +1219,7 @@ function renderSide() {
   const lock = c => c.private ? ic('lock', 'lockic') : c.readonly ? ic('megaphone', 'lockic') : '';
   const tRow = c => `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${S.unread.has(c.id) ? 'unread' : ''}" data-id="${c.id}"><div class="ico">${roomIcon(c)}</div>${esc(c.name)}${lock(c)}</div>`;
   const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''}" data-id="${c.id}"><div class="ico">${ic('volume')}</div>${esc(c.name)}${lock(c)}</div>` +
-      `<div class="vusers">${(S.voice[c.id] || []).map(n => `<div class="vuser ${speaking.has(n) ? 'speaking' : ''}" data-vu="${esc(n)}">${av(n)}${esc(n)}</div>`).join('')}</div>`;
+      `<div class="vusers">${(S.voice[c.id] || []).map(n => `<div class="vuser ${speaking.has(n) ? 'speaking' : ''}" data-vu="${esc(n)}">${av(n)}${esc(n)}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</div>`).join('')}</div>`;
   const row = c => c.type === 'voice' ? vRow(c) : tRow(c);
   const free = s.channels.filter(c => !c.category), text = free.filter(c => c.type !== 'voice'), voiceCh = free.filter(c => c.type === 'voice');
   const cats = [...new Set(s.channels.map(c => c.category).filter(Boolean))];
@@ -1195,6 +1232,11 @@ function renderSide() {
   $('#side-list').querySelectorAll('[data-cat]').forEach(l => l.onclick = () => { const k = l.dataset.cat; shut.has(k) ? shut.delete(k) : shut.add(k); store.set('kanka-cats', JSON.stringify([...shut])); renderSide(); });
   $('#side-list').querySelectorAll('.room[data-id]:not(.vroom)').forEach(d => d.onclick = () => selectChannel(d.dataset.id));
   $('#side-list').querySelectorAll('.vroom').forEach(d => d.onclick = () => joinVoice(d.dataset.id));
+  $('#side-list').querySelectorAll('[data-live]').forEach(b => b.onclick = e => {
+    e.stopPropagation(); const n = b.dataset.live;
+    if (myVoice === b.dataset.ch) { const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); }
+    else { autoWatch = n; joinVoice(b.dataset.ch); }
+  });
   $('#side-list').querySelectorAll('.label button').forEach(b => b.onclick = () => {
     const voiceRoom = b.dataset.t === 'voice';
     form(voiceRoom ? 'Yeni sesli oda' : 'Yeni oda', voiceRoom ? 'Arkadaşlarınla sesli konuşacağınız oda.' : 'Yeni bir sohbet odası aç.', [{ k: 'name', p: 'Oda adı' }], v =>
@@ -2281,14 +2323,19 @@ function makePeer(sid) {
   Object.assign(pc, { _polite: socket.id < sid, _making: false, _ignore: false });
   peers[sid] = pc;
   localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  if (videoStream) pc._vsender = pc.addTrack(videoStream.getVideoTracks()[0], videoStream);
+  if (videoStream) setTimeout(() => feedPeer(sid));
   pc.onicecandidate = e => e.candidate && socket.emit('signal', { to: sid, data: { ice: e.candidate } });
   pc.onnegotiationneeded = async () => {
     try { pc._making = true; await pc.setLocalDescription(); socket.emit('signal', { to: sid, data: { sdp: pc.localDescription } }); }
     catch (e) { console.warn(e); } finally { pc._making = false; }
   };
   pc.ontrack = e => {
-    if (e.track.kind === 'audio') {
+    const mic = document.getElementById('a-' + sid);
+    if (e.track.kind === 'audio' && e.streams[0] && (e.streams[0].id === peerMedia[sid]?.streamId || (mic?.srcObject && mic.srcObject.id !== e.streams[0].id))) {
+      let a = document.getElementById('as-' + sid);
+      if (!a) { a = document.createElement('audio'); a.id = 'as-' + sid; a.autoplay = true; document.body.appendChild(a); }
+      a.srcObject = new MediaStream([e.track]); a.volume = svol[peerNames[sid]] ?? 1; a.muted = watching !== sid;
+    } else if (e.track.kind === 'audio') {
       let a = document.getElementById('a-' + sid);
       if (!a) { a = document.createElement('audio'); a.id = 'a-' + sid; a.autoplay = true; document.body.appendChild(a); }
       a.srcObject = e.streams[0] || new MediaStream([e.track]);
@@ -2306,7 +2353,7 @@ function makePeer(sid) {
 }
 socket.on('voiceJoined', ({ sid, name }) => {
   peerNames[sid] = name; playSound('join');
-  if (myVoice) socket.emit('media', { cam: videoKind === 'cam', screen: videoKind === 'screen' });
+  sendMedia();
   renderStage();
 });
 socket.on('signal', async ({ from, data }) => {
@@ -2324,10 +2371,19 @@ socket.on('signal', async ({ from, data }) => {
     }
   } catch (e) { console.warn('ses bağlantısı', e); }
 });
-socket.on('media', ({ sid, name, cam, screen }) => { peerNames[sid] = name; peerMedia[sid] = { cam, screen }; renderStage(); });
+socket.on('media', ({ sid, name, cam, screen, streamId, viewers, q, audio }) => {
+  const was = peerMedia[sid]?.screen;
+  peerNames[sid] = name; peerMedia[sid] = { cam, screen, streamId, viewers, q, audio };
+  if (!screen && watching === sid) watching = null;
+  if (screen && !was && autoWatch === name) { autoWatch = null; watchStream(sid); }
+  else if (screen && !was && watching !== sid) toast(`${esc(name)} yayın başlattı · izlemek için kutucuğuna tıkla`);
+  renderStage();
+});
+const svol = JSON.parse(store.get('kanka-svol') || '{}');
 function closePeer(sid) {
   peers[sid]?.close(); delete peers[sid]; delete peerMedia[sid]; delete peerVideo[sid];
-  document.getElementById('a-' + sid)?.remove(); dropMeter(sid); renderStage();
+  watchers.delete(sid); if (watching === sid) watching = null;
+  document.getElementById('a-' + sid)?.remove(); document.getElementById('as-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
 function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; }
@@ -2378,32 +2434,105 @@ socket.on('ringCancel', ({ chatId }) => { if (ringing?.chatId === chatId) { stop
 socket.on('callDecline', ({ from, chatId }) => { if (outgoing?.chatId === chatId) { toast(`${from} aramayı reddetti`); if (!S.channel?.group) { outgoing = null; leaveVoice(false); } } });
 
 // --- Kamera / ekran paylaşımı ---
+// --- Kamera ve canlı yayın (Discord'daki "Yayın Başlat" gibi) ---
+// Kalite: [genişlik, yükseklik, FPS, kbps]. Yayın sadece "İzle"ye basanlara gönderilir; izlemeyenin internetini yemez.
+const GO_Q = { '720p30': [1280, 720, 30, 2500, '720p', '30 FPS'], '1080p30': [1920, 1080, 30, 4500, '1080p', '30 FPS'], '1080p60': [1920, 1080, 60, 8000, '1080p', '60 FPS'], 'src60': [2560, 1440, 60, 12000, 'Kaynak', '1440p 60 FPS'] };
+let goOpts = { q: '1080p30', audio: true, motion: true }; try { goOpts = { ...goOpts, ...JSON.parse(store.get('kanka-golive') || '{}') }; } catch {}
+let goCur = null, screenAudio = null, watching = null, autoWatch = null;
+const watchers = new Set();
+const mediaState = () => ({ cam: videoKind === 'cam', screen: videoKind === 'screen', streamId: videoStream?.id || null, viewers: watchers.size, q: videoKind === 'screen' ? goCur?.q : null, audio: !!screenAudio });
+const sendMedia = () => myVoice && socket.emit('media', mediaState());
+function feedPeer(sid) {
+  const pc = peers[sid]; if (!pc) return;
+  const share = !!videoStream && (videoKind === 'cam' || watchers.has(sid));
+  const vt = share ? videoStream.getVideoTracks()[0] : null, at = share && videoKind === 'screen' ? screenAudio : null;
+  if (pc._vsender) pc._vsender.replaceTrack(vt).catch(() => {}); else if (vt) pc._vsender = pc.addTrack(vt, videoStream);
+  if (pc._ssender) pc._ssender.replaceTrack(at).catch(() => {}); else if (at) pc._ssender = pc.addTrack(at, videoStream);
+  if (vt) tuneSender(pc);
+}
+const feedAll = () => Object.keys(peers).forEach(feedPeer);
+function tuneSender(pc, tries = 0) {
+  const snd = pc._vsender; if (!snd?.track) return;
+  const p = snd.getParameters();
+  if (!p.encodings?.length) { if (tries < 12) setTimeout(() => tuneSender(pc, tries + 1), 500); return; }
+  if (videoKind === 'screen') { const [, , fps, kbps] = GO_Q[goCur?.q] || GO_Q['1080p30']; p.encodings[0].maxBitrate = kbps * 1000; p.encodings[0].maxFramerate = fps; p.degradationPreference = goCur?.motion ? 'maintain-framerate' : 'maintain-resolution'; }
+  else { p.encodings[0].maxBitrate = 1500e3; p.encodings[0].maxFramerate = 30; }
+  snd.setParameters(p).catch(() => {});
+}
 async function startVideo(kind) {
   if (!myVoice) return;
   if (videoKind === kind) return stopVideo();
+  if (kind === 'screen') return showGoLive();
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } }); }
+  catch { return toast('Kamera izni verilmedi'); }
+  if (videoStream) stopVideo(true);
+  videoStream = stream; videoKind = 'cam';
+  stream.getVideoTracks()[0].onended = () => { if (videoStream === stream) stopVideo(); };
+  feedAll(); sendMedia(); updateVoiceBtns(); renderStage();
+}
+async function showGoLive() {
+  const desk = !!window.kankaDesktop?.sources;
+  let sources = [], pick = null;
+  if (desk) { try { sources = await window.kankaDesktop.sources(); pick = sources.find(x => !x.screen)?.id || sources[0]?.id; } catch {} }
+  const o = { ...goOpts };
+  const draw = () => {
+    modal(`<div class="golive"><h3>${ic('live')}Yayın başlat</h3><p class="hint">Sesli odadakiler yayınını görür, "İzle"ye basan izler. ${desk ? '' : 'Neyi paylaşacağını bir sonraki adımda tarayıcı soracak.'}</p>
+      ${desk && sources.length ? `<h4>NEYİ PAYLAŞACAKSIN?</h4><div class="src-grid">${sources.map(x => `<button class="src ${x.id === pick ? 'on' : ''}" data-src="${esc(x.id)}"><img src="${x.thumb}" alt=""><span>${x.icon ? `<img src="${x.icon}" alt="">` : ''}${x.screen ? ic('screen') : ''}${esc(x.name)}</span></button>`).join('')}</div>` : ''}
+      <h4>YAYIN KALİTESİ</h4><div class="pills" id="gl-q">${Object.entries(GO_Q).map(([k, q]) => `<button data-q="${k}" class="${o.q === k ? 'on' : ''}">${q[4]}<small>${q[5]}</small></button>`).join('')}</div>
+      <p class="hint" style="margin-top:6px">Her izleyici için yaklaşık ${(GO_Q[o.q][3] / 1000).toFixed(1)} Mbps yükleme hızı gerekir. İnternetin yavaşsa 720p seç.</p>
+      <h4>İÇERİK</h4><div class="pills" id="gl-m"><button data-m="1" class="${o.motion ? 'on' : ''}">Oyun / video<small>Akıcılık öncelikli</small></button><button data-m="0" class="${o.motion ? '' : 'on'}">Metin / kod / sunum<small>Netlik öncelikli</small></button></div>
+      <label class="chk" style="margin-top:8px"><input type="checkbox" id="gl-a" ${o.audio ? 'checked' : ''}><span>Bilgisayar sesini de paylaş<small>${desk ? 'Oyun ve video sesi yayına eklenir. Kulaklıksız kullanırsan arkadaşlarının sesi de karışabilir.' : 'Tarayıcının penceresinde "Sistem sesini paylaş" kutusunu da işaretle.'}</small></span></label>
+      <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="gl-go">${ic('live')}Yayına başla</button></div></div>`);
+    $('#mx').onclick = closeModal;
+    $('#modal-box').querySelectorAll('[data-src]').forEach(b => b.onclick = () => { pick = b.dataset.src; $('#modal-box').querySelectorAll('[data-src]').forEach(x => x.classList.toggle('on', x === b)); });
+    $('#gl-q').onclick = e => { const b = e.target.closest('[data-q]'); if (b) { o.q = b.dataset.q; draw(); } };
+    $('#gl-m').onclick = e => { const b = e.target.closest('[data-m]'); if (b) { o.motion = b.dataset.m === '1'; draw(); } };
+    $('#gl-a').onchange = e => o.audio = e.target.checked;
+    $('#gl-go').onclick = () => { goOpts = o; store.set('kanka-golive', JSON.stringify(o)); closeModal(); goLive(o, pick); };
+  };
+  draw();
+}
+async function goLive(o, sourceId) {
+  const [w, h, fps] = GO_Q[o.q];
   let stream;
   try {
-    stream = kind === 'screen'
-      ? await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: false })
-      : await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
-  } catch { return toast(kind === 'screen' ? 'Ekran paylaşımı iptal edildi' : 'Kamera izni verilmedi'); }
+    if (sourceId && window.kankaDesktop?.pickSource) await window.kankaDesktop.pickSource(sourceId, o.audio);
+    stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { width: { ideal: w, max: w }, height: { ideal: h, max: h }, frameRate: { ideal: fps, max: fps } },
+      audio: o.audio ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false, restrictOwnAudio: true, suppressLocalAudioPlayback: false } : false,
+      systemAudio: o.audio ? 'include' : 'exclude', selfBrowserSurface: 'exclude', surfaceSwitching: 'include'
+    });
+  } catch { return toast('Yayın başlatılmadı'); }
+  if (!myVoice) { stream.getTracks().forEach(t => t.stop()); return; }
   const track = stream.getVideoTracks()[0];
-  if (videoStream) videoStream.getTracks().forEach(t => t.stop());
-  videoStream = stream; videoKind = kind;
+  try { track.contentHint = o.motion ? 'motion' : 'detail'; } catch {}
+  if (videoStream) stopVideo(true);
+  videoStream = stream; videoKind = 'screen'; goCur = o; screenAudio = stream.getAudioTracks()[0] || null; watchers.clear();
   track.onended = () => { if (videoStream === stream) stopVideo(); };
-  for (const pc of Object.values(peers)) {
-    if (pc._vsender) pc._vsender.replaceTrack(track); else pc._vsender = pc.addTrack(track, stream);
-  }
-  socket.emit('media', { cam: kind === 'cam', screen: kind === 'screen' });
-  updateVoiceBtns(); renderStage();
+  feedAll(); sendMedia(); updateVoiceBtns(); renderStage();
+  playSound('join');
+  toast(`Yayındasın · ${GO_Q[o.q][4]} ${GO_Q[o.q][5]}${o.audio && !screenAudio ? '<br><small>Ses paylaşılamadı, sadece görüntü gidiyor.</small>' : ''}`);
 }
 function stopVideo(silent) {
   videoStream?.getTracks().forEach(t => t.stop());
-  videoStream = null; videoKind = null;
-  for (const pc of Object.values(peers)) pc._vsender?.replaceTrack(null);
-  if (!silent) socket.emit('media', { cam: false, screen: false });
+  videoStream = null; videoKind = null; screenAudio = null; goCur = null; watchers.clear();
+  for (const pc of Object.values(peers)) { pc._vsender?.replaceTrack(null).catch(() => {}); pc._ssender?.replaceTrack(null).catch(() => {}); }
+  if (!silent) sendMedia();
   updateVoiceBtns(); renderStage();
 }
+function watchStream(sid, on = true) {
+  if (on && watching && watching !== sid && peers[watching]) socket.emit('streamWatch', { to: watching, on: false });
+  if (on) watching = sid; else if (watching === sid) watching = null;
+  socket.emit('streamWatch', { to: sid, on });
+  const a = document.getElementById('as-' + sid); if (a) a.muted = !on;
+  renderStage();
+}
+socket.on('streamWatch', ({ from, name, on }) => {
+  if (on && videoKind === 'screen') { if (!watchers.has(from)) toast(`${esc(name)} yayınını izliyor`); watchers.add(from); } else watchers.delete(from);
+  feedPeer(from); sendMedia(); renderStage();
+});
+socket.on('voiceLive', l => { S.live = l; if (S.view === 'server' && S.server) renderSide(); });
 
 // --- Konuşma algılama ---
 // Herkes, duyduğu sesin kendisinden ölçer: yeşil halka sesle aynı anda yanar (sunucu üzerinden gecikmeli sinyal yok).
@@ -2470,39 +2599,72 @@ $('#vscreen').onclick = () => startVideo('screen');
 function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'cam'); $('#vscreen').classList.toggle('on', videoKind === 'screen'); }
 
 // --- Sahne (ses/görüntü kutucukları) ---
+let stageStats = null;
 function renderStage() {
   const st = $('#stage');
-  if (!myVoice) { st.classList.remove('on'); st.innerHTML = ''; return; }
+  if (!myVoice) { st.classList.remove('on', 'focus'); st.innerHTML = ''; clearInterval(stageStats); stageStats = null; return; }
   st.classList.add('on');
-  const tiles = [{ sid: 'me', name: S.me, stream: videoStream, kind: videoKind }, ...Object.keys(peers).map(sid => ({
-    sid, name: peerNames[sid] || '...', stream: (peerMedia[sid]?.cam || peerMedia[sid]?.screen) && !uNoVid.has(peerNames[sid]) ? peerVideo[sid] : null, kind: peerMedia[sid]?.screen ? 'screen' : peerMedia[sid]?.cam ? 'cam' : null
-  }))];
-  const hasVideo = tiles.some(t => t.stream);
-  st.classList.toggle('video', hasVideo);
+  const tiles = [{ sid: 'me', name: S.me, stream: videoStream, kind: videoKind }, ...Object.keys(peers).map(sid => {
+    const m = peerMedia[sid] || {}, kind = m.screen ? 'screen' : m.cam ? 'cam' : null;
+    const show = kind === 'cam' ? !uNoVid.has(peerNames[sid]) : kind === 'screen' ? watching === sid : false;
+    return { sid, name: peerNames[sid] || '...', stream: show ? peerVideo[sid] : null, kind, m };
+  })];
+  st.classList.toggle('video', tiles.some(t => t.stream || t.kind === 'screen'));
+  st.classList.toggle('focus', !!watching && !!peers[watching]);
   const keep = new Set();
   for (const t of tiles) {
     keep.add(t.sid);
     let el = st.querySelector(`.tile[data-sid="${t.sid}"]`);
     if (!el) {
       el = document.createElement('div'); el.className = 'tile'; el.dataset.sid = t.sid;
-      el.innerHTML = `<video autoplay playsinline muted></video><div class="tav"></div><div class="tname"></div>${t.sid !== 'me' ? '<input class="tvol" type="range" min="0" max="1" step="0.05" title="Ses seviyesi" aria-label="Ses seviyesi">' : ''}`;
-      el.ondblclick = () => el.querySelector('video').srcObject && (el.requestFullscreen?.() || el.querySelector('video').webkitEnterFullscreen?.());
+      el.innerHTML = `<video autoplay playsinline muted></video><div class="tav"></div><div class="tbadge"></div><div class="live-ov" hidden></div><div class="tname"></div><div class="tctl"></div>${t.sid !== 'me' ? '<input class="tvol" type="range" min="0" max="1" step="0.05" title="Ses seviyesi" aria-label="Ses seviyesi">' : ''}`;
+      el.ondblclick = () => el.querySelector('video').srcObject && (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.());
       st.appendChild(el);
       const r = el.querySelector('.tvol');
       if (r) r.oninput = e => { const a = document.getElementById('a-' + t.sid); if (a) a.volume = +e.target.value; vol[peerNames[t.sid]] = +e.target.value; store.set('kanka-vol', JSON.stringify(vol)); };
     }
+    const live = t.kind === 'screen', focus = t.sid !== 'me' && watching === t.sid;
     el.dataset.vu = t.name;
     el.classList.toggle('speaking', speaking.has(t.name));
-    el.classList.toggle('screen', t.kind === 'screen');
+    el.classList.toggle('screen', live);
+    el.classList.toggle('focus', focus);
     el.classList.toggle('has-video', !!t.stream);
     const v = el.querySelector('video');
     if (v.srcObject !== (t.stream || null)) v.srcObject = t.stream || null;
     v.classList.toggle('mirror', t.sid === 'me' && t.kind === 'cam');
     el.querySelector('.tav').innerHTML = av(t.name);
-    el.querySelector('.tname').textContent = (t.sid === 'me' ? t.name + ' (sen)' : t.name) + (t.kind === 'screen' ? ' · ekran' : '');
+    el.querySelector('.tname').textContent = t.sid === 'me' ? t.name + ' (sen)' : t.name;
+    const viewers = t.sid === 'me' ? watchers.size : t.m?.viewers || 0, q = GO_Q[t.sid === 'me' ? goCur?.q : t.m?.q];
+    el.querySelector('.tbadge').innerHTML = live ? `<span class="red">${ic('live')}CANLI</span><span title="İzleyen">${ic('eye')}${viewers}</span>${q && !focus ? `<span>${q[4]} · ${q[5].replace(/^1440p /, '')}</span>` : ''}${focus ? '<span class="fpsx" hidden></span>' : ''}` : '';
+    const ov = el.querySelector('.live-ov');
+    ov.hidden = !(live && t.sid !== 'me' && !focus);
+    if (!ov.hidden) { ov.innerHTML = `${ic('live')}<b>${esc(t.name)} yayında</b><button>Yayını izle</button>`; ov.querySelector('button').onclick = e => { e.stopPropagation(); watchStream(t.sid); }; }
+    const ctl = el.querySelector('.tctl');
+    if (focus) {
+      if (!ctl.dataset.f) {
+        ctl.dataset.f = '1';
+        ctl.innerHTML = `${t.m?.audio ? `<input type="range" min="0" max="1" step="0.05" title="Yayın sesi" aria-label="Yayın sesi" value="${svol[t.name] ?? 1}">` : ''}<button data-fs title="Tam ekran" aria-label="Tam ekran">${ic('expand')}</button><button class="stop" data-stop>Yayından ayrıl</button>`;
+        ctl.querySelector('[data-fs]').onclick = e => { e.stopPropagation(); document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.(); };
+        ctl.querySelector('[data-stop]').onclick = e => { e.stopPropagation(); watchStream(t.sid, false); };
+        const sv = ctl.querySelector('input'); if (sv) sv.oninput = e => { svol[t.name] = +e.target.value; store.set('kanka-svol', JSON.stringify(svol)); const a = document.getElementById('as-' + t.sid); if (a) a.volume = +e.target.value; };
+      }
+    } else if (t.sid === 'me' && live) {
+      if (ctl.dataset.f !== 'me') { ctl.dataset.f = 'me'; ctl.innerHTML = `<button class="stop" data-stop>Yayını bitir</button>`; ctl.querySelector('[data-stop]').onclick = e => { e.stopPropagation(); stopVideo(); }; }
+    } else { ctl.dataset.f = ''; ctl.innerHTML = ''; }
     const r = el.querySelector('.tvol'); if (r) r.value = vol[t.name] ?? 1;
   }
   st.querySelectorAll('.tile').forEach(el => { if (!keep.has(el.dataset.sid)) el.remove(); });
+  // İzlenen yayının gerçek çözünürlüğü ve FPS'i
+  if (watching && !stageStats) {
+    let last = 0, lt = performance.now();
+    stageStats = setInterval(() => {
+      const el = st.querySelector(`.tile[data-sid="${watching}"]`), v = el?.querySelector('video'), f = el?.querySelector('.fpsx');
+      if (!v || !f || !v.videoWidth) return;
+      const n = v.getVideoPlaybackQuality?.().totalVideoFrames || 0, now = performance.now();
+      const fps = Math.round((n - last) * 1000 / (now - lt)); last = n; lt = now;
+      f.hidden = false; f.textContent = `${v.videoHeight}p · ${fps} FPS`;
+    }, 1000);
+  } else if (!watching && stageStats) { clearInterval(stageStats); stageStats = null; }
 }
 socket.on('voiceState', v => { S.voice = v; if (S.view === 'server' && S.server) renderSide(); });
 if (!navigator.mediaDevices?.getDisplayMedia) $('#vscreen').style.display = 'none';

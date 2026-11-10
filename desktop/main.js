@@ -95,7 +95,12 @@ function createWindow() {
   win.webContents.session.setPermissionRequestHandler((wc, perm, cb) => cb(['media', 'notifications', 'clipboard-sanitized-write', 'fullscreen', 'display-capture'].includes(perm)));
   win.webContents.session.setDisplayMediaRequestHandler((req, cb) => {
     const { desktopCapturer } = require('electron');
-    desktopCapturer.getSources({ types: ['screen', 'window'], thumbnailSize: { width: 320, height: 180 } }).then(sources => pickSource(sources, cb));
+    const chosen = pendingPick; pendingPick = null;
+    desktopCapturer.getSources({ types: ['screen', 'window'], thumbnailSize: { width: 320, height: 180 } }).then(sources => {
+      const s = chosen && sources.find(x => x.id === chosen.id);
+      if (s) return cb(chosen.audio && process.platform === 'win32' ? { video: s, audio: 'loopback' } : { video: s });
+      pickSource(sources, cb);
+    }).catch(() => cb({}));
   }, { useSystemPicker: true });
   // Kapatınca tepsiye küçült
   win.on('close', e => {
@@ -107,6 +112,15 @@ function createWindow() {
     }
   });
 }
+
+// Uygulama içi yayın seçicisi: pencere ve ekranları küçük resimleriyle listeler
+let pendingPick = null;
+ipcMain.handle('kanka:sources', async () => {
+  const { desktopCapturer } = require('electron');
+  const list = await desktopCapturer.getSources({ types: ['window', 'screen'], thumbnailSize: { width: 384, height: 216 }, fetchWindowIcons: true });
+  return list.filter(x => x.name && !/^Kanka Chat$/.test(x.name)).map(x => ({ id: x.id, name: x.name, screen: x.id.startsWith('screen:'), thumb: x.thumbnail.toDataURL(), icon: x.appIcon && !x.appIcon.isEmpty() ? x.appIcon.resize({ width: 32 }).toDataURL() : null }));
+});
+ipcMain.handle('kanka:pick', (e, p) => { pendingPick = p && typeof p.id === 'string' ? { id: p.id, audio: !!p.audio } : null; return true; });
 
 function pickSource(sources, cb) {
   // Sistem seçicisi yoksa: basit bir seçim penceresi
