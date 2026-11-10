@@ -208,22 +208,29 @@ const findChannel = chId => {
 };
 const dmId = (a, b) => 'dm:' + [a, b].sort().join('|');
 const dmPeers = chId => chId.slice(3).split('|');
+const groupOf = chId => chId?.startsWith('g:') ? db.groups?.[chId.slice(2)] : null;
+const chatMembers = chId => chId.startsWith('dm:') ? dmPeers(chId) : groupOf(chId)?.members || [];
+const isPrivateChat = chId => chId?.startsWith('dm:') || chId?.startsWith('g:');
 function canAccess(name, chId) {
   if (!name || !chId) return false;
   if (chId.startsWith('dm:')) return dmPeers(chId).includes(name);
+  if (chId.startsWith('g:')) return !!groupOf(chId)?.members.includes(name);
   const f = findChannel(chId);
   return !!f && f.c.type === 'text' && (f.s.public || f.s.members.includes(name));
 }
 function dmsFor(name) {
-  return Object.keys(db.messages)
+  const dms = Object.keys(db.messages)
     .filter(k => k.startsWith('dm:') && dmPeers(k).includes(name) && db.messages[k].length)
-    .map(k => ({ id: k, with: dmPeers(k).find(n => n !== name) || name, last: db.messages[k].at(-1).time }))
-    .sort((a, b) => b.last - a.last);
+    .map(k => ({ id: k, with: dmPeers(k).find(n => n !== name) || name, last: db.messages[k].at(-1).time }));
+  const groups = Object.values(db.groups || {}).filter(g => g.members.includes(name))
+    .map(g => ({ id: 'g:' + g.id, group: true, name: g.name, members: g.members, owner: g.owner, last: db.messages['g:' + g.id]?.at(-1)?.time || g.created }));
+  return [...dms, ...groups].sort((a, b) => b.last - a.last);
 }
+const groupTitle = g => g.name || g.members.slice(0, 4).join(', ');
 const findMsg = (chId, msgId) => (db.messages[chId] || []).find(m => m.id === msgId);
 const roleOf = (s, n) => s.owner === n ? 'admin' : (s.roles?.[n] || 'member');
 const isMod = (s, n) => ['admin', 'mod'].includes(roleOf(s, n));
-const serverOf = chId => chId && !chId.startsWith('dm:') ? findChannel(chId)?.s : null;
+const serverOf = chId => chId && !isPrivateChat(chId) ? findChannel(chId)?.s : null;
 const UPLOAD_RE = /^\/uploads\/[a-f0-9]+\.(png|jpe?g|gif|webp)$/;
 
 const QUESTIONS = ['Issız bir adaya düşsen yanına alacağın 3 şey ne?', 'Hayatında izlediğin en iyi film hangisi?', 'Süper gücün olsa ne olurdu?', 'En sevdiğin yemek ne, kim yapıyor en iyisini?',
@@ -298,8 +305,19 @@ function badgesOf(u) {
 const online = new Map();            // socket.id -> kullanıcı adı
 const voice = new Map();             // kanal id -> Map(socket.id -> ad)
 const onlineNames = () => [...new Set(online.values())];
-const voiceState = () => Object.fromEntries([...voice].map(([k, m]) => [k, [...new Set(m.values())]]));
-const pushPresence = () => io.emit('presence', onlineNames());
+const idleSockets = new Set();
+function statusOf(name) {
+  const chosen = db.users[name]?.presence || 'online';
+  if (chosen === 'invisible') return null;
+  if (chosen === 'online') {
+    const socks = [...online].filter(([, n]) => n === name).map(([sid]) => sid);
+    if (socks.length && socks.every(sid => idleSockets.has(sid))) return 'idle';
+  }
+  return chosen;
+}
+const presenceList = () => onlineNames().map(n => [n, statusOf(n)]).filter(x => x[1]);
+const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.startsWith('call:')).map(([k, m]) => [k, [...new Set(m.values())]]));
+const pushPresence = () => io.emit('presence', presenceList());
 const pushVoice = () => io.emit('voiceState', voiceState());
 function pushServers(names) {
   for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(serverView));
@@ -368,10 +386,10 @@ function postMessage(me, chId, p = {}) {
   }
 
   // Bildirimler
-  const where = chId.startsWith('dm:') ? 'özel mesaj' : (() => { const f = findChannel(chId); return `${f.s.name} › ${f.c.name}`; })();
+  const where = chId.startsWith('dm:') ? 'özel mesaj' : chId.startsWith('g:') ? groupTitle(groupOf(chId)) : (() => { const f = findChannel(chId); return `${f.s.name} › ${f.c.name}`; })();
   const preview = (msg.text || msg.plan?.title || msg.poll?.question || msg.song?.title || (msg.game ? 'bir oyun başlattı' : 'görsel gönderdi')).slice(0, 120);
-  if (chId.startsWith('dm:')) {
-    for (const n of dmPeers(chId)) {
+  if (isPrivateChat(chId)) {
+    for (const n of chatMembers(chId)) {
       io.to('user:' + n).emit('dms', dmsFor(n));
       if (n !== me) io.to('user:' + n).emit('notify', { from: me, text: preview, channelId: chId, where, dm: true });
     }
@@ -421,7 +439,7 @@ io.on('connection', socket => {
     const token = crypto.randomBytes(24).toString('hex');
     db.sessions[token] = name; save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
-      token, user: pubUser(db.users[name]), users: allUsers(), online: onlineNames(),
+      token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), myStatus: db.users[name].presence || 'online',
       servers: serversFor(name).map(serverView), dms: dmsFor(name), voice: voiceState()
     };
   }
@@ -468,6 +486,67 @@ io.on('connection', socket => {
     const s = serverOf(chId); if (s) dailyQuestion(s);
     cb({ messages: (db.messages[chId] || []).slice(-150), playlist: db.playlists[chId] || [], watch: watch.get(chId) || null });
   });
+
+  // ----- Durum -----
+  socket.on('setStatus', (st, cb = () => {}) => {
+    if (!me || !['online', 'idle', 'dnd', 'invisible'].includes(st)) return cb({ error: 'Geçersiz durum' });
+    db.users[me].presence = st; save(); pushPresence(); cb({ ok: true });
+  });
+  socket.on('idle', on => { on ? idleSockets.add(socket.id) : idleSockets.delete(socket.id); pushPresence(); });
+
+  // ----- Eski mesajlar -----
+  socket.on('history', ({ before } = {}, cb = () => {}) => {
+    if (!canAccess(me, cur)) return cb({ messages: [] });
+    const list = db.messages[cur] || [], i = list.findIndex(m => m.id === before);
+    if (i <= 0) return cb({ messages: [], more: false });
+    cb({ messages: list.slice(Math.max(0, i - 100), i), more: i > 100 });
+  });
+
+  // ----- Grup sohbetleri -----
+  const pushDms = names => names.forEach(n => io.to('user:' + n).emit('dms', dmsFor(n)));
+  socket.on('createGroup', ({ members, name } = {}, cb = () => {}) => {
+    if (!me) return;
+    const list = [...new Set((members || []).filter(n => db.users[n] && n !== me))].slice(0, 9);
+    if (list.length < 2) return cb({ error: 'Grup için en az 2 kişi seç' });
+    if (list.some(n => db.users[n].blocked?.includes(me))) return cb({ error: 'Seçtiğin kişilerden biri seni ekleyemez' });
+    if (limited('grp|' + me, 10, 3600e3)) return cb({ error: 'Çok fazla grup açtın, biraz bekle' });
+    db.groups ||= {};
+    const g = { id: id(), name: clean(name, 40), members: [me, ...list], owner: me, created: Date.now() };
+    db.groups[g.id] = g; save();
+    const sys = { id: id(), kind: 'system', time: Date.now(), text: `${me} grubu oluşturdu`, reactions: {} };
+    (db.messages['g:' + g.id] ||= []).push(sys);
+    pushDms(g.members);
+    cb({ id: 'g:' + g.id });
+  });
+  socket.on('groupUpdate', ({ id: gid, name, add, leave } = {}, cb = () => {}) => {
+    const g = groupOf(gid); if (!g || !g.members.includes(me)) return cb({ error: 'Grup bulunamadı' });
+    const before = [...g.members], notes = [];
+    if (name !== undefined) { g.name = clean(name, 40); notes.push(`${me} grubun adını "${g.name || 'adsız'}" yaptı`); }
+    if (add?.length) {
+      const fresh = add.filter(n => db.users[n] && !g.members.includes(n) && !db.users[n].blocked?.includes(me)).slice(0, 10 - g.members.length);
+      if (!fresh.length) return cb({ error: 'Eklenecek kimse yok (en fazla 10 kişi)' });
+      g.members.push(...fresh); notes.push(`${me}, ${fresh.join(', ')} kişisini ekledi`);
+    }
+    if (leave) {
+      g.members = g.members.filter(n => n !== me); notes.push(`${me} gruptan ayrıldı`);
+      if (g.owner === me) g.owner = g.members[0] || null;
+      if (!g.members.length) { delete db.groups[g.id]; delete db.messages[gid]; }
+    }
+    for (const t of notes) if (db.groups[g.id]) {
+      const sys = { id: id(), kind: 'system', time: Date.now(), text: t, reactions: {} };
+      (db.messages[gid] ||= []).push(sys); io.to(gid).emit('message', { channelId: gid, msg: sys });
+    }
+    save(); pushDms([...new Set([...before, ...g.members])]); cb({ ok: true });
+  });
+
+  // ----- Özel arama (DM ve grup) -----
+  socket.on('ring', ({ chId, video } = {}) => {
+    if (!isPrivateChat(chId) || !canAccess(me, chId)) return;
+    for (const n of chatMembers(chId)) if (n !== me && !db.users[n]?.blocked?.includes(me))
+      io.to('user:' + n).emit('ring', { from: me, chatId: chId, callId: 'call:' + chId, video: !!video, title: chId.startsWith('g:') ? groupTitle(groupOf(chId)) : me });
+  });
+  socket.on('ringCancel', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('ringCancel', { chatId: chId }); });
+  socket.on('callDecline', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('callDecline', { from: me, chatId: chId }); });
 
   socket.on('openDM', (other, cb) => {
     if (!me || !db.users[other] || other === me) return cb({ error: 'Kullanıcı bulunamadı' });
@@ -868,8 +947,10 @@ io.on('connection', socket => {
     pushVoice();
   }
   socket.on('voiceJoin', (chId, cb = () => {}) => {
-    const f = findChannel(chId);
-    if (!me || !f || f.c.type !== 'voice' || !(f.s.public || f.s.members.includes(me))) return cb({ error: 'Erişim yok' });
+    const isCall = typeof chId === 'string' && chId.startsWith('call:');
+    const f = isCall ? null : findChannel(chId);
+    if (!me) return cb({ error: 'Erişim yok' });
+    if (isCall ? !canAccess(me, chId.slice(5)) || !isPrivateChat(chId.slice(5)) : (!f || f.c.type !== 'voice' || !(f.s.public || f.s.members.includes(me)))) return cb({ error: 'Erişim yok' });
     leaveVoice();
     const room = voice.get(chId) || new Map();
     const peers = [...room].map(([sid, name]) => ({ sid, name }));
@@ -887,7 +968,7 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     leaveVoice();
-    online.delete(socket.id);
+    online.delete(socket.id); idleSockets.delete(socket.id);
     pushPresence();
   });
 });
