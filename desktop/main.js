@@ -150,6 +150,7 @@ async function changeServer() {
 }
 
 // ---------------- Oyun ve Spotify algılama ----------------
+const PS_DETECT = 'WwBDAG8AbgBzAG8AbABlAF0AOgA6AE8AdQB0AHAAdQB0AEUAbgBjAG8AZABpAG4AZwA9AFsAVABlAHgAdAAuAEUAbgBjAG8AZABpAG4AZwBdADoAOgBVAFQARgA4AAoARwBlAHQALQBQAHIAbwBjAGUAcwBzACAAUwBwAG8AdABpAGYAeQAsAGoAYQB2AGEAdwAgAC0ARQByAHIAbwByAEEAYwB0AGkAbwBuACAAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAgAHwAIABXAGgAZQByAGUALQBPAGIAagBlAGMAdAAgAE0AYQBpAG4AVwBpAG4AZABvAHcAVABpAHQAbABlACAAfAAgAEYAbwByAEUAYQBjAGgALQBPAGIAagBlAGMAdAAgAHsAIAAkAF8ALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAArACAAJwB8ACcAIAArACAAJABfAC4ATQBhAGkAbgBXAGkAbgBkAG8AdwBUAGkAdABsAGUAIAB9AAoAdAByAHkAIAB7AAoAIAAgAEEAZABkAC0AVAB5AHAAZQAgAC0AQQBzAHMAZQBtAGIAbAB5AE4AYQBtAGUAIABTAHkAcwB0AGUAbQAuAFIAdQBuAHQAaQBtAGUALgBXAGkAbgBkAG8AdwBzAFIAdQBuAHQAaQBtAGUACgAgACAAJABhAHQAIAA9ACAAKABbAFMAeQBzAHQAZQBtAC4AVwBpAG4AZABvAHcAcwBSAHUAbgB0AGkAbQBlAFMAeQBzAHQAZQBtAEUAeAB0AGUAbgBzAGkAbwBuAHMAXQAuAEcAZQB0AE0AZQB0AGgAbwBkAHMAKAApACAAfAAgAFcAaABlAHIAZQAtAE8AYgBqAGUAYwB0ACAAewAgACQAXwAuAE4AYQBtAGUAIAAtAGUAcQAgACcAQQBzAFQAYQBzAGsAJwAgAC0AYQBuAGQAIAAkAF8ALgBHAGUAdABQAGEAcgBhAG0AZQB0AGUAcgBzACgAKQAuAEMAbwB1AG4AdAAgAC0AZQBxACAAMQAgAC0AYQBuAGQAIAAkAF8ALgBHAGUAdABQAGEAcgBhAG0AZQB0AGUAcgBzACgAKQBbADAAXQAuAFAAYQByAGEAbQBlAHQAZQByAFQAeQBwAGUALgBOAGEAbQBlACAALQBlAHEAIAAnAEkAQQBzAHkAbgBjAE8AcABlAHIAYQB0AGkAbwBuAGAAMQAnACAAfQApAFsAMABdAAoAIAAgAGYAdQBuAGMAdABpAG8AbgAgAFcAKAAkAG8AcAAsACAAJAB0ACkAIAB7ACAAJAB0AGEAcwBrACAAPQAgACQAYQB0AC4ATQBhAGsAZQBHAGUAbgBlAHIAaQBjAE0AZQB0AGgAbwBkACgAJAB0ACkALgBJAG4AdgBvAGsAZQAoACQAbgB1AGwAbAAsACAAQAAoACQAbwBwACkAKQA7ACAAJABuAHUAbABsACAAPQAgACQAdABhAHMAawAuAFcAYQBpAHQAKAAzADAAMAAwACkAOwAgACQAdABhAHMAawAuAFIAZQBzAHUAbAB0ACAAfQAKACAAIAAkAE0AIAA9ACAAWwBXAGkAbgBkAG8AdwBzAC4ATQBlAGQAaQBhAC4AQwBvAG4AdAByAG8AbAAuAEcAbABvAGIAYQBsAFMAeQBzAHQAZQBtAE0AZQBkAGkAYQBUAHIAYQBuAHMAcABvAHIAdABDAG8AbgB0AHIAbwBsAHMAUwBlAHMAcwBpAG8AbgBNAGEAbgBhAGcAZQByACwAIABXAGkAbgBkAG8AdwBzAC4ATQBlAGQAaQBhAC4AQwBvAG4AdAByAG8AbAAsACAAQwBvAG4AdABlAG4AdABUAHkAcABlACAAPQAgAFcAaQBuAGQAbwB3AHMAUgB1AG4AdABpAG0AZQBdAAoAIAAgACQAUAAgAD0AIABbAFcAaQBuAGQAbwB3AHMALgBNAGUAZABpAGEALgBDAG8AbgB0AHIAbwBsAC4ARwBsAG8AYgBhAGwAUwB5AHMAdABlAG0ATQBlAGQAaQBhAFQAcgBhAG4AcwBwAG8AcgB0AEMAbwBuAHQAcgBvAGwAcwBTAGUAcwBzAGkAbwBuAE0AZQBkAGkAYQBQAHIAbwBwAGUAcgB0AGkAZQBzACwAIABXAGkAbgBkAG8AdwBzAC4ATQBlAGQAaQBhAC4AQwBvAG4AdAByAG8AbAAsACAAQwBvAG4AdABlAG4AdABUAHkAcABlACAAPQAgAFcAaQBuAGQAbwB3AHMAUgB1AG4AdABpAG0AZQBdAAoAIAAgACQAbQBnAHIAIAA9ACAAVwAgACgAJABNADoAOgBSAGUAcQB1AGUAcwB0AEEAcwB5AG4AYwAoACkAKQAgACQATQAKACAAIABmAG8AcgBlAGEAYwBoACAAKAAkAHgAIABpAG4AIAAkAG0AZwByAC4ARwBlAHQAUwBlAHMAcwBpAG8AbgBzACgAKQApACAAewAKACAAIAAgACAAaQBmACAAKABbAHMAdAByAGkAbgBnAF0AJAB4AC4ARwBlAHQAUABsAGEAeQBiAGEAYwBrAEkAbgBmAG8AKAApAC4AUABsAGEAeQBiAGEAYwBrAFMAdABhAHQAdQBzACAALQBuAGUAIAAnAFAAbABhAHkAaQBuAGcAJwApACAAewAgAGMAbwBuAHQAaQBuAHUAZQAgAH0ACgAgACAAIAAgACQAcAAgAD0AIABXACAAKAAkAHgALgBUAHIAeQBHAGUAdABNAGUAZABpAGEAUAByAG8AcABlAHIAdABpAGUAcwBBAHMAeQBuAGMAKAApACkAIAAkAFAACgAgACAAIAAgACcATQB8ACcAIAArACAAJAB4AC4AUwBvAHUAcgBjAGUAQQBwAHAAVQBzAGUAcgBNAG8AZABlAGwASQBkACAAKwAgACcAfAAnACAAKwAgACQAcAAuAEEAcgB0AGkAcwB0ACAAKwAgACcAfAAnACAAKwAgACQAcAAuAFQAaQB0AGwAZQAKACAAIAB9AAoAfQAgAGMAYQB0AGMAaAAgAHsAfQAKAA==';
 let games = {}, lastStatus = 'Etkinlik: bekleniyor';
 const run = (cmd, args) => new Promise(res => execFile(cmd, args, { windowsHide: true, maxBuffer: 8 * 1024 * 1024 }, (e, out) => res(e ? '' : String(out))));
 const csvRow = l => (l.match(/"([^"]*)"/g) || []).map(x => x.slice(1, -1));
@@ -172,16 +173,25 @@ async function detect() {
   }
   // Pencere başlıkları (Spotify şarkısı, Minecraft Java) — Türkçe karakterler bozulmasın diye PowerShell ile UTF-8 okunur
   const names = new Set(lines.map(l => (csvRow(l)[0] || '').toLowerCase()));
-  let titles = [];
+  let titles = [], media = [];
   if (names.has('spotify.exe') || (!game && names.has('javaw.exe'))) {
-    const out = await run('powershell', ['-NoProfile', '-NonInteractive', '-Command',
-      "[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-Process Spotify,javaw -ErrorAction SilentlyContinue | Where-Object MainWindowTitle | ForEach-Object { $_.ProcessName + '|' + $_.MainWindowTitle }"]);
-    titles = out.split(/\r?\n/).filter(Boolean).map(l => { const i = l.indexOf('|'); return [l.slice(0, i).toLowerCase(), l.slice(i + 1).trim()]; });
+    const out = await run('powershell', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', PS_DETECT]);
+    for (const l of out.split(/\r?\n/).filter(Boolean)) {
+      const p = l.split('|');
+      if (p[0] === 'M') media.push({ app: (p[1] || '').toLowerCase(), artist: p[2] || '', title: p.slice(3).join('|') });
+      else titles.push([p[0].toLowerCase(), p.slice(1).join('|').trim()]);
+    }
   }
   if (!game && titles.some(([p, t]) => p === 'javaw' && t.startsWith('Minecraft'))) { game = 'Minecraft'; detail = 'Java'; }
   let music = null;
-  const sp = titles.find(([p, t]) => p === 'spotify' && !/^Spotify/i.test(t) && t.includes(' - '));
-  if (sp) { const t = sp[1], i = t.indexOf(' - '); music = { artist: t.slice(0, i), title: t.slice(i + 3) }; }
+  // 1) Windows medya oturumu: Spotify küçültülmüş ya da tepsideyken de çalışır
+  const sm = media.find(m => m.app.includes('spotify') && m.title);
+  if (sm) music = { artist: sm.artist, title: sm.title };
+  // 2) Yedek: pencere başlığı "Sanatçı - Şarkı"
+  if (!music) {
+    const sp = titles.find(([p, t]) => p === 'spotify' && !/^Spotify/i.test(t) && t.includes(' - '));
+    if (sp) { const t = sp[1], i = t.indexOf(' - '); music = { artist: t.slice(0, i), title: t.slice(i + 3) }; }
+  }
   return { game, detail, music };
 }
 

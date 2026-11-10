@@ -497,6 +497,9 @@
   .umenu .arr .ic { width: 14px; height: 14px; transform: rotate(-90deg); transition: transform .15s; } .umenu .arr.open .ic { transform: none; }
   .unote { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 4px; }
 
+  .hinv { margin-left: auto; margin-right: 6px; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--accent); }
+  .hinv:hover { background: var(--hover); } .hinv .ic { width: 18px; height: 18px; }
+
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
   .shead.srvbtn:hover, .shead.srvbtn.open { background: var(--hover); }
@@ -1163,7 +1166,8 @@ function renderSide() {
   const s = S.server;
   $('#side-head').className = 'shead srvbtn';
   $('#side-head').setAttribute('role', 'button'); $('#side-head').tabIndex = 0;
-  $('#side-head').innerHTML = `<h3>${esc(s.name)}</h3>${ic('chevron', 'chev')}`;
+  $('#side-head').innerHTML = `<h3>${esc(s.name)}</h3><button class="hinv" id="sh-inv" title="İnsanları davet et" aria-label="İnsanları davet et">${ic('userplus')}</button>${ic('chevron', 'chev')}`;
+  $('#sh-inv').onclick = e => { e.stopPropagation(); showInvite(s); };
   $('#side-head').onclick = e => { e.stopPropagation(); toggleSrvMenu(); };
   $('#side-head').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSrvMenu(); } };
   const canAdd = !(s.customRoles?.length) || perm(s, 'manageChannels');
@@ -1271,7 +1275,7 @@ function toggleSrvMenu() {
   const item = (id, label, icon, cls = '') => `<button data-m="${id}" class="${cls}">${label}${ic(icon)}</button>`;
   const m = document.createElement('div'); m.id = 'srvmenu'; m.setAttribute('role', 'menu');
   m.innerHTML =
-    (s.public ? '' : item('invite', 'İnsanları davet et', 'userplus', 'hl')) +
+    item('invite', 'İnsanları davet et', 'userplus', 'hl') +
     (mod || ['manageServer', 'manageRoles', 'kick', 'ban', 'timeout'].some(p => perm(s, p)) ? item('settings', 'Sunucu ayarları', 'gear') : '') +
     (!(s.customRoles?.length) || perm(s, 'manageChannels') ? item('text', 'Yazılı oda oluştur', 'hash') + item('voice', 'Sesli oda oluştur', 'volume') : '') +
     '<hr>' +
@@ -1459,7 +1463,7 @@ function showServerSettings(s, tab, focus) {
   page[tab]();
 }
 function showInvite(s) {
-  const link = `${location.origin}/?davet=${s.invite}`;
+  const link = `${location.origin}/davet/${s.invite}`;
   modal(`<h3>Arkadaşlarını davet et</h3><p class="hint">Bu linki gönder, açınca sunucuna katılırlar.</p>
     <input class="field" id="inv" value="${esc(link)}" readonly><div class="rowb"><button id="mx">Kapat</button><button class="primary" id="copy">Linki kopyala</button></div>`);
   $('#inv').onclick = e => e.target.select();
