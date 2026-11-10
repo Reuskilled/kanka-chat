@@ -107,11 +107,39 @@ async function checkDesktop() {
   save();
 }
 
+// Yedek yol: GitHub Releases kullanılamazsa 'masaustu' dalındaki parçalı dosyalar (manifest.json)
+async function checkDesktopBranch() {
+  const raw = p => `https://raw.githubusercontent.com/${REPO}/masaustu/${p}`;
+  const r = await fetch(raw('manifest.json') + '?t=' + Date.now(), { headers: { 'User-Agent': H['User-Agent'] }, signal: AbortSignal.timeout(20000) });
+  if (!r.ok) return;
+  const man = await r.json();
+  if (!man.version || man.version === st.deskVer) return;
+  const dir = path.join(APP, 'indir'); fs.mkdirSync(dir, { recursive: true });
+  const names = [...Object.keys(man.files).filter(n => n !== 'RELEASES'), ...Object.keys(man.files).filter(n => n === 'RELEASES')];
+  for (const name of names) {
+    const f = man.files[name], dst = path.join(dir, name);
+    if (hash(dst) === f.sha1) continue;
+    log(`Masaüstü ${man.version} indiriliyor: ${name} (${Math.round(f.size / 1048576)} MB)`);
+    const bufs = [];
+    for (const part of f.parts) {
+      const d = await fetch(raw(part), { headers: { 'User-Agent': H['User-Agent'] }, signal: AbortSignal.timeout(30 * 60e3) });
+      if (!d.ok) throw new Error('Parça indirilemedi: ' + part);
+      bufs.push(Buffer.from(await d.arrayBuffer()));
+    }
+    const buf = Buffer.concat(bufs);
+    if (crypto.createHash('sha1').update(buf).digest('hex') !== f.sha1) throw new Error('Bozuk indirme: ' + name);
+    fs.writeFileSync(dst + '.indiriliyor', buf); fs.renameSync(dst + '.indiriliyor', dst);
+  }
+  st.deskVer = man.version; save();
+  log(`Masaüstü sürümü hazır: ${man.version}`);
+}
+
 let busy = false, n = 0;
 async function tick() {
   if (busy) return; busy = true;
   try { await finishPending(); await checkCode(); } catch (e) { log('Hata (kod): ' + e.message); }
-  if (n++ % 5 === 0) try { await checkDesktop(); } catch (e) { log('Hata (masaüstü): ' + e.message); } // GitHub sınırı için 5 dakikada bir
+  if (n++ % 5 === 0) { try { await checkDesktop(); } catch (e) { log('Hata (masaüstü): ' + e.message); } // GitHub sınırı için 5 dakikada bir
+    try { await checkDesktopBranch(); } catch (e) { log('Hata (masaüstü dalı): ' + e.message); } }
   busy = false;
 }
 log('Güncelleyici çalışıyor');
