@@ -189,7 +189,9 @@
   #replybar b { color: var(--ink); }
   #compose { margin: 0 20px 20px; display: flex; gap: 6px; align-items: center; background: var(--card); border: 2px solid var(--line); border-radius: 20px; padding: 6px; position: relative; }
   #compose:focus-within { border-color: var(--accent-2); }
-  #input { flex: 1; border: none; outline: none; background: none; font-size: 15px; padding: 0 6px; }
+  #input { flex: 1; border: none; outline: none; background: none; font-size: 15px; padding: 9px 6px; resize: none; max-height: 40vh; line-height: 1.4; font-family: inherit; color: inherit; overflow-y: auto; align-self: center; }
+  #compose { align-items: flex-end; }
+  #compose > button, #compose > .ibtn { margin-bottom: 1px; }
   #send { width: 44px; height: 44px; border-radius: 14px; background: var(--mine); color: #fff; font-size: 18px; flex-shrink: 0; }
   #plus { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); font-size: 22px; font-weight: 800; flex-shrink: 0; }
   #menu { display: none; position: absolute; bottom: 58px; left: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.45); z-index: 5; }
@@ -220,7 +222,8 @@
   .song .n { width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
   .song a { font-weight: 800; text-decoration: none; word-break: break-all; }
   .song small { display: block; color: var(--muted); }
-  #toasts { position: fixed; right: 20px; bottom: 20px; z-index: 40; display: flex; flex-direction: column; gap: 8px; }
+  #toasts { position: fixed; right: 20px; top: 20px; z-index: 90; display: flex; flex-direction: column; gap: 8px; max-width: min(380px, calc(100vw - 40px)); }
+  body.has-tb #toasts { top: 46px; }
   .toast { background: var(--card); border: 1px solid var(--accent); border-radius: 16px; padding: 12px 16px; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,.5); cursor: pointer; animation: pop .2s ease-out; }
   .toast b { color: var(--accent-2); }
   .toast small { display: block; color: var(--muted); font-size: 12px; }
@@ -573,6 +576,20 @@
   #pip .pbar button { width: 32px; height: 32px; border-radius: 9px; background: rgba(0,0,0,.65); color: #fff; display: flex; align-items: center; justify-content: center; }
   #pip .pbar .ic { width: 16px; height: 16px; }
 
+  /* ================= Küçük kullanım detayları ================= */
+  #jumpnew { position: absolute; left: 50%; transform: translateX(-50%); bottom: 96px; z-index: 5; display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 99px;
+    background: var(--accent); color: #1a120c; font-weight: 900; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.4); animation: popIn .2s var(--ease-out); }
+  #jumpnew .ic { width: 15px; height: 15px; }
+  .row .who .wname, .row > .av { cursor: pointer; } .row .who .wname:hover { text-decoration: underline; }
+  #modal .box.qsbox { width: min(560px, 94vw); padding: 14px; }
+  #qs input { width: 100%; box-sizing: border-box; font-size: 17px; padding: 14px 16px; border-radius: 14px; border: 2px solid var(--accent); background: var(--bg); color: var(--ink); outline: none; }
+  #qs .qs-list { margin-top: 10px; max-height: 50vh; overflow-y: auto; }
+  #qs .qs-it { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border-radius: 10px; text-align: left; font-weight: 700; }
+  #qs .qs-it.on { background: var(--accent-soft); } #qs .qs-it small { margin-left: auto; color: var(--muted); font-size: 12px; }
+  #qs .qs-it .ic { width: 18px; height: 18px; color: var(--muted); } #qs .qs-it .av { width: 24px; height: 24px; font-size: 11px; }
+  #qs .qs-hint { margin-top: 8px; font-size: 12px; color: var(--muted); text-align: center; }
+  .tm[title] { cursor: default; }
+
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
   .shead.srvbtn:hover, .shead.srvbtn.open { background: var(--hover); }
@@ -794,7 +811,7 @@
     #app { padding: 0; gap: 0; }
     #chat { border-radius: 0; border: none; }
     #menu-btn { display: flex; }
-    #rail, #side { position: fixed; top: 0; bottom: 0; z-index: 15; border-radius: 0; transform: translateX(-120%); transition: transform .2s; }
+    #rail, #side { position: fixed; top: 0; bottom: 0; z-index: 15; border-radius: 0; transform: translateX(calc(-100% - 90px)); transition: transform .2s; }
     #rail { left: 0; } #side { left: 76px; width: min(280px, calc(100vw - 76px)); }
     body.drawer #rail, body.drawer #side { transform: none; }
     body.drawer::after { content: ''; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 14; }
@@ -802,6 +819,7 @@
     #head-actions .hbtn { width: 34px; height: 34px; }
     #messages { padding: 10px 12px; } .row .col { max-width: 85%; }
     #compose { margin: 0 10px 10px; } #replybar { margin: 0 10px; }
+    #toasts { left: 12px; right: 12px; top: 12px; max-width: none; } #jumpnew { bottom: 80px; }
     .tools { opacity: 1; pointer-events: auto; display: none; } .row.hl .tools { display: flex; }
     #modal .box { width: calc(100vw - 24px); }
     .bubble img { max-width: 100%; }
@@ -858,7 +876,7 @@
         <button type="button" data-a="sched"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Mesajı zamanla</button>
       </div>
       <div id="suggest"></div>
-      <input id="input" maxlength="2000" autocomplete="off">
+      <textarea id="input" rows="1" maxlength="2000" autocomplete="off" spellcheck="true"></textarea>
       <div id="recbar"><span class="dot"></span><span id="rectime">0:00</span> kaydediliyor... <button type="button" id="rec-cancel">Vazgeç</button></div>
       <button type="button" id="emo-btn" title="Emoji" aria-label="Emoji seç"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/></svg></button>
       <button type="button" id="mic-btn" title="Sesli mesaj" aria-label="Sesli mesaj kaydet"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
@@ -1192,7 +1210,9 @@ function showSettings(tab = 'profile') {
 
 // ================= Kenar şerit =================
 function renderRail() {
-  window.kankaDesktop?.badge(S.unread.size + (S.unreadDM ? 1 : 0));
+  const unreadN = S.unread.size + (S.unreadDM ? 1 : 0);
+  window.kankaDesktop?.badge(unreadN);
+  document.title = (unreadN ? `(${unreadN}) ` : '') + 'Kanka Chat';
   $('#rail').innerHTML =
     `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button><div class="rsep"></div>` +
     S.servers.map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''}" data-id="${s.id}" title="${esc(s.name)}${mutedServers.has(s.id) ? ' (sessizde)' : ''}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) ? '<span class="dot"></span>' : ''}</button>`).join('') +
@@ -1239,7 +1259,7 @@ function selectServer(id, channelId) {
   S.server = S.servers.find(s => s.id === id) || S.servers[0];
   S.unreadServers.delete(S.server.id);
   const text = S.server.channels.filter(c => c.type !== 'voice');
-  const ch = text.find(c => c.id === channelId) || text[0];
+  const ch = text.find(c => c.id === channelId) || text.find(c => c.id === lastCh[S.server.id]) || text[0];
   renderRail(); renderMembers();
   if (ch) selectChannel(ch.id); else renderSide();
 }
@@ -1280,6 +1300,38 @@ function renderSide() {
       socket.emit('createChannel', { serverId: s.id, name: v.name, type: b.dataset.t }, c => c.error ? toast(c.error) : !voiceRoom && selectChannel(c.id)));
   });
 }
+// ---- Ctrl+K: hızlı geçiş (oda, sunucu, kişi) ----
+function quickSwitch() {
+  const items = [];
+  for (const s of S.servers) for (const c of s.channels) items.push({ t: c.name, sub: s.name, icon: c.type === 'voice' ? ic('volume') : ic('hash'), go: () => { if (c.type === 'voice') { selectServer(s.id); joinVoice(c.id); } else selectServer(s.id, c.id); } });
+  for (const s of S.servers) items.push({ t: s.name, sub: 'Sunucu', icon: ic('logo'), go: () => selectServer(s.id) });
+  for (const d of S.dms) items.push(d.group ? { t: groupName(d), sub: 'Grup', icon: ic('users'), go: () => openGroup(d.id) } : { t: d.with, sub: 'Özel mesaj', av: d.with, go: () => openDMChannel(d.id, d.with) });
+  for (const n of S.social?.friends || []) if (!S.dms.some(d => d.with === n)) items.push({ t: n, sub: 'Arkadaş', av: n, go: () => openDM(n) });
+  let sel = 0, list = [];
+  modal(`<div id="qs"><input id="qs-in" placeholder="Nereye gitmek istiyorsun?" autocomplete="off"><div class="qs-list" id="qs-list"></div><div class="qs-hint">↑ ↓ seç · Enter git · Esc kapat · Ctrl+K her yerden açar</div></div>`, 'qsbox');
+  const draw = () => {
+    const q = $('#qs-in').value.trim().toLocaleLowerCase('tr');
+    list = items.filter(i => !q || i.t.toLocaleLowerCase('tr').includes(q)).sort((a, b) => (a.t.toLocaleLowerCase('tr').startsWith(q) ? 0 : 1) - (b.t.toLocaleLowerCase('tr').startsWith(q) ? 0 : 1)).slice(0, 12);
+    sel = Math.min(sel, Math.max(0, list.length - 1));
+    $('#qs-list').innerHTML = list.map((i, k) => `<button class="qs-it ${k === sel ? 'on' : ''}" data-k="${k}">${i.av ? av(i.av, S.online.has(i.av)) : i.icon}${esc(i.t)}<small>${esc(i.sub)}</small></button>`).join('') || '<p class="hint" style="text-align:center;padding:16px">Bulunamadı</p>';
+    $('#qs-list').querySelectorAll('[data-k]').forEach(b => b.onclick = () => { closeModal(); list[+b.dataset.k].go(); });
+  };
+  $('#qs-in').oninput = () => { sel = 0; draw(); };
+  $('#qs-in').onkeydown = e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sel = (sel + (e.key === 'ArrowDown' ? 1 : list.length - 1)) % Math.max(1, list.length); draw(); }
+    if (e.key === 'Enter' && list[sel]) { e.preventDefault(); closeModal(); list[sel].go(); }
+  };
+  draw(); setTimeout(() => $('#qs-in').focus(), 30);
+}
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'k' && S.me) { e.preventDefault(); $('#modal').classList.contains('open') && $('#qs') ? closeModal() : quickSwitch(); }
+  if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && S.view === 'server' && S.server) {
+    e.preventDefault();
+    const txt = S.server.channels.filter(c => c.type !== 'voice'), i = txt.findIndex(c => c.id === S.channel?.id);
+    const n = txt[(i + (e.key === 'ArrowDown' ? 1 : txt.length - 1)) % txt.length]; if (n) selectChannel(n.id);
+  }
+});
+
 // ---- Yazmaya başlayınca mesaj kutusuna odaklan (Discord gibi) ----
 document.addEventListener('keydown', e => {
   const inp = $('#input');
@@ -1760,7 +1812,15 @@ function jumpTo(id) {
 const lastRead = JSON.parse(store.get('kanka-read') || '{}');
 const markRead = id => { lastRead[id] = Date.now(); store.set('kanka-read', JSON.stringify(lastRead)); };
 let histMore = false, histBusy = false, newLineAt = null;
+const drafts = {};
+let draftFor = null;
+const lastCh = JSON.parse(store.get('kanka-lastch') || '{}');
 function enterRoom(id, placeholder, hello) {
+  if (draftFor && draftFor !== id) { const v = $('#input').value; v.trim() ? drafts[draftFor] = v : delete drafts[draftFor]; }
+  if (draftFor !== id) { $('#input').value = drafts[id] || ''; requestAnimationFrame(growInput); }
+  draftFor = id;
+  if (S.view === 'server' && S.server) { lastCh[S.server.id] = id; store.set('kanka-lastch', JSON.stringify(lastCh)); }
+  $('#jumpnew')?.remove();
   helloHTML = hello; cancelReply();
   $('#compose').style.display = 'flex';
   $('#input').placeholder = placeholder;
@@ -1850,7 +1910,7 @@ function msgHTML(m, prev) {
     `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}" title="${esc(us.join(', '))}">${e}<span>${us.length}</span></button>`).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}
-    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!mine && !cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}">${esc(uNicks[m.author] || m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}<span class="t">${m.kind === 'text' ? '' : hm(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!mine && !cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(uNicks[m.author] || m.author)}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}<span class="t">${m.kind === 'text' ? '' : hm(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 let pop = null;
@@ -1893,6 +1953,8 @@ $('#messages').addEventListener('click', e => {
 });
 $('#messages').onclick = e => {
   const sp = e.target.closest('.spoiler'); if (sp) return sp.classList.toggle('shown');
+  const who = e.target.closest('.row[data-au] .who .wname, .row[data-au] > .av');
+  if (who) return showProfile(who.closest('[data-au]').dataset.au);
   const th = e.target.closest('[data-thread]'); if (th) return openThread(th.dataset.thread);
   const vp = e.target.closest('[data-vplay]'); if (vp) return playVoice(vp.dataset.vplay);
   const wv = e.target.closest('.wave'); if (wv) return seekVoice(wv, e);
@@ -1949,7 +2011,19 @@ socket.on('message', ({ channelId, msg }) => {
   box.insertAdjacentHTML('beforeend', msgHTML(msg, S.msgs[S.msgs.length - 2]));
   box.querySelector(`.row[data-id="${msg.id}"]`)?.classList.add('new');
   if (atBottom || msg.author === S.me) box.scrollTop = box.scrollHeight;
+  else if (msg.author) showJumpNew();
 });
+function showJumpNew() {
+  let b = $('#jumpnew');
+  if (!b) {
+    b = document.createElement('button'); b.id = 'jumpnew'; b.type = 'button'; b.dataset.n = 0;
+    b.onclick = () => { const box = $('#messages'); box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' }); b.remove(); };
+    $('#compose').before(b);
+  }
+  b.dataset.n = +b.dataset.n + 1;
+  b.innerHTML = `${ic('arrowDown')} ${b.dataset.n} yeni mesaj`;
+}
+$('#messages').addEventListener('scroll', () => { const box = $('#messages'); if (box.scrollHeight - box.scrollTop - box.clientHeight < 60) $('#jumpnew')?.remove(); }, { passive: true });
 socket.on('update', ({ channelId, msg }) => {
   if (channelId !== S.channel?.id) return;
   const i = S.msgs.findIndex(m => m.id === msg.id);
@@ -1976,7 +2050,7 @@ $('#compose').onsubmit = e => {
   if (pickSuggestion()) return;
   const text = $('#input').value.trim();
   if (!text) return;
-  $('#input').value = ''; hideSuggest();
+  $('#input').value = ''; growInput(); hideSuggest(); if (S.channel) delete drafts[S.channel.id];
   const [cmd, ...rest] = text.split(' '); const arg = rest.join(' ');
   const parts = arg.split('|').map(s => s.trim()).filter(Boolean);
   if (cmd === '/plan') return send({ kind: 'plan', title: parts[0], when: parts[1] });
@@ -2059,8 +2133,19 @@ $('#input').addEventListener('input', () => {
   sugg = pool.filter(n => n !== S.me && n.toLowerCase().startsWith(m[1].toLowerCase())).slice(0, 6); suggI = 0;
   renderSuggest();
 });
+const growInput = () => { const i = $('#input'); i.style.height = 'auto'; i.style.height = Math.min(i.scrollHeight, innerHeight * .4) + 'px'; };
+$('#input').addEventListener('input', growInput);
 $('#input').addEventListener('keydown', e => {
+  // Enter gönderir, Shift+Enter alt satıra geçer (Discord gibi)
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && !sugg.length) { e.preventDefault(); $('#compose').requestSubmit(); return; }
+  // Boş kutuda ↑: son mesajını düzenle
+  if (e.key === 'ArrowUp' && !sugg.length && !$('#input').value) {
+    const m = [...S.msgs].reverse().find(x => x.author === S.me && x.kind === 'text' && x.text);
+    if (m) { e.preventDefault(); form('Mesajı düzenle', 'Enter ile kaydet, Esc ile vazgeç.', [{ k: 'text', p: 'Mesaj', v: m.text }], v => socket.emit('edit', { msgId: m.id, text: v.text })); }
+    return;
+  }
   if (!sugg.length) { if (e.key === 'Escape') cancelReply(); return; }
+  if (e.key === 'Enter') { e.preventDefault(); pickSuggestion(); return; }
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); suggI = (suggI + (e.key === 'ArrowDown' ? 1 : sugg.length - 1)) % sugg.length; renderSuggest(); }
   if (e.key === 'Tab') { e.preventDefault(); pickSuggestion(); }
   if (e.key === 'Escape') hideSuggest();
