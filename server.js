@@ -44,6 +44,13 @@ const GAME_PROCS = {
 };
 app.get('/api/presence/games', (req, res) => res.json(GAME_PROCS));
 const STARTED = Date.now();
+app.get('/api/davet/:code', (req, res) => {
+  const s = db.servers.find(x => x.invite === req.params.code);
+  if (!s) return res.status(404).json({ error: 'Davet geçersiz ya da süresi dolmuş' });
+  const mem = membersOf(s), on = new Set(onlineNames());
+  res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
+});
+app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 app.get('/api/surum', (req, res) => {
   let sha = null;
   try { sha = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'guncelleme.json'), 'utf8')).sha; } catch {}
@@ -116,7 +123,7 @@ for (const s of db.servers) {
   s.members ||= [];
   s.invite ||= crypto.randomBytes(4).toString('hex');
   s.public = s.id === 's1' || (!s.owner && !s.members.length); // hesaplardan önce açılan sunucular herkese açık kalsın
-  s.roles ||= {};
+  s.roles ||= {}; s.customRoles ||= []; s.memberRoles ||= {}; s.bans ||= {}; s.timeouts ||= {};
   for (const c of s.channels) c.type ||= 'text';
   if (s.id === 's1' && !s.channels.some(c => c.type === 'voice')) s.channels.push({ id: 'v1', name: 'Sohbet', type: 'voice' });
 }
@@ -196,11 +203,31 @@ const social = n => { const u = db.users[n] || {}; return { friends: u.friends |
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
 const allUsers = () => Object.values(db.users).map(pubUser);
 
-const serversFor = name => db.servers.filter(s => s.public || s.members.includes(name));
-const serverView = s => ({
+const serversFor = name => db.servers.filter(s => (s.public || s.members.includes(name)) && !s.bans?.[name]);
+// ---------- Roller ve izinler ----------
+const PERMS = ['manageServer', 'manageRoles', 'manageChannels', 'manageMessages', 'kick', 'ban', 'timeout', 'mentionEveryone'];
+const MOD_PERMS = ['manageChannels', 'manageMessages', 'kick', 'timeout', 'mentionEveryone'];
+function permsOf(s, n) {
+  if (s.owner === n) return new Set(PERMS);
+  const p = new Set(s.roles?.[n] === 'mod' ? MOD_PERMS : []);
+  for (const rid of s.memberRoles?.[n] || []) for (const x of s.customRoles.find(r => r.id === rid)?.perms || []) p.add(x);
+  return p;
+}
+const can = (s, n, perm) => permsOf(s, n).has(perm);
+const rankOf = (s, n) => s.owner === n ? 1e9 : Math.max(s.roles?.[n] === 'mod' ? 500 : 0, ...(s.memberRoles?.[n] || []).map(rid => { const i = s.customRoles.findIndex(r => r.id === rid); return i < 0 ? 0 : 1000 - i; }));
+const outranks = (s, a, b) => s.owner === a || rankOf(s, a) > rankOf(s, b);
+const timedOut = (s, n) => (s.timeouts?.[n] || 0) > Date.now();
+function seesChannel(s, c, n) {
+  if (!c.private) return true;
+  if (s.owner === n || can(s, n, 'manageChannels')) return true;
+  return (s.memberRoles?.[n] || []).some(r => (c.allow || []).includes(r)) || (c.allowUsers || []).includes(n);
+}
+const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
   id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, owner: s.owner || null, invite: s.invite, public: s.public, roles: s.roles,
   emojis: s.emojis || {}, filter: !!s.filter, slow: s.slow || 0,
-  channels: s.channels, members: s.public ? Object.keys(db.users) : s.members
+  channels: viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels, members: s.public ? Object.keys(db.users) : s.members,
+  customRoles: s.customRoles, memberRoles: s.memberRoles, timeouts: Object.fromEntries(Object.entries(s.timeouts || {}).filter(([, t]) => t > Date.now())),
+  bans: viewer && (s.owner === viewer || can(s, viewer, 'ban')) ? s.bans : {}, myPerms: viewer ? [...permsOf(s, viewer)] : []
 });
 const findChannel = chId => {
   for (const s of db.servers) { const c = s.channels.find(c => c.id === chId); if (c) return { s, c }; }
@@ -216,7 +243,7 @@ function canAccess(name, chId) {
   if (chId.startsWith('dm:')) return dmPeers(chId).includes(name);
   if (chId.startsWith('g:')) return !!groupOf(chId)?.members.includes(name);
   const f = findChannel(chId);
-  return !!f && f.c.type === 'text' && (f.s.public || f.s.members.includes(name));
+  return !!f && f.c.type === 'text' && (f.s.public || f.s.members.includes(name)) && !f.s.bans?.[name] && seesChannel(f.s, f.c, name);
 }
 function dmsFor(name) {
   const dms = Object.keys(db.messages)
@@ -229,7 +256,7 @@ function dmsFor(name) {
 const groupTitle = g => g.name || g.members.slice(0, 4).join(', ');
 const findMsg = (chId, msgId) => (db.messages[chId] || []).find(m => m.id === msgId);
 const roleOf = (s, n) => s.owner === n ? 'admin' : (s.roles?.[n] || 'member');
-const isMod = (s, n) => ['admin', 'mod'].includes(roleOf(s, n));
+const isMod = (s, n) => ['admin', 'mod'].includes(roleOf(s, n)) || can(s, n, 'manageChannels');
 const serverOf = chId => chId && !isPrivateChat(chId) ? findChannel(chId)?.s : null;
 const UPLOAD_RE = /^\/uploads\/[a-f0-9]+\.(png|jpe?g|gif|webp)$/;
 
@@ -320,7 +347,7 @@ const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.starts
 const pushPresence = () => io.emit('presence', presenceList());
 const pushVoice = () => io.emit('voiceState', voiceState());
 function pushServers(names) {
-  for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(serverView));
+  for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
 }
 const membersOf = s => s.public ? Object.keys(db.users) : s.members;
 
@@ -397,6 +424,8 @@ function postMessage(me, chId, p = {}) {
     const f = findChannel(chId);
     for (const n of membersOf(f.s)) if (n !== me) io.to('user:' + n).emit('activity', { channelId: chId, serverId: f.s.id });
     const mentioned = new Set([...(msg.text || '').matchAll(/@([\p{L}\p{N}_.-]+)/gu)].map(m => m[1]));
+    if (/@(everyone|herkes)\b/i.test(msg.text || '') && can(f.s, me, 'mentionEveryone')) { membersOf(f.s).forEach(n => mentioned.add(n)); msg.everyone = true; }
+    for (const r of f.s.customRoles || []) if ((msg.text || '').includes('@' + r.name)) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) mentioned.add(n);
     for (const n of mentioned) {
       if (n !== me && db.users[n] && canAccess(n, chId))
         io.to('user:' + n).emit('notify', { from: me, text: preview, channelId: chId, where, mention: true });
@@ -440,7 +469,7 @@ io.on('connection', socket => {
     db.sessions[token] = name; save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), myStatus: db.users[name].presence || 'online',
-      servers: serversFor(name).map(serverView), dms: dmsFor(name), voice: voiceState()
+      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState()
     };
   }
 
@@ -563,6 +592,9 @@ io.on('connection', socket => {
       if (o?.blocked?.includes(me)) return cb({ error: 'Bu kişi sana mesaj alımını kapattı.' });
     }
     const srv = serverOf(cur);
+    if (srv && timedOut(srv, me)) return cb({ error: `Susturuldun. ${Math.ceil((srv.timeouts[me] - Date.now()) / 60000)} dakika sonra yazabilirsin.` });
+    if (srv && findChannel(cur).c.readonly && !can(srv, me, 'manageMessages')) return cb({ error: 'Bu oda salt okunur' });
+    if (srv && /@(everyone|herkes)\b/i.test(p.text || '') && !can(srv, me, 'mentionEveryone')) return cb({ error: '@everyone kullanma yetkin yok' });
     if (srv?.slow && !isMod(srv, me)) {
       const key = cur + '|' + me, last = slowMap.get(key) || 0, wait = srv.slow * 1000 - (Date.now() - last);
       if (wait > 0) return cb({ error: `Yavaş mod açık: ${Math.ceil(wait / 1000)} saniye bekle` });
@@ -728,7 +760,7 @@ io.on('connection', socket => {
     return (needAdmin ? roleOf(s, me) === 'admin' : isMod(s, me)) ? s : null;
   };
   socket.on('updateServer', ({ serverId, name, icon, iconImg, filter, slow } = {}, cb = () => {}) => {
-    const s = adminServer(serverId, true); if (!s) return cb({ error: 'Sadece yönetici değiştirebilir' });
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
     if (filter !== undefined) { s.filter = !!filter; audit(s, me, filter ? 'Küfür filtresini açtı' : 'Küfür filtresini kapattı'); }
     if (slow !== undefined) { s.slow = [0, 5, 10, 30, 60, 300].includes(+slow) ? +slow : 0; audit(s, me, 'Yavaş modu ayarladı', s.slow ? s.slow + ' sn' : 'kapalı'); }
     if (name !== undefined || icon !== undefined || iconImg !== undefined) audit(s, me, 'Sunucu ayarlarını değiştirdi');
@@ -744,11 +776,84 @@ io.on('connection', socket => {
     audit(s, me, role === 'mod' ? 'Moderatör yaptı' : 'Moderatörlüğü aldı', name);
     save(); pushServers(membersOf(s)); cb({ ok: true });
   });
+  const permServer = (serverId, perm) => { const s = db.servers.find(x => x.id === serverId); if (s) { s.customRoles ||= []; s.memberRoles ||= {}; s.bans ||= {}; s.timeouts ||= {}; s.roles ||= {}; } return me && s && can(s, me, perm) ? s : null; };
+  const pushSrv = s => { save(); pushServers(membersOf(s)); };
+  socket.on('roleSave', ({ serverId, role } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Rolleri yönetme yetkin yok' });
+    const name = clean(role?.name, 30); if (!name) return cb({ error: 'Rol adı gerekli' });
+    const perms = (role.perms || []).filter(p => PERMS.includes(p) && (s.owner === me || can(s, me, p)));
+    const color = /^#[0-9a-f]{6}$/i.test(role.color) ? role.color : '#99aab5';
+    let r = s.customRoles.find(x => x.id === role.id);
+    if (r) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); Object.assign(r, { name, color, perms, hoist: !!role.hoist }); audit(s, me, 'Rolü düzenledi', name); }
+    else { if (s.customRoles.length >= 30) return cb({ error: 'En fazla 30 rol' }); r = { id: id(), name, color, perms, hoist: !!role.hoist }; s.customRoles.push(r); audit(s, me, 'Rol oluşturdu', name); }
+    pushSrv(s); cb({ ok: true, id: r.id });
+  });
+  const outranksRole = (s, r) => s.owner === me || rankOf(s, me) > 1000 - s.customRoles.indexOf(r);
+  socket.on('roleDelete', ({ serverId, roleId } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Yetkin yok' });
+    const r = s.customRoles.find(x => x.id === roleId); if (!r || !outranksRole(s, r)) return cb({ error: 'Bu rolü silemezsin' });
+    s.customRoles = s.customRoles.filter(x => x !== r);
+    for (const n in s.memberRoles) s.memberRoles[n] = s.memberRoles[n].filter(x => x !== roleId);
+    for (const c of s.channels) if (c.allow) c.allow = c.allow.filter(x => x !== roleId);
+    audit(s, me, 'Rolü sildi', r.name); pushSrv(s); cb({ ok: true });
+  });
+  socket.on('roleMove', ({ serverId, roleId, dir } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Yetkin yok' });
+    const i = s.customRoles.findIndex(x => x.id === roleId), j = i + (dir < 0 ? -1 : 1);
+    if (i < 0 || j < 0 || j >= s.customRoles.length) return cb({ ok: true });
+    if (!outranksRole(s, s.customRoles[i]) || !outranksRole(s, s.customRoles[j])) return cb({ error: 'Senden yüksek rolleri taşıyamazsın' });
+    [s.customRoles[i], s.customRoles[j]] = [s.customRoles[j], s.customRoles[i]]; pushSrv(s); cb({ ok: true });
+  });
+  socket.on('memberRoles', ({ serverId, name, roles } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageRoles'); if (!s || !membersOf(s).includes(name)) return cb({ error: 'Yetkin yok' });
+    const old = s.memberRoles[name] || [];
+    const want = (roles || []).filter(rid => s.customRoles.some(r => r.id === rid));
+    for (const rid of new Set([...old, ...want])) if (old.includes(rid) !== want.includes(rid) && !outranksRole(s, s.customRoles.find(r => r.id === rid))) return cb({ error: 'Senden yüksek bir rolü veremez/alamazsın' });
+    if (want.length) s.memberRoles[name] = want; else delete s.memberRoles[name];
+    audit(s, me, 'Rollerini değiştirdi', name); pushSrv(s); cb({ ok: true });
+  });
+  socket.on('channelSave', ({ serverId, channelId, name, category, private: priv, readonly, allow } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageChannels'); if (!s) return cb({ error: 'Oda yönetme yetkin yok' });
+    const c = s.channels.find(x => x.id === channelId); if (!c) return cb({ error: 'Oda bulunamadı' });
+    if (name !== undefined) { name = clean(name, 30); if (c.type === 'text') name = name.toLowerCase().replace(/\s+/g, '-'); if (name) c.name = name; }
+    if (category !== undefined) { category = clean(category, 30); if (category) c.category = category; else delete c.category; }
+    if (priv !== undefined) c.private = !!priv;
+    if (readonly !== undefined) c.readonly = !!readonly;
+    if (allow !== undefined) c.allow = (allow || []).filter(rid => s.customRoles.some(r => r.id === rid));
+    audit(s, me, 'Odayı düzenledi', c.name); pushSrv(s); cb({ ok: true });
+  });
+  socket.on('channelMove', ({ serverId, channelId, dir } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageChannels'); if (!s) return cb({ error: 'Yetkin yok' });
+    const i = s.channels.findIndex(x => x.id === channelId), j = i + (dir < 0 ? -1 : 1);
+    if (i < 0 || j < 0 || j >= s.channels.length) return cb({ ok: true });
+    [s.channels[i], s.channels[j]] = [s.channels[j], s.channels[i]]; pushSrv(s); cb({ ok: true });
+  });
+  socket.on('timeout', ({ serverId, name, minutes } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'timeout'); if (!s) return cb({ error: 'Susturma yetkin yok' });
+    if (!membersOf(s).includes(name) || name === me || !outranks(s, me, name)) return cb({ error: 'Bu kişiyi susturamazsın' });
+    minutes = [0, 1, 5, 10, 60, 1440, 10080].includes(+minutes) ? +minutes : 10;
+    if (minutes) s.timeouts[name] = Date.now() + minutes * 60e3; else delete s.timeouts[name];
+    audit(s, me, minutes ? 'Susturdu' : 'Susturmayı kaldırdı', minutes ? `${name} · ${minutes >= 1440 ? minutes / 1440 + ' gün' : minutes >= 60 ? minutes / 60 + ' saat' : minutes + ' dk'}` : name);
+    if (minutes) io.to('user:' + name).emit('toast', `${s.name} sunucusunda ${minutes >= 60 ? Math.round(minutes / 60) + ' saat' : minutes + ' dakika'} susturuldun`);
+    pushSrv(s); cb({ ok: true });
+  });
+  socket.on('ban', ({ serverId, name, reason, unban } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'ban'); if (!s) return cb({ error: 'Yasaklama yetkin yok' });
+    if (s.public) return cb({ error: 'Herkese açık sunucuda yasak yok' });
+    if (unban) { delete s.bans[name]; audit(s, me, 'Yasağı kaldırdı', name); pushSrv(s); return cb({ ok: true }); }
+    if (!db.users[name] || name === me || !outranks(s, me, name)) return cb({ error: 'Bu kişiyi yasaklayamazsın' });
+    s.bans[name] = { by: me, time: Date.now(), reason: clean(reason, 120) };
+    s.members = s.members.filter(n => n !== name); delete s.roles[name]; delete s.memberRoles?.[name];
+    audit(s, me, 'Yasakladı', name + (reason ? ' · ' + clean(reason, 120) : ''));
+    save(); pushServers([name, ...s.members]);
+    io.to('user:' + name).emit('toast', `${s.name} sunucusundan yasaklandın`);
+    cb({ ok: true });
+  });
   socket.on('kick', ({ serverId, name } = {}, cb = () => {}) => {
     const s = adminServer(serverId, false); if (!s) return cb({ error: 'Yetkin yok' });
     if (s.public) return cb({ error: 'Herkese açık sunucudan kimse atılamaz' });
-    if (name === s.owner || (roleOf(s, name) === 'mod' && roleOf(s, me) !== 'admin')) return cb({ error: 'Bu kişiyi atamazsın' });
-    s.members = s.members.filter(n => n !== name); delete s.roles[name];
+    if (name === s.owner || !can(s, me, 'kick') || !outranks(s, me, name)) return cb({ error: 'Bu kişiyi atamazsın' });
+    s.members = s.members.filter(n => n !== name); delete s.roles[name]; delete s.memberRoles?.[name];
     audit(s, me, 'Sunucudan attı', name);
     save(); pushServers([name, ...s.members]);
     io.to('user:' + name).emit('toast', `${s.name} sunucusundan çıkarıldın`);
@@ -899,21 +1004,22 @@ io.on('connection', socket => {
     if (!me) return;
     name = clean(name, 40); if (!name) return cb({ error: 'Sunucu adı gerekli' });
     const s = {
-      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], roles: {}, invite: crypto.randomBytes(4).toString('hex'),
+      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: crypto.randomBytes(4).toString('hex'),
       channels: [{ id: id(), name: 'genel', type: 'text' }, { id: id(), name: 'Sohbet', type: 'voice' }]
     };
     db.servers.push(s); save();
     pushServers([me]);
-    cb(serverView(s));
+    cb(serverView(s, me));
   });
 
-  socket.on('createChannel', ({ serverId, name, type } = {}, cb = () => {}) => {
+  socket.on('createChannel', ({ serverId, name, type, category } = {}, cb = () => {}) => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || !(s.public || s.members.includes(me))) return cb({ error: 'Yetkin yok' });
+    if ((s.customRoles?.length || s.lockChannels) && !can(s, me, 'manageChannels')) return cb({ error: 'Oda açma yetkin yok' });
     type = type === 'voice' ? 'voice' : 'text';
     name = clean(name, 30); if (type === 'text') name = name.toLowerCase().replace(/\s+/g, '-');
     if (!name) return cb({ error: 'Oda adı gerekli' });
-    const c = { id: id(), name, type };
+    const c = { id: id(), name, type, category: clean(category, 30) || undefined };
     s.channels.push(c); save();
     pushServers(membersOf(s));
     cb(c);
@@ -923,8 +1029,9 @@ io.on('connection', socket => {
     code = clean(code, 200).split(/[=/]/).pop();
     const s = db.servers.find(x => x.invite === code);
     if (!me || !s) return cb({ error: 'Davet kodu geçersiz' });
+    if (s.bans?.[me]) return cb({ error: 'Bu sunucudan yasaklandın' });
     if (!s.public && !s.members.includes(me)) { s.members.push(me); save(); pushServers(s.members); }
-    cb(serverView(s));
+    cb(serverView(s, me));
   });
 
   socket.on('leaveServer', (serverId, cb = () => {}) => {
@@ -950,7 +1057,8 @@ io.on('connection', socket => {
     const isCall = typeof chId === 'string' && chId.startsWith('call:');
     const f = isCall ? null : findChannel(chId);
     if (!me) return cb({ error: 'Erişim yok' });
-    if (isCall ? !canAccess(me, chId.slice(5)) || !isPrivateChat(chId.slice(5)) : (!f || f.c.type !== 'voice' || !(f.s.public || f.s.members.includes(me)))) return cb({ error: 'Erişim yok' });
+    if (isCall ? !canAccess(me, chId.slice(5)) || !isPrivateChat(chId.slice(5)) : (!f || f.c.type !== 'voice' || !(f.s.public || f.s.members.includes(me)) || f.s.bans?.[me] || !seesChannel(f.s, f.c, me))) return cb({ error: 'Erişim yok' });
+    if (f && timedOut(f.s, me)) return cb({ error: 'Susturulduğun için sesli odalara giremezsin' });
     leaveVoice();
     const room = voice.get(chId) || new Map();
     const peers = [...room].map(([sid, name]) => ({ sid, name }));
