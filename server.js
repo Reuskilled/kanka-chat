@@ -422,7 +422,7 @@ function postMessage(me, chId, p = {}) {
     }
   } else {
     const f = findChannel(chId);
-    for (const n of membersOf(f.s)) if (n !== me) io.to('user:' + n).emit('activity', { channelId: chId, serverId: f.s.id });
+    for (const n of membersOf(f.s)) if (n !== me) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
     const mentioned = new Set([...(msg.text || '').matchAll(/@([\p{L}\p{N}_.-]+)/gu)].map(m => m[1]));
     if (/@(everyone|herkes)\b/i.test(msg.text || '') && can(f.s, me, 'mentionEveryone')) { membersOf(f.s).forEach(n => mentioned.add(n)); msg.everyone = true; }
     for (const r of f.s.customRoles || []) if ((msg.text || '').includes('@' + r.name)) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) mentioned.add(n);

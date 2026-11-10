@@ -2146,7 +2146,7 @@ socket.on('dms', list => {
   if (S.channel?.group) { const g = list.find(d => d.id === S.channel.id); if (!g) { toast('Artık bu grupta değilsin'); return showFriends(); } S.channel.members = g.members; S.channel.name = groupName(g); $('#subtitle').textContent = `${g.members.length} üye`; renderMembers(); }
   if (S.view === 'dm') renderDMSide();
 });
-socket.on('activity', ({ channelId, serverId }) => {
+socket.on('chanActivity', ({ channelId, serverId }) => {
   if (channelId === S.channel?.id) return;
   S.unread.add(channelId);
   if ((S.view !== 'server' || S.server?.id !== serverId) && !mutedServers.has(serverId)) S.unreadServers.add(serverId);
