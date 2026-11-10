@@ -609,6 +609,54 @@
   .adm-badges button { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 12px; background: var(--hover); font-weight: 800; }
   .adm-badges button.on { box-shadow: inset 0 0 0 2px var(--accent); }
 
+  /* ================= Keşfet, hoş geldin, şablonlar ================= */
+  #discover { display: none; flex: 1; overflow-y: auto; padding: 22px 26px 30px; }
+  body.discover #discover { display: block; }
+  body.discover #messages, body.discover #typing, body.discover #replybar, body.discover #compose, body.discover #stage, body.discover #watch, body.discover #jumpnew { display: none !important; }
+  #disc-srv.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .dc-hero { border-radius: 22px; padding: 30px 32px; background: radial-gradient(120% 140% at 100% 100%, rgba(242,101,47,.45), rgba(242,101,47,0) 60%), var(--card); border: 1px solid var(--line); margin-bottom: 20px; }
+  .dc-hero h2 { font-size: 28px; font-weight: 900; } .dc-hero p { color: var(--muted); margin: 6px 0 16px; font-weight: 600; }
+  .dc-hero input { width: 100%; max-width: 520px; box-sizing: border-box; padding: 13px 16px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); font-size: 15px; outline: none; }
+  .dc-hero input:focus { border-color: var(--accent); }
+  .dc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 16px; }
+  .dc-card { border-radius: 18px; overflow: hidden; background: var(--card); border: 1px solid var(--line); display: flex; flex-direction: column; transition: transform .15s var(--ease-out), box-shadow .15s; text-align: left; }
+  .dc-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0,0,0,.35); }
+  .dc-card .cb { height: 110px; background: linear-gradient(135deg, #3a2c24, #241b16); background-size: cover; background-position: center; }
+  .dc-card .ci { width: 56px; height: 56px; border-radius: 18px; margin: -30px 0 0 16px; background: var(--accent); color: #fff; border: 4px solid var(--card); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; overflow: hidden; }
+  .dc-card .ci img { width: 100%; height: 100%; object-fit: cover; }
+  .dc-card .cx { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .dc-card .cn { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 16.5px; }
+  .dc-card .cd { color: var(--muted); font-size: 13.5px; line-height: 1.45; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .dc-card .cm { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); font-weight: 700; }
+  .dc-card .cm .on::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #23a55a; margin-right: 5px; }
+  .dc-card .cm .chip { margin-left: auto; }
+  .dc-card .cj { margin-top: 6px; padding: 10px; border-radius: 12px; font-weight: 900; background: var(--accent); color: #1a120c; }
+  .dc-card .cj.joined { background: var(--hover); color: var(--ink); }
+  .dc-empty { text-align: center; padding: 60px 20px; color: var(--muted); font-weight: 700; }
+  #modal .box.welcome { width: min(560px, 94vw); padding: 0; overflow: hidden; max-height: 92vh; overflow-y: auto; }
+  .wl-b { height: 150px; background: linear-gradient(135deg, #3a2c24, #241b16); background-size: cover; background-position: center; }
+  .wl-i { width: 76px; height: 76px; border-radius: 24px; margin: -40px auto 0; background: var(--accent); color: #fff; border: 5px solid var(--panel); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 30px; overflow: hidden; position: relative; }
+  .wl-i img { width: 100%; height: 100%; object-fit: cover; }
+  .wl-body { padding: 10px 26px 24px; text-align: center; }
+  .wl-body h2 { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 24px; font-weight: 900; margin-top: 8px; }
+  .wl-body > p { color: var(--muted); font-weight: 600; margin: 6px 0 4px; line-height: 1.5; white-space: pre-wrap; }
+  .wl-sec { text-align: left; margin-top: 18px; } .wl-sec h4 { font-size: 11.5px; letter-spacing: .07em; color: var(--muted); margin-bottom: 8px; }
+  .wl-ch { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 12px; background: var(--card); margin-bottom: 6px; text-align: left; font-weight: 800; }
+  .wl-ch:hover { background: var(--hover); } .wl-ch small { display: block; color: var(--muted); font-weight: 600; font-size: 12.5px; } .wl-ch .ic { color: var(--muted); }
+  .wl-rules { counter-reset: r; } .wl-rules li { list-style: none; counter-increment: r; display: flex; gap: 10px; padding: 9px 12px; border-radius: 12px; background: var(--card); margin-bottom: 6px; font-weight: 600; line-height: 1.45; }
+  .wl-rules li::before { content: counter(r); width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 900; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+  .wl-ok { margin-top: 14px; }
+  .tp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 4px; }
+  .tp { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 14px; background: var(--card); border: 2px solid transparent; text-align: left; }
+  .tp:hover { border-color: var(--line); } .tp.on { border-color: var(--accent); background: var(--accent-soft); }
+  .tp .ti { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; } .tp .ti .ic { width: 22px; height: 22px; }
+  .tp b { display: block; font-size: 14.5px; } .tp small { color: var(--muted); font-weight: 600; font-size: 12px; line-height: 1.4; display: block; margin-top: 2px; }
+  .tp-alt { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+  .tp-alt button { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 12px; background: var(--hover); font-weight: 800; font-size: 13px; }
+  .tp-alt .ic { width: 16px; height: 16px; }
+  .rule-ed { display: flex; gap: 8px; margin-bottom: 6px; } .rule-ed input { flex: 1; margin: 0; } .rule-ed button { padding: 0 12px; border-radius: 10px; background: var(--hover); color: var(--red); font-weight: 900; }
+  @media (max-width: 700px) { .tp-grid { grid-template-columns: 1fr; } }
+
   /* ================= Sunucu menüsü ================= */
   .shead.srvbtn { cursor: pointer; margin: 8px 8px 2px; padding: 10px 12px; border-radius: 14px; transition: background .15s; position: relative; }
   .shead.srvbtn:hover, .shead.srvbtn.open { background: var(--hover); }
@@ -890,6 +938,7 @@
     <div id="head"><button class="hbtn" id="menu-btn" aria-label="Menü"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div style="flex:1;min-width:0"><h2 id="title"></h2><small id="subtitle"></small></div><div id="head-actions" style="display:flex;gap:6px"></div></div>
     <div id="watch"><div class="bar"><span id="watch-info"></span><span><button id="watch-change">Değiştir</button><button id="watch-close">Kapat</button></span></div><div id="yt-wrap"><div id="yt"></div></div></div>
     <div id="stage" aria-label="Sesli oda"></div>
+    <div id="discover" aria-label="Sunucuları keşfet"></div>
     <div id="messages"></div>
     <div id="typing"></div>
     <div id="replybar"><span>Yanıtlanıyor: <b id="reply-who"></b> <span id="reply-text"></span></span><button id="reply-x" class="ibtn" aria-label="Yanıtı iptal et"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
@@ -1004,6 +1053,9 @@ const ICON = {
   expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   live: '<circle cx="12" cy="12" r="2.5"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/>',
   window: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M6.5 6.5h.01M9 6.5h.01"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path d="M4 20a2 2 0 0 0 2 2h13v-4"/>',
+  sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/>',
   usersPlus: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>',
   arrowDown: '<path d="M12 5v14M6 13l6 6 6-6"/>',
   bellOff: '<path d="M6 16v-5a6 6 0 0 1 9.2-5.1M18 11v5l2 2H8M10 21h4M3 3l18 18"/>',
@@ -1040,7 +1092,7 @@ function showBadgeCard(el, srv, id) {
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-sbadge]');
-  if (b) { e.stopPropagation(); e.preventDefault(); const srv = S.servers.find(x => x.id === b.dataset.srv) || window.__invSrv; return showBadgeCard(b, srv, b.dataset.sbadge); }
+  if (b) { e.stopPropagation(); e.preventDefault(); const srv = S.servers.find(x => x.id === b.dataset.srv) || (b.dataset.srv?.startsWith('__disc_') && (window.__discList || []).find(x => '__disc_' + x.id === b.dataset.srv)) || window.__invSrv; return showBadgeCard(b, srv, b.dataset.sbadge); }
   if (!e.target.closest('.bcard')) document.querySelector('.bcard')?.remove();
 }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelector('.bcard')?.remove(); });
@@ -1300,11 +1352,11 @@ function renderRail() {
   $('#rail').innerHTML =
     `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button><div class="rsep"></div>` +
     S.servers.map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''}" data-id="${s.id}" title="${esc(s.name)}${mutedServers.has(s.id) ? ' (sessizde)' : ''}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) ? '<span class="dot"></span>' : ''}</button>`).join('') +
-    `<button class="srv dash" id="add-srv" title="Sunucu oluştur" aria-label="Sunucu oluştur">${ic('plus')}</button><button class="srv dash" id="join-srv" title="Davet koduyla katıl" aria-label="Davet koduyla katıl">${ic('link')}</button>`;
+    `<button class="srv dash" id="add-srv" title="Sunucu oluştur" aria-label="Sunucu oluştur">${ic('plus')}</button><button class="srv dash" id="join-srv" title="Davet koduyla katıl" aria-label="Davet koduyla katıl">${ic('link')}</button><button class="srv dash ${S.view === 'discover' ? 'active' : ''}" id="disc-srv" title="Sunucuları keşfet" aria-label="Sunucuları keşfet">${ic('compass')}</button>`;
+  $('#disc-srv').onclick = () => showDiscover();
   $('#home').onclick = openDMHome;
   $('#rail').querySelectorAll('.srv[data-id]').forEach(b => b.onclick = () => selectServer(b.dataset.id));
-  $('#add-srv').onclick = () => form('Yeni sunucu', 'Arkadaşlarınla takılacağın yeni bir yer aç.', [{ k: 'name', p: 'Sunucu adı' }], v =>
-    socket.emit('createServer', v.name, s => s.error ? toast(s.error) : selectServer(s.id)));
+  $('#add-srv').onclick = () => showTemplates();
   $('#join-srv').onclick = () => form('Sunucuya katıl', 'Arkadaşının gönderdiği davet linkini ya da kodunu yapıştır.', [{ k: 'code', p: 'Davet linki ya da kodu' }], v => joinInvite(v.code));
 }
 async function invitePreview(code) {
@@ -1332,13 +1384,96 @@ function joinInviteNow(code) {
   socket.emit('joinInvite', code, s => {
     if (s.error) return toast(s.error);
     if (!S.servers.find(x => x.id === s.id)) S.servers.push(s);
-    selectServer(s.id); toast(`${s.name} sunucusuna katıldın`);
+    selectServer(s.id);
+    if (!(s.welcome?.enabled && !s.accepted)) toast(`${s.name} sunucusuna katıldın`);
+  });
+}
+
+// ================= Sunucu şablonları =================
+const TPL_UI = [
+  ['bos', 'Sıfırdan başla', 'Bir yazılı, bir sesli oda. Gerisini sen kurarsın.', 'plus', '#6b5a4e'],
+  ['arkadas', 'Arkadaş grubu', 'Mimler, fotoğraflar, planlar, müzik ve film gecesi odası.', 'users', '#ff9f43'],
+  ['oyun', 'Oyun ekibi', 'Duyurular, klipler, takım arıyorum, maç odaları, Kaptan ve Takım rolleri.', 'gamepad', '#ff4655'],
+  ['okul', 'Okul / sınıf', 'Ödevler, sınav takvimi, soru-cevap, etüt odası, Öğretmen rolü.', 'book', '#2fd3c3'],
+  ['topluluk', 'Topluluk', 'Kurallar, kendini tanıt, öneriler, mod odası ve hoş geldin ekranı.', 'sparkle', '#7c5cff'],
+];
+function showTemplates(pick = 'arkadas') {
+  modal(`<h3>${ic('plus')}Sunucu oluştur</h3><p class="hint">Bir şablon seç; odalar, kategoriler ve roller hazır gelsin. Sonradan her şeyi değiştirebilirsin.</p>
+    <div class="tp-grid">${TPL_UI.map(([k, t, d, i, c]) => `<button class="tp ${k === pick ? 'on' : ''}" data-tp="${k}"><span class="ti" style="background:${c}">${ic(i)}</span><span><b>${t}</b><small>${d}</small></span></button>`).join('')}</div>
+    <form id="tp-form"><input class="field" name="name" maxlength="40" placeholder="Sunucu adı (örn. ${pick === 'oyun' ? 'Valo Ekibi' : pick === 'okul' ? '11-B Sınıfı' : pick === 'topluluk' ? 'Anime Severler' : 'Kankalar'})" required autocomplete="off" style="margin-top:10px">
+    <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="primary">Oluştur</button></div></form>
+    <div class="tp-alt"><button id="tp-join">${ic('link')}Davet koduyla katıl</button><button id="tp-disc">${ic('compass')}Sunucuları keşfet</button></div>`);
+  $('#mx').onclick = closeModal;
+  $('#modal-box').querySelectorAll('[data-tp]').forEach(b => b.onclick = () => { const v = $('#tp-form').name.value; showTemplates(b.dataset.tp); $('#tp-form').name.value = v; $('#tp-form').name.focus(); });
+  $('#tp-join').onclick = () => form('Sunucuya katıl', 'Arkadaşının gönderdiği davet linkini ya da kodunu yapıştır.', [{ k: 'code', p: 'Davet linki ya da kodu' }], v => joinInvite(v.code));
+  $('#tp-disc').onclick = () => { closeModal(); showDiscover(); };
+  $('#tp-form').onsubmit = e => {
+    e.preventDefault(); const name = e.target.name.value.trim(); if (!name) return;
+    socket.emit('createServer', { name, template: pick }, s => { if (s.error) return toast(s.error); closeModal(); if (!S.servers.find(x => x.id === s.id)) S.servers.push(s); selectServer(s.id); toast(`${s.name} hazır! Arkadaşlarını davet etmeyi unutma.`); });
+  };
+  setTimeout(() => $('#tp-form')?.name.focus(), 30);
+}
+
+// ================= Keşfet =================
+let discCat = null, discQ = '';
+const srvArt = (o, cls) => `<div class="${cls}" style="${o.banner ? `background-image:url('${esc(o.banner)}')` : o.bannerColor ? `background-image:linear-gradient(135deg, ${o.bannerColor}, ${o.bannerColor}99)` : ''}"></div>`;
+const srvIco = (o, cls) => `<div class="${cls}">${o.iconImg ? `<img src="${esc(o.iconImg)}" alt="">` : esc(o.icon || '?')}</div>`;
+const discCard = (o, preview) => `<div class="dc-card">${srvArt(o, 'cb')}${srvIco(o, 'ci')}<div class="cx"><div class="cn">${badgeRow(o, 18)}${esc(o.name)}</div><div class="cd">${esc(o.description || 'Açıklama yok.')}</div>
+  <div class="cm"><span class="on">${o.online ?? 0} çevrimiçi</span><span>${o.members ?? 0} üye</span>${o.category ? `<span class="chip">${esc(o.category)}</span>` : ''}</div>
+  ${preview ? '' : `<button class="cj ${o.joined ? 'joined' : ''}" data-dj="${esc(o.invite)}" data-did="${esc(o.id)}">${o.joined ? 'Sunucuyu aç' : 'Katıl'}</button>`}</div></div>`;
+function showDiscover() {
+  S.view = 'discover'; document.body.classList.add('discover'); document.body.classList.remove('vview', 'drawer'); renderPip?.();
+  S.channel = null; renderRail();
+  setHeader(`${ic('compass')} Sunucuları keşfet`, 'Yeni kankalar, yeni topluluklar', false); $('#head-actions').innerHTML = '';
+  $('#side-head').className = 'shead'; $('#side-head').style.backgroundImage = ''; $('#side-head').onclick = null;
+  $('#side-head').innerHTML = '<h3>Keşfet</h3>';
+  $('#members').innerHTML = `<div class="label" style="padding:14px 8px 6px">Rozetler ne demek?</div>${Object.entries(SRV_BADGES).map(([k, b]) => `<div class="lrow" style="align-items:flex-start;gap:10px;background:none">${badgeSvg(k, 22)}<span><b>${b.t}</b><br><small style="color:var(--muted)">${b.d}</small></span></div>`).join('')}`;
+  $('#discover').innerHTML = `<div class="dc-hero"><h2>Sana uygun bir topluluk bul</h2><p>Oyun, müzik, okul ya da sadece muhabbet. Rozetli sunucular üstte.</p><input id="dc-q" type="search" placeholder="Sunucu ara…" value="${esc(discQ)}" aria-label="Sunucu ara"></div><div id="dc-list"><div class="dc-empty">Yükleniyor…</div></div>`;
+  let tm; $('#dc-q').oninput = e => { clearTimeout(tm); tm = setTimeout(() => { discQ = e.target.value; loadDiscover(); }, 250); };
+  loadDiscover();
+}
+function loadDiscover() {
+  socket.emit('discover', { q: discQ, cat: discCat }, r => {
+    if (S.view !== 'discover') return;
+    const cats = r.cats || [];
+    $('#side-list').innerHTML = `<div class="label">Kategoriler</div>` + [[null, 'Tümü', 'compass'], ...cats.map(c => [c, c, 'hash'])].map(([k, t, i]) => `<div class="room ${discCat === k ? 'active' : ''}" data-cat="${esc(k || '')}"><div class="ico">${ic(i)}</div>${esc(t)}</div>`).join('');
+    $('#side-list').querySelectorAll('[data-cat]').forEach(d => d.onclick = () => { discCat = d.dataset.cat || null; loadDiscover(); });
+    $('#dc-list').innerHTML = (r.list || []).length ? `<div class="dc-grid">${r.list.map(o => discCard(o)).join('')}</div>` : `<div class="dc-empty">${ic('compass')}<br>Burada henüz sunucu yok. Kendi sunucunu kur ve Sunucu ayarları › Keşif'ten herkese aç!</div>`;
+    window.__discList = r.list || [];
+    $('#dc-list').querySelectorAll('[data-dj]').forEach(b => b.onclick = () => {
+      const o = window.__discList.find(x => x.id === b.dataset.did);
+      if (o?.joined) { document.body.classList.remove('discover'); return selectServer(o.id); }
+      document.body.classList.remove('discover'); joinInviteNow(b.dataset.dj);
+    });
+    $('#dc-list').querySelectorAll('.dc-card [data-sbadge]').forEach(x => x.dataset.srv = '__disc_' + x.closest('.dc-card').querySelector('[data-did]')?.dataset.did);
+  });
+}
+
+// ================= Hoş geldin ekranı =================
+const welcomeShown = new Set();
+function showWelcome(s, force) {
+  const w = s?.welcome; if (!w?.enabled) return;
+  welcomeShown.add(s.id);
+  const needs = !s.accepted;
+  modal(`${srvArt(s, 'wl-b')}${srvIco(s, 'wl-i')}<div class="wl-body"><h2>${badgeRow(s, 22)}${esc(s.name)}</h2><p>${esc(w.message || `${s.name} sunucusuna hoş geldin!`)}</p>
+    ${(w.channels || []).length ? `<div class="wl-sec"><h4>BURADAN BAŞLA</h4>${w.channels.map(c => { const ch = s.channels.find(x => x.id === c.id); return ch ? `<button class="wl-ch" data-wch="${ch.id}">${roomIcon(ch)}<span>${esc(ch.name)}<small>${esc(c.desc || '')}</small></span></button>` : ''; }).join('')}</div>` : ''}
+    ${(w.rules || []).length ? `<div class="wl-sec"><h4>SUNUCU KURALLARI</h4><ol class="wl-rules">${w.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ol></div>` : ''}
+    ${needs ? `${(w.rules || []).length ? `<label class="chk" style="justify-content:center;margin-top:10px"><input type="checkbox" id="wl-chk"><span>Kuralları okudum ve kabul ediyorum</span></label>` : ''}<button class="primary wl-ok" id="wl-ok" ${(w.rules || []).length ? 'disabled' : ''}>Sunucuya gir</button>` : `<button class="primary wl-ok" id="mx">Kapat</button>`}
+    </div>`, 'welcome');
+  if ($('#mx')) $('#mx').onclick = closeModal;
+  const go = after => socket.emit('acceptRules', s.id, r => { if (r.error) return toast(r.error); s.accepted = true; closeModal(); toast(`Hoş geldin! Artık ${s.name} sunucusunda yazabilirsin.`); after?.(); });
+  if ($('#wl-chk')) $('#wl-chk').onchange = e => $('#wl-ok').disabled = !e.target.checked;
+  if ($('#wl-ok')) $('#wl-ok').onclick = () => go();
+  $('#modal-box').querySelectorAll('[data-wch]').forEach(b => b.onclick = () => {
+    if (needs && $('#wl-chk') && !$('#wl-chk').checked) return toast('Önce kuralları kabul et');
+    const open = () => { closeModal(); selectServer(s.id, b.dataset.wch); };
+    needs ? go(open) : open();
   });
 }
 
 // ================= Sunucu görünümü =================
 function selectServer(id, channelId) {
-  closeSrvMenu();
+  closeSrvMenu(); document.body.classList.remove('discover');
   S.view = 'server';
   S.server = S.servers.find(s => s.id === id) || S.servers[0];
   S.unreadServers.delete(S.server.id);
@@ -1346,6 +1481,7 @@ function selectServer(id, channelId) {
   const ch = text.find(c => c.id === channelId) || text.find(c => c.id === lastCh[S.server.id]) || text[0];
   renderRail(); renderMembers();
   if (ch) selectChannel(ch.id); else renderSide();
+  if (S.server.welcome?.enabled && !S.server.accepted && !welcomeShown.has(S.server.id)) setTimeout(() => showWelcome(S.server), 200);
 }
 function renderSide() {
   if (S.view === 'dm') return renderDMSide();
@@ -1367,8 +1503,8 @@ function renderSide() {
   const cats = [...new Set(s.channels.map(c => c.category).filter(Boolean))];
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
   $('#side-list').innerHTML =
-    (text.length || canAdd ? `<div class="label">Yazılı odalar ${canAdd ? '<button data-t="text" title="Oda ekle">+</button>' : ''}</div>` + text.map(row).join('') : '') +
-    (voiceCh.length || canAdd ? `<div class="label">Sesli odalar ${canAdd ? '<button data-t="voice" title="Sesli oda ekle">+</button>' : ''}</div>` + voiceCh.map(row).join('') : '') +
+    (text.length || (canAdd && !cats.length) ? `<div class="label">Yazılı odalar ${canAdd ? '<button data-t="text" title="Oda ekle">+</button>' : ''}</div>` + text.map(row).join('') : '') +
+    (voiceCh.length || (canAdd && !cats.length) ? `<div class="label">Sesli odalar ${canAdd ? '<button data-t="voice" title="Sesli oda ekle">+</button>' : ''}</div>` + voiceCh.map(row).join('') : '') +
     cats.map(cat => { const k = s.id + '|' + cat, closed = shut.has(k), list = s.channels.filter(c => c.category === cat);
       return `<div class="label cat-label ${closed ? 'shut' : ''}" data-cat="${esc(k)}">${ic('chevron')}${esc(cat)}</div>` + list.filter(c => !closed || c.id === S.channel?.id || c.id === myVoice).map(row).join(''); }).join('');
   $('#side-list').querySelectorAll('[data-cat]').forEach(l => l.onclick = () => { const k = l.dataset.cat; shut.has(k) ? shut.delete(k) : shut.add(k); store.set('kanka-cats', JSON.stringify([...shut])); renderSide(); });
@@ -1522,6 +1658,7 @@ function toggleSrvMenu() {
     '<hr>' +
     item('info', 'Sunucu bilgisi', 'info') +
     item('lb', 'Liderlik tablosu', 'trophy') +
+    (s.welcome?.enabled ? item('welcome', 'Hoş geldin ekranı', 'sparkle') : '') +
     (mod ? item('audit', 'Moderasyon kayıtları', 'log') : '') +
     item('copy', 'Sunucu kimliğini kopyala', 'idcopy') +
     (s.public ? '' : '<hr>' + item('leave', 'Sunucudan ayrıl', 'door', 'danger'));
@@ -1542,6 +1679,7 @@ function toggleSrvMenu() {
         socket.emit('createChannel', { serverId: s.id, name: val.name, type: a }, c => c.error ? toast(c.error) : !v && selectChannel(c.id))); }
     if (a === 'read') { s.channels.forEach(c => S.unread.delete(c.id)); S.unreadServers.delete(s.id); renderRail(); renderSide(); toast('Hepsi okundu olarak işaretlendi'); }
     if (a === 'info') showServerInfo(s);
+    if (a === 'welcome') showWelcome(s, true);
     if (a === 'lb') showLeaderboard();
     if (a === 'audit') socket.emit('audit', s.id, list => {
       modal(`<h3>${ic('log')}Moderasyon kayıtları</h3><p class="hint">${esc(s.name)} sunucusunda yapılan yönetim işlemleri.</p>` +
@@ -1587,6 +1725,7 @@ function showServerSettings(s, tab, focus) {
   s = S.servers.find(x => x.id === s.id) || s;
   const P = p => perm(s, p), mod = isMod(s, S.me);
   const tabs = [['general', 'Genel', 'gear', P('manageServer')], ['roles', 'Roller', 'tag', P('manageRoles')], ['channels', 'Odalar', 'hash', mod], ['members', 'Üyeler', 'users', !s.public && (P('manageRoles') || P('kick') || P('ban') || P('timeout'))],
+    ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
     ['emoji', 'Emojiler', 'smile', mod], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
@@ -1686,6 +1825,41 @@ function showServerSettings(s, tab, focus) {
       main.querySelectorAll('[data-kick]').forEach(b => b.onclick = () => confirmBox(`${b.dataset.kick} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: s.id, name: b.dataset.kick }, r => { if (r.error) return toast(r.error); toast('Atıldı'); showServerSettings(s, 'members'); })));
       main.querySelectorAll('[data-ban]').forEach(b => b.onclick = () => askBan(s, b.dataset.ban, () => showServerSettings(s, 'members')));
     },
+    welcome: () => {
+      const w = s.welcome || { enabled: false, message: '', rules: [], channels: [] }, txt = s.channels.filter(c => c.type !== 'voice');
+      const draft = { rules: [...(w.rules || [])], channels: (w.channels || []).map(c => ({ ...c })) };
+      const draw = () => {
+        main.innerHTML = `<div class="st-page"><h3>Hoş geldin ekranı</h3><p class="hint">Sunucuya yeni katılanlar önce bunu görür. Kural koyarsan, kabul etmeden mesaj yazamazlar.</p>
+          <div class="st-field"><label class="switch">Hoş geldin ekranını aç<input type="checkbox" id="wl-on" ${w.enabled ? 'checked' : ''}></label></div>
+          <div class="st-field"><label>Karşılama mesajı</label><textarea class="field" id="wl-msg" maxlength="500" placeholder="Örn. Hoş geldin! Önce kuralları oku, sonra #genel'de selam ver.">${esc(w.message || '')}</textarea></div>
+          <div class="st-field"><label>Kurallar (${draft.rules.length}/10)</label>${draft.rules.map((r, i) => `<div class="rule-ed"><input class="field" data-ri="${i}" maxlength="200" value="${esc(r)}"><button type="button" data-rd="${i}" aria-label="Kuralı sil">${ic('x')}</button></div>`).join('')}
+            ${draft.rules.length < 10 ? `<button class="lrow" id="wl-addr" style="margin:0">${ic('plus')}Kural ekle</button>` : ''}</div>
+          <div class="st-field"><label>Buradan başla odaları (${draft.channels.length}/5)</label>${draft.channels.map((c, i) => `<div class="rule-ed"><select class="field" data-ci="${i}" style="flex:0 0 190px">${txt.map(t => `<option value="${t.id}" ${t.id === c.id ? 'selected' : ''}># ${esc(t.name)}</option>`).join('')}</select><input class="field" data-cd="${i}" maxlength="60" placeholder="Kısa açıklama" value="${esc(c.desc || '')}"><button type="button" data-cx="${i}" aria-label="Odayı kaldır">${ic('x')}</button></div>`).join('')}
+            ${draft.channels.length < 5 && txt.length ? `<button class="lrow" id="wl-addc" style="margin:0">${ic('plus')}Oda ekle</button>` : ''}</div>
+          <div class="st-field" style="display:flex;gap:8px"><button class="primary" id="wl-save" style="width:auto;padding:11px 22px">Kaydet</button><button class="lrow" id="wl-prev" style="margin:0">${ic('eye')}Önizle</button></div></div>`;
+        const sync = () => { main.querySelectorAll('[data-ri]').forEach(x => draft.rules[+x.dataset.ri] = x.value); main.querySelectorAll('[data-ci]').forEach(x => draft.channels[+x.dataset.ci].id = x.value); main.querySelectorAll('[data-cd]').forEach(x => draft.channels[+x.dataset.cd].desc = x.value); w.enabled = $('#wl-on').checked; w.message = $('#wl-msg').value; };
+        if ($('#wl-addr')) $('#wl-addr').onclick = () => { sync(); draft.rules.push(''); draw(); main.querySelector(`[data-ri="${draft.rules.length - 1}"]`)?.focus(); };
+        if ($('#wl-addc')) $('#wl-addc').onclick = () => { sync(); draft.channels.push({ id: txt[0].id, desc: '' }); draw(); };
+        main.querySelectorAll('[data-rd]').forEach(b => b.onclick = () => { sync(); draft.rules.splice(+b.dataset.rd, 1); draw(); });
+        main.querySelectorAll('[data-cx]').forEach(b => b.onclick = () => { sync(); draft.channels.splice(+b.dataset.cx, 1); draw(); });
+        const payload = () => { sync(); return { serverId: s.id, enabled: w.enabled, message: w.message, rules: draft.rules, channels: draft.channels }; };
+        $('#wl-save').onclick = () => socket.emit('welcomeSave', payload(), done('Hoş geldin ekranı kaydedildi'));
+        $('#wl-prev').onclick = () => { const p = payload(); showWelcome({ ...s, accepted: false, welcome: { ...p, enabled: true } }, true); };
+      };
+      draw();
+    },
+    discovery: () => {
+      const cats = ['Oyun', 'Sohbet', 'Müzik', 'Eğitim', 'Yazılım', 'Anime', 'Film ve dizi', 'Spor', 'Sanat', 'Diğer'];
+      main.innerHTML = `<div class="st-page"><h3>Keşif</h3><p class="hint">Sunucunu Keşfet sayfasında listele; davet linki olmayanlar da bulup katılabilsin. Açık olunca herkes sunucuya katılabilir.</p>
+        <div class="st-field"><label class="switch">Keşfet sayfasında göster<input type="checkbox" id="ds-on" ${s.discoverable ? 'checked' : ''}></label></div>
+        <div class="st-field"><label>Kısa açıklama</label><textarea class="field" id="ds-desc" maxlength="200" placeholder="Sunucun ne hakkında? Kimler gelmeli?">${esc(s.description || '')}</textarea></div>
+        <div class="st-field"><label>Kategori</label><select class="field" id="ds-cat"><option value="">Seç…</option>${cats.map(c => `<option ${s.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+        <div class="st-field"><label>Önizleme</label><div id="ds-prev" style="max-width:320px"></div></div>
+        <div class="st-field"><button class="primary" id="ds-save" style="width:auto;padding:11px 22px">Kaydet</button></div></div>`;
+      const prev = () => $('#ds-prev').innerHTML = discCard({ ...s, description: $('#ds-desc').value, category: $('#ds-cat').value || null, members: s.members.length, online: s.members.filter(n => S.online.has(n)).length }, true);
+      $('#ds-desc').oninput = prev; $('#ds-cat').onchange = prev; prev();
+      $('#ds-save').onclick = () => socket.emit('discoverySave', { serverId: s.id, discoverable: $('#ds-on').checked, description: $('#ds-desc').value, category: $('#ds-cat').value }, done('Keşif ayarları kaydedildi'));
+    },
     emoji: () => {
       main.innerHTML = `<div class="st-page"><h3>Özel emojiler</h3><p class="hint">${Object.keys(s.emojis || {}).length}/50 · Sohbette :ad: yazarak kullanılır. Silmek için emojiye tıkla.</p>
         <div class="ep-grid" style="grid-template-columns:repeat(8,1fr);padding:0;margin-bottom:12px">${Object.entries(s.emojis || {}).map(([n, u]) => `<button data-rmemo="${n}" title=":${n}:"><img src="${esc(u)}" alt=":${n}:"></button>`).join('')}</div>
@@ -1739,6 +1913,7 @@ function openDMHome() {
 }
 let friendTab = 'online';
 function showFriends(tab = friendTab) {
+  document.body.classList.remove('discover');
   document.body.classList.remove('vview'); renderPip();
   friendTab = tab;
   S.view = 'dm'; S.channel = null; renderRail(); renderDMSide(); renderMembers();
@@ -1789,6 +1964,7 @@ function openChat(id, other) {
   openDMChannel(id, other || id.slice(3).split('|').find(n => n !== S.me) || S.me);
 }
 function openDMChannel(id, other) {
+  document.body.classList.remove('discover');
   document.body.classList.remove('vview'); renderPip();
   document.body.classList.remove('drawer');
   S.view = 'dm'; renderRail();
@@ -1802,6 +1978,7 @@ function openDMChannel(id, other) {
 }
 const groupName = g => g.name || g.members.filter(n => n !== S.me).slice(0, 3).join(', ') + (g.members.length > 4 ? '…' : '');
 function openGroup(id) {
+  document.body.classList.remove('discover');
   document.body.classList.remove('vview'); renderPip();
   const g = S.dms.find(d => d.id === id); if (!g) return;
   document.body.classList.remove('drawer');
@@ -2137,7 +2314,7 @@ socket.on('playlist', ({ channelId, playlist }) => { if (channelId === S.channel
 // ================= Yazma alanı =================
 function send(payload) {
   if (S.replyTo) payload.replyTo = S.replyTo.id;
-  socket.emit('message', payload, r => r?.error ? toast(r.error) : cancelReply());
+  socket.emit('message', payload, r => { if (r?.needRules) return showWelcome(S.servers.find(x => x.id === r.needRules)); r?.error ? toast(r.error) : cancelReply(); });
 }
 $('#compose').onsubmit = e => {
   e.preventDefault();
@@ -2259,6 +2436,7 @@ socket.on('typing', ({ channelId, name }) => {
 
 // ================= Üyeler =================
 function renderMembers() {
+  if (S.view === 'discover') return;
   let names;
   if (S.view === 'dm') names = S.channel?.group ? S.channel.members : S.channel?.with ? [S.me, S.channel.with] : [S.me];
   else names = S.server?.members || [];

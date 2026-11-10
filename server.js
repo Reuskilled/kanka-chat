@@ -48,7 +48,7 @@ app.get('/api/davet/:code', (req, res) => {
   const s = db.servers.find(x => x.invite === req.params.code);
   if (!s) return res.status(404).json({ error: 'Davet geçersiz ya da süresi dolmuş' });
   const mem = membersOf(s), on = new Set(onlineNames());
-  res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, badges: srvBadges(s), banner: s.banner || null, bannerColor: s.bannerColor || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
+  res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, badges: srvBadges(s), description: s.description || '', banner: s.banner || null, bannerColor: s.bannerColor || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
 });
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 app.get('/api/surum', (req, res) => {
@@ -225,6 +225,35 @@ function seesChannel(s, c, n) {
   if (s.owner === n || can(s, n, 'manageChannels')) return true;
   return (s.memberRoles?.[n] || []).some(r => (c.allow || []).includes(r)) || (c.allowUsers || []).includes(n);
 }
+// ---------- Sunucu şablonları ----------
+const MOD = ['manageChannels', 'manageMessages', 'kick', 'timeout', 'mentionEveryone'];
+const TEMPLATES = {
+  bos: { channels: [{ n: 'genel' }, { n: 'Sohbet', v: 1 }] },
+  oyun: {
+    roles: [{ name: 'Kaptan', color: '#ff4655', perms: MOD, hoist: true }, { name: 'Takım', color: '#4aa8ff', perms: [], hoist: true }],
+    channels: [{ n: 'duyurular', cat: 'Bilgi', ro: 1 }, { n: 'kurallar', cat: 'Bilgi', ro: 1 }, { n: 'genel', cat: 'Sohbet' }, { n: 'klip-ve-ekran', cat: 'Sohbet' }, { n: 'takım-arıyorum', cat: 'Sohbet' },
+      { n: 'strateji', cat: 'Takım', priv: ['Kaptan', 'Takım'] }, { n: 'Lobi', cat: 'Sesli', v: 1 }, { n: 'Maç 1', cat: 'Sesli', v: 1 }, { n: 'Maç 2', cat: 'Sesli', v: 1 }, { n: 'AFK', cat: 'Sesli', v: 1 }],
+    welcome: { message: 'Takıma hoş geldin! Önce kuralları oku, sonra #takım-arıyorum odasında kendini tanıt.', rules: ['Küfür, hakaret ve taciz yok.', 'Hile, hile satışı ve hesap paylaşımı yasak.', 'Spam ve izinsiz reklam yapma.', 'Maç sırasında sesli odada sessiz olmaya özen göster.'],
+      channels: [['duyurular', 'Turnuva ve maç saatleri'], ['takım-arıyorum', 'Kendini tanıt, takım bul'], ['klip-ve-ekran', 'En iyi anlarını paylaş']] } },
+  arkadas: {
+    roles: [{ name: 'Kanka', color: '#ffb347', perms: [], hoist: false }],
+    channels: [{ n: 'genel', cat: 'Takılma' }, { n: 'mimler', cat: 'Takılma' }, { n: 'fotoğraflar', cat: 'Takılma' }, { n: 'planlar', cat: 'Takılma' }, { n: 'müzik', cat: 'Takılma' },
+      { n: 'Muhabbet', cat: 'Sesli', v: 1 }, { n: 'Oyun', cat: 'Sesli', v: 1 }, { n: 'Film gecesi', cat: 'Sesli', v: 1 }] },
+  okul: {
+    roles: [{ name: 'Öğretmen', color: '#2fd3c3', perms: MOD, hoist: true }, { name: 'Sınıf başkanı', color: '#b07cff', perms: ['manageMessages', 'mentionEveryone'], hoist: true }],
+    channels: [{ n: 'duyurular', cat: 'Okul', ro: 1 }, { n: 'ödevler', cat: 'Okul' }, { n: 'sınav-takvimi', cat: 'Okul', ro: 1 }, { n: 'soru-cevap', cat: 'Dersler' }, { n: 'notlar', cat: 'Dersler' }, { n: 'sohbet', cat: 'Teneffüs' },
+      { n: 'Etüt', cat: 'Sesli', v: 1 }, { n: 'Grup çalışması', cat: 'Sesli', v: 1 }],
+    welcome: { message: 'Sınıfımıza hoş geldin! Duyuruları takip et, takıldığın soruları #soru-cevap odasına yaz.', rules: ['Birbirimize saygılı olalım.', 'Ödev cevaplarını doğrudan paylaşma, birbirine yardım et.', 'Ders dışı konular için #sohbet odasını kullan.'],
+      channels: [['duyurular', 'Okul ve ders duyuruları'], ['ödevler', 'Teslim tarihleri ve ödevler'], ['soru-cevap', 'Takıldığın yerleri sor']] } },
+  topluluk: {
+    roles: [{ name: 'Moderatör', color: '#4cc38a', perms: MOD, hoist: true }, { name: 'Destekçi', color: '#ff6b9a', perms: [], hoist: true }],
+    channels: [{ n: 'duyurular', cat: 'Başla', ro: 1 }, { n: 'kurallar', cat: 'Başla', ro: 1 }, { n: 'kendini-tanıt', cat: 'Başla' }, { n: 'genel', cat: 'Topluluk' }, { n: 'öneriler', cat: 'Topluluk' }, { n: 'paylaşımlar', cat: 'Topluluk' },
+      { n: 'mod-odası', cat: 'Yönetim', priv: ['Moderatör'] }, { n: 'Sohbet', cat: 'Sesli', v: 1 }, { n: 'Etkinlik', cat: 'Sesli', v: 1 }],
+    welcome: { message: 'Topluluğumuza hoş geldin! Kuralları kabul ettikten sonra #kendini-tanıt odasında selam ver.', rules: ['Herkese saygılı ol, ayrımcılık ve nefret söylemi yok.', 'Spam, izinsiz reklam ve davet linki paylaşma.', 'Konuya uygun odayı kullan.', 'Moderatörlerin uyarılarına uy.'],
+      channels: [['kendini-tanıt', 'Kendinden bahset'], ['genel', 'Ana sohbet'], ['öneriler', 'Fikirlerini paylaş']] } },
+};
+const CATS = ['Oyun', 'Sohbet', 'Müzik', 'Eğitim', 'Yazılım', 'Anime', 'Film ve dizi', 'Spor', 'Sanat', 'Diğer'];
+
 // ---------- Sunucu rozetleri ----------
 // resmi: Kanka HQ · dogrulanmis/partner: site yöneticisi verir · topluluk: 15+ üye ve 7+ gün
 const siteAdmin = n => !!n && (db.servers.find(x => x.id === 's1')?.owner === n || (db.siteAdmins || []).includes(n));
@@ -242,7 +271,9 @@ const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s
   channels: viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels, members: s.public ? Object.keys(db.users) : s.members,
   customRoles: s.customRoles, memberRoles: s.memberRoles, timeouts: Object.fromEntries(Object.entries(s.timeouts || {}).filter(([, t]) => t > Date.now())),
   bans: viewer && (s.owner === viewer || can(s, viewer, 'ban')) ? s.bans : {}, myPerms: viewer ? [...permsOf(s, viewer)] : [],
-  badges: srvBadges(s), createdAt: s.createdAt || null, siteAdmin: siteAdmin(viewer)
+  badges: srvBadges(s), createdAt: s.createdAt || null, siteAdmin: siteAdmin(viewer),
+  discoverable: !!s.discoverable, description: s.description || '', category: s.category || null,
+  welcome: s.welcome || null, accepted: !s.welcome?.enabled || !!s.accepted?.[viewer] || s.owner === viewer
 });
 const findChannel = chId => {
   for (const s of db.servers) { const c = s.channels.find(c => c.id === chId); if (c) return { s, c }; }
@@ -609,6 +640,7 @@ io.on('connection', socket => {
       if (o?.blocked?.includes(me)) return cb({ error: 'Bu kişi sana mesaj alımını kapattı.' });
     }
     const srv = serverOf(cur);
+    if (srv?.welcome?.enabled && srv.owner !== me && !srv.accepted?.[me]) return cb({ error: 'Önce sunucu kurallarını kabul etmelisin', needRules: srv.id });
     if (srv && timedOut(srv, me)) return cb({ error: `Susturuldun. ${Math.ceil((srv.timeouts[me] - Date.now()) / 60000)} dakika sonra yazabilirsin.` });
     if (srv && findChannel(cur).c.readonly && !can(srv, me, 'manageMessages')) return cb({ error: 'Bu oda salt okunur' });
     if (srv && /@(everyone|herkes)\b/i.test(p.text || '') && !can(srv, me, 'mentionEveryone')) return cb({ error: '@everyone kullanma yetkin yok' });
@@ -1040,13 +1072,25 @@ io.on('connection', socket => {
   socket.on('typing', () => { if (me && cur) socket.to(cur).emit('typing', { channelId: cur, name: me }); });
 
   // ----- Sunucular -----
-  socket.on('createServer', (name, cb = () => {}) => {
+  socket.on('createServer', (arg, cb = () => {}) => {
     if (!me) return;
-    name = clean(name, 40); if (!name) return cb({ error: 'Sunucu adı gerekli' });
+    if (limited('srv|' + me, 5, 3600e3)) return cb({ error: 'Bir saatte en fazla 5 sunucu kurabilirsin' });
+    const opts = typeof arg === 'string' ? { name: arg } : (arg || {});
+    const name = clean(opts.name, 40); if (!name) return cb({ error: 'Sunucu adı gerekli' });
+    const tpl = TEMPLATES[opts.template] || TEMPLATES.bos;
     const s = {
       id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], createdAt: Date.now(), roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: crypto.randomBytes(4).toString('hex'),
-      channels: [{ id: id(), name: 'genel', type: 'text' }, { id: id(), name: 'Sohbet', type: 'voice' }]
+      channels: [], template: opts.template in TEMPLATES ? opts.template : 'bos'
     };
+    for (const r of tpl.roles || []) s.customRoles.push({ id: id(), ...r });
+    for (const c of tpl.channels) {
+      const ch = { id: id(), name: c.n, type: c.v ? 'voice' : 'text' };
+      if (c.cat) ch.category = c.cat; if (c.ro) ch.readonly = true;
+      if (c.priv) { ch.private = true; ch.allow = s.customRoles.filter(r => c.priv.includes(r.name)).map(r => r.id); }
+      s.channels.push(ch);
+    }
+    if (tpl.welcome) s.welcome = { enabled: true, message: tpl.welcome.message, rules: [...tpl.welcome.rules],
+      channels: tpl.welcome.channels.map(([n, d]) => ({ id: s.channels.find(c => c.name === n)?.id, desc: d })).filter(x => x.id) };
     db.servers.push(s); save();
     pushServers([me]);
     cb(serverView(s, me));
@@ -1065,6 +1109,36 @@ io.on('connection', socket => {
     cb(c);
   });
 
+  socket.on('discover', ({ q, cat } = {}, cb = () => {}) => {
+    if (!me) return cb([]);
+    q = clean(q, 60).toLocaleLowerCase('tr');
+    const on = new Set(onlineNames()), W = { resmi: 40, partner: 30, dogrulanmis: 20, topluluk: 10 };
+    const list = db.servers.filter(s => (s.public || s.discoverable) && !s.bans?.[me])
+      .filter(s => !cat || s.category === cat)
+      .filter(s => !q || s.name.toLocaleLowerCase('tr').includes(q) || (s.description || '').toLocaleLowerCase('tr').includes(q))
+      .map(s => { const mem = membersOf(s), b = srvBadges(s); return { id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null,
+        description: s.description || (s.public ? 'Kanka Chat\'in resmi sunucusu. Duyurular, yenilikler ve sohbet.' : ''), category: s.public ? 'Sohbet' : s.category || 'Diğer', badges: b,
+        members: mem.length, online: mem.filter(n => on.has(n)).length, invite: s.invite, joined: s.public || s.members.includes(me), _w: b.reduce((a, x) => a + (W[x.id] || 0), 0) }; })
+      .sort((a, b) => b._w - a._w || b.online - a.online || b.members - a.members).slice(0, 60);
+    cb({ list, cats: CATS });
+  });
+  socket.on('acceptRules', (serverId, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId);
+    if (!me || !s || !membersOf(s).includes(me)) return cb({ error: 'Geçersiz' });
+    (s.accepted ||= {})[me] = Date.now(); save(); pushServers([me]); cb({ ok: true });
+  });
+  socket.on('welcomeSave', ({ serverId, enabled, message, rules, channels } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
+    s.welcome = { enabled: !!enabled, message: clean(message, 500), rules: (rules || []).map(r => clean(r, 200)).filter(Boolean).slice(0, 10),
+      channels: (channels || []).filter(c => s.channels.some(x => x.id === c?.id && x.type === 'text')).slice(0, 5).map(c => ({ id: c.id, desc: clean(c.desc, 60) })) };
+    audit(s, me, 'Hoş geldin ekranını düzenledi'); save(); pushServers(membersOf(s)); cb({ ok: true });
+  });
+  socket.on('discoverySave', ({ serverId, discoverable, description, category } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
+    if (discoverable && !clean(description, 200)) return cb({ error: 'Keşfette görünmek için kısa bir açıklama yaz' });
+    s.discoverable = !!discoverable; s.description = clean(description, 200); s.category = CATS.includes(category) ? category : null;
+    audit(s, me, s.discoverable ? 'Sunucuyu keşfete açtı' : 'Keşif ayarlarını değiştirdi'); save(); pushServers(membersOf(s)); cb({ ok: true });
+  });
   socket.on('joinInvite', (code, cb = () => {}) => {
     code = clean(code, 200).split(/[=/]/).pop();
     const s = db.servers.find(x => x.invite === code);
