@@ -1768,6 +1768,11 @@
   .vpop .vp-acts { margin-top: 14px; }
   .vpop.sheet { border-radius: 22px; }
   .vpop.sheet .vp-in { max-height: 60vh; }
+
+  .vp-avw { position: relative; padding: 0; cursor: pointer; }
+  .vp-avh { position: absolute; z-index: 3; inset: 6px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: rgba(0,0,0,.55); color: #fff; font-size: 10.5px; font-weight: 900; line-height: 1.15; text-align: center; opacity: 0; transition: opacity .15s; pointer-events: none; }
+  .vp-avh .ic { width: 18px; height: 18px; }
+  .vp-avw:hover .vp-avh, .vp-avw:focus-visible .vp-avh { opacity: 1; }
 </style>
 </head>
 <body>
@@ -3715,7 +3720,7 @@ function voicePop(n, anchor, chId) {
   const hasB = !!badgeChips(u, 22), act = !inVc && actLine(n), dshort = t => new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
   const stTxt = online ? STATUS[stOf(n)][0] : 'Çevrimdışı';
   p.innerHTML = `<div class="vp-banner" style="${banStyle(n, u)}"><button class="vp-ico" id="vp-prof" title="Tam profili aç" aria-label="Tam profili aç">${ic('expand')}</button></div>
-    <div class="vp-head"><div class="vp-avw ${speaking.has(n) ? 'vp-spk' : ''}" title="${stTxt}">${pAv(n, u, 88)}</div>
+    <div class="vp-head"><button class="vp-avw ${speaking.has(n) ? 'vp-spk' : ''}" id="vp-avb" aria-label="Tam profili aç">${pAv(n, u, 88)}<span class="vp-avh">${ic('user')}Profili<br>görüntüle</span></button>
       ${u.status ? `<div class="vp-bub" title="${esc(u.status)}"><span>${esc(u.status)}</span></div>` : ''}</div>
     <div class="vp-in">
       <button class="vp-name" id="vp-nm">${esc(dn(n))}</button>
@@ -3748,7 +3753,7 @@ function voicePop(n, anchor, chId) {
   if ($('#vp-self')) $('#vp-self').onclick = () => { $('#mute').click(); vpopFor = null; voicePop(n, anchor, chId); };
   if ($('#vp-watch')) $('#vp-watch').onclick = () => { closeVPop(); const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); setVView(true); };
   $('#vp-prof').onclick = () => { closeVPop(); showProfile(n); };
-  $('#vp-nm').onclick = () => { closeVPop(); showProfile(n); };
+  $('#vp-nm').onclick = $('#vp-avb').onclick = () => { closeVPop(); showProfile(n); };
   if ($('#vp-dm')) $('#vp-dm').onclick = () => { closeVPop(); openDM(n); };
   if ($('#vp-edit')) $('#vp-edit').onclick = () => { closeVPop(); showSettings('profile'); };
   if ($('#vp-q')) {
