@@ -492,7 +492,7 @@ function voiceKick(chIds, onlyName, reason) {
     const room = voice.get(ch); if (!room) continue;
     for (const [sid, n] of [...room]) {
       if (onlyName && n !== onlyName) continue;
-      any = true; room.delete(sid); voiceMedia.delete(sid);
+      any = true; room.delete(sid); voiceMedia.delete(sid); voiceFlags.delete(sid);
       io.to(sid).emit('voiceKicked', { ch, reason });
       io.sockets.sockets.get(sid)?.leave('v:' + ch);
       io.to('v:' + ch).emit('voiceLeft', sid);
@@ -502,7 +502,9 @@ function voiceKick(chIds, onlyName, reason) {
   }
   if (any) pushVoice();
 }
-const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceLive', liveState()); };
+const voiceFlags = new Map(); // socket.id -> { m: mikrofon kapalı }
+const flagsState = () => { const o = {}; for (const [ch, room] of voice) { if (ch.startsWith('call:')) continue; for (const [sid, n] of room) { const f = voiceFlags.get(sid) || {}, md = voiceMedia.get(sid) || {}; if (f.m || md.cam || md.screen) (o[ch] ||= {})[n] = { m: !!f.m, cam: !!md.cam, screen: !!md.screen }; } } return o; };
+const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceLive', liveState()); io.emit('voiceFlags', flagsState()); };
 function pushServers(names) {
   for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
 }
@@ -634,7 +636,7 @@ io.on('connection', socket => {
     const token = crypto.randomBytes(24).toString('hex');
     db.sessions[token] = name; save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
-      token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
+      token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), live: liveState(),
       onb: onbOf(db.users[name]), presets: PRESET_AV
     };
@@ -1321,7 +1323,7 @@ io.on('connection', socket => {
     { const f = findChannel(myVoice); if (f && (now.cam || now.screen) && !chPerm(f.s, f.c, me, 'stream')) { socket.emit('toast', 'Bu odada kamera ve ekran paylaşma iznin yok'); now.cam = now.screen = false; } }
     voiceMedia.set(socket.id, now);
     socket.to('v:' + myVoice).emit('media', { sid: socket.id, name: me, ...now, streamId: clean(st?.streamId, 80), viewers: Math.min(+st?.viewers || 0, 99), q: clean(st?.q, 12), audio: !!st?.audio });
-    if (!!was !== now.screen) pushVoice();
+    if (!!was !== now.screen) pushVoice(); else io.emit('voiceFlags', flagsState());
   });
   // Yayın izleme: izleyici yayıncıya "izliyorum / bıraktım" der; yayıncı görüntüyü sadece izleyenlere gönderir
   socket.on('streamWatch', ({ to, on } = {}) => {
@@ -1434,7 +1436,7 @@ io.on('connection', socket => {
     if (room) { room.delete(socket.id); if (!room.size) voice.delete(myVoice); }
     socket.to('v:' + myVoice).emit('voiceLeft', socket.id);
     socket.leave('v:' + myVoice);
-    voiceMedia.delete(socket.id);
+    voiceMedia.delete(socket.id); voiceFlags.delete(socket.id);
     { const st = stage.get(myVoice); if (st && ![...(voice.get(myVoice)?.values() || [])].includes(me)) { st.speakers.delete(me); st.hands.delete(me); io.to('v:' + myVoice).emit('stage', { ch: myVoice, ...stageView(myVoice) }); } }
     myVoice = null;
     pushVoice();
@@ -1458,6 +1460,7 @@ io.on('connection', socket => {
     cb({ peers, stage: f?.c.type === 'stage' ? stageView(chId) : null });
   });
   socket.on('voiceLeave', leaveVoice);
+  socket.on('vflags', ({ m } = {}) => { if (!myVoice) return; const was = !!voiceFlags.get(socket.id)?.m; voiceFlags.set(socket.id, { m: !!m }); if (was !== !!m) io.emit('voiceFlags', flagsState()); });
   socket.on('signal', ({ to, data } = {}) => {
     if (!myVoice || !voice.get(myVoice)?.has(to)) return;
     io.to(to).emit('signal', { from: socket.id, data });

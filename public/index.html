@@ -1359,6 +1359,40 @@
   .cs-clr { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); flex-shrink: 0; }
   .cs-clr:hover { background: var(--hover); color: var(--ink); } .cs-clr .ic { width: 14px; height: 14px; }
   .cc-ico { font-size: 24px; }
+  /* --- sesteki kişiler --- */
+  .vusers { margin: 2px 8px 6px 30px; display: grid; gap: 1px; }
+  .vuser { display: flex; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 10px; font-size: 14px; font-weight: 700; color: #cbb8aa; cursor: pointer; transition: background .12s, color .12s; min-width: 0; }
+  .vuser:hover { background: var(--hover); color: var(--ink); }
+  .vuser .av { width: 28px; height: 28px; font-size: 12px; border-width: 2px; flex-shrink: 0; }
+  .vuser .vn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vuser.me .vn { color: var(--ink); }
+  .vuser.speaking .av { box-shadow: 0 0 0 2px var(--green), 0 0 12px rgba(35,165,90,.55); }
+  .vuser .vic { display: flex; align-items: center; gap: 5px; flex-shrink: 0; color: var(--muted); }
+  .vuser .vic .ic { width: 15px; height: 15px; }
+  .vuser .vic .vm { color: #f23f43; }
+  .vuser .vic .vs { color: var(--accent); }
+  .vuser .livebadge { margin-left: 0; }
+  .vpop { position: fixed; z-index: 80; width: 300px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 22px 50px rgba(0,0,0,.55); overflow: hidden; animation: popIn .22s var(--ease-out) both; }
+  .vpop.sheet { left: 10px; right: 10px; bottom: 10px; width: auto; }
+  .vp-banner { height: 62px; }
+  .vp-body { padding: 0 16px 16px; }
+  .vp-av { width: 72px; height: 72px; font-size: 28px; margin-top: -36px; border: 5px solid var(--card); transition: box-shadow .2s; }
+  .vp-av.spk { box-shadow: 0 0 0 3px var(--green); }
+  .vp-name { font-size: 19px; font-weight: 900; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+  .vp-real { color: var(--muted); font-size: 12.5px; font-weight: 700; }
+  .vp-st { margin-top: 4px; color: #d8c4b4; font-size: 13.5px; }
+  .vp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .vp-tags span { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 99px; background: rgba(255,255,255,.05); font-size: 12px; font-weight: 800; color: var(--muted); }
+  .vp-tags .ic { width: 12px; height: 12px; }
+  .vp-tags .vt-on { color: var(--green); background: rgba(35,165,90,.12); } .vp-tags .vt-m { color: #ff7b7e; background: rgba(242,63,67,.12); } .vp-tags .vt-l { color: #ff7b7e; background: rgba(242,63,67,.12); }
+  .vp-box { margin-top: 12px; padding: 12px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); display: grid; gap: 10px; }
+  .vp-box label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--muted); }
+  .vp-box label .ic { width: 14px; height: 14px; } .vp-box label b { margin-left: auto; color: var(--ink); }
+  .vp-tg { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font-weight: 800; font-size: 13px; }
+  .vp-tg .ic { width: 15px; height: 15px; } .vp-tg:hover { border-color: #5a4335; }
+  .vp-tg.on { background: rgba(242,63,67,.14); border-color: rgba(242,63,67,.45); color: #ff8a8d; }
+  .vp-acts { display: flex; gap: 8px; margin-top: 12px; }
+  .vp-acts > * { flex: 1; padding: 10px 12px; font-size: 13.5px; }
 </style>
 </head>
 <body>
@@ -1642,7 +1676,7 @@ function onAuth(res) {
   store.set('kanka-token', res.token);
   S.me = res.user.name;
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
-  setPresence(res.online); S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {};
+  setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {};
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ice?.length) ICE.iceServers = res.ice;
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
@@ -1968,7 +2002,9 @@ function renderSide() {
   const canAdd = canAddCh(s), manage = canManageCh(s);
   const tRow = c => `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${S.unread.has(c.id) && notifMode(c.id) !== 'none' ? 'unread' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>`;
   const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
-      `<div class="vusers">${(S.voice[c.id] || []).map(n => `<div class="vuser ${speaking.has(n) ? 'speaking' : ''}" data-vu="${esc(n)}">${av(n)}${esc(n)}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</div>`).join('')}</div>`;
+      `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n);
+        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(uNicks[n] || n)}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
+  const vOrder = c => { const l = [...(S.voice[c.id] || [])]; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l; };
   const row = c => voiceLike(c.type) ? vRow(c) : tRow(c);
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
   const va = viewAs?.sid === s.id ? viewAs : null;
@@ -1992,6 +2028,7 @@ function renderSide() {
     if (c?.canConnect === false && myVoice !== c.id) return toast('Bu sesli odaya bağlanma iznin yok');
     myVoice === d.dataset.id ? setVView(!vview()) : joinVoice(d.dataset.id);
   });
+  sl.querySelectorAll('.vuser[data-vu]').forEach(v => { v.onclick = e => { if (e.target.closest('[data-live]')) return; e.stopPropagation(); voicePop(v.dataset.vu, v, v.dataset.ch); }; v.onkeydown = e => { if (e.key === 'Enter') v.click(); }; });
   sl.querySelectorAll('[data-rset]').forEach(b => b.onclick = e => { e.stopPropagation(); showChSettings(s, 'ch', b.dataset.rset, 'general'); });
   sl.querySelectorAll('[data-live]').forEach(b => b.onclick = e => {
     e.stopPropagation(); const n = b.dataset.live;
@@ -3039,6 +3076,42 @@ function showProfile(n) {
   if ($('#pf-ban')) $('#pf-ban').onclick = () => askBan(srv, n);
   if ($('#pf-kick')) $('#pf-kick').onclick = () => confirmBox(`${n} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: srv.id, name: n }, x => x.error ? toast(x.error) : toast(`${n} atıldı`)));
 }
+// ---- Sesteki kişiler: büyük satırlar + tıklayınca profil kartı ----
+let vpopFor = null;
+function closeVPop() { $('.vpop')?.remove(); vpopFor = null; }
+function voicePop(n, anchor, chId) {
+  if (vpopFor === n) return closeVPop();
+  closeVPop(); vpopFor = n;
+  const u = S.users[n] || {}, me = n === S.me, same = myVoice === chId && !me, fl = S.vflags?.[chId]?.[n] || {}, srv = S.view === 'server' ? S.server : null;
+  const live = (S.live?.[chId] || []).includes(n), stg = stageSt[chId], onStage = stg?.speakers?.includes(n);
+  const tags = [speaking.has(n) && `<span class="vt-on">${ic('volume')} Konuşuyor</span>`, fl.m && `<span class="vt-m">${ic('micoff')} Mikrofonu kapalı</span>`, live && `<span class="vt-l">● Yayında</span>`, fl.cam && `<span>${ic('video')} Kamerası açık</span>`, stg && `<span>${ic('stage')} ${onStage ? 'Konuşmacı' : 'Dinleyici'}</span>`].filter(Boolean).join('');
+  const p = document.createElement('div'); p.className = 'vpop'; p.setAttribute('role', 'dialog');
+  p.innerHTML = `<div class="vp-banner" style="${bannerBg(n, u)}"></div>
+    <div class="vp-body"><div class="av vp-av ${speaking.has(n) ? 'spk' : ''}" style="background:${u.color || userColor(n)}">${u.avatar ? `<img src="${esc(u.avatar)}" alt="">` : initial(n)}</div>
+      <div class="vp-name">${esc(uNicks[n] || n)}${badge(roleOf(srv, n))}</div>${uNicks[n] ? `<div class="vp-real">${esc(n)}</div>` : ''}
+      ${u.status ? `<div class="vp-st">${esc(u.status)}</div>` : ''}
+      ${tags ? `<div class="vp-tags">${tags}</div>` : ''}
+      ${same ? `<div class="vp-box"><label>${ic('volume')} Ses seviyesi <b id="vp-vv">${Math.round((vol[n] ?? 1) * 100)}%</b></label><input type="range" class="krange" id="vp-vol" min="0" max="1" step="0.05" value="${vol[n] ?? 1}">
+        <button class="vp-tg ${uMuted.has(n) ? 'on' : ''}" id="vp-mute">${ic('micoff')}<span>${uMuted.has(n) ? 'Susturmayı kaldır' : 'Benim için sustur'}</span></button></div>` : ''}
+      ${me && myVoice === chId ? `<div class="vp-box"><button class="vp-tg ${muted ? 'on' : ''}" id="vp-self">${ic(muted ? 'mic' : 'micoff')}<span>${muted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}</span></button></div>` : ''}
+      <div class="vp-acts">${live && myVoice === chId && !me ? `<button class="btnp" id="vp-watch">${ic('screen')} Yayını izle</button>` : ''}
+        <button class="btns2" id="vp-prof">${ic('user')} Profil</button>${me ? '' : `<button class="btns2" id="vp-dm">${ic('chat')} Mesaj</button>`}</div></div>`;
+  document.body.appendChild(p);
+  const r = anchor.getBoundingClientRect(), W = innerWidth, H = innerHeight, pw = p.offsetWidth, ph = p.offsetHeight;
+  if (W < 760) { p.classList.add('sheet'); }
+  else { p.style.left = Math.min(r.right + 12, W - pw - 10) + 'px'; p.style.top = Math.max(10, Math.min(r.top + r.height / 2 - 70, H - ph - 10)) + 'px'; }
+  p.onclick = e => e.stopPropagation();
+  if ($('#vp-vol')) $('#vp-vol').oninput = e => { vol[n] = +e.target.value; store.set('kanka-vol', JSON.stringify(vol)); applyPeerAudio(); $('#vp-vv').textContent = Math.round(vol[n] * 100) + '%'; };
+  if ($('#vp-mute')) $('#vp-mute').onclick = () => { uMuted.has(n) ? uMuted.delete(n) : uMuted.add(n); saveU(); applyPeerAudio(); refreshPeerAudio(); vpopFor = null; voicePop(n, anchor, chId); };
+  if ($('#vp-self')) $('#vp-self').onclick = () => { $('#mute').click(); vpopFor = null; voicePop(n, anchor, chId); };
+  if ($('#vp-watch')) $('#vp-watch').onclick = () => { closeVPop(); const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); setVView(true); };
+  $('#vp-prof').onclick = () => { closeVPop(); showProfile(n); };
+  if ($('#vp-dm')) $('#vp-dm').onclick = () => { closeVPop(); openDM(n); };
+}
+document.addEventListener('click', e => { if (!e.target.closest('.vpop, .vuser')) closeVPop(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVPop(); });
+socket.on('voiceFlags', f => { S.vflags = f || {}; if (S.view === 'server' && S.server) renderSide(); });
+
 // ---- Durum menüsü: süreli durum + özel durum ----
 const STATUS_DESC = { online: '', idle: 'Uzakta görünürsün', dnd: 'Bildirimleri ve sesleri kapatır', invisible: 'Çevrimdışı görünürsün ama her şeyi kullanabilirsin' };
 const endOfToday = () => { const d = new Date(); d.setHours(23, 59, 0, 0); return d.getTime(); };
@@ -3602,6 +3675,7 @@ function applyMute() {
   $('#mute').innerHTML = ic(muted ? 'micoff' : pttOn() && !pttDown ? 'keyboard' : 'mic');
   $('#mute').title = muted ? 'Sesi aç' : pttOn() ? 'Bas-konuş: V tuşuna basılı tut' : 'Sustur';
   $('#mute').classList.toggle('off', muted);
+  if (myVoice) socket.emit('vflags', { m: muted || !canSpeakNow() });
 }
 const typingTarget = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
 document.addEventListener('keydown', e => { if (myVoice && pttOn() && e.code === 'KeyV' && !typingTarget(e) && !pttDown) { pttDown = true; applyMute(); } });
