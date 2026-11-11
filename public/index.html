@@ -1393,6 +1393,20 @@
   .vp-tg.on { background: rgba(242,63,67,.14); border-color: rgba(242,63,67,.45); color: #ff8a8d; }
   .vp-acts { display: flex; gap: 8px; margin-top: 12px; }
   .vp-acts > * { flex: 1; padding: 10px 12px; font-size: 13.5px; }
+  .vp-tags .vt-p .sd { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .vp-sec { margin-top: 12px; }
+  .vp-sec h5 { font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .vp-roles { display: flex; flex-wrap: wrap; gap: 5px; }
+  .vp-roles span { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); font-size: 12px; font-weight: 800; }
+  .vp-roles i { width: 9px; height: 9px; border-radius: 50%; }
+  .vp-bio { font-size: 13.5px; line-height: 1.45; color: #d8c4b4; max-height: 84px; overflow: hidden; }
+  .vp-msg { display: flex; gap: 6px; margin-top: 14px; padding: 4px 4px 4px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); transition: border-color .15s; }
+  .vp-msg:focus-within { border-color: var(--accent); }
+  .vp-msg input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600; }
+  .vp-msg button { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--accent); color: #fff; flex-shrink: 0; }
+  .vp-msg button .ic { width: 16px; height: 16px; } .vp-msg button:disabled { opacity: .5; }
+  .row[data-au] .wname, .row[data-au] > .av { cursor: pointer; }
+  .row[data-au] .wname:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -2757,7 +2771,7 @@ $('#messages').addEventListener('click', e => {
 $('#messages').onclick = e => {
   const sp = e.target.closest('.spoiler'); if (sp) return sp.classList.toggle('shown');
   const who = e.target.closest('.row[data-au] .who .wname, .row[data-au] > .av');
-  if (who) return showProfile(who.closest('[data-au]').dataset.au);
+  if (who) { e.stopPropagation(); return miniProfile(who.closest('[data-au]').dataset.au, who); }
   const th = e.target.closest('[data-thread]'); if (th) return openThread(th.dataset.thread);
   const vp = e.target.closest('[data-vplay]'); if (vp) return playVoice(vp.dataset.vplay);
   const wv = e.target.closest('.wave'); if (wv) return seekVoice(wv, e);
@@ -2809,6 +2823,7 @@ socket.on('message', ({ channelId, msg }) => {
   typers.delete(msg.author); renderTyping();
   S.msgs.push(msg);
   if (S.view === 'server' && S.channel?.type === 'forum') { renderMessages(); return; }
+  if (msg.author && $('#messages .estate')) { renderMessages(true); return; }
   if (document.hasFocus()) markRead(channelId);
   const box = $('#messages');
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
@@ -2985,7 +3000,7 @@ function renderMembers() {
     ['Moderatörler', n => roleOf(srv, n) === 'mod' && !topHoist(n) && S.online.has(n)],
     ['Çevrimiçi', n => roleOf(srv, n) === 'member' && !topHoist(n) && S.online.has(n)], ['Çevrimdışı', n => !S.online.has(n)]];
   $('#members').innerHTML = groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(item).join('') : ''; }).join('');
-  $('#members').querySelectorAll('.mem').forEach(m => m.onclick = () => showProfile(m.dataset.n));
+  $('#members').querySelectorAll('.mem').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
 }
 const lvlFloor = L => 5 * (L - 1) ** 2;
 function xpBar(u) {
@@ -3078,11 +3093,14 @@ function showProfile(n) {
 }
 // ---- Sesteki kişiler: büyük satırlar + tıklayınca profil kartı ----
 let vpopFor = null;
+const srvRoles = n => { const s = S.view === 'server' ? S.server : null; if (!s) return []; return (s.memberRoles?.[n] || []).map(id => (s.customRoles || []).find(r => r.id === id)).filter(Boolean); };
+const miniProfile = (n, anchor) => voicePop(n, anchor, null);
 function closeVPop() { $('.vpop')?.remove(); vpopFor = null; }
 function voicePop(n, anchor, chId) {
   if (vpopFor === n) return closeVPop();
-  closeVPop(); vpopFor = n;
-  const u = S.users[n] || {}, me = n === S.me, same = myVoice === chId && !me, fl = S.vflags?.[chId]?.[n] || {}, srv = S.view === 'server' ? S.server : null;
+  closeVPop(); closeUMenu(); vpopFor = n;
+  const inVc = !!chId, online = S.online.has(n), myRoles = srvRoles(n);
+  const u = S.users[n] || {}, me = n === S.me, same = !!chId && myVoice === chId && !me, fl = S.vflags?.[chId]?.[n] || {}, srv = S.view === 'server' ? S.server : null;
   const live = (S.live?.[chId] || []).includes(n), stg = stageSt[chId], onStage = stg?.speakers?.includes(n);
   const tags = [speaking.has(n) && `<span class="vt-on">${ic('volume')} Konuşuyor</span>`, fl.m && `<span class="vt-m">${ic('micoff')} Mikrofonu kapalı</span>`, live && `<span class="vt-l">● Yayında</span>`, fl.cam && `<span>${ic('video')} Kamerası açık</span>`, stg && `<span>${ic('stage')} ${onStage ? 'Konuşmacı' : 'Dinleyici'}</span>`].filter(Boolean).join('');
   const p = document.createElement('div'); p.className = 'vpop'; p.setAttribute('role', 'dialog');
@@ -3090,16 +3108,19 @@ function voicePop(n, anchor, chId) {
     <div class="vp-body"><div class="av vp-av ${speaking.has(n) ? 'spk' : ''}" style="background:${u.color || userColor(n)}">${u.avatar ? `<img src="${esc(u.avatar)}" alt="">` : initial(n)}</div>
       <div class="vp-name">${esc(uNicks[n] || n)}${badge(roleOf(srv, n))}</div>${uNicks[n] ? `<div class="vp-real">${esc(n)}</div>` : ''}
       ${u.status ? `<div class="vp-st">${esc(u.status)}</div>` : ''}
-      ${tags ? `<div class="vp-tags">${tags}</div>` : ''}
+      ${tags ? `<div class="vp-tags">${tags}</div>` : inVc ? '' : `<div class="vp-tags"><span class="vt-p"><i class="sd" style="background:${online ? STATUS[stOf(n)][1] : '#80848e'}"></i>${online ? STATUS[stOf(n)][0] : 'Çevrimdışı'}</span>${actLine(n) ? `<span>${actLine(n)}</span>` : ''}</div>`}
+      ${myRoles.length ? `<div class="vp-sec"><h5>Roller</h5><div class="vp-roles">${myRoles.map(r => `<span><i style="background:${r.color}"></i>${esc(r.name)}</span>`).join('')}</div></div>` : ''}
+      ${!inVc && u.bio ? `<div class="vp-sec"><h5>Hakkımda</h5><div class="vp-bio">${fmt(u.bio)}</div></div>` : ''}
       ${same ? `<div class="vp-box"><label>${ic('volume')} Ses seviyesi <b id="vp-vv">${Math.round((vol[n] ?? 1) * 100)}%</b></label><input type="range" class="krange" id="vp-vol" min="0" max="1" step="0.05" value="${vol[n] ?? 1}">
         <button class="vp-tg ${uMuted.has(n) ? 'on' : ''}" id="vp-mute">${ic('micoff')}<span>${uMuted.has(n) ? 'Susturmayı kaldır' : 'Benim için sustur'}</span></button></div>` : ''}
-      ${me && myVoice === chId ? `<div class="vp-box"><button class="vp-tg ${muted ? 'on' : ''}" id="vp-self">${ic(muted ? 'mic' : 'micoff')}<span>${muted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}</span></button></div>` : ''}
+      ${me && chId && myVoice === chId ? `<div class="vp-box"><button class="vp-tg ${muted ? 'on' : ''}" id="vp-self">${ic(muted ? 'mic' : 'micoff')}<span>${muted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}</span></button></div>` : ''}
+      ${!inVc && !me ? `<div class="vp-msg"><input id="vp-q" maxlength="2000" placeholder="@${esc(n)} kişisine mesaj gönder" autocomplete="off"><button id="vp-send" aria-label="Gönder">${ic('send')}</button></div>` : ''}
       <div class="vp-acts">${live && myVoice === chId && !me ? `<button class="btnp" id="vp-watch">${ic('screen')} Yayını izle</button>` : ''}
-        <button class="btns2" id="vp-prof">${ic('user')} Profil</button>${me ? '' : `<button class="btns2" id="vp-dm">${ic('chat')} Mesaj</button>`}</div></div>`;
+        <button class="btns2" id="vp-prof">${ic('user')} Tam profil</button>${me ? `<button class="btns2" id="vp-edit">${ic('edit')} Düzenle</button>` : inVc ? `<button class="btns2" id="vp-dm">${ic('chat')} Mesaj</button>` : ''}</div></div>`;
   document.body.appendChild(p);
   const r = anchor.getBoundingClientRect(), W = innerWidth, H = innerHeight, pw = p.offsetWidth, ph = p.offsetHeight;
   if (W < 760) { p.classList.add('sheet'); }
-  else { p.style.left = Math.min(r.right + 12, W - pw - 10) + 'px'; p.style.top = Math.max(10, Math.min(r.top + r.height / 2 - 70, H - ph - 10)) + 'px'; }
+  else { const left = r.right + 12 + pw > W - 10 ? r.left - pw - 12 : r.right + 12; p.style.left = Math.max(10, left) + 'px'; p.style.top = Math.max(10, Math.min(r.top + r.height / 2 - 70, H - ph - 10)) + 'px'; }
   p.onclick = e => e.stopPropagation();
   if ($('#vp-vol')) $('#vp-vol').oninput = e => { vol[n] = +e.target.value; store.set('kanka-vol', JSON.stringify(vol)); applyPeerAudio(); $('#vp-vv').textContent = Math.round(vol[n] * 100) + '%'; };
   if ($('#vp-mute')) $('#vp-mute').onclick = () => { uMuted.has(n) ? uMuted.delete(n) : uMuted.add(n); saveU(); applyPeerAudio(); refreshPeerAudio(); vpopFor = null; voicePop(n, anchor, chId); };
@@ -3107,8 +3128,16 @@ function voicePop(n, anchor, chId) {
   if ($('#vp-watch')) $('#vp-watch').onclick = () => { closeVPop(); const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); setVView(true); };
   $('#vp-prof').onclick = () => { closeVPop(); showProfile(n); };
   if ($('#vp-dm')) $('#vp-dm').onclick = () => { closeVPop(); openDM(n); };
+  if ($('#vp-edit')) $('#vp-edit').onclick = () => { closeVPop(); showSettings('profile'); };
+  if ($('#vp-q')) {
+    const send = () => { const text = $('#vp-q').value.trim(); if (!text) return $('#vp-q').focus();
+      $('#vp-send').disabled = true;
+      socket.emit('quickDM', { to: n, text }, x => { if (x?.error) { $('#vp-send') && ($('#vp-send').disabled = false); return toast(x.error); } closeVPop(); toast(`Mesaj <b>${esc(n)}</b> kişisine gönderildi`, () => openDM(n), true); }); };
+    $('#vp-send').onclick = send; $('#vp-q').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); send(); } };
+    if (matchMedia('(pointer: fine)').matches) setTimeout(() => $('#vp-q')?.focus(), 50);
+  }
 }
-document.addEventListener('click', e => { if (!e.target.closest('.vpop, .vuser')) closeVPop(); });
+document.addEventListener('click', e => { if (!e.target.closest('.vpop, .vuser, #members .mem, .row[data-au] .wname, .row[data-au] > .av')) closeVPop(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVPop(); });
 socket.on('voiceFlags', f => { S.vflags = f || {}; if (S.view === 'server' && S.server) renderSide(); });
 

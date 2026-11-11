@@ -796,6 +796,16 @@ io.on('connection', socket => {
   socket.on('ringCancel', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('ringCancel', { chatId: chId }); });
   socket.on('callDecline', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('callDecline', { from: me, chatId: chId }); });
 
+  // Profil kartından hızlı DM
+  socket.on('quickDM', ({ to, text } = {}, cb = () => {}) => {
+    if (!me || !db.users[to] || to === me) return cb({ error: 'Kullanıcı bulunamadı' });
+    text = clean(text, 2000); if (!text) return cb({ error: 'Boş mesaj' });
+    if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun, biraz yavaşla 🙂' });
+    if (db.users[me].blocked?.includes(to)) return cb({ error: 'Bu kişiyi engelledin. Mesaj göndermek için engeli kaldır.' });
+    if (db.users[to].blocked?.includes(me)) return cb({ error: 'Bu kişi sana mesaj alımını kapattı.' });
+    const r = postMessage(me, dmId(me, to), { kind: 'text', text });
+    cb(r.error ? r : { ok: true, id: dmId(me, to) });
+  });
   socket.on('openDM', (other, cb) => {
     if (!me || !db.users[other] || other === me) return cb({ error: 'Kullanıcı bulunamadı' });
     cb({ id: dmId(me, other), with: other });
