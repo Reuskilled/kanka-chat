@@ -991,6 +991,13 @@ io.on('connection', socket => {
     if (u.bio || u.status) onbFlag(me, 'profile');
     save(); io.emit('users', allUsers()); cb({ ok: true });
   });
+  // Kendi rozet ilerlemen (kazanılmamışlar için)
+  socket.on('badgeProgress', (cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({});
+    const m = u.msgs || u.xp || 0;
+    cb({ sohbet: [Math.min(m, 100), 100], efsane: [Math.min(m, 1000), 1000], xox: [Math.min(u.xoxWins || 0, 3), 3], seri7: [Math.min(u.streak?.best || 0, 7), 7],
+      sosyal: [Math.min((u.friends || []).length, 5), 5], gece: [u.night ? 1 : 0, 1], kurucu: [db.servers.some(s => s.owner === me && !s.public) ? 1 : 0, 1], caylak: [u.onb?.rewarded ? 1 : 0, 1], erken: [badgesOf(u).includes('erken') ? 1 : 0, 1] });
+  });
   socket.on('mutuals', (n, cb = () => {}) => {
     const o = db.users[n]; if (!me || !o) return cb({ servers: [], friends: [] });
     const servers = db.servers.filter(s => !s.public && s.members.includes(me) && s.members.includes(n)).map(s => ({ id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, joined: s.joinedAt?.[n] || null }));

@@ -1532,6 +1532,34 @@
   .mini-card .pf-prevabout { padding: 14px 4px 0; display: grid; gap: 10px; }
   .mini-card .psocs { grid-template-columns: 1fr; }
   @media (max-width: 760px) { .st-2, .socin { grid-template-columns: 1fr; } }
+  /* --- rozet madalyonları --- */
+  .medal { display: block; overflow: visible; }
+  .medal.r2:not(.locked) { filter: drop-shadow(0 0 5px rgba(176,124,255,.45)); }
+  .medal.r3:not(.locked) { filter: drop-shadow(0 0 7px rgba(255,207,92,.6)); }
+  .mchip { display: inline-grid; place-items: center; cursor: default; transition: transform .18s var(--ease-out); outline: none; }
+  .mchip:hover, .mchip:focus-visible { transform: translateY(-2px) scale(1.12); }
+  .pf-badges { gap: 2px; padding: 5px 7px; background: rgba(0,0,0,.4); backdrop-filter: blur(4px); }
+  .btip { position: fixed; z-index: 120; display: flex; align-items: center; gap: 12px; max-width: 280px; padding: 12px 14px; border-radius: 16px; background: #1d1511; border: 1px solid #4a3426; box-shadow: 0 16px 40px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04); pointer-events: none; animation: popIn .16s var(--ease-out); }
+  .btip::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(120px 60px at 0% 50%, color-mix(in srgb, var(--rc) 22%, transparent), transparent); pointer-events: none; }
+  .btip b { display: block; font-size: 14.5px; font-weight: 900; }
+  .btip small { display: block; color: #cbb8aa; font-size: 12.5px; margin-top: 2px; line-height: 1.35; }
+  .rar { display: inline-block; font-size: 10.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--rc); margin-top: 1px; }
+  .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .mcard { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); overflow: hidden; transition: transform .18s var(--ease-out), border-color .18s; animation: fadeUp .35s var(--ease-out) both; }
+  .mcard.got::before { content: ''; position: absolute; inset: 0; background: radial-gradient(140px 90px at 15% 50%, color-mix(in srgb, var(--c1) 22%, transparent), transparent 70%); pointer-events: none; }
+  .mcard.got:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--rc) 55%, var(--line)); }
+  .mcard.got.r3 { border-color: color-mix(in srgb, #ffcf5c 35%, var(--line)); }
+  .mcard.got.r3::after { content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.12), transparent); animation: shine 3.5s ease-in-out infinite; pointer-events: none; }
+  @keyframes shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+  .mcard > div { position: relative; min-width: 0; flex: 1; }
+  .mcard b { display: block; font-size: 14.5px; font-weight: 900; }
+  .mcard small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.35; margin-top: 2px; }
+  .mcard.lock { opacity: .78; } .mcard.lock b { color: #cbb8aa; } .mcard.lock .rar { opacity: .7; }
+  .mcard .medal { flex-shrink: 0; }
+  .mprog { height: 6px; border-radius: 3px; background: rgba(255,255,255,.07); margin-top: 8px; overflow: hidden; }
+  .mprog i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--c1), var(--c2)); }
+  .mcard em { display: block; font-style: normal; font-size: 11.5px; font-weight: 800; color: var(--muted); margin-top: 4px; }
+  @media (prefers-reduced-motion: reduce) { .mcard.got.r3::after { animation: none; } }
 </style>
 </head>
 <body>
@@ -3208,6 +3236,64 @@ function friendBtn(n) {
   if (sc.reqIn.includes(n)) return `<button id="pf-fr">${ic('check')}İsteği kabul et</button>`;
   return `<button id="pf-fr">${ic('userplus')}Arkadaş ekle</button>`;
 }
+// ================= Rozetler: madalyonlar =================
+const RARITY = [['Yaygın', '#a9bccf'], ['Nadir', '#4aa8ff'], ['Destansı', '#b07cff'], ['Efsanevi', '#ffcf5c']];
+const BADGE_DEF = {
+  caylak: { ic: 'sparkle', c: ['#ffe6a8', '#f2a33a'], r: 0, how: 'Başlangıç rehberindeki 5 adımı bitir' },
+  sohbet: { ic: 'chat', c: ['#8fd3ff', '#2a6fdb'], r: 0, how: '100 mesaj gönder' },
+  sosyal: { ic: 'users', c: ['#7ff3e4', '#13897a'], r: 1, how: '5 arkadaş edin' },
+  gece: { ic: 'moon', c: ['#cbb8ff', '#4b2fa8'], r: 1, how: 'Gece 00:00 ile 05:00 arası mesaj at' },
+  xox: { ic: 'grid', c: ['#ffc2a1', '#e0552a'], r: 1, how: '3 XOX oyunu kazan' },
+  kurucu: { ic: 'shield', c: ['#ffb3d1', '#b8286e'], r: 2, how: 'Kendi sunucunu kur' },
+  seri7: { ic: 'fire', c: ['#ffe08a', '#ff4d2e'], r: 2, how: '7 gün üst üste giriş yap' },
+  erken: { ic: 'sprout', c: ['#9ff0c2', '#16794a'], r: 3, how: 'Kanka\'ya ilk katılan 100 kişiden biri ol' },
+  efsane: { ic: 'crown', c: ['#fff1b8', '#d18a10'], r: 3, how: '1000 mesaj gönder' },
+};
+const BADGE_ORDER = Object.keys(BADGE_DEF).sort((a, b) => BADGE_DEF[b].r - BADGE_DEF[a].r);
+const SHAPES = [
+  '<circle cx="24" cy="24" r="21"/>',
+  '<path d="M24 3 42 9.5V24c0 10-7.5 17.5-18 21C13.5 41.5 6 34 6 24V9.5Z"/>',
+  '<path d="M24 2.5 43 13.5v21L24 45.5 5 34.5v-21Z"/>',
+  (() => { let d = ''; for (let i = 0; i < 16; i++) { const a = Math.PI * i / 8 - Math.PI / 2, rr = i % 2 ? 19.2 : 23; d += (i ? 'L' : 'M') + (24 + rr * Math.cos(a)).toFixed(2) + ' ' + (24 + rr * Math.sin(a)).toFixed(2); } return `<path d="${d}Z"/>`; })(),
+];
+let medalN = 0;
+function medal(k, size = 28, locked = false) {
+  const d = BADGE_DEF[k]; if (!d) return '';
+  const id = 'md' + (++medalN), sh = SHAPES[d.r], c = locked ? ['#4a3d35', '#2a211c'] : d.c;
+  return `<svg class="medal r${d.r} ${locked ? 'locked' : ''}" width="${size}" height="${size}" style="width:${size}px;height:${size}px;min-width:${size}px" viewBox="0 0 48 48" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient>
+      <linearGradient id="${id}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+    <g fill="url(#${id})" stroke="${locked ? '#5a4a40' : 'rgba(255,255,255,.55)'}" stroke-width="1.6">${sh}</g>
+    <g fill="url(#${id}h)" transform="translate(24 24) scale(.78) translate(-24 -24)" opacity="${locked ? .25 : .9}">${sh}</g>
+    <g transform="translate(12.5 12.5) scale(.96)" fill="none" stroke="${locked ? '#8a786c' : '#fff'}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))">${ICON[d.ic] || ''}</g>
+    ${locked ? '<g transform="translate(31 31)"><circle cx="7" cy="7" r="7" fill="#1a120c" stroke="#5a4a40"/><path d="M4.6 6.5V5.4a2.4 2.4 0 0 1 4.8 0v1.1M4 6.5h6v4H4z" fill="none" stroke="#a8968a" stroke-width="1.3"/></g>' : ''}</svg>`;
+}
+const badgeChips = (u, size = 26) => BADGE_ORDER.filter(k => (u?.badges || []).includes(k)).map(k => `<span class="mchip" data-badge="${k}" tabindex="0">${medal(k, size)}</span>`).join('');
+function badgeGrid(n, u, prog) {
+  const me = n === S.me, have = new Set(u.badges || []), list = me ? [...BADGE_ORDER.filter(k => have.has(k)), ...BADGE_ORDER.filter(k => !have.has(k))] : BADGE_ORDER.filter(k => have.has(k));
+  if (!list.length) return '';
+  return `<section><h5>Rozetler <small>${have.size}/${BADGE_ORDER.length}</small></h5><div class="mgrid">${list.map(k => { const d = BADGE_DEF[k], got = have.has(k), info = S.badgeInfo?.[k] || ['', k, ''], pr = prog?.[k];
+    return `<div class="mcard ${got ? 'got' : 'lock'} r${d.r}" data-badge="${k}" style="--c1:${d.c[0]};--c2:${d.c[1]};--rc:${RARITY[d.r][1]}">${medal(k, 54, !got)}<div><b>${esc(info[1])}</b><span class="rar">${RARITY[d.r][0]}</span><small>${got ? esc(info[2]) : esc(d.how)}</small>
+      ${!got && pr && pr[1] > 1 ? `<div class="mprog"><i style="width:${Math.round(pr[0] / pr[1] * 100)}%"></i></div><em>${pr[0]} / ${pr[1]}</em>` : ''}</div></div>`; }).join('')}</div></section>`;
+}
+// Üstüne gelince detay kartı
+let btipT = null;
+function showBadgeTip(el) {
+  const k = el.dataset.badge, d = BADGE_DEF[k], info = S.badgeInfo?.[k]; if (!d || !info || el.closest('.mcard')) return;
+  hideBadgeTip();
+  const t = document.createElement('div'); t.className = 'btip'; t.style.cssText = `--rc:${RARITY[d.r][1]}`;
+  t.innerHTML = `${medal(k, 46)}<div><b>${esc(info[1])}</b><span class="rar">${RARITY[d.r][0]}</span><small>${esc(info[2])}</small></div>`;
+  document.body.appendChild(t);
+  const r = el.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight;
+  t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+  t.style.top = (r.top - h - 10 < 8 ? r.bottom + 10 : r.top - h - 10) + 'px';
+}
+function hideBadgeTip() { document.querySelectorAll('.btip').forEach(x => x.remove()); }
+document.addEventListener('pointerover', e => { const el = e.target.closest?.('[data-badge]'); if (el) { clearTimeout(btipT); btipT = setTimeout(() => showBadgeTip(el), 120); } });
+document.addEventListener('pointerout', e => { if (e.target.closest?.('[data-badge]')) { clearTimeout(btipT); hideBadgeTip(); } });
+document.addEventListener('focusin', e => { const el = e.target.closest?.('[data-badge]'); if (el) showBadgeTip(el); });
+document.addEventListener('focusout', hideBadgeTip);
+
 // ================= Profil 2.0 =================
 const dn = n => uNicks[n] || S.users[n]?.displayName || n;
 const FRAMES = [['none', 'Yok', 0], ['halka', 'Halka', 2], ['gokkusagi', 'Gökkuşağı', 5], ['ates', 'Ateş', 10], ['neon', 'Neon', 15], ['altin', 'Altın', 25], ['kurucu', 'Kurucu', -1]];
@@ -3223,7 +3309,7 @@ const themeOf = u => u?.theme?.length === 2 ? u.theme : null;
 const banStyle = (n, u) => u?.bannerImg ? `background:url('${esc(u.bannerImg)}') center/cover` : themeOf(u) ? `background:linear-gradient(135deg, ${u.theme[0]}, ${u.theme[1]})` : bannerBg(n, u);
 const dotColor = n => S.online.has(n) ? STATUS[stOf(n)][1] : '#80848e';
 const pAv = (n, u, size, dot = true) => `<div class="pav ${u?.frame ? 'fr-' + u.frame : ''}" style="--s:${size}px"><div class="av" style="background:${u?.color || userColor(n)}">${u?.avatar ? `<img src="${esc(u.avatar)}" alt="">` : initial(n)}</div>${dot ? `<i class="pdot" style="background:${dotColor(n)}" title="${S.online.has(n) ? STATUS[stOf(n)][0] : 'Çevrimdışı'}"></i>` : ''}</div>`;
-const badgesHTML = (u, sz = '') => (u?.badges || []).map(b => S.badgeInfo?.[b] ? `<span class="pbadge ${sz}" title="${esc(S.badgeInfo[b][1])} · ${esc(S.badgeInfo[b][2])}" style="color:${BADGE_IC[b]?.[1] || 'var(--ink)'}">${ic(BADGE_IC[b]?.[0] || 'star')}</span>` : '').join('');
+const badgesHTML = (u, sz = '') => badgeChips(u, sz === 'sm' ? 22 : 28);
 const socialsHTML = u => Object.entries(u?.socials || {}).filter(([k]) => SOCIAL_META[k]).map(([k, h]) => `<a class="psoc" href="${esc(SOCIAL_META[k][2](h))}" target="_blank" rel="noopener noreferrer" style="--c:${SOCIAL_META[k][1]}"><i></i><b>${SOCIAL_META[k][0]}</b><span>${esc(h)}</span>${ic('link')}</a>`).join('');
 const themeVars = u => themeOf(u) ? `--t1:${u.theme[0]};--t2:${u.theme[1]}` : '';
 const ago2 = t => { if (!t) return '—'; const d = Math.floor((Date.now() - t) / 864e5); return d < 1 ? 'bugün' : d < 30 ? d + ' gün' : d < 365 ? Math.floor(d / 30) + ' ay' : Math.floor(d / 365) + ' yıl'; };
@@ -3248,6 +3334,7 @@ function profAboutHTML(n, u) {
     ${Object.keys(u.socials || {}).length ? `<section><h5>Bağlantılar</h5><div class="psocs">${socialsHTML(u)}</div></section>` : ''}
     <section class="pf-grid"><div class="pf-lvl"><div class="pl-h"><b>Seviye ${u.level || 1}</b>${u.streak ? `<span class="streak">${ic('fire')} ${u.streak} gün seri</span>` : ''}</div>${xpBar(u)}<small>Sonraki seviyeye yaklaşık <b>${Math.max(1, next)}</b> mesaj</small></div>
       <div class="pf-stats"><div><b>${u.xp || 0}</b><span>Mesaj</span></div><div><b>${u.friendCount || 0}</b><span>Arkadaş</span></div><div><b>${u.badges?.length || 0}</b><span>Rozet</span></div></div></section>
+    <div id="pf-badges-sec">${badgeGrid(n, u, window._bprog)}</div>
     ${u.music ? `<section><h5>Profil şarkısı</h5><a class="music-card" href="${esc(u.music)}" target="_blank" rel="noopener">${ytId(u.music) ? `<img src="https://img.youtube.com/vi/${ytId(u.music)}/mqdefault.jpg" alt="">` : `<span class="mc-ic">${ic('music')}</span>`}<span><b>Şarkıyı aç</b><small>${esc(u.music.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40))}</small></span></a></section>` : ''}
     ${u.birthday ? `<section class="pf-line">${ic('cake')}<span>Doğum günü: <b>${new Date('2000-' + u.birthday + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</b></span></section>` : ''}
     ${uNotes[n] && n !== S.me ? `<section><h5>Notun <small>(sadece sen görürsün)</small></h5><div class="unote">${esc(uNotes[n])}</div></section>` : ''}`;
@@ -3266,7 +3353,7 @@ function showProfile(n, tab = 'about') {
     $('#pf-tabs').innerHTML = tabs().map(([k, t]) => `<button class="${k === tab ? 'on' : ''}" data-pt="${k}">${t}</button>`).join('');
     $('#pf-tabs').querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { tab = b.dataset.pt; draw(); });
     const B = $('#pf-body');
-    if (tab === 'about') B.innerHTML = profAboutHTML(n, u);
+    if (tab === 'about') { B.innerHTML = profAboutHTML(n, u); if (me) socket.emit('badgeProgress', pr => { window._bprog = pr; const el = $('#pf-badges-sec'); if (el && profileOpen === n) el.innerHTML = badgeGrid(n, u, pr); }); }
     if (tab === 'act') B.innerHTML = actCards(u) || `<div class="pf-empty">${ic('activity')}<b>Şu an bir şey yapmıyor</b><span>Oyun oynarken ya da Spotify dinlerken burada görünür.</span></div>`;
     if (tab === 'servers') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.servers.length ? `<div class="pf-list">${mut.servers.map(s => `<button data-gs="${s.id}"><span class="pl-ic">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</span><span><b>${esc(s.name)}</b><small>${s.joined ? ago2(s.joined) + 'dır üye' : 'Ortak sunucu'}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('grid')}<b>Ortak sunucunuz yok</b><span>Onu bir sunucuna davet et.</span></div>`;
     if (tab === 'friends') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.friends.length ? `<div class="pf-list">${mut.friends.map(f => `<button data-gf="${esc(f)}">${av(f, S.online.has(f))}<span><b>${esc(dn(f))}</b><small>@${esc(f)}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('users')}<b>Ortak arkadaşınız yok</b><span>Arkadaş olunca burada görünür.</span></div>`;
