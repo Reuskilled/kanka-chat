@@ -1724,6 +1724,50 @@
   .adm-adv { margin: 4px 0 10px; font-size: 13px; } .adm-adv summary { cursor: pointer; color: var(--muted); font-weight: 800; margin-bottom: 8px; }
   .adm-user { display: flex; gap: 12px; align-items: center; margin-top: 10px; } .adm-user .av { width: 40px; height: 40px; } .adm-user b { display: block; } .adm-user small { display: block; color: var(--muted); font-size: 12.5px; } .adm-user .no { color: var(--red); }
   @media (max-width: 700px) { .adm-stats { grid-template-columns: 1fr; } .seg.big { grid-template-columns: 1fr 1fr; } .acc-danger { flex-direction: column; align-items: stretch; } }
+
+  /* ---------- Küçük profil 2.0 ---------- */
+  .vpop { width: 320px; border-radius: 20px; --ring: var(--card); background: var(--card); border: 1px solid rgba(255,255,255,.07); box-shadow: 0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.3); }
+  .vpop.themed { --ring: color-mix(in srgb, var(--t1) 82%, #000); background: linear-gradient(170deg, var(--t1), var(--t2)); }
+  .vpop .vp-banner { height: 104px; position: relative; }
+  .vpop .vp-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,.18)); pointer-events: none; }
+  .vp-ico { position: absolute; z-index: 1; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.42); color: #fff; backdrop-filter: blur(6px); opacity: .85; transition: opacity .15s, transform .15s; }
+  .vp-ico:hover { opacity: 1; transform: scale(1.06); } .vp-ico .ic { width: 15px; height: 15px; }
+  .vp-head { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 0 16px; margin-top: -48px; min-height: 48px; }
+  .vp-avw { border-radius: 50%; flex-shrink: 0; transition: box-shadow .2s; }
+  .vpop .vp-avw .pav .av { border-color: var(--ring); }
+  .vpop .vp-avw .pav .pdot { border-color: var(--ring); }
+  .vp-avw.vp-spk .pav .av { box-shadow: 0 0 0 3px var(--green); }
+  .vp-bub { position: relative; margin-top: 54px; max-width: 180px; padding: 7px 11px; border-radius: 14px; background: rgba(0,0,0,.34); border: 1px solid rgba(255,255,255,.08); font-size: 12.5px; font-weight: 700; color: #f1e4d9; line-height: 1.35; }
+  .vp-bub::before { content: ''; position: absolute; left: -5px; top: 9px; width: 9px; height: 9px; border-radius: 50%; background: inherit; border: inherit; }
+  .vp-bub::after { content: ''; position: absolute; left: -11px; top: 18px; width: 5px; height: 5px; border-radius: 50%; background: rgba(0,0,0,.34); }
+  .vp-bub span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+  .vpop .vp-body { display: none; }
+  .vp-in { margin: 10px 10px 10px; padding: 14px; border-radius: 16px; background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.045); max-height: calc(100vh - 190px); overflow-y: auto; }
+  .vpop.themed .vp-in { background: rgba(14,10,8,.62); border-color: rgba(255,255,255,.06); }
+  .vpop .vp-name { display: block; font-size: 20px; font-weight: 900; line-height: 1.2; margin: 0; padding: 0; text-align: left; color: var(--ink); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vpop .vp-name:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .vpop .vp-un { display: flex; align-items: center; flex-wrap: wrap; gap: 0 2px; margin-top: 2px; color: #cbb8aa; font-size: 13px; font-weight: 700; }
+  .vpop .vp-un i { font-style: normal; margin: 0 5px; opacity: .5; } .vpop .vp-un .badge, .vpop .vp-un [class*="role-"] { margin-left: 8px; }
+  .vp-badges { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 9px; padding: 4px 6px; border-radius: 10px; background: rgba(0,0,0,.22); width: max-content; max-width: 100%; }
+  .vpop .vp-tags { margin-top: 10px; }
+  .vp-act { margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.04); font-size: 13px; }
+  .vp-act .act-line { display: flex; align-items: center; gap: 7px; } .vp-act .ic { width: 15px; height: 15px; }
+  .vpop .vp-mut { display: flex; align-items: center; gap: 7px; margin-top: 10px; padding: 0; font-size: 12.5px; font-weight: 800; color: var(--muted); text-align: left; }
+  .vpop .vp-mut .ic { width: 14px; height: 14px; }
+  .vpop .vp-sec { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.07); }
+  .vpop .vp-sec h5 { font-size: 11px; margin-bottom: 7px; color: #b9a596; }
+  .vpop .vp-bio { max-height: none; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; color: #e3d3c6; }
+  .vpop .vp-roles span { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.06); }
+  .vp-since { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; font-weight: 700; color: #e3d3c6; }
+  .vp-since span { display: inline-flex; align-items: center; gap: 7px; }
+  .vp-since .ic { width: 18px; height: 18px; padding: 3px; border-radius: 6px; background: #F2652F; color: #fff; box-sizing: border-box; }
+  .vp-since span[hidden] { display: none; }
+  .vp-sic { width: 18px; height: 18px; border-radius: 6px; overflow: hidden; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: 10px; font-weight: 900; } .vp-sic img { width: 100%; height: 100%; object-fit: cover; }
+  .vpop .vp-box { background: rgba(0,0,0,.2); border-color: rgba(255,255,255,.06); }
+  .vpop .vp-msg { margin-top: 14px; background: rgba(0,0,0,.25); border-color: rgba(255,255,255,.08); }
+  .vpop .vp-acts { margin-top: 14px; }
+  .vpop.sheet { border-radius: 22px; }
+  .vpop.sheet .vp-in { max-height: 60vh; }
 </style>
 </head>
 <body>
@@ -3668,27 +3712,35 @@ function voicePop(n, anchor, chId) {
   const tags = [speaking.has(n) && `<span class="vt-on">${ic('volume')} Konuşuyor</span>`, fl.m && `<span class="vt-m">${ic('micoff')} Mikrofonu kapalı</span>`, live && `<span class="vt-l">● Yayında</span>`, fl.cam && `<span>${ic('video')} Kamerası açık</span>`, stg && `<span>${ic('stage')} ${onStage ? 'Konuşmacı' : 'Dinleyici'}</span>`].filter(Boolean).join('');
   const p = document.createElement('div'); p.className = 'vpop'; p.setAttribute('role', 'dialog');
   if (themeOf(u)) { p.classList.add('themed'); p.style.cssText = themeVars(u); }
-  p.innerHTML = `<div class="vp-banner" style="${banStyle(n, u)}"></div>
-    <div class="vp-body"><div class="vp-top"><div class="${speaking.has(n) ? 'vp-spk' : ''}">${pAv(n, u, 80)}</div><div class="pf-badges">${badgesHTML(u, 'sm')}</div></div>
-      <div class="vp-name">${esc(dn(n))}${badge(roleOf(srv, n))}</div><div class="vp-un">@${esc(n)}${u.pronouns ? `<i>•</i>${esc(u.pronouns)}` : ''}</div>
-      ${me ? '' : '<div class="vp-mut" id="vp-mut"></div>'}
-      ${u.status ? `<div class="vp-st">${esc(u.status)}</div>` : ''}
-      ${tags ? `<div class="vp-tags">${tags}</div>` : inVc ? '' : `<div class="vp-tags"><span class="vt-p"><i class="sd" style="background:${online ? STATUS[stOf(n)][1] : '#80848e'}"></i>${online ? STATUS[stOf(n)][0] : 'Çevrimdışı'}</span>${actLine(n) ? `<span>${actLine(n)}</span>` : ''}</div>`}
-      ${myRoles.length ? `<div class="vp-sec"><h5>Roller</h5><div class="vp-roles">${myRoles.map(r => `<span><i style="background:${r.color}"></i>${esc(r.name)}</span>`).join('')}</div></div>` : ''}
+  const hasB = !!badgeChips(u, 22), act = !inVc && actLine(n), dshort = t => new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+  const stTxt = online ? STATUS[stOf(n)][0] : 'Çevrimdışı';
+  p.innerHTML = `<div class="vp-banner" style="${banStyle(n, u)}"><button class="vp-ico" id="vp-prof" title="Tam profili aç" aria-label="Tam profili aç">${ic('expand')}</button></div>
+    <div class="vp-head"><div class="vp-avw ${speaking.has(n) ? 'vp-spk' : ''}" title="${stTxt}">${pAv(n, u, 88)}</div>
+      ${u.status ? `<div class="vp-bub" title="${esc(u.status)}"><span>${esc(u.status)}</span></div>` : ''}</div>
+    <div class="vp-in">
+      <button class="vp-name" id="vp-nm">${esc(dn(n))}</button>
+      <div class="vp-un"><span>@${esc(n)}</span>${u.pronouns ? `<i>•</i><span>${esc(u.pronouns)}</span>` : ''}${badge(roleOf(srv, n))}</div>
+      ${hasB ? `<div class="vp-badges">${badgesHTML(u, 'sm')}</div>` : ''}
+      ${tags ? `<div class="vp-tags">${tags}</div>` : ''}
+      ${act ? `<div class="vp-act">${act}</div>` : ''}
+      ${me ? '' : '<button class="vp-mut" id="vp-mut"></button>'}
       ${!inVc && u.bio ? `<div class="vp-sec"><h5>Hakkımda</h5><div class="vp-bio">${fmt(u.bio)}</div></div>` : ''}
+      ${myRoles.length ? `<div class="vp-sec"><h5>Roller</h5><div class="vp-roles">${myRoles.map(r => `<span><i style="background:${r.color}"></i>${esc(r.name)}</span>`).join('')}</div></div>` : ''}
+      ${!inVc ? `<div class="vp-sec"><h5>Üyelik</h5><div class="vp-since"><span title="Kanka'ya katıldı">${ic('logo')}${u.createdAt ? dshort(u.createdAt) : 'Eskiden beri'}</span><span id="vp-sj" hidden></span></div></div>` : ''}
       ${same ? `<div class="vp-box"><label>${ic('volume')} Ses seviyesi <b id="vp-vv">${Math.round((vol[n] ?? 1) * 100)}%</b></label><input type="range" class="krange" id="vp-vol" min="0" max="1" step="0.05" value="${vol[n] ?? 1}">
         <button class="vp-tg ${uMuted.has(n) ? 'on' : ''}" id="vp-mute">${ic('micoff')}<span>${uMuted.has(n) ? 'Susturmayı kaldır' : 'Benim için sustur'}</span></button></div>` : ''}
       ${me && chId && myVoice === chId ? `<div class="vp-box"><button class="vp-tg ${muted ? 'on' : ''}" id="vp-self">${ic(muted ? 'mic' : 'micoff')}<span>${muted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}</span></button></div>` : ''}
       ${!inVc && !me ? `<div class="vp-msg"><input id="vp-q" maxlength="2000" placeholder="@${esc(n)} kişisine mesaj gönder" autocomplete="off"><button id="vp-send" aria-label="Gönder">${ic('send')}</button></div>` : ''}
-      <div class="vp-acts">${live && myVoice === chId && !me ? `<button class="btnp" id="vp-watch">${ic('screen')} Yayını izle</button>` : ''}
-        <button class="btns2" id="vp-prof">${ic('user')} Tam profil</button>${me ? `<button class="btns2" id="vp-edit">${ic('edit')} Düzenle</button>` : inVc ? `<button class="btns2" id="vp-dm">${ic('chat')} Mesaj</button>` : ''}</div></div>`;
+      ${(live && myVoice === chId && !me) || me || inVc ? `<div class="vp-acts">${live && myVoice === chId && !me ? `<button class="btnp" id="vp-watch">${ic('screen')} Yayını izle</button>` : ''}
+        ${me ? `<button class="btnp" id="vp-edit">${ic('edit')} Profili düzenle</button>` : inVc ? `<button class="btns2" id="vp-dm">${ic('chat')} Mesaj</button>` : ''}</div>` : ''}</div>`;
   document.body.appendChild(p);
   const r = anchor.getBoundingClientRect(), W = innerWidth, H = innerHeight, pw = p.offsetWidth, ph = p.offsetHeight;
   if (W < 760) { p.classList.add('sheet'); }
   else { const left = r.right + 12 + pw > W - 10 ? r.left - pw - 12 : r.right + 12; p.style.left = Math.max(10, left) + 'px'; p.style.top = Math.max(10, Math.min(r.top + r.height / 2 - 70, H - ph - 10)) + 'px'; }
   p.onclick = e => e.stopPropagation();
-  if (!me) socket.emit('mutuals', n, x => { const el = $('#vp-mut'); if (!el || vpopFor !== n || !x) return; const parts = [];
+  socket.emit('mutuals', n, x => { if (vpopFor !== n || !x) return; const el = $('#vp-mut') || document.createElement('i'); const parts = [];
     if (x.servers.length) parts.push(`${x.servers.length} ortak sunucu`); if (x.friends.length) parts.push(`${x.friends.length} ortak arkadaş`);
+    const sj = srv && !srv.public && x.joined?.[srv.id], sjEl = $('#vp-sj'); if (sj && sjEl) { sjEl.hidden = false; sjEl.title = `${srv.name} sunucusuna katıldı`; sjEl.innerHTML = `<b class="vp-sic">${srv.iconImg ? `<img src="${esc(srv.iconImg)}" alt="">` : esc(srv.icon || srv.name[0])}</b>${new Date(sj).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}`; }
     if (!parts.length) return; el.innerHTML = `${x.friends.length ? `<span class="avs">${x.friends.slice(0, 3).map(f => av(f)).join('')}</span>` : ic('grid')}${parts.join(' · ')}`;
     el.onclick = () => { closeVPop(); showProfile(n, x.friends.length && !x.servers.length ? 'friends' : 'servers'); }; });
   if ($('#vp-vol')) $('#vp-vol').oninput = e => { vol[n] = +e.target.value; store.set('kanka-vol', JSON.stringify(vol)); applyPeerAudio(); $('#vp-vv').textContent = Math.round(vol[n] * 100) + '%'; };
@@ -3696,6 +3748,7 @@ function voicePop(n, anchor, chId) {
   if ($('#vp-self')) $('#vp-self').onclick = () => { $('#mute').click(); vpopFor = null; voicePop(n, anchor, chId); };
   if ($('#vp-watch')) $('#vp-watch').onclick = () => { closeVPop(); const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); setVView(true); };
   $('#vp-prof').onclick = () => { closeVPop(); showProfile(n); };
+  $('#vp-nm').onclick = () => { closeVPop(); showProfile(n); };
   if ($('#vp-dm')) $('#vp-dm').onclick = () => { closeVPop(); openDM(n); };
   if ($('#vp-edit')) $('#vp-edit').onclick = () => { closeVPop(); showSettings('profile'); };
   if ($('#vp-q')) {
