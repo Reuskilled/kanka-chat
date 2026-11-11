@@ -200,7 +200,13 @@ const COLORS = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a'
 const NAME_RE = /^[\p{L}\p{N}_.-]{2,20}$/u;
 const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 32).toString('hex');
 const level = xp => Math.floor(Math.sqrt((xp || 0) / 5)) + 1;
-const pubUser = u => ({ name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
+// Profil: çerçeveler (seviyeyle açılır) ve sosyal bağlantılar
+const FRAMES = { halka: 2, gokkusagi: 5, ates: 10, neon: 15, altin: 25, kurucu: 0 };
+const SOCIALS = ['instagram', 'tiktok', 'youtube', 'x', 'twitch', 'steam', 'spotify'];
+const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (u.createdAt || 0)).length < 100;
+const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
+const HEX = /^#[0-9a-f]{6}$/i;
+const pubUser = u => ({ displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, activities: activitiesOf(u), badges: badgesOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
@@ -966,7 +972,7 @@ io.on('connection', socket => {
   });
 
   // ----- Profil -----
-  socket.on('updateProfile', ({ avatar, status, bio, banner, color, birthday, music } = {}, cb = () => {}) => {
+  socket.on('updateProfile', ({ avatar, status, bio, banner, color, birthday, music, displayName, pronouns, theme, bannerImg, frame, socials } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
     if (avatar === null) u.avatar = null;
     else if (avatar !== undefined) { if (!AVATAR_OK(avatar)) return cb({ error: 'Geçersiz resim' }); u.avatar = avatar; }
@@ -976,8 +982,20 @@ io.on('connection', socket => {
     if (color !== undefined && /^#[0-9a-f]{6}$/i.test(color)) u.color = color;
     if (birthday !== undefined) u.birthday = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(birthday) ? birthday : null;
     if (music !== undefined) u.music = /^https?:\/\/\S{4,300}$/.test(music) ? music : null;
+    if (displayName !== undefined) u.displayName = clean(displayName, 32).replace(/[\u200B-\u200F\u202A-\u202E]/g, '');
+    if (pronouns !== undefined) u.pronouns = clean(pronouns, 20);
+    if (theme !== undefined) u.theme = Array.isArray(theme) && theme.length === 2 && theme.every(c => HEX.test(c)) ? theme : null;
+    if (bannerImg !== undefined) u.bannerImg = bannerImg && UPLOAD_RE.test(bannerImg) ? bannerImg : null;
+    if (frame !== undefined) { if (frame && !frameOk(u, frame)) return cb({ error: 'Bu çerçeve henüz açılmadı' }); u.frame = frame && frame !== 'none' ? frame : null; }
+    if (socials !== undefined) { const o = {}; for (const k of SOCIALS) { const v = clean(socials?.[k], 60).replace(/^https?:\/\/\S+\//, '').replace(/^@/, ''); if (v && /^[\w.\-]{1,40}$/.test(v)) o[k] = v; } u.socials = o; }
     if (u.bio || u.status) onbFlag(me, 'profile');
     save(); io.emit('users', allUsers()); cb({ ok: true });
+  });
+  socket.on('mutuals', (n, cb = () => {}) => {
+    const o = db.users[n]; if (!me || !o) return cb({ servers: [], friends: [] });
+    const servers = db.servers.filter(s => !s.public && s.members.includes(me) && s.members.includes(n)).map(s => ({ id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, joined: s.joinedAt?.[n] || null }));
+    const mine = new Set(db.users[me].friends || []), friends = n === me ? [] : (o.friends || []).filter(x => mine.has(x));
+    cb({ servers: n === me ? [] : servers, friends, joined: Object.fromEntries(db.servers.filter(s => s.members.includes(n) && s.joinedAt?.[n]).map(s => [s.id, s.joinedAt[n]])) });
   });
   socket.on('changePassword', ({ old, next } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
@@ -1351,7 +1369,7 @@ io.on('connection', socket => {
     const name = clean(opts.name, 40); if (!name) return cb({ error: 'Sunucu adı gerekli' });
     const tpl = TEMPLATES[opts.template] || TEMPLATES.bos;
     const s = {
-      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: crypto.randomBytes(4).toString('hex'),
+      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], joinedAt: { [me]: Date.now() }, createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: crypto.randomBytes(4).toString('hex'),
       channels: [], template: opts.template in TEMPLATES ? opts.template : 'bos'
     };
     for (const r of tpl.roles || []) s.customRoles.push({ id: id(), ...r });
@@ -1425,7 +1443,7 @@ io.on('connection', socket => {
     const s = db.servers.find(x => x.invite === code);
     if (!me || !s) return cb({ error: 'Davet kodu geçersiz' });
     if (s.bans?.[me]) return cb({ error: 'Bu sunucudan yasaklandın' });
-    if (!s.public && !s.members.includes(me)) { s.members.push(me); save(); pushServers(s.members); }
+    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); save(); pushServers(s.members); }
     cb(serverView(s, me));
   });
 

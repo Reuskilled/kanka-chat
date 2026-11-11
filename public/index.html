@@ -1407,6 +1407,131 @@
   .vp-msg button .ic { width: 16px; height: 16px; } .vp-msg button:disabled { opacity: .5; }
   .row[data-au] .wname, .row[data-au] > .av { cursor: pointer; }
   .row[data-au] .wname:hover { text-decoration: underline; }
+  /* ===== Profil 2.0 ===== */
+  #modal .box.pcard2 { width: min(940px, 96vw); height: min(640px, 92vh); padding: 0; overflow: hidden; border-radius: 26px; }
+  .pf { display: grid; grid-template-columns: 330px 1fr; height: 100%; }
+  .pf-side { position: relative; display: flex; flex-direction: column; background: var(--card); border-right: 1px solid var(--line); overflow: hidden auto; scrollbar-width: none; }
+  .pf-side.themed { background: linear-gradient(170deg, var(--t1), var(--t2)); border-right-color: transparent; }
+  .pf-ban { height: 132px; flex-shrink: 0; }
+  .pf-in { position: relative; flex: 1; padding: 0 22px 22px; }
+  .pf-side.themed .pf-in { background: linear-gradient(180deg, rgba(18,13,10,.35), rgba(18,13,10,.62) 40%, rgba(18,13,10,.72)); margin: 0 8px 8px; border-radius: 0 0 18px 18px; }
+  .pf-top { display: flex; align-items: flex-end; justify-content: space-between; margin-top: -58px; margin-bottom: 10px; }
+  .pf-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; padding: 6px 8px; border-radius: 12px; background: rgba(0,0,0,.35); max-width: 150px; }
+  .pf-badges:empty { display: none; }
+  .pbadge { display: grid; place-items: center; width: 24px; height: 24px; } .pbadge .ic { width: 18px; height: 18px; }
+  .pbadge.sm { width: 18px; height: 18px; } .pbadge.sm .ic { width: 14px; height: 14px; }
+  .pf-dn { font-size: 25px; font-weight: 900; letter-spacing: -.02em; line-height: 1.15; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; word-break: break-word; }
+  .pf-un { color: #d8c4b4; font-size: 14px; font-weight: 700; margin-top: 3px; } .pf-un i { font-style: normal; margin: 0 6px; opacity: .5; }
+  .pf-bubble { position: relative; margin-top: 12px; padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.08); font-size: 14px; line-height: 1.4; }
+  .pf-actslot { display: flex; gap: 8px; margin-top: 16px; }
+  .pf-actslot > * { flex: 1; padding: 11px 12px; font-size: 14px; }
+  .pf-actslot .pf-more { flex: 0 0 46px; padding: 0; }
+  .pf-actslot #pf-fr { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); color: var(--ink); font-weight: 800; width: auto; margin: 0; }
+  .pf-actslot #pf-fr .ic { width: 16px; height: 16px; }
+  .pf-meta { display: grid; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.08); }
+  .pf-meta [hidden] { display: none !important; }
+  .pf-meta div { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; } .pf-meta span { color: var(--muted); font-weight: 700; } .pf-meta b { font-weight: 800; text-align: right; }
+  .pf-roles { margin-top: 16px; } .pf-roles h5, .pf-body h5 { font-size: 11.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .pf-body h5 small { text-transform: none; letter-spacing: 0; font-weight: 700; }
+  .pf-roles > div { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pf-roles span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 9px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.08); font-size: 12.5px; font-weight: 800; }
+  .pf-roles span i { width: 10px; height: 10px; border-radius: 50%; }
+  .pf-roles button { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: rgba(0,0,0,.25); border: 1px dashed rgba(255,255,255,.2); color: var(--muted); }
+  .pf-roles button.wide { width: auto; display: inline-flex; gap: 6px; padding: 0 12px; font-weight: 800; font-size: 12.5px; }
+  .pf-roles button .ic { width: 14px; height: 14px; } .pf-roles button:hover { color: var(--accent); border-color: var(--accent); }
+  .pf-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .pf-tabs { display: flex; gap: 4px; padding: 20px 64px 0 26px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
+  .pf-tabs button { position: relative; padding: 10px 12px 14px; font-weight: 800; font-size: 14px; color: var(--muted); white-space: nowrap; }
+  .pf-tabs button:hover { color: var(--ink); }
+  .pf-tabs button.on { color: var(--ink); } .pf-tabs button.on::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent); }
+  .pf-body { flex: 1; overflow-y: auto; padding: 22px 26px 26px; display: grid; gap: 20px; align-content: start; }
+  .pf-body section { animation: fadeUp .3s var(--ease-out) both; }
+  .pf-bio { font-size: 15px; line-height: 1.6; color: #e8dcd4; } .pf-bio.empty { color: var(--muted); font-style: italic; }
+  .psocs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+  .psoc { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); color: var(--ink); text-decoration: none; transition: border-color .15s, transform .15s; min-width: 0; }
+  .psoc:hover { border-color: var(--c); transform: translateY(-2px); }
+  .psoc i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); flex-shrink: 0; }
+  .psoc b { font-size: 13.5px; font-weight: 900; } .psoc span { flex: 1; min-width: 0; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .psoc .ic { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+  .pf-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; }
+  .pf-lvl, .pf-stats { padding: 16px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
+  .pl-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; } .pl-h b { font-size: 18px; font-weight: 900; }
+  .pf-lvl small { display: block; margin-top: 8px; color: var(--muted); font-size: 12.5px; } .pf-lvl small b { color: var(--accent-2); }
+  .pf-stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; align-items: center; }
+  .pf-stats b { display: block; font-size: 22px; font-weight: 900; } .pf-stats span { color: var(--muted); font-size: 12px; font-weight: 700; }
+  .pf-line { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; } .pf-line .ic { width: 18px; height: 18px; color: var(--accent); } .pf-line b { color: var(--ink); }
+  .pf-empty { display: grid; justify-items: center; gap: 6px; padding: 50px 20px; text-align: center; color: var(--muted); }
+  .pf-empty .ic { width: 34px; height: 34px; color: #6b564a; margin-bottom: 6px; } .pf-empty b { color: var(--ink); font-size: 16px; }
+  .pf-list { display: grid; gap: 6px; }
+  .pf-list button { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); text-align: left; color: var(--ink); transition: border-color .15s; }
+  .pf-list button:hover { border-color: var(--accent); }
+  .pf-list button > span:nth-child(2) { flex: 1; min-width: 0; } .pf-list b { display: block; font-weight: 800; } .pf-list small { color: var(--muted); font-size: 12.5px; }
+  .pf-list .ic { width: 15px; height: 15px; color: var(--muted); transform: rotate(-90deg); }
+  .pf-list .av { width: 38px; height: 38px; font-size: 15px; }
+  .pl-ic { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; background: linear-gradient(145deg, #ff9a5c, #e8552a); color: #fff; font-weight: 900; overflow: hidden; flex-shrink: 0; }
+  .pl-ic img { width: 100%; height: 100%; object-fit: cover; }
+  .box.pcard2 .pc-close { position: absolute; right: 16px; top: 16px; z-index: 5; }
+  @media (max-width: 760px) {
+    #modal .box.pcard2 { height: 92vh; border-radius: 22px; }
+    .pf { grid-template-columns: 1fr; grid-template-rows: auto 1fr; overflow-y: auto; }
+    .pf-side { border-right: 0; overflow: visible; } .pf-main { min-height: 60vh; }
+    .pf-tabs { padding: 10px 16px 0; } .pf-body { padding: 18px 16px; overflow: visible; } .pf-grid { grid-template-columns: 1fr; }
+  }
+  /* avatar + çerçeveler */
+  .pav { position: relative; width: var(--s); height: var(--s); flex-shrink: 0; }
+  .pav .av { position: relative; z-index: 1; width: 100%; height: 100%; font-size: calc(var(--s) * .4); border: 6px solid var(--card); box-sizing: border-box; }
+  .pf-side.themed .pav .av { border-color: rgba(30,20,15,.9); }
+  .pav .pdot { position: absolute; z-index: 2; right: calc(var(--s) * .04); bottom: calc(var(--s) * .04); width: calc(var(--s) * .2); height: calc(var(--s) * .2); border-radius: 50%; border: calc(var(--s) * .05) solid var(--card); }
+  .pav[class*="fr-"]::before { content: ''; position: absolute; inset: calc(var(--s) * -.035); border-radius: 50%; z-index: 0; }
+  .fr-halka::before { background: var(--accent); }
+  .fr-gokkusagi::before { background: conic-gradient(#ff5d5d, #ffb347, #f6e05e, #4cc38a, #4aa8ff, #b07cff, #ff5d5d); animation: spin 4s linear infinite; }
+  .fr-ates::before { background: conic-gradient(#ff3d00, #ffb300, #ff6d00, #ffd54f, #ff3d00); animation: spin 2.4s linear infinite; box-shadow: 0 0 18px rgba(255,109,0,.65); }
+  .fr-neon::before { background: conic-gradient(#00e5ff, #ff2bd6, #00e5ff); animation: spin 3s linear infinite; box-shadow: 0 0 16px rgba(0,229,255,.6), 0 0 26px rgba(255,43,214,.35); }
+  .fr-altin::before { background: linear-gradient(135deg, #fff1b8, #e2b04a 30%, #8a5a12 55%, #ffe08a 80%, #b9821f); box-shadow: 0 0 16px rgba(226,176,74,.55); }
+  .fr-kurucu::before { background: conic-gradient(#ff8a4c, #ffb347, #ff6b3d, #ff8a4c); box-shadow: 0 0 14px rgba(255,138,76,.55); }
+  .fr-kurucu::after { content: '🦝'; position: absolute; z-index: 3; left: 50%; bottom: calc(var(--s) * -.08); transform: translateX(-50%); font-size: calc(var(--s) * .2); line-height: 1; padding: 2px 5px; border-radius: 99px; background: #2b1d15; border: 2px solid #ff8a4c; }
+  /* mini kart teması */
+  .vpop.themed { background: linear-gradient(170deg, var(--t1), var(--t2)); border-color: transparent; }
+  .vpop.themed .vp-body { background: rgba(18,13,10,.66); margin: 0 6px 6px; border-radius: 0 0 14px 14px; }
+  .vpop .vp-banner { height: 70px; }
+  .vp-top { display: flex; align-items: flex-end; justify-content: space-between; margin-top: -40px; }
+  .vp-top .pav .av { border-color: var(--card); }
+  .vpop.themed .vp-top .pav .av { border-color: rgba(30,20,15,.95); }
+  .vp-top .pf-badges { max-width: 140px; padding: 4px 6px; }
+  .vp-un { color: #cbb8aa; font-size: 12.5px; font-weight: 700; margin-top: 1px; } .vp-un i { font-style: normal; margin: 0 5px; opacity: .5; }
+  .vp-mut { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12.5px; font-weight: 800; color: var(--muted); cursor: pointer; }
+  .vp-mut:hover { color: var(--ink); } .vp-mut:empty { display: none; }
+  .vp-mut .avs { display: flex; } .vp-mut .avs .av { width: 18px; height: 18px; font-size: 8px; margin-left: -5px; border: 2px solid var(--card); } .vp-mut .avs .av:first-child { margin-left: 0; }
+  /* profil düzenleme */
+  .st-sec { margin: 26px 0 6px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
+  .st-sec:first-of-type { border-top: 0; padding-top: 0; margin-top: 14px; }
+  .st-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .themes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .themes button { width: 46px; height: 46px; border-radius: 14px; border: 2px solid transparent; transition: transform .15s; }
+  .themes button:hover { transform: translateY(-2px); } .themes button.on { border-color: #fff; box-shadow: 0 0 0 3px var(--accent); }
+  .themes .none { background: var(--card); border: 2px dashed var(--line); display: grid; place-items: center; color: var(--muted); } .themes .none .ic { width: 18px; height: 18px; }
+  .themes label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); font-size: 12.5px; font-weight: 800; color: var(--muted); }
+  .themes input[type=color] { width: 30px; height: 30px; border: 0; padding: 0; background: none; cursor: pointer; }
+  .frames { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+  .frames button { display: grid; justify-items: center; gap: 8px; padding: 12px 6px 10px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font-weight: 800; font-size: 12.5px; position: relative; }
+  .frames button.on { border-color: var(--accent); background: var(--accent-soft); }
+  .frames button.lock { opacity: .55; cursor: not-allowed; }
+  .frames button em { position: absolute; top: 6px; right: 6px; font-style: normal; font-size: 10.5px; font-weight: 900; padding: 2px 6px; border-radius: 99px; background: rgba(0,0,0,.4); color: var(--muted); }
+  .frames .pav .av { border-width: 4px; }
+  .bnr { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .bnr .bprev { width: 180px; height: 60px; border-radius: 12px; border: 1px solid var(--line); }
+  .socin { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .socin label { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+  .socin label:focus-within { border-color: var(--accent); }
+  .socin label i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+  .st-field .socin label { text-transform: none; letter-spacing: 0; margin: 0; font-size: inherit; color: var(--ink); }
+  .socin label b { font-size: 12.5px; font-weight: 900; width: 78px; flex-shrink: 0; text-transform: none; letter-spacing: 0; }
+  .socin input { flex: 1; min-width: 0; padding: 11px 0; background: none; border: 0; outline: none; color: var(--ink); font: inherit; font-weight: 700; font-size: 13.5px; }
+  .mini-card .pf-side { border-radius: 20px; border: 1px solid var(--line); min-height: 0; }
+  .mini-card .pf-side .pf-in { padding-bottom: 18px; }
+  .mini-card .pf-prevabout { padding: 14px 4px 0; display: grid; gap: 10px; }
+  .mini-card .psocs { grid-template-columns: 1fr; }
+  @media (max-width: 760px) { .st-2, .socin { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -1729,31 +1854,45 @@ $('#settings').onclick = () => showSettings();
 const PALETTE = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#ff9f43', '#e5484d', '#8b6b5a'];
 function showSettings(tab = 'profile') {
   const u = S.users[S.me];
-  const KEYS = ['avatar', 'status', 'bio', 'banner', 'color', 'birthday', 'music'];
-  const initDraft = () => Object.fromEntries(KEYS.map(k => [k, u[k] || (k === 'avatar' || k === 'banner' ? null : '')]));
+  const KEYS = ['avatar', 'status', 'bio', 'banner', 'color', 'birthday', 'music', 'displayName', 'pronouns', 'theme', 'bannerImg', 'frame', 'socials'];
+  const OBJ = { theme: null, socials: {}, frame: null, bannerImg: null, avatar: null, banner: null };
+  const initDraft = () => Object.fromEntries(KEYS.map(k => [k, k in OBJ ? (u[k] && typeof u[k] === 'object' ? JSON.parse(JSON.stringify(u[k])) : u[k] || OBJ[k]) : u[k] || '']));
   const draft = initDraft();
-  const dirty = () => KEYS.some(k => (draft[k] || '') !== (u[k] || ''));
+  const norm = (k, v) => JSON.stringify(k === 'socials' ? Object.fromEntries(Object.entries(v || {}).filter(([, x]) => x)) : v || (k in OBJ ? null : ''));
+  const dirty = () => KEYS.some(k => norm(k, draft[k]) !== norm(k, u[k]));
   modal(`<nav class="st-nav"><h4>KULLANICI AYARLARI</h4>
       <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button>
       <button class="out" id="st-out">${ic('logout')}Çıkış yap</button><div class="st-ver" id="st-ver">Kanka Chat</div><button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="st-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div><div class="mini-card" id="st-card"></div></aside>`, 'settings');
   const preview = () => {
-    $('#st-card').innerHTML = cardHTML(S.me, { ...u, ...draft }, { online: true, preview: true, srv: S.view === 'server' ? S.server : null });
+    const pu = { ...u, ...draft };
+    $('#st-card').innerHTML = profSideHTML(S.me, pu, { preview: true }) + `<div class="pf-prevabout">${pu.bio ? `<div class="pf-bio">${fmt(pu.bio)}</div>` : ''}${Object.values(pu.socials || {}).some(Boolean) ? `<div class="psocs">${socialsHTML({ socials: Object.fromEntries(Object.entries(pu.socials).filter(([, x]) => x)) })}</div>` : ''}</div>`;
+    $('#st-card .pf-actslot').innerHTML = `<button class="btnp" tabindex="-1">${ic('chat')} Mesaj</button><button class="btns2" tabindex="-1">${ic('userplus')}</button>`;
     fillBars();
     $('.st-save')?.classList.toggle('dirty', dirty());
   };
   const pages = {
-    profile: () => `<div class="st-page"><h3>Profilim</h3><p class="hint">Diğerleri profil kartına tıklayınca bunları görecek.</p>
+    profile: () => `<div class="st-page"><h3>Profilim</h3><p class="hint">Sağda canlı önizlemesini görürsün. Diğerleri profiline tıklayınca bunları görecek.</p>
+      <div class="st-sec">Kimlik</div>
+      <div class="st-field st-2"><div><label>Görünen ad</label><input class="field" id="st-dn" maxlength="32" placeholder="${esc(S.me)}" value="${esc(draft.displayName)}" style="margin:0"></div><div><label>Zamir</label><input class="field" id="st-pr" maxlength="20" placeholder="Örn. o/onun" value="${esc(draft.pronouns)}" style="margin:0"></div></div>
       <div class="st-field"><label>Profil fotoğrafı</label><div class="st-av"><div class="av" id="st-av"></div><button id="st-up">${ic('camera')}<span>Yükle</span></button>${draft.avatar ? '<button id="st-rm">Kaldır</button>' : ''}</div><div class="avgrid sm" id="st-presets">${(S.presets || []).map(a => `<button type="button" class="avopt ${draft.avatar === a ? 'on' : ''}" data-av="${a}" aria-label="Rakun avatarı"><img src="${a}" alt=""></button>`).join('')}</div></div>
-      <div class="st-field"><label>Kapak rengi</label><div class="swatches" id="sw-banner"></div></div>
       <div class="st-field"><label>Avatar ve isim rengi</label><div class="swatches" id="sw-color"></div></div>
+      <div class="st-sec">Görünüm</div>
+      <div class="st-field"><label>Avatar çerçevesi</label><div class="frames">${FRAMES.map(f => { const open = frameOpen(u, f), on = (draft.frame || 'none') === f[0];
+        return `<button type="button" data-fr="${f[0]}" class="${on ? 'on' : ''} ${open ? '' : 'lock'}" title="${open ? f[1] : f[2] < 0 ? 'İlk 100 kullanıcıya özel' : 'Seviye ' + f[2] + ' olunca açılır'}">${pAv(S.me, { ...u, ...draft, frame: f[0] === 'none' ? null : f[0] }, 52, false)}<span>${f[1]}</span>${open ? '' : `<em>${f[2] < 0 ? '🔒' : 'Sv ' + f[2]}</em>`}</button>`; }).join('')}</div></div>
+      <div class="st-field"><label>Afiş</label><div class="bnr"><div class="bprev" style="${banStyle(S.me, { ...u, ...draft })}"></div><button class="btns2" id="st-bimg">${ic('image')} Resim / GIF yükle</button>${draft.bannerImg ? `<button class="btns2" id="st-brm">Resmi kaldır</button>` : ''}</div>${draft.bannerImg ? '' : '<div class="swatches" id="sw-banner" style="margin-top:10px"></div>'}</div>
+      <div class="st-field"><label>Profil teması</label><div class="themes"><button type="button" class="none ${draft.theme ? '' : 'on'}" data-th="none" title="Tema yok">${ic('x')}</button>${PTHEMES.map((t, i) => `<button type="button" data-th="${i}" class="${JSON.stringify(draft.theme) === JSON.stringify(t) ? 'on' : ''}" style="background:linear-gradient(160deg, ${t[0]}, ${t[1]})"></button>`).join('')}
+        <label>Özel <input type="color" id="th-a" value="${draft.theme?.[0] || '#ff8a4c'}"><input type="color" id="th-b" value="${draft.theme?.[1] || '#5b2a86'}"></label></div><p class="hint">Tema profil kartının tamamını boyar.</p></div>
+      <div class="st-sec">Hakkında</div>
       <div class="st-field"><label>Durum</label><input class="field" id="st-status" maxlength="60" placeholder="Örn. Valorant oynuyor" value="${esc(draft.status)}"></div>
       <div class="st-field"><label>Hakkımda</label><textarea class="field" id="st-bio" maxlength="190" placeholder="Kendinden biraz bahset... (**kalın**, *italik* kullanabilirsin)">${esc(draft.bio)}</textarea><div class="st-count" id="st-cnt"></div></div>
-      <div class="st-field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Doğum günü</label><div style="display:flex;gap:6px">
+      <div class="st-field st-2"><div><label>Doğum günü</label><div style="display:flex;gap:6px">
         <select class="field" id="st-bd-d" style="margin:0"><option value="">Gün</option>${Array.from({ length: 31 }, (_, i) => `<option ${draft.birthday?.slice(3) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${String(i + 1).padStart(2, '0')}</option>`).join('')}</select>
         <select class="field" id="st-bd-m" style="margin:0"><option value="">Ay</option>${['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'].map((a, i) => `<option value="${String(i + 1).padStart(2, '0')}" ${draft.birthday?.slice(0, 2) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${a}</option>`).join('')}</select></div></div>
         <div><label>Profil şarkısı</label><input class="field" id="st-music" placeholder="YouTube / Spotify linki" value="${esc(draft.music || '')}" style="margin:0"></div></div>
+      <div class="st-sec">Bağlantılar</div>
+      <div class="st-field"><div class="socin">${Object.entries(SOCIAL_META).map(([k, [nm, c]]) => `<label style="--c:${c}"><i></i><b>${nm}</b><input data-soc="${k}" maxlength="60" placeholder="kullanıcı adı" value="${esc(draft.socials?.[k] || '')}"></label>`).join('')}</div><p class="hint">Sadece kullanıcı adını yaz, linki biz oluştururuz.</p></div>
       <div class="st-save"><span>Kaydedilmemiş değişikliklerin var</span><button id="st-reset">Sıfırla</button><button class="primary" id="st-saveb">Değişiklikleri kaydet</button></div></div>`,
     account: () => `<div class="st-page"><h3>Hesap</h3><p class="hint">Kullanıcı adın: <b>${esc(S.me)}</b> · Katılım: ${since(u.createdAt)}</p>
       <div class="st-field"><label>Mevcut şifre</label><input class="field" type="password" id="p-old" autocomplete="current-password"></div>
@@ -1802,7 +1941,16 @@ function showSettings(tab = 'profile') {
       $('#st-up').onclick = () => readImage(url => { draft.avatar = url; open('profile'); preview(); });
       if ($('#st-rm')) $('#st-rm').onclick = () => { draft.avatar = null; open('profile'); preview(); };
       $('#st-presets').querySelectorAll('[data-av]').forEach(b => b.onclick = () => { draft.avatar = b.dataset.av; open('profile'); preview(); });
-      swatches('#sw-banner', 'banner', [null, '#ff7a59', '#e5484d', '#ff6b9a', '#b07cff', '#4aa8ff', '#2fd3c3', '#4cc38a', '#f6c445', '#3a2c24']);
+      if ($('#sw-banner')) swatches('#sw-banner', 'banner', [null, '#ff7a59', '#e5484d', '#ff6b9a', '#b07cff', '#4aa8ff', '#2fd3c3', '#4cc38a', '#f6c445', '#3a2c24']);
+      $('#st-dn').oninput = e => { draft.displayName = e.target.value; preview(); };
+      $('#st-pr').oninput = e => { draft.pronouns = e.target.value; preview(); };
+      $('#st-main').querySelectorAll('[data-fr]').forEach(b => b.onclick = () => { if (b.classList.contains('lock')) return toast(b.title); draft.frame = b.dataset.fr === 'none' ? null : b.dataset.fr; open('profile'); preview(); });
+      $('#st-bimg').onclick = () => readImage(url => { draft.bannerImg = url; open('profile'); preview(); });
+      if ($('#st-brm')) $('#st-brm').onclick = () => { draft.bannerImg = null; open('profile'); preview(); };
+      $('#st-main').querySelectorAll('[data-th]').forEach(b => b.onclick = () => { draft.theme = b.dataset.th === 'none' ? null : [...PTHEMES[+b.dataset.th]]; open('profile'); preview(); });
+      const thc = () => { draft.theme = [$('#th-a').value, $('#th-b').value]; $('#st-main').querySelectorAll('[data-th]').forEach(x => x.classList.remove('on')); preview(); };
+      $('#th-a').oninput = thc; $('#th-b').oninput = thc;
+      $('#st-main').querySelectorAll('[data-soc]').forEach(inp => inp.oninput = () => { draft.socials = { ...draft.socials, [inp.dataset.soc]: inp.value.trim().replace(/^@/, '') }; preview(); });
       swatches('#sw-color', 'color', PALETTE);
       $('#sw-color').addEventListener('click', avEl); $('#sw-color input').addEventListener('input', avEl);
       const cnt = () => $('#st-cnt').textContent = `${$('#st-bio').value.length}/190`; cnt();
@@ -1812,9 +1960,10 @@ function showSettings(tab = 'profile') {
       $('#st-bd-d').onchange = bd; $('#st-bd-m').onchange = bd;
       $('#st-music').oninput = e => { draft.music = e.target.value.trim(); preview(); };
       $('#st-reset').onclick = () => { Object.assign(draft, initDraft()); open('profile'); preview(); };
-      $('#st-saveb').onclick = () => socket.emit('updateProfile', { avatar: draft.avatar, status: draft.status, bio: draft.bio, banner: draft.banner || '', color: draft.color, birthday: draft.birthday || '', music: draft.music || '' }, r => {
+      $('#st-saveb').onclick = () => socket.emit('updateProfile', { avatar: draft.avatar, status: draft.status, bio: draft.bio, banner: draft.banner || '', color: draft.color, birthday: draft.birthday || '', music: draft.music || '',
+        displayName: draft.displayName, pronouns: draft.pronouns, theme: draft.theme, bannerImg: draft.bannerImg, frame: draft.frame || 'none', socials: draft.socials }, r => {
         if (r.error) return toast(r.error);
-        Object.assign(u, draft); preview(); toast('Profilin kaydedildi');
+        Object.assign(u, JSON.parse(JSON.stringify(draft))); preview(); toast('Profilin kaydedildi');
       });
     }
     if (t === 'account') $('#p-pw').onclick = () => socket.emit('changePassword', { old: $('#p-old').value, next: $('#p-new').value }, r => {
@@ -2017,7 +2166,7 @@ function renderSide() {
   const tRow = c => `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${S.unread.has(c.id) && notifMode(c.id) !== 'none' ? 'unread' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>`;
   const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n);
-        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(uNicks[n] || n)}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
+        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(dn(n))}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
   const vOrder = c => { const l = [...(S.voice[c.id] || [])]; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l; };
   const row = c => voiceLike(c.type) ? vRow(c) : tRow(c);
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
@@ -2681,7 +2830,7 @@ function renderMessages(toBottom) {
 function msgHTML(m, prev) {
   const newDay = !prev || new Date(prev.time).toDateString() !== new Date(m.time).toDateString();
   const day = newDay ? `<div class="day">${dayLabel(m.time)}</div>` : '';
-  if (m.author && uIgnored.has(m.author)) return day + `<div class="sys" style="opacity:.6">${ic('ban')}${esc(uNicks[m.author] || m.author)} yok sayıldığı için mesaj gizlendi</div>`;
+  if (m.author && uIgnored.has(m.author)) return day + `<div class="sys" style="opacity:.6">${ic('ban')}${esc(dn(m.author))} yok sayıldığı için mesaj gizlendi</div>`;
   if (m.kind === 'system') return day + `<div class="sys">${ic('star')}${esc(m.text.replace(/\s*\p{Extended_Pictographic}\ufe0f?/gu, ''))}</div>`;
   if (m.kind === 'birthday') return day + `<div class="bday" data-id="${m.id}"><span class="big">${ic('cake')}</span><p>Bugün ${esc(m.text)} kankamızın doğum günü!</p><span class="hint">İyi ki doğdun ${esc(m.text)} 🎉 Kutlamayı unutmayın!</span></div>`;
   if (m.kind === 'daily') return day + `<div class="daily" data-id="${m.id}"><div class="kt">${ic('sun')}GÜNÜN SORUSU</div><p>${esc(m.text)}</p></div>`;
@@ -2727,7 +2876,7 @@ function msgHTML(m, prev) {
     `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}" title="${esc(us.join(', '))}">${e}<span>${us.length}</span></button>`).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}
-    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!mine && !cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(uNicks[m.author] || m.author)}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.kind === 'text' ? '' : hm(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!mine && !cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.kind === 'text' ? '' : hm(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 let pop = null;
@@ -2992,7 +3141,7 @@ function renderMembers() {
   const item = n => {
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n);
-    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(uNicks[n] || n)}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}</div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}</div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
@@ -3059,38 +3208,102 @@ function friendBtn(n) {
   if (sc.reqIn.includes(n)) return `<button id="pf-fr">${ic('check')}İsteği kabul et</button>`;
   return `<button id="pf-fr">${ic('userplus')}Arkadaş ekle</button>`;
 }
-function showProfile(n) {
-  profileOpen = n;
-  const u = S.users[n] || { level: 1, xp: 0 }, srv = S.view === 'server' ? S.server : null, r = roleOf(srv, n);
+// ================= Profil 2.0 =================
+const dn = n => uNicks[n] || S.users[n]?.displayName || n;
+const FRAMES = [['none', 'Yok', 0], ['halka', 'Halka', 2], ['gokkusagi', 'Gökkuşağı', 5], ['ates', 'Ateş', 10], ['neon', 'Neon', 15], ['altin', 'Altın', 25], ['kurucu', 'Kurucu', -1]];
+const frameOpen = (u, f) => f[0] === 'none' || (f[2] < 0 ? !!u.kurucu : (u.level || 1) >= f[2]);
+const SOCIAL_META = {
+  instagram: ['Instagram', '#e1306c', h => `https://instagram.com/${h}`], tiktok: ['TikTok', '#25f4ee', h => `https://www.tiktok.com/@${h}`],
+  youtube: ['YouTube', '#ff3b3b', h => `https://www.youtube.com/@${h}`], x: ['X', '#e7e9ea', h => `https://x.com/${h}`],
+  twitch: ['Twitch', '#a970ff', h => `https://twitch.tv/${h}`], steam: ['Steam', '#66c0f4', h => `https://steamcommunity.com/id/${h}`],
+  spotify: ['Spotify', '#1ed760', h => `https://open.spotify.com/user/${h}`],
+};
+const PTHEMES = [['#ff8a4c', '#5b2a86'], ['#f6c445', '#e5484d'], ['#2fd3c3', '#4a3aff'], ['#ff6fae', '#7c5cff'], ['#4cc38a', '#1d4e89'], ['#1f1a17', '#5a3e2e'], ['#e7e9ea', '#8b6b5a'], ['#ff3d00', '#1a120c']];
+const themeOf = u => u?.theme?.length === 2 ? u.theme : null;
+const banStyle = (n, u) => u?.bannerImg ? `background:url('${esc(u.bannerImg)}') center/cover` : themeOf(u) ? `background:linear-gradient(135deg, ${u.theme[0]}, ${u.theme[1]})` : bannerBg(n, u);
+const dotColor = n => S.online.has(n) ? STATUS[stOf(n)][1] : '#80848e';
+const pAv = (n, u, size, dot = true) => `<div class="pav ${u?.frame ? 'fr-' + u.frame : ''}" style="--s:${size}px"><div class="av" style="background:${u?.color || userColor(n)}">${u?.avatar ? `<img src="${esc(u.avatar)}" alt="">` : initial(n)}</div>${dot ? `<i class="pdot" style="background:${dotColor(n)}" title="${S.online.has(n) ? STATUS[stOf(n)][0] : 'Çevrimdışı'}"></i>` : ''}</div>`;
+const badgesHTML = (u, sz = '') => (u?.badges || []).map(b => S.badgeInfo?.[b] ? `<span class="pbadge ${sz}" title="${esc(S.badgeInfo[b][1])} · ${esc(S.badgeInfo[b][2])}" style="color:${BADGE_IC[b]?.[1] || 'var(--ink)'}">${ic(BADGE_IC[b]?.[0] || 'star')}</span>` : '').join('');
+const socialsHTML = u => Object.entries(u?.socials || {}).filter(([k]) => SOCIAL_META[k]).map(([k, h]) => `<a class="psoc" href="${esc(SOCIAL_META[k][2](h))}" target="_blank" rel="noopener noreferrer" style="--c:${SOCIAL_META[k][1]}"><i></i><b>${SOCIAL_META[k][0]}</b><span>${esc(h)}</span>${ic('link')}</a>`).join('');
+const themeVars = u => themeOf(u) ? `--t1:${u.theme[0]};--t2:${u.theme[1]}` : '';
+const ago2 = t => { if (!t) return '—'; const d = Math.floor((Date.now() - t) / 864e5); return d < 1 ? 'bugün' : d < 30 ? d + ' gün' : d < 365 ? Math.floor(d / 30) + ' ay' : Math.floor(d / 365) + ' yıl'; };
+function profSideHTML(n, u, { srv, preview } = {}) {
+  const r = roleOf(srv, n), roles = srv ? (srv.memberRoles?.[n] || []).map(id => (srv.customRoles || []).find(x => x.id === id)).filter(Boolean) : [];
+  return `<div class="pf-side ${themeOf(u) ? 'themed' : ''}" style="${themeVars(u)}">
+    <div class="pf-ban" style="${banStyle(n, u)}"></div>
+    <div class="pf-in">
+      <div class="pf-top">${pAv(n, u, 108, !preview || true)}<div class="pf-badges">${badgesHTML(u)}</div></div>
+      <h2 class="pf-dn">${esc(u?.displayName || n)}${badge(r)}</h2>
+      <div class="pf-un">@${esc(n)}${u?.pronouns ? `<i>•</i>${esc(u.pronouns)}` : ''}</div>
+      ${u?.status ? `<div class="pf-bubble">${esc(u.status)}</div>` : ''}
+      <div class="pf-actslot"></div>
+      <div class="pf-meta"><div><span>Kanka üyesi</span><b>${since(u?.createdAt) || '—'}</b></div>${srv && !srv.public ? `<div id="pf-jrow" hidden><span>Bu sunucuda</span><b id="pf-joined"></b></div>` : ''}</div>
+      ${roles.length ? `<div class="pf-roles"><h5>Roller</h5><div>${roles.map(x => `<span><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join('')}${srv && perm(srv, 'manageRoles') && !preview ? `<button id="pf-addrole" title="Rolleri düzenle">${ic('plus')}</button>` : ''}</div></div>`
+        : srv && !srv.public && perm(srv, 'manageRoles') && !preview && n !== S.me ? `<div class="pf-roles"><h5>Roller</h5><div><button id="pf-addrole" class="wide">${ic('plus')} Rol ver</button></div></div>` : ''}
+    </div></div>`;
+}
+function profAboutHTML(n, u) {
+  const next = 100 * (u.level || 1) - (u.xp || 0);
+  return `${u.bio ? `<section><h5>Hakkımda</h5><div class="pf-bio">${fmt(u.bio)}</div></section>` : n === S.me ? `<section><h5>Hakkımda</h5><div class="pf-bio empty">Kendinden biraz bahset, profilini düzenle.</div></section>` : ''}
+    ${Object.keys(u.socials || {}).length ? `<section><h5>Bağlantılar</h5><div class="psocs">${socialsHTML(u)}</div></section>` : ''}
+    <section class="pf-grid"><div class="pf-lvl"><div class="pl-h"><b>Seviye ${u.level || 1}</b>${u.streak ? `<span class="streak">${ic('fire')} ${u.streak} gün seri</span>` : ''}</div>${xpBar(u)}<small>Sonraki seviyeye yaklaşık <b>${Math.max(1, next)}</b> mesaj</small></div>
+      <div class="pf-stats"><div><b>${u.xp || 0}</b><span>Mesaj</span></div><div><b>${u.friendCount || 0}</b><span>Arkadaş</span></div><div><b>${u.badges?.length || 0}</b><span>Rozet</span></div></div></section>
+    ${u.music ? `<section><h5>Profil şarkısı</h5><a class="music-card" href="${esc(u.music)}" target="_blank" rel="noopener">${ytId(u.music) ? `<img src="https://img.youtube.com/vi/${ytId(u.music)}/mqdefault.jpg" alt="">` : `<span class="mc-ic">${ic('music')}</span>`}<span><b>Şarkıyı aç</b><small>${esc(u.music.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40))}</small></span></a></section>` : ''}
+    ${u.birthday ? `<section class="pf-line">${ic('cake')}<span>Doğum günü: <b>${new Date('2000-' + u.birthday + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</b></span></section>` : ''}
+    ${uNotes[n] && n !== S.me ? `<section><h5>Notun <small>(sadece sen görürsün)</small></h5><div class="unote">${esc(uNotes[n])}</div></section>` : ''}`;
+}
+function showProfile(n, tab = 'about') {
+  profileOpen = n; closeVPop();
+  const u = S.users[n] || { level: 1, xp: 0 }, srv = S.view === 'server' ? S.server : null, r = roleOf(srv, n), me = n === S.me;
   const meAdmin = srv && roleOf(srv, S.me) === 'admin', meMod = srv && isMod(srv, S.me);
-  const canKick = srv && !srv.public && meMod && n !== S.me && r !== 'admin' && !(r === 'mod' && !meAdmin);
-  modal(`<button class="pc-close" id="mx" aria-label="Kapat">${ic('x')}</button>${cardHTML(n, u, { srv, online: S.online.has(n) })}
-    <div class="pc-body" style="padding-top:0">${uNotes[n] && n !== S.me ? `<div class="pc-sec"><h5>Notun</h5><div class="unote">${esc(uNotes[n])}</div></div>` : ''}
-      <div class="pc-actions">${n !== S.me ? `<button class="primary" id="pf-dm">${ic('chat')}Mesaj gönder</button>` + friendBtn(n) : `<button class="primary" id="pf-set">${ic('edit')}Profili düzenle</button>`}</div>
-      ${n !== S.me ? `<div class="pc-actions"><button class="btn-danger" id="pf-block">${S.social.blocked.includes(n) ? ic('unlock') + 'Engeli kaldır' : ic('ban') + 'Engelle'}</button></div>` : ''}
-      ${srv && rolesOf(srv, n).length ? `<div class="pc-sec" style="margin-top:12px"><h5>Roller</h5><div class="chips">${rolesOf(srv, n).map(x => `<span class="chip"><span class="rdot" style="background:${x.color}"></span>${esc(x.name)}</span>`).join('')}</div></div>` : ''}
-      ${srv && !srv.public && n !== S.me && r !== 'admin' && (perm(srv, 'manageRoles') || perm(srv, 'timeout') || perm(srv, 'ban')) ? `<div class="pc-actions">${perm(srv, 'manageRoles') ? `<button id="pf-roles">${ic('tag')}Roller</button>` : ''}${perm(srv, 'timeout') ? `<button id="pf-to">${ic('hourglass')}${timedOutLeft(srv, n) ? 'Susturmayı kaldır' : 'Sustur'}</button>` : ''}${perm(srv, 'ban') ? `<button class="btn-danger" id="pf-ban">${ic('ban')}Yasakla</button>` : ''}</div>` : ''}
-      ${(meAdmin && n !== S.me && r !== 'admin') || canKick ? `<div class="pc-actions">${meAdmin && n !== S.me && r !== 'admin' ? `<button id="pf-role">${ic('shield')}${r === 'mod' ? 'Moderatörlüğü al' : 'Moderatör yap'}</button>` : ''}${canKick ? '<button class="btn-danger" id="pf-kick">Sunucudan at</button>' : ''}</div>` : ''}
-    </div>`, 'pcard');
-  fillBars();
+  const canKick = srv && !srv.public && meMod && !me && r !== 'admin' && !(r === 'mod' && !meAdmin);
+  let mut = null;
+  const tabs = () => [['about', 'Hakkında'], ['act', 'Aktivite'], ...(me ? [] : [['servers', `Ortak sunucular${mut ? ` · ${mut.servers.length}` : ''}`], ['friends', `Ortak arkadaşlar${mut ? ` · ${mut.friends.length}` : ''}`]])];
+  modal(`<button class="pc-close" id="mx" aria-label="Kapat">${ic('x')}</button><div class="pf">${profSideHTML(n, u, { srv })}<div class="pf-main"><nav class="pf-tabs" id="pf-tabs"></nav><div class="pf-body" id="pf-body"></div></div></div>`, 'pcard2');
+  $('.pf-actslot').innerHTML = me ? `<button class="btnp" id="pf-set">${ic('edit')} Profili düzenle</button>`
+    : `<button class="btnp" id="pf-dm">${ic('chat')} Mesaj</button>${friendBtn(n)}<button class="btns2 pf-more" id="pf-more" aria-label="Daha fazla">${ic('more')}</button>`;
+  const draw = () => {
+    $('#pf-tabs').innerHTML = tabs().map(([k, t]) => `<button class="${k === tab ? 'on' : ''}" data-pt="${k}">${t}</button>`).join('');
+    $('#pf-tabs').querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { tab = b.dataset.pt; draw(); });
+    const B = $('#pf-body');
+    if (tab === 'about') B.innerHTML = profAboutHTML(n, u);
+    if (tab === 'act') B.innerHTML = actCards(u) || `<div class="pf-empty">${ic('activity')}<b>Şu an bir şey yapmıyor</b><span>Oyun oynarken ya da Spotify dinlerken burada görünür.</span></div>`;
+    if (tab === 'servers') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.servers.length ? `<div class="pf-list">${mut.servers.map(s => `<button data-gs="${s.id}"><span class="pl-ic">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</span><span><b>${esc(s.name)}</b><small>${s.joined ? ago2(s.joined) + 'dır üye' : 'Ortak sunucu'}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('grid')}<b>Ortak sunucunuz yok</b><span>Onu bir sunucuna davet et.</span></div>`;
+    if (tab === 'friends') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.friends.length ? `<div class="pf-list">${mut.friends.map(f => `<button data-gf="${esc(f)}">${av(f, S.online.has(f))}<span><b>${esc(dn(f))}</b><small>@${esc(f)}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('users')}<b>Ortak arkadaşınız yok</b><span>Arkadaş olunca burada görünür.</span></div>`;
+    B.querySelectorAll('[data-gs]').forEach(b => b.onclick = () => { closeModal(); selectServer(b.dataset.gs); });
+    B.querySelectorAll('[data-gf]').forEach(b => b.onclick = () => showProfile(b.dataset.gf));
+    fillBars();
+  };
+  draw();
+  socket.emit('mutuals', n, x => { mut = x || { servers: [], friends: [] }; if (srv && $('#pf-joined') && x?.joined?.[srv.id]) { $('#pf-joined').textContent = since(x.joined[srv.id]); $('#pf-jrow').hidden = false; } if (profileOpen === n && $('#pf-tabs')) draw(); });
   $('#mx').onclick = closeModal;
-  if ($('#pf-dm')) $('#pf-dm').onclick = () => { closeModal(); openDM(n); };
   if ($('#pf-set')) $('#pf-set').onclick = () => showSettings('profile');
+  if ($('#pf-dm')) $('#pf-dm').onclick = () => { closeModal(); openDM(n); };
   if ($('#pf-fr')) $('#pf-fr').onclick = () => {
     const sc = S.social, act = sc.friends.includes(n) || sc.reqOut.includes(n) ? 'friendRemove' : sc.reqIn.includes(n) ? 'friendAccept' : 'friendRequest';
-    socket.emit(act, n, r => { if (r.error) return toast(r.error); setTimeout(() => showProfile(n), 200); });
+    socket.emit(act, n, x => { if (x.error) return toast(x.error); setTimeout(() => showProfile(n, tab), 200); });
   };
-  if ($('#pf-block')) $('#pf-block').onclick = () => {
-    const on = !S.social.blocked.includes(n);
-    const go = () => socket.emit('block', { name: n, on }, r => r.error ? toast(r.error) : (toast(on ? `${n} engellendi` : 'Engel kaldırıldı'), setTimeout(() => showProfile(n), 200)));
-    on ? confirmBox(`${n} engellensin mi? Sana özel mesaj atamaz, arkadaşlığınız biter.`, go) : go();
+  if ($('#pf-addrole')) $('#pf-addrole').onclick = () => showServerSettings(srv, 'members', n);
+  if ($('#pf-more')) $('#pf-more').onclick = e => {
+    e.stopPropagation(); const b = e.currentTarget.getBoundingClientRect(), blocked = S.social.blocked.includes(n), items = [];
+    items.push({ t: uNotes[n] ? 'Notu düzenle' : 'Not ekle', icon: 'edit', act: () => form('Not', `${esc(n)} hakkında sadece senin göreceğin bir not.`, [{ k: 'note', p: 'Not', v: uNotes[n] || '' }], v => { v.note.trim() ? uNotes[n] = v.note.trim() : delete uNotes[n]; saveU(); showProfile(n, tab); }) });
+    items.push({ t: 'Kullanıcı adını kopyala', icon: 'copy', act: () => navigator.clipboard?.writeText(n).then(() => toast('Kopyalandı')) });
+    if (srv && !srv.public && r !== 'admin') {
+      const mod = [];
+      if (perm(srv, 'manageRoles')) mod.push({ t: 'Rolleri düzenle', icon: 'tag', act: () => showServerSettings(srv, 'members', n) });
+      if (meAdmin) mod.push({ t: r === 'mod' ? 'Moderatörlüğü al' : 'Moderatör yap', icon: 'shield', act: () => socket.emit('setRole', { serverId: srv.id, name: n, role: r === 'mod' ? 'member' : 'mod' }, x => x.error ? toast(x.error) : (closeModal(), toast('Rol güncellendi'))) });
+      if (perm(srv, 'timeout')) mod.push({ t: timedOutLeft(srv, n) ? 'Susturmayı kaldır' : 'Sustur', icon: 'hourglass', act: () => timedOutLeft(srv, n) ? socket.emit('timeout', { serverId: srv.id, name: n, minutes: 0 }, x => x.error ? toast(x.error) : (closeModal(), toast('Susturma kaldırıldı'))) : askTimeout(srv, n) });
+      if (canKick) mod.push({ t: 'Sunucudan at', icon: 'logout', danger: true, act: () => confirmBox(`${n} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: srv.id, name: n }, x => x.error ? toast(x.error) : toast(`${n} atıldı`))) });
+      if (perm(srv, 'ban')) mod.push({ t: 'Yasakla', icon: 'ban', danger: true, act: () => askBan(srv, n) });
+      if (mod.length) items.push('-', ...mod);
+    }
+    items.push('-', { t: blocked ? 'Engeli kaldır' : 'Engelle', icon: blocked ? 'unlock' : 'ban', danger: !blocked, act: () => {
+      const go = () => socket.emit('block', { name: n, on: !blocked }, x => x.error ? toast(x.error) : (toast(!blocked ? `${n} engellendi` : 'Engel kaldırıldı'), setTimeout(() => showProfile(n, tab), 200)));
+      !blocked ? confirmBox(`${n} engellensin mi? Sana özel mesaj atamaz, arkadaşlığınız biter.`, go) : go(); } });
+    ctxMenu(b.left, b.bottom + 6, items);
   };
-  if ($('#pf-role')) $('#pf-role').onclick = () => socket.emit('setRole', { serverId: srv.id, name: n, role: r === 'mod' ? 'member' : 'mod' }, x => x.error ? toast(x.error) : (closeModal(), toast('Rol güncellendi')));
-  if ($('#pf-roles')) $('#pf-roles').onclick = () => showServerSettings(srv, 'members', n);
-  if ($('#pf-to')) $('#pf-to').onclick = () => timedOutLeft(srv, n) ? socket.emit('timeout', { serverId: srv.id, name: n, minutes: 0 }, x => x.error ? toast(x.error) : (closeModal(), toast('Susturma kaldırıldı'))) : askTimeout(srv, n);
-  if ($('#pf-ban')) $('#pf-ban').onclick = () => askBan(srv, n);
-  if ($('#pf-kick')) $('#pf-kick').onclick = () => confirmBox(`${n} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: srv.id, name: n }, x => x.error ? toast(x.error) : toast(`${n} atıldı`)));
 }
+
 // ---- Sesteki kişiler: büyük satırlar + tıklayınca profil kartı ----
 let vpopFor = null;
 const srvRoles = n => { const s = S.view === 'server' ? S.server : null; if (!s) return []; return (s.memberRoles?.[n] || []).map(id => (s.customRoles || []).find(r => r.id === id)).filter(Boolean); };
@@ -3104,9 +3317,11 @@ function voicePop(n, anchor, chId) {
   const live = (S.live?.[chId] || []).includes(n), stg = stageSt[chId], onStage = stg?.speakers?.includes(n);
   const tags = [speaking.has(n) && `<span class="vt-on">${ic('volume')} Konuşuyor</span>`, fl.m && `<span class="vt-m">${ic('micoff')} Mikrofonu kapalı</span>`, live && `<span class="vt-l">● Yayında</span>`, fl.cam && `<span>${ic('video')} Kamerası açık</span>`, stg && `<span>${ic('stage')} ${onStage ? 'Konuşmacı' : 'Dinleyici'}</span>`].filter(Boolean).join('');
   const p = document.createElement('div'); p.className = 'vpop'; p.setAttribute('role', 'dialog');
-  p.innerHTML = `<div class="vp-banner" style="${bannerBg(n, u)}"></div>
-    <div class="vp-body"><div class="av vp-av ${speaking.has(n) ? 'spk' : ''}" style="background:${u.color || userColor(n)}">${u.avatar ? `<img src="${esc(u.avatar)}" alt="">` : initial(n)}</div>
-      <div class="vp-name">${esc(uNicks[n] || n)}${badge(roleOf(srv, n))}</div>${uNicks[n] ? `<div class="vp-real">${esc(n)}</div>` : ''}
+  if (themeOf(u)) { p.classList.add('themed'); p.style.cssText = themeVars(u); }
+  p.innerHTML = `<div class="vp-banner" style="${banStyle(n, u)}"></div>
+    <div class="vp-body"><div class="vp-top"><div class="${speaking.has(n) ? 'vp-spk' : ''}">${pAv(n, u, 80)}</div><div class="pf-badges">${badgesHTML(u, 'sm')}</div></div>
+      <div class="vp-name">${esc(dn(n))}${badge(roleOf(srv, n))}</div><div class="vp-un">@${esc(n)}${u.pronouns ? `<i>•</i>${esc(u.pronouns)}` : ''}</div>
+      ${me ? '' : '<div class="vp-mut" id="vp-mut"></div>'}
       ${u.status ? `<div class="vp-st">${esc(u.status)}</div>` : ''}
       ${tags ? `<div class="vp-tags">${tags}</div>` : inVc ? '' : `<div class="vp-tags"><span class="vt-p"><i class="sd" style="background:${online ? STATUS[stOf(n)][1] : '#80848e'}"></i>${online ? STATUS[stOf(n)][0] : 'Çevrimdışı'}</span>${actLine(n) ? `<span>${actLine(n)}</span>` : ''}</div>`}
       ${myRoles.length ? `<div class="vp-sec"><h5>Roller</h5><div class="vp-roles">${myRoles.map(r => `<span><i style="background:${r.color}"></i>${esc(r.name)}</span>`).join('')}</div></div>` : ''}
@@ -3122,6 +3337,10 @@ function voicePop(n, anchor, chId) {
   if (W < 760) { p.classList.add('sheet'); }
   else { const left = r.right + 12 + pw > W - 10 ? r.left - pw - 12 : r.right + 12; p.style.left = Math.max(10, left) + 'px'; p.style.top = Math.max(10, Math.min(r.top + r.height / 2 - 70, H - ph - 10)) + 'px'; }
   p.onclick = e => e.stopPropagation();
+  if (!me) socket.emit('mutuals', n, x => { const el = $('#vp-mut'); if (!el || vpopFor !== n || !x) return; const parts = [];
+    if (x.servers.length) parts.push(`${x.servers.length} ortak sunucu`); if (x.friends.length) parts.push(`${x.friends.length} ortak arkadaş`);
+    if (!parts.length) return; el.innerHTML = `${x.friends.length ? `<span class="avs">${x.friends.slice(0, 3).map(f => av(f)).join('')}</span>` : ic('grid')}${parts.join(' · ')}`;
+    el.onclick = () => { closeVPop(); showProfile(n, x.friends.length && !x.servers.length ? 'friends' : 'servers'); }; });
   if ($('#vp-vol')) $('#vp-vol').oninput = e => { vol[n] = +e.target.value; store.set('kanka-vol', JSON.stringify(vol)); applyPeerAudio(); $('#vp-vv').textContent = Math.round(vol[n] * 100) + '%'; };
   if ($('#vp-mute')) $('#vp-mute').onclick = () => { uMuted.has(n) ? uMuted.delete(n) : uMuted.add(n); saveU(); applyPeerAudio(); refreshPeerAudio(); vpopFor = null; voicePop(n, anchor, chId); };
   if ($('#vp-self')) $('#vp-self').onclick = () => { $('#mute').click(); vpopFor = null; voicePop(n, anchor, chId); };
