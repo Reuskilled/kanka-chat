@@ -1334,6 +1334,31 @@
   .fo-card img { margin-top: 10px; max-height: 180px; border-radius: 12px; object-fit: cover; max-width: 100%; }
   .fo-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 12.5px; font-weight: 800; }
   .fo-meta span { display: inline-flex; align-items: center; gap: 5px; } .fo-meta .ic { width: 14px; height: 14px; } .fo-meta .fo-last { margin-left: auto; font-weight: 700; }
+  /* --- süreli durum --- */
+  #statusmenu { width: auto; right: 10px; }
+  #statusmenu button { position: relative; }
+  #statusmenu small .ic { width: 11px; height: 11px; vertical-align: -1px; }
+  #statusmenu .sm-chev { margin-left: auto; color: var(--muted); display: grid; } #statusmenu .sm-chev .ic { width: 14px; height: 14px; transform: rotate(-90deg); }
+  #statusmenu .sm-custom { align-items: center; }
+  #statusmenu .sm-custom > span:nth-child(2) { flex: 1; min-width: 0; } #statusmenu .sm-custom b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #statusmenu .sm-ce { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: var(--panel); font-size: 16px; flex-shrink: 0; }
+  #statusmenu .sm-x { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: var(--muted); flex-shrink: 0; }
+  #statusmenu .sm-x:hover { background: var(--red); color: #fff; } #statusmenu .sm-x .ic { width: 13px; height: 13px; }
+  #statusmenu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 6px; }
+  #statusmenu.sub { animation: smIn .18s var(--ease-out); }
+  @keyframes smIn { from { opacity: .4; transform: translateX(10px); } }
+  #statusmenu .sm-head { display: flex; align-items: center; gap: 8px; padding: 6px 6px 8px; font-size: 14px; }
+  #statusmenu .sm-back { width: 28px !important; height: 28px; padding: 0 !important; justify-content: center; border-radius: 8px; }
+  #statusmenu .sm-back .ic { width: 15px; height: 15px; transform: rotate(90deg); }
+  #statusmenu .sm-cap { font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 2px 10px 6px; }
+  #statusmenu [data-dur] { justify-content: space-between; }
+  #statusmenu [data-dur] em { font-style: normal; font-size: 11.5px; color: var(--muted); font-weight: 700; }
+  .cs-pre { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .cs-pre button { padding: 7px 12px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); font-weight: 800; font-size: 13px; color: var(--ink); }
+  .cs-pre button:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .cs-clr { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); flex-shrink: 0; }
+  .cs-clr:hover { background: var(--hover); color: var(--ink); } .cs-clr .ic { width: 14px; height: 14px; }
+  .cc-ico { font-size: 24px; }
 </style>
 </head>
 <body>
@@ -1617,7 +1642,7 @@ function onAuth(res) {
   store.set('kanka-token', res.token);
   S.me = res.user.name;
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
-  setPresence(res.online); S.myStatus = res.myStatus || 'online'; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {};
+  setPresence(res.online); S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {};
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ice?.length) ICE.iceServers = res.ice;
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
@@ -3014,19 +3039,80 @@ function showProfile(n) {
   if ($('#pf-ban')) $('#pf-ban').onclick = () => askBan(srv, n);
   if ($('#pf-kick')) $('#pf-kick').onclick = () => confirmBox(`${n} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: srv.id, name: n }, x => x.error ? toast(x.error) : toast(`${n} atıldı`)));
 }
-function toggleStatusMenu() {
-  if ($('#statusmenu')) return $('#statusmenu').remove();
-  const m = document.createElement('div'); m.id = 'statusmenu';
-  const desc = { online: '', idle: 'Uzakta görünürsün', dnd: 'Bildirimleri ve sesleri kapatır', invisible: 'Çevrimdışı görünürsün ama her şeyi kullanabilirsin' };
-  m.innerHTML = Object.entries(STATUS).map(([k, [t, c]]) => `<button data-st="${k}" class="${S.myStatus === k ? 'on' : ''}"><span class="sd" style="background:${c}"></span><span>${t}${desc[k] ? `<small>${desc[k]}</small>` : ''}</span></button>`).join('') +
+// ---- Durum menüsü: süreli durum + özel durum ----
+const STATUS_DESC = { online: '', idle: 'Uzakta görünürsün', dnd: 'Bildirimleri ve sesleri kapatır', invisible: 'Çevrimdışı görünürsün ama her şeyi kullanabilirsin' };
+const endOfToday = () => { const d = new Date(); d.setHours(23, 59, 0, 0); return d.getTime(); };
+const DURS = [['30 dakika', 30 * 60e3], ['1 saat', 60 * 60e3], ['4 saat', 4 * 3600e3], ['8 saat', 8 * 3600e3], ['Bugün sonuna kadar', 'today'], ['3 gün', 3 * 864e5], ['Süresiz', 0]];
+const untilOf = v => v === 'today' ? endOfToday() : v ? Date.now() + v : null;
+const hhmm = t => new Date(t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+function leftTxt(t) {
+  if (!t) return 'süresiz';
+  const ms = t - Date.now(); if (ms <= 0) return 'bitiyor';
+  const m = Math.ceil(ms / 60e3), sameDay = new Date(t).toDateString() === new Date().toDateString();
+  if (m < 60) return `${m} dk kaldı`;
+  if (m < 24 * 60) return `${Math.floor(m / 60)} sa${m % 60 ? ' ' + (m % 60) + ' dk' : ''} kaldı · ${sameDay ? '' : 'yarın '}${hhmm(t)}`;
+  return `${new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} ${hhmm(t)}`;
+}
+function setMyStatus(st, until) {
+  socket.emit('setStatus', { st, until }, r => {
+    if (r?.error) return toast(r.error);
+    S.myStatus = st; S.myStatusUntil = r.until || null; renderMe(); renderMembers();
+    toast(`Durumun: <b>${STATUS[st][0]}</b>${st !== 'online' ? ` · ${r.until ? leftTxt(r.until).replace(' kaldı', '') : 'süresiz'}` : ''}`, null, true);
+  });
+}
+function toggleStatusMenu(view) {
+  const old = $('#statusmenu'); if (old && !view) return old.remove(); old?.remove();
+  const m = document.createElement('div'); m.id = 'statusmenu'; m.setAttribute('role', 'menu');
+  const u = S.users[S.me] || {};
+  if (view && view !== 'main') {
+    const [t, c] = STATUS[view];
+    m.innerHTML = `<div class="sm-head"><button class="sm-back" data-back aria-label="Geri">${ic('chevron')}</button><span class="sd" style="background:${c}"></span><b>${t}</b></div>
+      <div class="sm-cap">Ne kadar süre?</div>${DURS.map(([l, v], i) => `<button data-dur="${i}"><span>${l}</span>${v ? `<em>${v === 'today' ? 'bitiş 23:59' : 'bitiş ' + hhmm(Date.now() + v)}</em>` : ''}</button>`).join('')}`;
+    $('#side').appendChild(m); m.classList.add('sub');
+    m.onclick = e => { e.stopPropagation(); if (e.target.closest('[data-back]')) return toggleStatusMenu('main');
+      const b = e.target.closest('[data-dur]'); if (!b) return; m.remove(); setMyStatus(view, untilOf(DURS[+b.dataset.dur][1])); };
+    return;
+  }
+  m.innerHTML = `<button class="sm-custom" data-st="custom">${u.status ? `<span class="sm-ce">💬</span><span><b>${esc(u.status)}</b><small>${S.customUntil ? leftTxt(S.customUntil) : 'Silinmeyecek'}</small></span><i class="sm-x" data-clear title="Temizle">${ic('x')}</i>` : `<span class="sm-ce">😊</span><span>Özel durum ayarla<small>"Oyunda", "Ders çalışıyorum"…</small></span>`}</button><hr>` +
+    Object.entries(STATUS).map(([k, [t, c]]) => `<button data-st="${k}" class="${S.myStatus === k ? 'on' : ''}"><span class="sd" style="background:${c}"></span><span>${t}<small>${S.myStatus === k && k !== 'online' ? `${ic('clock')} ${leftTxt(S.myStatusUntil)}` : STATUS_DESC[k]}</small></span>${k !== 'online' ? `<i class="sm-chev">${ic('chevron')}</i>` : ''}</button>`).join('') +
     `<hr><button data-st="profile">${ic('edit')}<span>Profili düzenle</span></button>`;
   $('#side').appendChild(m);
   m.onclick = e => {
-    const b = e.target.closest('button'); if (!b) return; m.remove();
-    if (b.dataset.st === 'profile') return showSettings('profile');
-    socket.emit('setStatus', b.dataset.st, r => { if (r.error) return toast(r.error); S.myStatus = b.dataset.st; renderMe(); renderMembers(); toast(`Durumun: ${STATUS[S.myStatus][0]}`); });
+    e.stopPropagation();
+    if (e.target.closest('[data-clear]')) { m.remove(); return socket.emit('setCustomStatus', { text: '' }, r => { if (r?.error) return toast(r.error); S.customUntil = null; renderMe(); toast('Özel durum temizlendi'); }); }
+    const b = e.target.closest('button[data-st]'); if (!b) return;
+    const st = b.dataset.st;
+    if (st === 'profile') { m.remove(); return showSettings('profile'); }
+    if (st === 'custom') { m.remove(); return showCustomStatus(); }
+    if (st === 'online') { m.remove(); return setMyStatus('online', null); }
+    toggleStatusMenu(st);
   };
 }
+function showCustomStatus() {
+  const u = S.users[S.me] || {};
+  const presets = ['🎮 Oyunda', '📚 Ders çalışıyorum', '🎧 Müzik dinliyorum', '💻 Çalışıyorum', '🍕 Yemekteyim', '💤 Uyuyorum'];
+  modal(`<div class="ccm"><div class="cc-head"><div class="cc-ico">😊</div><div><h3>Özel durum</h3><p>Arkadaşların adının altında görür.</p></div></div>
+    <div class="mlabel">Ne yapıyorsun?</div><div class="cname"><input id="cs-t" maxlength="60" placeholder="Örn. Valorant'ta rank kasıyorum" value="${esc(u.status || '')}" autocomplete="off"><button class="cs-clr" id="cs-clr" title="Temizle" ${u.status ? '' : 'hidden'}>${ic('x')}</button></div>
+    <div class="cs-pre">${presets.map(p => `<button data-p="${esc(p)}">${esc(p)}</button>`).join('')}</div>
+    <div class="mlabel">Ne zaman silinsin?</div><select class="msel" id="cs-u">${[['Bugün sonuna kadar', 'today'], ['4 saat', 4 * 3600e3], ['1 saat', 3600e3], ['30 dakika', 30 * 60e3], ['3 gün', 3 * 864e5], ['Silinmesin', 0]].map(([l, v]) => `<option value="${v}">${l}</option>`).join('')}</select>
+    <div class="mfoot"><span style="margin-right:auto"></span><button class="btns2" id="mx">Vazgeç</button><button class="btnp" id="cs-ok">${ic('check')} Kaydet</button></div></div>`, 'ccm');
+  const inp = $('#cs-t');
+  inp.oninput = () => { $('#cs-clr').hidden = !inp.value; };
+  $('#cs-clr').onclick = () => { inp.value = ''; $('#cs-clr').hidden = true; inp.focus(); };
+  $('#modal-box').querySelectorAll('[data-p]').forEach(b => b.onclick = () => { inp.value = b.dataset.p; $('#cs-clr').hidden = false; inp.focus(); });
+  $('#mx').onclick = closeModal;
+  const go = () => { const v = $('#cs-u').value, text = inp.value.trim();
+    socket.emit('setCustomStatus', { text, until: text ? untilOf(v === 'today' ? 'today' : +v) : null }, r => {
+      if (r?.error) return toast(r.error); S.customUntil = r.until || null; closeModal(); renderMe();
+      toast(text ? `Özel durum: <b>${esc(text)}</b>${r.until ? ' · ' + leftTxt(r.until) : ''}` : 'Özel durum temizlendi', null, true); }); };
+  $('#cs-ok').onclick = go; inp.onkeydown = e => { if (e.key === 'Enter') go(); };
+  setTimeout(() => { inp.focus(); inp.select(); }, 60);
+}
+socket.on('myStatus', ({ st, until, expired }) => {
+  const was = S.myStatus; S.myStatus = st; S.myStatusUntil = until || null; renderMe(); renderMembers();
+  if (expired && was !== 'online') toast(`<b>${STATUS[was]?.[0] || 'Durum'}</b> süresi doldu, artık çevrimiçisin`, null, true);
+});
+socket.on('customStatus', ({ expired }) => { S.customUntil = null; if (expired) toast('Özel durumunun süresi doldu'); });
 document.addEventListener('click', e => { if (!e.target.closest('#statusmenu, #me-av')) $('#statusmenu')?.remove(); });
 // Otomatik "Boşta": 10 dakika hareket yoksa
 let lastAct = Date.now(), idleSent = false;
@@ -3038,7 +3124,7 @@ socket.on('connect', () => { idleSent = false; });
 function renderMe() {
   const u = S.users[S.me];
   $('#me-av').innerHTML = av(S.me, true);
-  $('#me-av').onclick = e => { e.stopPropagation(); toggleStatusMenu(); }; $('#me-av').style.cursor = 'pointer'; $('#me-av').title = 'Durumunu değiştir';
+  $('#me-av').onclick = e => { e.stopPropagation(); toggleStatusMenu(); }; $('#me-av').style.cursor = 'pointer'; $('#me-av').title = S.myStatus !== 'online' && S.myStatusUntil ? `${STATUS[S.myStatus][0]} · ${leftTxt(S.myStatusUntil)}` : 'Durumunu değiştir';
   $('#me-name').textContent = S.me;
   $('#me-lvl').innerHTML = actLine(S.me) || (u.status ? esc(u.status) : '') || `Seviye ${u.level}${u.streak ? ` · <span class="streak">${ic('fire')} ${u.streak} gün</span>` : ''}`;
 }
@@ -4646,7 +4732,7 @@ function startViewAs(s) {
   const items = [{ t: '@herkes (rolü olmayan üye)', icon: 'users', act: () => setViewAs(s, [], '@herkes') }, ...(s.customRoles || []).map(r => ({ t: esc(r.name), icon: 'tag', act: () => setViewAs(s, [r.id], r.name) }))];
   const b = $('#side-head').getBoundingClientRect(); ctxMenu(b.left + 10, b.bottom, items);
 }
-function setViewAs(s, roles, label) { viewAs = { sid: s.id, roles, label }; renderSide(); toast(`<b>${esc(label)}</b> gözünden görüyorsun`); }
+function setViewAs(s, roles, label) { viewAs = { sid: s.id, roles, label }; renderSide(); toast(`<b>${esc(label)}</b> gözünden görüyorsun`, null, true); }
 
 // Sahne çubuğu
 function renderStageBar() {
@@ -4679,7 +4765,7 @@ setInterval(() => {
   if (speaking.has(S.me)) afkAct = Date.now();
   if (Date.now() - afkAct > f.s.afk.min * 60e3) {
     const to = f.s.channels.find(c => c.id === f.s.afk.ch); if (!to) return;
-    afkAct = Date.now(); joinVoiceNow(to.id).then(ok => ok && toast(`${f.s.afk.min} dakikadır hareketsizdin, <b>${esc(to.name)}</b> odasına taşındın 💤`));
+    afkAct = Date.now(); joinVoiceNow(to.id).then(ok => ok && toast(`${f.s.afk.min} dakikadır hareketsizdin, <b>${esc(to.name)}</b> odasına taşındın 💤`, null, true));
   }
 }, 15e3);
 

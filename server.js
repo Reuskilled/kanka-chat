@@ -634,7 +634,7 @@ io.on('connection', socket => {
     const token = crypto.randomBytes(24).toString('hex');
     db.sessions[token] = name; save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
-      token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), myStatus: db.users[name].presence || 'online',
+      token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), live: liveState(),
       onb: onbOf(db.users[name]), presets: PRESET_AV
     };
@@ -723,9 +723,20 @@ io.on('connection', socket => {
   });
 
   // ----- Durum -----
-  socket.on('setStatus', (st, cb = () => {}) => {
+  // Durum: { st, until } — until verilirse o anda otomatik "Çevrimiçi"ye döner
+  socket.on('setStatus', (arg, cb = () => {}) => {
+    const { st, until } = typeof arg === 'string' ? { st: arg } : (arg || {});
     if (!me || !['online', 'idle', 'dnd', 'invisible'].includes(st)) return cb({ error: 'Geçersiz durum' });
-    db.users[me].presence = st; save(); pushPresence(); cb({ ok: true });
+    const u = db.users[me]; u.presence = st;
+    const t = +until; u.presenceUntil = st !== 'online' && t > Date.now() && t < Date.now() + 31 * 864e5 ? t : null;
+    save(); pushPresence(); cb({ ok: true, until: u.presenceUntil });
+  });
+  socket.on('setCustomStatus', ({ text, until } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    u.status = clean(text, 60); const t = +until;
+    u.statusUntil = u.status && t > Date.now() && t < Date.now() + 31 * 864e5 ? t : null;
+    if (u.status) onbFlag(me, 'profile');
+    save(); io.emit('users', allUsers()); cb({ ok: true, until: u.statusUntil });
   });
   socket.on('idle', on => { on ? idleSockets.add(socket.id) : idleSockets.delete(socket.id); pushPresence(); });
 
@@ -947,7 +958,7 @@ io.on('connection', socket => {
     const u = db.users[me]; if (!u) return;
     if (avatar === null) u.avatar = null;
     else if (avatar !== undefined) { if (!AVATAR_OK(avatar)) return cb({ error: 'Geçersiz resim' }); u.avatar = avatar; }
-    if (status !== undefined) u.status = clean(status, 60);
+    if (status !== undefined) { const ns = clean(status, 60); if (ns !== u.status) u.statusUntil = null; u.status = ns; }
     if (bio !== undefined) u.bio = clean(bio, 190);
     if (banner !== undefined) u.banner = /^#[0-9a-f]{6}$/i.test(banner) ? banner : null;
     if (color !== undefined && /^#[0-9a-f]{6}$/i.test(color)) u.color = color;
@@ -1459,6 +1470,15 @@ io.on('connection', socket => {
   });
 });
 
+setInterval(() => {
+  const now = Date.now();
+  let pres = false, prof = false;
+  for (const u of Object.values(db.users)) {
+    if (u.presenceUntil && u.presenceUntil <= now) { u.presence = 'online'; u.presenceUntil = null; pres = true; io.to('user:' + u.name).emit('myStatus', { st: 'online', until: null, expired: true }); }
+    if (u.statusUntil && u.statusUntil <= now) { u.status = ''; u.statusUntil = null; prof = true; io.to('user:' + u.name).emit('customStatus', { text: '', until: null, expired: true }); }
+  }
+  if (pres) pushPresence(); if (prof) io.emit('users', allUsers()); if (pres || prof) save();
+}, 15e3);
 setInterval(() => {
   const now = Date.now(), due = (db.scheduled || []).filter(x => x.at <= now);
   if (!due.length) return;
