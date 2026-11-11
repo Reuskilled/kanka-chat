@@ -560,6 +560,10 @@ io.on('connection', socket => {
     cb(start(n));
   });
 
+  socket.on('onbReset', (cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    u.onb = {}; save(); cb({ ok: true, onb: u.onb });
+  });
   socket.on('onbSet', (k, cb = () => {}) => {
     const u = db.users[me]; if (!u || !['dismissed', 'done', 'seen'].includes(k)) return cb({ error: 'Geçersiz' });
     onbOf(u)[k] = true; save(); cb({ ok: true, onb: u.onb });

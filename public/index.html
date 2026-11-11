@@ -1334,7 +1334,8 @@ function onAuth(res) {
   $('#a-pass').value = '';
   renderMe();
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = false; renderOnb();
-  if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
+  if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
+  else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
   if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
   const invite = new URLSearchParams(location.search).get('davet');
   if (invite) { history.replaceState(null, '', '/'); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
@@ -1408,7 +1409,7 @@ function showSettings(tab = 'profile') {
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'turuncu') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
       <div class="pc-sec" style="margin-top:18px"><label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
-    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Mikrofon</label><button class="btns2" id="st-mic">${ic('mic')} Mikrofonu test et</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
+    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Mikrofon</label><button class="btns2" id="st-mic">${ic('mic')} Mikrofonu test et</button></div><div class="st-field"><label>Başlangıç rehberi</label><button class="btns2" id="st-onb">${ic('sprout')} Rehberi baştan göster</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
         <label class="switch">Bilgisayar açılınca Kanka Chat'i başlat<input type="checkbox" id="as-on"></label>
         <label class="switch">Açılışta simge durumunda başlasın (saatin yanında)<input type="checkbox" id="as-hid"></label>
         <p class="hint" id="as-note">${window.kankaDesktop.autostart ? '' : 'Bu ayar Kanka Chat 1.0.6 ile geliyor. Şimdilik saatin yanındaki simgeye sağ tıklayıp "Bilgisayar açılınca başlat"ı işaretleyebilirsin.'}</p></div>` : ''}<div class="st-field"><label>Gürültü engelleme (mikrofon)</label>
@@ -1462,7 +1463,7 @@ function showSettings(tab = 'profile') {
         $('#as-hid').onchange = e => A({ hidden: e.target.checked }).then(() => toast(e.target.checked ? 'Açılışta saatin yanında, arka planda başlayacak' : 'Açılışta pencere açık başlayacak'));
       }
     }
-    if (t === 'notif') $('#st-mic').onclick = () => micTest(null, () => showSettings('notif'));
+    if (t === 'notif') { $('#st-mic').onclick = () => micTest(null, () => showSettings('notif')); $('#st-onb').onclick = onbRestart; }
     if (t === 'notif') $('#st-main').querySelectorAll('input[name=ns]').forEach(r => r.onchange = () => { setNS(r.value); toast('Gürültü engelleme ayarlandı'); });
     if (t === 'act') {
       const manual = () => ({ game: u.activities && !u.activities.auto ? u.activities.game?.name || '' : '', music: u.activities && !u.activities.auto ? u.activities.music : null });
@@ -3667,6 +3668,14 @@ function confetti(anchor) {
   }
 }
 socket.on('onb', ob => { S.onb = ob; renderOnb(); });
+function onbRestart() {
+  socket.emit('onbReset', r => {
+    if (r?.error) return toast(r.error);
+    store.set('kanka-mictest', null); store.set('kanka-onb-closed', null);
+    S.onb = r.onb; onbWon = false; $('#onb')?.remove(); closeModal();
+    setTimeout(() => { renderOnb(); showOnbWelcome(); }, 250);
+  });
+}
 
 // --- İlk giriş karşılaması + avatar seçimi ---
 function showOnbWelcome() {
