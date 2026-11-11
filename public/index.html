@@ -902,6 +902,152 @@
     #modal .box { width: calc(100vw - 24px); }
     .bubble img { max-width: 100%; }
   }
+  /* ===== Başlangıç rehberi, karşılama, mikrofon testi, boş ekranlar ===== */
+  .btnp { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: 14px; border: 0; background: linear-gradient(135deg, #ff8f55, #f2652f); color: #fff; font: inherit; font-weight: 900; font-size: 14.5px; cursor: pointer; box-shadow: 0 8px 22px rgba(242,101,47,.35), inset 0 1px 0 rgba(255,255,255,.25); transition: transform .15s var(--ease-out), box-shadow .15s, filter .15s; }
+  .btnp:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(242,101,47,.45), inset 0 1px 0 rgba(255,255,255,.25); }
+  .btnp:active { transform: translateY(0) scale(.98); }
+  .btnp .ic, .btns2 .ic { width: 17px; height: 17px; }
+  .btns2 { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font: inherit; font-weight: 800; font-size: 14px; cursor: pointer; transition: background .15s, border-color .15s, transform .15s; }
+  .btns2:hover { background: var(--hover); border-color: #4d3a2f; }
+
+  #onb { margin: 0 10px; border-radius: 18px; background: linear-gradient(165deg, #3a251a 0%, #2b211c 55%); border: 1px solid #4a3426; box-shadow: 0 10px 28px rgba(0,0,0,.28); overflow: hidden; position: relative; animation: onbIn .5s var(--ease-out) both; }
+  #onb[hidden] { display: none; }
+  #onb.out { animation: onbOut .45s var(--ease-out) forwards; }
+  @keyframes onbIn { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+  @keyframes onbOut { to { opacity: 0; transform: translateY(14px) scale(.96); margin-top: -40px; } }
+  #onb .oh { display: flex; align-items: center; gap: 9px; padding: 11px 8px 9px 11px; cursor: pointer; user-select: none; }
+  .oring { width: 38px; height: 38px; flex-shrink: 0; position: relative; }
+  .oring svg { width: 38px; height: 38px; transform: rotate(-90deg); }
+  .oring circle { fill: none; stroke-width: 4; }
+  .oring .bgc { stroke: rgba(255,255,255,.08); }
+  .oring .fg { stroke: url(#onbgrad); stroke-linecap: round; transition: stroke-dashoffset .7s var(--ease-out); }
+  .oring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11.5px; font-weight: 900; }
+  #onb .ot { flex: 1; min-width: 0; }
+  #onb .ot b { display: block; font-size: 14px; font-weight: 900; }
+  #onb .ot small { color: var(--muted); font-size: 12px; }
+  #onb .ox { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); background: none; border: 0; cursor: pointer; flex-shrink: 0; }
+  #onb .ox:hover { background: rgba(255,255,255,.07); color: var(--ink); }
+  #onb .ox .ic { width: 15px; height: 15px; }
+  #onb .chev { transition: transform .25s var(--ease-out); }
+  #onb.closed .chev { transform: rotate(180deg); }
+  #onb .ol { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 0 8px 9px; }
+  #onb.closed .ol { display: none; }
+  .ostep { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 9px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid transparent; color: var(--ink); font: inherit; cursor: pointer; min-width: 0; transition: background .15s, border-color .15s, transform .18s var(--ease-out); animation: fadeUp .35s var(--ease-out) both; }
+  .ostep:nth-child(2) { animation-delay: .05s; } .ostep:nth-child(3) { animation-delay: .1s; }
+  .ostep:hover { background: rgba(255,138,76,.09); border-color: rgba(255,138,76,.28); transform: translateX(2px); }
+  .ostep .oi { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex-shrink: 0; transition: background .3s, color .3s; }
+  .ostep .oi .ic { width: 16px; height: 16px; }
+  .ostep span { flex: 1; min-width: 0; }
+  .ostep span b { display: block; font-size: 13px; font-weight: 800; }
+  .ostep span small { display: block; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ostep .ock { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #5a4335; flex-shrink: 0; display: grid; place-items: center; transition: background .25s, border-color .25s; }
+  .ostep .ock .ic { width: 12px; height: 12px; stroke-width: 3.5; color: #10241a; opacity: 0; }
+  .ostep.done { cursor: default; }
+  .ostep.done:hover { transform: none; background: rgba(255,255,255,.03); border-color: transparent; }
+  .ostep.done span b { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(255,255,255,.3); }
+  .ostep.done .oi { background: rgba(111,211,155,.14); color: var(--green); }
+  .ostep.done .ock { background: var(--green); border-color: var(--green); animation: bump .4s var(--ease-out); }
+  .ostep.done .ock .ic { opacity: 1; }
+  #onb .owin { padding: 2px 14px 14px; text-align: center; }
+  #onb .owin .big { font-size: 30px; animation: bump .6s var(--ease-out); }
+  #onb .owin b { display: block; font-size: 15px; font-weight: 900; margin-top: 2px; }
+  #onb .owin small { color: var(--muted); font-size: 12.5px; }
+  .confetti { position: fixed; pointer-events: none; z-index: 60; width: 8px; height: 12px; border-radius: 2px; animation: conf 1.3s cubic-bezier(.2,.7,.4,1) forwards; }
+  @keyframes conf { 0% { transform: translate(0,0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+
+  #modal .box.onbw { width: min(640px, 94vw); padding: 0; overflow: hidden auto; max-height: 92vh; }
+  .onbw .ohero { position: relative; padding: 34px 30px 26px; text-align: center; background: radial-gradient(520px 200px at 50% -10%, rgba(255,138,76,.38), transparent 70%), linear-gradient(180deg, #2f2017, var(--panel)); border-bottom: 1px solid var(--line); overflow: hidden; }
+  .onbw .ohero .spark { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); opacity: .5; animation: twinkle 3s ease-in-out infinite; }
+  @keyframes twinkle { 0%, 100% { opacity: .15; transform: scale(.6); } 50% { opacity: .8; transform: scale(1); } }
+  .onbw .ologo { width: 88px; height: 88px; margin: 0 auto 16px; border-radius: 28px; display: grid; place-items: center; background: linear-gradient(145deg, #ff9a5c, #e8552a); box-shadow: 0 16px 40px rgba(242,101,47,.45), inset 0 1px 0 rgba(255,255,255,.35); animation: obob 3.2s ease-in-out infinite, popIn .5s var(--ease-out) both; overflow: hidden; }
+  .onbw .ologo img { width: 100%; height: 100%; }
+  @keyframes obob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
+  .onbw h2 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; line-height: 1.15; }
+  .onbw h2 em { font-style: normal; background: linear-gradient(90deg, #ffb347, #ff8a4c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .onbw .ohero p { color: var(--muted); margin-top: 8px; font-size: 15px; }
+  .onbw .osec { padding: 20px 28px 4px; }
+  .onbw .osec h4 { font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 900; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .onbw .osec h4 button { text-transform: none; letter-spacing: 0; font-size: 12.5px; background: none; border: 0; color: var(--accent-2); font-weight: 800; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+  .onbw .osec h4 button .ic { width: 14px; height: 14px; }
+  .avgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .avgrid.sm { grid-template-columns: repeat(6, 44px); gap: 10px; margin-top: 12px; }
+  .avopt { position: relative; aspect-ratio: 1; border-radius: 50%; padding: 0; border: 0; background: none; cursor: pointer; transition: transform .2s var(--ease-out); animation: popIn .35s var(--ease-out) both; }
+  .avopt img { width: 100%; height: 100%; border-radius: 50%; display: block; box-shadow: 0 0 0 3px var(--panel), 0 0 0 3px transparent; transition: box-shadow .2s var(--ease-out); }
+  .avopt:hover { transform: translateY(-3px) scale(1.05); }
+  .avopt.on img { box-shadow: 0 0 0 3px var(--panel), 0 0 0 6px var(--accent); }
+  .avopt.on::after { content: ''; position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--panel); background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 12px no-repeat; animation: bump .35s var(--ease-out); }
+  .avgrid.sm .avopt.on::after { width: 18px; height: 18px; border-width: 2px; background-size: 10px; }
+  .ocards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .ocard { padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); animation: fadeUp .45s var(--ease-out) both; }
+  .ocard:nth-child(2) { animation-delay: .07s; } .ocard:nth-child(3) { animation-delay: .14s; }
+  .ocard .n { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 10px; }
+  .ocard .n .ic { width: 18px; height: 18px; }
+  .ocard b { display: block; font-size: 14px; font-weight: 900; margin-bottom: 3px; }
+  .ocard small { color: var(--muted); font-size: 12.5px; line-height: 1.4; display: block; }
+  .onbw .ofoot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 22px 28px 24px; }
+  .onbw .ofoot .ghost { background: none; border: 0; color: var(--muted); font: inherit; font-weight: 800; cursor: pointer; padding: 10px 4px; }
+  .onbw .ofoot .ghost:hover { color: var(--ink); }
+
+  #modal .box.mict { width: min(480px, 94vw); padding: 24px; }
+  .mict .mh { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; }
+  .mict .mico { width: 54px; height: 54px; border-radius: 17px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); position: relative; flex-shrink: 0; transition: background .3s, color .3s; }
+  .mict .mico .ic { width: 26px; height: 26px; }
+  .mict .mico::before { content: ''; position: absolute; inset: -5px; border-radius: 21px; border: 2px solid var(--green); opacity: var(--lv, 0); transform: scale(calc(1 + var(--lv, 0) * .1)); transition: opacity .08s, transform .08s; }
+  .mict .mico.ok { background: rgba(111,211,155,.15); color: var(--green); }
+  .mict h3 { font-size: 20px; font-weight: 900; }
+  .mict .mh p { color: var(--muted); font-size: 13.5px; margin-top: 3px; line-height: 1.4; }
+  .mlabel { font-size: 11.5px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin: 18px 0 8px; }
+  .msel { width: 100%; padding: 11px 38px 11px 14px; border-radius: 12px; background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b49c89' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 12px center / 16px no-repeat; border: 1px solid var(--line); color: var(--ink); font: inherit; font-weight: 700; appearance: none; -webkit-appearance: none; cursor: pointer; outline: none; }
+  .msel:focus { border-color: var(--accent); }
+  .msel:disabled { opacity: .6; cursor: default; }
+  .mbar { display: flex; gap: 3px; height: 38px; padding: 9px 10px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+  .mbar i { flex: 1; border-radius: 3px; background: rgba(255,255,255,.07); transition: background .07s; }
+  .mbar i.on { background: var(--c); box-shadow: 0 0 8px var(--c); }
+  .mstat { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13.5px; font-weight: 800; color: var(--muted); min-height: 22px; }
+  .mstat .dotw { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: twinkle 1.4s ease-in-out infinite; }
+  .mstat.ok { color: var(--green); }
+  .mstat.ok .ic { width: 18px; height: 18px; stroke-width: 3; animation: bump .4s var(--ease-out); }
+  .mstat.err { color: var(--red); }
+  .mtog { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin-top: 8px; cursor: pointer; transition: border-color .15s; user-select: none; }
+  .mtog:hover { border-color: #4d3a2f; }
+  .mtog span { flex: 1; min-width: 0; }
+  .mtog b { display: block; font-size: 14px; font-weight: 800; }
+  .mtog small { color: var(--muted); font-size: 12px; }
+  .ksw { width: 42px; height: 24px; border-radius: 12px; background: #4a3a31; position: relative; transition: background .2s; flex-shrink: 0; }
+  .ksw::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .22s var(--ease-out); }
+  .ksw.on { background: var(--green); }
+  .ksw.on::after { transform: translateX(18px); }
+  .mhelp { margin-top: 12px; padding: 12px 14px 12px 16px; border-radius: 14px; background: rgba(255,107,107,.07); border: 1px solid rgba(255,107,107,.22); font-size: 13px; line-height: 1.55; animation: fadeUp .3s var(--ease-out) both; }
+  .mhelp b { display: block; margin-bottom: 4px; }
+  .mhelp ol { padding-left: 18px; color: var(--muted); }
+  .mfoot { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
+  .mfoot .lnk { background: none; border: 0; color: var(--muted); font: inherit; font-size: 13.5px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; margin-right: auto; cursor: pointer; padding: 0; }
+  .mfoot .lnk:hover { color: var(--ink); }
+
+  .estate { margin: auto; max-width: 460px; text-align: center; padding: 30px 20px; animation: fadeUp .5s var(--ease-out) both; }
+  .estate .eart { position: relative; width: 136px; height: 136px; margin: 0 auto 20px; }
+  .estate .eart .disc { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 50% 35%, rgba(255,138,76,.26), rgba(255,138,76,.05) 70%); border: 1.5px dashed rgba(255,138,76,.35); animation: spin 30s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .estate .eart .klogo, .estate .eart .eico { position: absolute; inset: 28px; width: 80px; height: 80px; color: var(--accent); }
+  .estate .eart .eico { display: grid; place-items: center; }
+  .estate .eart .eico .ic { width: 52px; height: 52px; stroke-width: 1.6; }
+  .estate .eart .eav { position: absolute; inset: 18px; width: 100px; height: 100px; font-size: 40px; border: 4px solid var(--panel); }
+  .estate .eart .wv { position: absolute; right: -2px; top: 4px; font-size: 34px; animation: wave 1.6s ease-in-out infinite; transform-origin: 70% 80%; }
+  .estate .eart .orb { position: absolute; border-radius: 50%; background: var(--accent-2); animation: floaty 4s ease-in-out infinite; }
+  .estate .eart .o1 { width: 10px; height: 10px; left: 2px; bottom: 22px; opacity: .55; }
+  .estate .eart .o2 { width: 6px; height: 6px; right: 14px; bottom: 6px; opacity: .4; animation-delay: -2s; }
+  @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .estate h3 { font-size: 21px; font-weight: 900; letter-spacing: -.01em; line-height: 1.25; }
+  .estate p { color: var(--muted); margin: 8px 0 20px; line-height: 1.5; font-size: 14.5px; }
+  .echips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .echip { padding: 9px 15px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); font: inherit; font-weight: 800; font-size: 13.5px; color: var(--ink); cursor: pointer; transition: border-color .15s, background .15s, transform .18s var(--ease-out); animation: popIn .35s var(--ease-out) both; }
+  .echip:nth-child(2) { animation-delay: .06s; } .echip:nth-child(3) { animation-delay: .12s; }
+  .echip:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-2px); }
+  .estate .eacts { margin-top: 18px; }
+  .srv.dash.hint { color: var(--accent); animation: discPulse 2.2s ease-out infinite; }
+  @keyframes discPulse { 0% { box-shadow: 0 0 0 0 rgba(255,138,76,.55); } 70%, 100% { box-shadow: 0 0 0 12px rgba(255,138,76,0); } }
+  @media (max-width: 560px) { .avgrid { grid-template-columns: repeat(4, 1fr); } .ocards { grid-template-columns: 1fr; } .onbw .osec, .onbw .ofoot { padding-left: 18px; padding-right: 18px; } }
+  @media (prefers-reduced-motion: reduce) { .onbw .ologo, .estate .eart .disc, .estate .eart .wv, .estate .eart .orb, .srv.dash.hint { animation: none; } }
 </style>
 </head>
 <body>
@@ -1187,6 +1333,8 @@ function onAuth(res) {
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
   $('#a-pass').value = '';
   renderMe();
+  S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = false; renderOnb();
+  if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
   if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
   const invite = new URLSearchParams(location.search).get('davet');
   if (invite) { history.replaceState(null, '', '/'); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
@@ -1229,7 +1377,7 @@ function showSettings(tab = 'profile') {
   };
   const pages = {
     profile: () => `<div class="st-page"><h3>Profilim</h3><p class="hint">Diğerleri profil kartına tıklayınca bunları görecek.</p>
-      <div class="st-field"><label>Profil fotoğrafı</label><div class="st-av"><div class="av" id="st-av"></div><button id="st-up">${ic('camera')}<span>Yükle</span></button>${draft.avatar ? '<button id="st-rm">Kaldır</button>' : ''}</div></div>
+      <div class="st-field"><label>Profil fotoğrafı</label><div class="st-av"><div class="av" id="st-av"></div><button id="st-up">${ic('camera')}<span>Yükle</span></button>${draft.avatar ? '<button id="st-rm">Kaldır</button>' : ''}</div><div class="avgrid sm" id="st-presets">${(S.presets || []).map(a => `<button type="button" class="avopt ${draft.avatar === a ? 'on' : ''}" data-av="${a}" aria-label="Rakun avatarı"><img src="${a}" alt=""></button>`).join('')}</div></div>
       <div class="st-field"><label>Kapak rengi</label><div class="swatches" id="sw-banner"></div></div>
       <div class="st-field"><label>Avatar ve isim rengi</label><div class="swatches" id="sw-color"></div></div>
       <div class="st-field"><label>Durum</label><input class="field" id="st-status" maxlength="60" placeholder="Örn. Valorant oynuyor" value="${esc(draft.status)}"></div>
@@ -1260,7 +1408,7 @@ function showSettings(tab = 'profile') {
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'turuncu') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
       <div class="pc-sec" style="margin-top:18px"><label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
-    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
+    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Mikrofon</label><button class="btns2" id="st-mic">${ic('mic')} Mikrofonu test et</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
         <label class="switch">Bilgisayar açılınca Kanka Chat'i başlat<input type="checkbox" id="as-on"></label>
         <label class="switch">Açılışta simge durumunda başlasın (saatin yanında)<input type="checkbox" id="as-hid"></label>
         <p class="hint" id="as-note">${window.kankaDesktop.autostart ? '' : 'Bu ayar Kanka Chat 1.0.6 ile geliyor. Şimdilik saatin yanındaki simgeye sağ tıklayıp "Bilgisayar açılınca başlat"ı işaretleyebilirsin.'}</p></div>` : ''}<div class="st-field"><label>Gürültü engelleme (mikrofon)</label>
@@ -1285,6 +1433,7 @@ function showSettings(tab = 'profile') {
       avEl();
       $('#st-up').onclick = () => readImage(url => { draft.avatar = url; open('profile'); preview(); });
       if ($('#st-rm')) $('#st-rm').onclick = () => { draft.avatar = null; open('profile'); preview(); };
+      $('#st-presets').querySelectorAll('[data-av]').forEach(b => b.onclick = () => { draft.avatar = b.dataset.av; open('profile'); preview(); });
       swatches('#sw-banner', 'banner', [null, '#ff7a59', '#e5484d', '#ff6b9a', '#b07cff', '#4aa8ff', '#2fd3c3', '#4cc38a', '#f6c445', '#3a2c24']);
       swatches('#sw-color', 'color', PALETTE);
       $('#sw-color').addEventListener('click', avEl); $('#sw-color input').addEventListener('input', avEl);
@@ -1313,6 +1462,7 @@ function showSettings(tab = 'profile') {
         $('#as-hid').onchange = e => A({ hidden: e.target.checked }).then(() => toast(e.target.checked ? 'Açılışta saatin yanında, arka planda başlayacak' : 'Açılışta pencere açık başlayacak'));
       }
     }
+    if (t === 'notif') $('#st-mic').onclick = () => micTest(null, () => showSettings('notif'));
     if (t === 'notif') $('#st-main').querySelectorAll('input[name=ns]').forEach(r => r.onchange = () => { setNS(r.value); toast('Gürültü engelleme ayarlandı'); });
     if (t === 'act') {
       const manual = () => ({ game: u.activities && !u.activities.auto ? u.activities.game?.name || '' : '', music: u.activities && !u.activities.auto ? u.activities.music : null });
@@ -1354,6 +1504,8 @@ function renderRail() {
     S.servers.map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''}" data-id="${s.id}" title="${esc(s.name)}${mutedServers.has(s.id) ? ' (sessizde)' : ''}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) ? '<span class="dot"></span>' : ''}</button>`).join('') +
     `<button class="srv dash" id="add-srv" title="Sunucu oluştur" aria-label="Sunucu oluştur">${ic('plus')}</button><button class="srv dash" id="join-srv" title="Davet koduyla katıl" aria-label="Davet koduyla katıl">${ic('link')}</button><button class="srv dash ${S.view === 'discover' ? 'active' : ''}" id="disc-srv" title="Sunucuları keşfet" aria-label="Sunucuları keşfet">${ic('compass')}</button>`;
   $('#disc-srv').onclick = () => showDiscover();
+  $('#disc-srv').classList.toggle('hint', !S.servers.some(s => s.id !== 's1') && S.view !== 'discover');
+  renderOnb();
   $('#home').onclick = openDMHome;
   $('#rail').querySelectorAll('.srv[data-id]').forEach(b => b.onclick = () => selectServer(b.dataset.id));
   $('#add-srv').onclick = () => showTemplates();
@@ -2127,9 +2279,11 @@ const dayLabel = t => {
 function renderMessages(toBottom) {
   const box = $('#messages');
   const atBottom = toBottom || box.scrollHeight - box.scrollTop - box.clientHeight < 120;
-  let prev = null, html = histMore ? '<div class="loadmore" id="loadmore">Yukarı kaydırınca eski mesajlar yüklenir</div>' : helloHTML;
+  const quiet = !histMore && !S.msgs.some(m => m.author);
+  let prev = null, html = histMore ? '<div class="loadmore" id="loadmore">Yukarı kaydırınca eski mesajlar yüklenir</div>' : quiet ? emptyHTML() : helloHTML;
   for (const m of S.msgs) { if (m.id === newLineAt) html += '<div class="newline"><span>Yeni mesajlar</span></div>'; html += msgHTML(m, prev); prev = m; }
   box.innerHTML = html;
+  if (quiet) wireEmpty(box);
   if (atBottom) box.scrollTop = box.scrollHeight;
 }
 function msgHTML(m, prev) {
@@ -2669,7 +2823,9 @@ async function routeNS() {
   nsSrc.connect(target); nsNode = target === nsDest ? null : target;
 }
 async function getMic() {
-  rawStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: nsMode() !== 'off', autoGainControl: true } });
+  const base = { echoCancellation: true, noiseSuppression: nsMode() !== 'off', autoGainControl: true }, dev = store.get('kanka-mic');
+  try { rawStream = await navigator.mediaDevices.getUserMedia({ audio: dev ? { ...base, deviceId: { exact: dev } } : base }); }
+  catch (e) { if (!dev) throw e; store.set('kanka-mic', null); rawStream = await navigator.mediaDevices.getUserMedia({ audio: base }); }
   try {
     nsCtx ||= new AudioContext({ sampleRate: 48000 }); if (nsCtx.state === 'suspended') await nsCtx.resume();
     if (nsCtx.state !== 'running') throw new Error('Ses motoru başlamadı: ' + nsCtx.state);
@@ -2711,7 +2867,7 @@ const peers = {}, peerNames = {}, peerMedia = {}, peerVideo = {}, speaking = new
 const vol = JSON.parse(store.get('kanka-vol') || '{}');
 const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
 
-async function joinVoice(chId) {
+async function joinVoiceNow(chId) {
   if (myVoice === chId) return true;
   if (!navigator.mediaDevices?.getUserMedia) return toast('Tarayıcın mikrofon erişimini desteklemiyor (localhost ya da https gerekli).');
   try { if (!localStream) localStream = await getMic(); }
@@ -3453,6 +3609,196 @@ socket.on('watch', ({ channelId, state }) => {
 });
 
 // ================= Küçük yardımcılar =================
+// ================= Başlangıç rehberi, karşılama, mikrofon testi, boş ekranlar =================
+const ONB_STEPS = [
+  { k: 'join', icon: 'compass', t: 'Bir sunucuya katıl', d: 'Keşfet\'ten bul ya da kendin kur' },
+  { k: 'voice', icon: 'volume', t: 'Sesli odaya gir', d: 'Arkadaşlarınla konuş' },
+  { k: 'profile', icon: 'user', t: 'Profilini tamamla', d: 'Durum ya da hakkımda ekle' },
+];
+const onbState = () => ({ join: S.servers.some(s => s.id !== 's1'), voice: !!S.onb?.voice, profile: !!S.onb?.profile });
+let onbWon = false;
+function renderOnb() {
+  let el = $('#onb');
+  if (!S.onb || S.onb.done || S.onb.dismissed) { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'onb'; $('#side').insertBefore(el, $('#me')); }
+  const st = onbState(), n = ONB_STEPS.filter(s => st[s.k]).length, C = 2 * Math.PI * 15;
+  const ring = `<div class="oring"><svg viewBox="0 0 38 38"><defs><linearGradient id="onbgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6b3d"/></linearGradient></defs><circle class="bgc" cx="19" cy="19" r="15"/><circle class="fg" cx="19" cy="19" r="15" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - n / 3)}"/></svg><b>${n}/3</b></div>`;
+  if (n === 3) {
+    if (onbWon) return;
+    onbWon = true;
+    el.className = '';
+    el.innerHTML = `<div class="oh">${ring}<div class="ot"><b>Hepsi tamam!</b><small>Rehberi bitirdin</small></div></div><div class="owin"><div class="big">🎉</div><b>Artık gerçek bir Kanka'sın</b><small>İyi sohbetler, bol eğlence!</small></div>`;
+    confetti(el); playSound('reward');
+    setTimeout(() => { el.classList.add('out'); socket.emit('onbSet', 'done', r => { if (r?.onb) S.onb = r.onb; }); setTimeout(() => el.remove(), 450); }, 5200);
+    return;
+  }
+  const closed = store.get('kanka-onb-closed') === '1', sig = `${st.join}${st.voice}${st.profile}${closed}`;
+  if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+  el.className = closed ? 'closed' : '';
+  el.innerHTML = `<div class="oh" id="onb-h" role="button" aria-expanded="${!closed}">${ring}<div class="ot"><b>Kanka'ya başla</b><small>${3 - n} adım kaldı · ${closed ? 'göster' : 'gizle'}</small></div>
+    <button class="ox" id="onb-x" title="Rehberi gizle" aria-label="Rehberi gizle">${ic('x')}</button></div>
+    <div class="ol">${ONB_STEPS.map(s => `<button class="ostep ${st[s.k] ? 'done' : ''}" data-k="${s.k}"><i class="oi">${ic(st[s.k] ? 'check' : s.icon)}</i><span><b>${s.t}</b><small>${s.d}</small></span><i class="ock">${ic('check')}</i></button>`).join('')}</div>`;
+  $('#onb-h').onclick = e => { if (e.target.closest('#onb-x')) return; store.set('kanka-onb-closed', closed ? null : '1'); renderOnb(); };
+  $('#onb-x').onclick = () => confirmBox('Başlangıç rehberini gizlemek istiyor musun? Adımları istediğin zaman kendin de yapabilirsin.', () => {
+    socket.emit('onbSet', 'dismissed', r => { if (r?.onb) S.onb = r.onb; }); el.classList.add('out'); setTimeout(() => el.remove(), 450);
+  });
+  el.querySelectorAll('.ostep:not(.done)').forEach(b => b.onclick = () => onbGo(b.dataset.k));
+}
+function onbGo(k) {
+  if (k === 'join') return showDiscover();
+  if (k === 'profile') return showSettings('profile');
+  if (k === 'voice') {
+    const srv = (S.view === 'server' && S.server?.channels.some(c => c.type === 'voice') ? S.server : null) || S.servers.find(s => s.id === 's1') || S.servers[0];
+    const vc = srv?.channels.find(c => c.type === 'voice');
+    if (!vc) return toast('Bu sunucuda sesli oda yok.');
+    if (S.view !== 'server' || S.server?.id !== srv.id) selectServer(srv.id);
+    joinVoice(vc.id);
+  }
+}
+function confetti(anchor) {
+  const r = anchor.getBoundingClientRect(), cols = ['#ff8a4c', '#ffb347', '#6fd39b', '#6fd3ff', '#ff6fae', '#ffd23f'];
+  for (let i = 0; i < 46; i++) {
+    const p = document.createElement('i'); p.className = 'confetti';
+    p.style.left = (r.left + r.width / 2) + 'px'; p.style.top = (r.top + 30) + 'px';
+    p.style.background = cols[i % cols.length];
+    p.style.setProperty('--dx', (Math.random() * 360 - 180) + 'px'); p.style.setProperty('--dy', (Math.random() * -260 - 40) + 'px'); p.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+    p.style.animationDelay = (Math.random() * .12) + 's';
+    document.body.appendChild(p); setTimeout(() => p.remove(), 1600);
+  }
+}
+socket.on('onb', ob => { S.onb = ob; renderOnb(); });
+
+// --- İlk giriş karşılaması + avatar seçimi ---
+function showOnbWelcome() {
+  const presets = S.presets || [], cur = S.users[S.me]?.avatar;
+  let pick = presets.includes(cur) ? cur : cur || presets[0];
+  const sparks = Array.from({ length: 9 }, (_, i) => `<i class="spark" style="left:${8 + i * 10.5}%;top:${12 + (i * 37) % 70}%;animation-delay:${-i * .4}s"></i>`).join('');
+  const draw = () => {
+    modal(`<div class="ohero">${sparks}<div class="ologo"><img src="${esc(pick)}" alt=""></div><h2>Hoş geldin, <em>${esc(S.me)}</em>!</h2><p>Seni aramızda görmek güzel. Bir dakikada her şeyi hazırlayalım.</p></div>
+      <div class="osec"><h4>Avatarını seç <button id="ow-up">${ic('camera')} Kendi fotoğrafını yükle</button></h4>
+        <div class="avgrid">${presets.map((u, i) => `<button class="avopt ${u === pick ? 'on' : ''}" data-av="${esc(u)}" style="animation-delay:${i * .025}s" aria-label="Avatar ${i + 1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div></div>
+      <div class="osec"><h4>3 adımda başla</h4><div class="ocards">${ONB_STEPS.map(s => `<div class="ocard"><div class="n">${ic(s.icon)}</div><b>${s.t}</b><small>${s.d}</small></div>`).join('')}</div></div>
+      <div class="ofoot"><button class="ghost" id="ow-later">Sonra bakarım</button><button class="btnp" id="ow-go">Başlayalım ${ic('send')}</button></div>`, 'onbw');
+    document.querySelectorAll('.onbw [data-av]').forEach(b => b.onclick = () => {
+      pick = b.dataset.av;
+      document.querySelectorAll('.onbw .avopt').forEach(x => x.classList.toggle('on', x === b));
+      const img = $('.onbw .ologo img'); img.src = pick; $('.onbw .ologo').animate([{ transform: 'scale(.85)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    });
+    $('#ow-up').onclick = () => readImage(url => { pick = url; draw(); });
+    const finish = save => {
+      socket.emit('onbSet', 'seen', r => { if (r?.onb) S.onb = r.onb; });
+      if (save && pick && pick !== cur) socket.emit('updateProfile', { avatar: pick }, r => r?.error && toast(r.error));
+      closeModal(); renderOnb();
+    };
+    $('#ow-go').onclick = () => finish(true);
+    $('#ow-later').onclick = () => finish(false);
+  };
+  draw();
+}
+
+// --- Mikrofon testi ---
+let mt = null;
+function joinVoice(chId) {
+  if (myVoice === chId) return Promise.resolve(true);
+  if (!String(chId).startsWith('call:') && !store.get('kanka-mictest') && navigator.mediaDevices?.getUserMedia) return micTest(chId);
+  return joinVoiceNow(chId);
+}
+function micTest(chId, back) {
+  return new Promise(resolve => {
+    const join = !!chId, live = !!myVoice;
+    modal(`<div class="mh"><div class="mico" id="mt-ico">${ic('mic')}</div><div><h3>Sesin geliyor mu?</h3><p>${join ? 'Odaya girmeden önce mikrofonunu hızlıca kontrol edelim.' : 'Mikrofonunu ve gürültü engellemeyi buradan test edebilirsin.'}</p></div></div>
+      <div class="mlabel">Mikrofon</div><select class="msel" id="mt-dev" ${live ? 'disabled title="Sesli odadayken mikrofon değiştirilemez"' : ''}><option>Mikrofon aranıyor…</option></select>
+      <div class="mlabel">Ses seviyesi</div><div class="mbar" id="mt-bar">${'<i></i>'.repeat(30)}</div>
+      <div class="mstat" id="mt-st"><span class="dotw"></span>Bir şeyler söyle, çubuk hareket etsin…</div>
+      <div class="mtog" id="mt-ns" role="switch"><span><b>Gürültü engelleme</b><small>Klavye, alkış, fan gibi sesleri siler</small></span><i class="ksw"></i></div>
+      <div class="mtog" id="mt-loop" role="switch"><span><b>Kendini dinle</b><small>Arkadaşlarının seni nasıl duyduğunu dinle · kulaklık tak</small></span><i class="ksw"></i></div>
+      <div class="mhelp" id="mt-help" hidden><b>Sesin gelmiyorsa şunlara bak:</b><ol><li>Adres çubuğundaki kilit simgesinden <b style="display:inline">mikrofon iznini</b> aç.</li><li>Yukarıdan doğru mikrofonu seç (kulaklık mikrofonu ya da bilgisayarınki).</li><li>Windows: Ayarlar → Sistem → Ses → Giriş'te mikrofonun açık ve sesinin yüksek olduğundan emin ol.</li><li>Mikrofonda donanım tuşu varsa kapalı olmasın.</li></ol></div>
+      <div class="mfoot"><button class="lnk" id="mt-hb">Sesim gelmiyor</button><button class="btns2" id="mt-x">${join ? 'Vazgeç' : 'Kapat'}</button>${join ? `<button class="btnp" id="mt-ok">${ic('volume')} Odaya katıl</button>` : ''}</div>`, 'mict');
+    mt = { resolve, chId, back, join, live, raf: 0, ctx: null, src: null, an: null, heard: 0, ok: false, loop: null, t: performance.now() };
+    const sw = (id, on) => $(id + ' .ksw').classList.toggle('on', on);
+    sw('#mt-ns', !!NS_AI[nsMode()]);
+    $('#mt-ns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? 'gt' : 'off'); sw('#mt-ns', on); };
+    $('#mt-loop').onclick = () => {
+      if (mt.loop) { mt.loop.pause(); mt.loop.srcObject = null; mt.loop = null; sw('#mt-loop', false); return; }
+      if (!localStream) return;
+      mt.loop = new Audio(); mt.loop.srcObject = localStream; mt.loop.play().catch(() => {}); sw('#mt-loop', true);
+    };
+    $('#mt-hb').onclick = () => { const h = $('#mt-help'); h.hidden = !h.hidden; };
+    $('#mt-dev').onchange = e => { store.set('kanka-mic', e.target.value || null); mt.ok = false; mt.heard = 0; mtStart(); };
+    $('#mt-x').onclick = () => { if (!mt.join) store.set('kanka-mictest', '1'); const bk = mt.back; mtEnd(false); closeModal(); bk && setTimeout(bk, 230); };
+    if ($('#mt-ok')) $('#mt-ok').onclick = () => { store.set('kanka-mictest', '1'); const ch = mt.chId, res = mt.resolve; mtEnd(true, true); closeModal(); joinVoiceNow(ch).then(res); };
+    mtStart();
+  });
+}
+async function mtStart() {
+  if (!mt) return;
+  mtMeterOff();
+  const stat = (cls, html) => { const s = $('#mt-st'); if (s) { s.className = 'mstat ' + cls; s.innerHTML = html; } };
+  if (!mt.live) { mt.loop && (mt.loop.srcObject = null); stopMic(); localStream = null; }
+  try { if (!localStream) localStream = await getMic(); }
+  catch { stat('err', `${ic('x')} Mikrofona erişilemedi. İzin vermen gerekiyor.`); $('#mt-help') && ($('#mt-help').hidden = false); return; }
+  if (!mt || !$('#mt-bar')) return;
+  if (mt.loop) mt.loop.srcObject = localStream;
+  try {
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput' && d.deviceId);
+    const curId = rawStream?.getAudioTracks()[0]?.getSettings().deviceId || store.get('kanka-mic');
+    $('#mt-dev').innerHTML = devs.length ? devs.map(d => `<option value="${esc(d.deviceId)}" ${d.deviceId === curId ? 'selected' : ''}>${esc(d.label || 'Mikrofon')}</option>`).join('') : '<option>Mikrofon bulunamadı</option>';
+  } catch {}
+  mt.ctx ||= new (window.AudioContext || window.webkitAudioContext)();
+  if (mt.ctx.state === 'suspended') mt.ctx.resume().catch(() => {});
+  mt.src = mt.ctx.createMediaStreamSource(localStream); mt.an = mt.ctx.createAnalyser(); mt.an.fftSize = 1024; mt.src.connect(mt.an);
+  const buf = new Float32Array(1024), bars = [...document.querySelectorAll('#mt-bar i')], N = bars.length;
+  const tick = now => {
+    if (!mt) return;
+    if (!$('#modal').classList.contains('open') || !$('#mt-bar')) { mtEnd(false); return; } // dışarı tıklayıp kapattıysa
+    const dt = now - mt.t; mt.t = now;
+    mt.an.getFloatTimeDomainData(buf); let sum = 0; for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+    const db = 20 * Math.log10(Math.sqrt(sum / buf.length) + 1e-9), lv = Math.max(0, Math.min(1, (db + 58) / 46));
+    const on = Math.round(lv * N);
+    bars.forEach((b, i) => { const a = i < on; b.classList.toggle('on', a); if (a) b.style.setProperty('--c', i < N * .6 ? '#6fd39b' : i < N * .85 ? '#ffb347' : '#ff6b6b'); });
+    $('#mt-ico').style.setProperty('--lv', lv.toFixed(2));
+    mt.heard = db > -44 ? mt.heard + dt : Math.max(0, mt.heard - dt / 4);
+    if (!mt.ok && mt.heard > 200) { mt.ok = true; $('#mt-ico').classList.add('ok'); stat('ok', `${ic('check')} Harika, sesin net geliyor!`); }
+    mt.raf = requestAnimationFrame(tick);
+  };
+  mt.raf = requestAnimationFrame(tick);
+}
+function mtMeterOff() { if (!mt) return; cancelAnimationFrame(mt.raf); try { mt.src?.disconnect(); } catch {} mt.src = mt.an = null; }
+function mtEnd(keepStream, joined) {
+  if (!mt) return;
+  mtMeterOff(); if (mt.loop) { mt.loop.pause(); mt.loop.srcObject = null; }
+  mt.ctx?.close().catch(() => {});
+  if (!keepStream && !mt.live && !myVoice) { stopMic(); localStream = null; }
+  if (!joined) mt.resolve(false);
+  mt = null;
+}
+
+// --- Boş ekranlar ---
+const QUICK = ['Selam millet 👋', 'Naber, nasılsınız? 😄', 'Burası çok iyi olmuş 🔥'];
+function emptyHTML() {
+  if (S.view === 'server' && S.server && S.channel && !S.channel.dm) {
+    const c = S.channel;
+    if (c.readonly && !perm(S.server, 'manageMessages'))
+      return `<div class="estate"><div class="eart"><div class="disc"></div><div class="eico">${ic('megaphone')}</div><i class="orb o1"></i><i class="orb o2"></i></div><h3>Henüz duyuru yok</h3><p>Yeni gelişmeler ve güncellemeler burada paylaşılacak. Takipte kal!</p></div>`;
+    return `<div class="estate"><div class="eart"><div class="disc"></div>${logoSvg()}<span class="wv">👋</span><i class="orb o1"></i><i class="orb o2"></i></div>
+      <h3>#${esc(c.name)} odasının ilk mesajı seni bekliyor</h3><p>Burası henüz sessiz. İlk mesajı sen yaz, sohbet başlasın.</p>
+      ${$('#input').disabled ? '' : `<div class="echips">${QUICK.map(t => `<button class="echip" data-q="${esc(t)}">${esc(t)}</button>`).join('')}</div>`}
+      ${S.server.invite ? `<div class="eacts"><button class="btns2" id="e-inv">${ic('userplus')} Arkadaşlarını davet et</button></div>` : ''}</div>`;
+  }
+  if (S.view === 'dm' && S.channel?.dm && S.channel.with) {
+    const o = S.channel.with;
+    return `<div class="estate"><div class="eart"><div class="disc"></div><div class="av eav" style="background:${userColor(o)}">${avInner(o)}</div><span class="wv">👋</span></div>
+      <h3>${esc(o)} ile sohbetin başlangıcı</h3><p>Bir selam ver, buzları kır. Mesajlarınız sadece ikinizin arasında.</p>
+      <div class="echips"><button class="echip" data-send="👋">👋 El salla</button><button class="echip" data-q="Naber? 😄">Naber? 😄</button></div></div>`;
+  }
+  return helloHTML;
+}
+function wireEmpty(box) {
+  box.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { $('#input').value = b.dataset.q; growInput(); $('#input').focus(); });
+  box.querySelectorAll('[data-send]').forEach(b => b.onclick = () => send({ kind: 'text', text: b.dataset.send }));
+  const inv = box.querySelector('#e-inv'); if (inv) inv.onclick = () => showInvite(S.server);
+}
+
 function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); }
 function closeModal() { $('#modal').classList.remove('open'); }
 $('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };

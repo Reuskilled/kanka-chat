@@ -305,6 +305,12 @@ const roleOf = (s, n) => s.owner === n ? 'admin' : (s.roles?.[n] || 'member');
 const isMod = (s, n) => ['admin', 'mod'].includes(roleOf(s, n)) || can(s, n, 'manageChannels');
 const serverOf = chId => chId && !isPrivateChat(chId) ? findChannel(chId)?.s : null;
 const UPLOAD_RE = /^\/uploads\/[a-f0-9]+\.(png|jpe?g|gif|webp)$/;
+// Hazır rakun avatarları (public/avatar)
+const PRESET_AV = ['klasik', 'kulaklik', 'gunes-gozlugu', 'tac', 'kep', 'parti', 'bere', 'papyon', 'bandana', 'astronot', 'sihirbaz', 'kalp'].map(k => `/avatar/rakun-${k}.svg`);
+const AVATAR_OK = a => UPLOAD_RE.test(a) || PRESET_AV.includes(a);
+// Başlangıç rehberi: bu tarihten önce açılmış hesaplara gösterilmez
+const ONB_SINCE = Date.parse('2026-11-11T15:00:00Z');
+const onbOf = u => { if (!u.onb) u.onb = (u.createdAt || 0) < ONB_SINCE ? { done: true } : {}; return u.onb; };
 
 const QUESTIONS = ['Issız bir adaya düşsen yanına alacağın 3 şey ne?', 'Hayatında izlediğin en iyi film hangisi?', 'Süper gücün olsa ne olurdu?', 'En sevdiğin yemek ne, kim yapıyor en iyisini?',
   'Zaman makinen olsa hangi yıla giderdin?', 'Bu aralar hangi şarkıyı dinlemeden duramıyorsun?', 'Çocukken ne olmak istiyordun?', 'Bir gün başka biri olabilsen kim olurdun?',
@@ -517,7 +523,8 @@ io.on('connection', socket => {
     db.sessions[token] = name; save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), myStatus: db.users[name].presence || 'online',
-      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), live: liveState()
+      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), live: liveState(),
+      onb: onbOf(db.users[name]), presets: PRESET_AV
     };
   }
 
@@ -529,7 +536,7 @@ io.on('connection', socket => {
     if (password.length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
     if (Object.keys(db.users).some(n => n.toLowerCase() === name.toLowerCase())) return cb({ error: 'Bu kullanıcı adı alınmış.' });
     const salt = crypto.randomBytes(16).toString('hex');
-    db.users[name] = { name, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now() };
+    db.users[name] = { name, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} };
     ensureOwners(); save();
     io.emit('users', allUsers());
     pushServers(onlineNames()); // herkese açık sunucunun üye listesi değişti
@@ -553,6 +560,10 @@ io.on('connection', socket => {
     cb(start(n));
   });
 
+  socket.on('onbSet', (k, cb = () => {}) => {
+    const u = db.users[me]; if (!u || !['dismissed', 'done', 'seen'].includes(k)) return cb({ error: 'Geçersiz' });
+    onbOf(u)[k] = true; save(); cb({ ok: true, onb: u.onb });
+  });
   socket.on('logout', token => { delete db.sessions[token]; save(); });
 
   // ----- Kanallar -----
@@ -783,13 +794,14 @@ io.on('connection', socket => {
   socket.on('updateProfile', ({ avatar, status, bio, banner, color, birthday, music } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
     if (avatar === null) u.avatar = null;
-    else if (avatar !== undefined) { if (!UPLOAD_RE.test(avatar)) return cb({ error: 'Geçersiz resim' }); u.avatar = avatar; }
+    else if (avatar !== undefined) { if (!AVATAR_OK(avatar)) return cb({ error: 'Geçersiz resim' }); u.avatar = avatar; }
     if (status !== undefined) u.status = clean(status, 60);
     if (bio !== undefined) u.bio = clean(bio, 190);
     if (banner !== undefined) u.banner = /^#[0-9a-f]{6}$/i.test(banner) ? banner : null;
     if (color !== undefined && /^#[0-9a-f]{6}$/i.test(color)) u.color = color;
     if (birthday !== undefined) u.birthday = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(birthday) ? birthday : null;
     if (music !== undefined) u.music = /^https?:\/\/\S{4,300}$/.test(music) ? music : null;
+    { const ob = onbOf(u); if (!ob.profile && (u.bio || u.status)) { ob.profile = true; socket.emit('onb', ob); } }
     save(); io.emit('users', allUsers()); cb({ ok: true });
   });
   socket.on('changePassword', ({ old, next } = {}, cb = () => {}) => {
@@ -1178,6 +1190,7 @@ io.on('connection', socket => {
     const room = voice.get(chId) || new Map();
     const peers = [...room].map(([sid, name]) => ({ sid, name }));
     room.set(socket.id, me); voice.set(chId, room);
+    { const ob = onbOf(db.users[me]); if (!ob.voice) { ob.voice = true; save(); socket.emit('onb', ob); } }
     socket.to('v:' + chId).emit('voiceJoined', { sid: socket.id, name: me });
     myVoice = chId; socket.join('v:' + chId);
     pushVoice();
