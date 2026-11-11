@@ -1773,6 +1773,89 @@
   .vp-avh { position: absolute; z-index: 3; inset: 6px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: rgba(0,0,0,.55); color: #fff; font-size: 10.5px; font-weight: 900; line-height: 1.15; text-align: center; opacity: 0; transition: opacity .15s; pointer-events: none; }
   .vp-avh .ic { width: 18px; height: 18px; }
   .vp-avw:hover .vp-avh, .vp-avw:focus-visible .vp-avh { opacity: 1; }
+
+  /* ---------- Etkinlik 2.0 ---------- */
+  .gart { --gc: #5b4a40; position: relative; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: linear-gradient(145deg, var(--gc), color-mix(in srgb, var(--gc) 55%, #000)); color: #fff; border-radius: 10px; width: 100%; aspect-ratio: 460/215; }
+  .gart img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+  .gart em { font-style: normal; font-weight: 900; font-size: 22px; letter-spacing: .02em; text-shadow: 0 2px 8px rgba(0,0,0,.35); display: flex; }
+  .gart em .ic { width: 22px; height: 22px; }
+  .gart.sm { width: 48px; height: 48px; aspect-ratio: auto; border-radius: 10px; } .gart.sm em { font-size: 15px; } .gart.sm em .ic { width: 20px; height: 20px; }
+  .gart.xs { width: 22px; height: 22px; aspect-ratio: auto; border-radius: 6px; } .gart.xs em { font-size: 9px; } .gart.xs em .ic { width: 12px; height: 12px; }
+  .act-art.g { background: none; } .act-art.g .gart { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 12px; } .act-art.g .gart img { object-position: 30% center; }
+  .act-line.watch .ic { color: #ff6b9a; }
+  .mprog2 { height: 4px; border-radius: 2px; background: rgba(255,255,255,.12); margin-top: 7px; overflow: hidden; } .mprog2 i { display: block; height: 100%; background: #1ed760; border-radius: 2px; transition: width 1s linear; }
+  .mtimes { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .act2 .ax-now { padding: 14px; border-radius: 18px; background: linear-gradient(160deg, rgba(255,138,76,.12), rgba(255,138,76,.03)); border: 1px solid rgba(255,138,76,.25); margin: 6px 0 12px; }
+  .act2 h5 { font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .ax-item { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 12px; background: rgba(0,0,0,.18); } .ax-item + .ax-item { margin-top: 6px; }
+  .ax-item > div { flex: 1; min-width: 0; } .ax-item small { display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .ax-item b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ax-item span { font-size: 12px; color: var(--accent-2, #ffb37a); font-weight: 700; }
+  .ax-item > button { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); } .ax-item > button:hover { background: rgba(229,72,77,.15); color: var(--red); } .ax-item > button .ic { width: 16px; height: 16px; }
+  .ax-empty { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 13px; line-height: 1.45; } .ax-empty > .ic { width: 28px; height: 28px; color: var(--accent); flex-shrink: 0; } .ax-empty b { display: block; color: var(--ink); font-size: 14.5px; }
+  .ax-auto { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); margin-bottom: 18px; }
+  .ax-auto > div:nth-child(2) { flex: 1; min-width: 0; } .ax-auto b { display: block; font-size: 14px; } .ax-auto span:not(.st) { display: block; font-size: 12.5px; color: var(--muted); }
+  .ax-ai { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex-shrink: 0; } .ax-ai .ic { width: 20px; height: 20px; }
+  .ax-auto .btns2 { padding: 8px 12px; font-size: 13px; text-decoration: none; } .ax-auto .btns2 .ic { width: 15px; height: 15px; }
+  .ax-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--card); margin-bottom: 12px; }
+  .ax-tabs button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 10px; font-weight: 900; color: var(--muted); transition: background .15s, color .15s; }
+  .ax-tabs button .ic { width: 17px; height: 17px; } .ax-tabs button.on { background: var(--accent); color: #fff; } .ax-tabs button:not(.on):hover { color: var(--ink); background: var(--hover); }
+  .ax-search { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); transition: border-color .15s; }
+  .ax-search:focus-within { border-color: var(--accent); } .ax-search .ic { width: 18px; height: 18px; color: var(--muted); }
+  .ax-search input { flex: 1; padding: 12px 0; background: none; border: 0; outline: none; color: var(--ink); font: inherit; font-size: 15px; }
+  .ax-dur { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; font-size: 12.5px; font-weight: 800; color: var(--muted); }
+  .ax-dur span { margin-right: 4px; } .ax-dur button { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-weight: 800; font-size: 12.5px; color: var(--ink); }
+  .ax-dur button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .ax-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-height: 430px; overflow-y: auto; padding: 2px; margin: 0 -2px; }
+  .ax-g { display: flex; flex-direction: column; gap: 6px; padding: 6px; border-radius: 14px; background: var(--card); border: 2px solid transparent; text-align: left; transition: transform .15s, border-color .15s, background .15s; }
+  .ax-g:hover { transform: translateY(-2px); background: var(--hover); } .ax-g.on { border-color: var(--accent); background: var(--accent-soft); }
+  .ax-g b { font-size: 12.5px; font-weight: 800; padding: 0 4px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ax-g.custom { border: 2px dashed rgba(255,138,76,.5); } .ax-g.custom b { color: var(--accent); }
+  .ax-note { display: flex; align-items: center; gap: 6px; margin: 8px 0 6px !important; } .ax-note .ic { width: 14px; height: 14px; color: #1ed760; }
+  .ax-songs h6 { font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 6px 0 6px; }
+  .ax-song { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 12px; text-align: left; transition: background .12s; }
+  .ax-song:hover { background: var(--hover); } .ax-st { flex: 1; min-width: 0; } .ax-st b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ax-st small { display: block; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ax-song > em { font-style: normal; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ax-play { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #1ed760; color: #08130c; opacity: 0; transform: scale(.85); transition: .15s; } .ax-play .ic { width: 14px; height: 14px; }
+  .ax-song:hover .ax-play, .ax-song:focus-visible .ax-play { opacity: 1; transform: none; }
+  .ax-load { display: flex; gap: 5px; justify-content: center; padding: 18px; } .ax-load i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: axb 1s infinite ease-in-out; } .ax-load i:nth-child(2) { animation-delay: .15s; } .ax-load i:nth-child(3) { animation-delay: .3s; }
+  @keyframes axb { 0%, 80%, 100% { opacity: .25; transform: scale(.8); } 40% { opacity: 1; transform: none; } }
+  .ax-man { margin-top: 12px; font-size: 13px; } .ax-man summary { cursor: pointer; color: var(--muted); font-weight: 800; padding: 4px 0; } .ax-man summary:hover { color: var(--ink); }
+  .ax-row { display: flex; gap: 8px; margin-top: 10px; } .ax-row .field { margin: 0; flex: 1; } .ax-row .primary { width: auto; margin: 0; padding: 0 18px; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap; } .ax-row .primary .ic { width: 16px; height: 16px; }
+  .ax-plats { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ax-plats button { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-weight: 800; font-size: 13px; }
+  .ax-plats button i { width: 9px; height: 9px; border-radius: 50%; background: var(--pc); } .ax-plats button.on { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 18%, transparent); }
+  #ax-recent h5 { margin-top: 22px; }
+  .ax-chips { display: flex; flex-wrap: wrap; gap: 6px; } .ax-chips button { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 13px; font-weight: 800; max-width: 260px; }
+  .ax-chips button:hover { border-color: var(--accent); } .ax-chips .gart.xs { border-radius: 50%; }
+  @media (max-width: 600px) { .ax-games { grid-template-columns: repeat(2, 1fr); } .ax-auto { flex-wrap: wrap; } .ax-row { flex-direction: column; } .ax-row .primary { padding: 12px; justify-content: center; } }
+  .pf-nowc { padding: 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .ax-item small { text-transform: none; letter-spacing: 0; font-size: 12px; }
+  .ax-auto .st { flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.06); color: var(--muted); white-space: nowrap; }
+  .ax-auto .st.on { background: rgba(76,195,138,.14); color: var(--green); }
+
+  .act-art.g.ri { background: #120d0a; } .act-art.g.ri > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
+  .act-art.g.ri > .gart { position: absolute; inset: 0; }
+  .act-mini { position: absolute; z-index: 3; right: 3px; bottom: 3px; width: 22px; height: 22px; border-radius: 7px; overflow: hidden; box-shadow: 0 0 0 2px var(--card); }
+  .act-mini .gart.xs { width: 22px; height: 22px; border-radius: 7px; }
+  .rks { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .rks .rk { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.07); color: var(--muted); }
+  .rks .rk.on { background: rgba(255,138,76,.16); color: var(--accent); } .rks .rk.tier { background: rgba(246,196,69,.14); color: #f6c445; }
+  .ax-cards { padding: 12px; border-radius: 14px; background: rgba(0,0,0,.18); }
+  .ax-hero { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); margin-bottom: 20px; }
+  .ax-hero > div:nth-child(2) { flex: 1; min-width: 0; } .ax-hero b { display: block; font-size: 15px; } .ax-hero span:not(.st) { display: block; font-size: 13px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+  .ax-hero em { display: block; font-style: normal; font-size: 12px; color: var(--muted); margin-top: 4px; } .ax-hero em:empty { display: none; }
+  .ax-hero .ax-ai { width: 46px; height: 46px; border-radius: 14px; } .ax-hero .ax-ai .ic { width: 24px; height: 24px; }
+  .ax-hero .primary { width: auto; margin: 0; padding: 11px 16px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; white-space: nowrap; } .ax-hero .primary .ic { width: 16px; height: 16px; }
+  .ax-hero .st { flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.06); color: var(--muted); white-space: nowrap; } .ax-hero .st.on { background: rgba(76,195,138,.14); color: var(--green); }
+  .ax-hero:not(.on) { background: linear-gradient(160deg, rgba(255,138,76,.13), var(--card)); border-color: rgba(255,138,76,.3); }
+  .act2 .ax-h { margin-top: 4px; }
+  .ax-sup { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ax-sup > div { display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .ax-sup b { display: block; font-size: 14px; } .ax-sup small { display: block; font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
+  .ax-foot { margin-top: 14px !important; }
+  @media (max-width: 700px) { .ax-sup { grid-template-columns: 1fr; } .ax-hero { flex-wrap: wrap; } }
+  .vpop .vp-now h5 { margin-bottom: 9px; } .vpop .vp-now .act-art { width: 56px; height: 56px; } .vpop .vp-now .act-info b { font-size: 14px; } .vpop .vp-now .act-card + .act-card { border-color: rgba(255,255,255,.07); }
+  #members .act-line b, .act-line b { flex-shrink: 0; max-width: 62%; }
 </style>
 </head>
 <body>
@@ -2228,17 +2311,7 @@ function showSettings(tab = 'profile') {
       <div class="st-save"><span>Kaydedilmemiş değişikliklerin var</span><button id="st-reset">Sıfırla</button><button class="primary" id="st-saveb">Değişiklikleri kaydet</button></div></div>`,
     account: () => accountPageHTML(u),
     admin: () => '<div id="adm-root"></div>',
-    act: () => { const a = u.activities || {}; return `<div class="st-page"><h3>Etkinlik</h3><p class="hint">Ne oynadığın ve ne dinlediğin profilinde ve üye listesinde görünür.</p>
-      <div class="st-field"><label>Otomatik algılama</label>
-        <div class="conn">${ic('activity')}<span>${window.kankaDesktop ? 'Kanka Chat masaüstü uygulaması' : 'Bilgisayar uygulaması'}</span><span class="st off" id="kd-st">Kontrol ediliyor…</span></div>
-        ${window.kankaDesktop ? `<p class="hint" style="margin-top:10px">Masaüstü uygulamasındasın; açık oyunun ve Spotify'da çalan şarkın kendiliğinden algılanıyor. Ekstra bir şey yapmana gerek yok.</p>`
-          : `<ol class="steps"><li><b>Kanka Chat'i bilgisayarına indir</b> ve kur (tek tık, 20 saniye).</li><li>Uygulamadan giriş yap. Discord'daki gibi açık oyunun ve <b>Spotify masaüstü</b>nde çalan şarkın otomatik görünür.</li>
-          <li>Kapatınca saatin yanındaki simgeye küçülür, arka planda çalışmaya devam eder.</li></ol>
-          <div class="rowb"><a class="primary" href="/indir/KankaChat-Kurulum.exe" download style="display:flex;align-items:center;justify-content:center;text-decoration:none">${ic('download')}Kanka Chat'i indir (Windows)</a></div>`}</div>
-      <div class="st-field"><label>Ya da elle seç: oyun</label><div class="gamegrid" id="gg">${GAMES.map(([g, c]) => `<button data-g="${esc(g)}" class="${a.game?.name === g && !a.auto ? 'on' : ''}"><span class="dot" style="background:${c}">${esc(g[0])}</span>${esc(g)}</button>`).join('')}</div>
-        <div style="display:flex;gap:8px;margin-top:8px"><input class="field" id="g-custom" placeholder="Listede yoksa oyunun adını yaz" style="margin:0" value="${esc(!a.auto && a.game && !GAMES.some(x => x[0] === a.game.name) ? a.game.name : '')}"><button class="lrow" id="g-set" style="margin:0">Ayarla</button></div></div>
-      <div class="st-field"><label>Elle: ne dinliyorsun?</label><div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px"><input class="field" id="m-title" placeholder="Şarkı" style="margin:0" value="${esc(!a.auto && a.music ? a.music.title : '')}"><input class="field" id="m-artist" placeholder="Sanatçı" style="margin:0" value="${esc(!a.auto && a.music ? a.music.artist : '')}"><button class="lrow" id="m-set" style="margin:0">Ayarla</button></div></div>
-      <div class="rowb"><button class="btn-danger" id="act-clear">${ic('x')}Elle seçilen etkinliği temizle</button></div></div>`; },
+    act: () => actPageHTML(),
     look: () => `<div class="st-page"><h3>Görünüm</h3><p class="hint">Bu ayarlar sadece bu cihazda geçerli.</p>
       <div class="st-field"><label>Tema</label><div class="themes">${Object.entries(THEMES).map(([k, t]) => { const v = { ...{ '--bg': '#17110e', '--panel': '#211915', '--card': '#2b211c' }, ...t.v };
         return `<button data-theme="${k}" class="${(store.get('kanka-theme') || 'sicak') === k ? 'on' : ''}" style="background:${v['--panel']};color:${t.light ? '#3b2a1e' : '#f4e6d8'}"><div class="pv" style="background:${v['--bg']}"><i style="background:${v['--card']}"></i><i style="background:${v['--card']}"></i></div>${t.name}</button>`; }).join('')}</div></div>
@@ -2314,17 +2387,7 @@ function showSettings(tab = 'profile') {
     }
     if (t === 'notif') { $('#st-mic').onclick = () => micTest(null, () => showSettings('notif')); $('#st-onb').onclick = onbRestart; }
     if (t === 'notif') $('#st-main').querySelectorAll('input[name=ns]').forEach(r => r.onchange = () => { setNS(r.value); toast('Gürültü engelleme ayarlandı'); });
-    if (t === 'act') {
-      const manual = () => ({ game: u.activities && !u.activities.auto ? u.activities.game?.name || '' : '', music: u.activities && !u.activities.auto ? u.activities.music : null });
-      const setAct = (p, msg) => socket.emit('setActivity', p, () => { toast(msg); setTimeout(() => open('act'), 300); });
-      socket.emit('presenceKey', {}, r => { const e = $('#kd-st'); if (!e) return; e.textContent = r.connected ? 'Bağlı' : 'Bağlı değil'; e.className = 'st ' + (r.connected ? 'on' : 'off'); });
-      window.kankaDesktop?.info?.().then(i => { const c = $('#kd-st')?.closest('.conn'); if (!c || !i) return; c.insertAdjacentHTML('afterend', `<p class="hint" style="margin-top:8px">Uygulama sürümü: <b>${esc(i.version)}</b>${i.version < '1.0.4' ? ' · <span style="color:var(--red)">eski, uygulamayı kapatıp açınca güncellenir</span>' : ''}<br>Şu an algılanan: <b>${esc(i.status || '-')}</b></p>`); }).catch(() => {});
-      $('#gg').onclick = e => { const b = e.target.closest('[data-g]'); if (!b) return; const on = b.classList.contains('on'); setAct({ game: on ? '' : b.dataset.g, music: manual().music }, on ? 'Oyun kaldırıldı' : `${b.dataset.g} oynuyorsun`); };
-      $('#g-set').onclick = () => setAct({ game: $('#g-custom').value, music: manual().music }, 'Oyun ayarlandı');
-      $('#m-set').onclick = () => setAct({ game: manual().game, music: { title: $('#m-title').value, artist: $('#m-artist').value } }, 'Müzik ayarlandı');
-      $('#act-clear').onclick = () => setAct({}, 'Etkinlik temizlendi');
-
-    }
+    if (t === 'act') wireActPage(); else window.onMyActivity = null;
     if (t === 'look') {
       $('#st-main').querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { store.set('kanka-theme', b.dataset.theme); applyTheme(); open('look'); });
       $('#st-main').querySelectorAll('[data-acc]').forEach(b => b.onclick = () => { store.set('kanka-accent', b.dataset.acc); applyTheme(); open('look'); preview(); });
@@ -3513,28 +3576,48 @@ function cardHTML(n, u, { srv, online, preview } = {}) {
 }
 const fillBars = () => setTimeout(() => document.querySelectorAll('.xpbar i[data-w]').forEach(i => i.style.width = i.dataset.w + '%'), 30);
 const GAMES = [['Valorant', '#ff4655'], ['League of Legends', '#c89b3c'], ['Counter-Strike 2', '#de9b35'], ['Minecraft', '#5d9c3e'], ['Fortnite', '#9d4dbb'], ['Roblox', '#e2231a'],
-  ['Grand Theft Auto V', '#4b8b3b'], ['Apex Legends', '#da292a'], ['Rocket League', '#0e7bd8'], ['Overwatch 2', '#f99e1a'], ['Dota 2', '#a72714'], ['Among Us', '#c51111'],
-  ['EA FC 26', '#1fd16d'], ['Rainbow Six Siege', '#3a6ea5'], ['PUBG', '#f2a900'], ['Marvel Rivals', '#ec1d24'], ['Euro Truck Simulator 2', '#2c6eb5'], ['Genshin Impact', '#c8a46e']];
+  ['Grand Theft Auto V', '#4b8b3b'], ['PUBG', '#f2a900'], ['Apex Legends', '#da292a'], ['Rainbow Six Siege', '#3a6ea5'], ['EA FC 26', '#1fd16d'], ['Marvel Rivals', '#ec1d24'],
+  ['Euro Truck Simulator 2', '#2c6eb5'], ['R.E.P.O.', '#3d7a3a'], ['PEAK', '#d9813b'], ['Lethal Company', '#b8462d'], ['Phasmophobia', '#4a5d7a'], ['Rust', '#cd412b'],
+  ['Dota 2', '#a72714'], ['Overwatch 2', '#f99e1a'], ['Among Us', '#c51111'], ['Rocket League', '#0e7bd8'], ['Genshin Impact', '#c8a46e'], ['Elden Ring', '#b59a5a'],
+  ['Helldivers 2', '#e4c32c'], ['Palworld', '#2a9fd6'], ['Red Dead Redemption 2', '#a8241e'], ['Stardew Valley', '#6aa84f'], ['Terraria', '#3d8c40'], ['Dead by Daylight', '#8e1b1b'],
+  ['Metin2', '#8a5a2b'], ['Knight Online', '#6b4a9a'], ['Wolfteam', '#c43c2c'], ['Mobile Legends', '#2c62d6'], ['Brawl Stars', '#f5b800'], ['Clash Royale', '#2a73d9']];
+const STEAM = { 'Counter-Strike 2': 730, 'Dota 2': 570, PUBG: 578080, 'Apex Legends': 1172470, Rust: 252490, 'Grand Theft Auto V': 271590, 'Red Dead Redemption 2': 1174180, 'Elden Ring': 1245620,
+  'Cyberpunk 2077': 1091500, Terraria: 105600, 'Stardew Valley': 413150, 'Euro Truck Simulator 2': 227300, 'Lethal Company': 1966720, Phasmophobia: 739630, Palworld: 1623730, 'Helldivers 2': 553850,
+  'Rocket League': 252950, 'Marvel Rivals': 2767030, 'The Finals': 2073850, Valheim: 892970, 'Dead by Daylight': 381210, 'Among Us': 945360, 'R.E.P.O.': 3241660, PEAK: 3527290,
+  'Rainbow Six Siege': 359550, 'Overwatch 2': 2357570, 'Forza Horizon 5': 1551360, 'Content Warning': 2881650, 'Sons of the Forest': 1326470, 'Fall Guys': 1097150, Warframe: 230410,
+  'Destiny 2': 1085660, 'The Witcher 3': 292030, Brawlhalla: 291550, 'Hollow Knight': 367520 };
+const gameCover = n => STEAM[n] ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${STEAM[n]}/header.jpg` : null;
 const gameColor = n => (GAMES.find(g => g[0] === n) || [, `hsl(${[...n].reduce((a, c) => a + c.charCodeAt(0), 0) % 360} 55% 45%)`])[1];
+const gameArt = (n, cls = '') => { const c = gameCover(n); return `<span class="gart ${cls}" style="--gc:${gameColor(n)}">${c ? `<img src="${c}" alt="" loading="lazy" onerror="this.remove()">` : ''}<em>${esc([...n.replace(/[^\p{L}\p{N} ]/gu, '')].filter((ch, i, arr) => i === 0 || arr[i - 1] === ' ').slice(0, 2).join('').toUpperCase() || n[0])}</em></span>`; };
+const mmss = ms => { const t = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
 const since2 = t => { const m = Math.max(0, Math.floor((Date.now() - t) / 60000)); return m < 1 ? 'az önce başladı' : m < 60 ? `${m} dakikadır` : `${Math.floor(m / 60)} sa ${m % 60} dk`; };
 function actLine(n) {
   const a = S.users[n]?.activities; if (!a) return '';
-  if (a.game) return `<span class="act-line game">${ic('gamepad')}<b>${esc(a.game.name)}</b> ${a.game.detail === 'Lobide' ? 'lobisinde' : 'oynuyor'}</span>`;
-  return `<span class="act-line music">${ic('spotify')}<b>${esc(a.music.title)}</b></span>`;
+  const r = a.game?.rich, SH = { 'League of Legends': 'LoL', 'Counter-Strike 2': 'CS2', 'Grand Theft Auto V': 'GTA V', 'Rainbow Six Siege': 'R6', 'Euro Truck Simulator 2': 'ETS2', 'Red Dead Redemption 2': 'RDR2' };
+  if (a.game) return `<span class="act-line game">${ic('gamepad')}<b>${esc(r?.state ? SH[a.game.name] || a.game.name : a.game.name)}</b> ${r?.state ? esc(r.state) : a.game.detail === 'Lobide' ? 'lobisinde' : 'oynuyor'}</span>`;
+  if (a.music) return `<span class="act-line music">${ic('spotify')}<b>${esc(a.music.title)}</b>${a.music.artist ? ` · ${esc(a.music.artist)}` : ''}</span>`;
+  return '';
 }
 function actCards(u) {
   const a = u?.activities; if (!a) return '';
   let h = '';
-  if (a.game) h += `<div class="act-card"><div class="act-art" style="background:${gameColor(a.game.name)}">${ic('gamepad')}</div><div class="act-info"><small>Oyun oynuyor</small><b>${esc(a.game.name)}</b>${a.game.detail ? `<span>${esc(a.game.detail)}</span>` : ''}<div class="elapsed" data-since="${a.game.start}">${since2(a.game.start)}</div></div></div>`;
-  if (a.music) h += `<div class="act-card"><div class="act-art" style="background:#1d3b2a">${a.music.art ? `<img src="${esc(a.music.art)}" alt="" style="width:100%;height:100%;object-fit:cover">` : ic('music')}<span class="badge-sp">${ic('spotify')}</span></div><div class="act-info"><small>Spotify'da dinliyor <span class="eq"><i></i><i></i><i></i></span></small><b>${esc(a.music.title)}</b>${a.music.artist ? `<span>${esc(a.music.artist)}</span>` : ''}<a class="elapsed" style="display:inline-block;color:#1ed760" href="https://open.spotify.com/search/${encodeURIComponent((a.music.artist + ' ' + a.music.title).trim())}" target="_blank" rel="noopener">Spotify'da aç ↗</a></div></div>`;
-  return `<div class="pc-sec"><h5>Şu an</h5>${h}</div>`;
+  if (a.game) { const g = a.game, r = g.rich || {}, st = r.start || g.start;
+    const chips = [r.phase && (r.ranked ? `<i class="rk on">Dereceli</i>` : r.mode ? `<i class="rk">Derecesiz</i>` : ''), r.rank && `<i class="rk tier">${esc(r.rank)}</i>`, r.extra && !r.state?.includes(r.extra) && `<i class="rk">${esc(r.extra)}</i>`].filter(Boolean).join('');
+    h += `<div class="act-card"><div class="act-art g ${r.img ? 'ri' : ''}">${r.img ? `<img src="${esc(r.img)}" alt="" onerror="this.remove()">` : ''}${gameArt(g.name)}${r.img ? `<span class="act-mini">${gameArt(g.name, 'xs')}</span>` : ''}</div>
+      <div class="act-info"><small>${esc(g.name)}${r.mode ? ' · ' + esc(r.mode) : g.detail ? ' · ' + esc(g.detail) : ''}</small><b>${esc(r.state || (g.detail === 'Lobide' ? 'Lobide' : 'Oynuyor'))}</b>${chips ? `<div class="rks">${chips}</div>` : ''}<div class="elapsed" data-since="${st}">${since2(st)}</div></div></div>`; }
+  if (a.music) { const m = a.music, q = encodeURIComponent(((m.artist || '') + ' ' + m.title).trim());
+    h += `<div class="act-card"><div class="act-art" style="background:#1d3b2a">${m.art ? `<img src="${esc(m.art)}" alt="" style="width:100%;height:100%;object-fit:cover">` : ic('music')}<span class="badge-sp">${ic('spotify')}</span></div><div class="act-info"><small>Spotify'da dinliyor <span class="eq"><i></i><i></i><i></i></span></small><b>${esc(m.title)}</b>${m.artist ? `<span>${esc(m.artist)}${m.album ? ' · ' + esc(m.album) : ''}</span>` : ''}
+      ${m.dur ? `<div class="mprog2" data-ms="${m.start}" data-dur="${m.dur}"><i style="width:${Math.min(100, (Date.now() - m.start) / m.dur * 100)}%"></i></div><div class="mtimes"><span data-mcur="${m.start}">${mmss(Math.min(m.dur, Date.now() - m.start))}</span><span>${mmss(m.dur)}</span></div>`
+        : `<a class="elapsed" style="display:inline-block;color:#1ed760" href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener">Spotify'da aç ↗</a>`}</div></div>`; }
+  return h ? `<div class="pc-sec"><h5>Şu an</h5>${h}</div>` : '';
 }
+setInterval(() => document.querySelectorAll('.mprog2[data-ms]').forEach(e => { const st = +e.dataset.ms, d = +e.dataset.dur; e.firstElementChild.style.width = Math.min(100, (Date.now() - st) / d * 100) + '%'; const c = e.parentElement.querySelector('[data-mcur]'); if (c) c.textContent = mmss(Math.min(d, Date.now() - st)); }), 1000);
 setInterval(() => document.querySelectorAll('.elapsed[data-since]').forEach(e => e.textContent = since2(+e.dataset.since)), 30e3);
 let profileOpen = null;
 socket.on('activity', ({ name, activities }) => {
   if (!S.users[name]) return;
   S.users[name].activities = activities;
-  renderMembers(); if (name === S.me) renderMe();
+  renderMembers(); if (name === S.me) { renderMe(); window.onMyActivity?.(); }
   if (profileOpen === name && $('#modal').classList.contains('open') && $('#modal-box').classList.contains('pcard')) showProfile(name);
   if (S.view === 'dm' && !S.channel) showFriends();
 });
@@ -3640,8 +3723,8 @@ function profSideHTML(n, u, { srv, preview } = {}) {
     </div></div>`;
 }
 function profAboutHTML(n, u) {
-  const next = 100 * (u.level || 1) - (u.xp || 0);
-  return `${u.bio ? `<section><h5>Hakkımda</h5><div class="pf-bio">${fmt(u.bio)}</div></section>` : n === S.me ? `<section><h5>Hakkımda</h5><div class="pf-bio empty">Kendinden biraz bahset, profilini düzenle.</div></section>` : ''}
+  const next = 100 * (u.level || 1) - (u.xp || 0), ac = actCards(u);
+  return `${ac ? `<section class="pf-now">${ac.replace('<div class="pc-sec"><h5>Şu an</h5>', '<h5>Şu an</h5><div class="pf-nowc">')}</section>` : ''}${u.bio ? `<section><h5>Hakkımda</h5><div class="pf-bio">${fmt(u.bio)}</div></section>` : n === S.me ? `<section><h5>Hakkımda</h5><div class="pf-bio empty">Kendinden biraz bahset, profilini düzenle.</div></section>` : ''}
     ${Object.keys(u.socials || {}).length ? `<section><h5>Bağlantılar</h5><div class="psocs">${socialsHTML(u)}</div></section>` : ''}
     <section class="pf-grid"><div class="pf-lvl"><div class="pl-h"><b>Seviye ${u.level || 1}</b>${u.streak ? `<span class="streak">${ic('fire')} ${u.streak} gün seri</span>` : ''}</div>${xpBar(u)}<small>Sonraki seviyeye yaklaşık <b>${Math.max(1, next)}</b> mesaj</small></div>
       <div class="pf-stats"><div><b>${u.xp || 0}</b><span>Mesaj</span></div><div><b>${u.friendCount || 0}</b><span>Arkadaş</span></div><div><b>${u.badges?.length || 0}</b><span>Rozet</span></div></div></section>
@@ -3717,7 +3800,7 @@ function voicePop(n, anchor, chId) {
   const tags = [speaking.has(n) && `<span class="vt-on">${ic('volume')} Konuşuyor</span>`, fl.m && `<span class="vt-m">${ic('micoff')} Mikrofonu kapalı</span>`, live && `<span class="vt-l">● Yayında</span>`, fl.cam && `<span>${ic('video')} Kamerası açık</span>`, stg && `<span>${ic('stage')} ${onStage ? 'Konuşmacı' : 'Dinleyici'}</span>`].filter(Boolean).join('');
   const p = document.createElement('div'); p.className = 'vpop'; p.setAttribute('role', 'dialog');
   if (themeOf(u)) { p.classList.add('themed'); p.style.cssText = themeVars(u); }
-  const hasB = !!badgeChips(u, 22), act = !inVc && actLine(n), dshort = t => new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+  const hasB = !!badgeChips(u, 22), act = !inVc && actCards(u), dshort = t => new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
   const stTxt = online ? STATUS[stOf(n)][0] : 'Çevrimdışı';
   p.innerHTML = `<div class="vp-banner" style="${banStyle(n, u)}"><button class="vp-ico" id="vp-prof" title="Tam profili aç" aria-label="Tam profili aç">${ic('expand')}</button></div>
     <div class="vp-head"><button class="vp-avw ${speaking.has(n) ? 'vp-spk' : ''}" id="vp-avb" aria-label="Tam profili aç">${pAv(n, u, 88)}<span class="vp-avh">${ic('user')}Profili<br>görüntüle</span></button>
@@ -3727,7 +3810,7 @@ function voicePop(n, anchor, chId) {
       <div class="vp-un"><span>@${esc(n)}</span>${u.pronouns ? `<i>•</i><span>${esc(u.pronouns)}</span>` : ''}${badge(roleOf(srv, n))}</div>
       ${hasB ? `<div class="vp-badges">${badgesHTML(u, 'sm')}</div>` : ''}
       ${tags ? `<div class="vp-tags">${tags}</div>` : ''}
-      ${act ? `<div class="vp-act">${act}</div>` : ''}
+      ${act ? `<div class="vp-sec vp-now">${act.replace('<div class="pc-sec">', '<div>')}</div>` : ''}
       ${me ? '' : '<button class="vp-mut" id="vp-mut"></button>'}
       ${!inVc && u.bio ? `<div class="vp-sec"><h5>Hakkımda</h5><div class="vp-bio">${fmt(u.bio)}</div></div>` : ''}
       ${myRoles.length ? `<div class="vp-sec"><h5>Roller</h5><div class="vp-roles">${myRoles.map(r => `<span><i style="background:${r.color}"></i>${esc(r.name)}</span>`).join('')}</div></div>` : ''}
@@ -5833,8 +5916,37 @@ function adminPanel(el, sub = 'reports') {
   }
 }
 
+// ================= Etkinlik sayfası (sadece otomatik algılama) =================
+const RICH_GAMES = [['League of Legends', 'Şampiyon, mod (dereceli / derecesiz), derece ve LP, KDA, maç süresi'], ['Valorant', 'Mod, harita, skor, derece, ajan seçimi'],
+  ['Counter-Strike 2', 'Harita, mod, skor, KDA ve MVP'], ['Minecraft', 'Sürüm, tek ya da çok oyunculu']];
+function actPageHTML() {
+  const d = !!window.kankaDesktop;
+  return `<div class="st-page act2"><h3>Etkinlik</h3><p class="hint">Bilgisayarında gerçekten ne yapıyorsan o görünür. Oyunu kapatınca ya da şarkıyı durdurunca kendiliğinden kalkar.</p>
+    <div class="ax-now" id="ax-now"></div>
+    <div class="ax-hero ${d ? 'on' : ''}"><div class="ax-ai">${ic(d ? 'activity' : 'download')}</div><div><b>${d ? 'Kanka Chat masaüstü' : 'Masaüstü uygulamasıyla otomatik'}</b>
+      <span>${d ? 'Açık oyununu, maç bilgilerini ve Spotify şarkını kendiliğinden algılıyor.' : 'Tarayıcılar güvenlik nedeniyle bilgisayarındaki programları göremez. Uygulamayı kur; oyunun, maç detayların ve Spotify şarkın kendiliğinden görünsün.'}</span>
+      <em id="ax-ver"></em></div><span class="st off" id="kd-st">…</span>${d ? '' : `<a class="primary" href="/indir/KankaChat-Kurulum.exe" download>${ic('download')}İndir (Windows)</a>`}</div>
+    <h5 class="ax-h">Ayrıntılı gösterilenler</h5>
+    <div class="ax-sup">${RICH_GAMES.map(([g, t]) => `<div>${gameArt(g, 'sm')}<span><b>${g}</b><small>${t}</small></span></div>`).join('')}
+      <div><span class="gart sm" style="--gc:#1d3b2a"><em>${ic('spotify')}</em></span><span><b>Spotify</b><small>Şarkı, sanatçı, albüm kapağı ve ilerleme çubuğu</small></span></div>
+      <div><span class="gart sm" style="--gc:#3a2c24"><em>${ic('gamepad')}</em></span><span><b>+70 oyun daha</b><small>Fortnite, Minecraft Bedrock, GTA V, Roblox… oyun adı ve süresi</small></span></div></div>
+    <p class="hint ax-foot">CS2 ayrıntıları için uygulama kurulduktan sonra oyunu bir kez yeniden başlatman yeterli. Riot oyunlarında bilgiler oyunun kendi istemcisinden okunur, hesabına giriş yapılmaz.</p></div>`;
+}
+function wireActPage() {
+  const now = () => {
+    const el = $('#ax-now'); if (!el) return;
+    const c = actCards(S.users[S.me]);
+    el.innerHTML = `<h5>Şu an herkes bunu görüyor</h5>` + (c ? `<div class="ax-cards">${c.replace(/^<div class="pc-sec"><h5>Şu an<\/h5>/, '').replace(/<\/div>$/, '')}</div>`
+      : `<div class="ax-empty">${ic('sparkle')}<span><b>Şu an bir şey algılanmadı</b>${window.kankaDesktop ? 'Bir oyun aç ya da Spotify\'da şarkı çal, birkaç saniye içinde burada belirir.' : 'Masaüstü uygulaması açıkken oyunların ve şarkıların burada belirir.'}</span></div>`);
+  };
+  window.onMyActivity = now; now();
+  socket.emit('presenceKey', {}, r => { const e = $('#kd-st'); if (!e) return; e.textContent = r.connected ? 'Bağlı' : window.kankaDesktop ? 'Bağlanıyor…' : 'Kurulu değil'; e.className = 'st ' + (r.connected ? 'on' : 'off');
+    if (r.connected && !window.kankaDesktop) { const h = e.closest('.ax-hero'); h.classList.add('on'); h.querySelector('.primary')?.remove(); h.querySelector('b').textContent = 'Masaüstü uygulaman açık'; h.querySelector('span').textContent = 'Bilgisayarındaki Kanka Chat oyununu ve şarkını algılıyor. Buradan da canlı görebilirsin.'; h.querySelector('.ax-ai').innerHTML = ic('activity'); } });
+  window.kankaDesktop?.info?.().then(i => { const e = $('#ax-ver'); if (e && i) e.innerHTML = `Sürüm ${esc(i.version)}${i.version < '1.0.8' ? ' · <b style="color:var(--red)">maç detayları için güncelle (uygulamayı kapatıp aç)</b>' : ''}`; }).catch(() => {});
+}
+
 function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); }
-function closeModal() { $('#modal').classList.remove('open'); }
+function closeModal() { $('#modal').classList.remove('open'); window.onMyActivity = null; }
 $('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
 function form(title, hint, fields, onOk) {
   modal(`<form id="mform"><h3>${title}</h3>${hint ? `<p class="hint">${hint}</p>` : '<div style="height:10px"></div>'}` +

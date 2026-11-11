@@ -164,13 +164,42 @@ async function changeServer() {
 }
 
 // ---------------- Oyun ve Spotify algılama ----------------
-const PS_DETECT = 'WwBDAG8AbgBzAG8AbABlAF0AOgA6AE8AdQB0AHAAdQB0AEUAbgBjAG8AZABpAG4AZwA9AFsAVABlAHgAdAAuAEUAbgBjAG8AZABpAG4AZwBdADoAOgBVAFQARgA4AAoARwBlAHQALQBQAHIAbwBjAGUAcwBzACAAUwBwAG8AdABpAGYAeQAsAGoAYQB2AGEAdwAgAC0ARQByAHIAbwByAEEAYwB0AGkAbwBuACAAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAgAHwAIABXAGgAZQByAGUALQBPAGIAagBlAGMAdAAgAE0AYQBpAG4AVwBpAG4AZABvAHcAVABpAHQAbABlACAAfAAgAEYAbwByAEUAYQBjAGgALQBPAGIAagBlAGMAdAAgAHsAIAAkAF8ALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAArACAAJwB8ACcAIAArACAAJABfAC4ATQBhAGkAbgBXAGkAbgBkAG8AdwBUAGkAdABsAGUAIAB9AAoAdAByAHkAIAB7AAoAIAAgAEEAZABkAC0AVAB5AHAAZQAgAC0AQQBzAHMAZQBtAGIAbAB5AE4AYQBtAGUAIABTAHkAcwB0AGUAbQAuAFIAdQBuAHQAaQBtAGUALgBXAGkAbgBkAG8AdwBzAFIAdQBuAHQAaQBtAGUACgAgACAAJABhAHQAIAA9ACAAKABbAFMAeQBzAHQAZQBtAC4AVwBpAG4AZABvAHcAcwBSAHUAbgB0AGkAbQBlAFMAeQBzAHQAZQBtAEUAeAB0AGUAbgBzAGkAbwBuAHMAXQAuAEcAZQB0AE0AZQB0AGgAbwBkAHMAKAApACAAfAAgAFcAaABlAHIAZQAtAE8AYgBqAGUAYwB0ACAAewAgACQAXwAuAE4AYQBtAGUAIAAtAGUAcQAgACcAQQBzAFQAYQBzAGsAJwAgAC0AYQBuAGQAIAAkAF8ALgBHAGUAdABQAGEAcgBhAG0AZQB0AGUAcgBzACgAKQAuAEMAbwB1AG4AdAAgAC0AZQBxACAAMQAgAC0AYQBuAGQAIAAkAF8ALgBHAGUAdABQAGEAcgBhAG0AZQB0AGUAcgBzACgAKQBbADAAXQAuAFAAYQByAGEAbQBlAHQAZQByAFQAeQBwAGUALgBOAGEAbQBlACAALQBlAHEAIAAnAEkAQQBzAHkAbgBjAE8AcABlAHIAYQB0AGkAbwBuAGAAMQAnACAAfQApAFsAMABdAAoAIAAgAGYAdQBuAGMAdABpAG8AbgAgAFcAKAAkAG8AcAAsACAAJAB0ACkAIAB7ACAAJAB0AGEAcwBrACAAPQAgACQAYQB0AC4ATQBhAGsAZQBHAGUAbgBlAHIAaQBjAE0AZQB0AGgAbwBkACgAJAB0ACkALgBJAG4AdgBvAGsAZQAoACQAbgB1AGwAbAAsACAAQAAoACQAbwBwACkAKQA7ACAAJABuAHUAbABsACAAPQAgACQAdABhAHMAawAuAFcAYQBpAHQAKAAzADAAMAAwACkAOwAgACQAdABhAHMAawAuAFIAZQBzAHUAbAB0ACAAfQAKACAAIAAkAE0AIAA9ACAAWwBXAGkAbgBkAG8AdwBzAC4ATQBlAGQAaQBhAC4AQwBvAG4AdAByAG8AbAAuAEcAbABvAGIAYQBsAFMAeQBzAHQAZQBtAE0AZQBkAGkAYQBUAHIAYQBuAHMAcABvAHIAdABDAG8AbgB0AHIAbwBsAHMAUwBlAHMAcwBpAG8AbgBNAGEAbgBhAGcAZQByACwAIABXAGkAbgBkAG8AdwBzAC4ATQBlAGQAaQBhAC4AQwBvAG4AdAByAG8AbAAsACAAQwBvAG4AdABlAG4AdABUAHkAcABlACAAPQAgAFcAaQBuAGQAbwB3AHMAUgB1AG4AdABpAG0AZQBdAAoAIAAgACQAUAAgAD0AIABbAFcAaQBuAGQAbwB3AHMALgBNAGUAZABpAGEALgBDAG8AbgB0AHIAbwBsAC4ARwBsAG8AYgBhAGwAUwB5AHMAdABlAG0ATQBlAGQAaQBhAFQAcgBhAG4AcwBwAG8AcgB0AEMAbwBuAHQAcgBvAGwAcwBTAGUAcwBzAGkAbwBuAE0AZQBkAGkAYQBQAHIAbwBwAGUAcgB0AGkAZQBzACwAIABXAGkAbgBkAG8AdwBzAC4ATQBlAGQAaQBhAC4AQwBvAG4AdAByAG8AbAAsACAAQwBvAG4AdABlAG4AdABUAHkAcABlACAAPQAgAFcAaQBuAGQAbwB3AHMAUgB1AG4AdABpAG0AZQBdAAoAIAAgACQAbQBnAHIAIAA9ACAAVwAgACgAJABNADoAOgBSAGUAcQB1AGUAcwB0AEEAcwB5AG4AYwAoACkAKQAgACQATQAKACAAIABmAG8AcgBlAGEAYwBoACAAKAAkAHgAIABpAG4AIAAkAG0AZwByAC4ARwBlAHQAUwBlAHMAcwBpAG8AbgBzACgAKQApACAAewAKACAAIAAgACAAaQBmACAAKABbAHMAdAByAGkAbgBnAF0AJAB4AC4ARwBlAHQAUABsAGEAeQBiAGEAYwBrAEkAbgBmAG8AKAApAC4AUABsAGEAeQBiAGEAYwBrAFMAdABhAHQAdQBzACAALQBuAGUAIAAnAFAAbABhAHkAaQBuAGcAJwApACAAewAgAGMAbwBuAHQAaQBuAHUAZQAgAH0ACgAgACAAIAAgACQAcAAgAD0AIABXACAAKAAkAHgALgBUAHIAeQBHAGUAdABNAGUAZABpAGEAUAByAG8AcABlAHIAdABpAGUAcwBBAHMAeQBuAGMAKAApACkAIAAkAFAACgAgACAAIAAgACcATQB8ACcAIAArACAAJAB4AC4AUwBvAHUAcgBjAGUAQQBwAHAAVQBzAGUAcgBNAG8AZABlAGwASQBkACAAKwAgACcAfAAnACAAKwAgACQAcAAuAEEAcgB0AGkAcwB0ACAAKwAgACcAfAAnACAAKwAgACQAcAAuAFQAaQB0AGwAZQAKACAAIAB9AAoAfQAgAGMAYQB0AGMAaAAgAHsAfQAKAA==';
-let games = {}, lastStatus = 'Etkinlik: bekleniyor';
+const RICH = require('./rich');
+// PowerShell betikleri: Türkçe karakterler bozulmasın diye UTF-8, komut satırına UTF-16 base64 olarak verilir
+const enc = src => Buffer.from(src, 'utf16le').toString('base64');
+const PS_MEDIA = enc(`[Console]::OutputEncoding=[Text.Encoding]::UTF8
+Get-Process Spotify,javaw -ErrorAction SilentlyContinue | Where-Object MainWindowTitle | ForEach-Object { 'T' + (@{ p = $_.ProcessName; t = $_.MainWindowTitle } | ConvertTo-Json -Compress) }
+try {
+  Add-Type -AssemblyName System.Runtime.WindowsRuntime
+  $at = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation\`1' })[0]
+  function W($op, $t) { $task = $at.MakeGenericMethod($t).Invoke($null, @($op)); $null = $task.Wait(3000); $task.Result }
+  $M = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType = WindowsRuntime]
+  $P = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties, Windows.Media.Control, ContentType = WindowsRuntime]
+  $mgr = W ($M::RequestAsync()) $M
+  foreach ($x in $mgr.GetSessions()) {
+    if ([string]$x.GetPlaybackInfo().PlaybackStatus -ne 'Playing') { continue }
+    $p = W ($x.TryGetMediaPropertiesAsync()) $P
+    $tl = $x.GetTimelineProperties()
+    $age = 0; try { $age = [int]([DateTimeOffset]::Now - $tl.LastUpdatedTime).TotalMilliseconds } catch {}
+    'M' + (@{ app = $x.SourceAppUserModelId; artist = $p.Artist; title = $p.Title; album = $p.AlbumTitle; pos = [int]$tl.Position.TotalMilliseconds; end = [int]$tl.EndTime.TotalMilliseconds; age = $age } | ConvertTo-Json -Compress)
+  }
+} catch {}`);
+const PS_LOL = enc(`(Get-CimInstance Win32_Process -Filter "Name='LeagueClientUx.exe'" -ErrorAction SilentlyContinue | Select-Object -First 1).CommandLine`);
+const ps = b64 => run('powershell', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', b64]);
+let games = {}, lastStatus = 'Etkinlik: bekleniyor', lolPid = null;
 const run = (cmd, args) => new Promise(res => execFile(cmd, args, { windowsHide: true, maxBuffer: 8 * 1024 * 1024 }, (e, out) => res(e ? '' : String(out))));
 const csvRow = l => (l.match(/"([^"]*)"/g) || []).map(x => x.slice(1, -1));
 
 async function loadGames() {
   try { const r = await fetch(config.server + '/api/presence/games', { signal: AbortSignal.timeout(8000) }); if (r.ok) games = await r.json(); } catch {}
+}
+// CS2 için Game State Integration: Steam klasörünü bul, ayar dosyasını yaz, yerel dinleyiciyi aç
+async function setupCS2() {
+  if (process.platform !== 'win32') return;
+  RICH.startGSI();
+  const out = await run('reg', ['query', 'HKCU\\Software\\Valve\\Steam', '/v', 'SteamPath']);
+  const sp = out.match(/SteamPath\s+REG_SZ\s+(.+)/)?.[1]?.trim().replace(/\//g, '\\');
+  RICH.installGSI([sp, 'C:\\Program Files (x86)\\Steam', 'C:\\Program Files\\Steam'].filter(Boolean));
 }
 
 async function detect() {
@@ -185,28 +214,43 @@ async function detect() {
     if (score > best) { best = score; game = hit[0]; detail = hit[1] || ''; }
     if (best === 2) break;
   }
-  // Pencere başlıkları (Spotify şarkısı, Minecraft Java) — Türkçe karakterler bozulmasın diye PowerShell ile UTF-8 okunur
-  const names = new Set(lines.map(l => (csvRow(l)[0] || '').toLowerCase()));
+  const names = new Map(lines.map(l => { const r = csvRow(l); return [(r[0] || '').toLowerCase(), r[1]]; }));
+  // Oyunların kendi yerel servislerinden ayrıntı: şampiyon, mod, derece, skor, KDA
+  let rich = null;
+  try {
+    if (game === 'League of Legends' && names.has('leagueclientux.exe')) {
+      const pid = names.get('leagueclientux.exe'); if (pid !== lolPid) { lolPid = pid; RICH.resetLol(); }
+      rich = await RICH.lolRich(() => ps(PS_LOL));
+    } else if (game === 'Valorant') rich = await RICH.valorantRich();
+    else if (game === 'Counter-Strike 2') rich = RICH.cs2Rich();
+  } catch { rich = null; }
+  // Pencere başlıkları ve Windows medya oturumu (Spotify şarkısı, süresi, Minecraft sürümü)
   let titles = [], media = [];
-  if (names.has('spotify.exe') || (!game && names.has('javaw.exe'))) {
-    const out = await run('powershell', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', PS_DETECT]);
-    for (const l of out.split(/\r?\n/).filter(Boolean)) {
-      const p = l.split('|');
-      if (p[0] === 'M') media.push({ app: (p[1] || '').toLowerCase(), artist: p[2] || '', title: p.slice(3).join('|') });
-      else titles.push([p[0].toLowerCase(), p.slice(1).join('|').trim()]);
+  if (names.has('spotify.exe') || (!game && names.has('javaw.exe')) || game === 'Minecraft') {
+    for (const l of (await ps(PS_MEDIA)).split(/\r?\n/).filter(Boolean)) {
+      try { const j = JSON.parse(l.slice(1)); if (l[0] === 'M') media.push({ ...j, app: String(j.app || '').toLowerCase() }); else if (l[0] === 'T') titles.push([String(j.p).toLowerCase(), String(j.t || '').trim()]); } catch {}
     }
   }
-  if (!game && titles.some(([p, t]) => p === 'javaw' && t.startsWith('Minecraft'))) { game = 'Minecraft'; detail = 'Java'; }
+  const mc = titles.find(([p, t]) => p === 'javaw' && t.startsWith('Minecraft'));
+  if (mc && (!game || game === 'Minecraft')) {
+    game = 'Minecraft'; const v = mc[1].match(/Minecraft\*?\s+([\d.]+)/)?.[1], t = mc[1];
+    const where = /Multiplayer|Çok Oyunculu/i.test(t) ? 'Çok oyunculu' : /Singleplayer|Tek Oyunculu/i.test(t) ? 'Tek oyunculu' : /LAN/i.test(t) ? 'LAN' : '';
+    detail = ['Java', v].filter(Boolean).join(' ');
+    if (where) rich = { mode: where, state: v ? `Java ${v}` : 'Java' };
+  }
   let music = null;
-  // 1) Windows medya oturumu: Spotify küçültülmüş ya da tepsideyken de çalışır
+  // 1) Windows medya oturumu: Spotify küçültülmüş ya da tepsideyken de çalışır, süre ve konum da gelir
   const sm = media.find(m => m.app.includes('spotify') && m.title);
-  if (sm) music = { artist: sm.artist, title: sm.title };
+  if (sm) {
+    music = { artist: sm.artist || '', title: sm.title, album: sm.album || '' };
+    if (sm.end > 1000) { music.dur = sm.end; music.pos = Math.min(sm.end, Math.max(0, sm.pos + Math.max(0, sm.age || 0))); }
+  }
   // 2) Yedek: pencere başlığı "Sanatçı - Şarkı"
   if (!music) {
     const sp = titles.find(([p, t]) => p === 'spotify' && !/^Spotify/i.test(t) && t.includes(' - '));
     if (sp) { const t = sp[1], i = t.indexOf(' - '); music = { artist: t.slice(0, i), title: t.slice(i + 3) }; }
   }
-  return { game, detail, music };
+  return { game, detail, music, rich };
 }
 
 async function presenceLoop() {
@@ -214,7 +258,7 @@ async function presenceLoop() {
     const st = await detect();
     try {
       await fetch(config.server + '/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: config.presenceKey, ...st }), signal: AbortSignal.timeout(8000) });
-      lastStatus = st.game ? `Oynuyor: ${st.game}` : st.music ? `Dinliyor: ${st.music.title}` : 'Etkinlik: boşta';
+      lastStatus = st.game ? `Oynuyor: ${st.game}${st.rich?.state ? ' · ' + st.rich.state : ''}` : st.music ? `Dinliyor: ${st.music.title}` : 'Etkinlik: boşta';
     } catch { lastStatus = 'Etkinlik: sunucuya ulaşılamadı'; }
   }
   setTimeout(presenceLoop, 10000);
@@ -264,6 +308,7 @@ app.whenReady().then(async () => {
   setSplash('Sunucuya bağlanılıyor…', config.server.replace(/^https?:\/\//, ''));
   createWindow(); buildTray();
   await loadGames(); setInterval(loadGames, 10 * 60e3);
+  setupCS2().catch(() => {});
   presenceLoop();
 });
 app.on('before-quit', () => { quitting = true; });

@@ -72,22 +72,40 @@ async function albumArt(title, artist) {
 }
 function activitiesOf(u) {
   const auto = u.auto && Date.now() - u.auto.at < 45e3 ? u.auto : null;
-  const game = auto?.game || u.manual?.game || null;
-  const music = auto?.music || u.manual?.music || null;
-  return game || music ? { game, music, auto: !!auto } : null;
+  return auto && (auto.game || auto.music) ? { game: auto.game, music: auto.music, auto: true } : null;
 }
 const pushActivity = u => io.emit('activity', { name: u.name, activities: activitiesOf(u) });
-app.post('/api/presence', async (req, res) => {
-  const { key, game, detail, music } = req.body || {};
+// Oyunun kendi servisinden gelen ayrıntılar (şampiyon, mod, derece, skor). Resimler sadece bilinen oyun kaynaklarından.
+const RICH_IMG = /^https:\/\/(ddragon\.leagueoflegends\.com|media\.valorant-api\.com|cdn\.communitydragon\.org)\//;
+function cleanRich(r) {
+  if (!r || typeof r !== 'object') return null;
+  const o = {};
+  for (const k of ['phase', 'mode', 'rank', 'state', 'champ', 'map', 'extra']) if (typeof r[k] === 'string' && r[k].trim()) o[k] = clean(r[k], 80);
+  if (typeof r.img === 'string' && RICH_IMG.test(r.img)) o.img = r.img.slice(0, 300);
+  if (r.ranked) o.ranked = true;
+  if (Array.isArray(r.kda) && r.kda.length === 3) o.kda = r.kda.map(x => Math.max(0, Math.min(999, +x || 0)));
+  const st = +r.start; if (st && st > Date.now() - 6 * 3600e3 && st <= Date.now() + 5e3) o.start = st;
+  return Object.keys(o).length ? o : null;
+}
+app.post('/api/presence', express.json({ limit: '16kb' }), async (req, res) => {
+  const { key, game, detail, music, rich } = req.body || {};
   const u = key && Object.values(db.users).find(x => x.presenceKey === key);
   if (!u) return res.status(401).json({ error: 'Anahtar geçersiz' });
-  const prev = u.auto && Date.now() - u.auto.at < 45e3 ? u.auto : {};
+  const prev = u.auto && Date.now() - u.auto.at < 45e3 ? u.auto : {}, now = Date.now();
   const g = typeof game === 'string' && game.trim() ? clean(game, 60) : null;
-  const m = music && typeof music.title === 'string' && music.title.trim() ? { title: clean(music.title, 120), artist: clean(music.artist, 120) } : null;
-  const next = { at: Date.now(),
-    game: g ? { name: g, detail: clean(detail, 40), start: prev.game?.name === g ? prev.game.start : Date.now() } : null,
-    music: m ? { ...m, start: prev.music?.title === m.title ? prev.music.start : Date.now(), art: prev.music?.title === m.title ? prev.music.art : null } : null };
-  const changed = JSON.stringify([prev.game?.name, prev.game?.detail, prev.music?.title]) !== JSON.stringify([next.game?.name, next.game?.detail, next.music?.title]) || !prev.at;
+  const m = music && typeof music.title === 'string' && music.title.trim() ? { title: clean(music.title, 120), artist: clean(music.artist, 120), album: clean(music.album, 120) || null } : null;
+  if (m) {
+    const dur = +music.dur, pos = +music.pos, same = prev.music?.title === m.title && prev.music?.artist === m.artist;
+    if (dur > 1000 && dur < 3600e3 && pos >= 0 && pos <= dur) { m.dur = Math.round(dur); m.start = now - Math.round(pos); if (same && prev.music.start && Math.abs(prev.music.start - m.start) < 3000) m.start = prev.music.start; }
+    else m.start = same ? prev.music.start : now;
+    m.art = same ? prev.music.art : null;
+  }
+  const r = g ? cleanRich(rich) : null;
+  const next = { at: now,
+    game: g ? { name: g, detail: clean(detail, 40), start: prev.game?.name === g ? prev.game.start : now, ...(r ? { rich: r } : {}) } : null,
+    music: m };
+  const sig = x => JSON.stringify([x.game?.name, x.game?.detail, x.game?.rich && { ...x.game.rich }, x.music?.title, x.music?.artist, x.music?.start]);
+  const changed = sig(prev) !== sig(next) || !prev.at;
   u.auto = next;
   if (changed) {
     pushActivity(u);
@@ -138,6 +156,7 @@ function ensureOwners() {
   for (const s of db.servers) if (!s.owner && first) s.owner = first.name;
 }
 ensureOwners();
+for (const u of Object.values(db.users)) delete u.manual; // elle etkinlik kaldırıldı
 
 // ---------- Gece yedeği: her gün bir kopya, son 7 gün saklanır ----------
 const BACKUPS = path.join(DATA_DIR, 'yedekler');
@@ -1685,14 +1704,6 @@ io.on('connection', socket => {
   });
 
   // ----- Etkinlik -----
-  socket.on('setActivity', ({ game, music } = {}, cb = () => {}) => {
-    const u = db.users[me]; if (!u) return;
-    const g = clean(game, 60), t = clean(music?.title, 120);
-    u.manual = { game: g ? { name: g, start: u.manual?.game?.name === g ? u.manual.game.start : Date.now() } : null,
-      music: t ? { title: t, artist: clean(music?.artist, 120), start: Date.now(), art: null } : null };
-    save(); pushActivity(u); cb({ ok: true });
-    if (u.manual.music) albumArt(t, u.manual.music.artist).then(a => { if (a && u.manual?.music?.title === t) { u.manual.music.art = a; save(); pushActivity(u); } });
-  });
   socket.on('presenceKey', ({ renew } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
     if (!u.presenceKey || renew) { u.presenceKey = crypto.randomBytes(18).toString('hex'); save(); }

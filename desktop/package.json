@@ -1,6 +1,6 @@
 {
   "name": "kanka-chat",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Kanka Chat masaüstü uygulaması",
   "main": "main.js",
   "author": "Kanka Chat",
@@ -17,6 +17,7 @@
     "copyright": "Kanka Chat",
     "files": [
       "main.js",
+      "rich.js",
       "preload.js",
       "splash.html",
       "yukleniyor.gif",
