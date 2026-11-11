@@ -1120,6 +1120,7 @@
   .invnote { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12.5px; margin-top: 14px; }
   .invnote .ic { width: 15px; height: 15px; flex-shrink: 0; }
 
+  body:has(#modal.open) .ktip { display: none; }
   .ktip { position: fixed; z-index: 70; width: 290px; padding: 14px 16px 12px; border-radius: 16px; background: linear-gradient(160deg, #3d281c, #2b211c); border: 1px solid #5a3e2e; box-shadow: 0 18px 44px rgba(0,0,0,.5); animation: popIn .3s var(--ease-out) both; }
   .ktip.out { animation: tipOut .2s ease forwards; }
   @keyframes tipOut { to { opacity: 0; transform: scale(.95); } }
@@ -1281,6 +1282,58 @@
   .ct-act .ic { width: 15px; height: 15px; }
   .ct-empty { margin: 2px 0 2px 18px; padding: 12px; border-radius: 11px; border: 1px dashed var(--line); color: var(--muted); font-size: 12.5px; text-align: center; }
   @media (hover: none) { .ct-act { opacity: 1; } #side-list .room .rset { opacity: .7; } }
+  /* --- odalar 2 --- */
+  .ctype.g2 { grid-template-columns: 1fr 1fr; }
+  .ctype.g2 .ct { padding: 11px 12px; } .ctype.g2 .ct small { font-size: 12px; }
+  #side-list .vlim { font-style: normal; font-size: 11px; font-weight: 900; padding: 2px 7px; border-radius: 99px; background: rgba(255,255,255,.06); color: var(--muted); margin-left: auto; flex-shrink: 0; }
+  #side-list .vlim.full { background: rgba(229,72,77,.18); color: #ff8a8d; }
+  #side-list .vlim + .lockic, #side-list .vlim ~ .rset { margin-left: 4px; }
+  #side-list .room.cmuted { opacity: .5; }
+  .vabar { display: flex; align-items: center; gap: 8px; margin: 8px 8px 4px; padding: 9px 10px; border-radius: 12px; background: rgba(111,211,255,.1); border: 1px solid rgba(111,211,255,.3); font-size: 12.5px; color: #bfe9ff; }
+  .vabar .ic { width: 16px; height: 16px; flex-shrink: 0; } .vabar span { flex: 1; min-width: 0; } .vabar b { color: #fff; }
+  .vabar button { padding: 5px 10px; border-radius: 8px; background: rgba(111,211,255,.2); color: #fff; font-weight: 800; font-size: 12px; }
+  .followb { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 800; font-size: 13px; margin-right: 6px; }
+  .followb .ic { width: 15px; height: 15px; }
+  .xfrom { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; background: rgba(255,179,71,.12); color: var(--accent-2); font-size: 11px; font-weight: 800; margin-left: 6px; vertical-align: middle; }
+  .xfrom .ic { width: 11px; height: 11px; }
+  #slowtag { display: flex; align-items: center; gap: 6px; position: absolute; top: -26px; left: 16px; font-size: 12px; font-weight: 800; color: var(--muted); }
+  #slowtag .ic { width: 13px; height: 13px; } #slowtag.wait { color: var(--accent-2); }
+  #compose { position: relative; }
+  .krange { width: 100%; accent-color: var(--accent); }
+  .lim-v { color: var(--accent); margin-left: 6px; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .seg button { padding: 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font-weight: 900; text-align: left; }
+  .seg button small { display: block; color: var(--muted); font-weight: 700; font-size: 12px; margin-top: 2px; }
+  .seg button.on { border-color: var(--accent); background: var(--accent-soft); }
+  .fp-b { width: 100%; padding: 12px 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font: inherit; font-size: 14.5px; resize: vertical; outline: none; }
+  .fp-b:focus { border-color: var(--accent); }
+  .addpop { width: 260px; padding: 8px; }
+  .addpop input { width: 100%; padding: 9px 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); font: inherit; font-weight: 700; outline: none; margin-bottom: 6px; }
+  .addpop #ap-l { max-height: 260px; overflow-y: auto; }
+  .addpop h5 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 8px 8px 4px; }
+  .addpop button { gap: 8px; } .addpop button .av { width: 22px; height: 22px; font-size: 10px; flex-shrink: 0; } .addpop .rdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  #stagebar { margin: -2px -2px 10px; padding: 10px; border-radius: 14px; background: linear-gradient(135deg, rgba(255,138,76,.14), rgba(255,138,76,.04)); border: 1px solid rgba(255,138,76,.3); }
+  #stagebar .sg-h { display: flex; align-items: center; gap: 6px; font-size: 12.5px; } #stagebar .sg-h .ic { width: 16px; height: 16px; color: var(--accent); }
+  #stagebar .sg-h span { color: var(--muted); margin-left: auto; font-size: 11.5px; }
+  #stagebar .sg-b { display: flex; gap: 6px; margin-top: 8px; }
+  .sg-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font-weight: 800; font-size: 13px; }
+  .sg-btn .ic { width: 15px; height: 15px; }
+  .sg-btn.hl { background: var(--accent); border-color: var(--accent); color: #fff; } .sg-btn.on { border-color: var(--accent-2); color: var(--accent-2); }
+  .sg-btn.req { flex: 0 0 auto; background: rgba(255,179,71,.15); border-color: rgba(255,179,71,.4); color: var(--accent-2); animation: discPulse 2s infinite; }
+  body.forumv #compose, body.forumv #typing { display: none !important; }
+  .forum { padding: 22px clamp(14px, 3vw, 34px) 40px; max-width: 980px; width: 100%; margin: 0 auto; }
+  .fo-head { display: flex; align-items: center; gap: 14px; justify-content: space-between; margin-bottom: 18px; }
+  .fo-head h2 { display: flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 900; } .fo-head h2 .ic { width: 24px; height: 24px; color: var(--accent); }
+  .fo-head p { color: var(--muted); margin-top: 4px; }
+  .fo-list { display: grid; gap: 10px; }
+  .fo-card { display: block; width: 100%; text-align: left; padding: 16px 18px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font: inherit; cursor: pointer; transition: border-color .15s, transform .18s var(--ease-out), box-shadow .18s; animation: fadeUp .35s var(--ease-out) both; }
+  .fo-card:hover { border-color: rgba(255,138,76,.5); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,.25); }
+  .fo-top { display: flex; align-items: center; gap: 8px; font-size: 13px; } .fo-top .av { width: 24px; height: 24px; font-size: 11px; } .fo-top span { color: var(--muted); }
+  .fo-card h3 { font-size: 17px; font-weight: 900; margin: 10px 0 4px; line-height: 1.3; }
+  .fo-card p { color: #cdb9aa; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .fo-card img { margin-top: 10px; max-height: 180px; border-radius: 12px; object-fit: cover; max-width: 100%; }
+  .fo-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 12.5px; font-weight: 800; }
+  .fo-meta span { display: inline-flex; align-items: center; gap: 5px; } .fo-meta .ic { width: 14px; height: 14px; } .fo-meta .fo-last { margin-left: auto; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -1429,6 +1482,10 @@ const ICON = {
   hourglass: '<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9"/>',
   up: '<path d="m6 15 6-6 6 6"/>',
   eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  at: '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>',
+  down: '<path d="m6 9 6 6 6-6"/>',
+  forum: '<path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1v2l-3-2h-4a2 2 0 0 1-2-2"/>',
+  stage: '<path d="M4 20h16"/><path d="M6 20v-4h12v4"/><rect x="9" y="3" width="6" height="9" rx="3"/><path d="M12 12v4"/>',
   grip: '<path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3.2" stroke-linecap="round"/>',
   eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
@@ -1495,7 +1552,7 @@ const S = {
 const typers = new Map();
 const EMOJIS = ['👍', '😂', '❤️', '🔥', '😮', '😢', '🎉', '💯'];
 const ROOM_MAP = { genel: 'chat', sohbet: 'chat', duyurular: 'megaphone', duyuru: 'megaphone', oyun: 'gamepad', oyunlar: 'gamepad', muzik: 'music', 'müzik': 'music', film: 'tv', dizi: 'tv', 'film-gecesi': 'tv', foto: 'camera', resim: 'image', etkinlik: 'calendar', kurallar: 'shield' };
-const roomIcon = c => ic(c.type === 'voice' ? 'volume' : ROOM_MAP[c.name] || 'hash');
+const roomIcon = c => ic(c.type === 'voice' ? 'volume' : c.type === 'stage' ? 'stage' : c.type === 'forum' ? 'forum' : c.news ? 'megaphone' : ROOM_MAP[c.name] || 'hash');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hm = t => new Date(t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 const userColor = n => S.users[n]?.color || '#8a7362';
@@ -1573,7 +1630,7 @@ function onAuth(res) {
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
   if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
   const odaQ = new URLSearchParams(location.search).get('oda');
-  if (odaQ) { history.replaceState(null, '', '/'); const sv = S.servers.find(x => x.channels.some(c => c.id === odaQ && c.type !== 'voice')); if (sv) return selectServer(sv.id, odaQ); }
+  if (odaQ) { history.replaceState(null, '', '/'); const sv = S.servers.find(x => x.channels.some(c => c.id === odaQ && !voiceLike(c.type))); if (sv) return selectServer(sv.id, odaQ); }
   const invite = new URLSearchParams(location.search).get('davet');
   if (invite) { history.replaceState(null, '', '/'); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
   const last = S.view === 'dm' && S.channel ? null : S.server && S.servers.find(s => s.id === S.server.id);
@@ -1867,7 +1924,7 @@ function selectServer(id, channelId) {
   S.view = 'server';
   S.server = S.servers.find(s => s.id === id) || S.servers[0];
   S.unreadServers.delete(S.server.id);
-  const text = S.server.channels.filter(c => c.type !== 'voice');
+  const text = S.server.channels.filter(c => !voiceLike(c.type));
   const ch = text.find(c => c.id === channelId) || text.find(c => c.id === lastCh[S.server.id]) || text[0];
   renderRail(); renderMembers();
   if (ch) selectChannel(ch.id); else renderSide();
@@ -1884,21 +1941,26 @@ function renderSide() {
   $('#side-head').onclick = e => { e.stopPropagation(); toggleSrvMenu(); };
   $('#side-head').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSrvMenu(); } };
   const canAdd = canAddCh(s), manage = canManageCh(s);
-  const tRow = c => `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${S.unread.has(c.id) ? 'unread' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>`;
-  const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${ic('volume')}</div><span class="rn">${esc(c.name)}</span>${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
+  const tRow = c => `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${S.unread.has(c.id) && notifMode(c.id) !== 'none' ? 'unread' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>`;
+  const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${(S.voice[c.id] || []).map(n => `<div class="vuser ${speaking.has(n) ? 'speaking' : ''}" data-vu="${esc(n)}">${av(n)}${esc(n)}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</div>`).join('')}</div>`;
-  const row = c => c.type === 'voice' ? vRow(c) : tRow(c);
+  const row = c => voiceLike(c.type) ? vRow(c) : tRow(c);
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
-  const top = topChs(s), cats = catsOf(s);
+  const va = viewAs?.sid === s.id ? viewAs : null;
+  const seen = c => !va || permAs(s, ovC(s, c), va.roles, 'view');
+  const top = topChs(s).filter(seen), cats = catsOf(s).filter(k => !va || s.channels.some(c => c.cat === k.id && seen(c)));
   $('#side-list').innerHTML =
     (!top.length && !cats.length && canAdd ? `<div class="side-empty">Henüz oda yok.<button data-newch>${ic('plus')} Oda oluştur</button></div>` : '') +
     (top.length ? `<div class="toplist">${top.map(row).join('')}</div>` : '') +
     cats.map(k => { const key = s.id + '|' + k.id, closed = shut.has(key), list = s.channels.filter(c => c.cat === k.id);
       return `<div class="label cat-label ${closed ? 'shut' : ''}" data-catk="${esc(key)}" data-id="${k.id}" ${manage ? 'data-drag="cat"' : ''}>${ic('chevron')}<span class="cn">${esc(k.name)}</span>${canAdd ? `<button data-addcat="${k.id}" title="Bu kategoriye oda ekle" aria-label="Oda ekle">+</button>` : ''}</div>` +
-        list.filter(c => !closed || c.id === S.channel?.id || c.id === myVoice).map(row).join(''); }).join('');
+        list.filter(seen).filter(c => !closed || c.id === S.channel?.id || c.id === myVoice).map(row).join(''); }).join('');
+  if (va) $('#side-list').insertAdjacentHTML('afterbegin', `<div class="vabar">${ic('eye')}<span><b>${esc(va.label)}</b> gözünden görüyorsun</span><button id="va-x">Çık</button></div>`);
   const sl = $('#side-list');
+  if (va) $('#va-x').onclick = () => { viewAs = null; renderSide(); };
   sl.querySelectorAll('[data-catk]').forEach(l => l.onclick = e => { if (e.target.closest('button') || dndOn) return; const k = l.dataset.catk; shut.has(k) ? shut.delete(k) : shut.add(k); store.set('kanka-cats', JSON.stringify([...shut])); renderSide(); });
   sl.querySelectorAll('.room[data-id]:not(.vroom)').forEach(d => d.onclick = e => { if (e.target.closest('.rset')) return; selectChannel(d.dataset.id); });
+  renderStageBar();
   sl.querySelectorAll('.vroom').forEach(d => d.onclick = e => {
     if (e.target.closest('.rset')) return;
     const c = s.channels.find(x => x.id === d.dataset.id);
@@ -1915,8 +1977,8 @@ function renderSide() {
   sl.querySelectorAll('[data-newch]').forEach(b => b.onclick = () => showCreateChannel(s));
   sl.oncontextmenu = e => {
     if (dndOn) return e.preventDefault();
-    if (!manage) return;
     const r = e.target.closest('.room[data-id]'), h = e.target.closest('.cat-label[data-id]');
+    if (!manage) { if (r) { e.preventDefault(); chMenu(s, s.channels.find(c => c.id === r.dataset.id), e.clientX, e.clientY, true); } return; }
     e.preventDefault();
     if (r) return chMenu(s, s.channels.find(c => c.id === r.dataset.id), e.clientX, e.clientY);
     if (h) return catMenu(s, cats.find(k => k.id === h.dataset.id), e.clientX, e.clientY);
@@ -1927,7 +1989,7 @@ function renderSide() {
 // ---- Ctrl+K: hızlı geçiş (oda, sunucu, kişi) ----
 function quickSwitch() {
   const items = [];
-  for (const s of S.servers) for (const c of s.channels) items.push({ t: c.name, sub: s.name, icon: c.type === 'voice' ? ic('volume') : ic('hash'), go: () => { if (c.type === 'voice') { selectServer(s.id); joinVoice(c.id); } else selectServer(s.id, c.id); } });
+  for (const s of S.servers) for (const c of s.channels) items.push({ t: c.name, sub: s.name, icon: roomIcon(c), go: () => { if (voiceLike(c.type)) { selectServer(s.id); joinVoice(c.id); } else selectServer(s.id, c.id); } });
   for (const s of S.servers) items.push({ t: s.name, sub: 'Sunucu', icon: ic('logo'), go: () => selectServer(s.id) });
   for (const d of S.dms) items.push(d.group ? { t: groupName(d), sub: 'Grup', icon: ic('users'), go: () => openGroup(d.id) } : { t: d.with, sub: 'Özel mesaj', av: d.with, go: () => openDMChannel(d.id, d.with) });
   for (const n of S.social?.friends || []) if (!S.dms.some(d => d.with === n)) items.push({ t: n, sub: 'Arkadaş', av: n, go: () => openDM(n) });
@@ -1951,7 +2013,7 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'k' && S.me) { e.preventDefault(); $('#modal').classList.contains('open') && $('#qs') ? closeModal() : quickSwitch(); }
   if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && S.view === 'server' && S.server) {
     e.preventDefault();
-    const txt = S.server.channels.filter(c => c.type !== 'voice'), i = txt.findIndex(c => c.id === S.channel?.id);
+    const txt = S.server.channels.filter(c => !voiceLike(c.type)), i = txt.findIndex(c => c.id === S.channel?.id);
     const n = txt[(i + (e.key === 'ArrowDown' ? 1 : txt.length - 1)) % txt.length]; if (n) selectChannel(n.id);
   }
 });
@@ -2054,7 +2116,7 @@ function toggleSrvMenu() {
   m.innerHTML =
     item('invite', 'İnsanları davet et', 'userplus', 'hl') +
     (mod || ['manageServer', 'manageRoles', 'kick', 'ban', 'timeout'].some(p => perm(s, p)) ? item('settings', 'Sunucu ayarları', 'gear') : '') +
-    (canAddCh(s) ? item('newch', 'Oda oluştur', 'plus') : '') + (canManageCh(s) ? item('newcat', 'Kategori oluştur', 'grid') : '') +
+    (canAddCh(s) ? item('newch', 'Oda oluştur', 'plus') : '') + (canManageCh(s) ? item('newcat', 'Kategori oluştur', 'grid') + item('viewas', 'Rolün gözünden gör', 'eye') : '') +
     '<hr>' +
     `<button data-m="mute">Sunucuyu sessize al<span class="tick ${muted ? 'on' : ''}"></span></button>` +
     item('read', 'Tümünü okundu say', 'check') +
@@ -2079,6 +2141,7 @@ function toggleSrvMenu() {
     if (a === 'settings') showServerSettings(s);
     if (a === 'newch') showCreateChannel(s);
     if (a === 'newcat') showCreateCategory(s);
+    if (a === 'viewas') setTimeout(() => startViewAs(s), 30);
     if (a === 'read') { s.channels.forEach(c => S.unread.delete(c.id)); S.unreadServers.delete(s.id); renderRail(); renderSide(); toast('Hepsi okundu olarak işaretlendi'); }
     if (a === 'info') showServerInfo(s);
     if (a === 'welcome') showWelcome(s, true);
@@ -2098,7 +2161,7 @@ document.addEventListener('click', e => { if (!e.target.closest('#srvmenu, #side
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSrvMenu(); });
 function showServerInfo(s) {
   const members = s.members || [], on = members.filter(n => S.online.has(n)).length;
-  const text = s.channels.filter(c => c.type !== 'voice').length, voice = s.channels.length - text;
+  const text = s.channels.filter(c => !voiceLike(c.type)).length, voice = s.channels.length - text;
   modal(`${s.banner || s.bannerColor ? `<div class="bn-prev" style="margin:-8px -8px 14px;background-image:${s.banner ? `url('${esc(s.banner)}')` : `linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)`}"></div>` : ''}<div style="text-align:center"><div class="srv active" style="width:72px;height:72px;margin:0 auto 10px;font-size:28px;cursor:default">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div>
     <h3 style="display:flex;align-items:center;justify-content:center;gap:8px">${badgeRow(s, 22)}${esc(s.name)}</h3><p class="hint">${s.public ? 'Herkese açık sunucu' : `Kurucu: <b>${esc(s.owner || '—')}</b>`}</p></div>
     ${(s.badges || []).length ? `<div class="sect" style="margin-top:6px"><h4>Rozetler</h4>${s.badges.map(b => `<div class="lrow" style="align-items:flex-start;gap:12px">${badgeSvg(b.id, 28)}<span><b>${SRV_BADGES[b.id].t}</b><br><small style="color:var(--muted)">${SRV_BADGES[b.id].d}</small></span></div>`).join('')}</div>` : ''}
@@ -2155,7 +2218,9 @@ function showServerSettings(s, tab, focus) {
           <p class="hint" style="margin-top:6px">Oda listesinin üstünde ve davet sayfasında görünür. En iyi 960×540 (16:9) resim.</p></div>
         <div class="st-field"><button class="primary" id="sv-save" style="width:auto;padding:11px 22px">Kaydet</button></div>
         <div class="st-field"><label>Moderasyon</label><label class="switch">Küfür filtresi (kötü kelimeler yıldızla gizlenir)<input type="checkbox" id="sv-filter" ${s.filter ? 'checked' : ''}></label>
-        <label class="switch">Yavaş mod (üyeler için mesaj arası bekleme)<select class="field" id="sv-slow" style="width:120px;margin:0">${[[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [30, '30 sn'], [60, '1 dk'], [300, '5 dk']].map(([v, t]) => `<option value="${v}" ${s.slow === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label></div>
+        <label class="switch">Yavaş mod (üyeler için mesaj arası bekleme)<select class="field" id="sv-slow" style="width:120px;margin:0">${[[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [30, '30 sn'], [60, '1 dk'], [300, '5 dk']].map(([v, t]) => `<option value="${v}" ${s.slow === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+        <label class="switch">AFK odası (hareketsiz kalanlar taşınır)<select class="field" id="sv-afk" style="width:170px;margin:0"><option value="">Kapalı</option>${s.channels.filter(c => c.type === 'voice').map(c => `<option value="${c.id}" ${s.afk?.ch === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+        <label class="switch">AFK süresi<select class="field" id="sv-afkm" style="width:120px;margin:0">${[1, 5, 10, 15, 30, 60].map(v => `<option value="${v}" ${(s.afk?.min || 10) === v ? 'selected' : ''}>${v} dk</option>`).join('')}</select></label></div>
         ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${location.origin}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}</div>`;
       $('#sv-save').onclick = () => socket.emit('updateServer', { serverId: s.id, name: $('#sv-name').value, icon: $('#sv-icon').value }, done('Kaydedildi'));
       $('#sv-img').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, iconImg: url }, done()));
@@ -2164,6 +2229,8 @@ function showServerSettings(s, tab, focus) {
       if ($('#sv-bnrm')) $('#sv-bnrm').onclick = () => socket.emit('updateServer', { serverId: s.id, banner: null, bannerColor: null }, done('Afiş kaldırıldı'));
       if ($('#sv-rmimg')) $('#sv-rmimg').onclick = () => socket.emit('updateServer', { serverId: s.id, iconImg: null }, done());
       $('#sv-filter').onchange = e => socket.emit('updateServer', { serverId: s.id, filter: e.target.checked }, r => r.error ? toast(r.error) : toast(e.target.checked ? 'Küfür filtresi açıldı' : 'Küfür filtresi kapandı'));
+      const afkSave = () => socket.emit('updateServer', { serverId: s.id, afkCh: $('#sv-afk').value || null, afkMin: +$('#sv-afkm').value }, r => r.error ? toast(r.error) : toast($('#sv-afk').value ? 'AFK odası ayarlandı' : 'AFK kapatıldı'));
+      $('#sv-afk').onchange = afkSave; $('#sv-afkm').onchange = afkSave;
       $('#sv-slow').onchange = e => socket.emit('updateServer', { serverId: s.id, slow: +e.target.value }, r => r.error ? toast(r.error) : toast('Yavaş mod güncellendi'));
       if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(`${location.origin}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
     },
@@ -2231,7 +2298,7 @@ function showServerSettings(s, tab, focus) {
       main.querySelectorAll('[data-ban]').forEach(b => b.onclick = () => askBan(s, b.dataset.ban, () => showServerSettings(s, 'members')));
     },
     welcome: () => {
-      const w = s.welcome || { enabled: false, message: '', rules: [], channels: [] }, txt = s.channels.filter(c => c.type !== 'voice');
+      const w = s.welcome || { enabled: false, message: '', rules: [], channels: [] }, txt = s.channels.filter(c => !voiceLike(c.type));
       const draft = { rules: [...(w.rules || [])], channels: (w.channels || []).map(c => ({ ...c })) };
       const draw = () => {
         main.innerHTML = `<div class="st-page"><h3>Hoş geldin ekranı</h3><p class="hint">Sunucuya yeni katılanlar önce bunu görür. Kural koyarsan, kabul etmeden mesaj yazamazlar.</p>
@@ -2296,11 +2363,13 @@ function selectChannel(id) {
   document.body.classList.remove('drawer');
   S.channel = S.server.channels.find(c => c.id === id);
   S.unread.delete(id);
-  setHeader(`${roomIcon(S.channel)} ${esc(S.channel.name)}`, S.server.name, true);
+  setHeader(`${roomIcon(S.channel)} ${esc(S.channel.name)}`, S.channel.topic || S.server.name, true);
+  $('#follow-btn')?.remove();
+  if (S.channel.news) { const fb = document.createElement('button'); fb.id = 'follow-btn'; fb.className = 'followb'; fb.innerHTML = `${ic('megaphone')}<span>Takip et</span>`; fb.onclick = () => showFollow(S.server, S.channel); $('#head-actions').prepend(fb); }
   const ro = S.channel.readonly && !perm(S.server, 'manageMessages'), to = timedOutLeft(S.server, S.me);
   enterRoom(id, to ? `Susturuldun · ${Math.ceil(to / 60000)} dakika sonra yazabilirsin` : ro ? 'Bu oda salt okunur. Sadece yetkililer yazabilir.' : `${S.channel.name} odasına bir şeyler yaz... (@ ile etiketle)`,
-    `<div class="hello"><div class="big">${roomIcon(S.channel)}</div><b>${esc(S.channel.name)} odasına hoş geldin!</b>İlk mesajı sen at, ortam ısınsın.</div>`);
-  renderSide();
+    `<div class="hello"><div class="big">${roomIcon(S.channel)}</div><b>${esc(S.channel.name)} odasına hoş geldin!</b>${S.channel.topic ? esc(S.channel.topic) : 'İlk mesajı sen at, ortam ısınsın.'}</div>`);
+  renderSide(); renderChanExtras();
 }
 
 // ================= Özel mesajlar =================
@@ -2524,6 +2593,7 @@ const dayLabel = t => {
 };
 function renderMessages(toBottom) {
   const box = $('#messages');
+  if (S.view === 'server' && S.channel?.type === 'forum') { const sc = box.scrollTop; box.innerHTML = forumHTML(); wireForum(box); box.scrollTop = toBottom ? 0 : sc; return; }
   const atBottom = toBottom || box.scrollHeight - box.scrollTop - box.clientHeight < 120;
   const quiet = !histMore && !S.msgs.some(m => m.author);
   let prev = null, html = histMore ? '<div class="loadmore" id="loadmore">Yukarı kaydırınca eski mesajlar yüklenir</div>' : quiet ? emptyHTML() : helloHTML;
@@ -2539,7 +2609,7 @@ function msgHTML(m, prev) {
   if (m.kind === 'system') return day + `<div class="sys">${ic('star')}${esc(m.text.replace(/\s*\p{Extended_Pictographic}\ufe0f?/gu, ''))}</div>`;
   if (m.kind === 'birthday') return day + `<div class="bday" data-id="${m.id}"><span class="big">${ic('cake')}</span><p>Bugün ${esc(m.text)} kankamızın doğum günü!</p><span class="hint">İyi ki doğdun ${esc(m.text)} 🎉 Kutlamayı unutmayın!</span></div>`;
   if (m.kind === 'daily') return day + `<div class="daily" data-id="${m.id}"><div class="kt">${ic('sun')}GÜNÜN SORUSU</div><p>${esc(m.text)}</p></div>`;
-  const mine = m.author === S.me;
+  const mine = m.author === S.me && !m.xfrom;
   const cont = !newDay && prev && prev.kind !== 'system' && prev.author === m.author && m.time - prev.time < 5 * 60e3 && !m.replyTo;
   const lvl = S.users[m.author] ? `<span class="lvl">Sv ${S.users[m.author].level}</span>` : '';
   const stamp = `<span class="stamp">${m.scheduled ? ic('clock') + ' ' : ''}${hm(m.time)}${m.edited ? ' · düzenlendi' : ''}</span>`;
@@ -2581,7 +2651,7 @@ function msgHTML(m, prev) {
     `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}" title="${esc(us.join(', '))}">${e}<span>${us.length}</span></button>`).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}
-    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!mine && !cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(uNicks[m.author] || m.author)}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}<span class="t">${m.kind === 'text' ? '' : hm(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!mine && !cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(uNicks[m.author] || m.author)}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.kind === 'text' ? '' : hm(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 let pop = null;
@@ -2676,6 +2746,7 @@ socket.on('message', ({ channelId, msg }) => {
   if (msg.author && msg.author !== S.me && !document.hasFocus() && !isDnd() && !(S.view === 'server' && mutedServers.has(S.server?.id))) playSound('msg');
   typers.delete(msg.author); renderTyping();
   S.msgs.push(msg);
+  if (S.view === 'server' && S.channel?.type === 'forum') { renderMessages(); return; }
   if (document.hasFocus()) markRead(channelId);
   const box = $('#messages');
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
@@ -2714,7 +2785,7 @@ socket.on('playlist', ({ channelId, playlist }) => { if (channelId === S.channel
 // ================= Yazma alanı =================
 function send(payload) {
   if (S.replyTo) payload.replyTo = S.replyTo.id;
-  socket.emit('message', payload, r => { if (r?.needRules) return showWelcome(S.servers.find(x => x.id === r.needRules)); if (r?.error) return toast(r.error); cancelReply(); setTimeout(() => tip('msg', '#compose', 'Mesajın gitti! 🎉', 'Bir mesajın üstüne gelip tepki verebilir ya da yanıtlayabilirsin. @ yazarak birini etiketle.', 'top'), 700); });
+  socket.emit('message', payload, r => { if (r?.needRules) return showWelcome(S.servers.find(x => x.id === r.needRules)); if (r?.error) return toast(r.error); cancelReply(); slowAfterSend(); setTimeout(() => tip('msg', '#compose', 'Mesajın gitti! 🎉', 'Bir mesajın üstüne gelip tepki verebilir ya da yanıtlayabilirsin. @ yazarak birini etiketle.', 'top'), 700); });
 }
 $('#compose').onsubmit = e => {
   e.preventDefault();
@@ -3010,12 +3081,15 @@ socket.on('dms', list => {
 });
 socket.on('chanActivity', ({ channelId, serverId }) => {
   if (channelId === S.channel?.id) return;
+  const nmode = notifMode(channelId); if (nmode === 'none') return;
+  if (nmode === 'all' && !isDnd() && !mutedServers.has(serverId)) playSound('msg');
   S.unread.add(channelId);
   if ((S.view !== 'server' || S.server?.id !== serverId) && !mutedServers.has(serverId)) S.unreadServers.add(serverId);
   renderRail(); if (S.view === 'server') renderSide();
 });
 socket.on('notify', n => {
   if (n.channelId === S.channel?.id && document.hasFocus()) return;
+  if (!n.dm && n.channelId && notifMode(n.channelId) === 'none') return;
   if (!notifOn() || isDnd()) { if (n.dm) { S.unread.add(n.channelId); if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); } return; }
   if (n.dm) { S.unread.add(n.channelId); if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); }
   playSound('mention');
@@ -3121,7 +3195,11 @@ async function joinVoiceNow(chId) {
   if (myVoice) leaveVoice(true);
   return new Promise(resolve => socket.emit('voiceJoin', chId, r => {
     if (r.error) { toast(r.error); return resolve(false); }
-    myVoice = chId; muted = false; applyMute(); startSpeakDetect(); playSound('join');
+    myVoice = chId; muted = false;
+    if (r.stage) stageSt[chId] = r.stage;
+    { const f = vch(); if (f?.c.type === 'stage' && f.c.canManage && !r.stage?.speakers?.includes(S.me)) socket.emit('stageSpeaker', { name: S.me, on: true }, () => {});
+      if (f && !canSpeakNow()) toast(f.c.type === 'stage' ? '🎧 Sahnede dinleyicisin. Konuşmak için ✋ el kaldır.' : '🎧 Bu odada sadece dinleyebilirsin'); }
+    applyMute(); startSpeakDetect(); playSound('join');
     setTimeout(() => tip('voice', '#voicebar', 'Sesli odadasın 🎧', 'Buradan mikrofonunu kapatabilir, kamerayı açabilir, ekranını paylaşabilir ve gürültü engellemeyi yönetebilirsin.', 'right'), 900);
     r.peers.forEach(p => { peerNames[p.sid] = p.name; makePeer(p.sid); });
     const ch = S.servers.flatMap(s => s.channels.map(c => ({ ...c, s: s.name }))).find(c => c.id === chId);
@@ -3138,6 +3216,7 @@ function makePeer(sid) {
   Object.assign(pc, { _polite: socket.id < sid, _making: false, _ignore: false });
   peers[sid] = pc;
   localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+  setTimeout(() => { const br = vch()?.c.bitrate === 'high' ? 128000 : 64000; pc.getSenders().filter(x => x.track?.kind === 'audio' && x.track === localStream?.getAudioTracks()[0]).forEach(x => { try { const p = x.getParameters(); if (!p.encodings?.length) p.encodings = [{}]; p.encodings[0].maxBitrate = br; x.setParameters(p).catch(() => {}); } catch {} }); }, 1500);
   if (videoStream) setTimeout(() => feedPeer(sid));
   pc.onicecandidate = e => e.candidate && socket.emit('signal', { to: sid, data: { ice: e.candidate } });
   pc.onnegotiationneeded = async () => {
@@ -3154,7 +3233,7 @@ function makePeer(sid) {
       let a = document.getElementById('a-' + sid);
       if (!a) { a = document.createElement('audio'); a.id = 'a-' + sid; a.autoplay = true; document.body.appendChild(a); }
       a.srcObject = e.streams[0] || new MediaStream([e.track]);
-      a.volume = vol[peerNames[sid]] ?? 1; a.muted = uMuted.has(peerNames[sid]);
+      a.volume = vol[peerNames[sid]] ?? 1; a.muted = uMuted.has(peerNames[sid]) || stageSilenced(peerNames[sid]);
       meter(sid, () => peerNames[sid], new MediaStream([e.track]));
     } else {
       peerVideo[sid] = new MediaStream([e.track]);
@@ -3425,7 +3504,7 @@ function setSpeaking(name, sid, on) {
 
 // --- Bas-konuş ve susturma ---
 const pttOn = () => store.get('kanka-ptt') === 'on';
-const micLive = () => !muted && (!pttOn() || pttDown);
+const micLive = () => !muted && (!pttOn() || pttDown) && canSpeakNow();
 function applyMute() {
   localStream?.getAudioTracks().forEach(t => t.enabled = micLive());
   $('#mute').innerHTML = ic(muted ? 'micoff' : pttOn() && !pttDown ? 'keyboard' : 'mic');
@@ -3436,10 +3515,11 @@ const typingTarget = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || 
 document.addEventListener('keydown', e => { if (myVoice && pttOn() && e.code === 'KeyV' && !typingTarget(e) && !pttDown) { pttDown = true; applyMute(); } });
 document.addEventListener('keyup', e => { if (e.code === 'KeyV' && pttDown) { pttDown = false; applyMute(); } });
 window.addEventListener('blur', () => { if (pttDown) { pttDown = false; applyMute(); } });
-$('#mute').onclick = () => { muted = !muted; applyMute(); };
+$('#mute').onclick = () => { if (!canSpeakNow()) return toast(vch()?.c.type === 'stage' ? 'Sahnede konuşmak için ✋ el kaldır' : 'Bu odada konuşma iznin yok'); muted = !muted; applyMute(); };
 $('#vleave').onclick = () => leaveVoice(false);
-$('#vcam').onclick = () => startVideo('cam');
-$('#vscreen').onclick = () => startVideo('screen');
+const streamOk = () => vch()?.c.canStream === false ? (toast('Bu odada kamera ve ekran paylaşma iznin yok'), false) : true;
+$('#vcam').onclick = () => streamOk() && startVideo('cam');
+$('#vscreen').onclick = () => streamOk() && startVideo('screen');
 function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'cam'); $('#vscreen').classList.toggle('on', videoKind === 'screen'); }
 
 // --- Sahne (ses/görüntü kutucukları) ---
@@ -3696,7 +3776,7 @@ let openThreadId = null;
 function openThread(id) {
   openThreadId = id;
   const m = S.msgs.find(x => x.id === id); if (!m) return;
-  modal(`<h3>${ic('thread')}Konu</h3><p class="hint"><b style="color:${userColor(m.author || '')}">${esc(m.author || 'Sistem')}</b>: ${esc((m.text || m.plan?.title || m.poll?.question || m.song?.title || 'görsel').slice(0, 140))}</p>
+  modal(`<h3>${ic('thread')}${m.title ? esc(m.title) : 'Konu'}</h3><p class="hint"><b style="color:${userColor(m.author || '')}">${esc(m.author || 'Sistem')}</b>: ${esc((m.text || m.plan?.title || m.poll?.question || m.song?.title || 'görsel').slice(0, 140))}</p>
     <div class="thread-box" id="thr-box"></div>
     <form id="thr-form" style="display:flex;gap:8px"><input class="field" id="thr-in" placeholder="Konuya yanıt yaz..." autocomplete="off" style="margin:0"><button class="primary" style="width:auto;padding:0 18px;margin:0" aria-label="Gönder">${ic('send')}</button></form>
     <div class="rowb"><button id="mx">Kapat</button></div>`);
@@ -3956,10 +4036,10 @@ function onbGo(mode, k) {
   if (k === 'profile') return showSettings('profile');
   if (k === 'invite') return showInvite(S.view === 'server' && S.server?.invite ? S.server : hqServer());
   if (k === 'msg') {
-    const ok = s => s?.channels.find(c => c.type !== 'voice' && (!c.readonly || perm(s, 'manageMessages')));
+    const ok = s => s?.channels.find(c => !voiceLike(c.type) && (!c.readonly || perm(s, 'manageMessages')));
     const srv = (S.view === 'server' && ok(S.server) ? S.server : null) || (ok(hqServer()) ? hqServer() : S.servers.find(ok));
     if (!srv) return toast('Yazabileceğin bir oda bulunamadı.');
-    const ch = S.view === 'server' && S.server?.id === srv.id && S.channel && S.channel.type !== 'voice' && !S.channel.readonly ? S.channel : ok(srv);
+    const ch = S.view === 'server' && S.server?.id === srv.id && S.channel && !voiceLike(S.channel.type) && !S.channel.readonly ? S.channel : ok(srv);
     if (S.view !== 'server' || S.server?.id !== srv.id || S.channel?.id !== ch.id) selectServer(srv.id, ch.id);
     setTimeout(() => { $('#input').focus(); $('#compose').classList.remove('attn'); void $('#compose').offsetWidth; $('#compose').classList.add('attn'); setTimeout(() => $('#compose').classList.remove('attn'), 2400); }, 250);
     return;
@@ -4204,7 +4284,7 @@ const canManageCh = s => !!s && perm(s, 'manageChannels');
 const canAddCh = s => !!s && (!(s.customRoles?.length) || perm(s, 'manageChannels'));
 const catsOf = s => s.categories || [];
 const topChs = s => s.channels.filter(c => !c.cat || !catsOf(s).some(k => k.id === c.cat));
-const chIcon = c => c.type === 'voice' ? ic('volume') : roomIcon(c);
+const chIcon = c => roomIcon(c);
 const chBadge = c => c.private ? ic('lock', 'lockic') : c.locked ? ic('lock', 'lockic') : c.ann ? ic('megaphone', 'lockic') : '';
 // Düzen modeli: { top: [id], cats: [{ id, channels: [id] }] }
 const layoutOf = s => ({ top: topChs(s).map(c => c.id), cats: catsOf(s).map(k => ({ id: k.id, channels: s.channels.filter(c => c.cat === k.id).map(c => c.id) })) });
@@ -4319,14 +4399,15 @@ function ctxMenu(x, y, items) {
   m.style.left = Math.min(x, W - w - 8) + 'px'; m.style.top = Math.min(y, H - h - 8) + 'px';
   m.onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return; closeUMenu(); items[+b.dataset.i].act(); };
 }
-function chMenu(s, c, x, y) {
-  ctxMenu(x, y, [
-    { t: 'Odayı düzenle', icon: 'gear', act: () => showChSettings(s, 'ch', c.id, 'general') },
-    { t: 'İzinleri düzenle', icon: 'shield', act: () => showChSettings(s, 'ch', c.id, 'perms') },
-    { t: 'Bağlantıyı kopyala', icon: 'link', act: () => navigator.clipboard?.writeText(`${location.origin}/?oda=${c.id}`).then(() => toast('Bağlantı kopyalandı')) },
-    '-',
-    { t: 'Odayı sil', icon: 'trash', danger: true, act: () => askDeleteCh(s, c) },
-  ]);
+function chMenu(s, c, x, y, lite) {
+  const nm = notifMode(c.id), nb = (v, t) => ({ t: `${nm === v ? '● ' : ''}${t}`, icon: 'bell', act: () => { setChNotif(c.id, v); renderSide(); toast(`#${esc(c.name)}: ${t}`); } });
+  const items = [];
+  if (!lite) items.push({ t: 'Odayı düzenle', icon: 'gear', act: () => showChSettings(s, 'ch', c.id, 'general') }, { t: 'İzinleri düzenle', icon: 'shield', act: () => showChSettings(s, 'ch', c.id, 'perms') }, { t: 'Odayı çoğalt', icon: 'copy', act: () => socket.emit('chDuplicate', { serverId: s.id, channelId: c.id }, r => r?.error ? toast(r.error) : toast('Oda çoğaltıldı')) }, '-');
+  if (!voiceLike(c.type)) items.push(nb('all', 'Tüm mesajlarda bildir'), nb('mentions', 'Sadece @bahsedilince'), nb('none', 'Odayı sessize al'), '-');
+  if (c.news) items.push({ t: 'Duyuruları takip et', icon: 'megaphone', act: () => showFollow(s, c) });
+  items.push({ t: 'Bağlantıyı kopyala', icon: 'link', act: () => navigator.clipboard?.writeText(`${location.origin}/?oda=${c.id}`).then(() => toast('Bağlantı kopyalandı')) });
+  if (!lite) items.push('-', { t: 'Odayı sil', icon: 'trash', danger: true, act: () => askDeleteCh(s, c) });
+  ctxMenu(x, y, items);
 }
 function catMenu(s, k, x, y) {
   ctxMenu(x, y, [
@@ -4345,17 +4426,18 @@ function showCreateChannel(s, catId = null, type = 'text', back) {
   const cats = catsOf(s);
   modal(`<div class="ccm"><div class="cc-head"><div class="cc-ico">${ic('hash')}</div><div><h3>Oda oluştur</h3><p id="cc-where"></p></div></div>
     <div class="mlabel">Oda türü</div>
-    <div class="ctype">${[['text', 'hash', 'Yazılı oda', 'Mesaj, resim, GIF ve emoji paylaş'], ['voice', 'volume', 'Sesli oda', 'Sesli konuş, ekran paylaş, birlikte takıl']].map(([k, i, t, d]) =>
+    <div class="ctype g2">${[['text', 'hash', 'Yazılı', 'Mesaj, resim ve emoji'], ['voice', 'volume', 'Sesli', 'Konuş, ekran paylaş'], ['forum', 'forum', 'Forum', 'Konu başlıklı gönderiler'], ['stage', 'stage', 'Sahne', 'Konuşmacılar ve dinleyiciler']].map(([k, i, t, d]) =>
       `<button type="button" class="ct ${k === type ? 'on' : ''}" data-t="${k}"><i>${ic(i)}</i><span><b>${t}</b><small>${d}</small></span><em class="rad"></em></button>`).join('')}</div>
     <div class="mlabel">Oda adı</div><div class="cname"><i id="cc-pre">${ic(type === 'voice' ? 'volume' : 'hash')}</i><input id="cc-name" maxlength="30" placeholder="${type === 'voice' ? 'Sohbet' : 'yeni-oda'}" autocomplete="off"></div>
     <div class="mlabel">Kategori</div><select class="msel" id="cc-cat"><option value="">Kategorisiz (en üstte)</option>${cats.map(k => `<option value="${k.id}" ${k.id === catId ? 'selected' : ''}>${esc(k.name)}</option>`).join('')}</select>
     <div class="mtog" id="cc-priv" role="switch"><span><b>${ic('lock')} Özel oda</b><small>Sadece seçtiğin roller görebilir. Oluşturduktan sonra rolleri seçersin.</small></span><i class="ksw"></i></div>
     <div class="mfoot"><span style="margin-right:auto"></span><button class="btns2" id="cc-x">Vazgeç</button><button class="btnp" id="cc-ok">${ic('plus')} Oda oluştur</button></div></div>`, 'ccm');
   let t = type, priv = false;
-  const fmt = v => t === 'text' ? v.toLocaleLowerCase('tr').replace(/\s+/g, '-') : v;
+  const fmt = v => t === 'text' || t === 'forum' ? v.toLocaleLowerCase('tr').replace(/\s+/g, '-') : v;
+  const icoOf = x => ({ voice: 'volume', stage: 'stage', forum: 'forum' }[x] || 'hash');
   const where = () => { const k = cats.find(x => x.id === $('#cc-cat').value); $('#cc-where').innerHTML = k ? `<b>${esc(k.name)}</b> kategorisine eklenecek` : 'Kategorisiz, listenin en üstüne eklenecek'; };
   where(); $('#cc-cat').onchange = where;
-  $('#modal-box').querySelectorAll('.ct').forEach(b => b.onclick = () => { t = b.dataset.t; $('#modal-box').querySelectorAll('.ct').forEach(x => x.classList.toggle('on', x === b)); $('#cc-pre').innerHTML = ic(t === 'voice' ? 'volume' : 'hash'); $('.ccm .cc-ico').innerHTML = ic(t === 'voice' ? 'volume' : 'hash'); $('#cc-name').placeholder = t === 'voice' ? 'Sohbet' : 'yeni-oda'; $('#cc-name').value = fmt($('#cc-name').value); });
+  $('#modal-box').querySelectorAll('.ct').forEach(b => b.onclick = () => { t = b.dataset.t; $('#modal-box').querySelectorAll('.ct').forEach(x => x.classList.toggle('on', x === b)); $('#cc-pre').innerHTML = ic(icoOf(t)); $('.ccm .cc-ico').innerHTML = ic(icoOf(t)); $('#cc-name').placeholder = { voice: 'Sohbet', stage: 'Sahne', forum: 'sorular' }[t] || 'yeni-oda'; $('#cc-name').value = fmt($('#cc-name').value); });
   $('#cc-name').oninput = e => { const p = e.target.selectionStart; e.target.value = fmt(e.target.value); e.target.setSelectionRange(p, p); };
   $('#cc-priv').onclick = () => { priv = !priv; $('#cc-priv .ksw').classList.toggle('on', priv); };
   $('#cc-x').onclick = () => { closeModal(); back && setTimeout(back, 230); };
@@ -4363,8 +4445,8 @@ function showCreateChannel(s, catId = null, type = 'text', back) {
     const name = $('#cc-name').value.trim(); if (!name) { $('#cc-name').focus(); $('.cname').classList.add('err'); return; }
     socket.emit('createChannel', { serverId: s.id, name, type: t, cat: $('#cc-cat').value || null, private: priv }, c => {
       if (c?.error) return toast(c.error);
-      closeModal(); toast(`${t === 'voice' ? 'Sesli oda' : 'Oda'} oluşturuldu`);
-      setTimeout(() => { if (priv) showChSettings(S.servers.find(x => x.id === s.id) || s, 'ch', c.id, 'perms', back); else if (back) back(); else if (t === 'text' && S.server?.id === s.id) selectChannel(c.id); }, 260);
+      closeModal(); toast(`${{ voice: 'Sesli oda', stage: 'Sahne', forum: 'Forum' }[t] || 'Oda'} oluşturuldu`);
+      setTimeout(() => { if (priv) showChSettings(S.servers.find(x => x.id === s.id) || s, 'ch', c.id, 'perms', back); else if (back) back(); else if ((t === 'text' || t === 'forum') && S.server?.id === s.id) selectChannel(c.id); }, 260);
     });
   };
   $('#cc-ok').onclick = go; $('#cc-name').onkeydown = e => { if (e.key === 'Enter') go(); };
@@ -4402,7 +4484,9 @@ function permFor(s, ov, n, key) {
   const rs = s.memberRoles?.[n] || [], rolePerms = new Set(rs.flatMap(r => s.customRoles.find(x => x.id === r)?.perms || []));
   if (s.roles?.[n] === 'mod' || rolePerms.has('manageChannels')) return true;
   if (key === 'send' && rolePerms.has('manageMessages')) return true;
-  const val = k => { let v = true; if (ov['@everyone']?.[k] !== undefined) v = ov['@everyone'][k]; if (rs.some(r => ov[r]?.[k] === false)) v = false; if (rs.some(r => ov[r]?.[k] === true)) v = true; return v; };
+  const val = k => { let v = k === 'manage' ? rolePerms.has('manageMessages') : k === 'mention' ? rolePerms.has('mentionEveryone') : true;
+    if (ov['@everyone']?.[k] !== undefined) v = ov['@everyone'][k]; if (rs.some(r => ov[r]?.[k] === false)) v = false; if (rs.some(r => ov[r]?.[k] === true)) v = true;
+    if (ov['u:' + n]?.[k] !== undefined) v = ov['u:' + n][k]; return v; };
   if (!val('view')) return false; return key === 'view' || val(key);
 }
 let chsOpen = null;
@@ -4412,28 +4496,34 @@ function showChSettings(s, kind, id, tab = 'general', back) {
   const obj = isCat ? catsOf(s).find(k => k.id === id) : s.channels.find(c => c.id === id);
   if (!obj) return toast(isCat ? 'Kategori bulunamadı' : 'Oda bulunamadı');
   const cat = !isCat && obj.cat ? catsOf(s).find(k => k.id === obj.cat) : null;
-  const keys = isCat ? ['view', 'send', 'connect'] : obj.type === 'voice' ? ['view', 'connect'] : ['view', 'send'];
+  const keys = isCat ? KEYS_BY.cat : KEYS_BY[obj.type] || KEYS_BY.text;
   const basePerms = () => JSON.parse(JSON.stringify(!isCat && obj.sync && cat ? cat.perms || {} : obj.perms || {}));
-  const st = chsOpen?.key === kind + id ? chsOpen : { key: kind + id, name: obj.name, cat: obj.cat || '', perms: basePerms(), target: '@everyone', permsDirty: false };
+  const st = chsOpen?.key === kind + id ? chsOpen : { key: kind + id, name: obj.name, cat: obj.cat || '', topic: obj.topic || '', slow: obj.slow || 0, limit: obj.limit || 0, bitrate: obj.bitrate || 'std', news: !!obj.news, perms: basePerms(), target: '@everyone', permsDirty: false };
   chsOpen = st;
   const roles = s.customRoles || [];
-  const dirty = () => st.name !== obj.name || (!isCat && (st.cat || '') !== (obj.cat || '')) || st.permsDirty;
+  const extra = ['topic', 'slow', 'limit', 'bitrate', 'news'], dirty = () => st.name !== obj.name || (!isCat && ((st.cat || '') !== (obj.cat || '') || extra.some(k => st[k] !== (k === 'topic' ? obj.topic || '' : k === 'bitrate' ? obj.bitrate || 'std' : k === 'news' ? !!obj.news : obj[k] || 0)))) || st.permsDirty;
   const members = s.public ? Object.keys(S.users) : s.members || [];
   const render = () => {
-    const title = isCat ? esc(obj.name.toUpperCase()) : `${obj.type === 'voice' ? '' : '#'}${esc(obj.name)}`;
-    const targets = ['@everyone', ...roles.filter(r => st.perms[r.id]).map(r => r.id)];
+    const title = isCat ? esc(obj.name.toUpperCase()) : `${voiceLike(obj.type) ? '' : '#'}${esc(obj.name)}`;
+    const targets = ['@everyone', ...roles.filter(r => st.perms[r.id]).map(r => r.id), ...Object.keys(st.perms).filter(t => t.startsWith('u:'))];
     if (!targets.includes(st.target)) st.target = '@everyone';
-    const tName = t => t === '@everyone' ? '@herkes' : roles.find(r => r.id === t)?.name || '?';
-    const tColor = t => t === '@everyone' ? '#8a7362' : roles.find(r => r.id === t)?.color || '#8a7362';
-    const addable = roles.filter(r => !st.perms[r.id]);
+    const tName = t => t === '@everyone' ? '@herkes' : t.startsWith('u:') ? t.slice(2) : roles.find(r => r.id === t)?.name || '?';
+    const tColor = t => t === '@everyone' ? '#8a7362' : t.startsWith('u:') ? userColor(t.slice(2)) : roles.find(r => r.id === t)?.color || '#8a7362';
+    const addable = [...roles.filter(r => !st.perms[r.id]), ...members.filter(n => n !== s.owner && !st.perms['u:' + n]).map(n => ({ user: n }))];
     const cur = st.perms[st.target] || {};
     const viewN = members.filter(n => permFor(s, st.perms, n, 'view')).length;
     const synced = !isCat && obj.sync && cat && !st.permsDirty;
     const pages = {
-      general: `<div class="st-page"><h3>${isCat ? 'Kategori' : obj.type === 'voice' ? 'Sesli oda' : 'Yazılı oda'}</h3><p class="hint">${isCat ? 'Kategorinin adı listede büyük harfle görünür.' : 'Odanın adını ve hangi kategoride duracağını seç.'}</p>
+      general: `<div class="st-page"><h3>${isCat ? 'Kategori' : { voice: 'Sesli oda', stage: 'Sahne odası', forum: 'Forum odası' }[obj.type] || (obj.news ? 'Duyuru odası' : 'Yazılı oda')}</h3><p class="hint">${isCat ? 'Kategorinin adı listede büyük harfle görünür.' : 'Odanın adını ve hangi kategoride duracağını seç.'}</p>
         <div class="st-field"><label>${isCat ? 'Kategori adı' : 'Oda adı'}</label><div class="cname"><i>${isCat ? ic('grid') : chIcon(obj)}</i><input id="cs-name" maxlength="30" value="${esc(st.name)}"></div></div>
         ${isCat ? `<div class="st-field"><label>İçindeki odalar</label><div class="cs-list">${s.channels.filter(c => c.cat === obj.id).map(c => `<button data-goch="${c.id}">${chIcon(c)}<span>${esc(c.name)}</span>${c.sync ? '<em class="sync">eşitli</em>' : ''}</button>`).join('') || '<p class="hint">Bu kategoride oda yok. Kenar çubuğunda bir odayı sürükleyip buraya bırakabilirsin.</p>'}</div></div>`
-          : `<div class="st-field"><label>Kategori</label><select class="msel" id="cs-cat"><option value="">Kategorisiz (en üstte)</option>${catsOf(s).map(k => `<option value="${k.id}" ${k.id === st.cat ? 'selected' : ''}>${esc(k.name)}</option>`).join('')}</select></div>`}
+          : `<div class="st-field"><label>Kategori</label><select class="msel" id="cs-cat"><option value="">Kategorisiz (en üstte)</option>${catsOf(s).map(k => `<option value="${k.id}" ${k.id === st.cat ? 'selected' : ''}>${esc(k.name)}</option>`).join('')}</select></div>
+          ${obj.type !== 'voice' ? `<div class="st-field"><label>${obj.type === 'stage' ? 'Sahne konusu' : 'Oda konusu'}</label><textarea class="fp-b" id="cs-topic" maxlength="160" rows="2" placeholder="${obj.type === 'stage' ? 'Bu akşam ne konuşuluyor?' : 'Bu oda ne için? Başlıkta görünür.'}">${esc(st.topic)}</textarea></div>` : ''}
+          ${voiceLike(obj.type) ? `<div class="st-field"><label>Kişi sınırı <b class="lim-v" id="cs-limv">${st.limit ? st.limit + ' kişi' : 'Sınırsız'}</b></label><input type="range" class="krange" id="cs-limit" min="0" max="99" value="${st.limit}"><p class="hint">Oda dolunca yeni kimse giremez (yöneticiler hariç). 0 = sınırsız.</p></div>
+            <div class="st-field"><label>Ses kalitesi</label><div class="seg" id="cs-br"><button data-br="std" class="${st.bitrate === 'std' ? 'on' : ''}">Standart<small>sohbet için</small></button><button data-br="high" class="${st.bitrate === 'high' ? 'on' : ''}">Yüksek<small>müzik ve yayın için</small></button></div></div>`
+          : `<div class="st-field"><label>Yavaş mod</label><select class="msel" id="cs-slow">${SLOW_OPTS.map(([v, t]) => `<option value="${v}" ${st.slow === v ? 'selected' : ''}>${t}</option>`).join('')}</select><p class="hint">Üyeler mesajlar arasında bu kadar bekler. Mesaj yönetenler etkilenmez.</p></div>`}
+          ${obj.type === 'text' ? `<div class="mtog" id="cs-news" role="switch"><span><b>${ic('megaphone')} Takip edilebilir duyuru odası</b><small>Başka sunucular bu odayı takip edebilir, buradaki mesajlar onlara da düşer.${obj.followers ? ` Şu an <b>${obj.followers}</b> yerden takip ediliyor.` : ''}</small></span><i class="ksw ${st.news ? 'on' : ''}"></i></div>` : ''}
+          <div class="st-field" style="margin-top:18px"><label>Kopya</label><button class="btns2" id="cs-dup">${ic('copy')} Odayı çoğalt</button><p class="hint">Aynı ayarlar ve izinlerle yeni bir oda oluşturur.</p></div>`}
         <div class="st-field"><label>Tehlikeli bölge</label><button class="btns2 dangerb" id="cs-del">${ic('trash')} ${isCat ? 'Kategoriyi sil' : 'Odayı sil'}</button></div></div>`,
       perms: `<div class="st-page"><h3>İzinler</h3><p class="hint">${isCat ? 'Kategorinin izinleri, onunla eşitlenmiş tüm odalara uygulanır.' : 'Rollere göre bu odayı kimlerin görebileceğini ve kullanabileceğini seç.'}</p>
         ${!isCat && cat ? (synced ? `<div class="syncbar ok">${ic('link')}<span><b>${esc(cat.name)}</b> kategorisiyle eşitli. Burada bir şeyi değiştirirsen eşitleme kalkar.</span></div>`
@@ -4442,6 +4532,7 @@ function showChSettings(s, kind, id, tab = 'general', back) {
           <button data-pre="open" class="${!st.perms['@everyone']?.view && st.perms['@everyone']?.view !== false && !Object.values(st.perms['@everyone'] || {}).includes(false) ? 'on' : ''}">🌐 Herkese açık</button>
           <button data-pre="priv" class="${st.perms['@everyone']?.view === false ? 'on' : ''}">🔒 Özel</button>
           ${keys.includes('send') ? `<button data-pre="ann" class="${st.perms['@everyone']?.send === false && st.perms['@everyone']?.view !== false ? 'on' : ''}">📢 Duyuru</button>` : ''}
+          ${keys.includes('speak') ? `<button data-pre="mute" class="${st.perms['@everyone']?.speak === false && st.perms['@everyone']?.view !== false ? 'on' : ''}">🎧 Sadece dinle</button>` : ''}
           ${keys.includes('connect') ? `<button data-pre="listen" class="${st.perms['@everyone']?.connect === false && st.perms['@everyone']?.view !== false ? 'on' : ''}">🚫 Bağlanılamaz</button>` : ''}</div>
         <div class="pgrid"><div class="ptargets"><div class="pt-h">Roller<div class="pt-add">${addable.length ? `<button id="pt-addb" title="Rol ekle">${ic('plus')}</button>` : ''}</div></div>
             ${targets.map(t => `<button class="pt ${t === st.target ? 'on' : ''}" data-tg="${t}"><i style="background:${tColor(t)}"></i><span>${esc(tName(t))}</span>${t !== '@everyone' ? `<em data-rm="${t}" title="Kaldır">${ic('x')}</em>` : ''}</button>`).join('')}
@@ -4451,14 +4542,14 @@ function showChSettings(s, kind, id, tab = 'general', back) {
               <div class="tri" role="radiogroup"><button data-k="${k}" data-v="no" class="no ${v === false ? 'on' : ''}" title="Yasak">${ic('x')}</button><button data-k="${k}" data-v="inh" class="inh ${v === undefined ? 'on' : ''}" title="${st.target === '@everyone' ? 'Varsayılan (izinli)' : 'Devral'}">/</button><button data-k="${k}" data-v="yes" class="yes ${v === true ? 'on' : ''}" title="İzinli">${ic('check')}</button></div></div>`; }).join('')}
             <div class="pinfo">${ic('users')}<span>Bu ayarlarla <b>${members.length}</b> üyeden <b>${viewN}</b> kişi bu ${isCat ? 'kategorideki eşitli odaları' : 'odayı'} görebilir. Sahip ve oda yöneticileri her zaman görür.</span></div></div></div></div>`,
     };
-    modal(`<nav class="st-nav"><h4>${isCat ? 'KATEGORİ' : obj.type === 'voice' ? 'SESLİ ODA' : 'YAZILI ODA'}</h4><div class="cs-title">${isCat ? ic('grid') : chIcon(obj)}<span>${title}</span></div>
+    modal(`<nav class="st-nav"><h4>${isCat ? 'KATEGORİ' : { voice: 'SESLİ ODA', stage: 'SAHNE', forum: 'FORUM' }[obj.type] || 'YAZILI ODA'}</h4><div class="cs-title">${isCat ? ic('grid') : chIcon(obj)}<span>${title}</span></div>
         <button data-ctab="general" class="${tab === 'general' ? 'on' : ''}">${ic('gear')}Genel</button><button data-ctab="perms" class="${tab === 'perms' ? 'on' : ''}">${ic('shield')}İzinler</button>
         <button id="mx">${ic('x')}Kapat</button></nav>
       <div class="st-main"><div id="cs-main">${pages[tab]}</div>
         <div class="st-save cs-save ${dirty() ? 'dirty show' : ''}"><span>Kaydedilmemiş değişikliklerin var</span><button id="cs-reset">Sıfırla</button><button class="primary" id="cs-save">Değişiklikleri kaydet</button></div></div>
       <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Kapat"><span>${ic('x')}</span>ESC</button></div>
         <div class="cs-prev"><div class="cs-pc">${isCat ? `<div class="label cat-label">${ic('chevron')}${esc(st.name)}</div>${s.channels.filter(c => c.cat === obj.id).slice(0, 4).map(c => `<div class="room">${chIcon(c)}${esc(c.name)}</div>`).join('')}`
-          : `<div class="room active">${chIcon(obj)}${esc(obj.type === 'voice' ? st.name : st.name.toLocaleLowerCase('tr').replace(/\s+/g, '-'))}${st.perms['@everyone']?.view === false ? ic('lock', 'lockic') : st.perms['@everyone']?.send === false ? ic('megaphone', 'lockic') : ''}</div>`}</div>
+          : `<div class="room active">${chIcon(obj)}${esc(voiceLike(obj.type) ? st.name : st.name.toLocaleLowerCase('tr').replace(/\s+/g, '-'))}${st.perms['@everyone']?.view === false ? ic('lock', 'lockic') : st.perms['@everyone']?.send === false ? ic('megaphone', 'lockic') : ''}</div>`}</div>
           <div class="cs-stat"><b>${viewN}</b><span>/${members.length} üye görebilir</span></div></div></aside>`, 'settings chset');
     const close = () => { const go = () => { chsOpen = null; closeModal(); back && setTimeout(back, 240); }; dirty() ? confirmBox('Kaydedilmemiş değişikliklerin silinecek. Kapatılsın mı?', go) : go(); };
     $('#mx').onclick = close; $('#st-x').onclick = close;
@@ -4466,6 +4557,12 @@ function showChSettings(s, kind, id, tab = 'general', back) {
     const bar = () => $('.cs-save').classList.toggle('dirty', dirty()) || $('.cs-save').classList.toggle('show', dirty());
     if ($('#cs-name')) $('#cs-name').oninput = e => { st.name = e.target.value; bar(); };
     if ($('#cs-cat')) $('#cs-cat').onchange = e => { st.cat = e.target.value; bar(); };
+    if ($('#cs-topic')) $('#cs-topic').oninput = e => { st.topic = e.target.value; bar(); };
+    if ($('#cs-slow')) $('#cs-slow').onchange = e => { st.slow = +e.target.value; bar(); };
+    if ($('#cs-limit')) $('#cs-limit').oninput = e => { st.limit = +e.target.value; $('#cs-limv').textContent = st.limit ? st.limit + ' kişi' : 'Sınırsız'; bar(); };
+    $('#modal-box').querySelectorAll('[data-br]').forEach(b => b.onclick = () => { st.bitrate = b.dataset.br; $('#modal-box').querySelectorAll('[data-br]').forEach(x => x.classList.toggle('on', x === b)); bar(); });
+    if ($('#cs-news')) $('#cs-news').onclick = () => { st.news = !st.news; $('#cs-news .ksw').classList.toggle('on', st.news); bar(); };
+    if ($('#cs-dup')) $('#cs-dup').onclick = () => socket.emit('chDuplicate', { serverId: s.id, channelId: obj.id }, r => { if (r?.error) return toast(r.error); toast('Oda çoğaltıldı'); chsOpen = null; setTimeout(() => showChSettings(s, 'ch', r.id, 'general', back), 200); });
     if ($('#cs-del')) $('#cs-del').onclick = () => (isCat ? askDeleteCat : askDeleteCh)(s, obj, () => { chsOpen = null; closeModal(); back && setTimeout(back, 240); });
     $('#modal-box').querySelectorAll('[data-goch]').forEach(b => b.onclick = () => { chsOpen = null; showChSettings(s, 'ch', b.dataset.goch, 'general', back); });
     $('#modal-box').querySelectorAll('[data-tg]').forEach(b => b.onclick = e => { if (e.target.closest('[data-rm]')) return; st.target = b.dataset.tg; render(); });
@@ -4477,12 +4574,19 @@ function showChSettings(s, kind, id, tab = 'general', back) {
       st.permsDirty = true; render();
     });
     $('#modal-box').querySelectorAll('[data-pre]').forEach(b => b.onclick = () => {
-      const e = {}; if (b.dataset.pre === 'priv') e.view = false; if (b.dataset.pre === 'ann') e.send = false; if (b.dataset.pre === 'listen') e.connect = false;
+      const e = {}; if (b.dataset.pre === 'priv') e.view = false; if (b.dataset.pre === 'ann') e.send = false; if (b.dataset.pre === 'listen') e.connect = false; if (b.dataset.pre === 'mute') e.speak = false;
       if (Object.keys(e).length) st.perms['@everyone'] = e; else delete st.perms['@everyone'];
       st.permsDirty = true; render();
     });
-    if ($('#pt-addb')) $('#pt-addb').onclick = e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect();
-      ctxMenu(r.left, r.bottom + 6, addable.map(x => ({ t: esc(x.name), icon: 'tag', act: () => { st.perms[x.id] = {}; st.target = x.id; st.permsDirty = true; render(); } }))); };
+    if ($('#pt-addb')) $('#pt-addb').onclick = e => { e.stopPropagation(); closeUMenu();
+      const r = e.currentTarget.getBoundingClientRect(), m = document.createElement('div'); m.className = 'umenu ctxm addpop';
+      m.innerHTML = `<input id="ap-q" placeholder="Rol ya da üye ara…" autocomplete="off"><div id="ap-l"></div>`; document.body.appendChild(m);
+      m.style.left = Math.min(r.left, innerWidth - 270) + 'px'; m.style.top = Math.min(r.bottom + 6, innerHeight - 340) + 'px';
+      const draw = q => { q = q.toLocaleLowerCase('tr'); const rs = addable.filter(x => !x.user && x.name.toLocaleLowerCase('tr').includes(q)), us = addable.filter(x => x.user && x.user.toLocaleLowerCase('tr').includes(q)).slice(0, 40);
+        $('#ap-l').innerHTML = (rs.length ? `<h5>Roller</h5>${rs.map(x => `<button data-at="${x.id}"><i class="rdot" style="background:${x.color}"></i><span>${esc(x.name)}</span></button>`).join('')}` : '') +
+          (us.length ? `<h5>Üyeler</h5>${us.map(x => `<button data-at="u:${esc(x.user)}">${av(x.user)}<span>${esc(x.user)}</span></button>`).join('')}` : '') || '<p class="hint" style="padding:10px">Sonuç yok</p>';
+        $('#ap-l').querySelectorAll('[data-at]').forEach(b => b.onclick = () => { closeUMenu(); st.perms[b.dataset.at] = {}; st.target = b.dataset.at; st.permsDirty = true; render(); }); };
+      draw(''); $('#ap-q').oninput = ev => draw(ev.target.value); setTimeout(() => $('#ap-q').focus(), 30); m.onclick = ev => ev.stopPropagation(); };
     if ($('#cs-sync')) $('#cs-sync').onclick = () => socket.emit('channelSave', { serverId: s.id, channelId: obj.id, sync: true }, r => {
       if (r?.error) return toast(r.error); toast('Oda kategoriyle eşitlendi'); chsOpen = null; setTimeout(() => showChSettings(s, kind, id, tab, back), 150); });
     $('#cs-reset').onclick = () => { chsOpen = null; showChSettings(s, kind, id, tab, back); };
@@ -4490,10 +4594,151 @@ function showChSettings(s, kind, id, tab = 'general', back) {
       const name = st.name.trim(); if (!name) return toast('Ad boş olamaz');
       const done = r => { if (r?.error) return toast(r.error); toast('Kaydedildi'); chsOpen = null; setTimeout(() => showChSettings(s, kind, id, tab, back), 160); };
       if (isCat) socket.emit('catSave', { serverId: s.id, catId: obj.id, name, perms: st.permsDirty ? st.perms : undefined }, done);
-      else socket.emit('channelSave', { serverId: s.id, channelId: obj.id, name, cat: (st.cat || '') !== (obj.cat || '') ? st.cat || null : undefined, perms: st.permsDirty ? st.perms : undefined }, done);
+      else socket.emit('channelSave', { serverId: s.id, channelId: obj.id, name, cat: (st.cat || '') !== (obj.cat || '') ? st.cat || null : undefined, perms: st.permsDirty ? st.perms : undefined,
+        topic: st.topic !== (obj.topic || '') ? st.topic : undefined, slow: st.slow !== (obj.slow || 0) ? st.slow : undefined, limit: st.limit !== (obj.limit || 0) ? st.limit : undefined,
+        bitrate: st.bitrate !== (obj.bitrate || 'std') ? st.bitrate : undefined, news: st.news !== !!obj.news ? st.news : undefined }, done);
     };
   };
   render();
+}
+
+// ================= Odalar 2: ayarlar, yeni türler, sahne, forum, duyuru, AFK, rol gözünden =================
+const voiceLike = t => t === 'voice' || t === 'stage';
+const SLOW_OPTS = [[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [15, '15 sn'], [30, '30 sn'], [60, '1 dk'], [120, '2 dk'], [300, '5 dk'], [600, '10 dk'], [900, '15 dk'], [3600, '1 saat']];
+const slowTxt = v => (SLOW_OPTS.find(x => x[0] === v) || [0, v + ' sn'])[1];
+const KEYS_BY = { text: ['view', 'send', 'attach', 'react', 'mention', 'manage'], forum: ['view', 'send', 'attach', 'react', 'manage'], voice: ['view', 'connect', 'speak', 'stream'], stage: ['view', 'connect', 'manage'], cat: ['view', 'send', 'attach', 'react', 'mention', 'manage', 'connect', 'speak', 'stream'] };
+Object.assign(PERM_ROWS, {
+  attach: ['Dosya ve resim gönder', 'Resim, ses kaydı ve dosya paylaşabilirler.', 'image'],
+  react: ['Tepki ekle', 'Mesajlara yeni emoji tepkisi ekleyebilirler.', 'smile'],
+  mention: ['@herkes etiketle', 'Tüm odayı tek mesajla bildirimle uyarabilirler.', 'at'],
+  manage: ['Mesajları yönet', 'Başkalarının mesajlarını silebilir ve sabitleyebilirler. Sahnede: sahne moderatörü.', 'pin'],
+  speak: ['Konuş', 'Kapalıysa odaya girebilir ama sadece dinleyebilirler.', 'mic'],
+  stream: ['Kamera ve ekran paylaş', 'Yayın açabilir, kamerasını açabilirler.', 'screen'],
+});
+const chNotif = () => { try { return JSON.parse(store.get('kanka-chnotif') || '{}'); } catch { return {}; } };
+const setChNotif = (id, v) => { const o = chNotif(); v === 'mentions' ? delete o[id] : o[id] = v; store.set('kanka-chnotif', JSON.stringify(o)); };
+const notifMode = id => chNotif()[id] || 'mentions';
+const vch = () => { if (!myVoice) return null; for (const s of S.servers) { const c = s.channels.find(x => x.id === myVoice); if (c) return { s, c }; } return null; };
+let stageSt = {};
+const canSpeakNow = () => { const f = vch(); if (!f) return true; if (f.c.type === 'stage') return !!stageSt[f.c.id]?.speakers?.includes(S.me); return f.c.canSpeak !== false; };
+const stageSilenced = n => { const f = vch(); return !!f && f.c.type === 'stage' && !stageSt[f.c.id]?.speakers?.includes(n); };
+function refreshPeerAudio() { for (const sid of Object.keys(peerNames)) { const a = document.getElementById('a-' + sid); if (a) a.muted = uMuted.has(peerNames[sid]) || stageSilenced(peerNames[sid]); } }
+
+// Rolün gözünden gör
+let viewAs = null; // { sid, roles: [], label }
+function permAs(s, ov, roles, key) {
+  const rp = new Set(roles.flatMap(r => s.customRoles.find(x => x.id === r)?.perms || []));
+  if (rp.has('manageChannels')) return true;
+  if (key === 'send' && rp.has('manageMessages')) return true;
+  const val = k => { let v = k === 'manage' ? rp.has('manageMessages') : k === 'mention' ? rp.has('mentionEveryone') : true;
+    if (ov['@everyone']?.[k] !== undefined) v = ov['@everyone'][k];
+    if (roles.some(r => ov[r]?.[k] === false)) v = false; if (roles.some(r => ov[r]?.[k] === true)) v = true; return v; };
+  if (!val('view')) return false; return key === 'view' || val(key);
+}
+const ovC = (s, c) => { const k = c.cat && catsOf(s).find(x => x.id === c.cat); return (c.sync && k ? k.perms : c.perms) || {}; };
+function startViewAs(s) {
+  const items = [{ t: '@herkes (rolü olmayan üye)', icon: 'users', act: () => setViewAs(s, [], '@herkes') }, ...(s.customRoles || []).map(r => ({ t: esc(r.name), icon: 'tag', act: () => setViewAs(s, [r.id], r.name) }))];
+  const b = $('#side-head').getBoundingClientRect(); ctxMenu(b.left + 10, b.bottom, items);
+}
+function setViewAs(s, roles, label) { viewAs = { sid: s.id, roles, label }; renderSide(); toast(`<b>${esc(label)}</b> gözünden görüyorsun`); }
+
+// Sahne çubuğu
+function renderStageBar() {
+  let el = $('#stagebar'); const f = vch();
+  if (!f || f.c.type !== 'stage') { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'stagebar'; $('#voicebar').insertBefore(el, $('#voicebar').firstChild); }
+  const st = stageSt[f.c.id] || { speakers: [], hands: [] }, me = S.me, mod = f.c.canManage, sp = st.speakers.includes(me), hand = st.hands.includes(me);
+  el.innerHTML = `<div class="sg-h">${ic('stage')}<b>Sahne</b><span>${st.speakers.length} konuşmacı · ${Math.max(0, (S.voice[f.c.id] || []).length - st.speakers.length)} dinleyici</span></div>
+    <div class="sg-b">${sp ? `<button class="sg-btn" id="sg-down">${ic('down')} Sahneden in</button>` : mod ? `<button class="sg-btn hl" id="sg-up">${ic('mic')} Sahneye çık</button>` : `<button class="sg-btn ${hand ? 'on' : 'hl'}" id="sg-hand">✋ ${hand ? 'Elini indir' : 'El kaldır'}</button>`}
+    ${mod && st.hands.length ? `<button class="sg-btn req" id="sg-req">✋ ${st.hands.length} istek</button>` : ''}</div>`;
+  $('#sg-hand') && ($('#sg-hand').onclick = () => socket.emit('stageHand', !hand, r => r?.error && toast(r.error)));
+  $('#sg-up') && ($('#sg-up').onclick = () => socket.emit('stageSpeaker', { name: me, on: true }, r => r?.error && toast(r.error)));
+  $('#sg-down') && ($('#sg-down').onclick = () => socket.emit('stageSpeaker', { name: me, on: false }, r => r?.error && toast(r.error)));
+  $('#sg-req') && ($('#sg-req').onclick = e => { const r = e.currentTarget.getBoundingClientRect();
+    ctxMenu(r.left, r.top - 10 - st.hands.length * 40, st.hands.map(n => ({ t: `${esc(n)} → sahneye al`, icon: 'mic', act: () => socket.emit('stageSpeaker', { name: n, on: true }, x => x?.error && toast(x.error)) }))); });
+}
+socket.on('stage', ({ ch, speakers, hands }) => {
+  const was = stageSt[ch]?.speakers?.includes(S.me);
+  stageSt[ch] = { speakers, hands };
+  const now = speakers.includes(S.me);
+  if (myVoice === ch && was !== now) { toast(now ? '🎤 Sahnedesin, artık konuşabilirsin' : 'Sahneden indin, dinleyicisin'); if (now) { muted = false; } }
+  applyMute(); refreshPeerAudio(); renderStageBar(); if (S.view === 'server') renderSide();
+});
+
+// AFK
+let afkAct = Date.now();
+['pointerdown', 'keydown', 'wheel'].forEach(ev => addEventListener(ev, () => { afkAct = Date.now(); }, { passive: true }));
+setInterval(() => {
+  const f = vch(); if (!f || !f.s.afk || f.c.id === f.s.afk.ch) return;
+  if (speaking.has(S.me)) afkAct = Date.now();
+  if (Date.now() - afkAct > f.s.afk.min * 60e3) {
+    const to = f.s.channels.find(c => c.id === f.s.afk.ch); if (!to) return;
+    afkAct = Date.now(); joinVoiceNow(to.id).then(ok => ok && toast(`${f.s.afk.min} dakikadır hareketsizdin, <b>${esc(to.name)}</b> odasına taşındın 💤`));
+  }
+}, 15e3);
+
+// Duyuru takibi
+function showFollow(s, c) {
+  const mine = S.servers.filter(x => x.id !== s.id && !x.public && (x.owner === S.me || perm(x, 'manageChannels')));
+  if (!mine.length) return toast('Takip için yönettiğin bir sunucu olmalı');
+  modal(`<div class="ccm"><div class="cc-head"><div class="cc-ico">${ic('megaphone')}</div><div><h3>Duyuruları takip et</h3><p><b>${esc(s.name)} · #${esc(c.name)}</b> odasındaki duyurular seçtiğin odaya da düşsün.</p></div></div>
+    <div class="mlabel">Sunucun</div><select class="msel" id="fw-s">${mine.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select>
+    <div class="mlabel">Oda</div><select class="msel" id="fw-c"></select>
+    <p class="invnote">${ic('info')} Takibi istediğin zaman aynı pencereden bırakabilirsin.</p>
+    <div class="mfoot"><button class="lnk" id="fw-off">Takibi bırak</button><button class="btns2" id="mx">Vazgeç</button><button class="btnp" id="fw-ok">${ic('check')} Takip et</button></div></div>`, 'ccm');
+  const fill = () => { const t = mine.find(x => x.id === $('#fw-s').value); $('#fw-c').innerHTML = t.channels.filter(x => x.type === 'text').map(x => `<option value="${x.id}">#${esc(x.name)}</option>`).join(''); };
+  fill(); $('#fw-s').onchange = fill; $('#mx').onclick = closeModal;
+  const go = off => socket.emit('newsFollow', { srcId: c.id, dstId: $('#fw-c').value, off }, r => { if (r?.error) return toast(r.error); closeModal(); toast(off ? 'Takip bırakıldı' : 'Takip ediliyor! Yeni duyurular odana düşecek 📢'); });
+  $('#fw-ok').onclick = () => go(false); $('#fw-off').onclick = () => go(true);
+}
+
+// Forum görünümü
+function forumHTML() {
+  const posts = S.msgs.filter(m => m.author).slice().reverse();
+  const last = m => Math.max(m.time, ...(m.thread || []).map(t => t.time));
+  posts.sort((a, b) => last(b) - last(a));
+  const canPost = !S.channel.readonly;
+  return `<div class="forum"><div class="fo-head"><div><h2>${roomIcon(S.channel)} ${esc(S.channel.name)}</h2>${S.channel.topic ? `<p>${esc(S.channel.topic)}</p>` : '<p>Her gönderi kendi sohbetini başlatır.</p>'}</div>${canPost ? `<button class="btnp" id="fo-new">${ic('plus')} Yeni gönderi</button>` : ''}</div>
+    ${posts.length ? `<div class="fo-list">${posts.map((m, i) => `<button class="fo-card" data-post="${m.id}" style="animation-delay:${Math.min(i, 10) * .03}s">
+      <div class="fo-top">${av(m.author)}<b>${esc(m.author)}</b><span>${ago(m.time)}</span></div>
+      <h3>${esc(m.title || (m.text || '').slice(0, 60) || 'Gönderi')}</h3>${m.text ? `<p>${esc(m.text.slice(0, 220))}</p>` : ''}${m.image ? `<img src="${esc(m.image)}" alt="" loading="lazy">` : ''}
+      <div class="fo-meta"><span>${ic('thread')} ${(m.thread || []).length} yanıt</span>${Object.values(m.reactions || {}).reduce((a, x) => a + x.length, 0) ? `<span>${ic('smile')} ${Object.values(m.reactions).reduce((a, x) => a + x.length, 0)}</span>` : ''}<span class="fo-last">son etkinlik ${ago(last(m))}</span></div></button>`).join('')}</div>`
+      : `<div class="estate"><div class="eart"><div class="disc"></div><div class="eico">${ic('forum')}</div><i class="orb o1"></i><i class="orb o2"></i></div><h3>Henüz gönderi yok</h3><p>İlk konuyu sen aç: bir soru, bir öneri ya da paylaşmak istediğin bir şey.</p>${canPost ? `<button class="btnp" id="fo-new2">${ic('plus')} İlk gönderiyi oluştur</button>` : ''}</div>`}</div>`;
+}
+const ago = t => { const d = (Date.now() - t) / 1000; return d < 60 ? 'az önce' : d < 3600 ? Math.floor(d / 60) + ' dk önce' : d < 86400 ? Math.floor(d / 3600) + ' sa önce' : Math.floor(d / 86400) + ' gün önce'; };
+function wireForum(box) {
+  box.querySelectorAll('[data-post]').forEach(b => b.onclick = () => openThread(b.dataset.post));
+  [box.querySelector('#fo-new'), box.querySelector('#fo-new2')].forEach(b => b && (b.onclick = newForumPost));
+}
+function newForumPost() {
+  modal(`<div class="ccm"><div class="cc-head"><div class="cc-ico">${ic('forum')}</div><div><h3>Yeni gönderi</h3><p>#${esc(S.channel.name)}</p></div></div>
+    <div class="mlabel">Başlık</div><div class="cname"><input id="fp-t" maxlength="100" placeholder="Ne hakkında konuşalım?"></div>
+    <div class="mlabel">İçerik</div><textarea class="fp-b" id="fp-b" maxlength="2000" rows="5" placeholder="Detayları yaz…"></textarea>
+    <div class="mfoot"><span style="margin-right:auto"></span><button class="btns2" id="mx">Vazgeç</button><button class="btnp" id="fp-ok">${ic('send')} Paylaş</button></div></div>`, 'ccm');
+  $('#mx').onclick = closeModal; setTimeout(() => $('#fp-t').focus(), 60);
+  $('#fp-ok').onclick = () => { const title = $('#fp-t').value.trim(), text = $('#fp-b').value.trim();
+    if (!title) { $('.cname').classList.add('err'); return $('#fp-t').focus(); }
+    socket.emit('message', { kind: 'text', title, text: text || title }, r => { if (r?.error) return toast(r.error); closeModal(); toast('Gönderi paylaşıldı'); }); };
+}
+
+// Yavaş mod geri sayımı
+let slowUntil = 0, slowT = null;
+function slowAfterSend() {
+  const c = S.channel; if (!c || S.view !== 'server' || c.canManage) return;
+  const sec = c.slow || S.server.slow || 0; if (!sec) return;
+  slowUntil = Date.now() + sec * 1000; clearInterval(slowT);
+  const tick = () => { const left = Math.ceil((slowUntil - Date.now()) / 1000), el = $('#slowtag');
+    if (left <= 0 || S.channel?.id !== c.id) { clearInterval(slowT); el && (el.innerHTML = `${ic('clock')} Yavaş mod: ${slowTxt(sec)}`, el.classList.remove('wait')); return; }
+    if (el) { el.innerHTML = `${ic('clock')} ${left} sn sonra yazabilirsin`; el.classList.add('wait'); } };
+  tick(); slowT = setInterval(tick, 500);
+}
+function renderChanExtras() {
+  $('#slowtag')?.remove();
+  document.body.classList.toggle('forumv', S.view === 'server' && S.channel?.type === 'forum');
+  if (S.view !== 'server' || !S.channel) return;
+  const sec = S.channel.slow || S.server.slow || 0;
+  if (sec && !S.channel.canManage) { const t = document.createElement('div'); t.id = 'slowtag'; t.innerHTML = `${ic('clock')} Yavaş mod: ${slowTxt(sec)}`; $('#compose').prepend(t); }
+  document.querySelectorAll('#menu [data-a="image"], #menu [data-a="voice"]').forEach(b => b.style.display = S.channel.canAttach === false ? 'none' : '');
 }
 
 // --- Sunucu ayarları > Odalar: sürüklenebilir ağaç ---
