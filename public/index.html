@@ -3066,8 +3066,14 @@ socket.on('social', soc => {
   if (newReq && S.view !== 'dm') { S.unreadDM = true; renderRail(); }
   if (S.view === 'dm') { renderDMSide(); if (!S.channel) showFriends(); }
 });
+socket.on('voiceKicked', ({ ch, reason }) => {
+  if (myVoice !== ch) return;
+  leaveVoice(false); toast(reason || 'Ses odasından çıkarıldın');
+});
 socket.on('servers', list => {
   S.servers = list;
+  // Bulunduğun ses odası artık yoksa (silindi / erişim kalktı) bağlantıyı kapat
+  if (myVoice && !String(myVoice).startsWith('call:') && !list.some(s => s.channels.some(c => c.id === myVoice))) { leaveVoice(false); toast('Bulunduğun ses odası artık yok'); }
   if (ssOpen && !list.some(x => x.id === ssOpen.id)) { ssOpen = null; closeModal(); }
   if (S.view === 'server') {
     S.server = S.servers.find(s => s.id === S.server?.id) || S.servers[0];

@@ -485,6 +485,23 @@ const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.starts
 const pushPresence = () => io.emit('presence', presenceList());
 const voiceMedia = new Map();       // socket.id -> { cam, screen } (yayın rozetleri için)
 const liveState = () => { const o = {}; for (const [ch, m] of voice) { if (ch.startsWith('call:')) continue; const l = [...m].filter(([sid]) => voiceMedia.get(sid)?.screen).map(([, n]) => n); if (l.length) o[ch] = l; } return o; };
+// Odadakileri sesten çıkar (oda silindi, sunucudan atıldı vb.)
+function voiceKick(chIds, onlyName, reason) {
+  let any = false;
+  for (const ch of chIds) {
+    const room = voice.get(ch); if (!room) continue;
+    for (const [sid, n] of [...room]) {
+      if (onlyName && n !== onlyName) continue;
+      any = true; room.delete(sid); voiceMedia.delete(sid);
+      io.to(sid).emit('voiceKicked', { ch, reason });
+      io.sockets.sockets.get(sid)?.leave('v:' + ch);
+      io.to('v:' + ch).emit('voiceLeft', sid);
+      stage.get(ch)?.speakers.delete(n); stage.get(ch)?.hands.delete(n);
+    }
+    if (!room.size) { voice.delete(ch); stage.delete(ch); }
+  }
+  if (any) pushVoice();
+}
 const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceLive', liveState()); };
 function pushServers(names) {
   for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
@@ -1134,6 +1151,7 @@ io.on('connection', socket => {
     s.bans[name] = { by: me, time: Date.now(), reason: clean(reason, 120) };
     s.members = s.members.filter(n => n !== name); delete s.roles[name]; delete s.memberRoles?.[name];
     audit(s, me, 'Yasakladı', name + (reason ? ' · ' + clean(reason, 120) : ''));
+    voiceKick(s.channels.map(c => c.id), name, 'Sunucudan yasaklandın');
     save(); pushServers([name, ...s.members]);
     io.to('user:' + name).emit('toast', `${s.name} sunucusundan yasaklandın`);
     cb({ ok: true });
@@ -1144,6 +1162,7 @@ io.on('connection', socket => {
     if (name === s.owner || !can(s, me, 'kick') || !outranks(s, me, name)) return cb({ error: 'Bu kişiyi atamazsın' });
     s.members = s.members.filter(n => n !== name); delete s.roles[name]; delete s.memberRoles?.[name];
     audit(s, me, 'Sunucudan attı', name);
+    voiceKick(s.channels.map(c => c.id), name, 'Sunucudan çıkarıldın');
     save(); pushServers([name, ...s.members]);
     io.to('user:' + name).emit('toast', `${s.name} sunucusundan çıkarıldın`);
     cb({ ok: true });
@@ -1154,6 +1173,8 @@ io.on('connection', socket => {
     if (!c) return cb({ error: 'Oda bulunamadı' });
     if (c.type === 'text' && s.channels.filter(x => x.type === 'text').length < 2) return cb({ error: 'En az bir yazılı oda kalmalı' });
     s.channels = s.channels.filter(x => x !== c); delete db.messages[c.id]; delete db.playlists[c.id];
+    if (s.afk?.ch === c.id) s.afk = null;
+    voiceKick([c.id], null, 'Bulunduğun ses odası silindi');
     audit(s, me, 'Oda sildi', c.name);
     save(); pushServers(membersOf(s)); cb({ ok: true });
   });
@@ -1389,6 +1410,7 @@ io.on('connection', socket => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || s.public) return cb({ error: 'Bu sunucudan ayrılamazsın' });
     s.members = s.members.filter(n => n !== me);
+    voiceKick(s.channels.map(c => c.id), me, 'Sunucudan ayrıldın');
     if (s.owner === me) s.owner = s.members[0] || null;
     if (!s.members.length) db.servers = db.servers.filter(x => x !== s);
     save(); pushServers([me, ...s.members]); cb({ ok: true });
