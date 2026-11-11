@@ -1048,6 +1048,104 @@
   @keyframes discPulse { 0% { box-shadow: 0 0 0 0 rgba(255,138,76,.55); } 70%, 100% { box-shadow: 0 0 0 12px rgba(255,138,76,0); } }
   @media (max-width: 560px) { .avgrid { grid-template-columns: repeat(4, 1fr); } .ocards { grid-template-columns: 1fr; } .onbw .osec, .onbw .ofoot { padding-left: 18px; padding-right: 18px; } }
   @media (prefers-reduced-motion: reduce) { .onbw .ologo, .estate .eart .disc, .estate .eart .wv, .estate .eart .orb, .srv.dash.hint { animation: none; } }
+  /* --- rehber v2 --- */
+  #onb .orw { color: var(--accent-2); font-weight: 900; }
+  #onb .ol { max-height: 46vh; overflow-y: auto; scrollbar-width: none; }
+  #onb .ol::-webkit-scrollbar { display: none; }
+  .ostep { padding: 7px 9px; }
+  .ostep .obar { display: block; height: 4px; border-radius: 2px; background: rgba(255,255,255,.08); margin-top: 5px; overflow: hidden; }
+  .ostep .obar u { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #ffb347, #ff6b3d); transition: width .6s var(--ease-out); }
+  #onb.win .owin { padding-top: 0; }
+  .orewards { display: flex; justify-content: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .orewards span { padding: 5px 10px; border-radius: 99px; background: rgba(255,179,71,.14); border: 1px solid rgba(255,179,71,.3); color: var(--accent-2); font-weight: 900; font-size: 12px; animation: popIn .4s var(--ease-out) both; }
+  .orewards span:nth-child(2) { animation-delay: .12s; }
+  #onbm { display: none; }
+  @media (max-width: 760px) {
+    #onb { display: none; }
+    #onbm { display: flex; align-items: center; gap: 10px; margin: 8px 10px 0; padding: 8px 12px 8px 8px; border-radius: 16px; background: linear-gradient(165deg, #3a251a, #2b211c 60%); border: 1px solid #4a3426; color: var(--ink); font: inherit; text-align: left; cursor: pointer; animation: onbIn .45s var(--ease-out) both; flex-shrink: 0; }
+    #onbm > span { flex: 1; min-width: 0; } #onbm > span b { display: block; font-size: 14px; font-weight: 900; } #onbm > span small { color: var(--muted); font-size: 12px; }
+    #onbm > .ic { width: 18px; height: 18px; color: var(--muted); transform: rotate(-90deg); }
+    #onbm.out { animation: onbOut .45s var(--ease-out) forwards; }
+    #onbm .oring b { font-size: 9.5px; }
+    #modal .box.onbsheet, #modal .box.invm, #modal .box.mict { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; max-width: none; max-height: 88vh; border-radius: 26px 26px 0 0; padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); }
+    #modal.open .box.onbsheet, #modal.open .box.invm, #modal.open .box.mict { animation: sheetUp .32s var(--ease-out); }
+    #modal .box.onbw { max-height: 94vh; }
+    .onbw .ohero { padding: 26px 18px 20px; } .onbw h2 { font-size: 22px; } .onbw .ologo { width: 72px; height: 72px; border-radius: 22px; }
+    .ostep { padding: 10px; } .ostep span b { font-size: 14px; } .ostep span small { font-size: 12.5px; }
+  }
+
+  #onb .ot small, .ostep span b, .ostep span small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #onb .ot small { display: block; }
+  #onbm .oring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 9.5px; }
+  @media (max-width: 760px) {
+    #modal .box.onbsheet, #modal .box.invm, #modal .box.mict { width: 100% !important; }
+    .onbw .avgrid { grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .onbw .osec { padding-top: 16px; }
+    .onbw .osteps { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .onbw .ostp { padding: 8px 10px; } .onbw .ostp small { display: none; } .onbw .ostp b { font-size: 12.5px; }
+    .onbw .ostp i { width: 22px; height: 22px; font-size: 12px; }
+    .onbw .ofoot { position: sticky; bottom: 0; background: var(--panel); border-top: 1px solid var(--line); padding: 14px 18px calc(14px + env(safe-area-inset-bottom)); }
+    .onbw .osec h4 { flex-wrap: wrap; gap: 6px; }
+  }
+  @keyframes sheetUp { from { transform: translateY(40px); opacity: .4; } }
+  .sh-grip { width: 40px; height: 4px; border-radius: 2px; background: #4a3a31; margin: 2px auto 14px; }
+  .sh-head { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+  .sh-head h3 { font-size: 19px; font-weight: 900; } .sh-head p { color: var(--muted); font-size: 13.5px; margin-top: 3px; line-height: 1.4; } .sh-head p b { color: var(--accent-2); }
+  #modal .box.onbsheet { width: min(440px, 94vw); }
+  #modal .box.onbsheet .ol { display: grid; gap: 6px; }
+  .onbw .orew { text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--accent-2); background: rgba(255,179,71,.12); border: 1px solid rgba(255,179,71,.28); padding: 4px 10px; border-radius: 99px; }
+  .osteps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ostp { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); animation: fadeUp .4s var(--ease-out) both; }
+  .ostp:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .ostp i { width: 26px; height: 26px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: 13px; flex-shrink: 0; }
+  .ostp b { display: block; font-size: 13.5px; font-weight: 900; } .ostp small { color: var(--muted); font-size: 12px; }
+  @media (max-width: 560px) { .osteps { grid-template-columns: 1fr; } }
+  #compose.attn { animation: attn 1.2s ease-out 2; }
+  @keyframes attn { 0% { box-shadow: 0 0 0 0 rgba(255,138,76,.6); } 100% { box-shadow: 0 0 0 14px rgba(255,138,76,0); } }
+
+  #modal .box.invm { width: min(480px, 94vw); padding: 24px; }
+  .invh { display: flex; gap: 14px; align-items: center; }
+  .invico { width: 54px; height: 54px; border-radius: 17px; background: linear-gradient(145deg, #ff9a5c, #e8552a); display: grid; place-items: center; font-weight: 900; font-size: 22px; color: #fff; overflow: hidden; flex-shrink: 0; box-shadow: 0 8px 22px rgba(242,101,47,.3); }
+  .invico img { width: 100%; height: 100%; object-fit: cover; }
+  .invh h3 { font-size: 20px; font-weight: 900; } .invh p { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+  .invbox { display: flex; gap: 8px; padding: 6px 6px 6px 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); align-items: center; transition: border-color .15s; }
+  .invbox:focus-within { border-color: var(--accent); }
+  .invbox input { flex: 1; min-width: 0; background: none; border: 0; color: var(--ink); font: inherit; font-weight: 700; font-size: 14px; outline: none; }
+  .invbox .btnp { padding: 10px 16px; border-radius: 11px; }
+  .invbox .btnp.ok { background: linear-gradient(135deg, #7be0a7, #3fbf7a); box-shadow: 0 8px 22px rgba(63,191,122,.35); }
+  .invshare { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+  .invshare a, .invshare button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 10px; border-radius: 13px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font: inherit; font-weight: 800; font-size: 13.5px; text-decoration: none; cursor: pointer; transition: border-color .15s, transform .15s, background .15s; }
+  .invshare a:hover, .invshare button:hover { border-color: var(--c); transform: translateY(-2px); background: var(--hover); }
+  .invshare i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+  .invnote { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12.5px; margin-top: 14px; }
+  .invnote .ic { width: 15px; height: 15px; flex-shrink: 0; }
+
+  .ktip { position: fixed; z-index: 70; width: 290px; padding: 14px 16px 12px; border-radius: 16px; background: linear-gradient(160deg, #3d281c, #2b211c); border: 1px solid #5a3e2e; box-shadow: 0 18px 44px rgba(0,0,0,.5); animation: popIn .3s var(--ease-out) both; }
+  .ktip.out { animation: tipOut .2s ease forwards; }
+  @keyframes tipOut { to { opacity: 0; transform: scale(.95); } }
+  .ktip b { display: block; font-size: 15px; font-weight: 900; }
+  .ktip p { color: #d8c4b4; font-size: 13.5px; line-height: 1.45; margin-top: 5px; }
+  .ktip kbd { padding: 1px 6px; border-radius: 6px; background: #1a120c; border: 1px solid #5a3e2e; font: inherit; font-size: 12px; font-weight: 900; color: var(--ink); }
+  .ktip .kt-f { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+  .ktip .kt-f span { font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); }
+  .ktip .kt-f button { padding: 7px 14px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; font: inherit; font-weight: 900; font-size: 13px; cursor: pointer; }
+  .ktip .kt-arrow { position: absolute; width: 12px; height: 12px; background: #34241a; border: 1px solid #5a3e2e; transform: rotate(45deg); margin-left: -6px; margin-top: -6px; }
+  .ktip[data-p=top] .kt-arrow { border-top: 0; border-left: 0; margin-top: 0; }
+  .ktip[data-p=bottom] .kt-arrow { border-bottom: 0; border-right: 0; margin-top: 0; }
+  .ktip[data-p=right] .kt-arrow { border-top: 0; border-right: 0; margin-left: 0; }
+  .tipfocus { position: relative; z-index: 2; box-shadow: 0 0 0 3px rgba(255,138,76,.65), 0 0 24px rgba(255,138,76,.35) !important; transition: box-shadow .3s; }
+
+  #modal .box.fstat { width: min(560px, 94vw); }
+  .funnel { display: grid; gap: 8px; margin-top: 16px; }
+  .fr { display: grid; grid-template-columns: 150px 1fr 40px 44px; align-items: center; gap: 10px; font-size: 13.5px; animation: fadeUp .35s var(--ease-out) both; }
+  .fr span { font-weight: 800; } .fr b { text-align: right; } .fr em { font-style: normal; color: var(--muted); font-size: 12px; text-align: right; }
+  .fb { height: 12px; border-radius: 6px; background: rgba(255,255,255,.06); overflow: hidden; }
+  .fb u { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #ffb347, #ff6b3d); animation: grow .8s var(--ease-out) both; transform-origin: left; }
+  @keyframes grow { from { transform: scaleX(0); } }
+  .fstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 18px; }
+  .fstats div { padding: 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); text-align: center; }
+  .fstats b { display: block; font-size: 22px; font-weight: 900; } .fstats span { color: var(--muted); font-size: 12px; }
+  @media (max-width: 560px) { .fr { grid-template-columns: 110px 1fr 32px 40px; font-size: 12.5px; } .fstats { grid-template-columns: 1fr 1fr; } }
 </style>
 </head>
 <body>
@@ -1329,11 +1427,11 @@ function onAuth(res) {
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ice?.length) ICE.iceServers = res.ice;
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
-  if (res.reward) setTimeout(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); }, 600);
+  if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
   $('#a-pass').value = '';
   renderMe();
-  S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = false; renderOnb();
+  S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
   if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
@@ -1853,7 +1951,7 @@ function showServerInfo(s) {
   modal(`${s.banner || s.bannerColor ? `<div class="bn-prev" style="margin:-8px -8px 14px;background-image:${s.banner ? `url('${esc(s.banner)}')` : `linear-gradient(135deg, ${s.bannerColor}, ${s.bannerColor}99)`}"></div>` : ''}<div style="text-align:center"><div class="srv active" style="width:72px;height:72px;margin:0 auto 10px;font-size:28px;cursor:default">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div>
     <h3 style="display:flex;align-items:center;justify-content:center;gap:8px">${badgeRow(s, 22)}${esc(s.name)}</h3><p class="hint">${s.public ? 'Herkese açık sunucu' : `Kurucu: <b>${esc(s.owner || '—')}</b>`}</p></div>
     ${(s.badges || []).length ? `<div class="sect" style="margin-top:6px"><h4>Rozetler</h4>${s.badges.map(b => `<div class="lrow" style="align-items:flex-start;gap:12px">${badgeSvg(b.id, 28)}<span><b>${SRV_BADGES[b.id].t}</b><br><small style="color:var(--muted)">${SRV_BADGES[b.id].d}</small></span></div>`).join('')}</div>` : ''}
-    ${s.siteAdmin ? `<div class="sect"><h4>Kanka Chat yönetimi</h4><div class="adm-badges">${['dogrulanmis', 'partner'].map(id => `<button data-adm="${id}" class="${(s.badges || []).some(b => b.id === id) ? 'on' : ''}">${badgeSvg(id, 20)}${(s.badges || []).some(b => b.id === id) ? SRV_BADGES[id].t + ' rozetini kaldır' : SRV_BADGES[id].t + ' yap'}</button>`).join('')}</div></div>` : ''}
+    ${s.siteAdmin ? `<div class="sect"><h4>Kanka Chat yönetimi</h4><div class="adm-badges">${['dogrulanmis', 'partner'].map(id => `<button data-adm="${id}" class="${(s.badges || []).some(b => b.id === id) ? 'on' : ''}">${badgeSvg(id, 20)}${(s.badges || []).some(b => b.id === id) ? SRV_BADGES[id].t + ' rozetini kaldır' : SRV_BADGES[id].t + ' yap'}</button>`).join('')}<button id="adm-onb">${ic('trophy')}Rehber istatistikleri</button></div></div>` : ''}
     <div class="srvinfo"><div><b>${members.length}</b><span>Üye</span></div><div><b style="color:var(--green)">${on}</b><span>Çevrimiçi</span></div><div><b>${text}+${voice}</b><span>Oda</span></div></div>
     <div class="lrow"><span>Senin rolün</span>${badge(roleOf(s, S.me)) || '<span style="flex:0;color:var(--muted)">Üye</span>'}</div>
     <div class="lrow"><span>Özel emoji</span><span style="flex:0">${Object.keys(s.emojis || {}).length}</span></div>
@@ -1861,6 +1959,7 @@ function showServerInfo(s) {
     <div class="rowb"><button id="mx">Kapat</button>${s.public ? '' : `<button class="primary" id="si-inv">${ic('userplus')}Davet et</button>`}</div>`);
   $('#mx').onclick = closeModal;
   if (!s.public) $('#si-inv').onclick = () => showInvite(s);
+  if ($('#adm-onb')) $('#adm-onb').onclick = showOnbStats;
   $('#modal-box').querySelectorAll('[data-adm]').forEach(b => b.onclick = () => { const on = !b.classList.contains('on'); socket.emit('serverBadge', { serverId: s.id, badge: b.dataset.adm, on }, x => { if (x.error) return toast(x.error); toast(on ? 'Rozet verildi' : 'Rozet kaldırıldı'); setTimeout(() => showServerInfo(S.servers.find(y => y.id === s.id) || s), 250); }); });
 }
 function askTimeout(srv, n, after) {
@@ -2036,17 +2135,10 @@ function showServerSettings(s, tab, focus) {
   };
   page[tab]();
 }
-function showInvite(s) {
-  const link = `${location.origin}/davet/${s.invite}`;
-  modal(`<h3>Arkadaşlarını davet et</h3><p class="hint">Bu linki gönder, açınca sunucuna katılırlar.</p>
-    <input class="field" id="inv" value="${esc(link)}" readonly><div class="rowb"><button id="mx">Kapat</button><button class="primary" id="copy">Linki kopyala</button></div>`);
-  $('#inv').onclick = e => e.target.select();
-  $('#copy').onclick = () => { navigator.clipboard?.writeText(link).then(() => toast('Link kopyalandı'), () => $('#inv').select()); };
-  $('#mx').onclick = closeModal;
-}
 $('#menu-btn').onclick = e => { e.stopPropagation(); document.body.classList.toggle('drawer'); };
 document.addEventListener('click', e => { if (document.body.classList.contains('drawer') && !e.target.closest('#rail, #side, #menu-btn, #modal')) document.body.classList.remove('drawer'); });
 function selectChannel(id) {
+  if (++chSwitches === 5 && matchMedia('(pointer: fine)').matches) setTimeout(() => tip('ctrlk', '#side-head', 'Hızlı geçiş ⚡', '<kbd>Ctrl</kbd> + <kbd>K</kbd> ile istediğin odaya ya da kişiye anında atla.', 'right'), 600);
   document.body.classList.remove('vview'); renderPip();
   document.body.classList.remove('drawer');
   S.channel = S.server.channels.find(c => c.id === id);
@@ -2469,7 +2561,7 @@ socket.on('playlist', ({ channelId, playlist }) => { if (channelId === S.channel
 // ================= Yazma alanı =================
 function send(payload) {
   if (S.replyTo) payload.replyTo = S.replyTo.id;
-  socket.emit('message', payload, r => { if (r?.needRules) return showWelcome(S.servers.find(x => x.id === r.needRules)); r?.error ? toast(r.error) : cancelReply(); });
+  socket.emit('message', payload, r => { if (r?.needRules) return showWelcome(S.servers.find(x => x.id === r.needRules)); if (r?.error) return toast(r.error); cancelReply(); setTimeout(() => tip('msg', '#compose', 'Mesajın gitti! 🎉', 'Bir mesajın üstüne gelip tepki verebilir ya da yanıtlayabilirsin. @ yazarak birini etiketle.', 'top'), 700); });
 }
 $('#compose').onsubmit = e => {
   e.preventDefault();
@@ -2877,6 +2969,7 @@ async function joinVoiceNow(chId) {
   return new Promise(resolve => socket.emit('voiceJoin', chId, r => {
     if (r.error) { toast(r.error); return resolve(false); }
     myVoice = chId; muted = false; applyMute(); startSpeakDetect(); playSound('join');
+    setTimeout(() => tip('voice', '#voicebar', 'Sesli odadasın 🎧', 'Buradan mikrofonunu kapatabilir, kamerayı açabilir, ekranını paylaşabilir ve gürültü engellemeyi yönetebilirsin.', 'right'), 900);
     r.peers.forEach(p => { peerNames[p.sid] = p.name; makePeer(p.sid); });
     const ch = S.servers.flatMap(s => s.channels.map(c => ({ ...c, s: s.name }))).find(c => c.id === chId);
     const pc = chId.startsWith('call:') ? S.dms.find(d => d.id === chId.slice(5)) || { with: chId.slice(8).split('|').find(n => n !== S.me) } : null;
@@ -3612,50 +3705,194 @@ socket.on('watch', ({ channelId, state }) => {
 // ================= Küçük yardımcılar =================
 // ================= Başlangıç rehberi, karşılama, mikrofon testi, boş ekranlar =================
 const ONB_STEPS = [
-  { k: 'join', icon: 'compass', t: 'Bir sunucuya katıl', d: 'Keşfet\'ten bul ya da kendin kur' },
+  { k: 'join', icon: 'compass', t: 'Sunucuya katıl', d: 'Keşfet\'ten bul ya da kendin kur' },
+  { k: 'msg', icon: 'chat', t: 'İlk mesajını at', d: 'Bir odaya selam yaz' },
   { k: 'voice', icon: 'volume', t: 'Sesli odaya gir', d: 'Arkadaşlarınla konuş' },
+  { k: 'invite', icon: 'userplus', t: 'Arkadaşını davet et', d: 'Davet linkini paylaş' },
   { k: 'profile', icon: 'user', t: 'Profilini tamamla', d: 'Durum ya da hakkımda ekle' },
 ];
-const onbState = () => ({ join: S.servers.some(s => s.id !== 's1'), voice: !!S.onb?.voice, profile: !!S.onb?.profile });
-let onbWon = false;
+const SETUP_STEPS = [
+  { k: 'icon', icon: 'image', t: 'Simge ekle', d: 'Listede öne çıksın' },
+  { k: 'invite', icon: 'userplus', t: 'Arkadaş davet et', d: 'Davet linkini paylaş' },
+  { k: 'channels', icon: 'hash', t: 'Odaları düzenle', d: 'Yeni oda aç ya da adlandır' },
+  { k: 'members', icon: 'users', t: '3 üyeye ulaş', d: '' },
+];
+const onbState = () => ({ join: S.servers.some(s => s.id !== 's1'), msg: !!S.onb?.msg, voice: !!S.onb?.voice, invite: !!S.onb?.invite, profile: !!S.onb?.profile });
+const hqServer = () => S.servers.find(s => s.id === 's1') || S.servers[0];
+let onbWon = '';
+function onbModel() {
+  const s = S.view === 'server' ? S.server : null;
+  if (s && s.owner === S.me && s.setup && !s.setup.done && !s.setup.dismissed) {
+    const m = (s.members || []).length, st = { icon: !!s.iconImg, invite: !!s.setup.invite, channels: !!s.setup.channels, members: m >= 3 };
+    const steps = SETUP_STEPS.map(x => ({ ...x, d: x.k === 'members' ? `${Math.min(m, 3)}/3 üye` : x.d, done: st[x.k] }));
+    return { mode: 'setup', id: s.id, title: 'Sunucunu hazırla', sub: s.name, steps, n: steps.filter(x => x.done).length, total: steps.length, extra: m };
+  }
+  if (S.onb && !S.onb.done && !S.onb.dismissed) {
+    const st = onbState(), steps = ONB_STEPS.map(x => ({ ...x, done: st[x.k] }));
+    return { mode: 'user', id: 'u', title: "Kanka'ya başla", steps, n: steps.filter(x => x.done).length, total: steps.length };
+  }
+  return null;
+}
+const onbRing = (n, total, size = 38) => { const r = size / 2 - 4, C = 2 * Math.PI * r; return `<div class="oring" style="width:${size}px;height:${size}px"><svg viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px"><defs><linearGradient id="onbgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6b3d"/></linearGradient></defs><circle class="bgc" cx="${size / 2}" cy="${size / 2}" r="${r}"/><circle class="fg" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - n / total)}"/></svg><b>${n}/${total}</b></div>`; };
+const onbStepsHTML = m => m.steps.map(s => `<button class="ostep ${s.done ? 'done' : ''}" data-k="${s.k}"><i class="oi">${ic(s.done ? 'check' : s.icon)}</i><span><b>${s.t}</b><small>${s.d}</small>${s.k === 'members' && !s.done ? `<em class="obar"><u style="width:${Math.min(100, (m.extra || 0) / 3 * 100)}%"></u></em>` : ''}</span><i class="ock">${ic('check')}</i></button>`).join('');
 function renderOnb() {
-  let el = $('#onb');
-  if (!S.onb || S.onb.done || S.onb.dismissed) { el?.remove(); return; }
+  const m = onbModel();
+  let el = $('#onb'), mb = $('#onbm');
+  if (!m) { el?.remove(); mb?.remove(); return; }
   if (!el) { el = document.createElement('div'); el.id = 'onb'; $('#side').insertBefore(el, $('#me')); }
-  const st = onbState(), n = ONB_STEPS.filter(s => st[s.k]).length, C = 2 * Math.PI * 15;
-  const ring = `<div class="oring"><svg viewBox="0 0 38 38"><defs><linearGradient id="onbgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6b3d"/></linearGradient></defs><circle class="bgc" cx="19" cy="19" r="15"/><circle class="fg" cx="19" cy="19" r="15" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - n / 3)}"/></svg><b>${n}/3</b></div>`;
-  if (n === 3) {
-    if (onbWon) return;
-    onbWon = true;
-    el.className = '';
-    el.innerHTML = `<div class="oh">${ring}<div class="ot"><b>Hepsi tamam!</b><small>Rehberi bitirdin</small></div></div><div class="owin"><div class="big">🎉</div><b>Artık gerçek bir Kanka'sın</b><small>İyi sohbetler, bol eğlence!</small></div>`;
+  if (!mb) { mb = document.createElement('button'); mb.id = 'onbm'; $('#chat').insertBefore(mb, $('#head').nextSibling); }
+  const left = m.total - m.n, closed = store.get('kanka-onb-closed') === '1';
+  const sig = `${m.mode}|${m.id}|${m.steps.map(s => +s.done).join('')}|${closed}|${m.extra || 0}`;
+  if (el.dataset.sig === sig) return;
+  el.dataset.sig = sig;
+  mb.innerHTML = `${onbRing(m.n, m.total, 30)}<span><b>${m.title}</b><small>${left ? `${left} adım kaldı` : 'Tamamlandı'}${m.mode === 'user' ? ' · 🎁 +100 XP' : ''}</small></span>${ic('chevron')}`;
+  mb.onclick = openOnbSheet;
+  if (!left) return onbFinish(m, el);
+  el.className = closed ? 'closed' : '';
+  el.innerHTML = `<div class="oh" id="onb-h" role="button" aria-expanded="${!closed}">${onbRing(m.n, m.total)}<div class="ot"><b>${m.title}</b><small>${m.mode === 'user' ? `${left} adım · <span class="orw">🎁 +100 XP</span>` : `${left} adım kaldı`}</small></div>
+    <button class="ox" id="onb-x" title="Gizle" aria-label="Rehberi gizle">${ic('x')}</button></div><div class="ol">${onbStepsHTML(m)}</div>`;
+  $('#onb-h').onclick = e => { if (e.target.closest('#onb-x')) return; store.set('kanka-onb-closed', closed ? null : '1'); renderOnb(); };
+  $('#onb-x').onclick = () => onbHide(m);
+  el.querySelectorAll('.ostep:not(.done)').forEach(b => b.onclick = () => onbGo(m.mode, b.dataset.k));
+}
+function onbHide(m) {
+  confirmBox(m.mode === 'user' ? 'Başlangıç rehberini gizlemek istiyor musun? Ayarlar > Bildirimler ve ses\'ten tekrar açabilirsin.' : 'Sunucu kurulum rehberini gizlemek istiyor musun?', () => {
+    if (m.mode === 'user') socket.emit('onbSet', 'dismissed', r => { if (r?.onb) S.onb = r.onb; renderOnb(); });
+    else socket.emit('setupSet', { serverId: m.id, k: 'dismissed' }, () => {});
+    $('#onb')?.classList.add('out'); setTimeout(() => { $('#onb')?.remove(); $('#onbm')?.remove(); }, 450);
+  });
+}
+function onbFinish(m, el) {
+  const key = m.mode + m.id; if (onbWon === key) return; onbWon = key;
+  const show = (title, sub, big, chips = '') => {
+    el.className = 'win';
+    el.innerHTML = `<div class="oh">${onbRing(m.total, m.total)}<div class="ot"><b>${title}</b><small>${sub}</small></div></div><div class="owin"><div class="big">${big}</div>${chips}</div>`;
     confetti(el); playSound('reward');
-    setTimeout(() => { el.classList.add('out'); socket.emit('onbSet', 'done', r => { if (r?.onb) S.onb = r.onb; }); setTimeout(() => el.remove(), 450); }, 5200);
+    $('#onbm')?.classList.add('done');
+    setTimeout(() => { el.classList.add('out'); $('#onbm')?.classList.add('out'); setTimeout(() => { el.remove(); $('#onbm')?.remove(); }, 450); }, 6000);
+  };
+  if (m.mode === 'setup') {
+    show('Sunucun hazır!', esc(m.sub), '🎉', `<b>Harika bir başlangıç</b><small>Şimdi sohbeti ısıtma zamanı</small>`);
+    socket.emit('setupSet', { serverId: m.id, k: 'done' }, () => {});
     return;
   }
-  const closed = store.get('kanka-onb-closed') === '1', sig = `${st.join}${st.voice}${st.profile}${closed}`;
-  if (el.dataset.sig === sig) return; el.dataset.sig = sig;
-  el.className = closed ? 'closed' : '';
-  el.innerHTML = `<div class="oh" id="onb-h" role="button" aria-expanded="${!closed}">${ring}<div class="ot"><b>Kanka'ya başla</b><small>${3 - n} adım kaldı · ${closed ? 'göster' : 'gizle'}</small></div>
-    <button class="ox" id="onb-x" title="Rehberi gizle" aria-label="Rehberi gizle">${ic('x')}</button></div>
-    <div class="ol">${ONB_STEPS.map(s => `<button class="ostep ${st[s.k] ? 'done' : ''}" data-k="${s.k}"><i class="oi">${ic(st[s.k] ? 'check' : s.icon)}</i><span><b>${s.t}</b><small>${s.d}</small></span><i class="ock">${ic('check')}</i></button>`).join('')}</div>`;
-  $('#onb-h').onclick = e => { if (e.target.closest('#onb-x')) return; store.set('kanka-onb-closed', closed ? null : '1'); renderOnb(); };
-  $('#onb-x').onclick = () => confirmBox('Başlangıç rehberini gizlemek istiyor musun? Adımları istediğin zaman kendin de yapabilirsin.', () => {
-    socket.emit('onbSet', 'dismissed', r => { if (r?.onb) S.onb = r.onb; }); el.classList.add('out'); setTimeout(() => el.remove(), 450);
+  socket.emit('onbClaim', r => {
+    if (r?.error) { onbWon = ''; el.dataset.sig = ''; return; }
+    show('Hepsi tamam!', 'Rehberi bitirdin', '🐣', `<b>Artık gerçek bir Kanka'sın</b><div class="orewards"><span>✨ +100 XP</span><span>🐣 Çaylak rozeti</span></div>`);
+    if (!r.already) toast(`<b>Rehberi bitirdin!</b><br>+100 XP ve 🐣 Çaylak rozeti kazandın`, () => showProfile(S.me), true);
+    setTimeout(() => socket.emit('onbSet', 'done', x => { if (x?.onb) S.onb = x.onb; }), 6200);
   });
-  el.querySelectorAll('.ostep:not(.done)').forEach(b => b.onclick = () => onbGo(b.dataset.k));
 }
-function onbGo(k) {
+function openOnbSheet() {
+  const m = onbModel(); if (!m) return;
+  modal(`<div class="sh-grip"></div><div class="sh-head">${onbRing(m.n, m.total, 52)}<div><h3>${m.title}</h3><p>${m.mode === 'user' ? 'Hepsini bitir, <b>+100 XP</b> ve <b>🐣 Çaylak rozeti</b> kazan.' : esc(m.sub) + ' sunucunu arkadaşların için hazırla.'}</p></div></div>
+    <div class="ol">${onbStepsHTML(m)}</div><div class="mfoot"><button class="lnk" id="sh-hide">Rehberi gizle</button><button class="btns2" id="mx">Kapat</button></div>`, 'onbsheet');
+  $('#modal-box').querySelectorAll('.ostep:not(.done)').forEach(b => b.onclick = () => { closeModal(); onbGo(m.mode, b.dataset.k); });
+  $('#mx').onclick = closeModal;
+  $('#sh-hide').onclick = () => { closeModal(); setTimeout(() => onbHide(m), 230); };
+}
+function onbGo(mode, k) {
+  document.body.classList.remove('drawer');
+  if (mode === 'setup') {
+    const s = S.server;
+    if (k === 'icon') return showServerSettings(s, 'general');
+    if (k === 'channels') return showServerSettings(s, 'channels');
+    return showInvite(s);
+  }
   if (k === 'join') return showDiscover();
   if (k === 'profile') return showSettings('profile');
+  if (k === 'invite') return showInvite(S.view === 'server' && S.server?.invite ? S.server : hqServer());
+  if (k === 'msg') {
+    const ok = s => s?.channels.find(c => c.type !== 'voice' && (!c.readonly || perm(s, 'manageMessages')));
+    const srv = (S.view === 'server' && ok(S.server) ? S.server : null) || (ok(hqServer()) ? hqServer() : S.servers.find(ok));
+    if (!srv) return toast('Yazabileceğin bir oda bulunamadı.');
+    const ch = S.view === 'server' && S.server?.id === srv.id && S.channel && S.channel.type !== 'voice' && !S.channel.readonly ? S.channel : ok(srv);
+    if (S.view !== 'server' || S.server?.id !== srv.id || S.channel?.id !== ch.id) selectServer(srv.id, ch.id);
+    setTimeout(() => { $('#input').focus(); $('#compose').classList.remove('attn'); void $('#compose').offsetWidth; $('#compose').classList.add('attn'); setTimeout(() => $('#compose').classList.remove('attn'), 2400); }, 250);
+    return;
+  }
   if (k === 'voice') {
-    const srv = (S.view === 'server' && S.server?.channels.some(c => c.type === 'voice') ? S.server : null) || S.servers.find(s => s.id === 's1') || S.servers[0];
+    const srv = (S.view === 'server' && S.server?.channels.some(c => c.type === 'voice') ? S.server : null) || hqServer();
     const vc = srv?.channels.find(c => c.type === 'voice');
     if (!vc) return toast('Bu sunucuda sesli oda yok.');
     if (S.view !== 'server' || S.server?.id !== srv.id) selectServer(srv.id);
     joinVoice(vc.id);
   }
 }
+
+// --- İlk kullanım ipuçları ---
+const tipSeen = new Set((() => { try { return JSON.parse(store.get('kanka-tips') || '[]'); } catch { return []; } })());
+let chSwitches = 0;
+function tip(key, sel, title, text, place = 'top', tries = 0) {
+  if (tipSeen.has(key)) return;
+  const el = typeof sel === 'string' ? $(sel) : sel;
+  if (!el || !el.getClientRects().length) return;
+  if ($('#modal').classList.contains('open') || $('.ktip')) { if (tries < 8) setTimeout(() => tip(key, sel, title, text, place, tries + 1), 1500); return; }
+  tipSeen.add(key); store.set('kanka-tips', JSON.stringify([...tipSeen]));
+  const t = document.createElement('div'); t.className = 'ktip'; t.setAttribute('role', 'dialog');
+  t.innerHTML = `<div class="kt-arrow"></div><b>${title}</b><p>${text}</p><div class="kt-f"><span>İpucu</span><button>Anladım</button></div>`;
+  document.body.appendChild(t); el.classList.add('tipfocus');
+  const pos = () => {
+    const r = el.getBoundingClientRect(), tw = t.offsetWidth, th = t.offsetHeight, W = innerWidth, H = innerHeight;
+    let p = place; if (p === 'right' && r.right + tw + 16 > W) p = 'top'; if (p === 'top' && r.top - th - 14 < 0) p = 'bottom';
+    let x, y;
+    if (p === 'right') { x = r.right + 14; y = r.top + r.height / 2 - th / 2; }
+    else { x = r.left + r.width / 2 - tw / 2; y = p === 'top' ? r.top - th - 14 : r.bottom + 14; }
+    x = Math.max(10, Math.min(W - tw - 10, x)); y = Math.max(10, Math.min(H - th - 10, y));
+    t.dataset.p = p; t.style.left = x + 'px'; t.style.top = y + 'px';
+    const a = t.querySelector('.kt-arrow');
+    if (p === 'right') { a.style.left = '-6px'; a.style.top = Math.max(14, Math.min(th - 14, r.top + r.height / 2 - y)) + 'px'; }
+    else { a.style.top = p === 'top' ? th - 6 + 'px' : '-6px'; a.style.left = Math.max(16, Math.min(tw - 16, r.left + r.width / 2 - x)) + 'px'; }
+  };
+  pos(); addEventListener('resize', pos);
+  const close = () => { removeEventListener('resize', pos); el.classList.remove('tipfocus'); t.classList.add('out'); setTimeout(() => t.remove(), 220); };
+  t.querySelector('button').onclick = close;
+  setTimeout(() => t.isConnected && close(), 14000);
+}
+
+// --- Davet penceresi ---
+function showInvite(s) {
+  if (!s?.invite) return toast('Bu sunucunun davet linki yok.');
+  const link = `${location.origin}/davet/${s.invite}`, text = `${s.name} sunucusuna gel, Kanka'da takılıyoruz! 🦝`;
+  const mark = () => socket.emit('onbMark', { k: 'invite', serverId: s.id }, () => {});
+  const enc = encodeURIComponent, cnt = (s.members || []).length;
+  const share = [
+    ['wa', 'WhatsApp', '#25d366', `https://wa.me/?text=${enc(text + ' ' + link)}`],
+    ['tg', 'Telegram', '#2aabee', `https://t.me/share/url?url=${enc(link)}&text=${enc(text)}`],
+    ['x', 'X', '#e7e9ea', `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(link)}`],
+  ];
+  modal(`<div class="invh"><div class="invico">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div><div><h3>Arkadaşlarını davet et</h3><p>${esc(s.name)} · ${cnt} üye</p></div></div>
+    <div class="mlabel">Davet linki</div>
+    <div class="invbox"><input id="inv" value="${esc(link)}" readonly aria-label="Davet linki"><button class="btnp" id="copy">${ic('copy')}<span>Kopyala</span></button></div>
+    <div class="mlabel">Hızlı paylaş</div>
+    <div class="invshare">${share.map(([k, n, c, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" data-sh="${k}" style="--c:${c}"><i></i>${n}</a>`).join('')}${navigator.share ? `<button data-sh="native" style="--c:var(--accent)"><i></i>Diğer</button>` : ''}</div>
+    <p class="invnote">${ic('shield')} Linki açan kişi giriş yapınca sunucuna katılır.</p>
+    <div class="mfoot"><span style="margin-right:auto"></span><button class="btns2" id="mx">Kapat</button></div>`, 'invm');
+  $('#inv').onclick = e => e.target.select();
+  $('#copy').onclick = () => {
+    const done = () => { const b = $('#copy'); if (!b) return; b.classList.add('ok'); b.innerHTML = `${ic('check')}<span>Kopyalandı</span>`; setTimeout(() => { if (!b.isConnected) return; b.classList.remove('ok'); b.innerHTML = `${ic('copy')}<span>Kopyala</span>`; }, 2000); };
+    (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(done, () => { $('#inv').select(); document.execCommand?.('copy'); done(); });
+    mark();
+  };
+  $('#modal-box').querySelectorAll('a[data-sh]').forEach(a => a.onclick = mark);
+  const nb = $('#modal-box').querySelector('[data-sh=native]'); if (nb) nb.onclick = () => navigator.share({ title: 'Kanka Chat', text, url: link }).then(mark, () => {});
+  $('#mx').onclick = closeModal;
+}
+
+// --- Rehber istatistikleri (yönetim) ---
+function showOnbStats() {
+  socket.emit('onbStats', r => {
+    if (r?.error) return toast(r.error);
+    const T = r.total || 0, st = r.steps, pct = v => T ? Math.round(v / T * 100) : 0;
+    const rows = [['Kayıt oldu', T], ['Karşılamayı gördü', st.seen], ['Sunucuya katıldı', st.join], ['İlk mesajı attı', st.msg], ['Sesli odaya girdi', st.voice], ['Arkadaş davet etti', st.invite], ['Profilini tamamladı', st.profile], ['Rehberi bitirdi 🐣', st.rewarded]];
+    modal(`<h3>Rehber istatistikleri</h3><p class="hint">${new Date(r.since).toLocaleDateString('tr-TR')} tarihinden sonra kayıt olanlar. Sadece toplu sayılar.</p>
+      <div class="funnel">${rows.map(([l, v], i) => `<div class="fr" style="animation-delay:${i * .04}s"><span>${l}</span><div class="fb"><u style="width:${T ? Math.max(2, v / T * 100) : 0}%"></u></div><b>${v}</b><em>%${pct(v)}</em></div>`).join('')}</div>
+      <div class="fstats"><div><b>${st.dismissed}</b><span>Rehberi gizledi</span></div><div><b>${r.servers.total}</b><span>Yeni sunucu</span></div><div><b>${r.servers.ready}</b><span>Kurulumu bitti</span></div><div><b>${r.servers.three}</b><span>3+ üyeli</span></div></div>
+      <div class="mfoot"><span style="margin-right:auto"></span><button class="btns2" id="mx">Kapat</button></div>`, 'fstat');
+    $('#mx').onclick = closeModal;
+  });
+}
+
 function confetti(anchor) {
   const r = anchor.getBoundingClientRect(), cols = ['#ff8a4c', '#ffb347', '#6fd39b', '#6fd3ff', '#ff6fae', '#ffd23f'];
   for (let i = 0; i < 46; i++) {
@@ -3672,7 +3909,7 @@ function onbRestart() {
   socket.emit('onbReset', r => {
     if (r?.error) return toast(r.error);
     store.set('kanka-mictest', null); store.set('kanka-onb-closed', null);
-    S.onb = r.onb; onbWon = false; $('#onb')?.remove(); closeModal();
+    S.onb = r.onb; onbWon = ''; $('#onb')?.remove(); closeModal();
     setTimeout(() => { renderOnb(); showOnbWelcome(); }, 250);
   });
 }
@@ -3686,7 +3923,7 @@ function showOnbWelcome() {
     modal(`<div class="ohero">${sparks}<div class="ologo"><img src="${esc(pick)}" alt=""></div><h2>Hoş geldin, <em>${esc(S.me)}</em>!</h2><p>Seni aramızda görmek güzel. Bir dakikada her şeyi hazırlayalım.</p></div>
       <div class="osec"><h4>Avatarını seç <button id="ow-up">${ic('camera')} Kendi fotoğrafını yükle</button></h4>
         <div class="avgrid">${presets.map((u, i) => `<button class="avopt ${u === pick ? 'on' : ''}" data-av="${esc(u)}" style="animation-delay:${i * .025}s" aria-label="Avatar ${i + 1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div></div>
-      <div class="osec"><h4>3 adımda başla</h4><div class="ocards">${ONB_STEPS.map(s => `<div class="ocard"><div class="n">${ic(s.icon)}</div><b>${s.t}</b><small>${s.d}</small></div>`).join('')}</div></div>
+      <div class="osec"><h4>5 adımda başla <span class="orew">🎁 +100 XP · 🐣 Çaylak rozeti</span></h4><div class="osteps">${ONB_STEPS.map((s, i) => `<div class="ostp" style="animation-delay:${i * .05}s"><i>${i + 1}</i><span><b>${s.t}</b><small>${s.d}</small></span></div>`).join('')}</div></div>
       <div class="ofoot"><button class="ghost" id="ow-later">Sonra bakarım</button><button class="btnp" id="ow-go">Başlayalım ${ic('send')}</button></div>`, 'onbw');
     document.querySelectorAll('.onbw [data-av]').forEach(b => b.onclick = () => {
       pick = b.dataset.av;
@@ -3698,6 +3935,7 @@ function showOnbWelcome() {
       socket.emit('onbSet', 'seen', r => { if (r?.onb) S.onb = r.onb; });
       if (save && pick && pick !== cur) socket.emit('updateProfile', { avatar: pick }, r => r?.error && toast(r.error));
       closeModal(); renderOnb();
+      if (S.afterWelcome) { S.afterWelcome(); S.afterWelcome = null; }
     };
     $('#ow-go').onclick = () => finish(true);
     $('#ow-later').onclick = () => finish(false);

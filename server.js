@@ -273,6 +273,7 @@ const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s
   bans: viewer && (s.owner === viewer || can(s, viewer, 'ban')) ? s.bans : {}, myPerms: viewer ? [...permsOf(s, viewer)] : [],
   badges: srvBadges(s), createdAt: s.createdAt || null, siteAdmin: siteAdmin(viewer),
   discoverable: !!s.discoverable, description: s.description || '', category: s.category || null,
+  setup: viewer && s.owner === viewer ? setupOf(s) : null,
   welcome: s.welcome || null, accepted: !s.welcome?.enabled || !!s.accepted?.[viewer] || s.owner === viewer
 });
 const findChannel = chId => {
@@ -310,6 +311,9 @@ const PRESET_AV = ['klasik', 'kulaklik', 'gunes-gozlugu', 'tac', 'kep', 'parti',
 const AVATAR_OK = a => UPLOAD_RE.test(a) || PRESET_AV.includes(a);
 // Başlangıç rehberi: bu tarihten önce açılmış hesaplara gösterilmez
 const ONB_SINCE = Date.parse('2026-11-11T15:00:00Z');
+const onbPush = (name, ob) => io.to('user:' + name).emit('onb', ob);
+const onbFlag = (name, k) => { const u = db.users[name]; if (!u) return; const ob = onbOf(u); if (ob.done || ob[k]) return; ob[k] = true; save(); onbPush(name, ob); };
+const setupOf = s => { if (!s.setup) s.setup = (s.createdAt || 0) < ONB_SINCE || s.public ? { done: true } : {}; return s.setup; };
 const onbOf = u => { if (!u.onb) u.onb = (u.createdAt || 0) < ONB_SINCE ? { done: true } : {}; return u.onb; };
 
 const QUESTIONS = ['Issız bir adaya düşsen yanına alacağın 3 şey ne?', 'Hayatında izlediğin en iyi film hangisi?', 'Süper gücün olsa ne olurdu?', 'En sevdiğin yemek ne, kim yapıyor en iyisini?',
@@ -365,6 +369,7 @@ const BADGES = {
   seri7: ['🔥', 'Ateşli seri', '7 gün üst üste giriş'],
   kurucu: ['🏰', 'Kurucu', 'Bir sunucu kurdu'],
   sosyal: ['🤝', 'Sosyal kelebek', '5+ arkadaş'],
+  caylak: ['🐣', 'Çaylak', 'Başlangıç rehberini bitirdi'],
 };
 function badgesOf(u) {
   const order = Object.values(db.users).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map(x => x.name);
@@ -377,6 +382,7 @@ function badgesOf(u) {
   if ((u.streak?.best || 0) >= 7) b.push('seri7');
   if (db.servers.some(s => s.owner === u.name && !s.public)) b.push('kurucu');
   if ((u.friends || []).length >= 5) b.push('sosyal');
+  if (u.onb?.rewarded) b.push('caylak');
   return b;
 }
 
@@ -485,6 +491,7 @@ function postMessage(me, chId, p = {}) {
         io.to('user:' + n).emit('notify', { from: me, text: preview, channelId: chId, where, mention: true });
     }
   }
+  onbFlag(me, 'msg');
   return { ok: true, msg };
 }
 
@@ -563,6 +570,37 @@ io.on('connection', socket => {
   socket.on('onbReset', (cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     u.onb = {}; save(); cb({ ok: true, onb: u.onb });
+  });
+  socket.on('onbMark', ({ k, serverId } = {}, cb = () => {}) => {
+    if (!me || k !== 'invite') return cb({ error: 'Geçersiz' });
+    onbFlag(me, 'invite');
+    const sv = serverId && db.servers.find(x => x.id === serverId);
+    if (sv && sv.owner === me && !setupOf(sv).invite) { setupOf(sv).invite = true; save(); pushServers([me]); }
+    cb({ ok: true });
+  });
+  socket.on('onbClaim', (cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    const ob = onbOf(u);
+    if (ob.rewarded) return cb({ ok: true, already: true, onb: ob });
+    const join = serversFor(me).some(x => x.id !== 's1');
+    if (!(join && ob.msg && ob.voice && ob.invite && ob.profile)) return cb({ error: 'Adımlar henüz bitmedi' });
+    ob.rewarded = true; u.xp = (u.xp || 0) + 100; save();
+    io.emit('users', allUsers()); cb({ ok: true, xp: 100, onb: ob });
+  });
+  socket.on('setupSet', ({ serverId, k } = {}, cb = () => {}) => {
+    const sv = db.servers.find(x => x.id === serverId);
+    if (!sv || sv.owner !== me || !['done', 'dismissed'].includes(k)) return cb({ error: 'Geçersiz' });
+    setupOf(sv)[k] = true; save(); pushServers([me]); cb({ ok: true });
+  });
+  socket.on('onbStats', (cb = () => {}) => {
+    if (!siteAdmin(me)) return cb({ error: 'Sadece yönetim görebilir' });
+    const us = Object.values(db.users).filter(u => (u.createdAt || 0) >= ONB_SINCE);
+    const cnt = f => us.filter(f).length;
+    const svs = db.servers.filter(x => !x.public && (x.createdAt || 0) >= ONB_SINCE);
+    cb({ ok: true, since: ONB_SINCE, total: us.length,
+      steps: { seen: cnt(u => u.onb?.seen), join: cnt(u => serversFor(u.name).some(x => x.id !== 's1')), msg: cnt(u => u.onb?.msg), voice: cnt(u => u.onb?.voice),
+        invite: cnt(u => u.onb?.invite), profile: cnt(u => u.onb?.profile), rewarded: cnt(u => u.onb?.rewarded), dismissed: cnt(u => u.onb?.dismissed) },
+      servers: { total: svs.length, ready: svs.filter(x => x.setup?.done).length, three: svs.filter(x => membersOf(x).length >= 3).length } });
   });
   socket.on('onbSet', (k, cb = () => {}) => {
     const u = db.users[me]; if (!u || !['dismissed', 'done', 'seen'].includes(k)) return cb({ error: 'Geçersiz' });
@@ -805,7 +843,7 @@ io.on('connection', socket => {
     if (color !== undefined && /^#[0-9a-f]{6}$/i.test(color)) u.color = color;
     if (birthday !== undefined) u.birthday = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(birthday) ? birthday : null;
     if (music !== undefined) u.music = /^https?:\/\/\S{4,300}$/.test(music) ? music : null;
-    { const ob = onbOf(u); if (!ob.profile && (u.bio || u.status)) { ob.profile = true; socket.emit('onb', ob); } }
+    if (u.bio || u.status) onbFlag(me, 'profile');
     save(); io.emit('users', allUsers()); cb({ ok: true });
   });
   socket.on('changePassword', ({ old, next } = {}, cb = () => {}) => {
@@ -898,13 +936,14 @@ io.on('connection', socket => {
     if (priv !== undefined) c.private = !!priv;
     if (readonly !== undefined) c.readonly = !!readonly;
     if (allow !== undefined) c.allow = (allow || []).filter(rid => s.customRoles.some(r => r.id === rid));
-    audit(s, me, 'Odayı düzenledi', c.name); pushSrv(s); cb({ ok: true });
+    if (s.owner === me) setupOf(s).channels = true;
+    audit(s, me, 'Odayı düzenledi', c.name); save(); pushSrv(s); cb({ ok: true });
   });
   socket.on('channelMove', ({ serverId, channelId, dir } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageChannels'); if (!s) return cb({ error: 'Yetkin yok' });
     const i = s.channels.findIndex(x => x.id === channelId), j = i + (dir < 0 ? -1 : 1);
     if (i < 0 || j < 0 || j >= s.channels.length) return cb({ ok: true });
-    [s.channels[i], s.channels[j]] = [s.channels[j], s.channels[i]]; pushSrv(s); cb({ ok: true });
+    [s.channels[i], s.channels[j]] = [s.channels[j], s.channels[i]]; if (s.owner === me) setupOf(s).channels = true; save(); pushSrv(s); cb({ ok: true });
   });
   socket.on('timeout', ({ serverId, name, minutes } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'timeout'); if (!s) return cb({ error: 'Susturma yetkin yok' });
@@ -981,7 +1020,7 @@ io.on('connection', socket => {
     pull(a.reqIn, name); pull(b.reqOut, me); a.friends.push(name); b.friends.push(me);
     save(); pushSocial(me, name); io.emit('users', allUsers());
     io.to('user:' + name).emit('toast', `${me} arkadaşlık isteğini kabul etti`);
-    cb({ ok: true });
+    onbFlag(me, 'invite'); onbFlag(name, 'invite'); cb({ ok: true });
   });
   socket.on('friendRemove', (name, cb = () => {}) => { // arkadaşlıktan çıkar / isteği reddet / isteği geri çek
     const a = U(me), b = U(name); if (!a || !b) return cb({ error: 'Kullanıcı bulunamadı' });
@@ -1095,7 +1134,7 @@ io.on('connection', socket => {
     const name = clean(opts.name, 40); if (!name) return cb({ error: 'Sunucu adı gerekli' });
     const tpl = TEMPLATES[opts.template] || TEMPLATES.bos;
     const s = {
-      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], createdAt: Date.now(), roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: crypto.randomBytes(4).toString('hex'),
+      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: crypto.randomBytes(4).toString('hex'),
       channels: [], template: opts.template in TEMPLATES ? opts.template : 'bos'
     };
     for (const r of tpl.roles || []) s.customRoles.push({ id: id(), ...r });
@@ -1120,7 +1159,7 @@ io.on('connection', socket => {
     name = clean(name, 30); if (type === 'text') name = name.toLowerCase().replace(/\s+/g, '-');
     if (!name) return cb({ error: 'Oda adı gerekli' });
     const c = { id: id(), name, type, category: clean(category, 30) || undefined };
-    s.channels.push(c); save();
+    s.channels.push(c); if (s.owner === me) setupOf(s).channels = true; save();
     pushServers(membersOf(s));
     cb(c);
   });
@@ -1194,7 +1233,7 @@ io.on('connection', socket => {
     const room = voice.get(chId) || new Map();
     const peers = [...room].map(([sid, name]) => ({ sid, name }));
     room.set(socket.id, me); voice.set(chId, room);
-    { const ob = onbOf(db.users[me]); if (!ob.voice) { ob.voice = true; save(); socket.emit('onb', ob); } }
+    onbFlag(me, 'voice');
     socket.to('v:' + chId).emit('voiceJoined', { sid: socket.id, name: me });
     myVoice = chId; socket.join('v:' + chId);
     pushVoice();
