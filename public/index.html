@@ -1560,6 +1560,170 @@
   .mprog i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--c1), var(--c2)); }
   .mcard em { display: block; font-style: normal; font-size: 11.5px; font-weight: 800; color: var(--muted); margin-top: 4px; }
   @media (prefers-reduced-motion: reduce) { .mcard.got.r3::after { animation: none; } }
+
+  /* ---------- Giriş 2: beta, e-posta, sıfırlama, bekleme listesi ---------- */
+  #auth { overflow-y: auto; padding: 24px 12px; }
+  #auth .card { width: min(420px, 100%); margin: auto; }
+  #auth-body > * { animation: abIn .35s var(--ease-out) both; }
+  @keyframes abIn { from { opacity: 0; transform: translateY(6px); } }
+  .beta-pill { display: inline-flex; align-items: center; gap: 8px; margin: -2px auto 12px; padding: 6px 12px 6px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 800; color: #ffcf9e; background: rgba(255,138,76,.12); border: 1px solid rgba(255,138,76,.32); }
+  .beta-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(255,138,76,.6); animation: bpulse 1.8s infinite; }
+  @keyframes bpulse { 70% { box-shadow: 0 0 0 7px rgba(255,138,76,0); } 100% { box-shadow: 0 0 0 0 rgba(255,138,76,0); } }
+  .afield { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); margin-bottom: 10px; transition: border-color .15s, box-shadow .15s; text-align: left; }
+  .afield > .ic { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
+  .afield input { flex: 1; min-width: 0; padding: 13px 0; background: none; border: 0; outline: none; font-size: 15px; color: var(--text); }
+  .afield:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255,138,76,.12); }
+  .afield:focus-within > .ic { color: var(--accent); }
+  .afield.bad { border-color: var(--red); box-shadow: 0 0 0 4px rgba(229,72,77,.12); }
+  .afield.good { border-color: var(--green); }
+  .afield.good > .ic { color: var(--green); }
+  .afield .peek { color: var(--muted); padding: 6px; margin-right: -6px; border-radius: 8px; display: flex; }
+  .afield .peek .ic { width: 18px; height: 18px; } .afield .peek.on { color: var(--accent); }
+  .acode-ok { font-size: 13px; font-weight: 700; color: var(--green); text-align: left; margin: -4px 4px 10px; display: flex; align-items: center; gap: 6px; min-height: 0; }
+  .acode-ok:empty { display: none; } .acode-ok .ic { width: 15px; height: 15px; } .acode-ok .no { color: var(--red); }
+  .arow { display: flex; justify-content: space-between; margin: -2px 2px 12px; }
+  .alink { color: var(--accent); font-weight: 800; font-size: 13.5px; background: none; padding: 2px; }
+  .alink:hover { text-decoration: underline; }
+  .aback { display: block; margin: 14px auto 0; color: var(--muted); }
+  .acheck { display: flex; gap: 10px; align-items: flex-start; text-align: left; font-size: 13px; line-height: 1.45; color: var(--muted); margin: 4px 2px 14px; cursor: pointer; border-radius: 10px; padding: 4px; }
+  .acheck input { position: absolute; opacity: 0; pointer-events: none; }
+  .acheck .box2 { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: .15s; }
+  .acheck input:checked + .box2 { background: var(--accent); border-color: var(--accent); }
+  .acheck input:checked + .box2::after { content: ''; width: 5px; height: 10px; border: solid #1a120c; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) translate(-1px,-1px); }
+  .acheck input:focus-visible + .box2 { box-shadow: 0 0 0 3px rgba(255,138,76,.35); }
+  .acheck.bad { background: rgba(229,72,77,.1); } .acheck.bad .box2 { border-color: var(--red); }
+  .acheck a, .alegal a { color: var(--text); font-weight: 700; }
+  .alegal { margin-top: 14px; font-size: 12px; color: var(--muted); }
+  .alegal a { color: var(--muted); }
+  .await { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 13.5px; color: var(--muted); flex-wrap: wrap; }
+  .abig { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(255,138,76,.14); color: var(--accent); }
+  .abig .ic { width: 30px; height: 30px; }
+  #auth-body.am-login .abig, #auth-body.am-register .abig { display: none; }
+  #auth .card:has(#auth-body:not(.am-login):not(.am-register)) .logo { display: none; }
+  .wpos { margin: 0 auto 14px; width: 150px; padding: 16px 10px; border-radius: 22px; background: linear-gradient(160deg, rgba(255,138,76,.22), rgba(255,138,76,.05)); border: 1px solid rgba(255,138,76,.35); display: flex; flex-direction: column; }
+  .wpos small { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .wpos b { font-size: 40px; font-weight: 900; color: var(--accent); line-height: 1.1; }
+  .wpos span { font-size: 12px; color: var(--muted); font-weight: 700; }
+  .primary.busy { opacity: .7; pointer-events: none; }
+  .primary.busy::after { content: ''; display: inline-block; width: 14px; height: 14px; margin-left: 10px; vertical-align: -2px; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Şikayet penceresi ---------- */
+  #modal .box.rep { width: 480px; }
+  .rp-head { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+  .rp-head > .ic { width: 44px; height: 44px; padding: 11px; border-radius: 14px; background: rgba(229,72,77,.14); color: var(--red); flex-shrink: 0; }
+  .rp-head h3 { margin: 2px 0 2px !important; } .rp-head .hint { margin: 0 !important; }
+  .rp-msg { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin-bottom: 14px; }
+  .rp-msg > .av, .rp-msg .av { width: 34px; height: 34px; flex-shrink: 0; }
+  .rp-msg b { display: block; font-size: 14px; } .rp-msg span { display: block; font-size: 13.5px; color: var(--muted); word-break: break-word; margin-top: 2px; }
+  .rp-list { display: flex; flex-direction: column; gap: 4px; max-height: 46vh; overflow-y: auto; margin: 0 -6px; padding: 0 6px; }
+  .rp-list button { display: flex; align-items: center; gap: 10px; text-align: left; padding: 11px 12px; border-radius: 12px; transition: background .12s; }
+  .rp-list button:hover, .rp-list button:focus-visible { background: var(--hover); }
+  .rp-list button span { flex: 1; } .rp-list b { display: block; font-size: 14.5px; } .rp-list small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+  .rp-list .ic { width: 16px; height: 16px; color: var(--muted); transform: rotate(-90deg); }
+  .rp-list .urg b { color: #ff8f8f; }
+  .rp-chosen { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); border: 1px solid rgba(255,138,76,.35); font-weight: 800; margin-bottom: 14px; }
+  .rp-chosen.urg { background: rgba(229,72,77,.12); border-color: rgba(229,72,77,.4); }
+  .rp-lbl { display: block; font-size: 13px; font-weight: 800; margin: 4px 0 6px; } .rp-lbl small { color: var(--muted); font-weight: 700; }
+  #modal .box.rep textarea.field { resize: vertical; min-height: 76px; font: inherit; font-size: 14px; }
+  .rp-info { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; color: var(--muted); line-height: 1.5; padding: 10px 12px; border-radius: 12px; background: var(--card); }
+  .rp-info .ic { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; color: var(--green); } .rp-info b { color: var(--ink); }
+  #modal .rowb .danger-btn, .danger-btn { background: var(--red) !important; color: #fff !important; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .danger-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .danger-btn .ic { width: 17px; height: 17px; }
+  .rp-done { text-align: center; }
+  .rp-ok { width: 64px; height: 64px; margin: 4px auto 14px; border-radius: 50%; background: rgba(76,195,138,.15); color: var(--green); display: flex; align-items: center; justify-content: center; animation: pop .4s var(--ease-out); }
+  .rp-ok .ic { width: 32px; height: 32px; stroke-width: 2.6; }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } }
+  .rp-acts { display: flex; flex-direction: column; gap: 8px; text-align: left; margin-bottom: 6px; }
+  .rp-acts button { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .rp-acts button:hover { border-color: var(--muted); } .rp-acts .ic { width: 20px; height: 20px; flex-shrink: 0; }
+  .rp-acts span { flex: 1; text-align: left; } .rp-acts b { display: block; } .rp-acts small { display: block; color: var(--muted); font-size: 12.5px; }
+  .rp-acts .danger .ic, .rp-acts .danger b { color: var(--red); }
+  .rp-head.del > .ic { background: rgba(229,72,77,.14); }
+  .del-list { margin: 0 0 14px 4px; padding-left: 18px; font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+
+  /* ---------- Şikayet kuyruğu ---------- */
+  .rpp .seg { grid-template-columns: repeat(2, max-content); margin-bottom: 14px; }
+  .rpp .seg button, .seg.big button { text-align: center; padding: 8px 16px; font-size: 13.5px; }
+  .seg.big { grid-template-columns: repeat(4, 1fr); margin: 6px 0 18px; }
+  .seg.big button { display: flex; align-items: center; justify-content: center; gap: 7px; } .seg.big .ic { width: 16px; height: 16px; }
+  .cnt { display: inline-block; background: var(--red); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 900; font-style: normal; padding: 0 6px; line-height: 17px; margin-left: 6px; }
+  #srvmenu .cnt { margin-left: 6px; margin-right: auto; }
+  .rpp-empty { text-align: center; padding: 36px 16px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .rpp-empty .ic { width: 40px; height: 40px; color: var(--green); margin-bottom: 4px; } .rpp-empty b { color: var(--ink); font-size: 15px; }
+  .rpc { border: 1px solid var(--line); background: var(--card); border-radius: 16px; padding: 14px; margin-bottom: 12px; transition: opacity .25s, transform .25s; }
+  .rpc.out { opacity: 0; transform: translateX(16px); }
+  .rpc.urg { border-color: rgba(229,72,77,.55); box-shadow: inset 3px 0 0 var(--red); }
+  .rpc header { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; flex-wrap: wrap; }
+  .rpc-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(229,72,77,.13); color: #ff9a9a; font-weight: 800; }
+  .rpc-tag .ic { width: 13px; height: 13px; }
+  .rpc-where { flex: 1; font-weight: 700; } .rpc header time { white-space: nowrap; }
+  .rpc-who { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .rpc-user { display: flex; align-items: center; gap: 10px; text-align: left; padding: 4px 8px 4px 4px; border-radius: 12px; } .rpc-user:hover { background: var(--hover); }
+  .rpc-user .av { width: 34px; height: 34px; } .rpc-user b { display: block; } .rpc-user small { color: var(--muted); font-size: 12px; } .rpc-user em { color: #ffb37a; font-style: normal; font-weight: 800; }
+  .rpc-by { color: var(--muted); font-size: 12px; } .rpc-by b { color: var(--ink); }
+  .rpc-ctx { margin-top: 10px; border-radius: 12px; background: var(--bg); padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+  .rpc-line { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; padding: 6px 8px; border-radius: 8px; font-size: 13px; opacity: .55; align-items: baseline; }
+  .rpc-line.hit { opacity: 1; background: rgba(229,72,77,.1); box-shadow: inset 2px 0 0 var(--red); }
+  .rpc-line span { word-break: break-word; } .rpc-line img { max-width: 160px; max-height: 120px; border-radius: 8px; display: block; cursor: zoom-in; }
+  .rpc-line time { font-size: 11px; color: var(--muted); }
+  .rpc-gone { display: block; padding: 4px 8px; color: var(--muted); font-style: italic; }
+  .rpc-note { margin: 10px 0 0; padding: 8px 12px; border-left: 3px solid var(--line); color: var(--ink); font-size: 13.5px; font-style: italic; }
+  .rpc-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .rpc-acts > button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; background: var(--hover); font-size: 13px; font-weight: 800; transition: background .15s, color .15s; }
+  .rpc-acts > button .ic { width: 15px; height: 15px; }
+  .rpc-acts > button.danger { color: var(--red); } .rpc-acts > button.ok { color: var(--green); margin-left: auto; }
+  .rpc-acts > button.arm, .rpc-acts > button.danger.arm { background: var(--red); color: #fff; }
+  .rpc-acts > button:hover { filter: brightness(1.15); }
+  .rpc-res { display: flex; align-items: center; gap: 8px; width: 100%; font-size: 13px; color: var(--muted); } .rpc-res .ic { width: 16px; height: 16px; color: var(--green); } .rpc-res span { flex: 1; } .rpc-res b { color: var(--ink); }
+  #mod-pill { position: relative; color: var(--red); } #mod-pill em { position: absolute; top: -2px; right: -4px; min-width: 17px; height: 17px; border-radius: 9px; background: var(--red); color: #fff; font-size: 10.5px; font-style: normal; font-weight: 900; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid var(--panel); }
+
+  /* ---------- Hesap sayfası ---------- */
+  .acc-id { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); margin-top: 10px; }
+  .acc-id .av { width: 44px; height: 44px; } .acc-id b { display: block; font-size: 16px; } .acc-id span { color: var(--muted); font-size: 13px; }
+  .acc-warn { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: rgba(246,196,69,.1); border: 1px solid rgba(246,196,69,.35); margin: 0 0 12px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .acc-warn.ok { background: rgba(76,195,138,.1); border-color: rgba(76,195,138,.35); } .acc-warn.ok > .ic { color: var(--green); }
+  .acc-warn > .ic { width: 20px; height: 20px; color: var(--yellow, #f6c445); flex-shrink: 0; margin-top: 1px; }
+  .acc-warn b { display: block; color: var(--ink); font-size: 14px; } .acc-warn code { display: block; word-break: break-all; font-size: 12px; margin-top: 4px; color: var(--ink); }
+  .codes { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 6px; }
+  .code { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--card); border: 1px dashed rgba(255,138,76,.45); }
+  .code.used { border-style: solid; border-color: var(--line); }
+  .code .cv { font-family: ui-monospace, Consolas, monospace; font-weight: 800; letter-spacing: 1px; font-size: 14.5px; color: var(--accent); }
+  .code.used .cv { color: var(--muted); text-decoration: line-through; }
+  .code .cu { flex: 1; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); } .code .cu .av { width: 20px; height: 20px; font-size: 10px; } .code .cu b { color: var(--ink); }
+  .code button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9px; background: var(--hover); font-size: 12.5px; font-weight: 800; } .code button .ic { width: 14px; height: 14px; }
+  .st-sec.danger { color: var(--red); }
+  .acc-danger { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; border: 1px solid rgba(229,72,77,.4); margin-bottom: 40px; }
+  .acc-danger span { flex: 1; font-size: 13px; color: var(--muted); line-height: 1.5; } .acc-danger b { display: block; color: var(--ink); font-size: 14px; }
+  .acc-danger button { padding: 10px 16px; border-radius: 12px; font-weight: 800; white-space: nowrap; }
+
+  /* ---------- Kanka yönetimi ---------- */
+  #modal .box.settings.st-wide { grid-template-columns: minmax(230px, 1fr) minmax(0, 940px) minmax(0, .35fr); }
+  .box.settings.st-wide .st-prev { display: none; }
+  .box.settings.st-wide .st-main .st-page { max-width: 900px; padding-bottom: 40px; }
+  .adm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+  .adm-stats > div { padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+  .adm-stats small { font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .adm-stats b { font-size: 28px; font-weight: 900; } .adm-stats b i { font-size: 14px; color: var(--muted); font-style: normal; margin-left: 4px; }
+  .adm-stats span { font-size: 12px; color: var(--muted); } .adm-stats .mprog { display: block; height: 6px; border-radius: 3px; background: var(--hover); margin-top: 6px; overflow: hidden; }
+  .adm-stats .mprog i { --c1: var(--accent); --c2: #ffb347; }
+  .adm-box { padding: 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); margin-bottom: 12px; }
+  .adm-box h4 { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 0 0 10px; } .adm-box h4 .ic { width: 17px; height: 17px; color: var(--accent); }
+  .adm-box .switch span b { display: block; } .adm-box .switch span small { display: block; font-weight: 600; color: var(--muted); font-size: 12.5px; margin-top: 2px; max-width: 520px; }
+  .adm-inl { display: flex; gap: 8px; align-items: center; margin: 6px 0 8px; flex-wrap: wrap; }
+  .adm-inl .field { margin: 0; flex: 1; min-width: 120px; padding: 10px 12px; } .adm-inl .field.num { flex: 0 0 84px; min-width: 0; }
+  .adm-top { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 14px; } .adm-top .av { width: 26px; height: 26px; font-size: 12px; } .adm-top span { flex: 1; } .adm-top em { font-style: normal; font-weight: 900; color: var(--accent); } .adm-inl label { font-size: 13px; font-weight: 800; color: var(--muted); }
+  .wl { max-height: 320px; overflow-y: auto; margin-top: 8px; border-radius: 12px; background: var(--bg); }
+  .wl-row { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 9px 12px; font-size: 13px; border-bottom: 1px solid var(--line); align-items: center; }
+  .wl-row:last-child { border-bottom: 0; } .wl-row small { color: var(--muted); } .wl-row em { font-style: normal; font-weight: 800; font-size: 12px; color: var(--muted); }
+  .wl-row.i em { color: var(--accent); } .wl-row.j em { color: var(--green); }
+  .mail-st { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: rgba(246,196,69,.1); margin-bottom: 14px; }
+  .mail-st .ic { grid-row: span 2; width: 24px; height: 24px; color: #f6c445; } .mail-st span { font-size: 12.5px; color: var(--muted); }
+  .mail-st.ok { background: rgba(76,195,138,.1); } .mail-st.ok .ic { color: var(--green); }
+  .adm-adv { margin: 4px 0 10px; font-size: 13px; } .adm-adv summary { cursor: pointer; color: var(--muted); font-weight: 800; margin-bottom: 8px; }
+  .adm-user { display: flex; gap: 12px; align-items: center; margin-top: 10px; } .adm-user .av { width: 40px; height: 40px; } .adm-user b { display: block; } .adm-user small { display: block; color: var(--muted); font-size: 12.5px; } .adm-user .no { color: var(--red); }
+  @media (max-width: 700px) { .adm-stats { grid-template-columns: 1fr; } .seg.big { grid-template-columns: 1fr 1fr; } .acc-danger { flex-direction: column; align-items: stretch; } }
 </style>
 </head>
 <body>
@@ -1569,13 +1733,7 @@
 <div id="auth">
   <form class="card" id="auth-form">
     <div class="logo"><svg class="ic klogo" viewBox="0 0 100 100" aria-hidden="true"><defs><mask id="klm-auth" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#000"/><path d="M18 46 L20 17 C20.4 12.6 24.6 10.8 28 13.4 L44 28 Z" fill="#fff"/><path d="M82 46 L80 17 C79.6 12.6 75.4 10.8 72 13.4 L56 28 Z" fill="#fff"/><path d="M50 25 C72 25 86 37 89 53 L95 61 L88.5 63.5 C86 78 70 87 50 87 C30 87 14 78 11.5 63.5 L5 61 L11 53 C14 37 28 25 50 25 Z" fill="#fff"/><path d="M50 31 L53.2 45 L46.8 45 Z" fill="#000"/><path d="M15 56 C21 46 36 44.5 46 52 L50 55 L54 52 C64 44.5 79 46 85 56 C81 66.5 67 70.5 57.5 64.5 L50 60.5 L42.5 64.5 C33 70.5 19 66.5 15 56 Z" fill="#000"/><circle cx="33.5" cy="56" r="5.2" fill="#fff"/><circle cx="66.5" cy="56" r="5.2" fill="#fff"/><path d="M44.5 70 L55.5 70 C55.5 74.2 52.4 77.2 50 77.2 C47.6 77.2 44.5 74.2 44.5 70 Z" fill="#000"/></mask></defs><rect width="100" height="100" fill="currentColor" mask="url(#klm-auth)"/></svg></div>
-    <h1>Selam kanka!</h1>
-    <p>Hesabına gir ya da yeni hesap aç.</p>
-    <div class="tabs"><button type="button" class="on" data-m="login">Giriş yap</button><button type="button" data-m="register">Kayıt ol</button></div>
-    <input class="field" id="a-name" placeholder="Kullanıcı adı" maxlength="20" autocomplete="username">
-    <input class="field" id="a-pass" type="password" placeholder="Şifre (en az 6 karakter)" autocomplete="current-password">
-    <button class="primary" type="submit" id="a-btn">Giriş yap</button>
-    <div id="auth-err"></div>
+    <div id="auth-body"></div>
     <a id="get-app" href="/indir/KankaChat-Kurulum.exe" download style="display:none;margin-top:14px;font-weight:800;font-size:14px;text-decoration:none">Windows uygulamasını indir →</a>
   </form>
 </div>
@@ -1640,6 +1798,10 @@ const ICON = {
   logo: '<path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><path d="M9 9.5v1M15 9.5v1M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   pin: '<path d="M12 17v5"/><path d="M9 3h6l-1 6 4 4H6l4-4z"/>',
+  flag: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/>',
+  ticket: '<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/>',
   tv: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m10.5 9 3.5 2-3.5 2z"/>',
   music: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
   trophy: '<path d="M8 21h8M12 16v5M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
@@ -1821,25 +1983,116 @@ function fmt(t) {
 const isJumbo = t => { const x = t.replace(/:[a-z0-9_]{2,24}:/g, m => serverEmojis()[m.slice(1, -1)] ? '' : m).replace(/\s/g, ''); return !!t.trim() && t.length < 40 && (/^(\p{Extended_Pictographic}|‍|️|\p{Emoji_Modifier})*$/u.test(x)); };
 
 // ================= Giriş / Kayıt =================
-let authMode = 'login';
-document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
-  authMode = b.dataset.m;
-  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
-  $('#a-btn').textContent = authMode === 'login' ? 'Giriş yap' : 'Hesabı oluştur';
-  $('#a-pass').autocomplete = authMode === 'login' ? 'current-password' : 'new-password';
-  $('#auth-err').textContent = '';
-});
+let authMode = 'login', authBeta = null;
+const QS = new URLSearchParams(location.search);
+const authQ = { kod: QS.get('kod'), davet: QS.get('davet'), sifirla: QS.get('sifirla') };
+if (authQ.kod || authQ.davet) authMode = 'register';
+if (authQ.sifirla) authMode = 'reset';
+const AUTH_IC = { user: 'user', mail: 'mail', lock: 'lock', code: 'ticket' };
+const afield = (id, ph, icn, type = 'text', extra = '') => `<label class="afield" id="af-${id}">${ic(AUTH_IC[icn] || icn)}<input id="${id}" type="${type}" placeholder="${ph}" ${extra}>${type === 'password' ? `<button type="button" class="peek" data-peek="${id}" aria-label="Şifreyi göster">${ic('eye')}</button>` : ''}</label>`;
+function renderAuth(mode = authMode, keep) {
+  authMode = mode;
+  const b = $('#auth-body'), v = keep ? Object.fromEntries([...b.querySelectorAll('input[id]')].map(i => [i.id, i.type === 'checkbox' ? i.checked : i.value])) : {};
+  const beta = authBeta?.on, pill = beta ? `<div class="beta-pill"><i></i>Kapalı beta${authBeta.full ? ' · şu an dolu' : authBeta.left != null && authBeta.left < 1000 ? ` · ${authBeta.left} yer kaldı` : ''}</div>` : '';
+  const tabs = `<div class="tabs"><button type="button" class="${mode === 'login' ? 'on' : ''}" data-m="login">Giriş yap</button><button type="button" class="${mode === 'register' ? 'on' : ''}" data-m="register">Kayıt ol</button></div>`;
+  const legal = '<a href="/kosullar" target="_blank">Kullanım Şartları</a> · <a href="/gizlilik" target="_blank">Gizlilik ve KVKK</a>';
+  let h = '';
+  if (mode === 'login') h = `${pill}<h1>Selam kanka!</h1><p>Hesabına gir ya da yeni hesap aç.</p>${tabs}
+    ${afield('a-name', 'Kullanıcı adı ya da e-posta', 'user', 'text', 'maxlength="190" autocomplete="username"')}
+    ${afield('a-pass', 'Şifre', 'lock', 'password', 'autocomplete="current-password"')}
+    <div class="arow"><span></span><button type="button" class="alink" id="a-forgot">Şifremi unuttum</button></div>
+    <button class="primary" type="submit" id="a-btn">Giriş yap</button><div id="auth-err"></div><div class="alegal">${legal}</div>`;
+  else if (mode === 'register') {
+    const viaInvite = !!authQ.davet, needCode = beta && !viaInvite;
+    h = `${pill}<h1>${needCode ? 'Betaya hoş geldin!' : 'Aramıza katıl'}</h1><p>${needCode ? 'Kanka şu an davetle açılıyor. Kodun varsa hemen başla.' : viaInvite ? 'Bir arkadaşın seni sunucusuna davet etti 🎉' : 'Bir dakikada hesabını aç.'}</p>${tabs}
+      ${needCode ? `${afield('a-code', 'Davet kodu (KNK-XXXXXX)', 'code', 'text', 'maxlength="12" autocomplete="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:1px"')}<div class="acode-ok" id="a-code-ok"></div>` : ''}
+      ${afield('a-name', 'Kullanıcı adı', 'user', 'text', 'maxlength="20" autocomplete="username"')}
+      ${afield('a-mail', 'E-posta (şifreni unutursan diye)', 'mail', 'email', 'maxlength="190" autocomplete="email"')}
+      ${afield('a-pass', 'Şifre (en az 6 karakter)', 'lock', 'password', 'autocomplete="new-password"')}
+      <label class="acheck" id="af-a-terms"><input type="checkbox" id="a-terms"><span class="box2"></span><span><a href="/kosullar" target="_blank">Kullanım Şartları</a>'nı ve <a href="/gizlilik" target="_blank">Gizlilik Politikası / KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum. 13 yaşından büyüğüm.</span></label>
+      <button class="primary" type="submit" id="a-btn">Hesabı oluştur</button><div id="auth-err"></div>
+      ${needCode ? `<div class="await"><span>Kodun yok mu?</span><button type="button" class="alink" id="a-wait">Bekleme listesine katıl →</button></div>` : ''}`;
+  }
+  else if (mode === 'forgot') h = `<h1>Şifreni mi unuttun?</h1><p>Kullanıcı adını ya da e-postanı yaz, sıfırlama linkini e-postana gönderelim.</p>
+    ${afield('a-who', 'Kullanıcı adı ya da e-posta', 'mail', 'text', 'maxlength="190" autocomplete="username"')}
+    <button class="primary" type="submit" id="a-btn">Link gönder</button><div id="auth-err"></div><button type="button" class="alink aback" data-m="login">← Girişe dön</button>`;
+  else if (mode === 'sent') h = `<div class="abig">${ic('mail')}</div><h1>E-postanı kontrol et</h1><p>Bu bilgilerle bir hesap varsa <b>1 saat</b> geçerli bir sıfırlama linki gönderdik. Gelen kutunda yoksa spam klasörüne de bak.</p>
+    <button type="button" class="primary" data-m="login">Girişe dön</button><button type="button" class="alink aback" data-m="forgot">Tekrar gönder</button>`;
+  else if (mode === 'reset') h = `<div class="abig">${ic('key')}</div><h1>Yeni şifre belirle</h1><p id="a-reset-who">Link kontrol ediliyor…</p>
+    ${afield('a-pass', 'Yeni şifre (en az 6 karakter)', 'lock', 'password', 'autocomplete="new-password"')}
+    ${afield('a-pass2', 'Yeni şifre tekrar', 'lock', 'password', 'autocomplete="new-password"')}
+    <button class="primary" type="submit" id="a-btn">Şifreyi kaydet ve gir</button><div id="auth-err"></div><button type="button" class="alink aback" data-m="login">← Girişe dön</button>`;
+  else if (mode === 'wait') h = `<div class="abig">${ic('sparkle')}</div><h1>Bekleme listesi</h1><p>E-postanı bırak, sıra sana gelince davet kodunu gönderelim. Arkadaşın Kanka'daysa ondan da kod isteyebilirsin, herkesin 3 kodu var.</p>
+    ${afield('a-wmail', 'E-posta adresin', 'mail', 'email', 'maxlength="190" autocomplete="email"')}
+    <button class="primary" type="submit" id="a-btn">Listeye yaz beni</button><div id="auth-err"></div><button type="button" class="alink aback" data-m="register">← Kodum var</button>`;
+  else if (mode === 'waited') h = `<div class="wpos"><small>Sıran</small><b>#${v.pos ?? authQ.pos}</b><span>${authQ.total} kişi bekliyor</span></div><h1>Listedesin! 🎉</h1>
+    <p>Sıra sana gelince <b>${esc(authQ.wmail || '')}</b> adresine kodun gelecek. Kanka'da bir arkadaşın varsa ondan kod iste, sırayı beklemeden girersin.</p>
+    <button type="button" class="alink aback" data-m="register">← Kodum var</button>`;
+  const prevErr = keep ? $('#auth-err')?.textContent : '';
+  b.innerHTML = h;
+  b.className = 'am-' + mode;
+  if (prevErr && $('#auth-err')) $('#auth-err').textContent = prevErr;
+  for (const [k, x] of Object.entries(v)) { const i = $('#' + k); if (i && k !== 'a-pass' && k !== 'a-pass2') i.type === 'checkbox' ? i.checked = x : i.value = x; }
+  b.querySelectorAll('[data-m]').forEach(x => x.onclick = () => { renderAuth(x.dataset.m, true); setTimeout(() => b.querySelector('input:not([type=checkbox])')?.focus(), 30); });
+  b.querySelectorAll('[data-peek]').forEach(x => x.onclick = () => { const i = $('#' + x.dataset.peek); i.type = i.type === 'password' ? 'text' : 'password'; x.classList.toggle('on', i.type === 'text'); });
+  if ($('#a-forgot')) $('#a-forgot').onclick = () => { const n = $('#a-name').value; renderAuth('forgot'); $('#a-who').value = n; $('#a-who').focus(); };
+  if ($('#a-wait')) $('#a-wait').onclick = () => { const m = $('#a-mail')?.value; renderAuth('wait'); if (m) $('#a-wmail').value = m; $('#a-wmail').focus(); };
+  if ($('#a-code')) {
+    if (authQ.kod && !$('#a-code').value) $('#a-code').value = authQ.kod.toUpperCase();
+    let tm; const chk = () => { clearTimeout(tm); const c = $('#a-code').value.trim(), o = $('#a-code-ok'); $('#af-a-code').classList.remove('bad', 'good'); o.innerHTML = '';
+      if (c.replace(/^KNK-?/i, '').length < 6) return;
+      tm = setTimeout(() => socket.emit('checkCode', c, r => { if ($('#a-code')?.value.trim() !== c) return; $('#af-a-code').classList.toggle('good', !!r.ok); $('#af-a-code').classList.toggle('bad', !r.ok);
+        o.innerHTML = r.ok ? `${ic('check')}Kod geçerli${r.by ? ` · <b>${esc(r.by)}</b> seni davet etti` : ''}` : `<span class="no">${esc(r.error)}</span>`; }), 250); };
+    $('#a-code').oninput = chk; chk();
+  }
+  if (mode === 'reset') socket.emit('checkReset', authQ.sifirla, r => { const w = $('#a-reset-who'); if (!w) return;
+    if (r.ok) w.innerHTML = `<b>${esc(r.name)}</b> hesabı için yeni bir şifre seç.`; else { w.innerHTML = `<span style="color:var(--red)">${esc(r.error)}</span>`; $('#auth-body').querySelectorAll('.afield').forEach(x => x.remove()); const bt = $('#a-btn'); bt.type = 'button'; bt.textContent = 'Yeni link iste'; bt.onclick = () => { history.replaceState(null, '', '/'); authQ.sifirla = null; renderAuth('forgot'); }; } });
+  b.querySelectorAll('.afield input, #a-terms').forEach(i => i.addEventListener('input', () => i.closest('.afield, .acheck')?.classList.remove('bad')));
+}
+function authErr(r) {
+  $('#auth-err').textContent = r.error || '';
+  document.querySelectorAll('#auth-body .bad').forEach(x => x.classList.remove('bad'));
+  const map = { email: 'af-a-mail', name: 'af-a-name', code: 'af-a-code', terms: 'af-a-terms' };
+  if (r.field && map[r.field]) $('#' + map[r.field])?.classList.add('bad');
+  if (r.full) { authQ.full = true; }
+}
 $('#auth-form').onsubmit = e => {
   e.preventDefault();
-  const name = $('#a-name').value.trim(), password = $('#a-pass').value;
-  if (!name || !password) return $('#auth-err').textContent = 'Kullanıcı adı ve şifre gerekli.';
-  socket.emit(authMode, { name, password }, onAuth);
+  const val = id => $('#' + id)?.value.trim() || '', btn = $('#a-btn');
+  const busy = on => { if (btn) { btn.disabled = on; btn.classList.toggle('busy', on); } };
+  if (authMode === 'login') {
+    if (!val('a-name') || !$('#a-pass').value) return authErr({ error: 'Kullanıcı adı ve şifre gerekli.' });
+    busy(true); socket.emit('login', { name: val('a-name'), password: $('#a-pass').value }, r => { busy(false); onAuth(r); });
+  } else if (authMode === 'register') {
+    if (!val('a-name') || !$('#a-pass').value) return authErr({ error: 'Kullanıcı adı ve şifre gerekli.' });
+    if (!val('a-mail')) return authErr({ error: 'E-posta adresini yaz.', field: 'email' });
+    if (!$('#a-terms').checked) return authErr({ error: 'Kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
+    busy(true); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true }, r => { busy(false); r.error ? authErr(r) : onAuth(r); });
+  } else if (authMode === 'forgot') {
+    if (!val('a-who')) return authErr({ error: 'Kullanıcı adını ya da e-postanı yaz.' });
+    busy(true); socket.emit('forgot', val('a-who'), r => { busy(false); r.error ? authErr(r) : renderAuth('sent'); });
+  } else if (authMode === 'reset') {
+    const p1 = $('#a-pass').value, p2 = $('#a-pass2').value;
+    if (p1.length < 6) return authErr({ error: 'Şifre en az 6 karakter olmalı.' });
+    if (p1 !== p2) return authErr({ error: 'Şifreler aynı değil.' });
+    busy(true); socket.emit('resetPw', { token: authQ.sifirla, password: p1 }, r => { busy(false); if (r.error) return authErr(r); history.replaceState(null, '', '/'); authQ.sifirla = null; toast('Şifren yenilendi, hoş geldin!'); onAuth(r); });
+  } else if (authMode === 'wait') {
+    if (!val('a-wmail')) return authErr({ error: 'E-postanı yaz.' });
+    busy(true); socket.emit('waitlist', { email: val('a-wmail'), ref: authQ.davet || null }, r => { busy(false); if (r.error) return authErr(r);
+      if (r.invited) return authErr({ error: 'Sana zaten davet kodu gönderdik! E-postanı (ve spam klasörünü) kontrol et.' });
+      Object.assign(authQ, { pos: r.pos, total: r.total, wmail: val('a-wmail') }); renderAuth('waited'); });
+  }
 };
+function showAuth() {
+  $('#auth').style.display = 'flex';
+  if (!$('#auth-body').innerHTML) renderAuth();
+  socket.emit('betaInfo', r => { authBeta = r; renderAuth(authMode, true); });
+}
 function hideBoot() { const b = $('#boot'); if (!b || b.classList.contains('out')) return; b.classList.add('out'); setTimeout(() => b.remove(), 400); }
 setTimeout(() => { const t = $('#boot-t'); if (t && $('#boot')) t.textContent = 'Sunucuya ulaşılamıyor, tekrar deneniyor…'; }, 7000);
 function onAuth(res) {
   hideBoot();
-  if (res.error) { store.set('kanka-token', null); $('#auth').style.display = 'flex'; return $('#auth-err').textContent = res.error; }
+  if (res.error) { store.set('kanka-token', null); showAuth(); return setTimeout(() => $('#auth-err') && authErr(res), 0); }
   store.set('kanka-token', res.token);
   S.me = res.user.name;
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
@@ -1849,14 +2102,16 @@ function onAuth(res) {
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
-  $('#a-pass').value = '';
-  renderMe();
+  if ($('#a-pass')) $('#a-pass').value = '';
+  S.myEmail = res.myEmail || null; S.siteAdmin = !!res.siteAdmin; S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
+  renderMe(); renderModPill();
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
   if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
   const odaQ = new URLSearchParams(location.search).get('oda');
   if (odaQ) { history.replaceState(null, '', '/'); const sv = S.servers.find(x => x.channels.some(c => c.id === odaQ && !voiceLike(c.type))); if (sv) return selectServer(sv.id, odaQ); }
+  if (authQ.kod) { authQ.kod = null; if (!QS.get('davet')) history.replaceState(null, '', '/'); }
   const invite = new URLSearchParams(location.search).get('davet');
   if (invite) { history.replaceState(null, '', '/'); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
   const last = S.view === 'dm' && S.channel ? null : S.server && S.servers.find(s => s.id === S.server.id);
@@ -1865,7 +2120,7 @@ function onAuth(res) {
 }
 socket.on('connect', () => {
   const t = store.get('kanka-token');
-  if (t) socket.emit('auth', t, onAuth); else { $('#auth').style.display = 'flex'; hideBoot(); }
+  if (t) socket.emit('auth', t, onAuth); else if ($('#app').style.display === 'none') { showAuth(); hideBoot(); }
   if (myVoice) { const ch = myVoice; cleanupVoice(); joinVoice(ch); }
 });
 function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); location.reload(); }
@@ -1889,7 +2144,7 @@ function showSettings(tab = 'profile') {
   const norm = (k, v) => JSON.stringify(k === 'socials' ? Object.fromEntries(Object.entries(v || {}).filter(([, x]) => x)) : v || (k in OBJ ? null : ''));
   const dirty = () => KEYS.some(k => norm(k, draft[k]) !== norm(k, u[k]));
   modal(`<nav class="st-nav"><h4>KULLANICI AYARLARI</h4>
-      <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button>
+      <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button>${S.siteAdmin ? `<h4 style="margin-top:14px">YÖNETİM</h4><button data-tab="admin">${ic('shield')}Kanka yönetimi${S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>` : ''}
       <button class="out" id="st-out">${ic('logout')}Çıkış yap</button><div class="st-ver" id="st-ver">Kanka Chat</div><button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="st-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div><div class="mini-card" id="st-card"></div></aside>`, 'settings');
@@ -1922,10 +2177,8 @@ function showSettings(tab = 'profile') {
       <div class="st-sec">Bağlantılar</div>
       <div class="st-field"><div class="socin">${Object.entries(SOCIAL_META).map(([k, [nm, c]]) => `<label style="--c:${c}"><i></i><b>${nm}</b><input data-soc="${k}" maxlength="60" placeholder="kullanıcı adı" value="${esc(draft.socials?.[k] || '')}"></label>`).join('')}</div><p class="hint">Sadece kullanıcı adını yaz, linki biz oluştururuz.</p></div>
       <div class="st-save"><span>Kaydedilmemiş değişikliklerin var</span><button id="st-reset">Sıfırla</button><button class="primary" id="st-saveb">Değişiklikleri kaydet</button></div></div>`,
-    account: () => `<div class="st-page"><h3>Hesap</h3><p class="hint">Kullanıcı adın: <b>${esc(S.me)}</b> · Katılım: ${since(u.createdAt)}</p>
-      <div class="st-field"><label>Mevcut şifre</label><input class="field" type="password" id="p-old" autocomplete="current-password"></div>
-      <div class="st-field"><label>Yeni şifre</label><input class="field" type="password" id="p-new" placeholder="En az 6 karakter" autocomplete="new-password"></div>
-      <div class="st-field"><button class="primary" id="p-pw" style="width:auto;padding:11px 20px">Şifreyi değiştir</button></div></div>`,
+    account: () => accountPageHTML(u),
+    admin: () => '<div id="adm-root"></div>',
     act: () => { const a = u.activities || {}; return `<div class="st-page"><h3>Etkinlik</h3><p class="hint">Ne oynadığın ve ne dinlediğin profilinde ve üye listesinde görünür.</p>
       <div class="st-field"><label>Otomatik algılama</label>
         <div class="conn">${ic('activity')}<span>${window.kankaDesktop ? 'Kanka Chat masaüstü uygulaması' : 'Bilgisayar uygulaması'}</span><span class="st off" id="kd-st">Kontrol ediliyor…</span></div>
@@ -1963,6 +2216,9 @@ function showSettings(tab = 'profile') {
     tab = t;
     document.querySelectorAll('.st-nav [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
     $('#st-main').innerHTML = pages[t]();
+    $('#modal-box').classList.toggle('st-wide', t === 'admin');
+    if (t === 'account') wireAccount();
+    if (t === 'admin') adminPanel($('#adm-root').parentElement);
     if (t === 'profile') {
       const avEl = () => { $('#st-av').style.background = draft.color; $('#st-av').innerHTML = draft.avatar ? `<img src="${esc(draft.avatar)}" alt="">` : initial(S.me); };
       avEl();
@@ -2307,7 +2563,7 @@ function userMenu(n, x, y) {
     (self ? '' : '<hr>' + chk('mute', 'Sustur', uMuted.has(n)) + chk('novid', 'Görüntüyü devre dışı bırak', uNoVid.has(n))) +
     (self ? '' : '<hr>' + (others.length ? `<button data-u="invsub" class="arr">Sunucuya davet et${ic('chevron')}</button><div class="sub" id="u-inv">${others.map(s => `<button data-inv="${s.id}">${esc(s.name)}</button>`).join('')}</div>` : '') +
       b('friend', fr ? 'Arkadaşı çıkar' : sc.reqOut.includes(n) ? 'İsteği geri çek' : sc.reqIn.includes(n) ? 'İsteği kabul et' : 'Arkadaş ekle') +
-      b('ignore', uIgnored.has(n) ? 'Yok saymayı bırak' : 'Yok say') + b('block', sc.blocked.includes(n) ? 'Engeli kaldır' : 'Engelle', 'danger')) +
+      b('ignore', uIgnored.has(n) ? 'Yok saymayı bırak' : 'Yok say') + b('block', sc.blocked.includes(n) ? 'Engeli kaldır' : 'Engelle', 'danger') + b('report', 'Şikayet et', 'danger')) +
     (srv && perm(srv, 'manageRoles') && (srv.customRoles || []).length && !self ? `<hr><button data-u="rolesub" class="arr">Roller${ic('chevron')}</button><div class="sub" id="u-roles">${srv.customRoles.map(r => chk('role:' + r.id, `<span class="rdot" style="background:${r.color};margin-right:8px"></span>${esc(r.name)}`, (srv.memberRoles?.[n] || []).includes(r.id))).join('')}</div>` : '') +
     (tgt && (perm(srv, 'timeout') || perm(srv, 'kick') || perm(srv, 'ban')) ? '<hr>' + (perm(srv, 'timeout') ? b('to', timedOutLeft(srv, n) ? `${esc(n)} susturmasını kaldır` : `${esc(n)} kullanıcısını sustur`, 'danger') : '') +
       (perm(srv, 'kick') ? b('kick', `${esc(n)} kullanıcısını at`, 'danger') : '') + (perm(srv, 'ban') ? b('ban', `${esc(n)} kullanıcısını yasakla`, 'danger') : '') : '') +
@@ -2344,6 +2600,7 @@ function userMenu(n, x, y) {
     else if (a === 'kick') confirmBox(`${n} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: srv.id, name: n }, r => r.error ? toast(r.error) : toast(`${n} atıldı`)));
     else if (a === 'ban') askBan(srv, n);
     else if (a === 'copy') navigator.clipboard?.writeText(n).then(() => toast('Kopyalandı'));
+    else if (a === 'report') showReport({ kind: 'user', name: n, serverId: srv?.id });
   };
 }
 document.addEventListener('contextmenu', e => {
@@ -2377,6 +2634,7 @@ function toggleSrvMenu() {
     item('info', 'Sunucu bilgisi', 'info') +
     item('lb', 'Liderlik tablosu', 'trophy') +
     (s.welcome?.enabled ? item('welcome', 'Hoş geldin ekranı', 'sparkle') : '') +
+    (mod && !s.public ? item('reports', `Şikayetler${S.rc?.servers?.[s.id] ? ` <em class="cnt">${S.rc.servers[s.id]}</em>` : ''}`, 'flag') : '') +
     (mod ? item('audit', 'Moderasyon kayıtları', 'log') : '') +
     item('copy', 'Sunucu kimliğini kopyala', 'idcopy') +
     (s.public ? '' : '<hr>' + item('leave', 'Sunucudan ayrıl', 'door', 'danger'));
@@ -2399,6 +2657,7 @@ function toggleSrvMenu() {
     if (a === 'info') showServerInfo(s);
     if (a === 'welcome') showWelcome(s, true);
     if (a === 'lb') showLeaderboard();
+    if (a === 'reports') showServerSettings(s, 'reports');
     if (a === 'audit') socket.emit('audit', s.id, list => {
       modal(`<h3>${ic('log')}Moderasyon kayıtları</h3><p class="hint">${esc(s.name)} sunucusunda yapılan yönetim işlemleri.</p>` +
         (list.length ? list.map(x => `<div class="lrow" style="align-items:flex-start"><span><b>${esc(x.by)}</b> · ${esc(x.action)}${x.target ? ` <span style="color:var(--muted)">— ${esc(x.target)}</span>` : ''}<br><small style="color:var(--muted)">${new Date(x.time).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}</small></span></div>`).join('') : '<p class="hint">Henüz kayıt yok.</p>') +
@@ -2445,7 +2704,7 @@ function showServerSettings(s, tab, focus) {
   const P = p => perm(s, p), mod = isMod(s, S.me);
   const tabs = [['general', 'Genel', 'gear', P('manageServer')], ['roles', 'Roller', 'tag', P('manageRoles')], ['channels', 'Odalar', 'hash', mod], ['members', 'Üyeler', 'users', !s.public && (P('manageRoles') || P('kick') || P('ban') || P('timeout'))],
     ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
-    ['emoji', 'Emojiler', 'smile', mod], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod]].filter(t => t[3]);
+    ['emoji', 'Emojiler', 'smile', mod], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
   ssOpen = { id: s.id, tab, focus };
@@ -2593,6 +2852,7 @@ function showServerSettings(s, tab, focus) {
         socket.emit('addEmoji', { serverId: s.id, name: v.name, url }, r => { if (r.error) return toast(r.error); toast(`:${v.name.toLowerCase()}: eklendi`); showServerSettings(s, 'emoji'); })));
       main.querySelectorAll('[data-rmemo]').forEach(b => b.onclick = () => confirmBox(`:${b.dataset.rmemo}: emojisi silinsin mi?`, () => socket.emit('removeEmoji', { serverId: s.id, name: b.dataset.rmemo }, () => showServerSettings(s, 'emoji'))));
     },
+    reports: () => { main.innerHTML = `<div class="st-page"><h3>Şikayetler</h3><p class="hint">Üyelerin bu sunucuda şikayet ettiği mesaj ve kişiler. ${S.siteAdmin ? 'Kanka yönetimi olduğun için şikayet edenleri görüyorsun; diğer moderatörler görmez.' : 'Şikayet edenlerin adı sana gösterilmez.'}</p><div id="ss-rep"></div></div>`; reportsPanel($('#ss-rep'), s.id); },
     bans: () => {
       const bans = Object.entries(s.bans || {});
       main.innerHTML = `<div class="st-page"><h3>Yasaklar</h3><p class="hint">Yasaklananlar davet linkiyle bile giremez.</p>` +
@@ -2976,6 +3236,7 @@ $('#messages').onclick = e => {
       (m.text ? `<button data-a="copy">${ic('copy')}Metni kopyala</button>` : '') +
       (canPin ? `<button data-a="pin">${ic('pin')}${m.pinned ? 'Sabitlemeyi kaldır' : 'Sabitle'}</button>` : '') +
       (mine && m.kind === 'text' && m.text ? `<button data-a="edit">${ic('edit')}Düzenle</button>` : '') +
+      (!mine && m.author ? `<button data-a="report" class="danger">${ic('flag')}Şikayet et</button>` : '') +
       (canDel ? `<button data-a="del" class="danger">${ic('trash')}Sil</button>` : ''),
       b => {
         const a = b.dataset.a;
@@ -2985,6 +3246,7 @@ $('#messages').onclick = e => {
         if (a === 'copy') navigator.clipboard?.writeText(m.text).then(() => toast('Kopyalandı'));
         if (a === 'edit') form('Mesajı düzenle', '', [{ k: 'text', p: 'Mesaj', v: m.text }], v => socket.emit('edit', { msgId: m.id, text: v.text }));
         if (a === 'del') confirmBox('Bu mesaj silinsin mi?', () => socket.emit('delete', m.id));
+        if (a === 'report') showReport({ kind: 'msg', msg: m, chId: S.channel.id });
       });
   }
   else if (t.dataset.xox) socket.emit('xoxMove', { msgId: t.dataset.xox, i: +t.dataset.i });
@@ -3387,6 +3649,7 @@ function showProfile(n, tab = 'about') {
     items.push('-', { t: blocked ? 'Engeli kaldır' : 'Engelle', icon: blocked ? 'unlock' : 'ban', danger: !blocked, act: () => {
       const go = () => socket.emit('block', { name: n, on: !blocked }, x => x.error ? toast(x.error) : (toast(!blocked ? `${n} engellendi` : 'Engel kaldırıldı'), setTimeout(() => showProfile(n, tab), 200)));
       !blocked ? confirmBox(`${n} engellensin mi? Sana özel mesaj atamaz, arkadaşlığınız biter.`, go) : go(); } });
+    items.push({ t: 'Şikayet et', icon: 'flag', danger: true, act: () => showReport({ kind: 'user', name: n, serverId: srv?.id }) });
     ctxMenu(b.left, b.bottom + 6, items);
   };
 }
@@ -3549,7 +3812,7 @@ socket.on('presence', list => {
 let usersT;
 socket.on('users', list => {
   S.users = Object.fromEntries(list.map(u => [u.name, u]));
-  if (!S.me) return;
+  if (!S.me || !S.users[S.me]) return;
   renderMe(); renderMembers();
   clearTimeout(usersT); usersT = setTimeout(() => { if (S.msgs.length) renderMessages(); }, 300);
 });
@@ -5252,6 +5515,264 @@ function chTreeHTML(s) {
     return `<div class="ct-cat" data-drag="cat" data-id="${k.id}"><i class="grip">${ic('grip')}</i>${ic('chevron')}<b>${esc(k.name)}</b><small>${list.length} oda</small>${k.perms?.['@everyone']?.view === false ? `<em class="tag">${ic('lock')}Özel</em>` : ''}
       <span class="ct-act"><button data-addin="${k.id}" title="Oda ekle">${ic('plus')}</button><button data-cperm="${k.id}" title="İzinler">${ic('shield')}</button><button data-cedit="${k.id}" title="Düzenle">${ic('gear')}</button><button data-cdel="${k.id}" class="danger" title="Sil">${ic('trash')}</button></span></div>` +
       (list.map(row).join('') || `<div class="ct-empty" data-in="${k.id}">Boş kategori · odaları buraya sürükle</div>`); }).join('');
+}
+
+// ================= Şikayet ve moderasyon =================
+const REASONS = [['spam', 'Spam ya da reklam', 'Tekrar eden mesajlar, istenmeyen link ve reklamlar'], ['taciz', 'Taciz veya zorbalık', 'Birini hedef alma, aşağılama, ısrarla rahatsız etme'],
+  ['nefret', 'Nefret söylemi', 'Irk, din, cinsiyet, yönelim gibi özellikler üzerinden saldırı'], ['cinsel', 'Cinsel içerik', 'İstenmeyen ya da müstehcen paylaşımlar'],
+  ['siddet', 'Şiddet ya da tehdit', 'Zarar verme tehdidi, şiddeti övme'], ['dolandir', 'Dolandırıcılık', 'Hesap çalma, sahte çekiliş, para ya da şifre isteme'],
+  ['cocuk', 'Çocuk güvenliği', 'Reşit olmayanları riske atan her şey. Öncelikli incelenir.'], ['taklit', 'Başkasını taklit', 'Başka biri gibi davranan hesap'], ['diger', 'Diğer', 'Listede olmayan bir kural ihlali']];
+function showReport({ kind, msg, chId, name, serverId }) {
+  const target = kind === 'msg' ? msg.author : name;
+  const srv = serverId ? S.servers.find(x => x.id === serverId) : chId && S.servers.find(x => x.channels?.some(c => c.id === chId));
+  const who = srv && !srv.public ? `<b>${esc(srv.name)}</b> moderatörleri ve Kanka ekibi` : 'Kanka ekibi';
+  const prev = kind === 'msg' ? `<div class="rp-msg">${av(target)}<div><b>${esc(dn(target))}</b><span>${msg.text ? esc(msg.text.slice(0, 220)) + (msg.text.length > 220 ? '…' : '') : msg.image ? '🖼️ Resim' : msg.audio ? '🎤 Sesli mesaj' : '—'}</span></div></div>`
+    : `<div class="rp-msg">${av(target)}<div><b>${esc(dn(target))}</b><span>@${esc(target)}</span></div></div>`;
+  let reason = null;
+  const step1 = () => {
+    modal(`<div class="rp-head">${ic('flag')}<div><h3>${kind === 'msg' ? 'Mesajı şikayet et' : 'Kullanıcıyı şikayet et'}</h3><p class="hint">Ne oldu? Doğru kategori daha hızlı incelenmesini sağlar.</p></div></div>${prev}
+      <div class="rp-list">${REASONS.map(([k, t, d]) => `<button data-r="${k}" class="${k === 'cocuk' ? 'urg' : ''}"><span><b>${t}</b><small>${d}</small></span>${ic('chevron')}</button>`).join('')}</div>
+      <div class="rowb"><button id="mx">Vazgeç</button></div>`, 'rep');
+    $('#mx').onclick = closeModal;
+    $('#modal-box').querySelectorAll('[data-r]').forEach(b => b.onclick = () => { reason = b.dataset.r; step2(); });
+  };
+  const step2 = () => {
+    const r = REASONS.find(x => x[0] === reason);
+    modal(`<div class="rp-head">${ic('flag')}<div><h3>${kind === 'msg' ? 'Mesajı şikayet et' : 'Kullanıcıyı şikayet et'}</h3><p class="hint">Son bir adım.</p></div></div>${prev}
+      <div class="rp-chosen ${reason === 'cocuk' ? 'urg' : ''}"><span>${r[1]}</span><button class="alink" id="rp-chg">Değiştir</button></div>
+      <label class="rp-lbl">Eklemek istediğin bir şey var mı? <small>(isteğe bağlı)</small></label>
+      <textarea class="field" id="rp-note" maxlength="500" rows="3" placeholder="Örn. birkaç gündür DM'den rahatsız ediyor"></textarea>
+      <div class="rp-info">${ic('shield')}<span>Şikayetini ${who} görecek. Sunucu moderatörleri kimin şikayet ettiğini <b>görmez</b>.${reason === 'cocuk' ? ' Acil bir tehlike varsa <b>112</b>\'yi ara.' : ''}</span></div>
+      <div class="rowb"><button id="rp-back">Geri</button><button class="primary danger-btn" id="rp-send">${ic('flag')}Şikayet et</button></div>`, 'rep');
+    $('#rp-chg').onclick = $('#rp-back').onclick = step1;
+    $('#rp-send').onclick = () => {
+      $('#rp-send').classList.add('busy');
+      socket.emit('report', { kind, msgId: msg?.id, chId: kind === 'msg' ? chId : srv?.id, name, reason, note: $('#rp-note').value }, x => {
+        if (x.error) { $('#rp-send')?.classList.remove('busy'); return toast(x.error); }
+        step3(x.dup);
+      });
+    };
+  };
+  const step3 = dup => {
+    const blocked = S.social.blocked.includes(target), ignored = uIgnored.has(target);
+    modal(`<div class="rp-done"><div class="rp-ok">${ic('check')}</div><h3>${dup ? 'Bunu zaten şikayet etmiştin' : 'Teşekkürler, şikayetin ulaştı'}</h3>
+      <p class="hint">İnceleme bitince sana haber vereceğiz. Bu sırada ${esc(dn(target))} ile karşılaşmak istemiyorsan:</p>
+      <div class="rp-acts">${blocked ? '' : `<button id="rp-block" class="danger">${ic('ban')}<span><b>Engelle</b><small>Sana mesaj atamaz, arkadaşlığınız biter</small></span></button>`}
+      ${ignored ? '' : `<button id="rp-ign">${ic('eye')}<span><b>Yok say</b><small>Mesajları senin için gizlenir, haberi olmaz</small></span></button>`}</div>
+      <div class="rowb"><button class="primary" id="mx">Tamam</button></div></div>`, 'rep');
+    $('#mx').onclick = closeModal;
+    if ($('#rp-block')) $('#rp-block').onclick = () => socket.emit('block', { name: target, on: true }, r => { if (r.error) return toast(r.error); toast(`${target} engellendi`); $('#rp-block').remove(); });
+    if ($('#rp-ign')) $('#rp-ign').onclick = () => { uIgnored.add(target); saveU(); if (S.channel) renderMessages(); toast(`${target} yok sayılıyor`); $('#rp-ign').remove(); };
+  };
+  step1();
+}
+// İki tıkla onaylanan buton (iç içe pencere açmadan)
+function armBtn(b, label, run) {
+  b.onclick = () => {
+    if (b.classList.contains('arm')) { clearTimeout(b._t); b.classList.remove('arm'); return run(); }
+    b._txt ??= b.innerHTML; b.classList.add('arm'); b.innerHTML = label;
+    b._t = setTimeout(() => { b.classList.remove('arm'); b.innerHTML = b._txt; }, 3500);
+  };
+}
+function reportsPanel(el, serverId, state = { status: 'open' }) {
+  el.innerHTML = `<div class="rpp"><div class="seg" id="rpp-seg"><button data-s="open" class="${state.status === 'open' ? 'on' : ''}">Açık</button><button data-s="done" class="${state.status === 'done' ? 'on' : ''}">Çözülenler</button></div><div id="rpp-list"><p class="hint">Yükleniyor…</p></div></div>`;
+  el.querySelectorAll('#rpp-seg [data-s]').forEach(b => b.onclick = () => reportsPanel(el, serverId, { status: b.dataset.s }));
+  socket.emit('reports', { serverId, status: state.status }, res => {
+    const L = el.querySelector('#rpp-list'); if (!L) return;
+    if (res.error) return L.innerHTML = `<p class="hint">${esc(res.error)}</p>`;
+    if (!res.reports.length) return L.innerHTML = `<div class="rpp-empty">${ic('shield')}<b>${state.status === 'open' ? 'Bekleyen şikayet yok' : 'Henüz çözülen şikayet yok'}</b><span>${state.status === 'open' ? 'Ortalık sakin. Yeni şikayet gelince burada ve bildirimlerde görünecek.' : ''}</span></div>`;
+    L.innerHTML = res.reports.map(r => {
+      const s = r.serverId && S.servers.find(x => x.id === r.serverId), P = p => s && r.target !== S.me && r.target !== s.owner && perm(s, p);
+      const line = m => `<div class="rpc-line ${m.id === r.msg?.id ? 'hit' : ''}"><b style="color:${userColor(m.author)}">${esc(m.author)}</b><span>${m.text ? fmt(m.text.slice(0, 300)) : m.image ? `<img src="${esc(m.image)}" alt="" data-view>` : '—'}</span><time>${hm(m.time)}</time></div>`;
+      const acts = r.status === 'open' ? [
+        r.kind === 'msg' && r.msgAlive ? `<button data-x="delete">${ic('trash')}Mesajı sil</button>` : '',
+        s && !r.targetGone && P('timeout') ? `<button data-x="to">${ic('hourglass')}1 saat sustur</button>` : '',
+        s && !r.targetGone && P('kick') ? `<button data-x="kick" class="danger">${ic('logout')}At</button>` : '',
+        s && !r.targetGone && P('ban') ? `<button data-x="ban" class="danger">${ic('ban')}Yasakla</button>` : '',
+        S.siteAdmin && r.target !== S.me && !r.targetGone && !r.targetBanned ? `<button data-x="siteban" class="danger">${ic('lock')}Hesabı kapat</button>` : '',
+        `<button data-x="dismiss" class="ok">${ic('check')}Sorun yok</button>`].join('')
+        : `<div class="rpc-res">${ic('check')}<span><b>${esc(r.action || 'Çözüldü')}</b> · ${esc(r.handledBy || '')} · ${r.handledAt ? ago(r.handledAt) : ''}</span><button data-x="reopen" class="alink">Tekrar aç</button></div>`;
+      return `<article class="rpc ${r.urgent ? 'urg' : ''}" data-id="${r.id}">
+        <header><span class="rpc-tag">${ic('flag')}${esc(r.reasonText)}</span><span class="rpc-where">${esc(r.where || '')}</span><time>${ago(r.at)}</time></header>
+        <div class="rpc-who"><button class="rpc-user" data-u="${esc(r.target)}">${av(r.target)}<span><b>${esc(r.target)}</b><small>${r.kind === 'msg' ? 'Mesajı şikayet edildi' : 'Kullanıcı şikayet edildi'}${r.priors ? ` · <em>${r.priors} şikayet daha</em>` : ''}${r.targetBanned ? ' · <em>hesabı kapalı</em>' : ''}${r.targetGone ? ' · hesap silinmiş' : ''}</small></span></button>
+          <small class="rpc-by">${r.by ? `Şikayet eden: <b>${esc(r.by)}</b>` : 'Şikayet eden gizli'}</small></div>
+        ${r.msg ? `<div class="rpc-ctx">${(r.context || []).filter(m => m.time <= r.msg.time).map(line).join('')}${line(r.msg)}${(r.context || []).filter(m => m.time > r.msg.time).map(line).join('')}${r.msgAlive === false ? '<small class="rpc-gone">Mesaj artık yok (silinmiş)</small>' : ''}</div>` : ''}
+        ${r.note ? `<blockquote class="rpc-note">“${esc(r.note)}”</blockquote>` : ''}
+        <div class="rpc-acts">${acts}</div></article>`;
+    }).join('');
+    L.querySelectorAll('.rpc').forEach(card => {
+      const r = res.reports.find(x => x.id === card.dataset.id), s = r.serverId && S.servers.find(x => x.id === r.serverId);
+      const act = (action, extra = {}) => socket.emit('reportAct', { id: r.id, action, ...extra }, x => { if (x.error) return toast(x.error); card.classList.add('out'); setTimeout(() => reportsPanel(el, serverId, state), 260); });
+      card.querySelector('.rpc-user').onclick = e => miniProfile(r.target, e.currentTarget);
+      card.querySelectorAll('[data-x]').forEach(b => {
+        const x = b.dataset.x;
+        if (x === 'dismiss' || x === 'reopen') b.onclick = () => act(x);
+        if (x === 'delete') armBtn(b, 'Silinsin mi? Tekrar bas', () => act('delete'));
+        if (x === 'to') b.onclick = () => socket.emit('timeout', { serverId: s.id, name: r.target, minutes: 60 }, y => y.error ? toast(y.error) : act('resolve', { label: '1 saat susturuldu' }));
+        if (x === 'kick') armBtn(b, 'Atılsın mı?', () => socket.emit('kick', { serverId: s.id, name: r.target }, y => y.error ? toast(y.error) : act('resolve', { label: 'Sunucudan atıldı' })));
+        if (x === 'ban') armBtn(b, 'Yasaklansın mı?', () => socket.emit('ban', { serverId: s.id, name: r.target, reason: r.reasonText }, y => y.error ? toast(y.error) : act('resolve', { label: 'Sunucudan yasaklandı' })));
+        if (x === 'siteban') armBtn(b, 'Kanka hesabı kapatılsın mı?', () => act('siteban', { reason: r.reasonText }));
+      });
+    });
+  });
+}
+const rcTotal = () => (S.rc?.site || 0) + (S.siteAdmin ? 0 : Object.values(S.rc?.servers || {}).reduce((a, b) => a + b, 0));
+function renderModPill() {
+  let p = $('#mod-pill'); const n = rcTotal();
+  if (!n) return p?.remove();
+  if (!p) { p = document.createElement('button'); p.id = 'mod-pill'; p.className = 'ibtn'; $('#settings').before(p); }
+  p.title = `${n} bekleyen şikayet`; p.setAttribute('aria-label', p.title);
+  p.innerHTML = `${ic('flag')}<em>${n > 99 ? '99+' : n}</em>`;
+  p.onclick = openReportsQueue;
+}
+function openReportsQueue() {
+  if (S.siteAdmin) return showSettings('admin');
+  const sid = Object.entries(S.rc?.servers || {}).find(([, c]) => c)?.[0], s = sid && S.servers.find(x => x.id === sid);
+  if (s) showServerSettings(s, 'reports');
+}
+socket.on('reportCounts', c => { S.rc = c; renderModPill(); });
+socket.on('reportNew', r => {
+  playSound?.('msg');
+  toast(`<b>${r.urgent ? '🚨 Öncelikli şikayet' : '🛡️ Yeni şikayet'}</b><br>${esc(r.target)} · ${esc(r.reason)}<small>${esc(r.where || '')} · İncelemek için tıkla</small>`, () => {
+    const s = r.serverId && S.servers.find(x => x.id === r.serverId); s ? showServerSettings(s, 'reports') : openReportsQueue();
+  }, true);
+});
+socket.on('disconnect', why => { if (why === 'io server disconnect') setTimeout(() => socket.connect(), 900); });
+socket.on('siteBanned', reason => {
+  store.set('kanka-token', null); cleanupVoice?.();
+  $('#app').style.display = 'none'; closeModal(); showAuth();
+  setTimeout(() => authErr({ error: 'Hesabın Kanka Chat kurallarını ihlal ettiği için kapatıldı.' + (reason ? ' Sebep: ' + reason : '') }), 80);
+});
+
+// ================= Hesap sayfası =================
+function accountPageHTML(u) {
+  return `<div class="st-page"><h3>Hesap</h3>
+    <div class="acc-id">${av(S.me)}<div><b>${esc(S.me)}</b><span>Katılım: ${since(u.createdAt)}</span></div></div>
+    <div class="st-sec">E-posta</div>
+    ${S.myEmail ? `<p class="hint" style="margin-top:0">Kayıtlı adres: <b style="color:var(--text)">${esc(S.myEmail)}</b>. Şifreni unutursan sıfırlama linki buraya gelir.</p>`
+      : `<div class="acc-warn">${ic('mail')}<span><b>E-posta eklemedin</b>Şifreni unutursan hesabını kurtarmanın tek yolu bu. 10 saniye sürer.</span></div>`}
+    <div class="st-field st-2"><div><label>${S.myEmail ? 'Yeni e-posta' : 'E-posta'}</label><input class="field" id="em-new" type="email" maxlength="190" placeholder="ornek@gmail.com" autocomplete="email" style="margin:0"></div>
+      <div><label>Şifren (onay için)</label><input class="field" id="em-pw" type="password" autocomplete="current-password" style="margin:0"></div></div>
+    <div class="st-field"><button class="btns2" id="em-save">${ic('check')} E-postayı kaydet</button></div>
+    <div class="st-sec">Şifre</div>
+    <div class="st-field st-2"><div><label>Mevcut şifre</label><input class="field" type="password" id="p-old" autocomplete="current-password" style="margin:0"></div><div><label>Yeni şifre</label><input class="field" type="password" id="p-new" placeholder="En az 6 karakter" autocomplete="new-password" style="margin:0"></div></div>
+    <div class="st-field"><button class="btns2" id="p-pw">${ic('lock')} Şifreyi değiştir</button></div>
+    <div class="st-sec">Davet kodların</div>
+    <p class="hint" style="margin-top:0">${S.beta ? 'Kanka kapalı betada. Bu kodlarla arkadaşlarını sıra beklemeden içeri alabilirsin.' : 'Arkadaşlarını davet et.'} Kodunla katılan her kişi için <b style="color:var(--text)">+50 XP</b>.</p>
+    <div id="acc-codes" class="codes"><p class="hint">Yükleniyor…</p></div>
+    <div class="st-sec">Verilerin</div>
+    <p class="hint" style="margin-top:0">Hakkında tuttuğumuz her şeyi (profil, sunucular, mesajların) bir dosya olarak indirebilirsin. Ayrıntılar <a href="/gizlilik" target="_blank" style="color:var(--accent)">Gizlilik Politikası</a>'nda.</p>
+    <div class="st-field"><button class="btns2" id="acc-export">${ic('download')} Verilerimi indir</button></div>
+    <div class="st-sec danger">Tehlikeli bölge</div>
+    <div class="acc-danger"><span><b>Hesabı kalıcı olarak sil</b>Profilin, mesajların ve özel mesajların silinir. Kurduğun sunucular en yetkili üyeye devredilir. Geri alınamaz.</span><button class="danger-btn" id="acc-del">Hesabı sil</button></div></div>`;
+}
+function wireAccount() {
+  $('#em-save').onclick = () => socket.emit('setEmail', { email: $('#em-new').value, password: $('#em-pw').value }, r => {
+    if (r.error) return toast(r.error);
+    S.myEmail = r.email; toast('E-postan kaydedildi'); showSettings('account');
+  });
+  socket.emit('myCodes', r => {
+    const el = $('#acc-codes'); if (!el || r.error) return;
+    el.innerHTML = r.codes.map(c => `<div class="code ${c.usedBy ? 'used' : ''}"><span class="cv">${esc(c.code)}</span>${c.usedBy ? `<span class="cu">${av(c.usedBy)}<b>${esc(c.usedBy)}</b> katıldı</span>` : `<span class="cu free">Kullanılmadı</span><button data-cp="${esc(c.code)}">${ic('link')}Linki kopyala</button>`}</div>`).join('') +
+      (r.joined ? `<p class="hint">Şimdiye kadar <b style="color:var(--text)">${r.joined}</b> kişi senin davetinle katıldı 🎉</p>` : '');
+    el.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(`${location.origin}/kod/${b.dataset.cp}`).then(() => toast('Davet linki kopyalandı, arkadaşına gönder')));
+  });
+  $('#acc-export').onclick = () => socket.emit('exportData', r => {
+    if (r.error) return toast(r.error);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(r.data, null, 2)], { type: 'application/json' }));
+    a.download = `kanka-verilerim-${S.me}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+  $('#acc-del').onclick = () => {
+    modal(`<div class="rp-head del">${ic('trash')}<div><h3>Hesabın silinsin mi?</h3><p class="hint">Bu işlem <b>geri alınamaz</b>.</p></div></div>
+      <ul class="del-list"><li>Profilin, rozetlerin, XP'in ve ayarların silinir</li><li>Gönderdiğin tüm mesajlar ve özel mesajlaşmaların silinir</li><li>Kurduğun sunucular en yetkili üyeye devredilir; üye yoksa silinir</li></ul>
+      <label class="rp-lbl">Onaylamak için kullanıcı adını yaz: <b>${esc(S.me)}</b></label><input class="field" id="del-name" autocomplete="off">
+      <label class="rp-lbl">Şifren</label><input class="field" id="del-pw" type="password" autocomplete="current-password">
+      <div class="rowb"><button id="mx">Vazgeç</button><button class="primary danger-btn" id="del-go" disabled>Hesabımı kalıcı olarak sil</button></div>`, 'rep');
+    $('#mx').onclick = closeModal;
+    $('#del-name').oninput = () => $('#del-go').disabled = $('#del-name').value !== S.me;
+    $('#del-go').onclick = () => socket.emit('deleteAccount', { password: $('#del-pw').value, confirm: $('#del-name').value }, r => {
+      if (r.error) return toast(r.error);
+      store.set('kanka-token', null); closeModal();
+      modal(`<div class="rp-done"><div class="rp-ok">${ic('check')}</div><h3>Hesabın silindi</h3><p class="hint">Görüşmek üzere kanka. Kapı her zaman açık 🦝</p></div>`, 'rep');
+      setTimeout(() => location.reload(), 2600);
+    });
+  };
+}
+
+// ================= Kanka yönetimi (site yöneticisi) =================
+function adminPanel(el, sub = 'reports') {
+  const subs = [['reports', 'Şikayetler', 'flag'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['users', 'Kullanıcılar', 'users']];
+  el.innerHTML = `<div class="st-page"><h3>Kanka yönetimi</h3><p class="hint">Sadece sen görüyorsun.</p>
+    <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;
+  el.querySelectorAll('#adm-seg [data-s]').forEach(b => b.onclick = () => adminPanel(el, b.dataset.s));
+  const B = el.querySelector('#adm-body');
+  if (sub === 'reports') return reportsPanel(B, null);
+  if (sub === 'beta') return socket.emit('adminBeta', r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const pct = Math.min(100, Math.round(r.users / r.cap * 100));
+    B.innerHTML = `<div class="adm-stats"><div><small>Kullanıcı</small><b>${r.users}<i>/ ${r.cap}</i></b><span class="mprog"><i style="width:${pct}%"></i></span></div><div><small>Bekleme listesi</small><b>${r.waiting}</b><span>kişi sırada</span></div><div><small>Davet kodu</small><b>${r.codes.used}<i>/ ${r.codes.total}</i></b><span>kullanıldı</span></div></div>
+      <div class="adm-box"><label class="switch"><span><b>Kapalı beta</b><small>Açıkken kayıt için davet kodu ya da bir sunucu daveti gerekir. Kapatırsan herkes kayıt olabilir.</small></span><input type="checkbox" id="b-on" ${r.on ? 'checked' : ''}></label>
+        <div class="adm-inl"><label>Kullanıcı sınırı</label><input class="field" id="b-cap" type="number" min="1" value="${r.cap}"><button class="btns2" id="b-capsave">Kaydet</button></div></div>
+      <div class="adm-box"><h4>${ic('ticket')}Davet kodu üret</h4><div class="adm-inl"><input class="field num" id="c-n" type="number" min="1" max="50" value="5"><input class="field" id="c-note" maxlength="40" placeholder="Not (örn. YouTube çekilişi)"><button class="btns2" id="c-go">Üret</button></div>
+        <div class="codes" id="c-out">${r.adminCodes.slice(0, 12).map(c => `<div class="code ${c.usedBy ? 'used' : ''}"><span class="cv">${esc(c.code)}</span>${c.usedBy ? `<span class="cu">${av(c.usedBy)}<b>${esc(c.usedBy)}</b></span>` : `<span class="cu free">${esc(c.note || 'Boşta')}</span><button data-cp="${esc(c.code)}">${ic('link')}Link</button>`}</div>`).join('')}</div></div>
+      <div class="adm-box"><h4>${ic('users')}Bekleme listesi</h4>
+        <div class="adm-inl"><span class="hint" style="margin:0;flex:1">${r.mail ? 'Davet kodu e-postayla gider.' : '⚠️ E-posta kurulmadı, kodları elle göndermen gerekir. "E-posta" sekmesinden kur.'}</span><input class="field num" id="w-n" type="number" min="1" max="100" value="10"><button class="primary" id="w-go" style="width:auto;margin:0;padding:10px 16px">Sıradakileri davet et</button></div>
+        <div id="w-res"></div>
+        <div class="wl">${r.waitlist.length ? r.waitlist.map(w => `<div class="wl-row ${w.joined ? 'j' : w.invited ? 'i' : ''}"><span>${esc(w.email)}</span><small>${ago(w.at)}${w.ref ? ' · davet linkinden' : ''}</small><em>${w.joined ? '✓ ' + esc(w.joined) : w.invited ? 'Davet edildi' : 'Bekliyor'}</em></div>`).join('') : '<p class="hint">Henüz kimse yok.</p>'}</div></div>
+      ${r.top.length ? `<div class="adm-box"><h4>${ic('trophy')}En çok davet edenler</h4>${r.top.map(([n, c], i) => `<div class="adm-top"><b>${i + 1}.</b>${av(n)}<span>${esc(n)}</span><em>${c} kişi</em></div>`).join('')}</div>` : ''}`;
+    const re = () => adminPanel(el, 'beta');
+    $('#b-on').onchange = e => socket.emit('adminBetaSet', { on: e.target.checked }, x => x.error ? toast(x.error) : (S.beta = e.target.checked, toast(e.target.checked ? 'Kapalı beta açık' : 'Kayıt herkese açıldı')));
+    $('#b-capsave').onclick = () => socket.emit('adminBetaSet', { cap: +$('#b-cap').value }, x => x.error ? toast(x.error) : (toast('Sınır kaydedildi'), re()));
+    $('#c-go').onclick = () => socket.emit('adminCodes', { n: +$('#c-n').value, note: $('#c-note').value }, x => {
+      if (x.error) return toast(x.error);
+      navigator.clipboard?.writeText(x.codes.map(c => `${location.origin}/kod/${c}`).join('\n'));
+      toast(`${x.codes.length} kod üretildi, linkler panoya kopyalandı`); re();
+    });
+    B.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(`${location.origin}/kod/${b.dataset.cp}`).then(() => toast('Link kopyalandı')));
+    armBtn($('#w-go'), `${$('#w-n').value} kişiye gönderilsin mi?`, () => {
+      $('#w-go').classList.add('busy');
+      socket.emit('adminInviteWait', { n: +$('#w-n').value }, x => {
+        $('#w-go')?.classList.remove('busy');
+        if (x.error) return toast(x.error);
+        if (!x.sent.length) return toast('Sırada bekleyen kimse yok');
+        const manual = x.sent.filter(s => !s.sent);
+        $('#w-res').innerHTML = `<div class="acc-warn ${manual.length ? '' : 'ok'}">${ic(manual.length ? 'mail' : 'check')}<span><b>${x.sent.length - manual.length} davet e-postayla gitti${manual.length ? `, ${manual.length} tanesini elle göndermelisin` : ''}</b>
+          ${manual.map(s => `${esc(s.email)} → <code>${location.origin}/kod/${esc(s.code)}</code>`).join('<br>')}</span></div>`;
+        setTimeout(re, manual.length ? 60000 : 1500);
+      });
+    });
+  });
+  if (sub === 'mail') return socket.emit('adminMail', {}, r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const c = r.cfg || {};
+    B.innerHTML = `<div class="adm-box"><div class="mail-st ${r.ready ? 'ok' : ''}">${ic(r.ready ? 'check' : 'mail')}<b>${r.ready ? 'E-posta hazır' : 'E-posta kurulmadı'}</b><span>${r.ready ? `${esc(c.user)} üzerinden gönderiliyor` : 'Şifre sıfırlama ve bekleme listesi davetleri için gerekli'}</span></div>
+      <ol class="steps"><li><b>kankahq1@gmail.com</b> gibi bir Gmail hesabında <b>2 adımlı doğrulama</b>yı aç.</li><li><a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent)">myaccount.google.com/apppasswords</a> adresinde "Kanka" adıyla bir <b>uygulama şifresi</b> oluştur (16 harf).</li><li>Aşağıya yapıştır, kaydet ve test et. Gmail günde 500 e-posta gönderir, beta için fazlasıyla yeter.</li></ol>
+      <div class="st-field st-2"><div><label>Gönderen Gmail adresi</label><input class="field" id="m-user" value="${esc(c.user || '')}" placeholder="kankahq1@gmail.com" style="margin:0"></div>
+        <div><label>Uygulama şifresi</label><input class="field" id="m-pass" type="password" placeholder="${c.hasPass ? '•••• kayıtlı (değiştirmek için yaz)' : 'abcd efgh ijkl mnop'}" style="margin:0"></div></div>
+      <div class="st-field"><label>Site adresi (e-postadaki linkler buna gider)</label><input class="field" id="m-url" value="${esc(c.url || location.origin)}"></div>
+      <details class="adm-adv"><summary>Gmail dışı bir SMTP kullan</summary><div class="st-field st-2"><div><label>SMTP sunucusu</label><input class="field" id="m-host" value="${esc(c.host || '')}" placeholder="boş = Gmail" style="margin:0"></div><div><label>Port</label><input class="field" id="m-port" type="number" value="${c.port || 465}" style="margin:0"></div></div></details>
+      <div class="rowb" style="justify-content:flex-start"><button class="primary" id="m-save" style="width:auto;padding:11px 20px">Kaydet</button><button class="btns2" id="m-test">${ic('send')} Test e-postası gönder</button></div></div>`;
+    $('#m-save').onclick = () => socket.emit('adminMail', { set: { user: $('#m-user').value, pass: $('#m-pass').value, url: $('#m-url').value, host: $('#m-host').value, port: $('#m-port').value } }, x => x.error ? toast(x.error) : (toast('Kaydedildi'), adminPanel(el, 'mail')));
+    $('#m-test').onclick = () => { $('#m-test').classList.add('busy'); socket.emit('adminMail', { test: true }, x => { $('#m-test')?.classList.remove('busy'); toast(x.error ? x.error : `Test e-postası ${x.to} adresine gönderildi 🎉`); }); };
+  });
+  if (sub === 'users') {
+    B.innerHTML = `<div class="adm-box"><h4>${ic('search')}Kullanıcı bul</h4><div class="adm-inl"><input class="field" id="u-q" placeholder="Kullanıcı adı ya da e-posta"><button class="btns2" id="u-go">Bul</button></div><div id="u-res"></div></div>
+      <div class="adm-box"><h4>${ic('lock')}Kapatılan hesaplar</h4><div id="u-banned"><p class="hint">Yükleniyor…</p></div></div>`;
+    const show = r => {
+      if (r.error) return $('#u-res').innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+      const u = r.user;
+      $('#u-res').innerHTML = `<div class="adm-user">${av(u.name)}<div><b>${esc(u.name)}</b><small>${u.email ? esc(u.email) : 'E-posta yok'} · ${since(u.createdAt)}${u.invitedBy ? ' · davet: ' + esc(u.invitedBy) : ''} · ${u.servers} sunucu · ${u.reports} şikayet</small>${u.banned ? `<small class="no">Hesap kapalı: ${esc(u.banned.reason || '—')}</small>` : ''}</div></div>
+        <div class="rpc-acts"><button id="u-link">${ic('key')}Şifre sıfırlama linki</button>${u.banned ? `<button id="u-unban" class="ok">${ic('unlock')}Hesabı aç</button>` : `<button id="u-ban" class="danger">${ic('lock')}Hesabı kapat</button>`}</div><div id="u-out"></div>`;
+      $('#u-link').onclick = () => socket.emit('adminUser', { name: u.name, action: 'resetLink' }, x => { if (x.error) return toast(x.error); navigator.clipboard?.writeText(x.link); $('#u-out').innerHTML = `<div class="acc-warn ok">${ic('link')}<span><b>Link panoya kopyalandı (24 saat geçerli)</b><code>${esc(x.link)}</code></span></div>`; });
+      if ($('#u-ban')) armBtn($('#u-ban'), 'Kapatılsın mı?', () => socket.emit('adminUser', { name: u.name, action: 'ban', reason: 'Kural ihlali' }, x => { show(x); loadBanned(); }));
+      if ($('#u-unban')) $('#u-unban').onclick = () => socket.emit('adminUser', { name: u.name, action: 'unban' }, x => { show(x); loadBanned(); });
+    };
+    const loadBanned = () => socket.emit('adminBanned', r => { const e = $('#u-banned'); if (!e) return; e.innerHTML = (r.list || []).map(b => `<div class="lrow"><span>${av(b.name)} <b>${esc(b.name)}</b> <small style="color:var(--muted)">${esc(b.reason || '')} · ${esc(b.by)} · ${ago(b.at)}</small></span><button class="alink" data-ub="${esc(b.name)}">Aç</button></div>`).join('') || '<p class="hint">Kapatılan hesap yok.</p>';
+      e.querySelectorAll('[data-ub]').forEach(x => x.onclick = () => socket.emit('adminUser', { name: x.dataset.ub, action: 'unban' }, () => loadBanned())); });
+    $('#u-go').onclick = () => socket.emit('adminUser', { name: $('#u-q').value }, show);
+    $('#u-q').onkeydown = e => { if (e.key === 'Enter') $('#u-go').click(); };
+    loadBanned();
+  }
 }
 
 function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); }

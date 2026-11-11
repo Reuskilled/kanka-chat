@@ -51,6 +51,8 @@ app.get('/api/davet/:code', (req, res) => {
   res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, badges: srvBadges(s), description: s.description || '', banner: s.banner || null, bannerColor: s.bannerColor || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
 });
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
+app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
+for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 app.get('/api/surum', (req, res) => {
   let sha = null;
   try { sha = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'guncelleme.json'), 'utf8')).sha; } catch {}
@@ -608,6 +610,138 @@ function postMessage(me, chId, p = {}) {
   return { ok: true, msg };
 }
 
+// ---------- Kapalı beta, davet kodları, bekleme listesi ----------
+for (const k of ['codes', 'resets']) db[k] ||= {};
+for (const k of ['waitlist', 'reports']) db[k] ||= [];
+db.beta ||= { on: true, cap: 300 };
+const CODES_PER_USER = 3;
+const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i;
+const userCount = () => Object.keys(db.users).filter(n => n !== 'Claude').length;
+const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function newCode(by, note = '') {
+  let c; do { c = 'KNK-' + Array.from({ length: 6 }, () => CODE_ABC[crypto.randomInt(CODE_ABC.length)]).join(''); } while (db.codes[c]);
+  db.codes[c] = { by, at: Date.now(), note };
+  return c;
+}
+const normCode = c => String(c ?? '').trim().toUpperCase().replace(/\s+/g, '').replace(/^(KNK)?-?/, 'KNK-').slice(0, 10);
+const codeFree = c => !!db.codes[c] && !db.codes[c].usedBy;
+const betaFull = () => db.beta.on && userCount() >= (db.beta.cap || 300);
+const betaInfo = () => ({ on: !!db.beta.on, full: betaFull(), left: db.beta.on ? Math.max(0, (db.beta.cap || 300) - userCount()) : null, waiting: db.waitlist.filter(w => !w.invited).length });
+// Kayıt kapısı: beta açıksa geçerli kod ya da özel bir sunucunun davet linki gerekir
+function betaGate(code, invite) {
+  if (!db.beta.on) return { ok: true };
+  if (betaFull()) return { error: 'Beta şu an dolu. Bekleme listesine yazıl, yer açılınca haber verelim.', full: true };
+  const c = code && normCode(code);
+  if (c && codeFree(c)) return { ok: true, code: c };
+  if (c) return { error: db.codes[c] ? 'Bu davet kodu daha önce kullanılmış.' : 'Davet kodu geçersiz. Büyük harflerle tekrar dene.' };
+  if (invite && db.servers.some(s => s.invite === invite && !s.public)) return { ok: true, via: 'invite' };
+  return { error: 'Kanka şu an kapalı betada. Kayıt için davet kodu gerekli.', needCode: true };
+}
+function myCodes(name) {
+  const u = db.users[name]; if (!u) return [];
+  const have = Object.values(db.codes).filter(c => c.by === name).length; for (let i = have; i < CODES_PER_USER; i++) newCode(name);
+  return Object.entries(db.codes).filter(([, c]) => c.by === name).sort((a, b) => a[1].at - b[1].at).slice(-30)
+    .map(([code, c]) => ({ code, usedBy: c.usedBy || null, usedAt: c.usedAt || null, note: c.note || '' }));
+}
+
+// ---------- E-posta (şifre sıfırlama, bekleme listesi davetleri) ----------
+const MAIL_FILE = path.join(DATA_DIR, 'mail.json');
+let mailCfg = null; try { mailCfg = JSON.parse(fs.readFileSync(MAIL_FILE, 'utf8')); } catch {}
+if (!mailCfg && process.env.SMTP_USER) mailCfg = { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS, host: process.env.SMTP_HOST || '', url: process.env.PUBLIC_URL || '' };
+let mailer = null;
+function getMailer() {
+  if (!mailCfg?.user || !mailCfg?.pass) return null;
+  if (mailer) return mailer;
+  try {
+    const nm = require('nodemailer');
+    mailer = nm.createTransport(mailCfg.host ? { host: mailCfg.host, port: +mailCfg.port || 465, secure: (+mailCfg.port || 465) === 465, auth: { user: mailCfg.user, pass: mailCfg.pass } }
+      : { service: 'gmail', auth: { user: mailCfg.user, pass: mailCfg.pass } });
+  } catch (e) { console.error('E-posta modülü yüklenemedi:', e.message); return null; }
+  return mailer;
+}
+// Linkler istekteki adrese göre değil, yönetimin kaydettiği adrese göre kurulur (link zehirlemesine karşı)
+const baseUrl = () => (mailCfg?.url || process.env.PUBLIC_URL || 'https://185-208-172-60.sslip.io').replace(/\/+$/, '');
+const mailHtml = (title, body, btn, url) => `<!doctype html><html><body style="margin:0;background:#17120f;font-family:Segoe UI,Arial,sans-serif;color:#f3e9e1">
+<div style="max-width:480px;margin:0 auto;padding:36px 22px"><div style="font-size:22px;font-weight:800;color:#ff8a4c;margin-bottom:22px">🦝 Kanka Chat</div>
+<div style="background:#231b17;border:1px solid #3a2e27;border-radius:20px;padding:28px"><h1 style="font-size:20px;margin:0 0 12px">${title}</h1><div style="font-size:15px;line-height:1.6;color:#d8c9bd">${body}</div>
+${btn ? `<a href="${url}" style="display:inline-block;margin-top:22px;background:#ff8a4c;color:#1b130f;font-weight:800;text-decoration:none;padding:13px 22px;border-radius:12px">${btn}</a>` : ''}</div>
+<p style="font-size:12px;color:#8c7b6f;margin-top:18px">Bu e-postayı Kanka Chat gönderdi. Sen istemediysen görmezden gelebilirsin.</p></div></body></html>`;
+async function sendMail(to, subject, html) {
+  const t = getMailer(); if (!t) return false;
+  try { await t.sendMail({ from: `"Kanka Chat" <${mailCfg.from || mailCfg.user}>`, to, subject, html }); return true; }
+  catch (e) { console.error('E-posta gönderilemedi:', e.message); return false; }
+}
+const findUserBy = who => { who = clean(who, 190).toLowerCase(); return who && Object.values(db.users).find(u => u.name.toLowerCase() === who || (u.email && u.email === who)); };
+function resetToken(name, hours) {
+  for (const [t, r] of Object.entries(db.resets)) if (r.name === name || r.exp < Date.now()) delete db.resets[t];
+  const t = crypto.randomBytes(24).toString('hex'); db.resets[t] = { name, exp: Date.now() + hours * 3600e3 }; save();
+  return t;
+}
+async function sendInviteMail(email, code) {
+  return sendMail(email, 'Kanka Chat davetin geldi 🎉', mailHtml('Sıra sende kanka!', `Bekleme listesinden çıktın. Davet kodun: <b style="font-size:18px;color:#fff;letter-spacing:1px">${code}</b><br><br>Aşağıdaki butona basınca kod otomatik yazılır.`, 'Hesabımı oluştur', `${baseUrl()}/kod/${code}`));
+}
+
+// ---------- Şikayetler ----------
+const REPORT_REASONS = { spam: 'Spam ya da reklam', taciz: 'Taciz veya zorbalık', nefret: 'Nefret söylemi', cinsel: 'Cinsel içerik', siddet: 'Şiddet ya da tehdit', dolandir: 'Dolandırıcılık', cocuk: 'Çocuk güvenliği', taklit: 'Başkasını taklit', diger: 'Diğer' };
+const siteAdmins = () => { const s1 = db.servers.find(x => x.id === 's1')?.owner; return [...new Set([s1, ...(db.siteAdmins || [])].filter(Boolean))]; };
+const srvOf = id => id && db.servers.find(x => x.id === id);
+const reportVisible = (r, n) => siteAdmin(n) || (!!r.serverId && !!srvOf(r.serverId) && isMod(srvOf(r.serverId), n));
+function reportCounts(n) {
+  const open = db.reports.filter(r => r.status === 'open');
+  const out = { site: siteAdmin(n) ? open.length : 0, servers: {} };
+  for (const r of open) if (r.serverId && srvOf(r.serverId) && isMod(srvOf(r.serverId), n)) out.servers[r.serverId] = (out.servers[r.serverId] || 0) + 1;
+  return out;
+}
+function pushReports(r) {
+  const who = new Set(siteAdmins());
+  const s = srvOf(r.serverId); if (s) for (const n of s.members.concat(s.owner || [])) if (isMod(s, n)) who.add(n);
+  for (const n of who) io.to('user:' + n).emit('reportCounts', reportCounts(n));
+  return who;
+}
+const reportView = (r, n) => ({ ...r, by: siteAdmin(n) ? r.by : null, reasonText: REPORT_REASONS[r.reason] || r.reason, serverName: srvOf(r.serverId)?.name || null, targetGone: !db.users[r.target], targetBanned: !!db.users[r.target]?.siteBan,
+  msgAlive: r.msg ? !!findMsg(r.chId, r.msg.id) : null, priors: db.reports.filter(x => x.target === r.target && x.id !== r.id).length });
+function siteBanUser(name, by, reason) {
+  const u = db.users[name]; if (!u) return false;
+  u.siteBan = { by, at: Date.now(), reason: clean(reason, 160) };
+  for (const [t, n] of Object.entries(db.sessions)) if (n === name) delete db.sessions[t];
+  for (const s of db.servers) voiceKick(s.channels.map(c => c.id), name, 'Hesabın kapatıldı');
+  io.to('user:' + name).emit('siteBanned', u.siteBan.reason);
+  setTimeout(() => io.in('user:' + name).disconnectSockets(true), 300);
+  save(); return true;
+}
+const banText = u => 'Bu hesap Kanka Chat kurallarını ihlal ettiği için kapatıldı.' + (u.siteBan?.reason ? ` Sebep: ${u.siteBan.reason}` : '') + ' Hata olduğunu düşünüyorsan kankahq1@gmail.com adresine yaz.';
+
+setInterval(() => { // eski şikayetleri ve süresi dolan sıfırlama linklerini temizle (gizlilik politikasında yazan süreler)
+  const lim = Date.now() - 730 * 864e5; db.reports = db.reports.filter(r => r.at > lim);
+  for (const [t, r] of Object.entries(db.resets)) if (r.exp < Date.now()) delete db.resets[t];
+}, 6 * 3600e3);
+
+// ---------- Hesap silme (KVKK) ----------
+function deleteUserData(name) {
+  for (const s of [...db.servers]) {
+    if (s.owner === name && !s.public) {
+      const rank = n => roleOf(s, n) === 'admin' ? 0 : roleOf(s, n) === 'mod' ? 1 : 2;
+      const heir = s.members.filter(n => n !== name && db.users[n]).sort((a, b) => rank(a) - rank(b) || (s.joinedAt?.[a] || 0) - (s.joinedAt?.[b] || 0))[0];
+      if (heir) { s.owner = heir; delete s.roles[heir]; audit(s, 'Kanka', 'Sahiplik devredildi (hesap silindi)', heir); io.to('user:' + heir).emit('toast', `${s.name} sunucusunun sahibi artık sensin`); }
+      else { for (const c of s.channels) delete db.messages[c.id]; db.servers.splice(db.servers.indexOf(s), 1); continue; }
+    }
+    s.members = (s.members || []).filter(n => n !== name);
+    delete s.roles?.[name]; delete s.memberRoles?.[name]; delete s.joinedAt?.[name]; delete s.accepted?.[name];
+    voiceKick(s.channels.map(c => c.id), name, 'Hesap silindi');
+  }
+  for (const k of Object.keys(db.messages)) {
+    if (k.startsWith('dm:') && dmPeers(k).includes(name)) { delete db.messages[k]; continue; }
+    db.messages[k] = db.messages[k].filter(m => m.author !== name);
+  }
+  for (const g of Object.values(db.groups || {})) g.members = g.members.filter(n => n !== name);
+  for (const u of Object.values(db.users)) for (const f of ['friends', 'reqIn', 'reqOut', 'blocked']) if (Array.isArray(u[f])) u[f] = u[f].filter(n => n !== name);
+  for (const [t, n] of Object.entries(db.sessions)) if (n === name) delete db.sessions[t];
+  for (const [c, x] of Object.entries(db.codes)) if (x.by === name && !x.usedBy) delete db.codes[c];
+  const em = db.users[name]?.email; if (em) db.waitlist = db.waitlist.filter(w => w.email !== em);
+  delete db.users[name];
+  save();
+}
+
 // ---------- Sürüm takibi: sayfa değişince açık olan herkese "yenile" uyarısı ----------
 const INDEX = path.join(__dirname, 'public', 'index.html');
 let build = '';
@@ -644,32 +778,86 @@ io.on('connection', socket => {
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), live: liveState(),
-      onb: onbOf(db.users[name]), presets: PRESET_AV
+      onb: onbOf(db.users[name]), presets: PRESET_AV,
+      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), reportCounts: reportCounts(name), beta: db.beta.on
     };
   }
 
-  socket.on('register', ({ name, password } = {}, cb) => {
-    const w = limited('reg|' + ip, 5, 3600e3);
-    if (w) return cb({ error: `Bu bağlantıdan çok fazla hesap açıldı. ${Math.ceil(w / 60)} dakika sonra tekrar dene.` });
-    name = clean(name, 20); password = String(password ?? '');
+  socket.on('register', ({ name, password, email, code, invite, terms } = {}, cb = () => {}) => {
+    name = clean(name, 20); password = String(password ?? ''); email = clean(email, 190).toLowerCase();
     if (!NAME_RE.test(name)) return cb({ error: 'Kullanıcı adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin.' });
     if (password.length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
-    if (Object.keys(db.users).some(n => n.toLowerCase() === name.toLowerCase())) return cb({ error: 'Bu kullanıcı adı alınmış.' });
+    if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz. Şifreni unutursan buraya link göndeririz.', field: 'email' });
+    if (!terms) return cb({ error: 'Devam etmek için kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
+    if (Object.keys(db.users).some(n => n.toLowerCase() === name.toLowerCase())) return cb({ error: 'Bu kullanıcı adı alınmış.', field: 'name' });
+    if (Object.values(db.users).some(u => u.email === email)) return cb({ error: 'Bu e-posta ile zaten bir hesap var. Şifreni unuttuysan giriş ekranından sıfırlayabilirsin.', field: 'email' });
+    const gate = betaGate(code, invite); if (gate.error) return cb({ ...gate, field: 'code' });
+    const w = limited('reg|' + ip, 5, 3600e3);
+    if (w) return cb({ error: `Bu bağlantıdan çok fazla hesap açıldı. ${Math.ceil(w / 60)} dakika sonra tekrar dene.` });
     const salt = crypto.randomBytes(16).toString('hex');
-    db.users[name] = { name, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} };
+    db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} };
+    if (gate.code) {
+      const c = db.codes[gate.code]; c.usedBy = name; c.usedAt = Date.now(); db.users[name].invitedBy = c.by;
+      const inv = db.users[c.by];
+      if (inv) { inv.xp = (inv.xp || 0) + 50; io.to('user:' + c.by).emit('toast', `🎉 ${name} senin davet kodunla Kanka'ya katıldı! +50 XP`); }
+    }
+    db.waitlist.forEach(x => { if (x.email === email) x.joined = name; });
     ensureOwners(); save();
     io.emit('users', allUsers());
     pushServers(onlineNames()); // herkese açık sunucunun üye listesi değişti
     cb(start(name));
   });
+  socket.on('betaInfo', (cb = () => {}) => cb(betaInfo()));
+  socket.on('checkCode', (code, cb = () => {}) => {
+    if (limited('code|' + ip, 30, 600e3)) return cb({ error: 'Çok fazla deneme' });
+    const c = normCode(code); cb(codeFree(c) ? { ok: true, code: c, by: db.codes[c].by && db.users[db.codes[c].by] ? db.codes[c].by : null } : { error: db.codes[c] ? 'Bu kod kullanılmış' : 'Kod geçersiz' });
+  });
+  socket.on('waitlist', ({ email, ref } = {}, cb = () => {}) => {
+    email = clean(email, 190).toLowerCase();
+    if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz.' });
+    let i = db.waitlist.findIndex(x => x.email === email);
+    if (i < 0) {
+      if (limited('wait|' + ip, 5, 3600e3)) return cb({ error: 'Çok fazla deneme, biraz sonra tekrar dene.' });
+      db.waitlist.push({ email, at: Date.now(), ref: clean(ref, 40) || null }); save(); i = db.waitlist.length - 1;
+      for (const n of siteAdmins()) io.to('user:' + n).emit('waitlistNew', db.waitlist.filter(w => !w.invited).length);
+    }
+    const w = db.waitlist[i];
+    cb({ ok: true, invited: !!w.invited, pos: w.invited ? 0 : db.waitlist.filter((x, j) => !x.invited && j <= i).length, total: db.waitlist.filter(x => !x.invited).length });
+  });
+  socket.on('forgot', async (who, cb = () => {}) => {
+    if (limited('forgot|' + ip, 5, 900e3)) return cb({ error: 'Çok fazla istek. 15 dakika sonra tekrar dene.' });
+    if (!getMailer()) return cb({ error: 'E-posta sistemi henüz kurulmadı. kankahq1@gmail.com adresine yaz, elle yardım edelim.' });
+    const u = findUserBy(who);
+    if (u?.email && !u.siteBan && !limited('forgotU|' + u.name, 3, 3600e3)) {
+      const t = resetToken(u.name, 1);
+      sendMail(u.email, 'Kanka Chat şifre sıfırlama', mailHtml('Şifreni sıfırla', `Selam <b>${u.name}</b>, şifreni sıfırlamak için bir istek aldık. Link <b>1 saat</b> geçerli.`, 'Yeni şifre belirle', `${baseUrl()}/?sifirla=${t}`));
+    }
+    cb({ ok: true }); // hesabın var olup olmadığını belli etme
+  });
+  socket.on('checkReset', (token, cb = () => {}) => {
+    const r = db.resets[String(token || '')];
+    cb(r && r.exp > Date.now() && db.users[r.name] ? { ok: true, name: r.name } : { error: 'Bu link geçersiz ya da süresi dolmuş. Yeni bir link iste.' });
+  });
+  socket.on('resetPw', ({ token, password } = {}, cb = () => {}) => {
+    if (limited('reset|' + ip, 10, 900e3)) return cb({ error: 'Çok fazla deneme' });
+    const r = db.resets[String(token || '')], u = r && db.users[r.name];
+    if (!r || r.exp < Date.now() || !u) return cb({ error: 'Bu link geçersiz ya da süresi dolmuş. Yeni bir link iste.' });
+    if (String(password ?? '').length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
+    if (u.siteBan) return cb({ error: banText(u) });
+    u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(String(password), u.salt);
+    for (const [t, n] of Object.entries(db.sessions)) if (n === u.name) delete db.sessions[t];
+    for (const [t, x] of Object.entries(db.resets)) if (x.name === u.name) delete db.resets[t];
+    save(); cb(start(u.name));
+  });
 
   socket.on('login', ({ name, password } = {}, cb) => {
-    const key = 'login|' + ip + '|' + clean(name, 20).toLowerCase(), now = Date.now();
+    const key = 'login|' + ip + '|' + clean(name, 190).toLowerCase(), now = Date.now();
     const fails = (limits.get(key) || []).filter(t => now - t < 600e3);
     if (fails.length >= 5) return cb({ error: `Çok fazla hatalı deneme. ${Math.ceil((600e3 - (now - fails[0])) / 60000)} dakika sonra tekrar dene.` });
-    const u = Object.values(db.users).find(u => u.name.toLowerCase() === clean(name, 20).toLowerCase());
-    if (!u || hashPw(String(password ?? ''), u.salt) !== u.hash) { fails.push(now); limits.set(key, fails); return cb({ error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Kullanıcı adı ya da şifre yanlış.' }); }
+    const u = findUserBy(name);
+    if (!u || hashPw(String(password ?? ''), u.salt) !== u.hash) { fails.push(now); limits.set(key, fails); return cb({ error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Kullanıcı adı / e-posta ya da şifre yanlış.' }); }
     limits.delete(key);
+    if (u.siteBan) return cb({ error: banText(u), banned: true });
     cb(start(u.name));
   });
 
@@ -677,6 +865,7 @@ io.on('connection', socket => {
     const n = db.sessions[token];
     if (!n || !db.users[n]) return cb({ error: 'Oturum bulunamadı' });
     delete db.sessions[token];
+    if (db.users[n].siteBan) return cb({ error: banText(db.users[n]), banned: true });
     cb(start(n));
   });
 
@@ -715,6 +904,165 @@ io.on('connection', socket => {
         invite: cnt(u => u.onb?.invite), profile: cnt(u => u.onb?.profile), rewarded: cnt(u => u.onb?.rewarded), dismissed: cnt(u => u.onb?.dismissed) },
       servers: { total: svs.length, ready: svs.filter(x => x.setup?.done).length, three: svs.filter(x => membersOf(x).length >= 3).length } });
   });
+  // ---- Hesap: e-posta, veri indirme, hesap silme ----
+  socket.on('setEmail', ({ email, password } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+    if (hashPw(String(password ?? ''), u.salt) !== u.hash) return cb({ error: 'Şifre yanlış' });
+    email = clean(email, 190).toLowerCase();
+    if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz' });
+    if (Object.values(db.users).some(x => x !== u && x.email === email)) return cb({ error: 'Bu e-posta başka bir hesapta kayıtlı' });
+    u.email = email; save(); cb({ ok: true, email });
+  });
+  socket.on('exportData', (cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (limited('export|' + me, 3, 3600e3)) return cb({ error: 'Saatte en fazla 3 kez indirebilirsin' });
+    const { salt, hash, ...profile } = u, msgs = [];
+    for (const [k, list] of Object.entries(db.messages)) for (const m of list) if (m.author === me)
+      msgs.push({ yer: k.startsWith('dm:') ? 'DM: ' + dmPeers(k).filter(n => n !== me).join(', ') : (findChannel(k) ? findChannel(k).s.name + ' #' + findChannel(k).c.name : k), zaman: new Date(m.time).toISOString(), tur: m.kind, metin: m.text || '', resim: m.image || null });
+    cb({ ok: true, data: { aciklama: 'Kanka Chat hesabında hakkında tuttuğumuz veriler (KVKK md. 11)', indirilme: new Date().toISOString(), profil: profile, sunucular: serversFor(me).filter(s => !s.public).map(s => ({ ad: s.name, sahip: s.owner === me, katilim: s.joinedAt?.[me] ? new Date(s.joinedAt[me]).toISOString() : null })), mesajlar: msgs } });
+  });
+  socket.on('deleteAccount', ({ password, confirm } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+    if (hashPw(String(password ?? ''), u.salt) !== u.hash) return cb({ error: 'Şifre yanlış' });
+    if (String(confirm || '') !== me) return cb({ error: 'Onay için kullanıcı adını aynen yaz' });
+    if (db.servers.find(x => x.id === 's1')?.owner === me) return cb({ error: 'Kanka HQ sahibi hesabını silemez' });
+    const name = me, touched = onlineNames();
+    deleteUserData(name);
+    cb({ ok: true });
+    io.emit('users', allUsers()); pushServers(touched.filter(n => n !== name));
+    setTimeout(() => io.in('user:' + name).disconnectSockets(true), 200);
+  });
+  socket.on('myCodes', (cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' });
+    const list = myCodes(me); save();
+    cb({ ok: true, beta: db.beta.on, codes: list, joined: Object.values(db.users).filter(u => u.invitedBy === me).length });
+  });
+
+  // ---- Şikayetler ----
+  socket.on('report', ({ kind, msgId, chId, name, reason, note } = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' });
+    if (!REPORT_REASONS[reason]) return cb({ error: 'Bir sebep seç' });
+    if (limited('report|' + me, 15, 3600e3)) return cb({ error: 'Çok fazla şikayet gönderdin, biraz bekle' });
+    let r;
+    if (kind === 'msg') {
+      if (!canAccess(me, chId)) return cb({ error: 'Bu mesaja erişimin yok' });
+      const list = db.messages[chId] || [], i = list.findIndex(m => m.id === msgId), m = list[i];
+      if (!m) return cb({ error: 'Mesaj bulunamadı' });
+      if (m.author === me) return cb({ error: 'Kendi mesajını şikayet edemezsin' });
+      if (db.reports.some(x => x.by === me && x.msg?.id === msgId)) return cb({ ok: true, dup: true });
+      const f = findChannel(chId), snap = x => ({ id: x.id, author: x.author, text: (x.text || '').slice(0, 600), image: x.image || null, kind: x.kind, time: x.time });
+      r = { kind: 'msg', target: m.author, chId, serverId: f && !f.s.public ? f.s.id : null, where: f ? `${f.s.name} · #${f.c.name}` : isPrivateChat(chId) ? (chId.startsWith('dm:') ? 'Özel mesaj' : 'Grup sohbeti') : '',
+        msg: snap(m), context: list.slice(Math.max(0, i - 3), i).concat(list.slice(i + 1, i + 2)).map(snap) };
+    } else if (kind === 'user') {
+      if (!db.users[name] || name === me) return cb({ error: 'Kullanıcı bulunamadı' });
+      if (db.reports.some(x => x.by === me && x.kind === 'user' && x.target === name && x.status === 'open')) return cb({ ok: true, dup: true });
+      const sv = db.servers.find(x => x.id === chId && !x.public && x.members.includes(me) && x.members.includes(name));
+      r = { kind: 'user', target: name, serverId: sv?.id || null, where: sv ? sv.name : 'Profil' };
+    } else return cb({ error: 'Geçersiz' });
+    Object.assign(r, { id: id(), by: me, reason, note: clean(note, 500), at: Date.now(), status: 'open', urgent: reason === 'cocuk' });
+    db.reports.unshift(r); if (db.reports.length > 3000) db.reports.length = 3000;
+    save(); cb({ ok: true });
+    for (const n of pushReports(r)) if (n !== me) io.to('user:' + n).emit('reportNew', { id: r.id, target: r.target, reason: REPORT_REASONS[reason], where: r.where, serverId: reportVisible(r, n) && !siteAdmin(n) ? r.serverId : null, urgent: r.urgent });
+  });
+  socket.on('reportCounts', (cb = () => {}) => cb(me ? reportCounts(me) : {}));
+  socket.on('reports', ({ serverId, status = 'open' } = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' });
+    let list;
+    if (serverId) { const s = srvOf(serverId); if (!s || !isMod(s, me)) return cb({ error: 'Yetkin yok' }); list = db.reports.filter(r => r.serverId === serverId); }
+    else { if (!siteAdmin(me)) return cb({ error: 'Yetkin yok' }); list = db.reports; }
+    list = list.filter(r => status === 'all' || r.status === status).slice(0, 200);
+    cb({ ok: true, reports: list.map(r => reportView(r, me)) });
+  });
+  socket.on('reportAct', ({ id: rid, action, label, reason } = {}, cb = () => {}) => {
+    const r = db.reports.find(x => x.id === rid); if (!r || !reportVisible(r, me)) return cb({ error: 'Yetkin yok' });
+    const site = siteAdmin(me), s = srvOf(r.serverId);
+    const close = txt => { r.status = 'done'; r.handledBy = me; r.handledAt = Date.now(); r.action = txt; };
+    if (action === 'dismiss') close('Kural ihlali yok');
+    else if (action === 'reopen') { r.status = 'open'; delete r.action; delete r.handledBy; }
+    else if (action === 'delete') {
+      const list = db.messages[r.chId] || [], i = list.findIndex(m => m.id === r.msg?.id);
+      if (i >= 0) {
+        if (!site && !(s && s.channels.some(c => c.id === r.chId))) return cb({ error: 'Bu mesajı silemezsin' });
+        list.splice(i, 1); io.to(r.chId).emit('remove', { channelId: r.chId, msgId: r.msg.id });
+        if (s) audit(s, me, 'Şikayet üzerine mesaj sildi', `${r.target}: ${(r.msg.text || '').slice(0, 60)}`);
+      }
+      close('Mesaj silindi');
+    } else if (action === 'siteban') {
+      if (!site) return cb({ error: 'Sadece Kanka yönetimi' });
+      if (siteAdmin(r.target)) return cb({ error: 'Yönetici kapatılamaz' });
+      siteBanUser(r.target, me, reason || REPORT_REASONS[r.reason]);
+      for (const x of db.reports) if (x.target === r.target && x.status === 'open') { x.status = 'done'; x.handledBy = me; x.handledAt = Date.now(); x.action = 'Hesap kapatıldı'; }
+    } else if (action === 'resolve') close(clean(label, 60) || 'Gereken yapıldı');
+    else return cb({ error: 'Geçersiz işlem' });
+    if (r.status === 'done' && r.by && db.users[r.by] && r.by !== me) io.to('user:' + r.by).emit('toast', `🛡️ Şikayetin incelendi, teşekkürler. Sonuç: ${r.action}`);
+    save(); pushReports(r); cb({ ok: true, report: reportView(r, me) });
+  });
+
+  // ---- Kanka yönetimi ----
+  const SA = cb => { if (siteAdmin(me)) return true; cb({ error: 'Sadece Kanka yönetimi' }); return false; };
+  socket.on('adminBeta', (cb = () => {}) => {
+    if (!SA(cb)) return;
+    const codes = Object.entries(db.codes);
+    cb({ ok: true, ...betaInfo(), cap: db.beta.cap, users: userCount(), mail: !!getMailer(),
+      codes: { total: codes.length, used: codes.filter(([, c]) => c.usedBy).length },
+      adminCodes: codes.filter(([, c]) => c.by === 'kanka').slice(-60).reverse().map(([code, c]) => ({ code, usedBy: c.usedBy || null, note: c.note || '' })),
+      waitlist: db.waitlist.map((w, i) => ({ i, email: w.email, at: w.at, ref: w.ref, invited: w.invited || null, code: w.code || null, joined: w.joined || null })).reverse().slice(0, 300),
+      top: Object.entries(Object.values(db.users).reduce((a, u) => (u.invitedBy && (a[u.invitedBy] = (a[u.invitedBy] || 0) + 1), a), {})).sort((a, b) => b[1] - a[1]).slice(0, 5) });
+  });
+  socket.on('adminBetaSet', ({ on, cap } = {}, cb = () => {}) => {
+    if (!SA(cb)) return;
+    if (on !== undefined) db.beta.on = !!on;
+    if (cap !== undefined) db.beta.cap = Math.max(1, Math.min(100000, +cap || 300));
+    save(); cb({ ok: true });
+  });
+  socket.on('adminCodes', ({ n = 1, note } = {}, cb = () => {}) => {
+    if (!SA(cb)) return;
+    const out = Array.from({ length: Math.max(1, Math.min(50, +n || 1)) }, () => newCode('kanka', clean(note, 40) || 'Yönetim: ' + me));
+    save(); cb({ ok: true, codes: out });
+  });
+  socket.on('adminInviteWait', async ({ n = 10, emails } = {}, cb = () => {}) => {
+    if (!SA(cb)) return;
+    const pick = (Array.isArray(emails) && emails.length ? db.waitlist.filter(w => emails.includes(w.email)) : db.waitlist.filter(w => !w.invited).slice(0, Math.max(1, Math.min(100, +n || 10)))).filter(w => !w.joined);
+    const out = [];
+    for (const w of pick) {
+      if (!w.code || db.codes[w.code]?.usedBy) w.code = newCode('kanka', 'Bekleme: ' + w.email);
+      w.invited = Date.now();
+      out.push({ email: w.email, code: w.code, sent: await sendInviteMail(w.email, w.code) });
+    }
+    save(); cb({ ok: true, sent: out });
+  });
+  socket.on('adminMail', ({ set, test } = {}, cb = () => {}) => {
+    if (!SA(cb)) return;
+    if (set) {
+      const cfg = { user: clean(set.user, 190), pass: String(set.pass || '').replace(/\s+/g, '').slice(0, 200) || mailCfg?.pass || '', host: clean(set.host, 120), port: +set.port || 465, url: clean(set.url, 200).replace(/\/+$/, '') || baseUrl() };
+      if (!EMAIL_RE.test(cfg.user)) return cb({ error: 'Gönderen e-posta adresi geçersiz' });
+      mailCfg = cfg; mailer = null;
+      try { fs.writeFileSync(MAIL_FILE, JSON.stringify(cfg)); } catch (e) { return cb({ error: 'Kaydedilemedi: ' + e.message }); }
+    }
+    if (test) {
+      const to = db.users[me]?.email || mailCfg?.user;
+      return (async () => {
+        const t = getMailer(); if (!t) return cb({ error: 'Önce ayarları kaydet' });
+        try { await t.verify(); } catch (e) { return cb({ error: 'Bağlanamadı: ' + e.message.slice(0, 160) }); }
+        const ok = await sendMail(to, 'Kanka Chat test e-postası', mailHtml('E-posta çalışıyor 🎉', 'Bu test e-postası geldiyse şifre sıfırlama ve bekleme listesi davetleri hazır.'));
+        cb(ok ? { ok: true, to } : { error: 'Gönderilemedi, sunucu kayıtlarına bak' });
+      })();
+    }
+    cb({ ok: true, cfg: mailCfg ? { user: mailCfg.user, host: mailCfg.host || '', port: mailCfg.port || 465, url: mailCfg.url || baseUrl(), hasPass: !!mailCfg.pass } : { url: baseUrl() }, ready: !!getMailer() });
+  });
+  socket.on('adminUser', ({ name, action, reason } = {}, cb = () => {}) => {
+    if (!SA(cb)) return;
+    const u = findUserBy(name); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
+    if (action === 'resetLink') return cb({ ok: true, link: `${baseUrl()}/?sifirla=${resetToken(u.name, 24)}` });
+    if (action === 'ban') { if (siteAdmin(u.name)) return cb({ error: 'Yönetici kapatılamaz' }); siteBanUser(u.name, me, reason); }
+    if (action === 'unban') { delete u.siteBan; save(); }
+    cb({ ok: true, user: { name: u.name, email: u.email ? u.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2') : null, createdAt: u.createdAt, invitedBy: u.invitedBy || null, banned: u.siteBan || null,
+      reports: db.reports.filter(r => r.target === u.name).length, servers: serversFor(u.name).filter(s => !s.public).length } });
+  });
+  socket.on('adminBanned', (cb = () => {}) => { if (!SA(cb)) return; cb({ ok: true, list: Object.values(db.users).filter(u => u.siteBan).map(u => ({ name: u.name, ...u.siteBan })) }); });
+
   socket.on('onbSet', (k, cb = () => {}) => {
     const u = db.users[me]; if (!u || !['dismissed', 'done', 'seen'].includes(k)) return cb({ error: 'Geçersiz' });
     onbOf(u)[k] = true; save(); cb({ ok: true, onb: u.onb });
