@@ -1146,6 +1146,141 @@
   .fstats div { padding: 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); text-align: center; }
   .fstats b { display: block; font-size: 22px; font-weight: 900; } .fstats span { color: var(--muted); font-size: 12px; }
   @media (max-width: 560px) { .fr { grid-template-columns: 110px 1fr 32px 40px; font-size: 12.5px; } .fstats { grid-template-columns: 1fr 1fr; } }
+  /* ===== Odalar: sürükle-bırak, menüler, izinler ===== */
+  #side-list .room { position: relative; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  #side-list .room .rn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #side-list .room .rset { margin-left: auto; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: var(--muted); opacity: 0; transition: opacity .12s, background .12s; flex-shrink: 0; }
+  #side-list .room:hover .rset, #side-list .room.active .rset { opacity: 1; }
+  #side-list .room .rset:hover { background: rgba(255,255,255,.08); color: var(--ink); }
+  #side-list .room .rset .ic { width: 15px; height: 15px; }
+  #side-list .room.nocon { opacity: .6; }
+  #side-list .cat-label { user-select: none; -webkit-user-select: none; cursor: pointer; }
+  #side-list .cat-label .cn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #side-list .toplist { padding-top: 6px; }
+  .side-empty { margin: 18px 12px; padding: 16px; border-radius: 14px; border: 1px dashed var(--line); color: var(--muted); text-align: center; font-size: 13.5px; display: grid; gap: 10px; }
+  .side-empty button { justify-self: center; display: inline-flex; gap: 6px; align-items: center; padding: 8px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 800; }
+  body.dnd, body.dnd * { cursor: grabbing !important; }
+  body.dnd #side-list .room:hover { background: transparent; }
+  .dnd-src { opacity: .3; }
+  .dnd-ghost { position: fixed !important; left: 0; top: 0; z-index: 95; pointer-events: none; margin: 0 !important; background: var(--card) !important; border: 1px solid var(--accent) !important; border-radius: 12px; box-shadow: 0 14px 34px rgba(0,0,0,.5), 0 0 0 4px rgba(255,138,76,.15); opacity: .96; transition: none !important; }
+  .dnd-line { position: fixed; z-index: 94; height: 3px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 10px rgba(255,138,76,.7); pointer-events: none; display: none; }
+  .dnd-line::before, .dnd-line::after { content: ''; position: absolute; top: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .dnd-line::before { left: -4px; } .dnd-line::after { right: -4px; }
+  .dnd-line.cat { height: 4px; background: var(--accent-2); }
+  .dnd-into { background: rgba(255,138,76,.12) !important; border-radius: 10px; color: var(--accent) !important; }
+  .ctxm { width: 230px; }
+  .ctxm button { justify-content: flex-start !important; }
+  .ctxm button .ic { width: 16px; height: 16px; color: var(--muted); }
+  .ctxm button:hover .ic { color: inherit; }
+  .ctxm button.danger { color: var(--red); }
+  .ctxm button.danger:hover { background: var(--red); color: #fff; }
+  .ctxm hr { border: 0; border-top: 1px solid var(--line); margin: 4px 6px; }
+
+  #modal .box.ccm { width: min(500px, 94vw); padding: 24px; }
+  .cc-head { display: flex; gap: 14px; align-items: center; margin-bottom: 4px; }
+  .cc-ico { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex-shrink: 0; }
+  .cc-ico .ic { width: 24px; height: 24px; }
+  .cc-head h3 { font-size: 20px; font-weight: 900; } .cc-head p { color: var(--muted); font-size: 13.5px; margin-top: 2px; } .cc-head p b { color: var(--ink); }
+  .ctype { display: grid; gap: 8px; }
+  .ct { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font: inherit; cursor: pointer; transition: border-color .15s, background .15s; }
+  .ct:hover { border-color: #4d3a2f; }
+  .ct.on { border-color: var(--accent); background: linear-gradient(135deg, rgba(255,138,76,.12), rgba(255,138,76,.03)); }
+  .ct i { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: rgba(255,255,255,.05); color: var(--muted); flex-shrink: 0; }
+  .ct.on i { background: var(--accent-soft); color: var(--accent); }
+  .ct i .ic { width: 19px; height: 19px; }
+  .ct span { flex: 1; } .ct b { display: block; font-size: 14.5px; font-weight: 900; } .ct small { color: var(--muted); font-size: 12.5px; }
+  .rad { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #5a4335; flex-shrink: 0; transition: border .15s; }
+  .ct.on .rad { border: 6px solid var(--accent); }
+  .cname { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); transition: border-color .15s; }
+  .cname:focus-within { border-color: var(--accent); }
+  .cname.err { border-color: var(--red); animation: shake .35s; }
+  .cname i { color: var(--muted); display: grid; } .cname i .ic { width: 18px; height: 18px; }
+  .cname input { flex: 1; min-width: 0; padding: 12px 0; background: none; border: 0; outline: none; color: var(--ink); font: inherit; font-weight: 700; font-size: 15px; }
+  .ccm .mtog b { display: flex; align-items: center; gap: 6px; } .ccm .mtog b .ic { width: 15px; height: 15px; }
+
+  .box.settings.chset .st-nav .cs-title { display: flex; align-items: center; gap: 8px; padding: 2px 12px 14px; font-weight: 900; font-size: 16px; color: var(--ink); border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+  .box.settings.chset .st-nav .cs-title span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .box.settings.chset .st-nav .cs-title .ic { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
+  .box.settings.chset .st-main { display: flex; flex-direction: column; overflow-y: auto; }
+  .box.settings.chset #cs-main { flex: 1; }
+  .cs-save { transform: translateY(110%); opacity: 0; transition: transform .28s var(--ease-out), opacity .2s; pointer-events: none; }
+  .cs-save.show { transform: none; opacity: 1; pointer-events: auto; }
+  .dangerb { color: var(--red) !important; border-color: rgba(255,107,107,.35) !important; }
+  .dangerb:hover { background: var(--red) !important; color: #fff !important; }
+  .cs-list { display: grid; gap: 6px; }
+  .cs-list button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font-weight: 800; text-align: left; }
+  .cs-list button:hover { border-color: var(--accent); }
+  .cs-list button .ic { width: 16px; height: 16px; color: var(--muted); } .cs-list button span { flex: 1; }
+  em.sync, .tag.sync { color: var(--green) !important; }
+  .syncbar { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: rgba(255,179,71,.08); border: 1px solid rgba(255,179,71,.28); margin: 14px 0 4px; font-size: 13.5px; }
+  .syncbar.ok { background: rgba(111,211,155,.08); border-color: rgba(111,211,155,.3); }
+  .syncbar > .ic { width: 18px; height: 18px; color: var(--accent-2); flex-shrink: 0; } .syncbar.ok > .ic { color: var(--green); }
+  .syncbar span { flex: 1; } .syncbar .btns2 { padding: 8px 12px; font-size: 13px; }
+  .presets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 14px; }
+  .presets span { font-size: 11.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+  .presets button { padding: 8px 13px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); font-weight: 800; font-size: 13px; color: var(--ink); transition: border-color .15s, background .15s; }
+  .presets button:hover { border-color: #5a4335; }
+  .presets button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .pgrid { display: grid; grid-template-columns: 200px 1fr; gap: 14px; align-items: start; }
+  .ptargets { padding: 8px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); display: grid; gap: 3px; }
+  .pt-h { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 8px 8px; font-size: 11.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .pt-add button { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+  .pt-add .ic { width: 15px; height: 15px; }
+  .pt { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 10px; border-radius: 10px; text-align: left; font-weight: 800; font-size: 13.5px; color: var(--ink); }
+  .pt:hover { background: var(--hover); } .pt.on { background: var(--accent-soft); color: var(--accent); }
+  .pt i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .pt span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pt em { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; color: var(--muted); opacity: 0; }
+  .pt:hover em { opacity: 1; } .pt em:hover { background: var(--red); color: #fff; } .pt em .ic { width: 12px; height: 12px; }
+  .prows { display: grid; gap: 8px; }
+  .pr-h { font-size: 14px; color: var(--muted); padding: 2px 2px 4px; } .pr-h b { color: var(--ink); }
+  .pr { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .pr-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.05); color: var(--muted); flex-shrink: 0; }
+  .pr-ic .ic { width: 17px; height: 17px; }
+  .pr span { flex: 1; min-width: 0; } .pr b { display: block; font-size: 14.5px; font-weight: 900; } .pr small { color: var(--muted); font-size: 12.5px; line-height: 1.35; display: block; margin-top: 2px; }
+  .tri { display: flex; border-radius: 11px; border: 1px solid var(--line); overflow: hidden; flex-shrink: 0; background: var(--panel); }
+  .tri button { width: 38px; height: 32px; display: grid; place-items: center; color: var(--muted); font-weight: 900; font-size: 16px; transition: background .15s, color .15s; }
+  .tri button + button { border-left: 1px solid var(--line); }
+  .tri button .ic { width: 15px; height: 15px; stroke-width: 3; }
+  .tri button:hover { background: var(--hover); color: var(--ink); }
+  .tri .no.on { background: #e5484d; color: #fff; } .tri .inh.on { background: #4a3a31; color: #fff; } .tri .yes.on { background: #3fbf7a; color: #fff; }
+  .pinfo { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.03); border: 1px dashed var(--line); color: var(--muted); font-size: 13px; line-height: 1.45; margin-top: 4px; }
+  .pinfo .ic { width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px; } .pinfo b { color: var(--ink); }
+  .cs-prev { display: grid; gap: 12px; }
+  .cs-pc { padding: 10px; border-radius: 16px; background: var(--bg); border: 1px solid var(--line); pointer-events: none; }
+  .cs-pc .room { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; color: var(--muted); font-weight: 700; }
+  .cs-pc .room.active { background: var(--hover); color: var(--ink); }
+  .cs-pc .room .ic { width: 17px; height: 17px; }
+  .cs-pc .lockic { margin-left: auto; width: 14px; height: 14px; }
+  .cs-pc .cat-label { display: flex; align-items: center; gap: 4px; padding: 6px 4px; font-size: 11.5px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .cs-pc .cat-label .ic { width: 12px; height: 12px; }
+  .cs-stat { padding: 14px 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+  .cs-stat b { font-size: 26px; font-weight: 900; color: var(--accent); } .cs-stat span { color: var(--muted); font-weight: 700; }
+  @media (max-width: 760px) { .pgrid { grid-template-columns: 1fr; } .ptargets { display: flex; overflow-x: auto; gap: 6px; } .pt-h { display: none; } .pt { width: auto; white-space: nowrap; } .pr { flex-wrap: wrap; } .tri { margin-left: auto; } }
+
+  .ct-bar { display: flex; gap: 8px; margin: 16px 0 14px; flex-wrap: wrap; }
+  .ctree { display: grid; gap: 4px; padding: 8px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); max-height: calc(100vh - 290px); overflow-y: auto; }
+  .ct-top:empty { display: none; }
+  .ct-row, .ct-cat { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 11px; user-select: none; -webkit-user-select: none; transition: background .12s; touch-action: pan-y; }
+  .ct-row { margin-left: 18px; } .ct-top .ct-row { margin-left: 0; }
+  .ct-row:hover, .ct-cat:hover { background: var(--hover); }
+  .ct-cat { margin-top: 8px; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .ct-cat b { color: var(--ink); font-weight: 900; } .ct-cat small { font-size: 11.5px; letter-spacing: 0; text-transform: none; color: var(--muted); font-weight: 700; }
+  .ct-cat > .ic { width: 13px; height: 13px; }
+  .grip { display: grid; place-items: center; color: #6b564a; cursor: grab; flex-shrink: 0; }
+  .grip .ic { width: 15px; height: 15px; }
+  .ct-row .ci { display: grid; color: var(--muted); } .ct-row .ci .ic { width: 17px; height: 17px; }
+  .ct-row b { font-weight: 800; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,.05); color: var(--muted); font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+  .tag .ic { width: 11px; height: 11px; }
+  .ct-act { margin-left: auto; display: flex; gap: 4px; opacity: 0; transition: opacity .12s; }
+  .ct-row:hover .ct-act, .ct-cat:hover .ct-act { opacity: 1; }
+  .ct-act button { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: var(--muted); background: var(--panel); border: 1px solid var(--line); }
+  .ct-act button:hover { color: var(--ink); border-color: var(--accent); }
+  .ct-act button.danger:hover { background: var(--red); border-color: var(--red); color: #fff; }
+  .ct-act .ic { width: 15px; height: 15px; }
+  .ct-empty { margin: 2px 0 2px 18px; padding: 12px; border-radius: 11px; border: 1px dashed var(--line); color: var(--muted); font-size: 12.5px; text-align: center; }
+  @media (hover: none) { .ct-act { opacity: 1; } #side-list .room .rset { opacity: .7; } }
 </style>
 </head>
 <body>
@@ -1294,6 +1429,8 @@ const ICON = {
   hourglass: '<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9"/>',
   up: '<path d="m6 15 6-6 6 6"/>',
   eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  grip: '<path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3.2" stroke-linecap="round"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   live: '<circle cx="12" cy="12" r="2.5"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/>',
   window: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M6.5 6.5h.01M9 6.5h.01"/>',
@@ -1435,6 +1572,8 @@ function onAuth(res) {
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
   if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+  const odaQ = new URLSearchParams(location.search).get('oda');
+  if (odaQ) { history.replaceState(null, '', '/'); const sv = S.servers.find(x => x.channels.some(c => c.id === odaQ && c.type !== 'voice')); if (sv) return selectServer(sv.id, odaQ); }
   const invite = new URLSearchParams(location.search).get('davet');
   if (invite) { history.replaceState(null, '', '/'); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
   const last = S.view === 'dm' && S.channel ? null : S.server && S.servers.find(s => s.id === S.server.id);
@@ -1744,33 +1883,46 @@ function renderSide() {
   $('#sh-inv').onclick = e => { e.stopPropagation(); showInvite(s); };
   $('#side-head').onclick = e => { e.stopPropagation(); toggleSrvMenu(); };
   $('#side-head').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSrvMenu(); } };
-  const canAdd = !(s.customRoles?.length) || perm(s, 'manageChannels');
-  const lock = c => c.private ? ic('lock', 'lockic') : c.readonly ? ic('megaphone', 'lockic') : '';
-  const tRow = c => `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${S.unread.has(c.id) ? 'unread' : ''}" data-id="${c.id}"><div class="ico">${roomIcon(c)}</div>${esc(c.name)}${lock(c)}</div>`;
-  const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''}" data-id="${c.id}"><div class="ico">${ic('volume')}</div>${esc(c.name)}${lock(c)}</div>` +
+  const canAdd = canAddCh(s), manage = canManageCh(s);
+  const tRow = c => `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${S.unread.has(c.id) ? 'unread' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>`;
+  const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${ic('volume')}</div><span class="rn">${esc(c.name)}</span>${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${(S.voice[c.id] || []).map(n => `<div class="vuser ${speaking.has(n) ? 'speaking' : ''}" data-vu="${esc(n)}">${av(n)}${esc(n)}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</div>`).join('')}</div>`;
   const row = c => c.type === 'voice' ? vRow(c) : tRow(c);
-  const free = s.channels.filter(c => !c.category), text = free.filter(c => c.type !== 'voice'), voiceCh = free.filter(c => c.type === 'voice');
-  const cats = [...new Set(s.channels.map(c => c.category).filter(Boolean))];
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
+  const top = topChs(s), cats = catsOf(s);
   $('#side-list').innerHTML =
-    (text.length || (canAdd && !cats.length) ? `<div class="label">Yazılı odalar ${canAdd ? '<button data-t="text" title="Oda ekle">+</button>' : ''}</div>` + text.map(row).join('') : '') +
-    (voiceCh.length || (canAdd && !cats.length) ? `<div class="label">Sesli odalar ${canAdd ? '<button data-t="voice" title="Sesli oda ekle">+</button>' : ''}</div>` + voiceCh.map(row).join('') : '') +
-    cats.map(cat => { const k = s.id + '|' + cat, closed = shut.has(k), list = s.channels.filter(c => c.category === cat);
-      return `<div class="label cat-label ${closed ? 'shut' : ''}" data-cat="${esc(k)}">${ic('chevron')}${esc(cat)}</div>` + list.filter(c => !closed || c.id === S.channel?.id || c.id === myVoice).map(row).join(''); }).join('');
-  $('#side-list').querySelectorAll('[data-cat]').forEach(l => l.onclick = () => { const k = l.dataset.cat; shut.has(k) ? shut.delete(k) : shut.add(k); store.set('kanka-cats', JSON.stringify([...shut])); renderSide(); });
-  $('#side-list').querySelectorAll('.room[data-id]:not(.vroom)').forEach(d => d.onclick = () => selectChannel(d.dataset.id));
-  $('#side-list').querySelectorAll('.vroom').forEach(d => d.onclick = () => myVoice === d.dataset.id ? setVView(!vview()) : joinVoice(d.dataset.id));
-  $('#side-list').querySelectorAll('[data-live]').forEach(b => b.onclick = e => {
+    (!top.length && !cats.length && canAdd ? `<div class="side-empty">Henüz oda yok.<button data-newch>${ic('plus')} Oda oluştur</button></div>` : '') +
+    (top.length ? `<div class="toplist">${top.map(row).join('')}</div>` : '') +
+    cats.map(k => { const key = s.id + '|' + k.id, closed = shut.has(key), list = s.channels.filter(c => c.cat === k.id);
+      return `<div class="label cat-label ${closed ? 'shut' : ''}" data-catk="${esc(key)}" data-id="${k.id}" ${manage ? 'data-drag="cat"' : ''}>${ic('chevron')}<span class="cn">${esc(k.name)}</span>${canAdd ? `<button data-addcat="${k.id}" title="Bu kategoriye oda ekle" aria-label="Oda ekle">+</button>` : ''}</div>` +
+        list.filter(c => !closed || c.id === S.channel?.id || c.id === myVoice).map(row).join(''); }).join('');
+  const sl = $('#side-list');
+  sl.querySelectorAll('[data-catk]').forEach(l => l.onclick = e => { if (e.target.closest('button') || dndOn) return; const k = l.dataset.catk; shut.has(k) ? shut.delete(k) : shut.add(k); store.set('kanka-cats', JSON.stringify([...shut])); renderSide(); });
+  sl.querySelectorAll('.room[data-id]:not(.vroom)').forEach(d => d.onclick = e => { if (e.target.closest('.rset')) return; selectChannel(d.dataset.id); });
+  sl.querySelectorAll('.vroom').forEach(d => d.onclick = e => {
+    if (e.target.closest('.rset')) return;
+    const c = s.channels.find(x => x.id === d.dataset.id);
+    if (c?.canConnect === false && myVoice !== c.id) return toast('Bu sesli odaya bağlanma iznin yok');
+    myVoice === d.dataset.id ? setVView(!vview()) : joinVoice(d.dataset.id);
+  });
+  sl.querySelectorAll('[data-rset]').forEach(b => b.onclick = e => { e.stopPropagation(); showChSettings(s, 'ch', b.dataset.rset, 'general'); });
+  sl.querySelectorAll('[data-live]').forEach(b => b.onclick = e => {
     e.stopPropagation(); const n = b.dataset.live;
     if (myVoice === b.dataset.ch) { const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); setVView(true); }
     else { autoWatch = n; joinVoice(b.dataset.ch).then(ok => ok && setVView(true)); }
   });
-  $('#side-list').querySelectorAll('.label button').forEach(b => b.onclick = () => {
-    const voiceRoom = b.dataset.t === 'voice';
-    form(voiceRoom ? 'Yeni sesli oda' : 'Yeni oda', voiceRoom ? 'Arkadaşlarınla sesli konuşacağınız oda.' : 'Yeni bir sohbet odası aç.', [{ k: 'name', p: 'Oda adı' }], v =>
-      socket.emit('createChannel', { serverId: s.id, name: v.name, type: b.dataset.t }, c => c.error ? toast(c.error) : !voiceRoom && selectChannel(c.id)));
-  });
+  sl.querySelectorAll('[data-addcat]').forEach(b => b.onclick = e => { e.stopPropagation(); showCreateChannel(s, b.dataset.addcat); });
+  sl.querySelectorAll('[data-newch]').forEach(b => b.onclick = () => showCreateChannel(s));
+  sl.oncontextmenu = e => {
+    if (dndOn) return e.preventDefault();
+    if (!manage) return;
+    const r = e.target.closest('.room[data-id]'), h = e.target.closest('.cat-label[data-id]');
+    e.preventDefault();
+    if (r) return chMenu(s, s.channels.find(c => c.id === r.dataset.id), e.clientX, e.clientY);
+    if (h) return catMenu(s, cats.find(k => k.id === h.dataset.id), e.clientX, e.clientY);
+    ctxMenu(e.clientX, e.clientY, [{ t: 'Oda oluştur', icon: 'hash', act: () => showCreateChannel(s) }, { t: 'Kategori oluştur', icon: 'grid', act: () => showCreateCategory(s) }]);
+  };
+  if (manage) chDnD(sl, s, renderSide); else sl.onpointerdown = null;
 }
 // ---- Ctrl+K: hızlı geçiş (oda, sunucu, kişi) ----
 function quickSwitch() {
@@ -1902,7 +2054,7 @@ function toggleSrvMenu() {
   m.innerHTML =
     item('invite', 'İnsanları davet et', 'userplus', 'hl') +
     (mod || ['manageServer', 'manageRoles', 'kick', 'ban', 'timeout'].some(p => perm(s, p)) ? item('settings', 'Sunucu ayarları', 'gear') : '') +
-    (!(s.customRoles?.length) || perm(s, 'manageChannels') ? item('text', 'Yazılı oda oluştur', 'hash') + item('voice', 'Sesli oda oluştur', 'volume') : '') +
+    (canAddCh(s) ? item('newch', 'Oda oluştur', 'plus') : '') + (canManageCh(s) ? item('newcat', 'Kategori oluştur', 'grid') : '') +
     '<hr>' +
     `<button data-m="mute">Sunucuyu sessize al<span class="tick ${muted ? 'on' : ''}"></span></button>` +
     item('read', 'Tümünü okundu say', 'check') +
@@ -1925,9 +2077,8 @@ function toggleSrvMenu() {
     closeSrvMenu();
     if (a === 'invite') showInvite(s);
     if (a === 'settings') showServerSettings(s);
-    if (a === 'text' || a === 'voice') { const v = a === 'voice';
-      form(v ? 'Yeni sesli oda' : 'Yeni oda', v ? 'Arkadaşlarınla sesli konuşacağınız oda.' : 'Yeni bir sohbet odası aç.', [{ k: 'name', p: 'Oda adı' }], val =>
-        socket.emit('createChannel', { serverId: s.id, name: val.name, type: a }, c => c.error ? toast(c.error) : !v && selectChannel(c.id))); }
+    if (a === 'newch') showCreateChannel(s);
+    if (a === 'newcat') showCreateCategory(s);
     if (a === 'read') { s.channels.forEach(c => S.unread.delete(c.id)); S.unreadServers.delete(s.id); renderRail(); renderSide(); toast('Hepsi okundu olarak işaretlendi'); }
     if (a === 'info') showServerInfo(s);
     if (a === 'welcome') showWelcome(s, true);
@@ -2038,25 +2189,27 @@ function showServerSettings(s, tab, focus) {
       }
     },
     channels: () => {
-      const cats = [...new Set(s.channels.map(c => c.category).filter(Boolean))];
-      main.innerHTML = `<div class="st-page"><h3>Odalar</h3><p class="hint">Odaları kategorilere ayır, özel ya da salt okunur yap. Özel odaları sadece seçtiğin roller ve yöneticiler görür.</p>
-        <form id="c-new" class="ss-row" style="margin-bottom:16px"><input class="field" name="name" placeholder="Yeni oda adı" required style="margin:0;flex:2"><select class="field" name="type" style="margin:0;flex:1"><option value="text">Yazılı</option><option value="voice">Sesli</option></select>
-          <input class="field" name="cat" placeholder="Kategori (isteğe bağlı)" list="cat-list" style="margin:0;flex:1.5"><datalist id="cat-list">${cats.map(c => `<option value="${esc(c)}">`).join('')}</datalist><button class="primary" style="width:auto;margin:0;padding:10px 16px">Ekle</button></form>
-        ${s.channels.map((c, i) => `<div class="ss-row ${ssOpen.focus === c.id ? 'open' : ''}"><b>${c.type === 'voice' ? ic('volume') : roomIcon(c)}${esc(c.name)}${c.category ? `<span class="chip">${esc(c.category)}</span>` : ''}${c.private ? ic('lock') : ''}${c.readonly ? ic('megaphone') : ''}</b>
-          <button data-up="${c.id}" ${i ? '' : 'disabled'} title="Yukarı">${ic('up')}</button><button data-down="${c.id}" ${i < s.channels.length - 1 ? '' : 'disabled'} title="Aşağı">${ic('chevron')}</button><button data-open="${c.id}">Düzenle</button><button class="danger" data-delc="${c.id}">${ic('trash')}</button>
-          <form class="ss-sub" data-form="${c.id}"><div class="ss-grid"><input class="field" name="name" value="${esc(c.name)}" maxlength="30" style="margin:0"><input class="field" name="cat" value="${esc(c.category || '')}" placeholder="Kategori" list="cat-list" style="margin:0"></div>
-            <label class="chk"><input type="checkbox" name="priv" ${c.private ? 'checked' : ''}><span>${ic('lock')} Özel oda<small>Sadece aşağıda seçtiğin roller ve yöneticiler görür</small></span></label>
-            ${c.type === 'voice' ? '' : `<label class="chk"><input type="checkbox" name="ro" ${c.readonly ? 'checked' : ''}><span>${ic('megaphone')} Salt okunur<small>Sadece "Mesajları yönet" yetkisi olanlar yazabilir (duyurular için)</small></span></label>`}
-            <div class="allow" style="${c.private ? '' : 'display:none'}"><h4 style="margin:8px 0 2px">Kimler görebilir?</h4>${roleChecks(c.allow || [], 'allow')}</div>
-            <div class="rowb"><button class="primary">Kaydet</button></div></form></div>`).join('')}</div>`;
-      $('#c-new').onsubmit = e => { e.preventDefault(); const f = e.target; socket.emit('createChannel', { serverId: s.id, name: f.name.value, type: f.type.value, category: f.cat.value }, done('Oda eklendi')); };
-      main.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { b.closest('.ss-row').classList.toggle('open'); });
-      main.querySelectorAll('[data-form] [name=priv]').forEach(x => x.onchange = () => x.closest('form').querySelector('.allow').style.display = x.checked ? '' : 'none');
-      main.querySelectorAll('[data-up],[data-down]').forEach(b => b.onclick = () => socket.emit('channelMove', { serverId: s.id, channelId: b.dataset.up || b.dataset.down, dir: b.dataset.up ? -1 : 1 }, done()));
-      main.querySelectorAll('[data-delc]').forEach(b => b.onclick = () => { const c = s.channels.find(c => c.id === b.dataset.delc);
-        confirmBox(`"${c.name}" odası ve içindeki tüm mesajlar silinecek.`, () => socket.emit('deleteChannel', { serverId: s.id, channelId: c.id }, r => { if (r.error) return toast(r.error); toast('Oda silindi'); showServerSettings(s, 'channels'); })); });
-      main.querySelectorAll('[data-form]').forEach(f => f.onsubmit = e => { e.preventDefault();
-        socket.emit('channelSave', { serverId: s.id, channelId: f.dataset.form, name: f.name.value, category: f.cat.value, private: f.priv.checked, readonly: f.ro ? f.ro.checked : undefined, allow: [...f.querySelectorAll('[name=allow]:checked')].map(x => x.value) }, r => { if (r.error) return toast(r.error); toast('Oda kaydedildi'); ssOpen.focus = f.dataset.form; again(); }); });
+      const back = () => ssOpen && showServerSettings(S.servers.find(x => x.id === s.id) || s, 'channels');
+      const draw = () => {
+        const cur = S.servers.find(x => x.id === s.id) || s;
+        main.innerHTML = `<div class="st-page"><h3>Odalar ve kategoriler</h3><p class="hint">Sürükleyerek sırala ya da kategoriler arasında taşı. Bir odanın izinlerini ${ic('shield')} ile, adını ve kategorisini ${ic('gear')} ile düzenle.</p>
+          <div class="ct-bar"><button class="btnp" id="ct-newch">${ic('plus')} Oda oluştur</button><button class="btns2" id="ct-newcat">${ic('grid')} Kategori oluştur</button></div>
+          <div class="ctree" id="ctree">${chTreeHTML(cur)}</div></div>`;
+        const t = $('#ctree');
+        $('#ct-newch').onclick = () => showCreateChannel(cur, null, 'text', back);
+        $('#ct-newcat').onclick = () => showCreateCategory(cur, back);
+        const chOf = x => cur.channels.find(c => c.id === x), catOfId = x => catsOf(cur).find(k => k.id === x);
+        t.querySelectorAll('[data-perm]').forEach(b => b.onclick = () => showChSettings(cur, 'ch', b.dataset.perm, 'perms', back));
+        t.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => showChSettings(cur, 'ch', b.dataset.edit, 'general', back));
+        t.querySelectorAll('[data-del]').forEach(b => b.onclick = () => askDeleteCh(cur, chOf(b.dataset.del), back));
+        t.querySelectorAll('[data-addin]').forEach(b => b.onclick = () => showCreateChannel(cur, b.dataset.addin, 'text', back));
+        t.querySelectorAll('[data-cperm]').forEach(b => b.onclick = () => showChSettings(cur, 'cat', b.dataset.cperm, 'perms', back));
+        t.querySelectorAll('[data-cedit]').forEach(b => b.onclick = () => showChSettings(cur, 'cat', b.dataset.cedit, 'general', back));
+        t.querySelectorAll('[data-cdel]').forEach(b => b.onclick = () => askDeleteCat(cur, catOfId(b.dataset.cdel), back));
+        t.querySelectorAll('.ct-row').forEach(r => r.ondblclick = () => showChSettings(cur, 'ch', r.dataset.id, 'general', back));
+        chDnD(t, cur, draw);
+      };
+      draw();
     },
     members: () => {
       const list = [...s.members].sort((a, b) => (b === s.owner) - (a === s.owner) || a.localeCompare(b, 'tr'));
@@ -4044,6 +4197,315 @@ function wireEmpty(box) {
   box.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { $('#input').value = b.dataset.q; growInput(); $('#input').focus(); });
   box.querySelectorAll('[data-send]').forEach(b => b.onclick = () => send({ kind: 'text', text: b.dataset.send }));
   const inv = box.querySelector('#e-inv'); if (inv) inv.onclick = () => showInvite(S.server);
+}
+
+// ================= Odalar: kategoriler, sürükle-bırak, izinler =================
+const canManageCh = s => !!s && perm(s, 'manageChannels');
+const canAddCh = s => !!s && (!(s.customRoles?.length) || perm(s, 'manageChannels'));
+const catsOf = s => s.categories || [];
+const topChs = s => s.channels.filter(c => !c.cat || !catsOf(s).some(k => k.id === c.cat));
+const chIcon = c => c.type === 'voice' ? ic('volume') : roomIcon(c);
+const chBadge = c => c.private ? ic('lock', 'lockic') : c.locked ? ic('lock', 'lockic') : c.ann ? ic('megaphone', 'lockic') : '';
+// Düzen modeli: { top: [id], cats: [{ id, channels: [id] }] }
+const layoutOf = s => ({ top: topChs(s).map(c => c.id), cats: catsOf(s).map(k => ({ id: k.id, channels: s.channels.filter(c => c.cat === k.id).map(c => c.id) })) });
+function applyLayout(s, L) {
+  const byId = Object.fromEntries(s.channels.map(c => [c.id, c]));
+  L.top.forEach(x => { byId[x].cat = null; });
+  L.cats.forEach(k => k.channels.forEach(x => { if (byId[x].cat !== k.id) byId[x].sync = false; byId[x].cat = k.id; }));
+  s.categories = L.cats.map(k => catsOf(s).find(x => x.id === k.id));
+  s.channels = [...L.top, ...L.cats.flatMap(k => k.channels)].map(x => byId[x]);
+}
+function saveLayout(s, L, rerender) {
+  const old = { ch: [...s.channels], cats: [...catsOf(s)], cat: Object.fromEntries(s.channels.map(c => [c.id, c.cat])) };
+  applyLayout(s, L); rerender();
+  socket.emit('chLayout', { serverId: s.id, ...L }, r => {
+    if (!r?.error) return;
+    toast(r.error); s.channels = old.ch; s.categories = old.cats; s.channels.forEach(c => c.cat = old.cat[c.id]); rerender();
+  });
+}
+// Sürükle-bırak: fare ile hemen, dokunmatikte basılı tutunca
+let dndOn = false;
+function chDnD(root, s, rerender) {
+  root.onpointerdown = e => {
+    const el = e.target.closest('[data-drag]');
+    if (!el || !root.contains(el) || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('button, input, select')) return;
+    const kind = el.dataset.drag, id = el.dataset.id, sx = e.clientX, sy = e.clientY, touch = e.pointerType !== 'mouse';
+    let started = false, ghost = null, line = null, target = null, last = e, holdT = null, raf = 0, offX = 0, offY = 0;
+    const L = layoutOf(s);
+    const listOf = key => key ? L.cats.find(k => k.id === key).channels : L.top;
+    const without = arr => arr.filter(x => x !== id);
+    const start = () => {
+      started = dndOn = true;
+      const r = el.getBoundingClientRect(); offX = sx - r.left; offY = sy - r.top;
+      ghost = el.cloneNode(true); ghost.className += ' dnd-ghost'; ghost.style.width = r.width + 'px'; ghost.removeAttribute('data-drag');
+      document.body.appendChild(ghost);
+      line = document.createElement('div'); line.className = 'dnd-line' + (kind === 'cat' ? ' cat' : ''); document.body.appendChild(line);
+      el.classList.add('dnd-src'); if (kind === 'cat') root.querySelectorAll(`[data-in="${id}"]`).forEach(x => x.classList.add('dnd-src'));
+      document.body.classList.add('dnd'); navigator.vibrate?.(12);
+      move(last);
+    };
+    const pick = y => {
+      const r0 = root.getBoundingClientRect();
+      if (kind === 'cat') {
+        const hs = [...root.querySelectorAll('[data-drag="cat"]')].filter(h => h.dataset.id !== id);
+        let idx = hs.filter(h => { const r = h.getBoundingClientRect(); return r.top + r.height / 2 < y; }).length;
+        const ly = idx < hs.length ? hs[idx].getBoundingClientRect().top : (() => { const all = [...root.querySelectorAll('[data-drag]:not(.dnd-src)')]; return all.length ? all.at(-1).getBoundingClientRect().bottom : r0.top; })();
+        return { idx, ly, lx: r0.left, lw: r0.width };
+      }
+      const rows = [...root.querySelectorAll('[data-drag]')].filter(x => x !== el);
+      if (!rows.length) return null;
+      let best = rows[0], bd = Infinity;
+      for (const x of rows) { const r = x.getBoundingClientRect(); const d = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0; if (d < bd) { bd = d; best = x; } }
+      const r = best.getBoundingClientRect(), after = y > r.top + r.height / 2;
+      if (best.dataset.drag === 'cat') {
+        const key = best.dataset.id;
+        if (after) return { list: key, idx: 0, ly: r.bottom, lx: r.left + 10, lw: r.width - 10, into: best };
+        const ci = L.cats.findIndex(k => k.id === key), prev = ci > 0 ? L.cats[ci - 1].id : null;
+        return { list: prev, idx: without(listOf(prev)).length, ly: r.top - 2, lx: r.left + 10, lw: r.width - 10 };
+      }
+      const key = best.dataset.list || null, arr = without(listOf(key));
+      return { list: key, idx: arr.indexOf(best.dataset.id) + (after ? 1 : 0), ly: after ? r.bottom : r.top, lx: r.left + 6, lw: r.width - 12 };
+    };
+    const move = ev => {
+      last = ev;
+      if (!started) {
+        const d = Math.hypot(ev.clientX - sx, ev.clientY - sy);
+        if (touch) { if (d > 10) cleanup(); return; }
+        if (d < 6) return; start(); return;
+      }
+      ghost.style.transform = `translate(${ev.clientX - offX}px, ${ev.clientY - offY}px) rotate(1.5deg)`;
+      target = pick(ev.clientY);
+      root.querySelectorAll('.dnd-into').forEach(x => x.classList.remove('dnd-into'));
+      if (target) { line.style.display = 'block'; line.style.left = target.lx + 'px'; line.style.width = target.lw + 'px'; line.style.top = (target.ly - 1) + 'px'; target.into?.classList.add('dnd-into'); }
+      const rr = root.getBoundingClientRect();
+      cancelAnimationFrame(raf);
+      const sc = () => { const v = ev.clientY < rr.top + 40 ? -10 : ev.clientY > rr.bottom - 40 ? 10 : 0; if (v && started) { root.scrollTop += v; raf = requestAnimationFrame(sc); } };
+      sc();
+    };
+    const blockTouch = ev => { if (started) ev.preventDefault(); };
+    const finish = () => {
+      if (started && target) {
+        const N = { top: [...L.top], cats: L.cats.map(k => ({ id: k.id, channels: [...k.channels] })) };
+        if (kind === 'cat') { const k = N.cats.find(x => x.id === id); N.cats = N.cats.filter(x => x.id !== id); N.cats.splice(target.idx, 0, k); }
+        else {
+          for (const arr of [N.top, ...N.cats.map(k => k.channels)]) { const i = arr.indexOf(id); if (i >= 0) arr.splice(i, 1); }
+          (target.list ? N.cats.find(k => k.id === target.list).channels : N.top).splice(target.idx, 0, id);
+        }
+        if (JSON.stringify(N) !== JSON.stringify(L)) saveLayout(s, N, rerender);
+        const eat = ev => { ev.stopPropagation(); ev.preventDefault(); };
+        root.addEventListener('click', eat, { capture: true, once: true }); setTimeout(() => root.removeEventListener('click', eat, { capture: true }), 60);
+      }
+      cleanup();
+    };
+    const cleanup = () => {
+      clearTimeout(holdT); cancelAnimationFrame(raf);
+      removeEventListener('pointermove', move); removeEventListener('pointerup', finish); removeEventListener('pointercancel', cleanup); removeEventListener('touchmove', blockTouch);
+      ghost?.remove(); line?.remove(); root.querySelectorAll('.dnd-src, .dnd-into').forEach(x => x.classList.remove('dnd-src', 'dnd-into'));
+      document.body.classList.remove('dnd'); setTimeout(() => { dndOn = false; }, 0);
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', finish); addEventListener('pointercancel', cleanup);
+    addEventListener('touchmove', blockTouch, { passive: false });
+    if (touch) holdT = setTimeout(start, 380);
+  };
+}
+
+// --- Sağ tık menüsü ---
+function ctxMenu(x, y, items) {
+  closeUMenu();
+  const m = document.createElement('div'); m.className = 'umenu ctxm'; m.setAttribute('role', 'menu');
+  m.innerHTML = items.map((it, i) => it === '-' ? '<hr>' : `<button data-i="${i}" class="${it.danger ? 'danger' : ''}">${ic(it.icon)}<span>${it.t}</span></button>`).join('');
+  document.body.appendChild(m);
+  const W = innerWidth, H = innerHeight, w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.min(x, W - w - 8) + 'px'; m.style.top = Math.min(y, H - h - 8) + 'px';
+  m.onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return; closeUMenu(); items[+b.dataset.i].act(); };
+}
+function chMenu(s, c, x, y) {
+  ctxMenu(x, y, [
+    { t: 'Odayı düzenle', icon: 'gear', act: () => showChSettings(s, 'ch', c.id, 'general') },
+    { t: 'İzinleri düzenle', icon: 'shield', act: () => showChSettings(s, 'ch', c.id, 'perms') },
+    { t: 'Bağlantıyı kopyala', icon: 'link', act: () => navigator.clipboard?.writeText(`${location.origin}/?oda=${c.id}`).then(() => toast('Bağlantı kopyalandı')) },
+    '-',
+    { t: 'Odayı sil', icon: 'trash', danger: true, act: () => askDeleteCh(s, c) },
+  ]);
+}
+function catMenu(s, k, x, y) {
+  ctxMenu(x, y, [
+    { t: 'Bu kategoriye oda ekle', icon: 'plus', act: () => showCreateChannel(s, k.id) },
+    { t: 'Kategoriyi düzenle', icon: 'gear', act: () => showChSettings(s, 'cat', k.id, 'general') },
+    { t: 'İzinleri düzenle', icon: 'shield', act: () => showChSettings(s, 'cat', k.id, 'perms') },
+    '-',
+    { t: 'Kategoriyi sil', icon: 'trash', danger: true, act: () => askDeleteCat(s, k) },
+  ]);
+}
+const askDeleteCh = (s, c, after) => confirmBox(`"${c.name}" odası ve içindeki tüm mesajlar kalıcı olarak silinecek.`, () => socket.emit('deleteChannel', { serverId: s.id, channelId: c.id }, r => { if (r?.error) return toast(r.error); toast('Oda silindi'); after?.(); }));
+const askDeleteCat = (s, k, after) => confirmBox(`"${k.name}" kategorisi silinecek. İçindeki odalar silinmez, kategorisiz olarak en üste taşınır.`, () => socket.emit('catDelete', { serverId: s.id, catId: k.id }, r => { if (r?.error) return toast(r.error); toast('Kategori silindi'); after?.(); }));
+
+// --- Oda / kategori oluşturma ---
+function showCreateChannel(s, catId = null, type = 'text', back) {
+  const cats = catsOf(s);
+  modal(`<div class="ccm"><div class="cc-head"><div class="cc-ico">${ic('hash')}</div><div><h3>Oda oluştur</h3><p id="cc-where"></p></div></div>
+    <div class="mlabel">Oda türü</div>
+    <div class="ctype">${[['text', 'hash', 'Yazılı oda', 'Mesaj, resim, GIF ve emoji paylaş'], ['voice', 'volume', 'Sesli oda', 'Sesli konuş, ekran paylaş, birlikte takıl']].map(([k, i, t, d]) =>
+      `<button type="button" class="ct ${k === type ? 'on' : ''}" data-t="${k}"><i>${ic(i)}</i><span><b>${t}</b><small>${d}</small></span><em class="rad"></em></button>`).join('')}</div>
+    <div class="mlabel">Oda adı</div><div class="cname"><i id="cc-pre">${ic(type === 'voice' ? 'volume' : 'hash')}</i><input id="cc-name" maxlength="30" placeholder="${type === 'voice' ? 'Sohbet' : 'yeni-oda'}" autocomplete="off"></div>
+    <div class="mlabel">Kategori</div><select class="msel" id="cc-cat"><option value="">Kategorisiz (en üstte)</option>${cats.map(k => `<option value="${k.id}" ${k.id === catId ? 'selected' : ''}>${esc(k.name)}</option>`).join('')}</select>
+    <div class="mtog" id="cc-priv" role="switch"><span><b>${ic('lock')} Özel oda</b><small>Sadece seçtiğin roller görebilir. Oluşturduktan sonra rolleri seçersin.</small></span><i class="ksw"></i></div>
+    <div class="mfoot"><span style="margin-right:auto"></span><button class="btns2" id="cc-x">Vazgeç</button><button class="btnp" id="cc-ok">${ic('plus')} Oda oluştur</button></div></div>`, 'ccm');
+  let t = type, priv = false;
+  const fmt = v => t === 'text' ? v.toLocaleLowerCase('tr').replace(/\s+/g, '-') : v;
+  const where = () => { const k = cats.find(x => x.id === $('#cc-cat').value); $('#cc-where').innerHTML = k ? `<b>${esc(k.name)}</b> kategorisine eklenecek` : 'Kategorisiz, listenin en üstüne eklenecek'; };
+  where(); $('#cc-cat').onchange = where;
+  $('#modal-box').querySelectorAll('.ct').forEach(b => b.onclick = () => { t = b.dataset.t; $('#modal-box').querySelectorAll('.ct').forEach(x => x.classList.toggle('on', x === b)); $('#cc-pre').innerHTML = ic(t === 'voice' ? 'volume' : 'hash'); $('.ccm .cc-ico').innerHTML = ic(t === 'voice' ? 'volume' : 'hash'); $('#cc-name').placeholder = t === 'voice' ? 'Sohbet' : 'yeni-oda'; $('#cc-name').value = fmt($('#cc-name').value); });
+  $('#cc-name').oninput = e => { const p = e.target.selectionStart; e.target.value = fmt(e.target.value); e.target.setSelectionRange(p, p); };
+  $('#cc-priv').onclick = () => { priv = !priv; $('#cc-priv .ksw').classList.toggle('on', priv); };
+  $('#cc-x').onclick = () => { closeModal(); back && setTimeout(back, 230); };
+  const go = () => {
+    const name = $('#cc-name').value.trim(); if (!name) { $('#cc-name').focus(); $('.cname').classList.add('err'); return; }
+    socket.emit('createChannel', { serverId: s.id, name, type: t, cat: $('#cc-cat').value || null, private: priv }, c => {
+      if (c?.error) return toast(c.error);
+      closeModal(); toast(`${t === 'voice' ? 'Sesli oda' : 'Oda'} oluşturuldu`);
+      setTimeout(() => { if (priv) showChSettings(S.servers.find(x => x.id === s.id) || s, 'ch', c.id, 'perms', back); else if (back) back(); else if (t === 'text' && S.server?.id === s.id) selectChannel(c.id); }, 260);
+    });
+  };
+  $('#cc-ok').onclick = go; $('#cc-name').onkeydown = e => { if (e.key === 'Enter') go(); };
+  setTimeout(() => $('#cc-name').focus(), 60);
+}
+function showCreateCategory(s, back) {
+  modal(`<div class="ccm"><div class="cc-head"><div class="cc-ico">${ic('grid')}</div><div><h3>Kategori oluştur</h3><p>Odalarını gruplara ayır, sürükleyerek içine taşı.</p></div></div>
+    <div class="mlabel">Kategori adı</div><div class="cname"><input id="cc-name" maxlength="30" placeholder="Örn. OYUN ODALARI" autocomplete="off"></div>
+    <div class="mtog" id="cc-priv" role="switch"><span><b>${ic('lock')} Özel kategori</b><small>İçindeki eşitlenmiş odaları sadece seçtiğin roller görür.</small></span><i class="ksw"></i></div>
+    <div class="mfoot"><span style="margin-right:auto"></span><button class="btns2" id="cc-x">Vazgeç</button><button class="btnp" id="cc-ok">${ic('plus')} Kategori oluştur</button></div></div>`, 'ccm');
+  let priv = false;
+  $('#cc-priv').onclick = () => { priv = !priv; $('#cc-priv .ksw').classList.toggle('on', priv); };
+  $('#cc-x').onclick = () => { closeModal(); back && setTimeout(back, 230); };
+  const go = () => {
+    const name = $('#cc-name').value.trim(); if (!name) { $('#cc-name').focus(); $('.cname').classList.add('err'); return; }
+    socket.emit('catSave', { serverId: s.id, name, perms: priv ? { '@everyone': { view: false } } : undefined }, r => {
+      if (r?.error) return toast(r.error);
+      closeModal(); toast('Kategori oluşturuldu');
+      setTimeout(() => priv ? showChSettings(S.servers.find(x => x.id === s.id) || s, 'cat', r.id, 'perms', back) : back?.(), 260);
+    });
+  };
+  $('#cc-ok').onclick = go; $('#cc-name').onkeydown = e => { if (e.key === 'Enter') go(); };
+  setTimeout(() => $('#cc-name').focus(), 60);
+}
+
+// --- Oda / kategori ayarları + izin düzenleyici ---
+const PERM_ROWS = {
+  view: ['Odayı görüntüle', 'Kapalıysa oda listede hiç görünmez.', 'eye'],
+  send: ['Mesaj gönder', 'Bu odaya yazabilirler. Duyuru odaları için kapat.', 'chat'],
+  connect: ['Sesli odaya bağlan', 'Bu sesli odaya girebilirler.', 'volume'],
+};
+// İstemci tarafı hesap (sunucudakiyle aynı mantık) — sadece önizleme için
+function permFor(s, ov, n, key) {
+  if (s.owner === n) return true;
+  const rs = s.memberRoles?.[n] || [], rolePerms = new Set(rs.flatMap(r => s.customRoles.find(x => x.id === r)?.perms || []));
+  if (s.roles?.[n] === 'mod' || rolePerms.has('manageChannels')) return true;
+  if (key === 'send' && rolePerms.has('manageMessages')) return true;
+  const val = k => { let v = true; if (ov['@everyone']?.[k] !== undefined) v = ov['@everyone'][k]; if (rs.some(r => ov[r]?.[k] === false)) v = false; if (rs.some(r => ov[r]?.[k] === true)) v = true; return v; };
+  if (!val('view')) return false; return key === 'view' || val(key);
+}
+let chsOpen = null;
+function showChSettings(s, kind, id, tab = 'general', back) {
+  s = S.servers.find(x => x.id === s.id) || s;
+  const isCat = kind === 'cat';
+  const obj = isCat ? catsOf(s).find(k => k.id === id) : s.channels.find(c => c.id === id);
+  if (!obj) return toast(isCat ? 'Kategori bulunamadı' : 'Oda bulunamadı');
+  const cat = !isCat && obj.cat ? catsOf(s).find(k => k.id === obj.cat) : null;
+  const keys = isCat ? ['view', 'send', 'connect'] : obj.type === 'voice' ? ['view', 'connect'] : ['view', 'send'];
+  const basePerms = () => JSON.parse(JSON.stringify(!isCat && obj.sync && cat ? cat.perms || {} : obj.perms || {}));
+  const st = chsOpen?.key === kind + id ? chsOpen : { key: kind + id, name: obj.name, cat: obj.cat || '', perms: basePerms(), target: '@everyone', permsDirty: false };
+  chsOpen = st;
+  const roles = s.customRoles || [];
+  const dirty = () => st.name !== obj.name || (!isCat && (st.cat || '') !== (obj.cat || '')) || st.permsDirty;
+  const members = s.public ? Object.keys(S.users) : s.members || [];
+  const render = () => {
+    const title = isCat ? esc(obj.name.toUpperCase()) : `${obj.type === 'voice' ? '' : '#'}${esc(obj.name)}`;
+    const targets = ['@everyone', ...roles.filter(r => st.perms[r.id]).map(r => r.id)];
+    if (!targets.includes(st.target)) st.target = '@everyone';
+    const tName = t => t === '@everyone' ? '@herkes' : roles.find(r => r.id === t)?.name || '?';
+    const tColor = t => t === '@everyone' ? '#8a7362' : roles.find(r => r.id === t)?.color || '#8a7362';
+    const addable = roles.filter(r => !st.perms[r.id]);
+    const cur = st.perms[st.target] || {};
+    const viewN = members.filter(n => permFor(s, st.perms, n, 'view')).length;
+    const synced = !isCat && obj.sync && cat && !st.permsDirty;
+    const pages = {
+      general: `<div class="st-page"><h3>${isCat ? 'Kategori' : obj.type === 'voice' ? 'Sesli oda' : 'Yazılı oda'}</h3><p class="hint">${isCat ? 'Kategorinin adı listede büyük harfle görünür.' : 'Odanın adını ve hangi kategoride duracağını seç.'}</p>
+        <div class="st-field"><label>${isCat ? 'Kategori adı' : 'Oda adı'}</label><div class="cname"><i>${isCat ? ic('grid') : chIcon(obj)}</i><input id="cs-name" maxlength="30" value="${esc(st.name)}"></div></div>
+        ${isCat ? `<div class="st-field"><label>İçindeki odalar</label><div class="cs-list">${s.channels.filter(c => c.cat === obj.id).map(c => `<button data-goch="${c.id}">${chIcon(c)}<span>${esc(c.name)}</span>${c.sync ? '<em class="sync">eşitli</em>' : ''}</button>`).join('') || '<p class="hint">Bu kategoride oda yok. Kenar çubuğunda bir odayı sürükleyip buraya bırakabilirsin.</p>'}</div></div>`
+          : `<div class="st-field"><label>Kategori</label><select class="msel" id="cs-cat"><option value="">Kategorisiz (en üstte)</option>${catsOf(s).map(k => `<option value="${k.id}" ${k.id === st.cat ? 'selected' : ''}>${esc(k.name)}</option>`).join('')}</select></div>`}
+        <div class="st-field"><label>Tehlikeli bölge</label><button class="btns2 dangerb" id="cs-del">${ic('trash')} ${isCat ? 'Kategoriyi sil' : 'Odayı sil'}</button></div></div>`,
+      perms: `<div class="st-page"><h3>İzinler</h3><p class="hint">${isCat ? 'Kategorinin izinleri, onunla eşitlenmiş tüm odalara uygulanır.' : 'Rollere göre bu odayı kimlerin görebileceğini ve kullanabileceğini seç.'}</p>
+        ${!isCat && cat ? (synced ? `<div class="syncbar ok">${ic('link')}<span><b>${esc(cat.name)}</b> kategorisiyle eşitli. Burada bir şeyi değiştirirsen eşitleme kalkar.</span></div>`
+          : `<div class="syncbar">${ic('link')}<span>İzinler <b>${esc(cat.name)}</b> kategorisinden farklı.</span><button class="btns2" id="cs-sync">Kategoriyle eşitle</button></div>`) : ''}
+        <div class="presets"><span>Hızlı ayar</span>
+          <button data-pre="open" class="${!st.perms['@everyone']?.view && st.perms['@everyone']?.view !== false && !Object.values(st.perms['@everyone'] || {}).includes(false) ? 'on' : ''}">🌐 Herkese açık</button>
+          <button data-pre="priv" class="${st.perms['@everyone']?.view === false ? 'on' : ''}">🔒 Özel</button>
+          ${keys.includes('send') ? `<button data-pre="ann" class="${st.perms['@everyone']?.send === false && st.perms['@everyone']?.view !== false ? 'on' : ''}">📢 Duyuru</button>` : ''}
+          ${keys.includes('connect') ? `<button data-pre="listen" class="${st.perms['@everyone']?.connect === false && st.perms['@everyone']?.view !== false ? 'on' : ''}">🚫 Bağlanılamaz</button>` : ''}</div>
+        <div class="pgrid"><div class="ptargets"><div class="pt-h">Roller<div class="pt-add">${addable.length ? `<button id="pt-addb" title="Rol ekle">${ic('plus')}</button>` : ''}</div></div>
+            ${targets.map(t => `<button class="pt ${t === st.target ? 'on' : ''}" data-tg="${t}"><i style="background:${tColor(t)}"></i><span>${esc(tName(t))}</span>${t !== '@everyone' ? `<em data-rm="${t}" title="Kaldır">${ic('x')}</em>` : ''}</button>`).join('')}
+            ${roles.length ? '' : '<p class="hint" style="padding:8px 10px">Rol oluşturunca burada role özel izin verebilirsin.</p>'}</div>
+          <div class="prows"><div class="pr-h"><b>${esc(tName(st.target))}</b> için izinler</div>
+            ${keys.map(k => { const v = cur[k]; return `<div class="pr"><i class="pr-ic">${ic(PERM_ROWS[k][2])}</i><span><b>${PERM_ROWS[k][0]}</b><small>${PERM_ROWS[k][1]}</small></span>
+              <div class="tri" role="radiogroup"><button data-k="${k}" data-v="no" class="no ${v === false ? 'on' : ''}" title="Yasak">${ic('x')}</button><button data-k="${k}" data-v="inh" class="inh ${v === undefined ? 'on' : ''}" title="${st.target === '@everyone' ? 'Varsayılan (izinli)' : 'Devral'}">/</button><button data-k="${k}" data-v="yes" class="yes ${v === true ? 'on' : ''}" title="İzinli">${ic('check')}</button></div></div>`; }).join('')}
+            <div class="pinfo">${ic('users')}<span>Bu ayarlarla <b>${members.length}</b> üyeden <b>${viewN}</b> kişi bu ${isCat ? 'kategorideki eşitli odaları' : 'odayı'} görebilir. Sahip ve oda yöneticileri her zaman görür.</span></div></div></div></div>`,
+    };
+    modal(`<nav class="st-nav"><h4>${isCat ? 'KATEGORİ' : obj.type === 'voice' ? 'SESLİ ODA' : 'YAZILI ODA'}</h4><div class="cs-title">${isCat ? ic('grid') : chIcon(obj)}<span>${title}</span></div>
+        <button data-ctab="general" class="${tab === 'general' ? 'on' : ''}">${ic('gear')}Genel</button><button data-ctab="perms" class="${tab === 'perms' ? 'on' : ''}">${ic('shield')}İzinler</button>
+        <button id="mx">${ic('x')}Kapat</button></nav>
+      <div class="st-main"><div id="cs-main">${pages[tab]}</div>
+        <div class="st-save cs-save ${dirty() ? 'dirty show' : ''}"><span>Kaydedilmemiş değişikliklerin var</span><button id="cs-reset">Sıfırla</button><button class="primary" id="cs-save">Değişiklikleri kaydet</button></div></div>
+      <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Kapat"><span>${ic('x')}</span>ESC</button></div>
+        <div class="cs-prev"><div class="cs-pc">${isCat ? `<div class="label cat-label">${ic('chevron')}${esc(st.name)}</div>${s.channels.filter(c => c.cat === obj.id).slice(0, 4).map(c => `<div class="room">${chIcon(c)}${esc(c.name)}</div>`).join('')}`
+          : `<div class="room active">${chIcon(obj)}${esc(obj.type === 'voice' ? st.name : st.name.toLocaleLowerCase('tr').replace(/\s+/g, '-'))}${st.perms['@everyone']?.view === false ? ic('lock', 'lockic') : st.perms['@everyone']?.send === false ? ic('megaphone', 'lockic') : ''}</div>`}</div>
+          <div class="cs-stat"><b>${viewN}</b><span>/${members.length} üye görebilir</span></div></div></aside>`, 'settings chset');
+    const close = () => { const go = () => { chsOpen = null; closeModal(); back && setTimeout(back, 240); }; dirty() ? confirmBox('Kaydedilmemiş değişikliklerin silinecek. Kapatılsın mı?', go) : go(); };
+    $('#mx').onclick = close; $('#st-x').onclick = close;
+    $('#modal-box').querySelectorAll('[data-ctab]').forEach(b => b.onclick = () => { tab = b.dataset.ctab; render(); });
+    const bar = () => $('.cs-save').classList.toggle('dirty', dirty()) || $('.cs-save').classList.toggle('show', dirty());
+    if ($('#cs-name')) $('#cs-name').oninput = e => { st.name = e.target.value; bar(); };
+    if ($('#cs-cat')) $('#cs-cat').onchange = e => { st.cat = e.target.value; bar(); };
+    if ($('#cs-del')) $('#cs-del').onclick = () => (isCat ? askDeleteCat : askDeleteCh)(s, obj, () => { chsOpen = null; closeModal(); back && setTimeout(back, 240); });
+    $('#modal-box').querySelectorAll('[data-goch]').forEach(b => b.onclick = () => { chsOpen = null; showChSettings(s, 'ch', b.dataset.goch, 'general', back); });
+    $('#modal-box').querySelectorAll('[data-tg]').forEach(b => b.onclick = e => { if (e.target.closest('[data-rm]')) return; st.target = b.dataset.tg; render(); });
+    $('#modal-box').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { delete st.perms[b.dataset.rm]; st.permsDirty = true; render(); });
+    $('#modal-box').querySelectorAll('.tri button').forEach(b => b.onclick = () => {
+      const o = st.perms[st.target] ||= {}; const k = b.dataset.k;
+      if (b.dataset.v === 'inh') delete o[k]; else o[k] = b.dataset.v === 'yes';
+      if (!Object.keys(o).length && st.target === '@everyone') delete st.perms['@everyone'];
+      st.permsDirty = true; render();
+    });
+    $('#modal-box').querySelectorAll('[data-pre]').forEach(b => b.onclick = () => {
+      const e = {}; if (b.dataset.pre === 'priv') e.view = false; if (b.dataset.pre === 'ann') e.send = false; if (b.dataset.pre === 'listen') e.connect = false;
+      if (Object.keys(e).length) st.perms['@everyone'] = e; else delete st.perms['@everyone'];
+      st.permsDirty = true; render();
+    });
+    if ($('#pt-addb')) $('#pt-addb').onclick = e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect();
+      ctxMenu(r.left, r.bottom + 6, addable.map(x => ({ t: esc(x.name), icon: 'tag', act: () => { st.perms[x.id] = {}; st.target = x.id; st.permsDirty = true; render(); } }))); };
+    if ($('#cs-sync')) $('#cs-sync').onclick = () => socket.emit('channelSave', { serverId: s.id, channelId: obj.id, sync: true }, r => {
+      if (r?.error) return toast(r.error); toast('Oda kategoriyle eşitlendi'); chsOpen = null; setTimeout(() => showChSettings(s, kind, id, tab, back), 150); });
+    $('#cs-reset').onclick = () => { chsOpen = null; showChSettings(s, kind, id, tab, back); };
+    $('#cs-save').onclick = () => {
+      const name = st.name.trim(); if (!name) return toast('Ad boş olamaz');
+      const done = r => { if (r?.error) return toast(r.error); toast('Kaydedildi'); chsOpen = null; setTimeout(() => showChSettings(s, kind, id, tab, back), 160); };
+      if (isCat) socket.emit('catSave', { serverId: s.id, catId: obj.id, name, perms: st.permsDirty ? st.perms : undefined }, done);
+      else socket.emit('channelSave', { serverId: s.id, channelId: obj.id, name, cat: (st.cat || '') !== (obj.cat || '') ? st.cat || null : undefined, perms: st.permsDirty ? st.perms : undefined }, done);
+    };
+  };
+  render();
+}
+
+// --- Sunucu ayarları > Odalar: sürüklenebilir ağaç ---
+function chTreeHTML(s) {
+  const row = c => `<div class="ct-row" data-drag="ch" data-id="${c.id}" data-list="${c.cat || ''}" ${c.cat ? `data-in="${c.cat}"` : ''}><i class="grip">${ic('grip')}</i><i class="ci">${chIcon(c)}</i><b>${esc(c.name)}</b>
+    ${c.private ? `<em class="tag">${ic('lock')}Özel</em>` : ''}${c.ann ? `<em class="tag">${ic('megaphone')}Duyuru</em>` : ''}${c.locked ? `<em class="tag">${ic('lock')}Kilitli</em>` : ''}${c.cat && c.sync ? `<em class="tag sync">${ic('link')}Eşitli</em>` : ''}
+    <span class="ct-act"><button data-perm="${c.id}" title="İzinler">${ic('shield')}</button><button data-edit="${c.id}" title="Düzenle">${ic('gear')}</button><button data-del="${c.id}" class="danger" title="Sil">${ic('trash')}</button></span></div>`;
+  const top = topChs(s);
+  return `<div class="ct-top">${top.map(row).join('') || ''}</div>` + catsOf(s).map(k => { const list = s.channels.filter(c => c.cat === k.id);
+    return `<div class="ct-cat" data-drag="cat" data-id="${k.id}"><i class="grip">${ic('grip')}</i>${ic('chevron')}<b>${esc(k.name)}</b><small>${list.length} oda</small>${k.perms?.['@everyone']?.view === false ? `<em class="tag">${ic('lock')}Özel</em>` : ''}
+      <span class="ct-act"><button data-addin="${k.id}" title="Oda ekle">${ic('plus')}</button><button data-cperm="${k.id}" title="İzinler">${ic('shield')}</button><button data-cedit="${k.id}" title="Düzenle">${ic('gear')}</button><button data-cdel="${k.id}" class="danger" title="Sil">${ic('trash')}</button></span></div>` +
+      (list.map(row).join('') || `<div class="ct-empty" data-in="${k.id}">Boş kategori · odaları buraya sürükle</div>`); }).join('');
 }
 
 function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); }
