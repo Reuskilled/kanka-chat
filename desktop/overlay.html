@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: transparent; overflow: hidden; font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; user-select: none; }
+  #box { position: absolute; display: flex; flex-direction: column; gap: 5px; padding: 6px; transition: opacity .25s; }
+  body.tl #box { top: 0; left: 0; align-items: flex-start; } body.tr #box { top: 0; right: 0; align-items: flex-end; }
+  body.bl #box { bottom: 0; left: 0; align-items: flex-start; flex-direction: column-reverse; } body.br #box { bottom: 0; right: 0; align-items: flex-end; flex-direction: column-reverse; }
+  .head { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; border-radius: 999px; background: rgba(15,11,9,.72); color: #f3e9e1; font-size: 11.5px; font-weight: 700; max-width: 250px; }
+  .head i { width: 16px; height: 16px; border-radius: 5px; background: #F2652F; display: grid; place-items: center; font-style: normal; font-size: 10px; flex-shrink: 0; }
+  .head span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .85; }
+  .u { display: flex; align-items: center; gap: 8px; padding: 3px 12px 3px 3px; border-radius: 999px; background: rgba(15,11,9,.62); color: #f3e9e1; max-width: 250px;
+    transition: background .15s, opacity .3s, transform .2s; animation: in .25s ease-out both; }
+  body.tr .u, body.br .u { flex-direction: row-reverse; padding: 3px 3px 3px 12px; }
+  @keyframes in { from { opacity: 0; transform: translateY(-4px); } }
+  .av { position: relative; width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-weight: 800; font-size: 14px; color: #fff; overflow: visible; }
+  .av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .av::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; border: 2.5px solid #23d18b; opacity: 0; transform: scale(.9); transition: opacity .12s, transform .12s; }
+  .u.sp { background: rgba(15,11,9,.85); }
+  .u.sp .av::after { opacity: 1; transform: none; box-shadow: 0 0 10px rgba(35,209,139,.7); }
+  .u.sp b { color: #fff; }
+  .n { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  b { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #e9dcd2; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+  svg { width: 14px; height: 14px; flex-shrink: 0; fill: none; stroke: #ff6b6e; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .more { font-size: 11.5px; font-weight: 700; color: #cbb8aa; padding: 2px 10px; border-radius: 999px; background: rgba(15,11,9,.55); }
+  body.only .u:not(.sp) { display: none; }
+  body.only .head, body.only .more { display: none; }
+  .hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+</style>
+</head>
+<body class="tl">
+<div id="box"></div>
+<script>
+const MIC_OFF = '<svg viewBox="0 0 24 24"><path d="M9 9v2a3 3 0 0 0 5.1 2.1M15 9.3V6a3 3 0 0 0-5.8-1"/><path d="M5 11a7 7 0 0 0 11.7 5.2M19 11a7 7 0 0 1-.6 2.8M12 18v3M3 3l18 18"/></svg>';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+let last = '';
+window.render = (st, cfg) => {
+  cfg = cfg || {};
+  document.body.className = (cfg.pos || 'tl') + (cfg.onlySpeaking ? ' only' : '');
+  document.getElementById('box').style.opacity = cfg.opacity ?? 1;
+  document.body.style.zoom = cfg.scale || 1;
+  if (!st) { document.getElementById('box').innerHTML = ''; last = ''; return; }
+  const key = JSON.stringify([st, cfg.pos, cfg.onlySpeaking]); if (key === last) return; last = key;
+  const users = st.users || [], max = 10;
+  const row = u => `<div class="u ${u.sp ? 'sp' : ''}"><div class="av" style="background:${esc(u.c || '#5b4a40')}">${u.av ? `<img src="${esc(u.av)}" alt="" onerror="this.remove()">` : esc((u.n || '?')[0].toUpperCase())}</div><div class="n"><b>${esc(u.n)}</b>${u.m ? MIC_OFF : ''}</div></div>`;
+  document.getElementById('box').innerHTML = `<div class="head"><i>K</i><span>${esc(st.room || 'Sesli oda')}${st.server ? ' · ' + esc(st.server) : ''}</span></div>` +
+    users.slice(0, max).map(row).join('') + (users.length > max ? `<div class="more">+${users.length - max} kişi daha</div>` : '');
+};
+</script>
+</body>
+</html>

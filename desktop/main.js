@@ -2,7 +2,7 @@
 // Sohbeti kendi penceresinde açar, sistem tepsisinde yaşar, oyun ve Spotify'ı arka planda algılar.
 // Kurulum/kaldırma sırasında Squirrel kısayolları oluşturur ve hemen çıkar
 if (require('electron-squirrel-startup')) process.exit(0);
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell, dialog, Notification, autoUpdater } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell, dialog, Notification, autoUpdater, screen, globalShortcut } = require('electron');
 const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -256,6 +256,7 @@ async function detect() {
 async function presenceLoop() {
   if (config.presenceKey) {
     const st = await detect();
+    if (st.game !== currentGame) { currentGame = st.game; updateOverlay(); }
     try {
       await fetch(config.server + '/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: config.presenceKey, ...st }), signal: AbortSignal.timeout(8000) });
       lastStatus = st.game ? `Oynuyor: ${st.game}${st.rich?.state ? ' · ' + st.rich.state : ''}` : st.music ? `Dinliyor: ${st.music.title}` : 'Etkinlik: boşta';
@@ -293,6 +294,59 @@ ipcMain.handle('kanka:autostart', (e, p) => {
   if (p && typeof p.hidden === 'boolean') { config.startHidden = p.hidden; saveConfig(); }
   return { on: autostartOn(), hidden: !!config.startHidden };
 });
+// ---------------- Oyun içi katman: sesli odadakiler ve kim konuşuyor ----------------
+// Her zaman üstte, şeffaf, tıklamaları oyuna geçiren küçük bir pencere. Kenarlıksız/pencereli tam ekran oyunlarda görünür.
+config.overlay = { on: true, pos: 'tl', onlyGame: true, onlySpeaking: false, opacity: 1, size: 1, ...(config.overlay || {}) };
+let overlay = null, ovState = null, ovHidden = false, ovPreview = 0, currentGame = null;
+const OV_W = 300, OV_H = 560;
+function placeOverlay() {
+  if (!overlay) return;
+  const b = screen.getPrimaryDisplay().bounds, sz = config.overlay.size || 1, w = Math.round(OV_W * sz), h = Math.round(OV_H * sz), m = 12, p = config.overlay.pos;
+  overlay.setBounds({ x: b.x + (p[1] === 'r' ? b.width - w - m : m), y: b.y + (p[0] === 'b' ? b.height - h - m : m), width: w, height: h });
+}
+function ensureOverlay() {
+  if (overlay && !overlay.isDestroyed()) return overlay;
+  overlay = new BrowserWindow({ width: OV_W, height: OV_H, frame: false, transparent: true, resizable: false, movable: false, minimizable: false, maximizable: false, focusable: false,
+    skipTaskbar: true, hasShadow: false, show: false, alwaysOnTop: true, backgroundColor: '#00000000', webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
+  overlay.setAlwaysOnTop(true, 'screen-saver'); overlay.setIgnoreMouseEvents(true); overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  overlay.loadFile(path.join(__dirname, 'overlay.html')).then(() => updateOverlay(true)).catch(() => {});
+  overlay.on('closed', () => { overlay = null; });
+  placeOverlay();
+  return overlay;
+}
+const SAMPLE = { room: 'Sohbet', server: 'Önizleme', users: [{ n: 'Sen', c: '#ff8a4c', sp: true }, { n: 'Kanka', c: '#4aa8ff' }, { n: 'Ayşe', c: '#b07cff', m: true }] };
+function updateOverlay(force) {
+  const c = config.overlay, preview = Date.now() < ovPreview, st = preview ? (ovState || SAMPLE) : ovState;
+  const want = !!st && (preview || (c.on && !ovHidden && st.users?.length && (!c.onlyGame || currentGame) && !(win && win.isFocused() && win.isVisible())));
+  if (!want) { if (overlay && overlay.isVisible()) overlay.hide(); return; }
+  const o = ensureOverlay();
+  const cfg = { pos: c.pos, onlySpeaking: preview ? false : c.onlySpeaking, opacity: c.opacity, scale: c.size };
+  o.webContents.executeJavaScript(`window.render && window.render(${JSON.stringify(st)}, ${JSON.stringify(cfg)})`).catch(() => {});
+  if (!o.isVisible() || force) { o.showInactive(); o.setAlwaysOnTop(true, 'screen-saver'); }
+}
+ipcMain.on('kanka:overlay', (e, st) => {
+  if (e.sender !== win?.webContents) return;
+  if (st && typeof st === 'object' && Array.isArray(st.users)) {
+    const s = v => String(v ?? '').slice(0, 60);
+    ovState = { room: s(st.room), server: s(st.server), users: st.users.slice(0, 40).map(u => ({ n: s(u.n), c: /^#[0-9a-f]{3,8}$/i.test(u.c) ? u.c : null, av: /^https:\/\//.test(u.av || '') ? String(u.av).slice(0, 400) : null, sp: !!u.sp, m: !!u.m })) };
+  } else ovState = null;
+  updateOverlay();
+});
+ipcMain.handle('kanka:overlayConfig', (e, p) => {
+  if (p && typeof p === 'object') {
+    const o = config.overlay;
+    if (typeof p.on === 'boolean') o.on = p.on;
+    if (['tl', 'tr', 'bl', 'br'].includes(p.pos)) o.pos = p.pos;
+    if (typeof p.onlyGame === 'boolean') o.onlyGame = p.onlyGame;
+    if (typeof p.onlySpeaking === 'boolean') o.onlySpeaking = p.onlySpeaking;
+    if (+p.opacity >= .3 && +p.opacity <= 1) o.opacity = +p.opacity;
+    if (+p.size >= .8 && +p.size <= 1.3) o.size = +p.size;
+    saveConfig(); placeOverlay();
+    if (p.preview) { ovPreview = Date.now() + 6000; setTimeout(() => updateOverlay(), 6100); }
+    updateOverlay(true);
+  }
+  return { ...config.overlay, game: currentGame, hotkey: 'Ctrl+Shift+O' };
+});
 ipcMain.handle('kanka:logout', () => { config.presenceKey = null; saveConfig(); return { ok: true }; });
 ipcMain.on('kanka:badge', (e, n) => { if (win && process.platform === 'win32') win.setOverlayIcon(n ? nativeImage.createFromPath(path.join(__dirname, 'dot.png')) : null, n ? `${n} okunmamış` : ''); win?.flashFrame(!!n && !win.isFocused()); });
 
@@ -310,6 +364,10 @@ app.whenReady().then(async () => {
   await loadGames(); setInterval(loadGames, 10 * 60e3);
   setupCS2().catch(() => {});
   presenceLoop();
+  try { globalShortcut.register('Control+Shift+O', () => { ovHidden = !ovHidden; updateOverlay(true); }); } catch {}
+  win?.on('focus', () => updateOverlay()); win?.on('blur', () => setTimeout(updateOverlay, 150)); win?.on('hide', () => updateOverlay()); win?.on('show', () => updateOverlay());
+  screen.on('display-metrics-changed', placeOverlay);
 });
-app.on('before-quit', () => { quitting = true; });
+app.on('before-quit', () => { quitting = true; try { overlay?.destroy(); } catch {} });
+app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch {} });
 app.on('window-all-closed', e => e.preventDefault());

@@ -13,4 +13,6 @@ contextBridge.exposeInMainWorld('kankaDesktop', {
   badge: n => ipcRenderer.send('kanka:badge', n),
   onUpdateReady: cb => { ipcRenderer.on('kanka:update-ready', (e, v) => cb(v)); ipcRenderer.invoke('kanka:update-pending').then(p => p && cb('')); },
   installUpdate: () => ipcRenderer.invoke('kanka:install-update'),
+  overlay: st => ipcRenderer.send('kanka:overlay', st),
+  overlayConfig: p => ipcRenderer.invoke('kanka:overlayConfig', p || null),
 });
