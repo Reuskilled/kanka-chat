@@ -1,0 +1,32 @@
+{
+ "version": "1.2.2",
+ "files": {
+  "KankaChat-Kurulum.exe": {
+   "size": 155949568,
+   "sha1": "bddac9b3952cdc3d0a5b09c266f8df64ce306346",
+   "parts": [
+    "KankaChat-Kurulum.exe.00",
+    "KankaChat-Kurulum.exe.01",
+    "KankaChat-Kurulum.exe.02",
+    "KankaChat-Kurulum.exe.03"
+   ]
+  },
+  "RELEASES": {
+   "size": 81,
+   "sha1": "b06c951e96a0b4763e8e16c2967bd39c1022f67d",
+   "parts": [
+    "RELEASES.00"
+   ]
+  },
+  "kanka-chat-1.2.2-full.nupkg": {
+   "size": 155038835,
+   "sha1": "2bb27ffe1317fb0cb7ff91db225dae0e6f06ba31",
+   "parts": [
+    "kanka-chat-1.2.2-full.nupkg.00",
+    "kanka-chat-1.2.2-full.nupkg.01",
+    "kanka-chat-1.2.2-full.nupkg.02",
+    "kanka-chat-1.2.2-full.nupkg.03"
+   ]
+  }
+ }
+}
