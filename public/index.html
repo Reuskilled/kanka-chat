@@ -733,7 +733,7 @@
   .primary:hover { filter: brightness(1.08); }
   .srv { transition: border-radius .25s var(--ease-out), background-color .2s, border-color .2s, transform .2s var(--ease); }
   .srv:hover { transform: translateY(-2px); }
-  .srv.active::before { content: ''; position: absolute; left: -15px; top: 50%; width: 5px; height: 32px; margin-top: -16px; border-radius: 0 4px 4px 0; background: var(--accent); animation: pill .3s var(--ease); }
+  .srv.active::before { content: ''; position: absolute; left: -15px; top: 50%; width: 5px; height: 32px; margin-top: -16px; border-radius: 0 4px 4px 0; background: var(--accent); }
   @keyframes pill { from { transform: scaleY(0); } }
   .srv .dot { animation: pulse 2s infinite; }
   @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,.6); } 50% { box-shadow: 0 0 0 5px rgba(255,107,107,0); } }
@@ -790,7 +790,6 @@
   @keyframes wave { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg) translateY(-3px); } }
   #auth-err:not(:empty) { animation: shake .4s; }
   @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
-  .on-dot::after { animation: popIn .3s var(--ease); }
   #watch.on { animation: slideDown .35s var(--ease-out); }
   @keyframes slideDown { from { opacity: 0; max-height: 0; } to { max-height: 60vh; } }
   .row.flash .bubble, .row.flash .kcard { animation: flash 1.4s ease-out; }
@@ -4165,7 +4164,7 @@ setInterval(() => { if (S.me && !idleSent && Date.now() - lastAct > 10 * 60e3) {
 socket.on('connect', () => { idleSent = false; });
 function renderMe() {
   const u = S.users[S.me];
-  $('#me-av').innerHTML = av(S.me, true);
+  { const h = av(S.me, true); if ($('#me-av').innerHTML !== h) $('#me-av').innerHTML = h; } // değişmediyse yeniden çizme (resim titremesin)
   $('#me-av').onclick = e => { e.stopPropagation(); toggleStatusMenu(); }; $('#me-av').style.cursor = 'pointer'; $('#me-av').title = S.myStatus !== 'online' && S.myStatusUntil ? `${STATUS[S.myStatus][0]} · ${leftTxt(S.myStatusUntil)}` : 'Durumunu değiştir';
   $('#me-name').textContent = S.me;
   $('#me-lvl').innerHTML = actLine(S.me) || (u.status ? esc(u.status) : '') || `Seviye ${u.level}${u.streak ? ` · <span class="streak">${ic('fire')} ${u.streak} gün</span>` : ''}`;
