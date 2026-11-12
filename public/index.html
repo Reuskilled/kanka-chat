@@ -2138,6 +2138,23 @@
   .invc .sk { background: rgba(255,255,255,.07); border-radius: 6px; color: transparent !important; animation: skp 1.2s ease-in-out infinite; } .invc b.sk { width: 160px; } .invc small.sk { width: 110px; }
   .invc .ic-icon.sk { box-shadow: none; } @keyframes skp { 50% { opacity: .5; } }
   @media (max-width: 520px) { .invc .ic-row { flex-wrap: wrap; } .invc .ic-go { width: 100% !important; } }
+  /* ---------- Oda kartı ---------- */
+  .roomc { display: flex; align-items: center; gap: 12px; width: 400px; max-width: 100%; margin: 6px 0 2px; padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); white-space: normal; }
+  .roomc.v.live { background: linear-gradient(135deg, rgba(63,207,142,.09), transparent 70%), var(--card); border-color: rgba(63,207,142,.3); }
+  .roomc .rc-ic { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; flex-shrink: 0; background: rgba(255,138,76,.14); color: var(--accent); }
+  .roomc.v .rc-ic { background: rgba(63,207,142,.14); color: #3fcf8e; } .roomc .rc-ic .ic { width: 22px; height: 22px; }
+  .roomc .rc-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .roomc .rc-t small { font-size: 11px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .roomc .rc-t b { font-size: 16px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .roomc .rc-t > span:not(.rc-who) { font-size: 12.5px; color: var(--muted); }
+  .roomc .rc-who { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .roomc.live .rc-who { color: #8fdcb6; font-weight: 700; }
+  .roomc .rc-avs { display: flex; } .roomc .rc-avs .av { width: 22px; height: 22px; font-size: 9px; border: 2px solid var(--card); margin-left: -6px; } .roomc .rc-avs .av:first-child { margin-left: 0; }
+  .roomc .rc-go { width: auto !important; padding: 10px 16px !important; border-radius: 12px !important; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; font-weight: 900; }
+  .roomc .rc-go .ic { width: 16px; height: 16px; } .roomc.v .primary.rc-go { background: #3fcf8e; color: #0b1a12; box-shadow: 0 6px 18px rgba(63,207,142,.25); }
+  .roomc .rc-here { font-size: 12.5px; font-weight: 900; color: #3fcf8e; flex-shrink: 0; }
+  .roomc.bad .rc-ic { background: rgba(255,255,255,.06); color: var(--muted); }
+  @media (max-width: 520px) { .roomc { flex-wrap: wrap; } .roomc .rc-go { width: 100% !important; justify-content: center; } }
 </style>
 </head>
 <body>
@@ -2542,7 +2559,7 @@ function onAuth(res) {
   { const ac = new URLSearchParams(location.search).get('ac'), kim = new URLSearchParams(location.search).get('kim');
     if (ac) { history.replaceState(null, '', '/'); setTimeout(() => openFromNotif({ ch: ac === 'arkadaslar' ? null : ac, friend: ac === 'arkadaslar', from: kim, dm: /^(dm|g):/.test(ac) }), 300); } }
   const odaQ = new URLSearchParams(location.search).get('oda');
-  if (odaQ) { history.replaceState(null, '', '/'); const sv = S.servers.find(x => x.channels.some(c => c.id === odaQ && !voiceLike(c.type))); if (sv) return selectServer(sv.id, odaQ); }
+  if (odaQ) { history.replaceState(null, '', '/'); const f = roomFind(odaQ); if (f && voiceLike(f.c.type)) { selectServer(f.sv.id); setTimeout(() => joinVoice(odaQ), 400); return; } if (f) return selectServer(f.sv.id, odaQ); toast('Bu odayı göremiyorsun'); }
   if (authQ.kod) { authQ.kod = null; if (!QS.get('davet')) history.replaceState(null, '', '/'); }
   const invite = new URLSearchParams(location.search).get('davet');
   if (invite) { history.replaceState(null, '', '/'); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
@@ -3633,6 +3650,32 @@ function invCardHTML(code) {
       <button class="${v.joined ? 'btns2' : 'primary'} ic-go" data-invgo="${code}">${v.joined ? 'Sunucuya git' : 'Katıl'}</button></div>
     ${v.description ? `<p class="ic-desc">${esc(v.description)}</p>` : ''}</div>`;
 }
+// ---- Oda kartı: ?oda=… linki; sesli odada içerdekiler ve tek tıkla Sese katıl ----
+const ROOM_RE = /(?:https?:\/\/[^\s?#]+)?\/?\?(?:[^\s#]*&)?oda=([A-Za-z0-9_-]{1,40})/gi;
+const roomIds = t => [...new Set([...String(t || '').matchAll(ROOM_RE)].map(x => x[1]))].slice(0, 3);
+const roomOnly = t => roomIds(t).length === 1 && /^\s*\S*[?&]oda=[A-Za-z0-9_-]{1,40}\s*$/.test(t || '');
+const roomFind = id => { for (const sv of S.servers) { const c = sv.channels.find(c => c.id === id); if (c) return { sv, c }; } return null; };
+function roomCardHTML(id) {
+  const f = roomFind(id);
+  if (!f) return `<div class="roomc bad" data-room="${esc(id)}"><span class="rc-ic">${ic('lock')}</span><span class="rc-t"><small>Oda bağlantısı</small><b>Bu odayı göremiyorsun</b><span>Odanın olduğu sunucuda değilsin ya da oda silinmiş.</span></span></div>`;
+  const { sv, c } = f, voice = voiceLike(c.type), who = voice ? (S.voice?.[c.id] || []) : [], here = myVoice === c.id;
+  return `<div class="roomc ${voice ? 'v' : ''} ${who.length ? 'live' : ''}" data-room="${esc(id)}">
+    <span class="rc-ic">${roomIcon(c)}</span>
+    <span class="rc-t"><small>${voice ? (c.type === 'stage' ? 'Sahne' : 'Sesli oda') : 'Yazılı oda'} · ${esc(sv.name)}</small><b>${voice ? '' : '#'}${esc(c.name)}</b>
+      ${voice ? (who.length ? `<span class="rc-who"><span class="rc-avs">${who.slice(0, 5).map(n => av(n)).join('')}</span>${who.length} kişi seste${who.length <= 3 ? ': ' + who.map(n => esc(dn(n))).join(', ') : ''}</span>` : '<span class="rc-who">Şu an kimse yok · ilk sen gir</span>') : ''}</span>
+    ${here ? '<span class="rc-here">Buradasın</span>' : `<button class="${voice ? 'primary' : 'btns2'} rc-go" data-roomgo="${esc(id)}">${voice ? `${ic('volume')}Sese katıl` : 'Odaya git'}</button>`}</div>`;
+}
+function roomGo(id) {
+  const f = roomFind(id); if (!f) return toast('Bu odayı göremiyorsun', null, false, { type: 'err' });
+  if (voiceLike(f.c.type)) { if (myVoice !== id) { selectServer(f.sv.id); setTimeout(() => joinVoice(id), 150); } }
+  else selectServer(f.sv.id, id);
+}
+const refreshRoomCards = () => document.querySelectorAll('.roomc[data-room]').forEach(el => { const h = roomCardHTML(el.dataset.room); if (el.outerHTML !== h) el.outerHTML = h; });
+document.addEventListener('click', e => {
+  const go = e.target.closest('[data-roomgo]'); if (go) { e.preventDefault(); e.stopPropagation(); return roomGo(go.dataset.roomgo); }
+  const a = e.target.closest('#messages a[href], #thread a[href]'); if (!a || a.host !== location.host) return;
+  const id = roomIds(a.getAttribute('href'))[0]; if (id) { e.preventDefault(); e.stopPropagation(); roomGo(id); }
+}, true);
 function invFetch() {
   const codes = [...invAsk]; invAsk = new Set(); if (!codes.length) return;
   socket.emit('invitePeek', codes, r => { for (const c of codes) { invCache[c] = r?.[c] ?? null; document.querySelectorAll(`.invc[data-inv="${c}"]`).forEach(el => el.outerHTML = invCardHTML(c)); } });
@@ -3707,7 +3750,7 @@ function msgHTML(m, prev) {
     const fimgs = (m.files || []).filter(f => f.kind === 'image');
     const onlyImg = (m.image || (m.files?.length && fimgs.length === m.files.length)) && !m.text && !m.replyTo;
     const jumbo = !m.image && !m.audio && m.text && isJumbo(m.text);
-    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.text && !invOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${invCodes(m.text).map(invCardHTML).join('')}${m.preview && !invCodes(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
+    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${invCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !invCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
   }
   if (m.thread?.length) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
@@ -5247,7 +5290,7 @@ function renderStage() {
     }, 1000);
   } else if (!watching && stageStats) { clearInterval(stageStats); stageStats = null; }
 }
-socket.on('voiceState', v => { S.voice = v; if (S.view === 'server' && S.server) renderSide(); pushOverlay(); refreshHome(); });
+socket.on('voiceState', v => { S.voice = v; if (S.view === 'server' && S.server) renderSide(); pushOverlay(); refreshHome(); refreshRoomCards(); });
 if (!navigator.mediaDevices?.getDisplayMedia) $('#vscreen').style.display = 'none';
 
 // ================= Emoji seçici =================
