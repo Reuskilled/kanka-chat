@@ -2,7 +2,7 @@
 // Sohbeti kendi penceresinde açar, sistem tepsisinde yaşar, oyun ve Spotify'ı arka planda algılar.
 // Kurulum/kaldırma sırasında Squirrel kısayolları oluşturur ve hemen çıkar
 if (require('electron-squirrel-startup')) process.exit(0);
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell, dialog, Notification, autoUpdater, screen, globalShortcut } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell, dialog, Notification, autoUpdater, screen, globalShortcut, powerMonitor } = require('electron');
 const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -362,6 +362,10 @@ ipcMain.handle('kanka:overlayConfig', (e, p) => {
   return { ...config.overlay, game: currentGame, hotkey: 'Ctrl+Shift+O' };
 });
 ipcMain.handle('kanka:logout', () => { config.presenceKey = null; saveConfig(); return { ok: true }; });
+// Gerçek boşta süresi: Windows'un kendi sayacı (oyunda klavye/fare kullanmak da sayılır), ekran kilitliyse hemen boşta
+let screenLocked = false;
+ipcMain.handle('kanka:idle', () => { try { return screenLocked ? -1 : powerMonitor.getSystemIdleTime(); } catch { return null; } });
+app.whenReady().then(() => { try { powerMonitor.on('lock-screen', () => { screenLocked = true; }); powerMonitor.on('unlock-screen', () => { screenLocked = false; }); powerMonitor.on('suspend', () => { screenLocked = true; }); powerMonitor.on('resume', () => { screenLocked = false; }); } catch {} });
 ipcMain.on('kanka:badge', (e, n) => { if (win && process.platform === 'win32') win.setOverlayIcon(n ? nativeImage.createFromPath(path.join(__dirname, 'dot.png')) : null, n ? `${n} okunmamış` : ''); win?.flashFrame(!!n && !win.isFocused()); });
 
 app.whenReady().then(async () => {

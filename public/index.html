@@ -4156,12 +4156,22 @@ socket.on('myStatus', ({ st, until, expired }) => {
 socket.on('customStatus', ({ expired }) => { S.customUntil = null; if (expired) toast('Özel durumunun süresi doldu'); });
 document.addEventListener('click', e => { if (!e.target.closest('#statusmenu, #me-av')) $('#statusmenu')?.remove(); });
 // Otomatik "Boşta": 10 dakika hareket yoksa
+// Masaüstünde Windows'un kendi sayacı kullanılır: oyunda klavye/fare kullanmak da hareket sayılır, ekran kilitlenince hemen boşta.
+// Sesli odadayken boşa düşülmez (konuşuyor olabilirsin). Durum sadece gerçekten değişince sunucuya gider.
+const IDLE_MS = 10 * 60e3;
 let lastAct = Date.now(), idleSent = false;
-['mousemove', 'keydown', 'mousedown', 'touchstart', 'wheel'].forEach(ev => document.addEventListener(ev, () => {
-  lastAct = Date.now(); if (idleSent) { idleSent = false; socket.emit('idle', false); }
-}, { passive: true }));
-setInterval(() => { if (S.me && !idleSent && Date.now() - lastAct > 10 * 60e3) { idleSent = true; socket.emit('idle', true); } }, 30e3);
-socket.on('connect', () => { idleSent = false; });
+const setIdle = v => { if (v === idleSent || !S.me) return; idleSent = v; socket.emit('idle', v); };
+['mousemove', 'keydown', 'mousedown', 'touchstart', 'wheel'].forEach(ev => document.addEventListener(ev, () => { lastAct = Date.now(); if (idleSent) setIdle(false); }, { passive: true }));
+async function idleCheck() {
+  let idleFor = Date.now() - lastAct;
+  if (window.kankaDesktop?.idleTime) {
+    const t = await window.kankaDesktop.idleTime().catch(() => null);
+    if (t === -1) idleFor = Infinity; else if (typeof t === 'number' && t >= 0) idleFor = t * 1000; // Windows sayacı uygulamadaki hareketi de kapsar
+  }
+  setIdle(idleFor > IDLE_MS && !myVoice);
+}
+setInterval(idleCheck, 15e3);
+socket.on('connect', () => { idleSent = false; setTimeout(idleCheck, 2000); });
 function renderMe() {
   const u = S.users[S.me];
   { const h = av(S.me, true); if ($('#me-av').innerHTML !== h) $('#me-av').innerHTML = h; } // değişmediyse yeniden çizme (resim titremesin)
@@ -4174,7 +4184,9 @@ function setPresence(list) {
   S.status = new Map(pairs); S.online = new Set(pairs.map(p => p[0]));
   if (S.me && S.myStatus === 'invisible') S.online.add(S.me);
 }
+let presSig = '';
 socket.on('presence', list => {
+  const sig = JSON.stringify(list); if (sig === presSig && S.me) return; presSig = sig; // aynı durum tekrar geldiyse hiçbir şeyi yeniden çizme
   setPresence(list); renderMembers(); if (S.me) renderMe();
   if (S.view === 'dm' && !S.channel) showFriends();
   if (S.view === 'dm') { renderDMSide(); if (S.channel?.with) $('#subtitle').textContent = S.online.has(S.channel.with) ? STATUS[stOf(S.channel.with)][0] : 'Çevrimdışı'; }
