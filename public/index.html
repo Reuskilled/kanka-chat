@@ -2081,6 +2081,43 @@
   .lprev small { font-size: 11.5px; color: var(--muted); font-weight: 700; } .lprev b { font-size: 14.5px; color: #ffb37a; line-height: 1.35; }
   .lprev .lp-t > span { font-size: 13px; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   #messages .bubble .lprev img { width: 84px; height: 84px; margin: 0; object-fit: cover; border-radius: 8px; flex-shrink: 0; cursor: pointer; }
+  /* ---------- Ana sayfa ---------- */
+  .ftabs button .ic { width: 15px; height: 15px; margin-right: 5px; vertical-align: -2px; }
+  .flist.hm { padding: 0; }
+  .hm { display: flex; flex-direction: column; gap: 26px; padding: 20px 24px 32px; max-width: 980px; }
+  .hm-sec h5 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 12px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .hm-sec h5 .ic { width: 15px; height: 15px; color: var(--accent); } .hm-sec h5 .cnt { margin-left: 2px; }
+  .hm-sec h6 { margin: 18px 0 8px; font-size: 13px; font-weight: 800; color: var(--muted); }
+  .hm-rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  .hm-room { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: linear-gradient(135deg, rgba(63,207,142,.09), transparent 70%), var(--card); border: 1px solid rgba(63,207,142,.25); }
+  .hm-room.here { border-color: var(--accent); }
+  .hm-avs { display: flex; flex-shrink: 0; } .hm-avs .av { width: 34px; height: 34px; font-size: 13px; border: 3px solid var(--card); margin-left: -10px; } .hm-avs .av:first-child { margin-left: 0; }
+  .hm-avs .more { width: 34px; height: 34px; margin-left: -10px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: var(--panel); border: 3px solid var(--card); color: var(--muted); }
+  .hm-rt { display: flex; flex-direction: column; min-width: 0; flex: 1; } .hm-rt b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .hm-rt small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hm-join { width: auto !important; padding: 8px 16px !important; border-radius: 10px !important; flex-shrink: 0; }
+  .hm-here { font-size: 12px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+  .hm-list { display: flex; flex-direction: column; border-radius: 16px; background: var(--card); border: 1px solid var(--line); overflow: hidden; }
+  .hm-it { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; transition: background .12s; } .hm-it + .hm-it { border-top: 1px solid var(--line); }
+  .hm-it:hover { background: rgba(255,255,255,.03); }
+  .hm-it > .av { width: 36px; height: 36px; font-size: 14px; flex-shrink: 0; }
+  .hm-ic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0; background: rgba(255,138,76,.14); color: var(--accent); font-weight: 900; overflow: hidden; }
+  .hm-ic img { width: 100%; height: 100%; object-fit: cover; } .hm-ic .ic { width: 18px; height: 18px; } .hm-ic.req { background: rgba(63,207,142,.14); color: #3fcf8e; }
+  .hm-t { flex: 1; min-width: 0; font-size: 14px; color: var(--muted); display: flex; flex-direction: column; } .hm-t b { color: var(--ink); }
+  .hm-t small { font-size: 12px; color: var(--muted); margin-top: 1px; } .hm-t em { font-style: normal; font-size: 13px; color: var(--ink); opacity: .85; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hm-t { display: block; } .hm-t small, .hm-t em { display: block; }
+  .hm-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex-shrink: 0; } .hm-dot.at { width: auto; height: auto; padding: 2px 7px; border-radius: 8px; font-size: 12px; font-weight: 900; color: #fff; }
+  .hm-acts .btns2 { padding: 7px 14px; }
+  .hm-calm { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  .hm-calm .ic { width: 20px; height: 20px; color: #3fcf8e; } .hm-calm b { display: block; color: var(--ink); font-size: 14px; }
+  .hm-start { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .hm-card { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); text-align: left; transition: border-color .15s, transform .15s; }
+  .hm-card:hover { border-color: var(--accent); transform: translateY(-2px); } .hm-card .hm-ic { margin-bottom: 6px; } .hm-card b { font-size: 14.5px; color: var(--ink); } .hm-card small { font-size: 12.5px; color: var(--muted); }
+  .hm-know { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+  .hm-k { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .hm-k > .av { width: 34px; height: 34px; font-size: 13px; } .hm-k span { flex: 1; min-width: 0; display: flex; flex-direction: column; } .hm-k small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hm-k .btns2 { padding: 7px 12px; display: inline-flex; gap: 6px; align-items: center; } .hm-k .btns2 .ic { width: 14px; height: 14px; }
+  @media (max-width: 760px) { .hm { padding: 14px 12px 24px; } .hm-start { grid-template-columns: 1fr; }
+    .ftabs { flex-wrap: nowrap; overflow-x: auto; padding: 10px 12px; scrollbar-width: none; } .ftabs button { white-space: nowrap; flex-shrink: 0; } .ftabs .addf span { display: none; } .ftabs .addf { padding: 7px 10px; } }
 </style>
 </head>
 <body>
@@ -3245,16 +3282,17 @@ function selectChannel(id) {
 function openDMHome() {
   S.view = 'dm'; S.unreadDM = false;
   renderRail(); renderMembers();
-  showFriends(S.social.reqIn.length ? 'pending' : 'online');
+  showFriends('home');
 }
-let friendTab = 'online';
+let friendTab = 'home';
 function showFriends(tab = friendTab) {
   document.body.classList.remove('discover');
   document.body.classList.remove('vview'); renderPip();
   friendTab = tab;
   S.view = 'dm'; S.channel = null; renderRail(); renderDMSide(); renderMembers();
   setWatch(null);
-  setHeader(`${ic('users')} Arkadaşlar`, `${S.social.friends.length} arkadaş`, false);
+  if (tab === 'home') setHeader(`${ic('sparkle')} Ana sayfa`, `${S.social.friends.length} arkadaş · ${S.social.friends.filter(n => S.online.has(n)).length} çevrimiçi`, false);
+  else setHeader(`${ic('users')} Arkadaşlar`, `${S.social.friends.length} arkadaş`, false);
   $('#head-actions').innerHTML = '';
   $('#compose').style.display = 'none'; $('#typing').textContent = '';
   const sc = S.social, f = sc.friends;
@@ -3263,17 +3301,19 @@ function showFriends(tab = friendTab) {
   };
   const row = (n, extra, btns) => `<div class="frow" data-n="${esc(n)}">${av(n, S.online.has(n))}<div class="info"><b>${esc(n)}</b><small>${extra}</small></div>${btns}</div>`;
   let body;
+  if (tab === 'home') body = homeHTML();
   if (tab === 'pending') body = lists.pending.map(([d, n]) => row(n, d === 'in' ? 'Gelen arkadaşlık isteği' : 'Gönderilen istek',
     d === 'in' ? `<button data-acc="${esc(n)}" title="Kabul et" aria-label="Kabul et" style="color:var(--green)">${ic('check')}</button><button data-rem="${esc(n)}" title="Reddet" aria-label="Reddet" style="color:var(--red)">${ic('x')}</button>` : `<button data-rem="${esc(n)}" title="Geri çek" aria-label="İsteği geri çek">${ic('x')}</button>`)).join('');
   else if (tab === 'blocked') body = lists.blocked.map(n => row(n, 'Engellendi', `<button data-unb="${esc(n)}" title="Engeli kaldır" aria-label="Engeli kaldır">${ic('unlock')}</button>`)).join('');
-  else body = lists[tab].map(n => row(n, actLine(n) || esc(S.users[n]?.status || (S.online.has(n) ? 'Çevrimiçi' : 'Çevrimdışı')),
+  else if (tab !== 'home') body = lists[tab].map(n => row(n, actLine(n) || esc(S.users[n]?.status || (S.online.has(n) ? 'Çevrimiçi' : 'Çevrimdışı')),
     `<button data-dm="${esc(n)}" title="Mesaj" aria-label="Mesaj gönder">${ic('chat')}</button><button data-rem="${esc(n)}" title="Arkadaşlıktan çıkar" aria-label="Arkadaşlıktan çıkar">${ic('x')}</button>`)).join('');
   const empty = { online: 'Şu an çevrimiçi arkadaşın yok.', all: 'Henüz arkadaşın yok. Sağ üstten arkadaş ekle!', pending: 'Bekleyen istek yok.', blocked: 'Kimseyi engellemedin.' }[tab];
   $('#messages').innerHTML = `<div class="ftabs">
-      <button class="${tab === 'online' ? 'on' : ''}" data-ft="online">Çevrimiçi</button><button class="${tab === 'all' ? 'on' : ''}" data-ft="all">Tümü</button>
+      <button class="${tab === 'home' ? 'on' : ''}" data-ft="home">${ic('sparkle')}Ana sayfa</button><button class="${tab === 'online' ? 'on' : ''}" data-ft="online">Çevrimiçi</button><button class="${tab === 'all' ? 'on' : ''}" data-ft="all">Tümü</button>
       <button class="${tab === 'pending' ? 'on' : ''}" data-ft="pending">Bekleyen${sc.reqIn.length ? `<span class="cnt">${sc.reqIn.length}</span>` : ''}</button><button class="${tab === 'blocked' ? 'on' : ''}" data-ft="blocked">Engellenen</button>
       <button class="addf" id="add-friend">${ic('userplus')}<span>Arkadaş ekle</span></button></div>
-    <div class="flist">${body || `<div class="empty" style="padding:40px 0"><div class="big">${ic('users')}</div>${empty}</div>`}</div>`;
+    <div class="flist ${tab === 'home' ? 'hm' : ''}">${body || `<div class="empty" style="padding:40px 0"><div class="big">${ic('users')}</div>${empty}</div>`}</div>`;
+  if (tab === 'home') wireHome();
   $('#messages').querySelectorAll('[data-ft]').forEach(b => b.onclick = () => showFriends(b.dataset.ft));
   $('#messages').querySelectorAll('[data-acc]').forEach(b => b.onclick = () => socket.emit('friendAccept', b.dataset.acc, r => r.error ? toast(r.error) : toast('Artık arkadaşsınız')));
   $('#messages').querySelectorAll('[data-rem]').forEach(b => b.onclick = () => socket.emit('friendRemove', b.dataset.rem, r => r.error && toast(r.error)));
@@ -3285,6 +3325,57 @@ function showFriends(tab = friendTab) {
     socket.emit('friendRequest', n, r => r.error ? toast(r.error) : toast(r.accepted ? 'Artık arkadaşsınız' : 'İstek gönderildi'));
   });
 }
+// ================= Ana sayfa: şu an seste olanlar, seni bekleyenler, hızlı başlangıç =================
+const MENT_KEY = 'kanka-mentions';
+const mentionsAll = () => { try { return JSON.parse(store.get(MENT_KEY) || '[]'); } catch { return []; } };
+function rememberMention(n) { const l = mentionsAll().filter(x => !(x.channelId === n.channelId && x.text === n.text)); l.unshift({ from: n.from, text: String(n.text || '').slice(0, 140), channelId: n.channelId, where: n.where, t: Date.now() }); store.set(MENT_KEY, JSON.stringify(l.slice(0, 20))); }
+const pendingMentions = () => mentionsAll().filter(x => x.t > (lastRead[x.channelId] || 0) && S.servers.some(s => s.channels.some(c => c.id === x.channelId)));
+function homeHTML() {
+  const sc = S.social, fr = new Set(sc.friends);
+  // 1) Şu an seste olanlar
+  const rooms = [];
+  for (const sv of S.servers) for (const c of sv.channels) { const who = S.voice?.[c.id]; if (who?.length && voiceLike(c.type)) rooms.push({ sv, c, who, f: who.filter(n => fr.has(n)).length }); }
+  rooms.sort((a, b) => b.f - a.f || b.who.length - a.who.length);
+  const voiceSec = rooms.length ? `<section class="hm-sec"><h5>${ic('mic')}Şu an seste</h5><div class="hm-rooms">${rooms.slice(0, 6).map(r => {
+    const here = myVoice === r.c.id, names = r.who.map(dn);
+    return `<div class="hm-room ${here ? 'here' : ''}"><div class="hm-avs">${r.who.slice(0, 4).map(n => av(n)).join('')}${r.who.length > 4 ? `<span class="more">+${r.who.length - 4}</span>` : ''}</div>
+      <div class="hm-rt"><b>${esc(names.slice(0, 2).join(', '))}${names.length > 2 ? ` ve ${names.length - 2} kişi` : ''}</b><small>${esc(r.sv.name)} › ${esc(r.c.name)}</small></div>
+      ${here ? '<span class="hm-here">Buradasın</span>' : `<button class="primary hm-join" data-jv="${r.c.id}" data-sv="${r.sv.id}">Katıl</button>`}</div>`; }).join('')}</div></section>` : '';
+  // 2) Seni bekleyenler
+  const items = [];
+  for (const n of sc.reqIn) items.push(`<div class="hm-it" data-go="friends"><span class="hm-ic req">${ic('userplus')}</span><span class="hm-t"><b>${esc(dn(n))}</b> sana arkadaşlık isteği gönderdi</span><span class="hm-acts"><button class="btns2" data-acc="${esc(n)}">Kabul et</button></span></div>`);
+  for (const d of S.dms.filter(d => S.unread.has(d.id)).slice(0, 6)) { const who = d.group ? groupName(d) : dn(d.with); items.push(`<div class="hm-it" data-chat="${esc(d.id)}" data-with="${esc(d.with || '')}">${d.group ? `<span class="hm-ic grp">${ic('users')}</span>` : av(d.with)}<span class="hm-t"><b>${esc(who)}</b> sana yazdı<small>${ago(d.last)}</small></span><span class="hm-dot"></span></div>`); }
+  for (const m of pendingMentions().slice(0, 6)) items.push(`<div class="hm-it" data-mch="${esc(m.channelId)}">${av(m.from)}<span class="hm-t"><b>${esc(dn(m.from))}</b> seni etiketledi<small>${esc(m.where)} · ${ago(m.t)}</small><em>${esc(m.text)}</em></span><span class="hm-dot at">@</span></div>`);
+  const unreadRooms = S.servers.map(sv => ({ sv, chs: sv.channels.filter(c => S.unread.has(c.id) && !voiceLike(c.type) && notifMode(c.id) !== 'none') })).filter(x => x.chs.length && !mutedServers.has(x.sv.id));
+  for (const x of unreadRooms.slice(0, 4)) items.push(`<div class="hm-it" data-usv="${x.sv.id}" data-uch="${x.chs[0].id}"><span class="hm-ic srv">${x.sv.iconImg ? `<img src="${esc(x.sv.iconImg)}" alt="">` : esc(x.sv.icon || x.sv.name[0])}</span><span class="hm-t"><b>${esc(x.sv.name)}</b> · yeni mesajlar<small>${x.chs.slice(0, 4).map(c => '#' + esc(c.name)).join(' ')}${x.chs.length > 4 ? ` +${x.chs.length - 4}` : ''}</small></span><span class="hm-dot"></span></div>`);
+  const waitSec = `<section class="hm-sec"><h5>${ic('bell')}Seni bekleyenler${items.length ? `<span class="cnt">${items.length}</span>` : ''}</h5>${items.length ? `<div class="hm-list">${items.join('')}</div>` : `<div class="hm-calm">${ic('check')}<span><b>Her şeyi gördün</b>Yeni mesaj, etiket ya da istek yok.</span></div>`}</section>`;
+  // 5) Hızlı başlangıç: arkadaşı az olanlar için
+  let startSec = '';
+  if (sc.friends.length < 3) {
+    const skip = new Set([S.me, ...sc.friends, ...sc.reqOut, ...sc.reqIn, ...sc.blocked]), seen = new Map();
+    for (const sv of S.servers) if (!sv.public) for (const n of sv.members || []) if (!skip.has(n) && S.users[n]) { const e = seen.get(n) || { n, srv: [] }; e.srv.push(sv.name); seen.set(n, e); }
+    const know = [...seen.values()].sort((a, b) => (S.online.has(b.n) - S.online.has(a.n)) || b.srv.length - a.srv.length).slice(0, 6);
+    startSec = `<section class="hm-sec"><h5>${ic('sparkle')}Kanka'yı birlikte kullan</h5><div class="hm-start">
+      <button class="hm-card" data-q="invite"><span class="hm-ic">${ic('link')}</span><b>Arkadaşını davet et</b><small>Linki at, tek tıkla katılsın</small></button>
+      <button class="hm-card" data-q="create"><span class="hm-ic">${ic('plus')}</span><b>Sunucu kur</b><small>Arkadaş grubun için hazır şablonlar</small></button>
+      <button class="hm-card" data-q="discover"><span class="hm-ic">${ic('compass')}</span><b>Keşfet</b><small>Herkese açık topluluklar</small></button></div>
+      ${know.length ? `<h6>Tanıyor olabileceklerin</h6><div class="hm-know">${know.map(k => `<div class="hm-k">${av(k.n, S.online.has(k.n))}<span><b>${esc(dn(k.n))}</b><small>${esc(k.srv.slice(0, 2).join(', '))}</small></span><button class="btns2" data-addf="${esc(k.n)}">${ic('userplus')}Ekle</button></div>`).join('')}</div>` : ''}</section>`;
+  }
+  return `<div class="hm">${voiceSec}${waitSec}${startSec}</div>`;
+}
+function wireHome() {
+  const M = $('#messages');
+  M.querySelectorAll('[data-jv]').forEach(b => b.onclick = e => { e.stopPropagation(); selectServer(b.dataset.sv); setTimeout(() => joinVoice(b.dataset.jv), 150); });
+  M.querySelectorAll('[data-chat]').forEach(r => r.onclick = () => openChat(r.dataset.chat, r.dataset.with || undefined));
+  M.querySelectorAll('[data-mch]').forEach(r => r.onclick = () => { const s = S.servers.find(s => s.channels.some(c => c.id === r.dataset.mch)); if (s) selectServer(s.id, r.dataset.mch); });
+  M.querySelectorAll('[data-usv]').forEach(r => r.onclick = () => selectServer(r.dataset.usv, r.dataset.uch));
+  M.querySelectorAll('[data-go="friends"]').forEach(r => r.onclick = e => { if (!e.target.closest('button')) showFriends('pending'); });
+  M.querySelectorAll('[data-addf]').forEach(b => b.onclick = () => socket.emit('friendRequest', b.dataset.addf, r => { if (r.error) return toast(r.error); toast(r.accepted ? 'Artık arkadaşsınız' : 'İstek gönderildi'); b.disabled = true; b.innerHTML = `${ic('check')}Gönderildi`; }));
+  M.querySelectorAll('[data-q]').forEach(b => b.onclick = () => ({ invite: () => showInvite(hqServer()), create: () => showTemplates(), discover: () => showDiscover() })[b.dataset.q]());
+}
+const homeOpen = () => S.view === 'dm' && !S.channel && friendTab === 'home' && $('#messages .hm');
+let homeT = null;
+const refreshHome = () => { clearTimeout(homeT); homeT = setTimeout(() => { if (homeOpen()) { const st = $('#messages').scrollTop; showFriends('home'); $('#messages').scrollTop = st; } }, 250); };
 function openDM(name) {
   if (name === S.me) return;
   socket.emit('openDM', name, r => {
@@ -3425,7 +3516,7 @@ function jumpTo(id) {
 const lastRead = JSON.parse(store.get('kanka-read') || '{}');
 const readSent = {};
 const markRead = id => { lastRead[id] = Date.now(); store.set('kanka-read', JSON.stringify(lastRead)); clearTimeout(readSent[id]); readSent[id] = setTimeout(() => { delete readSent[id]; socket.emit('read', id); }, 700); };
-socket.on('readSync', ({ id, t }) => { lastRead[id] = Math.max(lastRead[id] || 0, t); store.set('kanka-read', JSON.stringify(lastRead)); if (S.unread.delete(id)) { if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; for (const sv of S.servers) if (!sv.channels.some(c => S.unread.has(c.id))) S.unreadServers.delete(sv.id); renderRail(); if (S.view === 'server') renderSide(); else if (S.view === 'dm') renderDMSide?.(); } });
+socket.on('readSync', ({ id, t }) => { lastRead[id] = Math.max(lastRead[id] || 0, t); store.set('kanka-read', JSON.stringify(lastRead)); if (S.unread.delete(id)) { if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; for (const sv of S.servers) if (!sv.channels.some(c => S.unread.has(c.id))) S.unreadServers.delete(sv.id); renderRail(); if (S.view === 'server') renderSide(); else if (S.view === 'dm') renderDMSide?.(); refreshHome(); } });
 // Bildirim tercihleri hesapta: bir cihazda değişince hepsinde geçerli, telefon bildirimi de uyar
 const prefsNow = () => ({ notif: notifOn(), muted: [...mutedServers], ch: Object.fromEntries(Object.entries(chNotif()).filter(([, v]) => v === 'all' || v === 'none')) });
 let prefsT = null;
@@ -4381,10 +4472,11 @@ socket.on('chanActivity', ({ channelId, serverId }) => {
   if (nmode === 'all' && !isDnd() && !mutedServers.has(serverId)) playSound('msg');
   S.unread.add(channelId);
   if ((S.view !== 'server' || S.server?.id !== serverId) && !mutedServers.has(serverId)) S.unreadServers.add(serverId);
-  renderRail(); if (S.view === 'server') renderSide();
+  renderRail(); if (S.view === 'server') renderSide(); refreshHome();
 });
 socket.on('notify', n => {
   if (n.channelId === S.channel?.id && document.hasFocus()) return;
+  if (n.mention && !n.dm && n.channelId) { rememberMention(n); refreshHome(); } else if (n.dm || n.friend) refreshHome();
   if (!n.dm && n.channelId && notifMode(n.channelId) === 'none') return;
   if (!notifOn() || isDnd()) { if (n.dm) { S.unread.add(n.channelId); if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); } return; }
   if (n.dm) { S.unread.add(n.channelId); if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); }
@@ -5099,7 +5191,7 @@ function renderStage() {
     }, 1000);
   } else if (!watching && stageStats) { clearInterval(stageStats); stageStats = null; }
 }
-socket.on('voiceState', v => { S.voice = v; if (S.view === 'server' && S.server) renderSide(); pushOverlay(); });
+socket.on('voiceState', v => { S.voice = v; if (S.view === 'server' && S.server) renderSide(); pushOverlay(); refreshHome(); });
 if (!navigator.mediaDevices?.getDisplayMedia) $('#vscreen').style.display = 'none';
 
 // ================= Emoji seçici =================
