@@ -2025,6 +2025,10 @@
     #messages .row .tools { right: 8px; }
     #messages .row .col { max-width: none; }
   }
+  .pf-matches .pm-sum { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 13px; color: var(--muted); font-weight: 700; flex-wrap: wrap; }
+  .pf-matches .pm-dots { display: flex; gap: 4px; } .pf-matches .pm-dots i { width: 10px; height: 22px; border-radius: 4px; background: #a99a8f; }
+  .pf-matches .pm-dots i.r-win { background: #3fcf8e; } .pf-matches .pm-dots i.r-loss { background: #ff5a5f; }
+  .pf-matches b.w { color: #3fcf8e; } .pf-matches b.l { color: #ff6b6f; }
 </style>
 </head>
 <body>
@@ -3821,11 +3825,19 @@ function matchCardHTML(m) {
     <div class="mc-ps">${players}</div>
     <div class="mc-quick">${quick}<span class="mc-gg">${g.result === 'win' ? 'Tebrik et' : g.result === 'loss' ? 'Moral ver' : 'Tepki ver'}</span></div></div>`;
 }
-function matchListHTML(list) {
+function matchAboutHTML(list) {
   if (!list?.length) return '';
-  return `<div class="pc-sec"><h5>Son maçlar</h5><div class="mlist">${list.map(x => `<div class="ml r-${x.result}">${x.img ? `<img src="${esc(x.img)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(${esc(JSON.stringify(gameArt(x.game, 'sm')))}))">` : gameArt(x.game, 'sm')}
+  const w = list.filter(x => x.result === 'win').length, l = list.filter(x => x.result === 'loss').length;
+  return `<section class="pf-matches"><h5>Son maçlar</h5>
+    <div class="pm-sum"><div class="pm-dots">${list.slice(0, 10).map(x => `<i class="r-${x.result}" title="${esc((x.champ || x.map || x.game) + ' · ' + RES_TXT[x.result])}"></i>`).join('')}</div>
+      <span><b class="w">${w}G</b> · <b class="l">${l}M</b>${w + l ? ` · %${Math.round(w / (w + l) * 100)} kazanma` : ''}</span></div>
+    ${matchListHTML(list.slice(0, 3), true)}</section>`;
+}
+function matchListHTML(list, bare) {
+  if (!list?.length) return '';
+  return `${bare ? '' : '<div class="pc-sec"><h5>Son maçlar</h5>'}<div class="mlist">${list.map(x => `<div class="ml r-${x.result}">${x.img ? `<img src="${esc(x.img)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(${esc(JSON.stringify(gameArt(x.game, 'sm')))}))">` : gameArt(x.game, 'sm')}
     <span><b>${esc(x.champ || x.map || x.game)}</b><small>${esc([x.mode, ago(x.time)].filter(Boolean).join(' · '))}</small></span>
-    <span class="ml-k">${x.score ? `${x.score[0]}:${x.score[1]}` : x.kda ? x.kda.join('/') : ''}</span><em>${RES_TXT[x.result]}</em></div>`).join('')}</div></div>`;
+    <span class="ml-k">${x.score ? `${x.score[0]}:${x.score[1]}` : x.kda ? x.kda.join('/') : ''}</span><em>${RES_TXT[x.result]}</em></div>`).join('')}</div>${bare ? '' : '</div>'}`;
 }
 function actCards(u) {
   const a = u?.activities; if (!a) return '';
@@ -3976,7 +3988,7 @@ function showProfile(n, tab = 'about') {
     $('#pf-tabs').innerHTML = tabs().map(([k, t]) => `<button class="${k === tab ? 'on' : ''}" data-pt="${k}">${t}</button>`).join('');
     $('#pf-tabs').querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { tab = b.dataset.pt; draw(); });
     const B = $('#pf-body');
-    if (tab === 'about') { B.innerHTML = profAboutHTML(n, u); if (me) socket.emit('badgeProgress', pr => { window._bprog = pr; const el = $('#pf-badges-sec'); if (el && profileOpen === n) el.innerHTML = badgeGrid(n, u, pr); }); }
+    if (tab === 'about') { B.innerHTML = profAboutHTML(n, u); if (mut?.matches?.length) B.querySelector('.pf-grid')?.insertAdjacentHTML('beforebegin', matchAboutHTML(mut.matches)); if (me) socket.emit('badgeProgress', pr => { window._bprog = pr; const el = $('#pf-badges-sec'); if (el && profileOpen === n) el.innerHTML = badgeGrid(n, u, pr); }); }
     if (tab === 'act') B.innerHTML = (actCards(u) || `<div class="pf-empty">${ic('activity')}<b>Şu an bir şey yapmıyor</b><span>Oyun oynarken ya da Spotify dinlerken burada görünür.</span></div>`) + matchListHTML(mut?.matches);
     if (tab === 'servers') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.servers.length ? `<div class="pf-list">${mut.servers.map(s => `<button data-gs="${s.id}"><span class="pl-ic">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</span><span><b>${esc(s.name)}</b><small>${s.joined ? ago2(s.joined) + 'dır üye' : 'Ortak sunucu'}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('grid')}<b>Ortak sunucunuz yok</b><span>Onu bir sunucuna davet et.</span></div>`;
     if (tab === 'friends') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.friends.length ? `<div class="pf-list">${mut.friends.map(f => `<button data-gf="${esc(f)}">${av(f, S.online.has(f))}<span><b>${esc(dn(f))}</b><small>@${esc(f)}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('users')}<b>Ortak arkadaşınız yok</b><span>Arkadaş olunca burada görünür.</span></div>`;
@@ -6188,11 +6200,11 @@ function wireActPage() {
   const mc = (set) => socket.emit('matchShare', set || null, r => {
     const el = $('#ax-mc'); if (!el || !r) return;
     const opt = (v, t) => `<option value="${esc(v)}" ${r.to === v ? 'selected' : ''}>${esc(t)}</option>`;
-    el.innerHTML = `<div class="mc-set"><div class="mc-ic">${ic('trophy')}</div><div class="mc-st"><b>Maç sonu kartı</b><span>LoL, Valorant ya da CS2 maçın bitince sonucun, KDA'n ve derece değişimin kendiliğinden kart olarak paylaşılır. Aynı maçtaki kankalar tek kartta toplanır.</span>
-      <select id="mc-to" ${r.on ? '' : 'disabled'}>${opt('voice', 'Seste olduğum sunucunun oyun odasına')}${r.chans.map(c => opt(c.id, `${c.server} › #${c.name}`)).join('')}${opt('profile', 'Sadece profilimde göster')}</select></div>
+    el.innerHTML = `<div class="mc-set"><div class="mc-ic">${ic('trophy')}</div><div class="mc-st"><b>Maç sonu kartı</b><span>LoL, Valorant ya da CS2 maçın bitince sonucun, KDA'n ve derece değişimin kendiliğinden profiline eklenir. İstersen bir odaya da kart olarak düşsün; aynı maçtaki kankalar tek kartta toplanır.</span>
+      <select id="mc-to" ${r.on ? '' : 'disabled'}>${opt('profile', 'Profilimde göster (önerilen)')}${opt('voice', 'Profilimde + seste olduğum sunucunun oyun odasında')}${r.chans.map(c => opt(c.id, `Profilimde + ${c.server} › #${c.name}`)).join('')}</select></div>
       <label class="tgl"><input type="checkbox" id="mc-on" ${r.on ? 'checked' : ''}><i></i></label></div>`;
     $('#mc-on').onchange = e => mc({ on: e.target.checked, to: $('#mc-to').value });
-    $('#mc-to').onchange = e => { mc({ on: true, to: e.target.value }); toast('Maç kartları artık ' + (e.target.value === 'profile' ? 'sadece profilinde' : 'seçtiğin yerde') + ' görünecek'); };
+    $('#mc-to').onchange = e => { mc({ on: true, to: e.target.value }); toast('Maç kartları artık ' + (e.target.value === 'profile' ? 'sadece profilinde' : 'profilinde ve seçtiğin odada') + ' görünecek'); };
   });
   mc();
   socket.emit('presenceKey', {}, r => { const e = $('#kd-st'); if (!e) return; e.textContent = r.connected ? 'Bağlı' : window.kankaDesktop ? 'Bağlanıyor…' : 'Kurulu değil'; e.className = 'st ' + (r.connected ? 'on' : 'off');

@@ -110,7 +110,7 @@ function cleanMatch(m) {
 const voiceRoomOf = n => { for (const [ch, room] of voice) if (!ch.startsWith('call:') && [...room.values()].includes(n)) return ch; return null; };
 // Kart nereye düşsün: ayardaki oda, yoksa şu an seste olduğu sunucunun oyun odası (adında oyun/maç geçen), yoksa ilk yazılı oda
 function matchTarget(u) {
-  const to = u.matchShare?.to || 'voice';
+  const to = u.matchShare?.to || 'profile'; // varsayılan: sadece profilde
   if (to === 'profile') return null;
   const ok = (sv, c) => sv && c && c.type === 'text' && !c.news && (sv.public || sv.members.includes(u.name)) && !sv.bans?.[u.name] && chPerm(sv, c, u.name, 'send');
   if (to !== 'voice') { const f = findChannel(to); return f && ok(f.s, f.c) ? f.c.id : null; }
@@ -1426,7 +1426,7 @@ io.on('connection', socket => {
       u.matchShare = { on: p.on !== false, to }; save();
     }
     const chans = serversFor(me).filter(sv => !sv.public).flatMap(sv => sv.channels.filter(c => c.type === 'text' && !c.news && chPerm(sv, c, me, 'send')).map(c => ({ id: c.id, name: c.name, server: sv.name })));
-    cb({ on: u.matchShare?.on !== false, to: u.matchShare?.to || 'voice', chans, last: (u.matches || []).slice(0, 5) });
+    cb({ on: u.matchShare?.on !== false, to: u.matchShare?.to || 'profile', chans, last: (u.matches || []).slice(0, 5) });
   });
   socket.on('badgeProgress', (cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({});
