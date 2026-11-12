@@ -1982,6 +1982,51 @@
   .mc-set .tgl i { display: block; width: 42px; height: 24px; border-radius: 99px; background: rgba(255,255,255,.15); position: relative; transition: background .2s; cursor: pointer; }
   .mc-set .tgl i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
   .mc-set .tgl input:checked + i { background: #3fcf8e; } .mc-set .tgl input:checked + i::after { transform: translateX(18px); }
+  /* ---------- Sohbet 2.0: herkes solda, baloncuksuz ---------- */
+  #messages { padding: 8px 0 18px; gap: 0; }
+  #messages .row { justify-content: flex-start; padding: 2px 56px 2px 76px; margin-top: 0; border-radius: 0; transition: background .1s; }
+  #messages .row:not(.cont) { margin-top: 16px; padding-top: 4px; }
+  #messages .row > .av { position: absolute; left: 24px; top: 6px; width: 40px; height: 40px; margin: 0; display: flex; font-size: 15px; }
+  #messages .row.cont > .av { display: none; }
+  #messages .row.reply:not(.cont) > .av { top: 28px; }
+  #messages .row .col { align-items: stretch; max-width: none; flex: 1; margin: 0; min-width: 0; }
+  #messages .row:hover, #messages .row.hl { background: rgba(255,255,255,.03); border-radius: 0; }
+  #messages .row.own:hover { background: rgba(255,138,76,.04); }
+  #messages .who { margin: 0 0 3px; gap: 8px; align-items: center; font-size: 15px; }
+  #messages .who .wname { font-weight: 800; }
+  #messages .who .t { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+  #messages .bubble { background: none; color: var(--ink); padding: 0; border-radius: 0; font-size: 15px; line-height: 1.5; filter: none; align-self: stretch; }
+  #messages .bubble a { color: #ffb37a; }
+  #messages .bubble .mention { background: rgba(255,179,71,.16); color: var(--accent-2); }
+  #messages .bubble img { margin: 6px 0 2px; max-width: min(440px, 100%); max-height: 340px; width: auto; border-radius: 12px; }
+  #messages .bubble.only-img { padding: 0; } #messages .bubble.only-img img { margin: 4px 0 2px; }
+  #messages .bubble.jumbo { padding: 0; }
+  #messages .bubble .yt { display: block; max-width: 400px; margin-top: 6px; }
+  #messages .edtag { font-size: 11px; color: var(--muted); margin-left: 6px; font-weight: 600; }
+  #messages .row .kcard, #messages .row .mtch, #messages .row .vmsg { align-self: flex-start; }
+  #messages .row .vmsg { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 8px 12px 8px 8px; max-width: 360px; margin-top: 2px; }
+  #messages .row .vmsg .play { background: var(--accent); color: #fff; }
+  #messages .row .reacts { margin-top: 6px; }
+  .gtime { display: none; }
+  #messages .row.cont .gtime { display: block; position: absolute; left: 20px; width: 48px; top: 5px; text-align: center; font-size: 10.5px; font-weight: 600; color: var(--muted); opacity: 0; transition: opacity .1s; pointer-events: none; }
+  #messages .row.cont:hover .gtime, #messages .row.cont.hl .gtime { opacity: 1; }
+  #messages .row .tools { left: auto; right: 18px; top: -16px; }
+  #messages .rref { margin: 0 0 4px; }
+  #messages .row .rref::before { content: ''; position: absolute; left: -32px; top: 9px; width: 24px; height: 12px; border-left: 2px solid #5c463a; border-top: 2px solid #5c463a; border-top-left-radius: 8px; }
+  #messages .row .rref::after { display: none; }
+  #messages .row.flash { animation: rowFlash 1.6s ease-out; } #messages .row.flash .bubble { animation: none; }
+  @keyframes rowFlash { 0%, 35% { background: rgba(255,179,71,.14); } 100% { background: transparent; } }
+  #messages .row.mentioned, #messages .row:has(.mention.me) { background: rgba(255,179,71,.07); box-shadow: inset 3px 0 0 var(--accent-2); }
+  #messages .day { margin: 22px 24px 4px; }
+  #messages .sys, #messages .bday, #messages .daily { margin-left: 24px; margin-right: 24px; }
+  body.light #messages .bubble { color: var(--ink); }
+  @media (max-width: 760px) {
+    #messages .row { padding: 2px 14px 2px 60px; }
+    #messages .row > .av { left: 12px; width: 36px; height: 36px; }
+    #messages .row.cont .gtime { left: 8px; }
+    #messages .row .tools { right: 8px; }
+    #messages .row .col { max-width: none; }
+  }
 </style>
 </head>
 <body>
@@ -2238,7 +2283,7 @@ function fmt(t) {
     .replace(/```(?:\w+\n)?([\s\S]+?)```/g, (_, c) => `\u0000${codes.push(`<pre><code>${c.replace(/^\n/, '')}</code></pre>`) - 1}\u0000`)
     .replace(/`([^`\n]+)`/g, (_, c) => `\u0000${codes.push(`<code>${c}</code>`) - 1}\u0000`);
   h = h.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
-    .replace(/@([\p{L}\p{N}_.-]+)/gu, (m, n) => S.users[n] || /^(everyone|herkes)$/i.test(n) ? `<span class="mention">@${n}</span>` : (S.server?.customRoles || []).find(r => r.name === n) ? `<span class="mention" style="color:${(S.server.customRoles.find(r => r.name === n)).color}">@${n}</span>` : m)
+    .replace(/@([\p{L}\p{N}_.-]+)/gu, (m, n) => S.users[n] || /^(everyone|herkes)$/i.test(n) ? `<span class="mention${n === S.me || /^(everyone|herkes)$/i.test(n) ? ' me' : ''}">@${n}</span>` : (S.server?.customRoles || []).find(r => r.name === n) ? `<span class="mention" style="color:${(S.server.customRoles.find(r => r.name === n)).color}">@${n}</span>` : m)
     .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
     .replace(/(^|[^*\w])\*([^*\n]+)\*(?!\w)/g, '$1<i>$2</i>')
     .replace(/(^|[^_\w])_([^_\n]+)_(?!\w)/g, '$1<i>$2</i>')
@@ -3370,6 +3415,7 @@ function renderMessages(toBottom) {
   if (quiet) wireEmpty(box);
   if (atBottom) box.scrollTop = box.scrollHeight;
 }
+const whenTxt = t => { const d = new Date(t), n = new Date(), y = new Date(n - 864e5); return d.toDateString() === n.toDateString() ? hm(t) : d.toDateString() === y.toDateString() ? 'Dün ' + hm(t) : d.toLocaleDateString('tr-TR') + ' ' + hm(t); };
 function msgHTML(m, prev) {
   const newDay = !prev || new Date(prev.time).toDateString() !== new Date(m.time).toDateString();
   const day = newDay ? `<div class="day">${dayLabel(m.time)}</div>` : '';
@@ -3411,7 +3457,7 @@ function msgHTML(m, prev) {
   } else {
     const onlyImg = m.image && !m.text && !m.replyTo;
     const jumbo = !m.image && !m.audio && m.text && isJumbo(m.text);
-    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" data-view>` : ''}${m.text ? fmt(m.text) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${onlyImg || jumbo ? '' : stamp}</div>`;
+    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" data-view>` : ''}${m.text ? fmt(m.text) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
   }
   if (m.thread?.length) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
@@ -3420,8 +3466,8 @@ function msgHTML(m, prev) {
   const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) =>
     `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}" title="${esc(us.join(', '))}">${e}<span>${us.length}</span></button>`).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
-  return day + `<div class="row ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}
-    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!mine && !cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.kind === 'text' ? '' : hm(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+  return day + `<div class="row ${mine ? 'own' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}<span class="gtime">${hm(m.time)}</span>
+    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 let pop = null;
