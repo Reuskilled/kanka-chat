@@ -16,12 +16,30 @@ function local(port, p, auth, timeout = 1500) {
     req.on('error', () => res(null)); req.on('timeout', () => { req.destroy(); res(null); }); req.end();
   });
 }
+// Biten maçlar burada birikir; main.js sunucuya gönderince siler (maç sonu kartı)
+const matches = [], sentKeys = new Set();
+function pushMatch(m) {
+  if (!m?.key || sentKeys.has(m.key)) return;
+  sentKeys.add(m.key); if (sentKeys.size > 50) sentKeys.delete(sentKeys.values().next().value);
+  matches.push({ ...m, at: Date.now() }); if (matches.length > 5) matches.shift();
+}
 const getJSON = async (url, ms = 6000) => { try { const r = await fetch(url, { signal: AbortSignal.timeout(ms) }); return r.ok ? r.json() : null; } catch { return null; } };
 
 // ---------------- League of Legends ----------------
 const LOL_TIER = { IRON: 'Demir', BRONZE: 'Bronz', SILVER: 'Gümüş', GOLD: 'Altın', PLATINUM: 'Platin', EMERALD: 'Zümrüt', DIAMOND: 'Elmas', MASTER: 'Ustalık', GRANDMASTER: 'Büyük Ustalık', CHALLENGER: 'Şampiyonluk' };
 const LOL_PHASE = { Lobby: 'Lobide', Matchmaking: 'Maç arıyor', ReadyCheck: 'Maç bulundu', ChampSelect: 'Şampiyon seçiyor', GameStart: 'Maç yükleniyor', InProgress: 'Maçta', Reconnect: 'Maça dönüyor', WaitingForStats: 'Maç bitti', PreEndOfGame: 'Maç bitti', EndOfGame: 'Maç bitti' };
 let ddTry = 0, lcu = null, champs = null, ddVer = null, lolStart = null, lolPhaseWas = null;
+let lolGame = null, lolPend = null; // maç sürerken son bilinen durum / maç bitti, derece güncellemesi bekleniyor
+const qKey = q => q ? `${q.tier}|${q.division}|${q.leaguePoints}|${q.wins}|${q.losses}` : '';
+function lolRankChange(a, b) {
+  if (!a || !b || !LOL_TIER[b.tier]) return null;
+  const before = rankText(a), after = rankText(b);
+  if (!LOL_TIER[a.tier]) return { after, dir: 'up', text: 'Yerleşti' };
+  const same = a.tier === b.tier && a.division === b.division;
+  if (same) { const d = (b.leaguePoints ?? 0) - (a.leaguePoints ?? 0); return d ? { before, after, delta: d, dir: d > 0 ? 'up' : 'down' } : null; }
+  const order = Object.keys(LOL_TIER), DIV = ['IV', 'III', 'II', 'I'], val = q => order.indexOf(q.tier) * 4 + Math.max(0, DIV.indexOf(q.division));
+  return { before, after, dir: val(b) > val(a) ? 'up' : 'down', text: val(b) > val(a) ? 'Terfi etti' : 'Düştü' };
+}
 const rankText = q => q && LOL_TIER[q.tier] ? `${LOL_TIER[q.tier]}${['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(q.tier) ? '' : ' ' + (q.division || '')} · ${q.leaguePoints ?? 0} LP`.replace('  ', ' ') : null;
 async function champImg(alias) {
   if (!alias) return null;
@@ -73,6 +91,42 @@ async function lolRich(getCmdline) {
   }
   if (champ) { out.champ = champ.name; out.img = await champImg(champ.alias); }
   out.start = lolStart;
+  // ---- Maç sonu kartı ----
+  if (['InProgress', 'Reconnect'].includes(phase) && sess?.gameData?.gameId) {
+    const g = (lolGame?.id === sess.gameData.gameId ? lolGame : null) || { id: sess.gameData.gameId, rankQ: queue.type, rankBefore: thisQ || null, start: Date.now() };
+    Object.assign(g, { mode: out.mode, ranked: out.ranked, champ: out.champ || g.champ, img: out.img || g.img, kda: out.kda || g.kda, level: out.level || g.level });
+    lolGame = g;
+  }
+  if (['WaitingForStats', 'PreEndOfGame', 'EndOfGame'].includes(phase) && lolGame && !lolPend) {
+    const eog = await q('/lol-end-of-game/v1/eog-stats-block');
+    if (eog?.localPlayer || phase === 'EndOfGame' || Date.now() - (lolGame.endSeen ||= Date.now()) > 90e3) {
+      const lp = eog?.localPlayer || {}, st = lp.stats || {};
+      const myTeam = lp.teamId ?? eog?.teams?.find(t => t.players?.some(x => x.puuid && x.puuid === lp.puuid))?.teamId;
+      let win = null;
+      if (Array.isArray(eog?.teams) && myTeam != null) { const t = eog.teams.find(t => t.teamId === myTeam); if (t && typeof t.isWinningTeam === 'boolean') win = t.isWinningTeam; }
+      if (win == null && st.WIN != null) win = !!+st.WIN;
+      if (win == null && st.LOSE != null) win = !+st.LOSE;
+      const ch = lp.championId && champs?.[lp.championId];
+      const len = +eog?.gameLength || Math.round((Date.now() - (lolGame.start || Date.now())) / 1000);
+      const kda = st.CHAMPIONS_KILLED != null ? [+st.CHAMPIONS_KILLED || 0, +st.NUM_DEATHS || 0, +st.ASSISTS || 0] : lolGame.kda;
+      const cs = st.MINIONS_KILLED != null ? (+st.MINIONS_KILLED || 0) + (+st.NEUTRAL_MINIONS_KILLED || 0) : null;
+      const remake = len < 300 || eog?.gameEndedInEarlySurrender && len < 420;
+      if (win != null && !remake) {
+        lolPend = { at: Date.now(), m: { key: 'lol:' + lolGame.id, game: 'League of Legends', result: win ? 'win' : 'loss', mode: lolGame.mode, ranked: lolGame.ranked,
+          champ: ch?.name || lolGame.champ, img: ch ? await champImg(ch.alias) : lolGame.img, kda, dur: len,
+          extra: [cs != null ? `${cs} CS` : null, st.LEVEL || lolGame.level ? `Sv ${st.LEVEL || lolGame.level}` : null, st.GOLD_EARNED ? `${(st.GOLD_EARNED / 1000).toFixed(1)}k altın` : null].filter(Boolean) },
+          rankQ: lolGame.rankQ, before: lolGame.rankBefore };
+      }
+      lolGame = null;
+    }
+  }
+  if (lolPend) { // dereceli ise LP güncellenene kadar (en çok 75 sn) bekle
+    const p = lolPend, now = p.before && p.m.ranked ? ranked?.queueMap?.[p.rankQ] : null;
+    if (!p.m.ranked || !p.before || (now && qKey(now) !== qKey(p.before)) || Date.now() - p.at > 75e3) {
+      if (now) p.m.rank = lolRankChange(p.before, now) || { after: rankText(now) };
+      pushMatch(p.m); lolPend = null;
+    }
+  }
   return out;
 }
 
@@ -82,7 +136,43 @@ const VAL_Q = { competitive: 'Rekabetçi', unrated: 'Derecesiz', swiftplay: 'Hı
 const VAL_TIERS = ['Derecesiz', '', '', 'Demir 1', 'Demir 2', 'Demir 3', 'Bronz 1', 'Bronz 2', 'Bronz 3', 'Gümüş 1', 'Gümüş 2', 'Gümüş 3', 'Altın 1', 'Altın 2', 'Altın 3', 'Platin 1', 'Platin 2', 'Platin 3',
   'Elmas 1', 'Elmas 2', 'Elmas 3', 'Yücelik 1', 'Yücelik 2', 'Yücelik 3', 'Ölümsüzlük 1', 'Ölümsüzlük 2', 'Ölümsüzlük 3', 'Radyant'];
 const VAL_STATE = { MENUS: 'Menüde', PREGAME: 'Ajan seçiyor', INGAME: 'Maçta' };
-let valStart = null, valWas = null;
+let valStart = null, valWas = null, valGame = null;
+// Maç bitince ayrıntılar Riot'un oyuncu verisi servisinden (oyunun kendi kullandığı, oturum anahtarı yerel istemciden)
+let valVer = null, valVerAt = 0, valAgents = null;
+async function valDetails(port, auth, since) {
+  try {
+    const [tok, sess] = await Promise.all([local(port, '/entitlements/v1/token', auth), local(port, '/product-session/v1/external-sessions', auth)]);
+    if (!tok?.accessToken) return null;
+    const args = Object.values(sess || {}).flatMap(x => x?.launchConfiguration?.arguments || []).join(' ');
+    const region = args.match(/-ares-deployment=(\w+)/)?.[1] || 'eu', shard = { latam: 'na', br: 'na', na: 'na', eu: 'eu', ap: 'ap', kr: 'kr' }[region] || 'eu';
+    if (!valVer || Date.now() - valVerAt > 6 * 3600e3) { const v = await getJSON('https://valorant-api.com/v1/version'); if (v?.data?.riotClientVersion) { valVer = v.data.riotClientVersion; valVerAt = Date.now(); } }
+    const H = { Authorization: 'Bearer ' + tok.accessToken, 'X-Riot-Entitlements-JWT': tok.token, 'X-Riot-ClientVersion': valVer || '',
+      'X-Riot-ClientPlatform': 'ew0KCSJwbGF0Zm9ybVR5cGUiOiAiUEMiLA0KCSJwbGF0Zm9ybU9TIjogIldpbmRvd3MiLA0KCSJwbGF0Zm9ybU9TVmVyc2lvbiI6ICIxMC4wLjE5MDQyLjEuMjU2LjY0Yml0IiwNCgkicGxhdGZvcm1DaGlwc2V0IjogIlVua25vd24iDQp9' };
+    const pd = async u => { try { const r = await fetch(`https://pd.${shard}.a.pvp.net${u}`, { headers: H, signal: AbortSignal.timeout(8000) }); return r.ok ? r.json() : null; } catch { return null; } };
+    const puuid = tok.subject;
+    const hist = await pd(`/match-history/v1/history/${puuid}?startIndex=0&endIndex=1`);
+    const last = hist?.History?.[0]; if (!last || last.GameStartTime < since - 10 * 60e3) return null;
+    const md = await pd(`/match-details/v1/matches/${last.MatchID}`); if (!md?.players) return null;
+    const me = md.players.find(p => p.subject === puuid); if (!me) return null;
+    const team = md.teams?.find(t => t.teamId === me.teamId), other = md.teams?.find(t => t.teamId !== me.teamId);
+    if (!valAgents) { const a = await getJSON('https://valorant-api.com/v1/agents?language=tr-TR&isPlayableCharacter=true'); if (Array.isArray(a?.data)) valAgents = Object.fromEntries(a.data.map(x => [x.uuid.toLowerCase(), x])); }
+    const ag = valAgents?.[String(me.characterId).toLowerCase()];
+    const out = { id: last.MatchID, agent: ag?.displayName || null, img: ag?.displayIconSmall || ag?.displayIcon || null,
+      kda: [me.stats?.kills || 0, me.stats?.deaths || 0, me.stats?.assists || 0], score: team && other ? [team.roundsWon, other.roundsWon] : null,
+      win: team ? !!team.won : null, draw: team && other && !team.won && !other.won, dur: Math.round((md.matchInfo?.gameLengthMillis || 0) / 1000) || null,
+      acs: me.stats?.score && me.stats.roundsPlayed ? Math.round(me.stats.score / me.stats.roundsPlayed) : null };
+    if (md.matchInfo?.isRanked) {
+      const cu = await pd(`/mmr/v1/players/${puuid}/competitiveupdates?startIndex=0&endIndex=1&queue=competitive`);
+      const u = cu?.Matches?.[0];
+      if (u && u.MatchID === last.MatchID) {
+        const b = VAL_TIERS[u.TierBeforeUpdate], a = VAL_TIERS[u.TierAfterUpdate], d = u.RankedRatingEarned;
+        out.rank = u.TierAfterUpdate !== u.TierBeforeUpdate ? { before: b, after: `${a} · ${u.RankedRatingAfterUpdate} RR`, dir: u.TierAfterUpdate > u.TierBeforeUpdate ? 'up' : 'down', text: u.TierAfterUpdate > u.TierBeforeUpdate ? 'Terfi etti' : 'Düştü' }
+          : { before: `${b} · ${u.RankedRatingBeforeUpdate} RR`, after: `${a} · ${u.RankedRatingAfterUpdate} RR`, delta: d, dir: d >= 0 ? 'up' : 'down' };
+      }
+    }
+    return out;
+  } catch { return null; }
+}
 async function valorantRich() {
   const lf = path.join(process.env.LOCALAPPDATA || '', 'Riot Games', 'Riot Client', 'Config', 'lockfile');
   let parts; try { parts = fs.readFileSync(lf, 'utf8').split(':'); } catch { return null; }
@@ -107,6 +197,21 @@ async function valorantRich() {
   else out.state = (party.partyState || d.partyState) === 'MATCHMAKING' ? 'Maç arıyor' : VAL_STATE[loop] || null;
   if (loop === 'PREGAME' && mapName) out.state = `Ajan seçiyor · ${mapName}`;
   if (hit && loop !== 'MENUS') out.img = hit.listViewIcon || hit.displayIcon || null;
+  // ---- Maç sonu kartı ----
+  if (loop === 'INGAME' && !isCustom && !['deathmatch', 'ggteam', 'hurm', ''].includes(qid)) {
+    valGame ||= { start: Date.now(), tier };
+    Object.assign(valGame, { mode, ranked: out.ranked, map: mapName, bg: hit?.splash || hit?.listViewIcon || null, ally, enemy });
+  } else if (valGame && loop !== 'INGAME') {
+    const g = valGame; valGame = null;
+    if (Date.now() - g.start > 4 * 60e3) {
+      const d = await valDetails(port, auth, g.start);
+      const sc = d?.score || (g.ally != null && g.enemy != null ? [g.ally, g.enemy] : null);
+      const res = d ? (d.draw ? 'draw' : d.win ? 'win' : 'loss') : sc && sc[0] !== sc[1] ? (sc[0] > sc[1] ? 'win' : 'loss') : null;
+      if (res) pushMatch({ key: 'val:' + (d?.id || `${g.map}:${sc}:${Math.round(g.start / 6e5)}`), game: 'Valorant', result: res, mode: g.mode, ranked: g.ranked, map: g.map,
+        champ: d?.agent || null, img: d?.img || null, bg: g.bg, score: sc, kda: d?.kda || null, dur: d?.dur || Math.round((Date.now() - g.start) / 1000),
+        extra: d?.acs ? [`${d.acs} ACS`] : [], rank: d?.rank || null });
+    }
+  }
   return out;
 }
 let valMapList = null, valMapAt = 0, valTry = 0;
@@ -127,7 +232,7 @@ function startGSI(port = 29571) {
   http.createServer((req, res) => {
     if (req.method !== 'POST') { res.writeHead(404); return res.end(); }
     let d = ''; req.on('data', c => { d += c; if (d.length > 2e5) req.destroy(); });
-    req.on('end', () => { try { const j = JSON.parse(d); if (j.auth?.token === 'kanka') { gsi = j; gsiAt = Date.now(); } } catch {} res.writeHead(200); res.end(); });
+    req.on('end', () => { try { const j = JSON.parse(d); if (j.auth?.token === 'kanka') { gsi = j; gsiAt = Date.now(); csCheckEnd(j); } } catch {} res.writeHead(200); res.end(); });
   }).on('error', () => {}).listen(port, '127.0.0.1');
 }
 // CS2'nin cfg klasörüne Kanka ayar dosyasını bir kez yaz (oyun bir sonraki açılışta okur)
@@ -144,6 +249,18 @@ function installGSI(steamPaths) {
   }
   return done;
 }
+// Maç bitti ekranı (gameover) gelince kart
+function csCheckEnd(j) {
+  const m = j.map, me = j.provider?.steamid, p = j.player?.steamid === me ? j.player : null;
+  if (!m || m.phase !== 'gameover' || !p || ['deathmatch', 'gungameprogressive', 'training', 'custom', 'survival'].includes(m.mode)) return;
+  const us = p.team === 'T' ? m.team_t?.score : m.team_ct?.score, them = p.team === 'T' ? m.team_ct?.score : m.team_t?.score;
+  if (us == null || them == null || us + them < 3) return;
+  const st = p.match_stats || {};
+  pushMatch({ key: `cs:${m.name}:${csStart || ''}:${us}-${them}`, game: 'Counter-Strike 2', result: us > them ? 'win' : us < them ? 'loss' : 'draw',
+    mode: CS_MODE[m.mode] || m.mode, ranked: m.mode === 'competitive' || m.mode === 'premier', map: CS_MAP[m.name] || m.name, score: [us, them],
+    kda: [st.kills || 0, st.deaths || 0, st.assists || 0], dur: csStart ? Math.round((Date.now() - csStart) / 1000) : null,
+    extra: [st.mvps ? `${st.mvps} MVP` : null, st.score ? `${st.score} puan` : null].filter(Boolean) });
+}
 function cs2Rich() {
   if (!gsi || Date.now() - gsiAt > 40e3) return null;
   const m = gsi.map, me = gsi.provider?.steamid, p = gsi.player && gsi.player.steamid === me ? gsi.player : null;
@@ -159,4 +276,4 @@ function cs2Rich() {
   return out;
 }
 
-module.exports = { lolRich, valorantRich, cs2Rich, startGSI, installGSI, resetLol: () => { lcu = null; } };
+module.exports = { takeMatches: () => matches.slice(), doneMatch: k => { const i = matches.findIndex(x => x.key === k); if (i >= 0) matches.splice(i, 1); }, lolRich, valorantRich, cs2Rich, startGSI, installGSI, resetLol: () => { lcu = null; } };

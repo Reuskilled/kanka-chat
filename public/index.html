@@ -1927,6 +1927,60 @@
   @media (max-width: 700px) { .st-save .primary kbd { display: none; } .st-save span { font-size: 12.5px; } .st-save .sv-ic { display: none; } }
   /* profil önizlemesinde Hakkımda kartın içinde kalsın */
   #st-card .pf-prevabout:not(:empty) { margin-top: -14px; padding: 18px 18px 16px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 18px 18px; background: var(--card); }
+  /* ---------- Maç sonu kartı ---------- */
+  .mtch { position: relative; overflow: hidden; width: 460px; max-width: 100%; border-radius: 18px; border: 1px solid rgba(255,255,255,.08); background: #16100d; isolation: isolate; margin-top: 2px; }
+  .mtch .mc-bg { position: absolute; inset: 0; z-index: -1; background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--gc) 45%, transparent), transparent 60%); background-size: cover; background-position: center 20%; }
+  .mtch .mc-bg[style*="url"] { opacity: .5; filter: saturate(1.15); }
+  .mtch .mc-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(18,12,10,.35) 0%, rgba(18,12,10,.82) 45%, #15100d 100%); }
+  .mtch::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--rc); }
+  .mtch.r-win { --rc: #3fcf8e; } .mtch.r-loss { --rc: #ff5a5f; } .mtch.r-draw { --rc: #a99a8f; }
+  .mc-top { display: flex; align-items: center; gap: 8px; padding: 12px 16px 0 18px; font-size: 12px; color: rgba(255,255,255,.75); font-weight: 700; flex-wrap: wrap; }
+  .mc-game { display: inline-flex; align-items: center; gap: 6px; color: #fff; }
+  .mc-game .gart { width: 18px; height: 18px; border-radius: 5px; }
+  .mc-tag { padding: 2px 7px; border-radius: 6px; background: rgba(255,200,80,.18); color: #ffc850; font-size: 11px; font-weight: 800; }
+  .mc-meta { margin-left: auto; opacity: .8; }
+  .mc-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 14px 16px 12px 18px; }
+  .mc-res { display: block; font-size: 30px; line-height: 1; font-weight: 900; letter-spacing: .06em; color: var(--rc); text-shadow: 0 0 28px color-mix(in srgb, var(--rc) 55%, transparent); }
+  .mc-head h4 { margin: 6px 0 0; font-size: 15px; color: #fff; font-weight: 800; }
+  .mc-score { display: flex; align-items: baseline; gap: 6px; font-weight: 900; color: #fff; }
+  .mc-score b { font-size: 34px; line-height: 1; } .mc-score b:last-child { color: rgba(255,255,255,.55); } .mc-score i { font-style: normal; font-size: 22px; opacity: .5; }
+  .mc-ps { display: grid; gap: 6px; padding: 0 12px 10px 14px; }
+  .mc-p { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(0,0,0,.35); backdrop-filter: blur(6px); cursor: pointer; transition: background .15s; }
+  .mc-p:hover { background: rgba(0,0,0,.5); }
+  .mc-ch { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; flex-shrink: 0; box-shadow: 0 0 0 2px color-mix(in srgb, var(--rc) 60%, transparent); }
+  .mc-av { position: relative; display: grid; place-items: center; overflow: hidden; } .mc-av .av { width: 40px; height: 40px; border-radius: 10px; } .mc-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .mc-who { display: flex; flex-direction: column; min-width: 0; flex: 1; } .mc-who b { color: #fff; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mc-who small { color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; }
+  .mc-kda { display: flex; flex-direction: column; align-items: flex-end; }
+  .mc-kda b { font-size: 17px; color: #fff; font-weight: 900; letter-spacing: .02em; } .mc-kda i { font-style: normal; opacity: .4; margin: 0 2px; } .mc-kda em { font-style: normal; color: #ff8a8d; }
+  .mc-kda small { font-size: 11px; color: rgba(255,255,255,.6); font-weight: 700; white-space: nowrap; }
+  .mc-rank { display: flex; flex-direction: column; align-items: flex-end; padding-left: 10px; margin-left: 2px; border-left: 1px solid rgba(255,255,255,.1); min-width: 74px; }
+  .mc-rank b { font-size: 13px; font-weight: 900; } .mc-rank.up b { color: #3fcf8e; } .mc-rank.down b { color: #ff6b6f; }
+  .mc-rank small { font-size: 11px; color: rgba(255,255,255,.65); font-weight: 700; white-space: nowrap; }
+  .mc-rank.big.up { animation: mcGlow 1.6s ease-in-out 2; } @keyframes mcGlow { 50% { filter: drop-shadow(0 0 8px #3fcf8e); } }
+  .mc-quick { display: flex; align-items: center; gap: 6px; padding: 0 14px 12px 18px; }
+  .mc-quick button { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.08); font-size: 15px; color: #fff; transition: transform .12s, background .15s; }
+  .mc-quick button:hover { transform: translateY(-1px) scale(1.06); background: rgba(255,255,255,.13); }
+  .mc-quick button.on { background: color-mix(in srgb, var(--accent) 25%, transparent); border-color: var(--accent); }
+  .mc-quick button span { font-size: 12px; font-weight: 800; }
+  .mc-gg { margin-left: auto; font-size: 12px; color: rgba(255,255,255,.45); font-weight: 700; }
+  @media (max-width: 520px) { .mc-res { font-size: 24px; } .mc-score b { font-size: 26px; } .mc-rank { min-width: 0; padding-left: 8px; } .mc-rank small, .mc-kda small { display: none; } .mc-p { gap: 8px; padding: 8px; } .mc-meta { margin-left: 0; width: 100%; } }
+  .mlist { display: grid; gap: 6px; }
+  .ml { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--card); border-left: 3px solid var(--rc); }
+  .ml.r-win { --rc: #3fcf8e; } .ml.r-loss { --rc: #ff5a5f; } .ml.r-draw { --rc: #a99a8f; }
+  .ml img { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; }
+  .ml > span:nth-child(2) { display: flex; flex-direction: column; flex: 1; min-width: 0; } .ml small { color: var(--muted); font-size: 12px; }
+  .ml-k { font-weight: 800; font-size: 13px; color: var(--ink); } .ml em { font-style: normal; font-weight: 900; font-size: 11px; letter-spacing: .05em; color: var(--rc); width: 64px; text-align: right; }
+  .mc-set { display: flex; align-items: flex-start; gap: 14px; padding: 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); margin: 6px 0 18px; }
+  .mc-set .mc-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,200,80,.15); color: #ffc850; flex-shrink: 0; }
+  .mc-set .mc-st { flex: 1; display: flex; flex-direction: column; gap: 4px; } .mc-set .mc-st span { color: var(--muted); font-size: 13px; line-height: 1.45; }
+  .mc-set select { margin-top: 10px; width: 100%; max-width: 380px; padding: 10px 38px 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: #120c0a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b49c89' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center / 16px;
+    color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; appearance: none; cursor: pointer; }
+  .mc-set select:focus { outline: none; border-color: var(--accent); } .mc-set select:disabled { opacity: .45; cursor: default; }
+  .ml .gart { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; }
+  .mc-set .tgl { position: relative; flex-shrink: 0; } .mc-set .tgl input { position: absolute; opacity: 0; }
+  .mc-set .tgl i { display: block; width: 42px; height: 24px; border-radius: 99px; background: rgba(255,255,255,.15); position: relative; transition: background .2s; cursor: pointer; }
+  .mc-set .tgl i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .mc-set .tgl input:checked + i { background: #3fcf8e; } .mc-set .tgl input:checked + i::after { transform: translateX(18px); }
 </style>
 </head>
 <body>
@@ -3333,6 +3387,8 @@ function msgHTML(m, prev) {
     const state = g.winner === 'draw' ? `${ic('users')} Berabere!` : g.winner ? `${ic('trophy')} ${esc(g.winner === 'x' ? g.x : g.o)} kazandı!` : myTurn ? 'Sıra sende' : `Sıra ${esc(g.turn === 'x' ? g.x : (g.o || 'rakipte'))}`;
     body = `<div class="kcard"><div class="kt">${ic('grid')}XOX</div><h4>${esc(g.x)} <span class="x" style="color:var(--accent)">${sym('x')}</span> vs <span style="color:#7ec8ff">${sym('o')}</span> ${esc(g.o || '?')}</h4>
       <div class="xox">${[...g.board].map((c, i) => `<button class="${c}" data-xox="${m.id}" data-i="${i}" ${c !== '.' || !myTurn ? 'disabled' : ''} aria-label="Kare ${i + 1}">${sym(c)}</button>`).join('')}</div><div class="sub">${state}</div></div>`;
+  } else if (m.kind === 'match') {
+    body = matchCardHTML(m);
   } else if (m.kind === 'song') {
     body = `<div class="kcard"><div class="kt">${ic('music')}Çalma listesine eklendi</div><h4 style="word-break:break-all"><a href="${esc(m.song.url)}" target="_blank" rel="noopener">${esc(m.song.title)}</a></h4><div class="sub">${esc(m.song.by)} ekledi</div></div>`;
   } else {
@@ -3344,7 +3400,7 @@ function msgHTML(m, prev) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
     body += `<div class="thr" data-thread="${m.id}"><span class="avs">${who.map(n => av(n)).join('')}</span>${ic('thread')} ${m.thread.length} yanıt · son ${hm(m.thread.at(-1).time)}</div>`;
   }
-  const reacts = Object.entries(m.reactions || {}).map(([e, us]) =>
+  const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) =>
     `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}" title="${esc(us.join(', '))}">${e}<span>${us.length}</span></button>`).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}
@@ -3404,6 +3460,8 @@ $('#messages').onclick = e => {
     row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash');
     return;
   }
+  const pp = !e.target.closest('button') && e.target.closest('[data-prof]');
+  if (pp) return showProfile(pp.dataset.prof);
   const t = e.target.closest('button, img[data-view]');
   if (!t) return;
   const find = id => S.msgs.find(m => m.id === id);
@@ -3672,6 +3730,43 @@ function actLine(n) {
   if (a.music) return `<span class="act-line music">${ic('spotify')}<b>${esc(a.music.title)}</b>${a.music.artist ? ` · ${esc(a.music.artist)}` : ''}</span>`;
   return '';
 }
+// ================= Maç sonu kartı =================
+const RES_TXT = { win: 'ZAFER', loss: 'BOZGUN', draw: 'BERABERE' };
+const lolSplash = img => { const a = /\/img\/champion\/([\w]+)\.png$/.exec(img || '')?.[1]; return a ? `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${a}_0.jpg` : null; };
+const durTxt = s => !s ? '' : s >= 3600 ? `${Math.floor(s / 3600)} sa ${Math.floor(s % 3600 / 60)} dk` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+const kdaRatio = k => k ? ((k[0] + k[2]) / Math.max(1, k[1])).toFixed(2).replace(/\.?0+$/, '') : null;
+function rankChip(r) {
+  if (!r) return '';
+  const up = r.dir !== 'down', big = r.text && !Number.isFinite(r.delta);
+  const lab = Number.isFinite(r.delta) ? `${r.delta > 0 ? '+' : ''}${r.delta} ${/RR/.test(r.after) ? 'RR' : 'LP'}` : r.text || '';
+  return `<span class="mc-rank ${up ? 'up' : 'down'} ${big ? 'big' : ''}" title="${esc([r.before, r.after].filter(Boolean).join(' → '))}">${lab ? `<b>${up ? '▲' : '▼'} ${esc(lab)}</b>` : ''}<small>${esc(r.after)}</small></span>`;
+}
+function matchCardHTML(m) {
+  const g = m.match, ps = g.players || [], lead = ps[0] || {};
+  const bg = g.bg || (g.game === 'League of Legends' ? lolSplash(lead.img) : null);
+  const meta = [g.mode, g.map && g.game !== 'Valorant' && g.game !== 'Counter-Strike 2' ? g.map : null, g.dur ? durTxt(g.dur) : null].filter(Boolean);
+  const title = g.game === 'League of Legends' ? (ps.length > 1 ? `${ps.length} kanka aynı maçta` : lead.champ || g.game) : g.map || g.game;
+  const players = ps.map(p => {
+    const k = p.kda, r = kdaRatio(k);
+    return `<div class="mc-p" data-prof="${esc(p.n)}"><span class="mc-ch mc-av">${av(p.n)}${p.img ? `<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>
+      <span class="mc-who"><b>${esc(dn(p.n))}</b><small>${esc(p.champ || (g.game === 'Counter-Strike 2' ? 'CS2' : ''))}</small></span>
+      ${k ? `<span class="mc-kda"><b>${k[0]}<i>/</i><em>${k[1]}</em><i>/</i>${k[2]}</b><small>${r} KDA${(p.extra || []).length ? ' · ' + p.extra.map(esc).join(' · ') : ''}</small></span>` : ''}
+      ${rankChip(p.rank)}</div>`;
+  }).join('');
+  const quick = ['👏', '🔥', '💀', '😂'].map(e => { const us = m.reactions?.[e] || []; return `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}">${e}${us.length ? `<span>${us.length}</span>` : ''}</button>`; }).join('');
+  return `<div class="mtch r-${g.result}" style="--gc:${gameColor(g.game)}">
+    ${bg ? `<div class="mc-bg" style="background-image:url('${esc(bg)}')"></div>` : '<div class="mc-bg"></div>'}
+    <div class="mc-top"><span class="mc-game">${gameArt(g.game, 'xs')}${esc(g.game)}</span>${g.ranked ? '<span class="mc-tag">Dereceli</span>' : ''}<span class="mc-meta">${meta.map(esc).join(' · ')}</span></div>
+    <div class="mc-head"><div><span class="mc-res">${RES_TXT[g.result]}</span><h4>${esc(title)}</h4></div>${g.score ? `<div class="mc-score"><b>${g.score[0]}</b><i>:</i><b>${g.score[1]}</b></div>` : ''}</div>
+    <div class="mc-ps">${players}</div>
+    <div class="mc-quick">${quick}<span class="mc-gg">${g.result === 'win' ? 'Tebrik et' : g.result === 'loss' ? 'Moral ver' : 'Tepki ver'}</span></div></div>`;
+}
+function matchListHTML(list) {
+  if (!list?.length) return '';
+  return `<div class="pc-sec"><h5>Son maçlar</h5><div class="mlist">${list.map(x => `<div class="ml r-${x.result}">${x.img ? `<img src="${esc(x.img)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(${esc(JSON.stringify(gameArt(x.game, 'sm')))}))">` : gameArt(x.game, 'sm')}
+    <span><b>${esc(x.champ || x.map || x.game)}</b><small>${esc([x.mode, ago(x.time)].filter(Boolean).join(' · '))}</small></span>
+    <span class="ml-k">${x.score ? `${x.score[0]}:${x.score[1]}` : x.kda ? x.kda.join('/') : ''}</span><em>${RES_TXT[x.result]}</em></div>`).join('')}</div></div>`;
+}
 function actCards(u) {
   const a = u?.activities; if (!a) return '';
   let h = '';
@@ -3822,7 +3917,7 @@ function showProfile(n, tab = 'about') {
     $('#pf-tabs').querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { tab = b.dataset.pt; draw(); });
     const B = $('#pf-body');
     if (tab === 'about') { B.innerHTML = profAboutHTML(n, u); if (me) socket.emit('badgeProgress', pr => { window._bprog = pr; const el = $('#pf-badges-sec'); if (el && profileOpen === n) el.innerHTML = badgeGrid(n, u, pr); }); }
-    if (tab === 'act') B.innerHTML = actCards(u) || `<div class="pf-empty">${ic('activity')}<b>Şu an bir şey yapmıyor</b><span>Oyun oynarken ya da Spotify dinlerken burada görünür.</span></div>`;
+    if (tab === 'act') B.innerHTML = (actCards(u) || `<div class="pf-empty">${ic('activity')}<b>Şu an bir şey yapmıyor</b><span>Oyun oynarken ya da Spotify dinlerken burada görünür.</span></div>`) + matchListHTML(mut?.matches);
     if (tab === 'servers') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.servers.length ? `<div class="pf-list">${mut.servers.map(s => `<button data-gs="${s.id}"><span class="pl-ic">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</span><span><b>${esc(s.name)}</b><small>${s.joined ? ago2(s.joined) + 'dır üye' : 'Ortak sunucu'}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('grid')}<b>Ortak sunucunuz yok</b><span>Onu bir sunucuna davet et.</span></div>`;
     if (tab === 'friends') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.friends.length ? `<div class="pf-list">${mut.friends.map(f => `<button data-gf="${esc(f)}">${av(f, S.online.has(f))}<span><b>${esc(dn(f))}</b><small>@${esc(f)}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('users')}<b>Ortak arkadaşınız yok</b><span>Arkadaş olunca burada görünür.</span></div>`;
     B.querySelectorAll('[data-gs]').forEach(b => b.onclick = () => { closeModal(); selectServer(b.dataset.gs); });
@@ -5994,7 +6089,7 @@ function adminPanel(el, sub = 'reports') {
 
 // ================= Etkinlik sayfası (sadece otomatik algılama) =================
 const verLt = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); return false; };
-const RICH_GAMES = [['League of Legends', 'Şampiyon, mod (dereceli / derecesiz), derece ve LP, KDA, maç süresi'], ['Valorant', 'Mod, harita, skor, derece, ajan seçimi'],
+const RICH_GAMES = [['League of Legends', 'Şampiyon, mod, derece ve LP, KDA, maç sonu kartı'], ['Valorant', 'Mod, harita, skor, derece, maç sonu kartı'],
   ['Counter-Strike 2', 'Harita, mod, skor, KDA ve MVP'], ['Minecraft', 'Sürüm, tek ya da çok oyunculu']];
 function actPageHTML() {
   const d = !!window.kankaDesktop;
@@ -6003,6 +6098,7 @@ function actPageHTML() {
     <div class="ax-hero ${d ? 'on' : ''}"><div class="ax-ai">${ic(d ? 'activity' : 'download')}</div><div><b>${d ? 'Kanka Chat masaüstü' : 'Masaüstü uygulamasıyla otomatik'}</b>
       <span>${d ? 'Açık oyununu, maç bilgilerini ve Spotify şarkını kendiliğinden algılıyor.' : 'Tarayıcılar güvenlik nedeniyle bilgisayarındaki programları göremez. Uygulamayı kur; oyunun, maç detayların ve Spotify şarkın kendiliğinden görünsün.'}</span>
       <em id="ax-ver"></em></div><span class="st off" id="kd-st">…</span>${d ? '' : `<a class="primary" href="/indir/KankaChat-Kurulum.exe" download>${ic('download')}İndir (Windows)</a>`}</div>
+    <div class="ax-mc" id="ax-mc"></div>
     <h5 class="ax-h">Ayrıntılı gösterilenler</h5>
     <div class="ax-sup">${RICH_GAMES.map(([g, t]) => `<div>${gameArt(g, 'sm')}<span><b>${g}</b><small>${t}</small></span></div>`).join('')}
       <div><span class="gart sm" style="--gc:#1d3b2a"><em>${ic('spotify')}</em></span><span><b>Spotify</b><small>Şarkı, sanatçı, albüm kapağı ve ilerleme çubuğu</small></span></div>
@@ -6017,9 +6113,19 @@ function wireActPage() {
       : `<div class="ax-empty">${ic('sparkle')}<span><b>Şu an bir şey algılanmadı</b>${window.kankaDesktop ? 'Bir oyun aç ya da Spotify\'da şarkı çal, birkaç saniye içinde burada belirir.' : 'Masaüstü uygulaması açıkken oyunların ve şarkıların burada belirir.'}</span></div>`);
   };
   window.onMyActivity = now; now();
+  const mc = (set) => socket.emit('matchShare', set || null, r => {
+    const el = $('#ax-mc'); if (!el || !r) return;
+    const opt = (v, t) => `<option value="${esc(v)}" ${r.to === v ? 'selected' : ''}>${esc(t)}</option>`;
+    el.innerHTML = `<div class="mc-set"><div class="mc-ic">${ic('trophy')}</div><div class="mc-st"><b>Maç sonu kartı</b><span>LoL, Valorant ya da CS2 maçın bitince sonucun, KDA'n ve derece değişimin kendiliğinden kart olarak paylaşılır. Aynı maçtaki kankalar tek kartta toplanır.</span>
+      <select id="mc-to" ${r.on ? '' : 'disabled'}>${opt('voice', 'Seste olduğum sunucunun oyun odasına')}${r.chans.map(c => opt(c.id, `${c.server} › #${c.name}`)).join('')}${opt('profile', 'Sadece profilimde göster')}</select></div>
+      <label class="tgl"><input type="checkbox" id="mc-on" ${r.on ? 'checked' : ''}><i></i></label></div>`;
+    $('#mc-on').onchange = e => mc({ on: e.target.checked, to: $('#mc-to').value });
+    $('#mc-to').onchange = e => { mc({ on: true, to: e.target.value }); toast('Maç kartları artık ' + (e.target.value === 'profile' ? 'sadece profilinde' : 'seçtiğin yerde') + ' görünecek'); };
+  });
+  mc();
   socket.emit('presenceKey', {}, r => { const e = $('#kd-st'); if (!e) return; e.textContent = r.connected ? 'Bağlı' : window.kankaDesktop ? 'Bağlanıyor…' : 'Kurulu değil'; e.className = 'st ' + (r.connected ? 'on' : 'off');
     if (r.connected && !window.kankaDesktop) { const h = e.closest('.ax-hero'); h.classList.add('on'); h.querySelector('.primary')?.remove(); h.querySelector('b').textContent = 'Masaüstü uygulaman açık'; h.querySelector('span').textContent = 'Bilgisayarındaki Kanka Chat oyununu ve şarkını algılıyor. Buradan da canlı görebilirsin.'; h.querySelector('.ax-ai').innerHTML = ic('activity'); } });
-  window.kankaDesktop?.info?.().then(i => { const e = $('#ax-ver'); if (e && i) e.innerHTML = `Sürüm ${esc(i.version)}${verLt(i.version, '1.0.8') ? ' · <b style="color:var(--red)">maç detayları için güncelle (uygulamayı kapatıp aç)</b>' : ''}`; }).catch(() => {});
+  window.kankaDesktop?.info?.().then(i => { const e = $('#ax-ver'); if (e && i) e.innerHTML = `Sürüm ${esc(i.version)}${verLt(i.version, '1.2.0') ? ' · <b style="color:var(--red)">maç sonu kartı için güncelle (uygulamayı kapatıp aç)</b>' : ''}`; }).catch(() => {});
 }
 
 // ================= Oyun içi katman (masaüstü) =================

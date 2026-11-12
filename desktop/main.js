@@ -263,7 +263,9 @@ async function presenceLoop() {
     const st = await detect();
     if (st.game !== currentGame) { currentGame = st.game; updateOverlay(); }
     try {
-      await fetch(config.server + '/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: config.presenceKey, ...st }), signal: AbortSignal.timeout(8000) });
+      const matches = config.matchCards === false ? [] : RICH.takeMatches(); // biten maçlar: sunucu maç sonu kartı yapar
+      const r = await fetch(config.server + '/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: config.presenceKey, ...st, matches }), signal: AbortSignal.timeout(8000) });
+      if (r.ok) for (const m of matches) RICH.doneMatch(m.key);
       lastStatus = st.game ? `Oynuyor: ${st.game}${st.rich?.state ? ' · ' + st.rich.state : ''}` : st.music ? `Dinliyor: ${st.music.title}` : 'Etkinlik: boşta';
     } catch { lastStatus = 'Etkinlik: sunucuya ulaşılamadı'; }
   }

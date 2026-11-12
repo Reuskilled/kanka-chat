@@ -87,10 +87,70 @@ function cleanRich(r) {
   const st = +r.start; if (st && st > Date.now() - 6 * 3600e3 && st <= Date.now() + 5e3) o.start = st;
   return Object.keys(o).length ? o : null;
 }
-app.post('/api/presence', express.json({ limit: '16kb' }), async (req, res) => {
+// ---------- Maç sonu kartı ----------
+const MATCH_GAMES = ['League of Legends', 'Valorant', 'Counter-Strike 2'];
+function cleanMatch(m) {
+  if (!m || typeof m !== 'object' || !MATCH_GAMES.includes(m.game) || !['win', 'loss', 'draw'].includes(m.result)) return null;
+  const key = clean(m.key, 90); if (!key) return null;
+  const o = { key, game: m.game, result: m.result, ranked: !!m.ranked };
+  for (const k of ['mode', 'map', 'champ']) if (typeof m[k] === 'string' && m[k].trim()) o[k] = clean(m[k], 40);
+  for (const k of ['img', 'bg']) if (typeof m[k] === 'string' && RICH_IMG.test(m[k])) o[k] = m[k].slice(0, 300);
+  if (Array.isArray(m.kda) && m.kda.length === 3) o.kda = m.kda.map(x => Math.max(0, Math.min(999, Math.round(+x) || 0)));
+  if (Array.isArray(m.score) && m.score.length === 2) o.score = m.score.map(x => Math.max(0, Math.min(99, Math.round(+x) || 0)));
+  if (+m.dur > 0) o.dur = Math.min(4 * 3600, Math.round(+m.dur));
+  if (Array.isArray(m.extra)) o.extra = m.extra.filter(x => typeof x === 'string').slice(0, 3).map(x => clean(x, 24)).filter(Boolean);
+  if (m.rank && typeof m.rank === 'object') {
+    const r = {}; for (const k of ['before', 'after', 'text']) if (typeof m.rank[k] === 'string' && m.rank[k].trim()) r[k] = clean(m.rank[k], 40);
+    if (Number.isFinite(+m.rank.delta) && m.rank.delta !== null) r.delta = Math.max(-999, Math.min(999, Math.round(+m.rank.delta)));
+    if (['up', 'down'].includes(m.rank.dir)) r.dir = m.rank.dir;
+    if (r.after) o.rank = r;
+  }
+  return o;
+}
+const voiceRoomOf = n => { for (const [ch, room] of voice) if (!ch.startsWith('call:') && [...room.values()].includes(n)) return ch; return null; };
+// Kart nereye düşsün: ayardaki oda, yoksa şu an seste olduğu sunucunun oyun odası (adında oyun/maç geçen), yoksa ilk yazılı oda
+function matchTarget(u) {
+  const to = u.matchShare?.to || 'voice';
+  if (to === 'profile') return null;
+  const ok = (sv, c) => sv && c && c.type === 'text' && !c.news && (sv.public || sv.members.includes(u.name)) && !sv.bans?.[u.name] && chPerm(sv, c, u.name, 'send');
+  if (to !== 'voice') { const f = findChannel(to); return f && ok(f.s, f.c) ? f.c.id : null; }
+  const vc = voiceRoomOf(u.name), f = vc && findChannel(vc); if (!f) return null;
+  const list = f.s.channels.filter(c => ok(f.s, c));
+  return (list.find(c => /oyun|ma[çc]|game|gaming|valo|lol|cs|rank/i.test(c.name)) || list[0])?.id || null;
+}
+function deliverMatch(u, m) {
+  const player = { n: u.name, champ: m.champ || null, img: m.img || null, kda: m.kda || null, extra: m.extra || [], rank: m.rank || null };
+  (u.matches ||= []).unshift({ game: m.game, result: m.result, mode: m.mode || null, map: m.map || null, champ: m.champ || null, img: m.img || null, kda: m.kda || null, score: m.score || null, rank: m.rank || null, time: Date.now() });
+  u.matches.length = Math.min(u.matches.length, 10);
+  const chId = matchTarget(u); if (!chId) return save();
+  const list = (db.messages[chId] ||= []);
+  // Aynı maçta olan kankalar tek kartta toplanır
+  const same = list.slice(-40).reverse().find(x => x.kind === 'match' && Date.now() - x.time < 15 * 60e3 && x.match.result === m.result && x.match.game === m.game &&
+    (x.match.key === m.key || (m.score && x.match.score && x.match.map === m.map && x.match.score.join('-') === m.score.join('-'))));
+  if (same) {
+    if (!same.match.players.some(p => p.n === u.name)) { same.match.players.push(player); save(); io.to(chId).emit('update', { channelId: chId, msg: same }); }
+    return;
+  }
+  const { champ, img, kda, extra, rank, ...card } = m;
+  const msg = { id: id(), author: u.name, color: u.color, time: Date.now(), kind: 'match', reactions: {}, match: { ...card, players: [player] } };
+  list.push(msg); if (list.length > 2000) list.shift();
+  save();
+  io.to(chId).emit('message', { channelId: chId, msg });
+  const f = findChannel(chId);
+  if (f) for (const n of membersOf(f.s)) if (n !== u.name) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
+}
+app.post('/api/presence', express.json({ limit: '24kb' }), async (req, res) => {
   const { key, game, detail, music, rich } = req.body || {};
   const u = key && Object.values(db.users).find(x => x.presenceKey === key);
   if (!u) return res.status(401).json({ error: 'Anahtar geçersiz' });
+  if (Array.isArray(req.body.matches) && u.matchShare?.on !== false) {
+    const seen = (u.matchKeys ||= []);
+    for (const raw of req.body.matches.slice(0, 5)) {
+      const m = cleanMatch(raw); if (!m || seen.includes(m.key)) continue;
+      seen.push(m.key); if (seen.length > 30) seen.shift();
+      try { deliverMatch(u, m); } catch (e) { console.error('maç kartı', e); }
+    }
+  }
   const prev = u.auto && Date.now() - u.auto.at < 45e3 ? u.auto : {}, now = Date.now();
   const g = typeof game === 'string' && game.trim() ? clean(game, 60) : null;
   const m = music && typeof music.title === 'string' && music.title.trim() ? { title: clean(music.title, 120), artist: clean(music.artist, 120), album: clean(music.album, 120) || null } : null;
@@ -1359,6 +1419,15 @@ io.on('connection', socket => {
     save(); io.emit('users', allUsers()); cb({ ok: true });
   });
   // Kendi rozet ilerlemen (kazanılmamışlar için)
+  socket.on('matchShare', (p, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return;
+    if (p && typeof p === 'object') {
+      const to = p.to === 'voice' || p.to === 'profile' ? p.to : (findChannel(p.to)?.c?.type === 'text' ? p.to : 'voice');
+      u.matchShare = { on: p.on !== false, to }; save();
+    }
+    const chans = serversFor(me).filter(sv => !sv.public).flatMap(sv => sv.channels.filter(c => c.type === 'text' && !c.news && chPerm(sv, c, me, 'send')).map(c => ({ id: c.id, name: c.name, server: sv.name })));
+    cb({ on: u.matchShare?.on !== false, to: u.matchShare?.to || 'voice', chans, last: (u.matches || []).slice(0, 5) });
+  });
   socket.on('badgeProgress', (cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({});
     const m = u.msgs || u.xp || 0;
@@ -1369,7 +1438,7 @@ io.on('connection', socket => {
     const o = db.users[n]; if (!me || !o) return cb({ servers: [], friends: [] });
     const servers = db.servers.filter(s => !s.public && s.members.includes(me) && s.members.includes(n)).map(s => ({ id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, joined: s.joinedAt?.[n] || null }));
     const mine = new Set(db.users[me].friends || []), friends = n === me ? [] : (o.friends || []).filter(x => mine.has(x));
-    cb({ servers: n === me ? [] : servers, friends, joined: Object.fromEntries(db.servers.filter(s => s.members.includes(n) && s.joinedAt?.[n]).map(s => [s.id, s.joinedAt[n]])) });
+    cb({ matches: (o.matches || []).slice(0, 8), servers: n === me ? [] : servers, friends, joined: Object.fromEntries(db.servers.filter(s => s.members.includes(n) && s.joinedAt?.[n]).map(s => [s.id, s.joinedAt[n]])) });
   });
   socket.on('changePassword', ({ old, next } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
