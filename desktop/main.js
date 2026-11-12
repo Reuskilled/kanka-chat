@@ -6,6 +6,8 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell, dialog, Not
 const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+// Ana süreçte beklenmeyen bir hata olursa kullanıcıya çirkin hata kutusu gösterme, sadece kaydet
+process.on('uncaughtException', e => { try { console.error('[kanka] hata:', e?.stack || e); } catch {} });
 
 const DEFAULT_SERVER = 'https://185-208-172-60.sslip.io';
 const CONFIG = () => path.join(app.getPath('userData'), 'ayarlar.json');
@@ -66,7 +68,7 @@ let updateReady = false;
 autoUpdater.on?.('update-downloaded', (e, notes, version) => {
   if (splash) return;
   updateReady = true;
-  win?.webContents.send('kanka:update-ready', version || '');
+  if (win && !win.isDestroyed()) win.webContents.send('kanka:update-ready', version || '');
   if (!win?.isVisible() && Notification.isSupported()) {
     const n = new Notification({ title: 'Kanka Chat güncellemesi hazır', body: 'Yeniden başlatmak için tıkla.', icon: ICON });
     n.on('click', () => { quitting = true; autoUpdater.quitAndInstall(); }); n.show();
@@ -302,7 +304,7 @@ config.overlay = { on: true, pos: 'tl', onlyGame: true, onlySpeaking: false, opa
 let overlay = null, ovState = null, ovHidden = false, ovPreview = 0, currentGame = null;
 const OV_W = 300, OV_H = 560;
 function placeOverlay() {
-  if (!overlay) return;
+  if (!alive(overlay)) return;
   const b = screen.getPrimaryDisplay().bounds, sz = config.overlay.size || 1, w = Math.round(OV_W * sz), h = Math.round(OV_H * sz), m = 12, p = config.overlay.pos;
   overlay.setBounds({ x: b.x + (p[1] === 'r' ? b.width - w - m : m), y: b.y + (p[0] === 'b' ? b.height - h - m : m), width: w, height: h });
 }
@@ -317,10 +319,15 @@ function ensureOverlay() {
   return overlay;
 }
 const SAMPLE = { room: 'Sohbet', server: 'Önizleme', users: [{ n: 'Sen', c: '#ff8a4c', sp: true }, { n: 'Kanka', c: '#4aa8ff' }, { n: 'Ayşe', c: '#b07cff', m: true }] };
+const alive = w => !!w && !w.isDestroyed();
 function updateOverlay(force) {
+  try { updateOverlay_(force); } catch (e) { console.warn('overlay', e?.message); }
+}
+function updateOverlay_(force) {
+  if (quitting) return;
   const c = config.overlay, preview = Date.now() < ovPreview, st = preview ? (ovState || SAMPLE) : ovState;
-  const want = !!st && (preview || (c.on && !ovHidden && st.users?.length && (!c.onlyGame || currentGame) && !(win && win.isFocused() && win.isVisible())));
-  if (!want) { if (overlay && overlay.isVisible()) overlay.hide(); return; }
+  const want = !!st && (preview || (c.on && !ovHidden && st.users?.length && (!c.onlyGame || currentGame) && !(alive(win) && win.isFocused() && win.isVisible())));
+  if (!want) { if (alive(overlay) && overlay.isVisible()) overlay.hide(); return; }
   const o = ensureOverlay();
   const cfg = { pos: c.pos, onlySpeaking: preview ? false : c.onlySpeaking, opacity: c.opacity, scale: c.size };
   o.webContents.executeJavaScript(`window.render && window.render(${JSON.stringify(st)}, ${JSON.stringify(cfg)})`).catch(() => {});
@@ -367,7 +374,7 @@ app.whenReady().then(async () => {
   setupCS2().catch(() => {});
   presenceLoop();
   try { globalShortcut.register('Control+Shift+O', () => { ovHidden = !ovHidden; updateOverlay(true); }); } catch {}
-  win?.on('focus', () => updateOverlay()); win?.on('blur', () => setTimeout(updateOverlay, 150)); win?.on('hide', () => updateOverlay()); win?.on('show', () => updateOverlay());
+  win?.on('focus', () => updateOverlay()); win?.on('blur', () => setTimeout(() => updateOverlay(), 150)); win?.on('hide', () => updateOverlay()); win?.on('show', () => updateOverlay());
   screen.on('display-metrics-changed', placeOverlay);
 });
 app.on('before-quit', () => { quitting = true; try { overlay?.destroy(); } catch {} });
