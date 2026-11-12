@@ -279,7 +279,9 @@ ipcMain.on('kanka:titlebar', (e, color, symbol) => {
 // Squirrel kurulumunda uygulama klasörü her güncellemede değişir; bu yüzden kalıcı Update.exe üzerinden başlatılır.
 const UPDATE_EXE = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
 const loginOpts = () => fs.existsSync(UPDATE_EXE)
-  ? { path: UPDATE_EXE, args: ['--processStart', `"${path.basename(process.execPath)}"`, '--process-start-args', '"--autostart"'] }
+  // Tırnak ekleme: Electron boşluklu argümanları kendisi tırnaklar. Elle eklenen tırnaklar kaçışlanıp
+  // "\"Kanka Chat.exe\"" olur ve Squirrel uygulamayı bulamaz (1.0.9'a kadarki hata).
+  ? { path: UPDATE_EXE, args: ['--processStart', path.basename(process.execPath), '--process-start-args', '--autostart'] }
   : { args: ['--autostart'] };
 const autostartOn = () => { try { return app.getLoginItemSettings(loginOpts()).openAtLogin; } catch { return false; } };
 function setAutostart(on) {
@@ -353,7 +355,7 @@ ipcMain.on('kanka:badge', (e, n) => { if (win && process.platform === 'win32') w
 app.whenReady().then(async () => {
   // İlk açılışta varsayılan olarak "bilgisayar açılınca başlat" açık
   if (config.autostart === undefined) setAutostart(true);
-  else if (config.autostart && !autostartOn()) setAutostart(true); // güncellemeden sonra kayıt bozulduysa onar
+  else if (config.autostart) setAutostart(true); // her açılışta kaydı yeniden yaz: eski/bozuk kayıtlar kendiliğinden onarılır
   const hidden = config.startHidden && (process.argv.includes('--hidden') || process.argv.includes('--autostart'));
   if (!hidden) createSplash();
   await new Promise(r => setTimeout(r, 350));

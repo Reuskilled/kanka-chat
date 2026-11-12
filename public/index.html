@@ -5943,6 +5943,7 @@ function adminPanel(el, sub = 'reports') {
 }
 
 // ================= Etkinlik sayfası (sadece otomatik algılama) =================
+const verLt = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); return false; };
 const RICH_GAMES = [['League of Legends', 'Şampiyon, mod (dereceli / derecesiz), derece ve LP, KDA, maç süresi'], ['Valorant', 'Mod, harita, skor, derece, ajan seçimi'],
   ['Counter-Strike 2', 'Harita, mod, skor, KDA ve MVP'], ['Minecraft', 'Sürüm, tek ya da çok oyunculu']];
 function actPageHTML() {
@@ -5968,7 +5969,7 @@ function wireActPage() {
   window.onMyActivity = now; now();
   socket.emit('presenceKey', {}, r => { const e = $('#kd-st'); if (!e) return; e.textContent = r.connected ? 'Bağlı' : window.kankaDesktop ? 'Bağlanıyor…' : 'Kurulu değil'; e.className = 'st ' + (r.connected ? 'on' : 'off');
     if (r.connected && !window.kankaDesktop) { const h = e.closest('.ax-hero'); h.classList.add('on'); h.querySelector('.primary')?.remove(); h.querySelector('b').textContent = 'Masaüstü uygulaman açık'; h.querySelector('span').textContent = 'Bilgisayarındaki Kanka Chat oyununu ve şarkını algılıyor. Buradan da canlı görebilirsin.'; h.querySelector('.ax-ai').innerHTML = ic('activity'); } });
-  window.kankaDesktop?.info?.().then(i => { const e = $('#ax-ver'); if (e && i) e.innerHTML = `Sürüm ${esc(i.version)}${i.version < '1.0.8' ? ' · <b style="color:var(--red)">maç detayları için güncelle (uygulamayı kapatıp aç)</b>' : ''}`; }).catch(() => {});
+  window.kankaDesktop?.info?.().then(i => { const e = $('#ax-ver'); if (e && i) e.innerHTML = `Sürüm ${esc(i.version)}${verLt(i.version, '1.0.8') ? ' · <b style="color:var(--red)">maç detayları için güncelle (uygulamayı kapatıp aç)</b>' : ''}`; }).catch(() => {});
 }
 
 // ================= Oyun içi katman (masaüstü) =================
