@@ -66,6 +66,77 @@ app.get('/api/yedek/:name', (req, res) => {
   res.set({ 'Content-Type': 'application/gzip', 'Content-Disposition': `attachment; filename="kanka-${name}"`, 'Cache-Control': 'no-store' });
   fs.createReadStream(f).pipe(res);
 });
+// ---------- Bağlantı önizlemesi: mesajdaki ilk bağlantının başlığı, açıklaması ve görseli ----------
+const dns = require('dns').promises, net = require('net');
+const privIP = ip => net.isIPv6(ip) ? /^(::1|::|fc|fd|fe80|::ffff:(10\.|127\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.))/i.test(ip)
+  : /^(0\.|10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|22[4-9]\.|2[3-5]\d\.)/.test(ip);
+const lpCache = new Map();
+async function safeFetch(url, hops = 0) {
+  const u = new URL(url); if (!/^https?:$/.test(u.protocol) || hops > 3) return null;
+  const addrs = await dns.lookup(u.hostname, { all: true }).catch(() => []);
+  if (!addrs.length || addrs.some(a => privIP(a.address))) return null;
+  const r = await fetch(u, { redirect: 'manual', signal: AbortSignal.timeout(5000), headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KankaChatBot/1.0; +bağlantı önizlemesi)', Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'tr,en;q=0.8' } });
+  if (r.status >= 300 && r.status < 400 && r.headers.get('location')) return safeFetch(new URL(r.headers.get('location'), u).href, hops + 1);
+  return r.ok ? r : null;
+}
+const unent = t => String(t || '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&#x27;|&apos;/g, "'").replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(+n)).replace(/\s+/g, ' ').trim();
+async function linkPreview(url) {
+  if (lpCache.has(url)) return lpCache.get(url);
+  let out = null;
+  try {
+    const r = await safeFetch(url);
+    if (r && /text\/html|application\/xhtml/i.test(r.headers.get('content-type') || '')) {
+      const reader = r.body.getReader(); let html = '', n = 0;
+      while (n < 400e3) { const { done, value } = await reader.read(); if (done) break; n += value.length; html += Buffer.from(value).toString('utf8'); if (/<\/head>/i.test(html)) break; }
+      reader.cancel().catch(() => {});
+      const meta = k => { const m = new RegExp(`<meta[^>]+(?:property|name)=["']${k}["'][^>]*>`, 'i').exec(html)?.[0]; return m && unent(/content=["']([^"']*)["']/i.exec(m)?.[1]); };
+      const title = meta('og:title') || meta('twitter:title') || unent(/<title[^>]*>([^<]{1,300})<\/title>/i.exec(html)?.[1]);
+      let image = meta('og:image') || meta('twitter:image'); try { image = image ? new URL(image, r.url || url).href : null; } catch { image = null; }
+      if (image && !/^https:\/\//.test(image)) image = null;
+      if (title) out = { url, title: title.slice(0, 140), desc: (meta('og:description') || meta('description') || '').slice(0, 220), image: image?.slice(0, 500) || null, site: (meta('og:site_name') || new URL(url).hostname.replace(/^www\./, '')).slice(0, 60) };
+    }
+  } catch {}
+  if (lpCache.size > 500) lpCache.clear();
+  lpCache.set(url, out); return out;
+}
+// ---------- Dosya yükleme: resim, video, PDF, zip, belge… (en çok 25 MB, günde 300 MB) ----------
+const FILES = path.join(DATA_DIR, 'uploads', 'f'); fs.mkdirSync(FILES, { recursive: true });
+const FILE_MAX = 25 * 1024 * 1024, FILE_DAY = 300 * 1024 * 1024;
+const BAD_EXT = /\.(exe|msi|bat|cmd|com|scr|ps1|vbs|vbe|js|jse|wsf|wsh|hta|cpl|jar|lnk|reg|dll|sys|html?|xhtml|svg|xml|php|apk|app|dmg|pkg|iso)$/i;
+const fileKind = (mime, name) => /^image\/(png|jpeg|gif|webp)$/.test(mime) ? 'image' : /^video\/(mp4|webm|quicktime)$/.test(mime) || /\.(mp4|webm|mov)$/i.test(name) ? 'video' : /^audio\//.test(mime) ? 'audio' : 'file';
+const safeName = n => String(n || 'dosya').normalize('NFC').replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').replace(/^\.+/, '').slice(-120) || 'dosya';
+app.post('/api/dosya', express.raw({ type: () => true, limit: FILE_MAX + 1024 }), (req, res) => {
+  const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), me = tok && db.sessions[tok];
+  if (!me || !db.users[me]) return res.status(401).json({ error: 'Giriş yapmalısın' });
+  if (limited('dosya|' + me, 40, 60e3)) return res.status(429).json({ error: 'Çok fazla dosya yükledin, bir dakika bekle' });
+  let name; try { name = safeName(decodeURIComponent(String(req.headers['x-file-name'] || 'dosya'))); } catch { name = 'dosya'; }
+  const buf = req.body; if (!Buffer.isBuffer(buf) || !buf.length) return res.status(400).json({ error: 'Boş dosya' });
+  if (buf.length > FILE_MAX) return res.status(413).json({ error: 'Dosya en fazla 25 MB olabilir' });
+  if (BAD_EXT.test(name)) return res.status(400).json({ error: 'Bu dosya türü güvenlik nedeniyle gönderilemez (.exe, .bat, .html gibi)' });
+  const u = db.users[me], day = new Date().toISOString().slice(0, 10);
+  if (u.upDay?.d !== day) u.upDay = { d: day, b: 0 };
+  if (u.upDay.b + buf.length > FILE_DAY) return res.status(429).json({ error: 'Bugünkü yükleme sınırına ulaştın (300 MB). Yarın tekrar dene.' });
+  let mime = String(req.headers['x-file-type'] || 'application/octet-stream').split(';')[0].toLowerCase().slice(0, 80); // gövde hep octet-stream gelir (json ayrıştırıcısına takılmasın)
+  // İçerikten tür doğrulama: resim diyorsa gerçekten resim olsun
+  const sig = buf.subarray(0, 12).toString('hex');
+  const realImg = sig.startsWith('89504e47') ? 'image/png' : sig.startsWith('ffd8ff') ? 'image/jpeg' : sig.startsWith('47494638') ? 'image/gif' : sig.startsWith('52494646') && buf.subarray(8, 12).toString() === 'WEBP' ? 'image/webp' : null;
+  if (mime.startsWith('image/')) mime = realImg || 'application/octet-stream';
+  const kind = fileKind(mime, name), fid = crypto.randomBytes(12).toString('hex');
+  fs.writeFileSync(path.join(FILES, fid), buf);
+  u.upDay.b += buf.length;
+  (db.files ||= {})[fid] = { owner: me, name, size: buf.length, mime, kind, at: Date.now() };
+  save();
+  res.json({ ok: true, id: fid, name, size: buf.length, kind, url: `/dosya/${fid}/${encodeURIComponent(name)}` });
+});
+app.get('/dosya/:id/:name?', (req, res) => {
+  const f = /^[a-f0-9]{24}$/.test(req.params.id) && db.files?.[req.params.id];
+  if (!f) return res.status(404).send('Dosya bulunamadı');
+  const inline = ['image', 'video', 'audio'].includes(f.kind);
+  res.set({ 'Content-Type': inline ? f.mime : 'application/octet-stream', 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, max-age=2592000',
+    'Content-Security-Policy': "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox",
+    'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(f.name)}` });
+  res.sendFile(path.join(FILES, req.params.id), { acceptRanges: true });
+});
 app.get('/api/surum', (req, res) => {
   let sha = null;
   try { sha = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'guncelleme.json'), 'utf8')).sha; } catch {}
@@ -544,6 +615,13 @@ function dmsFor(name) {
     .map(g => ({ id: 'g:' + g.id, group: true, name: g.name, members: g.members, owner: g.owner, last: db.messages['g:' + g.id]?.at(-1)?.time || g.created }));
   return [...dms, ...groups].sort((a, b) => b.last - a.last);
 }
+// Her odanın, kullanıcı dışındaki biri tarafından yazılmış son mesajının zamanı (okunmamış noktaları için)
+function lastMsgTimes(name) {
+  const o = {}, lastOther = ch => { const l = db.messages[ch]; if (!l) return 0; for (let i = l.length - 1; i >= Math.max(0, l.length - 50); i--) if (l[i].author && l[i].author !== name) return l[i].time; return 0; };
+  for (const sv of serversFor(name)) for (const c of sv.channels) if (!voiceLike(c.type) && seesChannel(sv, c, name)) { const t = lastOther(c.id); if (t) o[c.id] = t; }
+  for (const d of dmsFor(name)) { const t = lastOther(d.id); if (t) o[d.id] = t; }
+  return o;
+}
 const groupTitle = g => g.name || g.members.slice(0, 4).join(', ');
 const findMsg = (chId, msgId) => (db.messages[chId] || []).find(m => m.id === msgId);
 const roleOf = (s, n) => s.owner === n ? 'admin' : (s.roles?.[n] || 'member');
@@ -654,9 +732,20 @@ try {
   try { vapid = JSON.parse(fs.readFileSync(VAPID_FILE, 'utf8')); } catch { vapid = webpush.generateVAPIDKeys(); fs.writeFileSync(VAPID_FILE, JSON.stringify(vapid)); }
   webpush.setVapidDetails('mailto:kankahq1@gmail.com', vapid.publicKey, vapid.privateKey);
 } catch (e) { console.warn('Web Push kapalı:', e.message); webpush = null; }
+// Hesapta saklanan bildirim tercihleri (her cihazda aynı): notif=false hepsi kapalı; muted=susturulan sunucular; ch={odaId:'all'|'mentions'|'none'}
+const prefsOf = u => u?.prefs || {};
+function pushAllowed(u, n) {
+  const pr = prefsOf(u); if (pr.notif === false) return false;
+  const chId = n.channelId || n.ch;
+  if (n.dm || n.friend || !chId) return true;
+  const f = findChannel(chId); if (!f) return true;
+  if ((pr.muted || []).includes(f.s.id) && !n.direct) return false;
+  return (pr.ch || {})[chId] !== 'none';
+}
 function sendPush(name, payload) {
   const u = db.users[name]; if (!webpush || !u?.push?.length) return;
   if ((u.presence || 'online') === 'dnd') return;
+  if (!pushAllowed(u, payload)) return;
   if ([...online].some(([sid, n]) => n === name && visibleSockets.has(sid))) return; // şu an Kanka'ya bakıyor
   const body = JSON.stringify(payload);
   for (const sub of [...u.push]) {
@@ -668,7 +757,7 @@ function sendPush(name, payload) {
 function notifyUser(name, n) {
   io.to('user:' + name).emit('notify', n);
   const title = n.friend ? n.from : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? n.from : `${n.from} seni etiketledi`;
-  sendPush(name, { title, body: n.friend ? 'sana arkadaşlık isteği gönderdi' : String(n.text || '').slice(0, 160) + (n.dm ? '' : n.where ? `\n${n.where}` : ''),
+  sendPush(name, { direct: !!n.mention, title, body: n.friend ? 'sana arkadaşlık isteği gönderdi' : String(n.text || '').slice(0, 160) + (n.dm ? '' : n.where ? `\n${n.where}` : ''),
     tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend });
 }
 const presenceList = () => onlineNames().map(n => [n, statusOf(n)]).filter(x => x[1]);
@@ -712,8 +801,13 @@ function postMessage(me, chId, p = {}) {
   if (kind === 'text') {
     msg.text = clean(p.text, 2000);
     if (p.image && UPLOAD_RE.test(p.image)) msg.image = p.image;
+    if (Array.isArray(p.files)) { // yeni: bir mesajda en çok 10 dosya/resim (sadece kendi yüklediklerin)
+      const fs_ = p.files.slice(0, 10).map(x => typeof x === 'string' && /^[a-f0-9]{24}$/.test(x) && db.files?.[x]).filter(f => f && f.owner === me);
+      const ids = p.files.slice(0, 10).filter(x => typeof x === 'string' && db.files?.[x]?.owner === me);
+      if (ids.length) msg.files = ids.map(x => { const f = db.files[x]; return { id: x, name: f.name, size: f.size, kind: f.kind, url: `/dosya/${x}/${encodeURIComponent(f.name)}` }; });
+    }
     if (p.audio && AUDIO_RE.test(p.audio)) { msg.audio = p.audio; msg.duration = Math.min(Math.max(+p.duration || 0, 0), 600); }
-    if (!msg.text && !msg.image && !msg.audio) return ({ error: 'Boş mesaj' });
+    if (!msg.text && !msg.image && !msg.audio && !msg.files?.length) return ({ error: 'Boş mesaj' });
     const srv = serverOf(chId);
     if (srv?.filter && msg.text) msg.text = filterText(msg.text);
   } else if (kind === 'plan') {
@@ -747,6 +841,9 @@ function postMessage(me, chId, p = {}) {
   const list = (db.messages[chId] ||= []);
   list.push(msg);
   if (list.length > 2000) list.shift();
+  // Bağlantı önizlemesi (YouTube zaten kendi kartıyla gösteriliyor)
+  { const lu = msg.kind === 'text' && /https?:\/\/[^\s<>"']+/i.exec(msg.text || '')?.[0]?.replace(/[).,!?;:]+$/, '');
+    if (lu && !/(youtube\.com|youtu\.be)\//i.test(lu)) linkPreview(lu).then(pv => { if (pv && findMsg(chId, msg.id)) { msg.preview = pv; save(); io.to(chId).emit('update', { channelId: chId, msg }); } }); }
   // Takip edilebilir duyuru odası: takipçi odalara kopyala
   { const f1 = p.xfrom ? null : findChannel(chId);
     if (f1?.c.news && f1.c.followers?.length) setTimeout(() => {
@@ -772,7 +869,7 @@ function postMessage(me, chId, p = {}) {
 
   // Bildirimler
   const where = chId.startsWith('dm:') ? 'özel mesaj' : chId.startsWith('g:') ? groupTitle(groupOf(chId)) : (() => { const f = findChannel(chId); return `${f.s.name} › ${f.c.name}`; })();
-  const preview = (msg.text || msg.plan?.title || msg.poll?.question || msg.song?.title || (msg.game ? 'bir oyun başlattı' : 'görsel gönderdi')).slice(0, 120);
+  const preview = (msg.text || msg.plan?.title || msg.poll?.question || msg.song?.title || (msg.game ? 'bir oyun başlattı' : msg.files?.length ? (msg.files.every(f => f.kind === 'image') ? 'resim gönderdi' : 'dosya gönderdi: ' + msg.files[0].name) : 'görsel gönderdi')).slice(0, 120);
   if (isPrivateChat(chId)) {
     for (const n of chatMembers(chId)) {
       io.to('user:' + n).emit('dms', dmsFor(n));
@@ -780,7 +877,12 @@ function postMessage(me, chId, p = {}) {
     }
   } else {
     const f = findChannel(chId);
-    for (const n of membersOf(f.s)) if (n !== me) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
+    for (const n of membersOf(f.s)) if (n !== me) {
+      io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
+      const pr = prefsOf(db.users[n]);
+      if (pr.ch?.[chId] === 'all' && !(pr.muted || []).includes(f.s.id) && seesChannel(f.s, f.c, n) && !(msg.text || '').includes('@' + n))
+        sendPush(n, { title: `${me} · #${f.c.name}`, body: (msg.text || (msg.files?.length ? 'dosya gönderdi' : 'görsel gönderdi')).slice(0, 160), tag: chId, ch: chId, from: me });
+    }
     const mentioned = new Set([...(msg.text || '').matchAll(/@([\p{L}\p{N}_.-]+)/gu)].map(m => m[1]));
     if (/@(everyone|herkes)\b/i.test(msg.text || '') && can(f.s, me, 'mentionEveryone')) { membersOf(f.s).forEach(n => mentioned.add(n)); msg.everyone = true; }
     for (const r of f.s.customRoles || []) if ((msg.text || '').includes('@' + r.name)) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) mentioned.add(n);
@@ -901,6 +1003,7 @@ setInterval(() => { // eski şikayetleri ve süresi dolan sıfırlama linklerini
 
 // ---------- Hesap silme (KVKK) ----------
 function deleteUserData(name) {
+  for (const [fid, f] of Object.entries(db.files || {})) if (f.owner === name) { try { fs.unlinkSync(path.join(FILES, fid)); } catch {} delete db.files[fid]; }
   for (const s of [...db.servers]) {
     if (s.owner === name && !s.public) {
       const rank = n => roleOf(s, n) === 'admin' ? 0 : roleOf(s, n) === 'mod' ? 1 : 2;
@@ -960,7 +1063,7 @@ io.on('connection', socket => {
     db.sessions[token] = name; save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
-      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), live: liveState(),
+      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
       myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), reportCounts: reportCounts(name), beta: db.beta.on
     };
@@ -1288,6 +1391,24 @@ io.on('connection', socket => {
     u.statusUntil = u.status && t > Date.now() && t < Date.now() + 31 * 864e5 ? t : null;
     if (u.status) onbFlag(me, 'profile');
     save(); io.emit('users', allUsers()); cb({ ok: true, until: u.statusUntil });
+  });
+  socket.on('prefs', (p, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({});
+    if (p && typeof p === 'object') {
+      const ch = {}; for (const [k, v] of Object.entries(p.ch || {}).slice(0, 500)) if (typeof k === 'string' && k.length < 80 && ['all', 'none'].includes(v)) ch[k] = v;
+      u.prefs = { notif: p.notif !== false, muted: (Array.isArray(p.muted) ? p.muted : []).filter(x => typeof x === 'string' && x.length < 40).slice(0, 200), ch,
+        read: u.prefs?.read || {}, at: Date.now() };
+      save();
+      for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('prefs', { notif: u.prefs.notif, muted: u.prefs.muted, ch });
+    }
+    cb(u.prefs ? { notif: u.prefs.notif, muted: u.prefs.muted, ch: u.prefs.ch, read: u.prefs.read || {}, at: u.prefs.at } : null);
+  });
+  socket.on('read', id => { // okundu bilgisi her cihazda aynı olsun
+    const u = db.users[me]; if (!u || typeof id !== 'string' || id.length > 80) return;
+    const t = Date.now(); u.prefs ||= {}; u.prefs.read ||= {}; u.prefs.read[id] = t;
+    const keys = Object.keys(u.prefs.read); if (keys.length > 600) for (const k of keys.sort((a, b) => u.prefs.read[a] - u.prefs.read[b]).slice(0, 100)) delete u.prefs.read[k];
+    save();
+    for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('readSync', { id, t });
   });
   socket.on('vis', on => { on ? visibleSockets.add(socket.id) : visibleSockets.delete(socket.id); });
   socket.on('pushKey', (cb = () => {}) => cb(webpush && vapid ? vapid.publicKey : null));

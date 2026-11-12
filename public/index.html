@@ -2051,6 +2051,36 @@
   .bk-list span { display: flex; gap: 10px; align-items: baseline; } .bk-list small { color: var(--muted); }
   .bk-alert { display: flex; gap: 12px; padding: 14px; border-radius: 14px; background: rgba(255,90,95,.1); border: 1px solid rgba(255,90,95,.35); margin-bottom: 14px; font-size: 13.5px; line-height: 1.5; }
   .bk-alert b:first-child { display: block; } .bk-alert .ic { color: #ff6b6f; flex-shrink: 0; }
+  /* ---------- Dosyalar ---------- */
+  #attach { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 20px 8px; padding: 10px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+  #attach[hidden] { display: none; }
+  #attach .at { position: relative; display: flex; align-items: center; gap: 10px; width: 230px; padding: 8px 34px 8px 8px; border-radius: 12px; background: rgba(0,0,0,.25); border: 1px solid var(--line); overflow: hidden; }
+  #attach .at.err { border-color: rgba(255,90,95,.5); } #attach .at.err small { color: #ff6b6f; }
+  #attach .at img, #attach .at-ic { width: 44px; height: 44px; border-radius: 9px; object-fit: cover; flex-shrink: 0; }
+  .at-ic, .fc-ic { position: relative; display: grid; place-items: center; background: rgba(255,138,76,.14); color: var(--accent); }
+  .at-ic .ic, .fc-ic .ic { width: 26px; height: 26px; } .at-ic em, .fc-ic em { position: absolute; bottom: 6px; font-style: normal; font-size: 8.5px; font-weight: 900; letter-spacing: .02em; color: var(--accent); background: var(--card); padding: 0 3px; border-radius: 3px; }
+  #attach .at-n { display: flex; flex-direction: column; min-width: 0; } #attach .at-n b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #attach .at-n small { font-size: 11.5px; color: var(--muted); }
+  #attach .at-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.06); } #attach .at-bar i { display: block; height: 100%; background: var(--accent); transition: width .15s; }
+  #attach .at-x { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: var(--muted); background: rgba(0,0,0,.3); } #attach .at-x:hover { color: #fff; background: #ff5a5f; } #attach .at-x .ic { width: 14px; height: 14px; }
+  #attach .at-hint { font-size: 12px; color: var(--muted); font-weight: 700; margin-left: 4px; }
+  .fimgs { display: grid; gap: 4px; margin: 6px 0 2px; max-width: 440px; border-radius: 12px; overflow: hidden; }
+  .fimgs.n1 { grid-template-columns: 1fr; } .fimgs.n2 { grid-template-columns: 1fr 1fr; } .fimgs.n3, .fimgs.n4 { grid-template-columns: 1fr 1fr; }
+  #messages .bubble .fimgs img { margin: 0; width: 100%; max-width: none; border-radius: 0; object-fit: cover; aspect-ratio: auto; max-height: 340px; }
+  #messages .bubble .fimgs:not(.n1) img { aspect-ratio: 1; height: 100%; max-height: 220px; }
+  .fvid { margin: 6px 0 2px; max-width: 440px; } .fvid video { display: block; width: 100%; max-height: 320px; border-radius: 12px; background: #000; }
+  .fvid .fname { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12px; color: var(--muted); text-decoration: none; } .fvid .fname .ic { width: 13px; height: 13px; }
+  .fcard { display: flex; align-items: center; gap: 12px; max-width: 380px; margin: 6px 0 2px; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); text-decoration: none; color: var(--ink); transition: border-color .15s, background .15s; }
+  .fcard:hover { border-color: var(--accent); background: rgba(255,138,76,.06); }
+  .fc-ic { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; }
+  .fc-t { display: flex; flex-direction: column; min-width: 0; flex: 1; } .fc-t b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .fc-t small { font-size: 12px; color: var(--muted); }
+  .fc-d { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); background: rgba(255,255,255,.05); flex-shrink: 0; } .fcard:hover .fc-d { color: #fff; background: var(--accent); }
+  @media (max-width: 760px) { #attach { margin: 0 10px 6px; } #attach .at { width: 100%; } }
+  .lprev { display: flex; gap: 12px; max-width: 460px; margin: 6px 0 2px; padding: 10px 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent); text-decoration: none; color: var(--ink); white-space: normal; transition: background .15s; }
+  .lprev:hover { background: rgba(255,138,76,.06); }
+  .lprev .lp-t { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+  .lprev small { font-size: 11.5px; color: var(--muted); font-weight: 700; } .lprev b { font-size: 14.5px; color: #ffb37a; line-height: 1.35; }
+  .lprev .lp-t > span { font-size: 13px; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  #messages .bubble .lprev img { width: 84px; height: 84px; margin: 0; object-fit: cover; border-radius: 8px; flex-shrink: 0; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -2085,10 +2115,11 @@
     <div id="messages"></div>
     <div id="typing"></div>
     <div id="replybar"><span>Yanıtlanıyor: <b id="reply-who"></b> <span id="reply-text"></span></span><button id="reply-x" class="ibtn" aria-label="Yanıtı iptal et"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div id="attach" hidden></div>
     <form id="compose">
       <button type="button" id="plus" title="Ekle" aria-label="Ekle"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
       <div id="menu">
-        <button type="button" data-a="image"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>Resim gönder</button>
+        <button type="button" data-a="image"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>Dosya ya da resim gönder</button>
         <button type="button" data-a="plan"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Plan kur</button>
         <button type="button" data-a="poll"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Anket yap</button>
         <button type="button" data-a="song"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>Listeye şarkı ekle</button>
@@ -2106,8 +2137,8 @@
       <div id="emojipanel"><div class="ep-tabs" id="ep-tabs"></div><div class="ep-grid" id="ep-grid"></div></div>
       <button id="send" type="submit" title="Gönder" aria-label="Gönder"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 20 4l-5 16-3-7z"/><path d="m12 13 8-9"/></svg></button>
     </form>
-    <input type="file" id="file" accept="image/*" hidden>
-    <div id="drop">Resmi buraya bırak</div>
+    <input type="file" id="file" multiple hidden>
+    <div id="drop">Dosyaları buraya bırak</div>
   </main>
   <aside id="members" class="panel"></aside>
 </div>
@@ -2200,6 +2231,7 @@ const ICON = {
   spotify: '<circle cx="12" cy="12" r="9.5"/><path d="M7 9.5c3.5-1 7.5-.6 10.5 1M7.8 12.8c2.8-.8 6-.4 8.3.9M8.6 15.8c2.2-.6 4.5-.3 6.3.7"/>',
   download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
   activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
   more: '<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3.2"/>',
   chevron: '<path d="m6 9 6 6 6-6"/>',
@@ -2446,6 +2478,8 @@ function onAuth(res) {
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
+  if (res.prefs?.at) applyServerPrefs(res.prefs); else socket.emit('prefs', prefsNow()); // sunucuda yoksa bu cihazın ayarlarını yükle
+  initReadState(res);
   pushSync(); setTimeout(pushNudge, 4000); setTimeout(() => pullBackup(), 15000);
   socket.emit('vis', document.visibilityState === 'visible');
   { const ac = new URLSearchParams(location.search).get('ac'), kim = new URLSearchParams(location.search).get('kim');
@@ -2605,7 +2639,7 @@ function showSettings(tab = 'profile') {
     }
     if (t === 'notif') {
       wireOverlaySettings();
-      $('#p-nt').onchange = e => store.set('kanka-notif', e.target.checked ? null : 'off');
+      $('#p-nt').onchange = e => { store.set('kanka-notif', e.target.checked ? null : 'off'); syncPrefs(); };
       wirePushSettings();
     }
     preview();
@@ -2938,7 +2972,7 @@ window.addEventListener('blur', closeUMenu);
 
 // ---- Sunucu menüsü (sunucu adına tıklayınca) ----
 const mutedServers = new Set(JSON.parse(store.get('kanka-muted') || '[]'));
-const saveMuted = () => store.set('kanka-muted', JSON.stringify([...mutedServers]));
+const saveMuted = () => { store.set('kanka-muted', JSON.stringify([...mutedServers])); syncPrefs(); };
 function closeSrvMenu() { $('#srvmenu')?.remove(); $('#side-head')?.classList.remove('open'); }
 function toggleSrvMenu() {
   if ($('#srvmenu')) return closeSrvMenu();
@@ -3389,7 +3423,33 @@ function jumpTo(id) {
   row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash');
 }
 const lastRead = JSON.parse(store.get('kanka-read') || '{}');
-const markRead = id => { lastRead[id] = Date.now(); store.set('kanka-read', JSON.stringify(lastRead)); };
+const readSent = {};
+const markRead = id => { lastRead[id] = Date.now(); store.set('kanka-read', JSON.stringify(lastRead)); clearTimeout(readSent[id]); readSent[id] = setTimeout(() => { delete readSent[id]; socket.emit('read', id); }, 700); };
+socket.on('readSync', ({ id, t }) => { lastRead[id] = Math.max(lastRead[id] || 0, t); store.set('kanka-read', JSON.stringify(lastRead)); if (S.unread.delete(id)) { if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; for (const sv of S.servers) if (!sv.channels.some(c => S.unread.has(c.id))) S.unreadServers.delete(sv.id); renderRail(); if (S.view === 'server') renderSide(); else if (S.view === 'dm') renderDMSide?.(); } });
+// Bildirim tercihleri hesapta: bir cihazda değişince hepsinde geçerli, telefon bildirimi de uyar
+const prefsNow = () => ({ notif: notifOn(), muted: [...mutedServers], ch: Object.fromEntries(Object.entries(chNotif()).filter(([, v]) => v === 'all' || v === 'none')) });
+let prefsT = null;
+const syncPrefs = () => { clearTimeout(prefsT); prefsT = setTimeout(() => socket.emit('prefs', prefsNow()), 300); };
+function applyServerPrefs(p) {
+  if (!p) return;
+  store.set('kanka-notif', p.notif === false ? 'off' : null);
+  mutedServers.clear(); (p.muted || []).forEach(x => mutedServers.add(x)); store.set('kanka-muted', JSON.stringify([...mutedServers]));
+  store.set('kanka-chnotif', JSON.stringify(p.ch || {}));
+}
+socket.on('prefs', p => { applyServerPrefs(p); renderRail(); if (S.view === 'server') renderSide(); });
+function initReadState(res) {
+  const sr = res.prefs?.read || {};
+  for (const [k, t] of Object.entries(sr)) lastRead[k] = Math.max(lastRead[k] || 0, t);
+  const first = !Object.keys(lastRead).length;
+  for (const [ch, t] of Object.entries(res.lastMsg || {})) {
+    if (first) { lastRead[ch] = Date.now(); continue; } // ilk açılışta her şeyi okunmuş say
+    if (t > (lastRead[ch] || 0) && ch !== S.channel?.id) {
+      if (/^(dm|g):/.test(ch)) { S.unread.add(ch); S.unreadDM = true; }
+      else { const sv = res.servers.find(x => x.channels.some(c => c.id === ch)); if (sv && notifMode(ch) !== 'none') { S.unread.add(ch); if (!mutedServers.has(sv.id)) S.unreadServers.add(sv.id); } }
+    }
+  }
+  store.set('kanka-read', JSON.stringify(lastRead));
+}
 let histMore = false, histBusy = false, newLineAt = null;
 const drafts = {};
 let draftFor = null;
@@ -3446,6 +3506,18 @@ function renderMessages(toBottom) {
   if (atBottom) box.scrollTop = box.scrollHeight;
 }
 const whenTxt = t => { const d = new Date(t), n = new Date(), y = new Date(n - 864e5); return d.toDateString() === n.toDateString() ? hm(t) : d.toDateString() === y.toDateString() ? 'Dün ' + hm(t) : d.toLocaleDateString('tr-TR') + ' ' + hm(t); };
+function previewHTML(p) {
+  return `<a class="lprev ${p.image ? 'img' : ''}" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer"><span class="lp-t"><small>${esc(p.site)}</small><b>${esc(p.title)}</b>${p.desc ? `<span>${esc(p.desc)}</span>` : ''}</span>${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</a>`;
+}
+function filesHTML(files) {
+  const imgs = files.filter(f => f.kind === 'image'), rest = files.filter(f => f.kind !== 'image');
+  let h = imgs.length ? `<div class="fimgs n${Math.min(imgs.length, 4)}">${imgs.map(f => `<img src="${esc(f.url)}" alt="${esc(f.name)}" decoding="async" data-view>`).join('')}</div>` : '';
+  for (const f of rest) {
+    if (f.kind === 'video') h += `<div class="fvid"><video src="${esc(f.url)}" controls preload="metadata" playsinline></video><a class="fname" href="${esc(f.url)}" download="${esc(f.name)}">${ic('download')}${esc(f.name)} · ${fmtSize(f.size)}</a></div>`;
+    else h += `<a class="fcard" href="${esc(f.url)}" download="${esc(f.name)}" title="İndir"><span class="fc-ic">${ic('file')}<em>${esc(extOf(f.name) || 'DOSYA')}</em></span><span class="fc-t"><b>${esc(f.name)}</b><small>${fmtSize(f.size)}</small></span><span class="fc-d">${ic('download')}</span></a>`;
+  }
+  return h;
+}
 function msgHTML(m, prev) {
   const newDay = !prev || new Date(prev.time).toDateString() !== new Date(m.time).toDateString();
   const day = newDay ? `<div class="day">${dayLabel(m.time)}</div>` : '';
@@ -3485,9 +3557,10 @@ function msgHTML(m, prev) {
   } else if (m.kind === 'song') {
     body = `<div class="kcard"><div class="kt">${ic('music')}Çalma listesine eklendi</div><h4 style="word-break:break-all"><a href="${esc(m.song.url)}" target="_blank" rel="noopener">${esc(m.song.title)}</a></h4><div class="sub">${esc(m.song.by)} ekledi</div></div>`;
   } else {
-    const onlyImg = m.image && !m.text && !m.replyTo;
+    const fimgs = (m.files || []).filter(f => f.kind === 'image');
+    const onlyImg = (m.image || (m.files?.length && fimgs.length === m.files.length)) && !m.text && !m.replyTo;
     const jumbo = !m.image && !m.audio && m.text && isJumbo(m.text);
-    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.text ? fmt(m.text) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
+    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.text ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${m.preview ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
   }
   if (m.thread?.length) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
@@ -3642,6 +3715,7 @@ $('#compose').onsubmit = e => {
   e.preventDefault();
   if (pickSuggestion()) return;
   const text = $('#input').value.trim();
+  if (att.length) { $('#input').value = ''; growInput(); hideSuggest(); if (S.channel) delete drafts[S.channel.id]; return sendWithFiles(text); }
   if (!text) return;
   $('#input').value = ''; growInput(); hideSuggest(); if (S.channel) delete drafts[S.channel.id];
   const [cmd, ...rest] = text.split(' '); const arg = rest.join(' ');
@@ -3682,25 +3756,60 @@ $('#menu').onclick = e => {
   if (a === 'song') form(`${ic('music')}Şarkı ekle`, 'YouTube/Spotify linki ya da şarkının adını yaz.', [{ k: 'title', p: 'Link ya da şarkı adı' }], v => send({ kind: 'song', title: v.title }));
 };
 
-// Resim
-$('#file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) uploadImage(f); };
-function uploadImage(f) {
-  if (!f.type.startsWith('image/')) return toast('Sadece resim gönderebilirsin');
-  if (f.size > 5 * 1024 * 1024) return toast('Resim en fazla 5 MB olabilir');
-  const r = new FileReader();
-  r.onload = () => socket.emit('upload', { data: r.result }, res => {
-    if (res.error) return toast(res.error);
-    const text = $('#input').value.trim(); $('#input').value = '';
-    send({ kind: 'text', text, image: res.url });
-  });
-  r.readAsDataURL(f);
+// ---- Dosya ve resim ekleme: seç, sürükle-bırak ya da yapıştır; gönder'e basınca mesajla birlikte gider ----
+const BAD_EXT_C = /\.(exe|msi|bat|cmd|com|scr|ps1|vbs|vbe|js|jse|wsf|wsh|hta|cpl|jar|lnk|reg|dll|sys|html?|xhtml|svg|xml|php|apk|app|dmg|pkg|iso)$/i;
+let att = [], attSeq = 0;
+const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(n >= 10485760 ? 0 : 1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+const extOf = n => (/\.([a-z0-9]{1,5})$/i.exec(n || '')?.[1] || '').toUpperCase();
+function addFiles(list) {
+  if (S.channel?.canAttach === false) return toast('Bu odada dosya gönderemezsin');
+  for (const f of [...list]) {
+    if (att.length >= 10) { toast('Bir mesajda en çok 10 dosya gönderebilirsin'); break; }
+    if (f.size > 25 * 1024 * 1024) { toast(`${f.name}: dosya en fazla 25 MB olabilir`, null, false, { type: 'err' }); continue; }
+    if (BAD_EXT_C.test(f.name)) { toast(`${f.name}: bu dosya türü güvenlik nedeniyle gönderilemez`, null, false, { type: 'err' }); continue; }
+    const a = { k: ++attSeq, f, name: f.name || 'resim.png', size: f.size, img: /^image\/(png|jpeg|gif|webp)$/.test(f.type), st: 'up', p: 0 };
+    if (a.img) a.prev = URL.createObjectURL(f);
+    att.push(a); uploadOne(a);
+  }
+  renderAttach(); $('#input').focus();
 }
+function uploadOne(a) {
+  const x = new XMLHttpRequest(); a.xhr = x;
+  x.open('POST', '/api/dosya');
+  x.setRequestHeader('Authorization', 'Bearer ' + store.get('kanka-token'));
+  x.setRequestHeader('Content-Type', 'application/octet-stream');
+  x.setRequestHeader('X-File-Name', encodeURIComponent(a.name));
+  x.setRequestHeader('X-File-Type', a.f.type || 'application/octet-stream');
+  x.upload.onprogress = e => { if (e.lengthComputable) { a.p = e.loaded / e.total; const bar = document.querySelector(`#attach [data-k="${a.k}"] .at-bar i`); if (bar) bar.style.width = Math.round(a.p * 100) + '%'; } };
+  x.onload = () => { let r = {}; try { r = JSON.parse(x.responseText); } catch {} if (x.status === 200 && r.ok) { a.st = 'ok'; a.id = r.id; } else { a.st = 'err'; a.err = r.error || 'Yüklenemedi'; toast(`${a.name}: ${a.err}`, null, false, { type: 'err' }); } renderAttach(); attWaiter?.(); };
+  x.onerror = () => { a.st = 'err'; a.err = 'Bağlantı hatası'; renderAttach(); attWaiter?.(); };
+  x.send(a.f);
+}
+function removeAtt(k) { const a = att.find(x => x.k === k); if (!a) return; a.xhr?.abort(); if (a.prev) URL.revokeObjectURL(a.prev); att = att.filter(x => x.k !== k); renderAttach(); }
+function clearAttach() { att.forEach(a => a.prev && URL.revokeObjectURL(a.prev)); att = []; renderAttach(); }
+function renderAttach() {
+  const el = $('#attach'); el.hidden = !att.length;
+  el.innerHTML = att.map(a => `<div class="at ${a.st}" data-k="${a.k}" title="${esc(a.err || a.name)}">${a.img ? `<img src="${a.prev}" alt="">` : `<span class="at-ic">${ic('file')}<em>${esc(extOf(a.name) || 'DOSYA')}</em></span>`}
+    <span class="at-n"><b>${esc(a.name)}</b><small>${a.st === 'err' ? esc(a.err) : a.st === 'up' ? 'yükleniyor…' : fmtSize(a.size)}</small></span>${a.st === 'up' ? `<span class="at-bar"><i style="width:${Math.round(a.p * 100)}%"></i></span>` : ''}
+    <button type="button" class="at-x" data-rm="${a.k}" aria-label="Kaldır">${ic('x')}</button></div>`).join('') + (att.length ? `<span class="at-hint">${att.length} dosya · Enter ile gönder</span>` : '');
+  el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => removeAtt(+b.dataset.rm));
+}
+let attWaiter = null;
+async function sendWithFiles(text) {
+  if (att.some(a => a.st === 'up')) { toast('Dosyalar yüklenince gönderilecek…'); await new Promise(r => { attWaiter = () => { if (!att.some(a => a.st === 'up')) { attWaiter = null; r(); } }; }); }
+  const ids = att.filter(a => a.st === 'ok').map(a => a.id);
+  if (!ids.length && !text) { clearAttach(); return; }
+  clearAttach();
+  send({ kind: 'text', text, files: ids });
+}
+$('#file').onchange = e => { const fl = [...e.target.files]; e.target.value = ''; if (fl.length) addFiles(fl); };
+function uploadImage(f) { addFiles([f]); }
 let dragN = 0;
 $('#chat').addEventListener('dragenter', e => { if ([...e.dataTransfer.types].includes('Files')) { dragN++; $('#drop').style.display = 'flex'; } });
 $('#chat').addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; $('#drop').style.display = 'none'; } });
 $('#chat').addEventListener('dragover', e => e.preventDefault());
-$('#chat').addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('#drop').style.display = 'none'; const f = e.dataTransfer.files[0]; if (f) uploadImage(f); });
-$('#input').addEventListener('paste', e => { const f = [...e.clipboardData.files][0]; if (f) { e.preventDefault(); uploadImage(f); } });
+$('#chat').addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('#drop').style.display = 'none'; if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+$('#input').addEventListener('paste', e => { const fl = [...e.clipboardData.files]; if (fl.length) { e.preventDefault(); addFiles(fl); } });
 
 // @etiket önerileri
 let sugg = [], suggI = 0;
@@ -5923,7 +6032,7 @@ Object.assign(PERM_ROWS, {
   stream: ['Kamera ve ekran paylaş', 'Yayın açabilir, kamerasını açabilirler.', 'screen'],
 });
 const chNotif = () => { try { return JSON.parse(store.get('kanka-chnotif') || '{}'); } catch { return {}; } };
-const setChNotif = (id, v) => { const o = chNotif(); v === 'mentions' ? delete o[id] : o[id] = v; store.set('kanka-chnotif', JSON.stringify(o)); };
+const setChNotif = (id, v) => { const o = chNotif(); v === 'mentions' ? delete o[id] : o[id] = v; store.set('kanka-chnotif', JSON.stringify(o)); syncPrefs(); };
 const notifMode = id => chNotif()[id] || 'mentions';
 const vch = () => { if (!myVoice) return null; for (const s of S.servers) { const c = s.channels.find(x => x.id === myVoice); if (c) return { s, c }; } return null; };
 let stageSt = {};
