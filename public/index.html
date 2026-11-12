@@ -749,7 +749,6 @@
   @keyframes msgInMine { from { opacity: 0; transform: translate(14px, 10px) scale(.97); } }
   .sys, .daily { animation: fadeUp .4s var(--ease-out) both; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } }
-  #messages.switch > * { animation: none; }
   .row.new .reacts button { animation: pop .3s var(--ease); }
   .reacts button.bump { animation: bump .35s var(--ease); }
   @keyframes bump { 40% { transform: scale(1.25); } }
@@ -3388,8 +3387,7 @@ function enterRoom(id, placeholder, hello) {
     const nl = $('#messages .newline');
     if (nl) centerIn(nl);
     markRead(id);
-    const box = $('#messages'); box.classList.remove('switch'); void box.offsetWidth; box.classList.add('switch');
-    setTimeout(() => box.classList.remove('switch'), 400);
+
     $('#input').focus();
   });
 }
