@@ -17,6 +17,12 @@ fs.mkdirSync(UPLOADS, { recursive: true });
 const OLD_UP = path.join(__dirname, 'public', 'uploads');
 if (fs.existsSync(OLD_UP) && OLD_UP !== UPLOADS) for (const f of fs.readdirSync(OLD_UP)) { try { fs.renameSync(path.join(OLD_UP, f), path.join(UPLOADS, f)); } catch {} }
 
+// Temel güvenlik başlıkları: başka sitelerin Kanka'yı çerçeve içine alıp tıklama tuzağı kurmasını ve tür tahminini engelle
+app.use((req, res, next) => {
+  res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'SAMEORIGIN' });
+  if (!req.path.startsWith('/dosya/')) res.set('Content-Security-Policy', "frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
+  next();
+});
 app.use('/uploads', express.static(UPLOADS, { maxAge: '30d' }));
 app.use('/indir', express.static(path.join(__dirname, 'indir'), { setHeaders: res => res.set('Content-Disposition', 'attachment') }));
 app.use(express.json({ limit: '8kb' }));
@@ -44,8 +50,37 @@ const GAME_PROCS = {
 };
 app.get('/api/presence/games', (req, res) => res.json(GAME_PROCS));
 const STARTED = Date.now();
+// Gerçek istemci IP'si: X-Forwarded-For sadece bağlantı kendi sunucumuzdaki ters vekilden (Caddy) geliyorsa ve en son eklenen değer dikkate alınır; aksi halde sahte başlıkla limitler atlatılabilirdi
+function clientIp(remote, xff) {
+  const r = String(remote || '').replace(/^::ffff:/, '');
+  if ((r === '127.0.0.1' || r === '::1') && xff) { const hops = String(xff).split(',').map(x => x.trim()).filter(Boolean); if (hops.length) return hops[hops.length - 1].replace(/^::ffff:/, ''); }
+  return r || 'bilinmiyor';
+}
+const reqIp = req => clientIp(req.socket?.remoteAddress, req.headers['x-forwarded-for']);
+// Güvenlik olayları (yönetim panelinde görünür)
+function secLog(kind, who, detail) {
+  const l = (db.secLog ||= []); const last = l[0];
+  if (last && last.kind === kind && last.who === who && Date.now() - last.at < 10 * 60e3) { last.n = (last.n || 1) + 1; last.at = Date.now(); }
+  else l.unshift({ kind, who, detail: String(detail || '').slice(0, 120), at: Date.now(), n: 1 });
+  l.length = Math.min(l.length, 200); save();
+}
+// Davet kodu tahmin etmeye çalışanları yavaşlat: kısa sürede çok geçersiz kod deneyen 1 saat engellenir
+function inviteGuard(key, valid) {
+  if (blockedUntil(key)) return false;
+  if (!valid) {
+    const k = 'invbad|' + key; const n = (limits.get(k) || []).filter(t => Date.now() - t < 3600e3); n.push(Date.now()); limits.set(k, n);
+    // aynı internet bağlantısını paylaşan (okul, yurt, mobil) masumları vurmamak için IP sınırı daha yüksek
+    if (n.length >= (key.startsWith('ip:') ? 40 : 12)) { limits.set('invblock|' + key, [Date.now() + 3600e3]); secLog('davet-tahmini', key, `${n.length} geçersiz davet kodu denendi, 1 saat engellendi`); }
+  }
+  return true;
+}
+const blockedUntil = key => { const b = limits.get('invblock|' + key)?.[0]; return b && b > Date.now() ? b : 0; };
+const newInviteCode = () => { const A = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; const b = crypto.randomBytes(12); for (const x of b) c += A[x % A.length]; return c.slice(0, 10); };
 app.get('/api/davet/:code', (req, res) => {
+  const ipk = 'ip:' + reqIp(req);
+  if (blockedUntil(ipk) || limited('davetapi|' + ipk, 40, 600e3)) return res.status(429).json({ error: 'Çok fazla deneme, biraz sonra tekrar dene' });
   const s = db.servers.find(x => x.invite === req.params.code);
+  inviteGuard(ipk, !!s);
   if (!s) return res.status(404).json({ error: 'Davet geçersiz ya da süresi dolmuş' });
   const mem = membersOf(s), on = new Set(onlineNames());
   res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, badges: srvBadges(s), description: s.description || '', banner: s.banner || null, bannerColor: s.bannerColor || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
@@ -313,7 +348,7 @@ if (!db.servers.find(s => s.id === 's1')) {
 }
 for (const s of db.servers) {
   s.members ||= [];
-  s.invite ||= crypto.randomBytes(4).toString('hex');
+  s.invite ||= newInviteCode();
   s.public = s.id === 's1' || (!s.owner && !s.members.length); // hesaplardan önce açılan sunucular herkese açık kalsın
   s.roles ||= {}; s.customRoles ||= []; s.memberRoles ||= {}; s.bans ||= {}; s.timeouts ||= {};
   for (const c of s.channels) c.type ||= 'text';
@@ -1040,8 +1075,11 @@ try {
 
 // ---------- Bağlantı ----------
 io.on('connection', socket => {
+  // Tek bir bağlantıdan olağandışı yoğunlukta istek gelirse (betik/saldırı) bağlantıyı kes
+  { let n = 0, t0 = Date.now();
+    socket.onAny(() => { const now = Date.now(); if (now - t0 > 10e3) { n = 0; t0 = now; } if (++n === 400) { secLog('istek-seli', socket.data?.me || 'bağlantı', '10 saniyede 400+ istek, bağlantı kesildi'); socket.disconnect(true); } }); }
   socket.emit('build', build);
-  const ip = String(socket.handshake.headers['x-forwarded-for'] || socket.handshake.address || '').split(',')[0].trim();
+  const ip = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']);
   let me = null, cur = null, myVoice = null;
 
   function start(name) {
@@ -1140,8 +1178,10 @@ io.on('connection', socket => {
     const key = 'login|' + ip + '|' + clean(name, 190).toLowerCase(), now = Date.now();
     const fails = (limits.get(key) || []).filter(t => now - t < 600e3);
     if (fails.length >= 5) return cb({ error: `Çok fazla hatalı deneme. ${Math.ceil((600e3 - (now - fails[0])) / 60000)} dakika sonra tekrar dene.` });
+    const ipFails = (limits.get('loginip|' + ip) || []).filter(t => now - t < 900e3);
+    if (ipFails.length >= 25) return cb({ error: 'Bu bağlantıdan çok fazla hatalı giriş denendi. 15 dakika sonra tekrar dene.' });
     const u = findUserBy(name);
-    if (!u || hashPw(String(password ?? ''), u.salt) !== u.hash) { fails.push(now); limits.set(key, fails); return cb({ error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Kullanıcı adı / e-posta ya da şifre yanlış.' }); }
+    if (!u || hashPw(String(password ?? ''), u.salt) !== u.hash) { fails.push(now); limits.set(key, fails); ipFails.push(now); limits.set('loginip|' + ip, ipFails); if (ipFails.length === 25) secLog('giris-denemesi', 'ip:' + ip, '15 dakikada 25 hatalı giriş'); return cb({ error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Kullanıcı adı / e-posta ya da şifre yanlış.' }); }
     limits.delete(key);
     if (u.siteBan) return cb({ error: banText(u), banned: true });
     cb(start(u.name));
@@ -1319,6 +1359,7 @@ io.on('connection', socket => {
     }
     save(); cb({ ok: true, sent: out });
   });
+  socket.on('adminSec', (cb = () => {}) => { if (!SA(cb)) return; cb({ log: (db.secLog || []).slice(0, 100) }); });
   socket.on('adminBackup', ({ now, mail, pulled } = {}, cb = () => {}) => {
     if (pulled) { if (siteAdmin(me)) { db.backupLog = { ...(db.backupLog || {}), desktop: { at: Date.now(), by: me, dir: clean(pulled.dir, 200), name: clean(pulled.name, 80) } }; save(); } return cb({ ok: true }); }
     if (!SA(cb)) return;
@@ -2055,7 +2096,7 @@ io.on('connection', socket => {
     const name = clean(opts.name, 40); if (!name) return cb({ error: 'Sunucu adı gerekli' });
     const tpl = TEMPLATES[opts.template] || TEMPLATES.bos;
     const s = {
-      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], joinedAt: { [me]: Date.now() }, createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: crypto.randomBytes(4).toString('hex'),
+      id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], joinedAt: { [me]: Date.now() }, createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: newInviteCode(),
       channels: [], template: opts.template in TEMPLATES ? opts.template : 'bos'
     };
     for (const r of tpl.roles || []) s.customRoles.push({ id: id(), ...r });
@@ -2128,9 +2169,11 @@ io.on('connection', socket => {
   socket.on('invitePeek', (codes, cb = () => {}) => {
     if (!me || !Array.isArray(codes)) return cb({});
     const on = new Set(onlineNames()), out = {};
-    for (const code of codes.slice(0, 20)) {
+    for (const code of codes.slice(0, 10)) {
       if (typeof code !== 'string' || code.length > 40) continue;
+      if (blockedUntil('u:' + me) || blockedUntil('ip:' + ip) || limited('peek|' + me, 120, 600e3)) { out[code] = null; continue; }
       const sv = db.servers.find(x => x.invite === code);
+      inviteGuard('u:' + me, !!sv); inviteGuard('ip:' + ip, !!sv);
       if (!sv || sv.bans?.[me]) { out[code] = null; continue; }
       const mem = membersOf(sv);
       out[code] = { id: sv.id, name: sv.name, icon: sv.icon, iconImg: sv.iconImg || null, banner: sv.banner || null, bannerColor: sv.bannerColor || null, badges: srvBadges(sv),
@@ -2138,10 +2181,21 @@ io.on('connection', socket => {
     }
     cb(out);
   });
+  socket.on('resetInvite', (serverId, cb = () => {}) => {
+    const sv = db.servers.find(x => x.id === serverId);
+    if (!me || !sv || sv.public || !can(sv, me, 'manageServer')) return cb({ error: 'Yetkin yok' });
+    if (limited('reinv|' + me, 10, 3600e3)) return cb({ error: 'Çok sık yeniledin, biraz bekle' });
+    sv.invite = newInviteCode(); audit(sv, me, 'Davet linkini yeniledi', 'eski link artık çalışmıyor'); save(); pushServers(sv.members);
+    cb({ ok: true, invite: sv.invite });
+  });
   socket.on('joinInvite', (code, cb = () => {}) => {
     code = clean(code, 200).split(/[=/]/).pop();
+    if (!me) return cb({ error: 'Giriş yapmalısın' });
+    if (blockedUntil('u:' + me) || blockedUntil('ip:' + ip)) return cb({ error: 'Çok fazla geçersiz davet denedin. Bir saat sonra tekrar dene.' });
+    if (limited('join|' + me, 15, 600e3)) return cb({ error: 'Çok hızlı sunucuya katılıyorsun, biraz bekle' });
     const s = db.servers.find(x => x.invite === code);
-    if (!me || !s) return cb({ error: 'Davet kodu geçersiz' });
+    inviteGuard('u:' + me, !!s); inviteGuard('ip:' + ip, !!s);
+    if (!s) return cb({ error: 'Davet kodu geçersiz' });
     if (s.bans?.[me]) return cb({ error: 'Bu sunucudan yasaklandın' });
     if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); save(); pushServers(s.members); }
     cb(serverView(s, me));

@@ -2155,6 +2155,8 @@
   .roomc .rc-here { font-size: 12.5px; font-weight: 900; color: #3fcf8e; flex-shrink: 0; }
   .roomc.bad .rc-ic { background: rgba(255,255,255,.06); color: var(--muted); }
   @media (max-width: 520px) { .roomc { flex-wrap: wrap; } .roomc .rc-go { width: 100% !important; justify-content: center; } }
+  .inv-reset { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: none; border: 1px dashed var(--line); color: var(--ink); font-weight: 800; font-size: 13.5px; text-align: left; }
+  .inv-reset:hover { border-color: var(--accent); } .inv-reset .ic { width: 15px; height: 15px; margin-right: 6px; vertical-align: -2px; } .inv-reset small { font-weight: 600; font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -2304,6 +2306,7 @@ const ICON = {
   heart: '<path d="M12 20s-8-4.5-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15.5 12 20 12 20z"/>',
   spotify: '<circle cx="12" cy="12" r="9.5"/><path d="M7 9.5c3.5-1 7.5-.6 10.5 1M7.8 12.8c2.8-.8 6-.4 8.3.9M8.6 15.8c2.2-.6 4.5-.3 6.3.7"/>',
   download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
   activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
@@ -3635,9 +3638,9 @@ function renderMessages(toBottom) {
 }
 const whenTxt = t => { const d = new Date(t), n = new Date(), y = new Date(n - 864e5); return d.toDateString() === n.toDateString() ? hm(t) : d.toDateString() === y.toDateString() ? 'Dün ' + hm(t) : d.toLocaleDateString('tr-TR') + ' ' + hm(t); };
 // ---- Davet kartı: mesajdaki /davet/kod linki sunucu kartı olarak görünür, tek tıkla katılınır ----
-const INV_RE = /(?:https?:\/\/[^\s/]+)?\/davet\/([a-f0-9]{6,16})\b|[?&]davet=([a-f0-9]{6,16})\b/gi;
-const invCodes = t => [...new Set([...String(t || '').matchAll(INV_RE)].map(x => (x[1] || x[2]).toLowerCase()))].slice(0, 3);
-const invOnly = t => invCodes(t).length === 1 && /^\s*(?:https?:\/\/\S+?)?(?:\/davet\/[a-f0-9]{6,16}|[^\s]*[?&]davet=[a-f0-9]{6,16})\s*$/i.test(t || '');
+const INV_RE = /(?:https?:\/\/[^\s/]+)?\/davet\/([A-Za-z0-9]{6,16})\b|[?&]davet=([A-Za-z0-9]{6,16})\b/g;
+const invCodes = t => [...new Set([...String(t || '').matchAll(INV_RE)].map(x => x[1] || x[2]))].slice(0, 3);
+const invOnly = t => invCodes(t).length === 1 && /^\s*(?:https?:\/\/\S+?)?(?:\/davet\/[A-Za-z0-9]{6,16}|[^\s]*[?&]davet=[A-Za-z0-9]{6,16})\s*$/.test(t || '');
 const invCache = {}; let invAsk = new Set(), invT = null;
 function invCardHTML(code) {
   const v = invCache[code];
@@ -5704,6 +5707,7 @@ function showInvite(s) {
   modal(`<div class="invh"><div class="invico">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div><div><h3>Arkadaşlarını davet et</h3><p>${esc(s.name)} · ${cnt} üye</p></div></div>
     <div class="mlabel">Davet linki</div>
     <div class="invbox"><input id="inv" value="${esc(link)}" readonly aria-label="Davet linki"><button class="btnp" id="copy">${ic('copy')}<span>Kopyala</span></button></div>
+    ${!s.public && perm(s, 'manageServer') ? `<button class="inv-reset" id="inv-reset">${ic('refresh')}Linki yenile <small>eski link çalışmaz olur, istenmeyen kişiler girmeye başladıysa kullan</small></button>` : ''}
     <div class="mlabel">Hızlı paylaş</div>
     <div class="invshare">${share.map(([k, n, c, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" data-sh="${k}" style="--c:${c}"><i></i>${n}</a>`).join('')}${navigator.share ? `<button data-sh="native" style="--c:var(--accent)"><i></i>Diğer</button>` : ''}</div>
     <p class="invnote">${ic('shield')} Linki açan kişi giriş yapınca sunucuna katılır.</p>
@@ -5716,6 +5720,10 @@ function showInvite(s) {
   };
   $('#modal-box').querySelectorAll('a[data-sh]').forEach(a => a.onclick = mark);
   const nb = $('#modal-box').querySelector('[data-sh=native]'); if (nb) nb.onclick = () => navigator.share({ title: 'Kanka Chat', text, url: link }).then(mark, () => {});
+  $('#inv-reset') && ($('#inv-reset').onclick = () => confirmBox('Davet linki yenilensin mi? Eski link hemen çalışmaz olur; daha önce paylaştığın yerlerdeki link artık kimseyi içeri almaz.', () => socket.emit('resetInvite', s.id, r => {
+    if (r.error) return toast(r.error, null, false, { type: 'err' });
+    s.invite = r.invite; const sv = S.servers.find(x => x.id === s.id); if (sv) sv.invite = r.invite; toast('Yeni davet linki hazır', null, false, { type: 'ok' }); showInvite(s);
+  })));
   $('#mx').onclick = closeModal;
 }
 
@@ -6544,12 +6552,18 @@ function wireAccount() {
 
 // ================= Kanka yönetimi (site yöneticisi) =================
 function adminPanel(el, sub = 'reports') {
-  const subs = [['reports', 'Şikayetler', 'flag'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['backup', 'Yedekler', 'download'], ['users', 'Kullanıcılar', 'users']];
+  const subs = [['reports', 'Şikayetler', 'flag'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'shield'], ['users', 'Kullanıcılar', 'users']];
   el.innerHTML = `<div class="st-page"><h3>Kanka yönetimi</h3><p class="hint">Sadece sen görüyorsun.</p>
     <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;
   el.querySelectorAll('#adm-seg [data-s]').forEach(b => b.onclick = () => adminPanel(el, b.dataset.s));
   const B = el.querySelector('#adm-body');
   if (sub === 'reports') return reportsPanel(B, null);
+  if (sub === 'sec') return socket.emit('adminSec', r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const T = { 'davet-tahmini': ['Davet kodu tahmini', 'Kısa sürede çok sayıda geçersiz davet kodu denendi; 1 saat engellendi.'], 'giris-denemesi': ['Toplu giriş denemesi', 'Aynı bağlantıdan çok sayıda hatalı şifre denendi; 15 dakika engellendi.'], 'istek-seli': ['İstek seli', 'Bir bağlantı olağandışı hızda istek gönderdi; bağlantısı kesildi.'] };
+    B.innerHTML = `<div class="adm-box"><p class="hint" style="margin:0">Kanka davet kodlarını tahmin etmeye, şifre denemeye ya da sunucuyu boğmaya çalışanları kendiliğinden yavaşlatıyor ve engelliyor. Olaylar burada görünür; bir şey yapman gerekmez, ama aynı kişi sık çıkıyorsa Kullanıcılar sekmesinden yasaklayabilirsin.</p></div>
+      <div class="bk-list" style="margin-top:12px">${r.log.length ? r.log.map(x => `<div><span style="flex-direction:column;align-items:flex-start;gap:2px"><b>${esc(T[x.kind]?.[0] || x.kind)}${x.n > 1 ? ` · ${x.n} kez` : ''}</b><small>${esc(x.who)} · ${esc(x.detail || T[x.kind]?.[1] || '')}</small></span><small>${ago(x.at)}</small></div>`).join('') : `<div class="hm-calm">${ic('check')}<span><b>Şüpheli bir olay yok</b>Kimse davet kodu tahmin etmeye ya da şifre denemeye çalışmadı.</span></div>`}</div>`;
+  });
   if (sub === 'backup') return socket.emit('adminBackup', {}, function draw(r) {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
     const L = r.log || {}, kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
