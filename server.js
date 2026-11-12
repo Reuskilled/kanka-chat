@@ -843,7 +843,7 @@ function postMessage(me, chId, p = {}) {
   if (list.length > 2000) list.shift();
   // Bağlantı önizlemesi (YouTube zaten kendi kartıyla gösteriliyor)
   { const lu = msg.kind === 'text' && /https?:\/\/[^\s<>"']+/i.exec(msg.text || '')?.[0]?.replace(/[).,!?;:]+$/, '');
-    if (lu && !/(youtube\.com|youtu\.be)\//i.test(lu)) linkPreview(lu).then(pv => { if (pv && findMsg(chId, msg.id)) { msg.preview = pv; save(); io.to(chId).emit('update', { channelId: chId, msg }); } }); }
+    if (lu && !/(youtube\.com|youtu\.be)\//i.test(lu) && !/\/davet\/|[?&]davet=/i.test(lu)) linkPreview(lu).then(pv => { if (pv && findMsg(chId, msg.id)) { msg.preview = pv; save(); io.to(chId).emit('update', { channelId: chId, msg }); } }); }
   // Takip edilebilir duyuru odası: takipçi odalara kopyala
   { const f1 = p.xfrom ? null : findChannel(chId);
     if (f1?.c.news && f1.c.followers?.length) setTimeout(() => {
@@ -2123,6 +2123,20 @@ io.on('connection', socket => {
     if (discoverable && !clean(description, 200)) return cb({ error: 'Keşfette görünmek için kısa bir açıklama yaz' });
     s.discoverable = !!discoverable; s.description = clean(description, 200); s.category = CATS.includes(category) ? category : null;
     audit(s, me, s.discoverable ? 'Sunucuyu keşfete açtı' : 'Keşif ayarlarını değiştirdi'); save(); pushServers(membersOf(s)); cb({ ok: true });
+  });
+  // Mesajlardaki davet linkleri için kart bilgisi (Discord'daki gibi)
+  socket.on('invitePeek', (codes, cb = () => {}) => {
+    if (!me || !Array.isArray(codes)) return cb({});
+    const on = new Set(onlineNames()), out = {};
+    for (const code of codes.slice(0, 20)) {
+      if (typeof code !== 'string' || code.length > 40) continue;
+      const sv = db.servers.find(x => x.invite === code);
+      if (!sv || sv.bans?.[me]) { out[code] = null; continue; }
+      const mem = membersOf(sv);
+      out[code] = { id: sv.id, name: sv.name, icon: sv.icon, iconImg: sv.iconImg || null, banner: sv.banner || null, bannerColor: sv.bannerColor || null, badges: srvBadges(sv),
+        description: (sv.description || '').slice(0, 140), members: mem.length, online: mem.filter(n => on.has(n)).length, joined: !!sv.public || sv.members.includes(me) };
+    }
+    cb(out);
   });
   socket.on('joinInvite', (code, cb = () => {}) => {
     code = clean(code, 200).split(/[=/]/).pop();
