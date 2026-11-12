@@ -2029,6 +2029,19 @@
   .pf-matches .pm-dots { display: flex; gap: 4px; } .pf-matches .pm-dots i { width: 10px; height: 22px; border-radius: 4px; background: #a99a8f; }
   .pf-matches .pm-dots i.r-win { background: #3fcf8e; } .pf-matches .pm-dots i.r-loss { background: #ff5a5f; }
   .pf-matches b.w { color: #3fcf8e; } .pf-matches b.l { color: #ff6b6f; }
+  .push-card { display: flex; align-items: center; gap: 14px; padding: 16px; margin-top: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+  .push-card.on { border-color: rgba(63,207,142,.45); background: linear-gradient(135deg, rgba(63,207,142,.08), transparent 60%), var(--card); }
+  .push-card .pk-ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,138,76,.15); color: var(--accent); flex-shrink: 0; }
+  .push-card.on .pk-ic { background: rgba(63,207,142,.16); color: #3fcf8e; }
+  .push-card .pk-t { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; } .push-card .pk-t span { font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .push-card .pk-b { display: flex; gap: 8px; flex-shrink: 0; }
+  @media (max-width: 700px) { .push-card { flex-wrap: wrap; } .push-card .pk-b { width: 100%; } .push-card .pk-b button { flex: 1; } }
+  #voicebar .vq { display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; font-size: 11.5px; font-weight: 700; cursor: help; }
+  #voicebar .vq[hidden] { display: none; }
+  #voicebar .vq i { width: 8px; height: 8px; border-radius: 50%; background: #3fcf8e; box-shadow: 0 0 0 3px rgba(63,207,142,.18); }
+  #voicebar .vq.mid i { background: #f0b232; box-shadow: 0 0 0 3px rgba(240,178,50,.18); } #voicebar .vq.mid em { color: #f0b232; }
+  #voicebar .vq.bad i { background: #ff5a5f; box-shadow: 0 0 0 3px rgba(255,90,95,.2); animation: pulse 1s infinite; } #voicebar .vq.bad em { color: #ff6b6f; }
+  #voicebar .vq em { font-style: normal; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -2049,7 +2062,7 @@
     <div class="shead" id="side-head"></div>
     <div id="side-list"></div>
     <div id="me">
-      <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı</div><div class="vc" id="vname"></div>
+      <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vq" class="vq" hidden><i></i><em></em></span></div><div class="vc" id="vname"></div>
         <div class="btns"><button id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="vns" title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button></div></div>
       <div class="row1"><div id="me-av"></div><div><div class="n" id="me-name"></div><div class="s" id="me-lvl"></div></div>
         <button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
@@ -2423,7 +2436,10 @@ function onAuth(res) {
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
-  if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+  pushSync(); setTimeout(pushNudge, 4000);
+  socket.emit('vis', document.visibilityState === 'visible');
+  { const ac = new URLSearchParams(location.search).get('ac'), kim = new URLSearchParams(location.search).get('kim');
+    if (ac) { history.replaceState(null, '', '/'); setTimeout(() => openFromNotif({ ch: ac === 'arkadaslar' ? null : ac, friend: ac === 'arkadaslar', from: kim, dm: /^(dm|g):/.test(ac) }), 300); } }
   const odaQ = new URLSearchParams(location.search).get('oda');
   if (odaQ) { history.replaceState(null, '', '/'); const sv = S.servers.find(x => x.channels.some(c => c.id === odaQ && !voiceLike(c.type))); if (sv) return selectServer(sv.id, odaQ); }
   if (authQ.kod) { authQ.kod = null; if (!QS.get('davet')) history.replaceState(null, '', '/'); }
@@ -2509,7 +2525,7 @@ function showSettings(tab = 'profile') {
           .map(([k, t, d]) => `<label class="chk"><input type="radio" name="ns" value="${k}" ${nsMode() === k ? 'checked' : ''}><span>${t}<small>${d}</small></span></label>`).join('')}</div>
       <p class="hint">Neler için haber verelim?</p>
       <div class="pc-sec"><label class="switch">Etiketlendiğimde ve özel mesaj geldiğinde bildir<input type="checkbox" id="p-nt" ${notifOn() ? 'checked' : ''}></label>
-      <label class="switch">Tarayıcı bildirimleri (sekme arka plandayken)<input type="checkbox" id="p-bn" ${'Notification' in window && Notification.permission === 'granted' ? 'checked' : ''}></label></div></div>`,
+      </div>${pushSettingsHTML()}</div>`,
   };
   const swatches = (el, key, opts) => {
     $(el).innerHTML = opts.map(c => `<button style="background:${c || 'linear-gradient(135deg,' + u.color + ',#2b211c)'}" data-c="${c || ''}" class="${(draft[key] || '') === (c || '') ? 'on' : ''}" title="${c || 'Otomatik'}" aria-label="Renk ${c || 'otomatik'}"></button>`).join('') +
@@ -2580,7 +2596,7 @@ function showSettings(tab = 'profile') {
     if (t === 'notif') {
       wireOverlaySettings();
       $('#p-nt').onchange = e => store.set('kanka-notif', e.target.checked ? null : 'off');
-      $('#p-bn').onchange = e => { if (e.target.checked && 'Notification' in window) Notification.requestPermission().then(p => e.target.checked = p === 'granted'); };
+      wirePushSettings();
     }
     preview();
   };
@@ -3405,7 +3421,10 @@ const dayLabel = t => {
   if (d.toDateString() === y.toDateString()) return 'Dün';
   return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
 };
+let lastMsgUsersSig = '';
+const msgUsersSig = () => JSON.stringify([...new Set(S.msgs.map(m => m.author).filter(Boolean))].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.color, u.avatar, u.frame, u.level, u.nameColor, u.avatarDeco]; }));
 function renderMessages(toBottom) {
+  lastMsgUsersSig = msgUsersSig();
   const box = $('#messages');
   if (S.view === 'server' && S.channel?.type === 'forum') { const sc = box.scrollTop; box.innerHTML = forumHTML(); wireForum(box); box.scrollTop = toBottom ? 0 : sc; return; }
   const atBottom = toBottom || box.scrollHeight - box.scrollTop - box.clientHeight < 120;
@@ -3458,7 +3477,7 @@ function msgHTML(m, prev) {
   } else {
     const onlyImg = m.image && !m.text && !m.replyTo;
     const jumbo = !m.image && !m.audio && m.text && isJumbo(m.text);
-    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" data-view>` : ''}${m.text ? fmt(m.text) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
+    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.text ? fmt(m.text) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
   }
   if (m.thread?.length) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
@@ -4208,7 +4227,8 @@ socket.on('users', list => {
   S.users = Object.fromEntries(list.map(u => [u.name, u]));
   if (!S.me || !S.users[S.me]) return;
   renderMe(); renderMembers();
-  clearTimeout(usersT); usersT = setTimeout(() => { if (S.msgs.length) renderMessages(); }, 300);
+  // Mesajları sadece ekrandaki yazarların adı/rengi/resmi/seviyesi değiştiyse yeniden çiz (her XP artışında değil)
+  clearTimeout(usersT); usersT = setTimeout(() => { if (!S.msgs.length) return; const sig = msgUsersSig(); if (sig !== lastMsgUsersSig) { lastMsgUsersSig = sig; renderMessages(); } }, 300);
 });
 socket.on('toast', t => toast(t));
 socket.on('social', soc => {
@@ -4256,11 +4276,72 @@ socket.on('notify', n => {
     else if (n.dm) openChat(n.channelId, n.from);
     else { const s = S.servers.find(s => s.channels.some(c => c.id === n.channelId)); if (s) selectServer(s.id, n.channelId); }
   }, true, { type: 'msg', av: n.from });
-  if (!document.hasFocus() && 'Notification' in window && Notification.permission === 'granted') {
+  if (!document.hasFocus() && !pushActive && 'Notification' in window && Notification.permission === 'granted') {
     const opt = { body: n.text, icon: '/icon-192.png', badge: '/icon-192.png', tag: n.channelId || 'kanka' };
     navigator.serviceWorker?.ready ? navigator.serviceWorker.ready.then(r => r.showNotification(title, opt)).catch(() => new Notification(title, opt)) : new Notification(title, opt);
   }
 });
+
+// ================= Telefona bildirim (Web Push) =================
+let pushActive = false;
+const pushCan = () => !window.kankaDesktop && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const isIOS = () => /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const iosNeedsInstall = () => isIOS() && !(navigator.standalone || matchMedia('(display-mode: standalone)').matches);
+const b64u = s => { const p = '='.repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); };
+async function pushSync() { // izin zaten verildiyse aboneliği sunucuyla eşitle
+  if (!pushCan() || Notification.permission !== 'granted') { pushActive = false; return; }
+  try { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); if (sub) { socket.emit('pushSub', sub.toJSON()); pushActive = true; } else await pushEnable(true); } catch { pushActive = false; }
+}
+async function pushEnable(quiet) {
+  if (!pushCan()) { if (!quiet) toast(window.kankaDesktop ? 'Masaüstü uygulaması bildirimleri zaten kendisi gösteriyor' : 'Bu tarayıcı bildirimleri desteklemiyor'); return false; }
+  if (iosNeedsInstall()) { if (!quiet) toast('iPhone\'da önce Paylaş › Ana Ekrana Ekle ile Kanka\'yı kur, sonra oradan aç ve bildirimleri aç'); return false; }
+  const perm = Notification.permission === 'granted' ? 'granted' : quiet ? Notification.permission : await Notification.requestPermission();
+  if (perm !== 'granted') { if (!quiet) toast(perm === 'denied' ? 'Bildirimler engellenmiş. Tarayıcı ayarlarından bu site için bildirimlere izin ver.' : 'Bildirim izni verilmedi'); return false; }
+  const key = await new Promise(r => socket.emit('pushKey', r)); if (!key) { if (!quiet) toast('Sunucuda bildirim henüz hazır değil, biraz sonra tekrar dene'); return false; }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (sub && sub.options?.applicationServerKey && btoa(String.fromCharCode(...new Uint8Array(sub.options.applicationServerKey))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') !== key) { await sub.unsubscribe(); sub = null; }
+    sub ||= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(key) });
+    const r = await new Promise(res => socket.emit('pushSub', sub.toJSON(), res));
+    pushActive = !!r?.ok; return pushActive;
+  } catch (e) { if (!quiet) toast('Bildirim açılamadı: ' + (e.message || e)); return false; }
+}
+async function pushDisable() {
+  try { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); if (sub) { socket.emit('pushOff', sub.endpoint); await sub.unsubscribe(); } } catch {}
+  pushActive = false;
+}
+function pushNudge() { // bir kere, nazikçe sor
+  if (!pushCan() || pushActive || Notification.permission === 'denied' || store.get('kanka-pushask')) return;
+  store.set('kanka-pushask', '1');
+  toast(`<b>Kanka kapalıyken de haberin olsun</b><br>Biri sana yazınca ya da seni etiketleyince telefonuna bildirim gelsin mi?<small>${iosNeedsInstall() ? 'iPhone: önce Ana Ekrana Ekle' : 'Dokun ve aç'}</small>`, () => pushEnable().then(ok => ok && toast('Bildirimler açıldı 🎉')), true, { type: 'info', ttl: 15000 });
+}
+function openFromNotif(d) {
+  if (d.friend) return showFriends('pending');
+  if (!d.ch) return;
+  if (d.dm || /^(dm|g):/.test(d.ch)) return openChat(d.ch, d.from);
+  const s = S.servers.find(s => s.channels.some(c => c.id === d.ch)); if (s) selectServer(s.id, d.ch);
+}
+navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.kankaOpen) openFromNotif(e.data.kankaOpen); });
+document.addEventListener('visibilitychange', () => { if (S.me) socket.emit('vis', document.visibilityState === 'visible'); });
+function pushSettingsHTML() {
+  if (window.kankaDesktop) return '';
+  return `<div class="push-card" id="push-card"><div class="pk-ic">${ic('bell')}</div><div class="pk-t"><b>Telefon ve tarayıcı bildirimleri</b><span id="pk-s">Kanka kapalıyken de özel mesaj, etiket ve arkadaşlık isteklerinde bildirim gelir.</span></div><div class="pk-b" id="pk-b"></div></div>`;
+}
+function wirePushSettings() {
+  const box = $('#pk-b'), st = $('#pk-s'); if (!box) return;
+  const draw = () => {
+    if (!pushCan()) { st.textContent = 'Bu tarayıcı bildirimleri desteklemiyor. Chrome, Edge, Firefox ya da Safari kullan.'; box.innerHTML = ''; return; }
+    if (iosNeedsInstall()) { st.innerHTML = 'iPhone\'da önce <b>Paylaş › Ana Ekrana Ekle</b> ile Kanka\'yı kur, sonra ana ekrandan açıp burayı aç.'; box.innerHTML = ''; return; }
+    if (Notification.permission === 'denied') { st.textContent = 'Bildirimler bu site için engellenmiş. Adres çubuğundaki kilit simgesinden izin ver, sonra sayfayı yenile.'; box.innerHTML = ''; return; }
+    box.innerHTML = pushActive ? `<button class="btns2" id="pk-test">Dene</button><button class="btns2" id="pk-off">Kapat</button>` : `<button class="primary" id="pk-on">Bildirimleri aç</button>`;
+    $('#pk-on') && ($('#pk-on').onclick = () => pushEnable().then(ok => { if (ok) toast('Bildirimler açıldı 🎉'); draw(); }));
+    $('#pk-off') && ($('#pk-off').onclick = () => pushDisable().then(() => { toast('Bu cihazda bildirimler kapatıldı'); draw(); }));
+    $('#pk-test') && ($('#pk-test').onclick = () => { toast('Deneme bildirimi gönderildi; uygulamadan çıkınca da böyle gelecek'); socket.emit('pushTest', r => r?.error && toast(r.error)); });
+    $('#push-card').classList.toggle('on', pushActive);
+  };
+  draw();
+}
 
 // ================= Çalma listesi =================
 function showPlaylist_() {
@@ -4356,7 +4437,7 @@ async function joinVoiceNow(chId) {
     if (r.stage) stageSt[chId] = r.stage;
     { const f = vch(); if (f?.c.type === 'stage' && f.c.canManage && !r.stage?.speakers?.includes(S.me)) socket.emit('stageSpeaker', { name: S.me, on: true }, () => {});
       if (f && !canSpeakNow()) toast(f.c.type === 'stage' ? '🎧 Sahnede dinleyicisin. Konuşmak için ✋ el kaldır.' : '🎧 Bu odada sadece dinleyebilirsin'); }
-    applyMute(); startSpeakDetect(); playSound('join');
+    applyMute(); startSpeakDetect(); watchMic(); vqStart(); playSound('join');
     setTimeout(() => tip('voice', '#voicebar', 'Sesli odadasın 🎧', 'Buradan mikrofonunu kapatabilir, kamerayı açabilir, ekranını paylaşabilir ve gürültü engellemeyi yönetebilirsin.', 'right'), 900);
     r.peers.forEach(p => { peerNames[p.sid] = p.name; makePeer(p.sid); }); pushOverlay();
     const ch = S.servers.flatMap(s => s.channels.map(c => ({ ...c, s: s.name }))).find(c => c.id === chId);
@@ -4368,6 +4449,45 @@ async function joinVoiceNow(chId) {
     resolve(true);
   }));
 }
+// ---- Ses bağlantı kalitesi ve otomatik toparlanma ----
+let vqT = null, vqPrev = {}, micRecovering = false;
+async function vqTick() {
+  const el = $('#vq'); if (!el) return;
+  if (!myVoice) { el.hidden = true; return; }
+  const list = Object.entries(peers); el.hidden = false;
+  if (!list.length) { el.className = 'vq good'; el.querySelector('em').textContent = ''; el.title = 'Odada şimdilik yalnızsın'; return; }
+  let rtt = 0, lost = 0, recv = 0, bad = 0;
+  for (const [sid, pc] of list) {
+    if (['failed', 'disconnected'].includes(pc.connectionState)) bad++;
+    try {
+      const st = await pc.getStats();
+      st.forEach(r => {
+        if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded' && r.currentRoundTripTime != null) rtt = Math.max(rtt, r.currentRoundTripTime * 1000);
+        if (r.type === 'inbound-rtp' && r.kind === 'audio') { const k = sid + r.id, p = vqPrev[k] || { l: r.packetsLost || 0, n: r.packetsReceived || 0 }; lost += Math.max(0, (r.packetsLost || 0) - p.l); recv += Math.max(0, (r.packetsReceived || 0) - p.n); vqPrev[k] = { l: r.packetsLost || 0, n: r.packetsReceived || 0 }; }
+      });
+    } catch {}
+  }
+  const loss = recv + lost ? lost / (recv + lost) * 100 : 0, ms = Math.round(rtt);
+  const lvl = bad ? 'bad' : ms > 250 || loss > 5 ? 'bad' : ms > 120 || loss > 2 ? 'mid' : 'good';
+  el.className = 'vq ' + lvl;
+  el.querySelector('em').textContent = bad ? 'yeniden bağlanıyor…' : ms ? ms + ' ms' : '';
+  el.title = bad ? 'Bağlantı koptu, kendiliğinden yeniden bağlanıyor' : `Gecikme ${ms || '?'} ms · paket kaybı %${loss.toFixed(1)}${lvl === 'good' ? ' · bağlantı iyi' : lvl === 'mid' ? ' · bağlantı orta' : ' · bağlantı zayıf'}`;
+}
+function vqStart() { clearInterval(vqT); vqPrev = {}; vqT = setInterval(vqTick, 3000); vqTick(); }
+// Mikrofon çıkarılır ya da değişirse kendiliğinden yenisine geç
+function watchMic() { rawStream?.getAudioTracks().forEach(t => t.onended = () => micRecover('Mikrofon değişti, yenisine geçildi')); }
+async function micRecover(msg) {
+  if (!myVoice || micRecovering) return; micRecovering = true;
+  try {
+    const old = localStream, fresh = await getMic(), nt = fresh.getAudioTracks()[0], oldT = old?.getAudioTracks() || [];
+    for (const pc of Object.values(peers)) for (const sn of pc.getSenders()) if (sn.track && oldT.includes(sn.track)) await sn.replaceTrack(nt).catch(() => {});
+    localStream = fresh; oldT.forEach(t => t.stop());
+    stopSpeakDetect(); startSpeakDetect(); applyMute(); watchMic(); toast(msg);
+  } catch { toast('Mikrofon bulunamadı. Bir mikrofon tak ya da Ayarlar › Bildirim ve uygulama\'dan seç.', null, false, { type: 'err' }); }
+  micRecovering = false;
+}
+window.addEventListener('online', () => { Object.values(peers).forEach(pc => pc.restartIce?.()); setTimeout(vqTick, 1500); });
+navigator.mediaDevices?.addEventListener?.('devicechange', () => { if (myVoice && rawStream && !store.get('kanka-mic') && rawStream.getAudioTracks().every(t => t.readyState === 'ended')) micRecover('Mikrofon değişti, yenisine geçildi'); });
 function makePeer(sid) {
   const pc = new RTCPeerConnection(ICE);
   Object.assign(pc, { _polite: socket.id < sid, _making: false, _ignore: false });
@@ -4398,7 +4518,13 @@ function makePeer(sid) {
       renderStage();
     }
   };
-  pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed') pc.restartIce?.(); };
+  // Bağlantı koparsa kendiliğinden toparla: kısa kopmada 3 sn bekle, sonra yeni yol ara
+  pc.onconnectionstatechange = () => {
+    clearTimeout(pc._rt);
+    if (pc.connectionState === 'failed') pc.restartIce?.();
+    else if (pc.connectionState === 'disconnected') pc._rt = setTimeout(() => pc.connectionState === 'disconnected' && pc.restartIce?.(), 3000);
+    vqTick();
+  };
   setTimeout(renderStage);
   return pc;
 }
@@ -4437,7 +4563,7 @@ function closePeer(sid) {
   document.getElementById('a-' + sid)?.remove(); document.getElementById('as-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
-function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; pushOverlay(); }
+function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {

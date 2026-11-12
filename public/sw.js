@@ -1,5 +1,5 @@
 // Kanka Chat service worker: uygulama kabuğunu önbellekte tutar, çevrimdışıyken de açılır
-const CACHE = 'kanka-v30';
+const CACHE = 'kanka-v31';
 const SHELL = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
@@ -17,7 +17,22 @@ self.addEventListener('fetch', e => {
     return res;
   }).catch(() => caches.match(e.request).then(r => r || caches.match('/'))));
 });
+// Telefona bildirim: uygulama kapalıyken sunucudan gelir
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data?.text() }; }
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    if (cs.some(c => c.visibilityState === 'visible' && c.focused)) return; // zaten bakıyor
+    return self.registration.showNotification(d.title || 'Kanka Chat', {
+      body: d.body || '', icon: '/icon-192.png', badge: '/icon-192.png', tag: d.tag || 'kanka', renotify: true,
+      data: { ch: d.ch || null, from: d.from || null, dm: !!d.dm, friend: !!d.friend }, vibrate: [80, 40, 80] });
+  }));
+});
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(self.clients.matchAll({ type: 'window' }).then(cs => cs.length ? cs[0].focus() : self.clients.openWindow('/')));
+  const d = e.notification.data || {}, q = d.friend ? '?ac=arkadaslar' : d.ch ? `?ac=${encodeURIComponent(d.ch)}${d.from ? '&kim=' + encodeURIComponent(d.from) : ''}` : '';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    const c = cs[0];
+    if (c) { c.postMessage({ kankaOpen: d }); return c.focus(); }
+    return self.clients.openWindow('/' + q);
+  }));
 });

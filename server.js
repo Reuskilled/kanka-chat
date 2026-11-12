@@ -567,6 +567,33 @@ function statusOf(name) {
   }
   return chosen;
 }
+// ---------- Telefona bildirim (Web Push) ----------
+// Kullanıcının görünür (açık ve önde) bir Kanka penceresi yoksa bildirim telefona/tarayıcıya push olarak gider
+const visibleSockets = new Set();
+let webpush = null, vapid = null;
+try {
+  webpush = require('web-push');
+  const VAPID_FILE = path.join(DATA_DIR, 'vapid.json');
+  try { vapid = JSON.parse(fs.readFileSync(VAPID_FILE, 'utf8')); } catch { vapid = webpush.generateVAPIDKeys(); fs.writeFileSync(VAPID_FILE, JSON.stringify(vapid)); }
+  webpush.setVapidDetails('mailto:kankahq1@gmail.com', vapid.publicKey, vapid.privateKey);
+} catch (e) { console.warn('Web Push kapalı:', e.message); webpush = null; }
+function sendPush(name, payload) {
+  const u = db.users[name]; if (!webpush || !u?.push?.length) return;
+  if ((u.presence || 'online') === 'dnd') return;
+  if ([...online].some(([sid, n]) => n === name && visibleSockets.has(sid))) return; // şu an Kanka'ya bakıyor
+  const body = JSON.stringify(payload);
+  for (const sub of [...u.push]) {
+    webpush.sendNotification(sub, body, { TTL: 3600, urgency: 'high', topic: (payload.tag || 'kanka').replace(/[^\w-]/g, '').slice(0, 32) || undefined }).catch(err => {
+      if (err?.statusCode === 404 || err?.statusCode === 410) { u.push = (u.push || []).filter(x => x.endpoint !== sub.endpoint); save(); }
+    });
+  }
+}
+function notifyUser(name, n) {
+  io.to('user:' + name).emit('notify', n);
+  const title = n.friend ? n.from : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? n.from : `${n.from} seni etiketledi`;
+  sendPush(name, { title, body: n.friend ? 'sana arkadaşlık isteği gönderdi' : String(n.text || '').slice(0, 160) + (n.dm ? '' : n.where ? `\n${n.where}` : ''),
+    tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend });
+}
 const presenceList = () => onlineNames().map(n => [n, statusOf(n)]).filter(x => x[1]);
 const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.startsWith('call:')).map(([k, m]) => [k, [...new Set(m.values())]]));
 const pushPresence = () => io.emit('presence', presenceList());
@@ -672,7 +699,7 @@ function postMessage(me, chId, p = {}) {
   if (isPrivateChat(chId)) {
     for (const n of chatMembers(chId)) {
       io.to('user:' + n).emit('dms', dmsFor(n));
-      if (n !== me) io.to('user:' + n).emit('notify', { from: me, text: preview, channelId: chId, where, dm: true });
+      if (n !== me) notifyUser(n, { from: me, text: preview, channelId: chId, where, dm: true });
     }
   } else {
     const f = findChannel(chId);
@@ -682,7 +709,7 @@ function postMessage(me, chId, p = {}) {
     for (const r of f.s.customRoles || []) if ((msg.text || '').includes('@' + r.name)) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) mentioned.add(n);
     for (const n of mentioned) {
       if (n !== me && db.users[n] && canAccess(n, chId))
-        io.to('user:' + n).emit('notify', { from: me, text: preview, channelId: chId, where, mention: true });
+        notifyUser(n, { from: me, text: preview, channelId: chId, where, mention: true });
     }
   }
   onbFlag(me, 'msg');
@@ -1172,6 +1199,20 @@ io.on('connection', socket => {
     u.statusUntil = u.status && t > Date.now() && t < Date.now() + 31 * 864e5 ? t : null;
     if (u.status) onbFlag(me, 'profile');
     save(); io.emit('users', allUsers()); cb({ ok: true, until: u.statusUntil });
+  });
+  socket.on('vis', on => { on ? visibleSockets.add(socket.id) : visibleSockets.delete(socket.id); });
+  socket.on('pushKey', (cb = () => {}) => cb(webpush && vapid ? vapid.publicKey : null));
+  socket.on('pushSub', (sub, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (!sub || typeof sub.endpoint !== 'string' || !/^https:\/\//.test(sub.endpoint) || sub.endpoint.length > 600 || typeof sub.keys?.p256dh !== 'string' || typeof sub.keys?.auth !== 'string') return cb({ error: 'Geçersiz abonelik' });
+    const clean = { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh.slice(0, 200), auth: sub.keys.auth.slice(0, 100) }, at: Date.now() };
+    u.push = [clean, ...(u.push || []).filter(x => x.endpoint !== clean.endpoint)].slice(0, 6); save(); cb({ ok: true });
+  });
+  socket.on('pushOff', (endpoint, cb = () => {}) => { const u = db.users[me]; if (!u) return; u.push = (u.push || []).filter(x => x.endpoint !== endpoint); save(); cb({ ok: true }); });
+  socket.on('pushTest', (cb = () => {}) => {
+    const u = db.users[me]; if (!u?.push?.length || !webpush) return cb({ error: 'Bu cihazda bildirim açık değil' });
+    const body = JSON.stringify({ title: 'Kanka Chat', body: 'Bildirimler çalışıyor! Kanka kapalıyken de mesajlarını kaçırmayacaksın.', tag: 'test' });
+    Promise.allSettled(u.push.map(sub => webpush.sendNotification(sub, body, { TTL: 60 }))).then(r => cb({ ok: r.some(x => x.status === 'fulfilled') }));
   });
   socket.on('idle', on => { on ? idleSockets.add(socket.id) : idleSockets.delete(socket.id); pushPresence(); });
 
@@ -1688,7 +1729,7 @@ io.on('connection', socket => {
     }
     if (!a.reqOut.includes(name)) { a.reqOut.push(name); b.reqIn.push(me); }
     save(); pushSocial(me, name);
-    io.to('user:' + name).emit('notify', { from: me, text: 'sana arkadaşlık isteği gönderdi', where: 'Arkadaşlar', friend: true });
+    notifyUser(name, { from: me, text: 'sana arkadaşlık isteği gönderdi', where: 'Arkadaşlar', friend: true });
     cb({ ok: true });
   });
   socket.on('friendAccept', (name, cb = () => {}) => {
@@ -1751,7 +1792,7 @@ io.on('connection', socket => {
     if (msg.thread.length > 300) msg.thread.shift();
     update(cur, msg);
     const who = new Set([msg.author, ...msg.thread.map(t => t.author)]); who.delete(me);
-    for (const n of who) io.to('user:' + n).emit('notify', { from: me, text: `konuda yanıtladı: ${text.slice(0, 80)}`, channelId: cur, where: 'Konu', mention: true });
+    for (const n of who) notifyUser(n, { from: me, text: `konuda yanıtladı: ${text.slice(0, 80)}`, channelId: cur, where: 'Konu', mention: true });
     cb({ ok: true });
   });
 
@@ -1931,7 +1972,7 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     leaveVoice();
-    online.delete(socket.id); idleSockets.delete(socket.id);
+    online.delete(socket.id); idleSockets.delete(socket.id); visibleSockets.delete(socket.id);
     pushPresence();
   });
 });
