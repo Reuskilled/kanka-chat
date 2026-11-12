@@ -1720,6 +1720,7 @@
   .mail-st { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: rgba(246,196,69,.1); margin-bottom: 14px; }
   .mail-st .ic { grid-row: span 2; width: 24px; height: 24px; color: #f6c445; } .mail-st span { font-size: 12.5px; color: var(--muted); }
   .mail-st.ok { background: rgba(76,195,138,.1); } .mail-st.ok .ic { color: var(--green); }
+  .mail-st.bad { background: rgba(255,90,95,.1); } .mail-st.bad .ic { color: #ff6b6f; }
   .adm-adv { margin: 4px 0 10px; font-size: 13px; } .adm-adv summary { cursor: pointer; color: var(--muted); font-weight: 800; margin-bottom: 8px; }
   .adm-user { display: flex; gap: 12px; align-items: center; margin-top: 10px; } .adm-user .av { width: 40px; height: 40px; } .adm-user b { display: block; } .adm-user small { display: block; color: var(--muted); font-size: 12.5px; } .adm-user .no { color: var(--red); }
   @media (max-width: 700px) { .adm-stats { grid-template-columns: 1fr; } .seg.big { grid-template-columns: 1fr 1fr; } .acc-danger { flex-direction: column; align-items: stretch; } }
@@ -6267,7 +6268,7 @@ function adminPanel(el, sub = 'reports') {
   if (sub === 'mail') return socket.emit('adminMail', {}, r => {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
     const c = r.cfg || {};
-    B.innerHTML = `<div class="adm-box"><div class="mail-st ${r.ready ? 'ok' : ''}">${ic(r.ready ? 'check' : 'mail')}<b>${r.ready ? 'E-posta hazır' : 'E-posta kurulmadı'}</b><span>${r.ready ? `${esc(c.user)} üzerinden gönderiliyor` : 'Şifre sıfırlama ve bekleme listesi davetleri için gerekli'}</span></div>
+    B.innerHTML = `<div class="adm-box"><div class="mail-st ${r.ready ? 'ok' : r.failed ? 'bad' : ''}">${ic(r.ready ? 'check' : 'mail')}<b>${r.ready ? 'E-posta hazır' : r.failed ? 'E-posta çalışmıyor' : r.unverified ? 'Test edilmedi' : 'E-posta kurulmadı'}</b><span>${r.ready ? `${esc(c.user)} üzerinden gönderiliyor` : r.failed ? 'Gmail son denemede şifreyi kabul etmedi. Yeni uygulama şifresi oluşturup tekrar dene.' : r.unverified ? 'Bilgiler kayıtlı. Çalıştığından emin olmak için Test e-postası gönder.' : 'Şifre sıfırlama ve bekleme listesi davetleri için gerekli'}</span></div>
       <ol class="steps"><li><b>kankahq1@gmail.com</b> gibi bir Gmail hesabında <b>2 adımlı doğrulama</b>yı aç.</li><li><a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent)">myaccount.google.com/apppasswords</a> adresinde "Kanka" adıyla bir <b>uygulama şifresi</b> oluştur (16 harf).</li><li>Aşağıya yapıştır, kaydet ve test et. Gmail günde 500 e-posta gönderir, beta için fazlasıyla yeter.</li></ol>
       <div class="st-field st-2"><div><label>Gönderen Gmail adresi</label><input class="field" id="m-user" value="${esc(c.user || '')}" placeholder="kankahq1@gmail.com" style="margin:0"></div>
         <div><label>Uygulama şifresi</label><input class="field" id="m-pass" type="password" placeholder="${c.hasPass ? '•••• kayıtlı (değiştirmek için yaz)' : 'abcd efgh ijkl mnop'}" style="margin:0"></div></div>
@@ -6275,7 +6276,7 @@ function adminPanel(el, sub = 'reports') {
       <details class="adm-adv"><summary>Gmail dışı bir SMTP kullan</summary><div class="st-field st-2"><div><label>SMTP sunucusu</label><input class="field" id="m-host" value="${esc(c.host || '')}" placeholder="boş = Gmail" style="margin:0"></div><div><label>Port</label><input class="field" id="m-port" type="number" value="${c.port || 465}" style="margin:0"></div></div></details>
       <div class="rowb" style="justify-content:flex-start"><button class="primary" id="m-save" style="width:auto;padding:11px 20px">Kaydet</button><button class="btns2" id="m-test">${ic('send')} Test e-postası gönder</button></div></div>`;
     $('#m-save').onclick = () => socket.emit('adminMail', { set: { user: $('#m-user').value, pass: $('#m-pass').value, url: $('#m-url').value, host: $('#m-host').value, port: $('#m-port').value } }, x => x.error ? toast(x.error) : (toast('Kaydedildi'), adminPanel(el, 'mail')));
-    $('#m-test').onclick = () => { $('#m-test').classList.add('busy'); socket.emit('adminMail', { test: true }, x => { $('#m-test')?.classList.remove('busy'); toast(x.error ? x.error : `Test e-postası ${x.to} adresine gönderildi 🎉`); }); };
+    $('#m-test').onclick = () => { $('#m-test').classList.add('busy'); socket.emit('adminMail', { test: true }, x => { $('#m-test')?.classList.remove('busy'); toast(x.error ? x.error : `Test e-postası ${x.to} adresine gönderildi 🎉`, null, false, { type: x.error ? 'err' : 'ok' }); adminPanel(el, 'mail'); }); };
   });
   if (sub === 'users') {
     B.innerHTML = `<div class="adm-box"><h4>${ic('search')}Kullanıcı bul</h4><div class="adm-inl"><input class="field" id="u-q" placeholder="Kullanıcı adı ya da e-posta"><button class="btns2" id="u-go">Bul</button></div><div id="u-res"></div></div>

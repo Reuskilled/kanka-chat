@@ -1151,12 +1151,17 @@ io.on('connection', socket => {
       const to = db.users[me]?.email || mailCfg?.user;
       return (async () => {
         const t = getMailer(); if (!t) return cb({ error: 'Önce ayarları kaydet' });
-        try { await t.verify(); } catch (e) { return cb({ error: 'Bağlanamadı: ' + e.message.slice(0, 160) }); }
+        try { await t.verify(); } catch (e) {
+          mailCfg.ok = false; try { fs.writeFileSync(MAIL_FILE, JSON.stringify(mailCfg)); } catch {}
+          const bad = /535|BadCredentials|Invalid login/i.test(e.message);
+          return cb({ error: bad ? 'Gmail şifreyi kabul etmedi. Normal Gmail şifren değil, 16 harfli uygulama şifresi olmalı; 2 adımlı doğrulama açık ve şifre aynı hesapta oluşturulmuş olmalı.' : 'Bağlanamadı: ' + e.message.slice(0, 160) });
+        }
+        mailCfg.ok = true; try { fs.writeFileSync(MAIL_FILE, JSON.stringify(mailCfg)); } catch {}
         const ok = await sendMail(to, 'Kanka Chat test e-postası', mailHtml('E-posta çalışıyor 🎉', 'Bu test e-postası geldiyse şifre sıfırlama ve bekleme listesi davetleri hazır.'));
         cb(ok ? { ok: true, to } : { error: 'Gönderilemedi, sunucu kayıtlarına bak' });
       })();
     }
-    cb({ ok: true, cfg: mailCfg ? { user: mailCfg.user, host: mailCfg.host || '', port: mailCfg.port || 465, url: mailCfg.url || baseUrl(), hasPass: !!mailCfg.pass } : { url: baseUrl() }, ready: !!getMailer() });
+    cb({ ok: true, cfg: mailCfg ? { user: mailCfg.user, host: mailCfg.host || '', port: mailCfg.port || 465, url: mailCfg.url || baseUrl(), hasPass: !!mailCfg.pass } : { url: baseUrl() }, ready: !!getMailer() && mailCfg?.ok === true, unverified: !!getMailer() && mailCfg?.ok !== true, failed: mailCfg?.ok === false });
   });
   socket.on('adminUser', ({ name, action, reason } = {}, cb = () => {}) => {
     if (!SA(cb)) return;
