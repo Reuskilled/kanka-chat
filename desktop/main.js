@@ -25,7 +25,9 @@ app.on('second-instance', () => showWindow());
 app.setAppUserModelId('com.kanka.chat');
 
 function showWindow() {
-  if (!win) return createWindow();
+  // Kapanış yarıda kaldıysa ya da pencere yok olduysa: takılı kalma, temiz başla
+  if (quitting) { app.relaunch(); app.exit(0); return; }
+  if (!win || win.isDestroyed()) { win = null; return createWindow(); }
   if (win.isMinimized()) win.restore();
   win.show(); win.focus();
 }
@@ -42,7 +44,7 @@ function finishSplash() {
   setSplash('Hazır!');
   const wait = Math.max(0, 1400 - (Date.now() - splashShown)); // çok hızlı açılsa bile animasyon görünsün
   setTimeout(() => {
-    if (!(config.startHidden && (process.argv.includes('--hidden') || process.argv.includes('--autostart')))) { win.show(); win.focus(); }
+    if (win && !win.isDestroyed() && !(config.startHidden && (process.argv.includes('--hidden') || process.argv.includes('--autostart')))) { win.show(); win.focus(); }
     splash?.destroy(); splash = null;
   }, wait);
 }
@@ -105,6 +107,7 @@ function createWindow() {
     }).catch(() => cb({}));
   }, { useSystemPicker: true });
   // Kapatınca tepsiye küçült
+  win.on('closed', () => { win = null; });
   win.on('close', e => {
     if (quitting) return;
     e.preventDefault(); win.hide();
@@ -377,6 +380,10 @@ app.whenReady().then(async () => {
   win?.on('focus', () => updateOverlay()); win?.on('blur', () => setTimeout(() => updateOverlay(), 150)); win?.on('hide', () => updateOverlay()); win?.on('show', () => updateOverlay());
   screen.on('display-metrics-changed', placeOverlay);
 });
-app.on('before-quit', () => { quitting = true; try { overlay?.destroy(); } catch {} });
+app.on('before-quit', () => {
+  quitting = true; try { overlay?.destroy(); } catch {}
+  // Kapanış bir yerde takılırsa süreç arkada asılı kalmasın (yoksa uygulama bir daha açılmıyor)
+  setTimeout(() => app.exit(0), 6000).unref?.();
+});
 app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch {} });
 app.on('window-all-closed', e => e.preventDefault());
