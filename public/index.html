@@ -1876,6 +1876,7 @@
   .st-field label.chk { display: flex; align-items: flex-start; gap: 10px; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 700; color: var(--ink); margin: 0; padding: 8px 4px; cursor: pointer; }
   .st-field label.chk input { margin-top: 2px; flex-shrink: 0; }
   .st-field label.chk small { text-transform: none; letter-spacing: 0; font-weight: 600; }
+  @media (max-width: 700px) { .followb { padding: 0; width: 38px; height: 38px; justify-content: center; } .followb span { display: none; } }
 </style>
 </head>
 <body>
@@ -3609,7 +3610,9 @@ const STEAM = { 'Counter-Strike 2': 730, 'Dota 2': 570, PUBG: 578080, 'Apex Lege
   'Destiny 2': 1085660, 'The Witcher 3': 292030, Brawlhalla: 291550, 'Hollow Knight': 367520 };
 const gameCover = n => STEAM[n] ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${STEAM[n]}/header.jpg` : null;
 const gameColor = n => (GAMES.find(g => g[0] === n) || [, `hsl(${[...n].reduce((a, c) => a + c.charCodeAt(0), 0) % 360} 55% 45%)`])[1];
-const gameArt = (n, cls = '') => { const c = gameCover(n); return `<span class="gart ${cls}" style="--gc:${gameColor(n)}">${c ? `<img src="${c}" alt="" loading="lazy" onerror="this.remove()">` : ''}<em>${esc([...n.replace(/[^\p{L}\p{N} ]/gu, '')].filter((ch, i, arr) => i === 0 || arr[i - 1] === ' ').slice(0, 2).join('').toUpperCase() || n[0])}</em></span>`; };
+const GAME_SHORT = { 'League of Legends': 'LoL', 'Counter-Strike 2': 'CS2', 'Grand Theft Auto V': 'GTA', 'Rainbow Six Siege': 'R6', 'Euro Truck Simulator 2': 'ETS2', 'Red Dead Redemption 2': 'RDR2', 'EA FC 26': 'FC26', 'Dead by Daylight': 'DbD', 'Mobile Legends': 'MLBB' };
+const gameInit = n => GAME_SHORT[n] || [...n.replace(/[^\p{L}\p{N} ]/gu, '')].filter((ch, i, arr) => (i === 0 || arr[i - 1] === ' ') && /[\p{Lu}\p{N}]/u.test(ch)).slice(0, 2).join('') || n[0].toUpperCase();
+const gameArt = (n, cls = '') => { const c = gameCover(n); return `<span class="gart ${cls}" style="--gc:${gameColor(n)}">${c ? `<img src="${c}" alt="" loading="lazy" onerror="this.remove()">` : ''}<em>${esc(gameInit(n))}</em></span>`; };
 const mmss = ms => { const t = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
 const since2 = t => { const m = Math.max(0, Math.floor((Date.now() - t) / 60000)); return m < 1 ? 'az önce başladı' : m < 60 ? `${m} dakikadır` : `${Math.floor(m / 60)} sa ${m % 60} dk`; };
 function actLine(n) {
