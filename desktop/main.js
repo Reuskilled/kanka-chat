@@ -362,6 +362,24 @@ ipcMain.handle('kanka:overlayConfig', (e, p) => {
   return { ...config.overlay, game: currentGame, hotkey: 'Ctrl+Shift+O' };
 });
 ipcMain.handle('kanka:logout', () => { config.presenceKey = null; saveConfig(); return { ok: true }; });
+// Sunucu yedeğini yöneticinin bilgisayarına indir: sunucu tamamen giderse bile veri burada durur
+const backupDir = () => path.join(app.getPath('documents'), 'Kanka Yedekleri');
+ipcMain.handle('kanka:saveBackup', async (e, token) => {
+  try {
+    if (typeof token !== 'string' || !token) return { ok: false, error: 'Oturum yok' };
+    const r = await fetch(config.server + '/api/yedek/son', { headers: { Authorization: 'Bearer ' + token, 'X-Kanka-Via': 'masaustu' }, signal: AbortSignal.timeout(120000) });
+    if (!r.ok) return { ok: false, error: 'Sunucu ' + r.status };
+    const name = (r.headers.get('content-disposition') || '').match(/filename="([^"]+)"/)?.[1] || `kanka-data-${new Date().toISOString().slice(0, 10)}.json.gz`;
+    if (!/^kanka-data-\d{4}-\d{2}-\d{2}\.json(\.gz)?$/.test(name)) return { ok: false, error: 'Beklenmeyen dosya' };
+    const buf = Buffer.from(await r.arrayBuffer()); if (buf.length < 20) return { ok: false, error: 'Boş yedek' };
+    const dir = backupDir(); fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, name + '.tmp'), buf); fs.renameSync(path.join(dir, name + '.tmp'), path.join(dir, name));
+    const all = fs.readdirSync(dir).filter(n => /^kanka-data-.*\.json(\.gz)?$/.test(n)).sort();
+    for (const old of all.slice(0, Math.max(0, all.length - 30))) { try { fs.unlinkSync(path.join(dir, old)); } catch {} }
+    return { ok: true, dir, name, size: buf.length };
+  } catch (err) { return { ok: false, error: String(err?.message || err) }; }
+});
+ipcMain.handle('kanka:openBackups', () => { const d = backupDir(); try { fs.mkdirSync(d, { recursive: true }); } catch {} return shell.openPath(d); });
 // Gerçek boşta süresi: Windows'un kendi sayacı (oyunda klavye/fare kullanmak da sayılır), ekran kilitliyse hemen boşta
 let screenLocked = false;
 ipcMain.handle('kanka:idle', () => { try { return screenLocked ? -1 : powerMonitor.getSystemIdleTime(); } catch { return null; } });

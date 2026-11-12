@@ -2043,6 +2043,14 @@
   #voicebar .vq.mid i { background: #f0b232; box-shadow: 0 0 0 3px rgba(240,178,50,.18); } #voicebar .vq.mid em { color: #f0b232; }
   #voicebar .vq.bad i { background: #ff5a5f; box-shadow: 0 0 0 3px rgba(255,90,95,.2); animation: pulse 1s infinite; } #voicebar .vq.bad em { color: #ff6b6f; }
   #voicebar .vq em { font-style: normal; color: var(--muted); }
+  .bk-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .bk-row i { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(246,196,69,.14); color: #f6c445; font-style: normal; flex-shrink: 0; }
+  .bk-row.ok i { background: rgba(63,207,142,.15); color: #3fcf8e; } .bk-row.bad i { background: rgba(255,90,95,.15); color: #ff6b6f; }
+  .bk-row i .ic { width: 16px; height: 16px; } .bk-row span { display: flex; flex-direction: column; } .bk-row small { color: var(--muted); font-size: 12.5px; }
+  .bk-list { display: grid; gap: 6px; } .bk-list > div { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+  .bk-list span { display: flex; gap: 10px; align-items: baseline; } .bk-list small { color: var(--muted); }
+  .bk-alert { display: flex; gap: 12px; padding: 14px; border-radius: 14px; background: rgba(255,90,95,.1); border: 1px solid rgba(255,90,95,.35); margin-bottom: 14px; font-size: 13.5px; line-height: 1.5; }
+  .bk-alert b:first-child { display: block; } .bk-alert .ic { color: #ff6b6f; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -2191,6 +2199,7 @@ const ICON = {
   heart: '<path d="M12 20s-8-4.5-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15.5 12 20 12 20z"/>',
   spotify: '<circle cx="12" cy="12" r="9.5"/><path d="M7 9.5c3.5-1 7.5-.6 10.5 1M7.8 12.8c2.8-.8 6-.4 8.3.9M8.6 15.8c2.2-.6 4.5-.3 6.3.7"/>',
   download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
   more: '<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3.2"/>',
   chevron: '<path d="m6 9 6 6 6-6"/>',
@@ -2437,7 +2446,7 @@ function onAuth(res) {
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
-  pushSync(); setTimeout(pushNudge, 4000);
+  pushSync(); setTimeout(pushNudge, 4000); setTimeout(() => pullBackup(), 15000);
   socket.emit('vis', document.visibilityState === 'visible');
   { const ac = new URLSearchParams(location.search).get('ac'), kim = new URLSearchParams(location.search).get('kim');
     if (ac) { history.replaceState(null, '', '/'); setTimeout(() => openFromNotif({ ch: ac === 'arkadaslar' ? null : ac, friend: ac === 'arkadaslar', from: kim, dm: /^(dm|g):/.test(ac) }), 300); } }
@@ -4283,6 +4292,17 @@ socket.on('notify', n => {
   }
 });
 
+// ================= Yönetici yedeği: masaüstü uygulaması her gün sunucu yedeğini bu bilgisayara indirir =================
+async function pullBackup(force) {
+  if (!S.siteAdmin || !window.kankaDesktop?.saveBackup) return false;
+  const day = new Date().toISOString().slice(0, 10);
+  if (!force && store.get('kanka-bkday') === day) return true;
+  const r = await window.kankaDesktop.saveBackup(store.get('kanka-token')).catch(e => ({ ok: false, error: String(e) }));
+  if (r?.ok) { store.set('kanka-bkday', day); socket.emit('adminBackup', { pulled: { dir: r.dir, name: r.name } }); }
+  else console.warn('Yedek indirilemedi', r?.error);
+  return !!r?.ok;
+}
+setInterval(() => S.me && pullBackup(), 3 * 3600e3);
 // ================= Telefona bildirim (Web Push) =================
 let pushActive = false;
 const pushCan = () => !window.kankaDesktop && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -6224,12 +6244,35 @@ function wireAccount() {
 
 // ================= Kanka yönetimi (site yöneticisi) =================
 function adminPanel(el, sub = 'reports') {
-  const subs = [['reports', 'Şikayetler', 'flag'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['users', 'Kullanıcılar', 'users']];
+  const subs = [['reports', 'Şikayetler', 'flag'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['backup', 'Yedekler', 'download'], ['users', 'Kullanıcılar', 'users']];
   el.innerHTML = `<div class="st-page"><h3>Kanka yönetimi</h3><p class="hint">Sadece sen görüyorsun.</p>
     <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;
   el.querySelectorAll('#adm-seg [data-s]').forEach(b => b.onclick = () => adminPanel(el, b.dataset.s));
   const B = el.querySelector('#adm-body');
   if (sub === 'reports') return reportsPanel(B, null);
+  if (sub === 'backup') return socket.emit('adminBackup', {}, function draw(r) {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const L = r.log || {}, kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+    const d = window.kankaDesktop?.saveBackup, desk = L.desktop, fresh = desk && Date.now() - desk.at < 36 * 3600e3;
+    const row = (ok, title, sub) => `<div class="bk-row ${ok ? 'ok' : ok === false ? 'bad' : ''}"><i>${ic(ok ? 'check' : ok === false ? 'x' : 'clock')}</i><span><b>${title}</b><small>${sub}</small></span></div>`;
+    B.innerHTML = `${r.recovered ? `<div class="bk-alert">${ic('shield')}<span><b>Veri yedekten kurtarıldı</b>Sunucu son açılışta veritabanı dosyasını okuyamadı ve <b>${esc(r.recovered)}</b> kopyasından devam etti. Bozuk dosya sunucuda saklandı.</span></div>` : ''}
+      <div class="adm-box"><p class="hint" style="margin:0 0 12px">Veritabanı her değişiklikte güvenli şekilde yazılıyor ve sunucuda her gün sıkıştırılmış bir kopyası alınıyor (son 14 gün). Sunucunun kendisi giderse diye kopyaların sunucu dışında da durması gerekiyor:</p>
+        ${row(fresh ? true : desk ? false : null, 'Bilgisayarına otomatik indirme', fresh ? `Son: ${ago(desk.at)} · Belgeler › Kanka Yedekleri` : d ? 'Masaüstü uygulaması açıkken her gün kendiliğinden indirir' : 'Kanka Chat masaüstü uygulamasını aç; yönetici hesabıyla girince her gün kendiliğinden indirir')}
+        ${row(r.mailOn && r.mailReady ? (L.mail ? L.mail.ok : null) : r.mailOn ? false : null, 'E-postana günlük kopya', !r.mailOn ? 'Kapalı' : !r.mailReady ? 'E-posta ayarı çalışınca başlar (E-posta sekmesi)' : L.mail ? `Son: ${ago(L.mail.at)} · ${esc(L.mail.to)}${L.mail.ok ? '' : ' · gönderilemedi'}` : 'Bir sonraki günlük yedekte gönderilecek')}
+        <label class="switch" style="margin-top:6px">Günlük yedeği e-postama da gönder<input type="checkbox" id="bk-mail" ${r.mailOn ? 'checked' : ''}></label>
+        <div class="rowb" style="justify-content:flex-start;margin-top:10px"><button class="primary" id="bk-now" style="width:auto;padding:11px 20px">${ic('download')} Şimdi yedekle${d ? ' ve bilgisayara indir' : ''}</button>${d ? `<button class="btns2" id="bk-open">${ic('folder')} Klasörü aç</button>` : ''}</div></div>
+      <h5 class="ax-h" style="margin-top:18px">Sunucudaki yedekler</h5>
+      <div class="bk-list">${r.list.length ? r.list.map(x => `<div><span><b>${esc(x.name.slice(5, 15))}</b><small>${kb(x.size)}${x.name.endsWith('.gz') ? '' : ' · eski biçim'}</small></span><button class="btns2" data-bk="${esc(x.name)}">${ic('download')} İndir</button></div>`).join('') : '<p class="hint">Henüz yedek yok.</p>'}</div>`;
+    $('#bk-mail').onchange = e => socket.emit('adminBackup', { mail: e.target.checked }, draw);
+    $('#bk-open') && ($('#bk-open').onclick = () => window.kankaDesktop.openBackups());
+    $('#bk-now').onclick = async () => { $('#bk-now').classList.add('busy');
+      socket.emit('adminBackup', { now: true }, async r2 => { if (d) { const ok = await pullBackup(true); toast(ok ? 'Yedek alındı ve bilgisayarına indirildi 🎉' : 'Yedek sunucuda alındı ama bilgisayara indirilemedi', null, false, { type: ok ? 'ok' : 'err' }); } else toast('Yedek alındı'); socket.emit('adminBackup', {}, draw); }); };
+    B.querySelectorAll('[data-bk]').forEach(b => b.onclick = async () => {
+      const res = await fetch('/api/yedek/' + encodeURIComponent(b.dataset.bk), { headers: { Authorization: 'Bearer ' + store.get('kanka-token') } });
+      if (!res.ok) return toast('İndirilemedi', null, false, { type: 'err' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(await res.blob()); a.download = 'kanka-' + b.dataset.bk; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    });
+  });
   if (sub === 'beta') return socket.emit('adminBeta', r => {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
     const pct = Math.min(100, Math.round(r.users / r.cap * 100));

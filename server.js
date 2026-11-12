@@ -53,6 +53,19 @@ app.get('/api/davet/:code', (req, res) => {
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
 for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+// ---------- Yedek indirme (sadece Kanka yönetimi; masaüstü uygulaması her gün bilgisayara çeker) ----------
+app.get('/api/yedek/:name', (req, res) => {
+  const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), who = tok && db.sessions[tok];
+  if (!who || !siteAdmin(who)) return res.status(403).json({ error: 'Yetkin yok' });
+  if (limited('yedek|' + who, 30, 3600e3)) return res.status(429).json({ error: 'Çok fazla istek' });
+  let name = req.params.name;
+  if (name === 'son') { backup(); name = backupList()[0]?.name; }
+  if (!name || !BACKUP_RE.test(name)) return res.status(404).json({ error: 'Yedek yok' });
+  const f = path.join(BACKUPS, name); if (!fs.existsSync(f)) return res.status(404).json({ error: 'Yedek yok' });
+  db.backupLog = { ...(db.backupLog || {}), download: { at: Date.now(), by: who, name, via: String(req.headers['x-kanka-via'] || 'web').slice(0, 20) } }; save();
+  res.set({ 'Content-Type': 'application/gzip', 'Content-Disposition': `attachment; filename="kanka-${name}"`, 'Cache-Control': 'no-store' });
+  fs.createReadStream(f).pipe(res);
+});
 app.get('/api/surum', (req, res) => {
   let sha = null;
   try { sha = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'guncelleme.json'), 'utf8')).sha; } catch {}
@@ -181,10 +194,38 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 // ---------- Veri ----------
-let db = { users: {}, sessions: {}, servers: [], messages: {}, playlists: {} };
-if (fs.existsSync(DATA_FILE)) {
-  try { Object.assign(db, JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))); } catch (e) { console.error('data.json okunamadı', e); }
+// Veri tek dosyada (data.json). Yazım atomik: önce data.json.tmp yazılır ve diske işlenir, sonra yerine geçer;
+// bir önceki sürüm data.json.bak olarak durur. Açılışta dosya bozuksa sırayla .bak ve günlük yedeklerden kurtarılır.
+const zlib = require('zlib');
+const BAK_FILE = DATA_FILE + '.bak', TMP_FILE = DATA_FILE + '.tmp';
+const BACKUPS = path.join(DATA_DIR, 'yedekler');
+const BACKUP_RE = /^data-\d{4}-\d{2}-\d{2}\.json(\.gz)?$/;
+function readDbFile(f) {
+  const raw = fs.readFileSync(f), txt = f.endsWith('.gz') ? zlib.gunzipSync(raw).toString('utf8') : raw.toString('utf8');
+  const j = JSON.parse(txt);
+  if (!j || typeof j !== 'object' || typeof j.users !== 'object' || !Array.isArray(j.servers)) throw new Error('beklenen alanlar yok');
+  return j;
 }
+let dbRecovered = null;
+function loadDb() {
+  const backups = fs.existsSync(BACKUPS) ? fs.readdirSync(BACKUPS).filter(n => BACKUP_RE.test(n)).sort().reverse().map(n => path.join(BACKUPS, n)) : [];
+  for (const f of [DATA_FILE, BAK_FILE, TMP_FILE, ...backups]) {
+    if (!fs.existsSync(f)) continue;
+    try {
+      const j = readDbFile(f);
+      if (f !== DATA_FILE) {
+        dbRecovered = path.basename(f);
+        console.error(`!!! data.json okunamadı, ${dbRecovered} dosyasından kurtarıldı`);
+        if (fs.existsSync(DATA_FILE)) fs.copyFileSync(DATA_FILE, DATA_FILE + '.bozuk-' + Date.now());
+      }
+      return j;
+    } catch (e) { console.error('Okunamadı:', path.basename(f), e.message); }
+  }
+  if (fs.existsSync(DATA_FILE)) { fs.copyFileSync(DATA_FILE, DATA_FILE + '.bozuk-' + Date.now()); console.error('!!! Hiçbir kopya okunamadı; bozuk dosya saklandı'); }
+  return null;
+}
+let db = { users: {}, sessions: {}, servers: [], messages: {}, playlists: {} };
+{ const j = loadDb(); if (j) Object.assign(db, j); }
 // Sıfırlama: klasörde SIFIRLA.txt varsa her şey silinir ve uygulama sıfırdan başlar
 const RESET_FLAG = path.join(DATA_DIR, 'SIFIRLA.txt');
 if (fs.existsSync(RESET_FLAG)) {
@@ -218,19 +259,37 @@ function ensureOwners() {
 ensureOwners();
 for (const u of Object.values(db.users)) delete u.manual; // elle etkinlik kaldırıldı
 
-// ---------- Gece yedeği: her gün bir kopya, son 7 gün saklanır ----------
-const BACKUPS = path.join(DATA_DIR, 'yedekler');
-function backup() {
+// ---------- Günlük yedek: sıkıştırılmış kopya, son 14 gün saklanır ----------
+let lastBackup = null;
+function backup(force) {
   try {
-    if (!fs.existsSync(DATA_FILE)) return;
+    if (!fs.existsSync(DATA_FILE)) return null;
     fs.mkdirSync(BACKUPS, { recursive: true });
-    const f = path.join(BACKUPS, `data-${new Date().toISOString().slice(0, 10)}.json`);
-    if (!fs.existsSync(f)) { fs.copyFileSync(DATA_FILE, f); console.log('Yedek alındı:', path.basename(f)); }
-    const all = fs.readdirSync(BACKUPS).filter(n => /^data-\d{4}-\d{2}-\d{2}\.json$/.test(n)).sort();
-    for (const old of all.slice(0, Math.max(0, all.length - 7))) fs.unlinkSync(path.join(BACKUPS, old));
-  } catch (e) { console.error('Yedek alınamadı', e.message); }
+    const name = `data-${new Date().toISOString().slice(0, 10)}.json.gz`, f = path.join(BACKUPS, name);
+    if (force || !fs.existsSync(f)) {
+      if (saveTimer) writeDbNow();
+      const gz = zlib.gzipSync(fs.readFileSync(DATA_FILE), { level: 9 });
+      readDbFile(DATA_FILE); // bozuk veriyi yedeğe koyma
+      fs.writeFileSync(f + '.tmp', gz); fs.renameSync(f + '.tmp', f);
+      console.log('Yedek alındı:', name, Math.round(gz.length / 1024) + ' KB');
+      if (!force) mailBackup(f, name).catch(() => {});
+    }
+    const all = fs.readdirSync(BACKUPS).filter(n => BACKUP_RE.test(n)).sort();
+    for (const old of all.slice(0, Math.max(0, all.length - 14))) fs.unlinkSync(path.join(BACKUPS, old));
+    lastBackup = { name, at: Date.now() };
+    return name;
+  } catch (e) { console.error('Yedek alınamadı', e.message); return null; }
 }
-backup(); setInterval(backup, 60 * 60e3);
+// Her gün yedeğin bir kopyası yöneticinin e-postasına gider (e-posta çalışıyorsa); 20 MB üstü gönderilmez
+async function mailBackup(f, name) {
+  if (db.backupCfg?.mail === false || !mailCfg?.ok) return false;
+  const size = fs.statSync(f).size; if (size > 20 * 1024 * 1024) return false;
+  const owner = db.servers.find(x => x.id === 's1')?.owner, to = db.users[owner]?.email || mailCfg.user;
+  const ok = await sendMail(to, `Kanka yedeği · ${name.slice(5, 15)}`, mailHtml('Günlük yedek', `Kanka Chat'in ${name.slice(5, 15)} tarihli veritabanı yedeği ekte (${Math.round(size / 1024)} KB). Sunucuya bir şey olursa bu dosyadan geri yüklenebilir. Bu e-postayı silme.`), [{ filename: 'kanka-' + name, path: f }]);
+  db.backupLog = { ...(db.backupLog || {}), mail: { at: Date.now(), ok, to } }; save();
+  return ok;
+}
+const backupList = () => fs.existsSync(BACKUPS) ? fs.readdirSync(BACKUPS).filter(n => BACKUP_RE.test(n)).sort().reverse().map(n => ({ name: n, size: fs.statSync(path.join(BACKUPS, n)).size, at: fs.statSync(path.join(BACKUPS, n)).mtimeMs })) : [];
 
 // ---------- Kötüye kullanım koruması ----------
 const limits = new Map();
@@ -268,11 +327,29 @@ async function startTurn() {
 startTurn();
 const iceServers = () => [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }, ...(turnInfo ? [turnInfo] : [])];
 
-let saveTimer = null;
-function save() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => fs.writeFile(DATA_FILE, JSON.stringify(db, null, 2), () => {}), 300);
+let saveTimer = null, saveFails = 0;
+// Atomik yazım: yarım kalan bir yazım asla data.json'u bozamaz
+function writeDbNow() {
+  clearTimeout(saveTimer); saveTimer = null;
+  try {
+    const txt = JSON.stringify(db);
+    const fd = fs.openSync(TMP_FILE, 'w');
+    try { fs.writeSync(fd, txt); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+    if (fs.existsSync(DATA_FILE)) { try { fs.copyFileSync(DATA_FILE, BAK_FILE); } catch {} }
+    let tries = 0;
+    for (;;) { try { fs.renameSync(TMP_FILE, DATA_FILE); break; } catch (e) { if (++tries > 5) throw e; const t = Date.now() + 40; while (Date.now() < t); } } // Windows'ta dosya anlık kilitli olabilir
+    saveFails = 0;
+  } catch (e) { saveFails++; console.error('Kayıt yazılamadı (' + saveFails + '):', e.message); setTimeout(save, Math.min(30e3, 1000 * saveFails)); }
 }
+function save() {
+  if (saveTimer) return; // 300 ms içindeki tüm değişiklikler tek yazımda
+  saveTimer = setTimeout(writeDbNow, 300);
+}
+// Kapanırken bekleyen değişiklikleri yaz
+for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) { try { process.on(sig, () => { if (saveTimer) writeDbNow(); process.exit(0); }); } catch {} }
+process.on('exit', () => { if (saveTimer) writeDbNow(); });
+if (dbRecovered) { try { fs.unlinkSync(DATA_FILE); } catch {} writeDbNow(); } // kurtarılan veriyi hemen sağlam dosyaya yaz (bozuk kopya .bozuk-… olarak saklandı)
+setTimeout(() => backup(), 5000); setInterval(backup, 60 * 60e3);
 
 // ---------- Yardımcılar ----------
 const id = () => crypto.randomBytes(5).toString('hex');
@@ -772,9 +849,9 @@ const mailHtml = (title, body, btn, url) => `<!doctype html><html><body style="m
 <div style="background:#231b17;border:1px solid #3a2e27;border-radius:20px;padding:28px"><h1 style="font-size:20px;margin:0 0 12px">${title}</h1><div style="font-size:15px;line-height:1.6;color:#d8c9bd">${body}</div>
 ${btn ? `<a href="${url}" style="display:inline-block;margin-top:22px;background:#ff8a4c;color:#1b130f;font-weight:800;text-decoration:none;padding:13px 22px;border-radius:12px">${btn}</a>` : ''}</div>
 <p style="font-size:12px;color:#8c7b6f;margin-top:18px">Bu e-postayı Kanka Chat gönderdi. Sen istemediysen görmezden gelebilirsin.</p></div></body></html>`;
-async function sendMail(to, subject, html) {
+async function sendMail(to, subject, html, attachments) {
   const t = getMailer(); if (!t) return false;
-  try { await t.sendMail({ from: `"Kanka Chat" <${mailCfg.from || mailCfg.user}>`, to, subject, html }); return true; }
+  try { await t.sendMail({ from: `"Kanka Chat" <${mailCfg.from || mailCfg.user}>`, to, subject, html, ...(attachments ? { attachments } : {}) }); return true; }
   catch (e) { console.error('E-posta gönderilemedi:', e.message); return false; }
 }
 const findUserBy = who => { who = clean(who, 190).toLowerCase(); return who && Object.values(db.users).find(u => u.name.toLowerCase() === who || (u.email && u.email === who)); };
@@ -1138,6 +1215,13 @@ io.on('connection', socket => {
       out.push({ email: w.email, code: w.code, sent: await sendInviteMail(w.email, w.code) });
     }
     save(); cb({ ok: true, sent: out });
+  });
+  socket.on('adminBackup', ({ now, mail, pulled } = {}, cb = () => {}) => {
+    if (pulled) { if (siteAdmin(me)) { db.backupLog = { ...(db.backupLog || {}), desktop: { at: Date.now(), by: me, dir: clean(pulled.dir, 200), name: clean(pulled.name, 80) } }; save(); } return cb({ ok: true }); }
+    if (!SA(cb)) return;
+    if (now) backup(true);
+    if (typeof mail === 'boolean') { db.backupCfg = { ...(db.backupCfg || {}), mail }; save(); }
+    cb({ list: backupList().slice(0, 14), recovered: dbRecovered, log: db.backupLog || {}, mailOn: db.backupCfg?.mail !== false, mailReady: !!mailCfg?.ok });
   });
   socket.on('adminMail', ({ set, test } = {}, cb = () => {}) => {
     if (!SA(cb)) return;

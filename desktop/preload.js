@@ -17,4 +17,7 @@ contextBridge.exposeInMainWorld('kankaDesktop', {
   overlayConfig: p => ipcRenderer.invoke('kanka:overlayConfig', p || null),
   // Bilgisayarın genelinde (oyun dahil) son klavye/fare hareketinden bu yana geçen saniye; ekran kilitliyse -1
   idleTime: () => ipcRenderer.invoke('kanka:idle'),
+  // Kanka yönetimi: sunucu yedeğini bu bilgisayara indir (Belgeler/Kanka Yedekleri)
+  saveBackup: token => ipcRenderer.invoke('kanka:saveBackup', token),
+  openBackups: () => ipcRenderer.invoke('kanka:openBackups'),
 });
