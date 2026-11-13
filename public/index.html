@@ -2159,6 +2159,14 @@
   .inv-reset:hover { border-color: var(--accent); } .inv-reset .ic { width: 15px; height: 15px; margin-right: 6px; vertical-align: -2px; } .inv-reset small { font-weight: 600; font-size: 12px; color: var(--muted); }
   .vv-bar .vv-chat { margin-left: auto; background: var(--accent); color: #fff; border-color: var(--accent); display: inline-flex; align-items: center; gap: 6px; } .vv-bar .vv-chat .ic { width: 15px; height: 15px; }
   .vb-chat { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 5px 10px; border-radius: 9px; background: rgba(255,138,76,.14); color: var(--accent); font-weight: 800; font-size: 12px; } .vb-chat .ic { width: 14px; height: 14px; } .vb-chat:hover { background: var(--accent); color: #fff; }
+  #callbar { display: flex; align-items: center; gap: 12px; margin: 10px 20px 0; padding: 10px 14px; border-radius: 16px; background: linear-gradient(135deg, rgba(63,207,142,.16), rgba(63,207,142,.04)); border: 1px solid rgba(63,207,142,.4); }
+  #callbar .cb-pulse { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: #3fcf8e; color: #0b1a12; animation: cbp 1.4s infinite; flex-shrink: 0; } #callbar .cb-pulse .ic { width: 18px; height: 18px; }
+  @keyframes cbp { 0% { box-shadow: 0 0 0 0 rgba(63,207,142,.55); } 100% { box-shadow: 0 0 0 14px rgba(63,207,142,0); } }
+  #callbar .cb-avs { display: flex; } #callbar .cb-avs .av { width: 28px; height: 28px; font-size: 11px; margin-left: -8px; border: 2px solid var(--panel); } #callbar .cb-avs .av:first-child { margin-left: 0; }
+  #callbar .cb-t { flex: 1; min-width: 0; display: flex; flex-direction: column; } #callbar .cb-t small { color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #callbar .primary { width: auto; padding: 9px 18px; border-radius: 11px; background: #3fcf8e; color: #0b1a12; display: inline-flex; gap: 6px; align-items: center; font-weight: 900; } #callbar .primary .ic { width: 16px; height: 16px; }
+  .room.incall::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #3fcf8e; margin-left: auto; box-shadow: 0 0 0 3px rgba(63,207,142,.25); animation: cbp 1.4s infinite; flex-shrink: 0; }
+  @media (max-width: 760px) { #callbar { margin: 8px 10px 0; } #callbar .cb-avs { display: none; } }
 </style>
 </head>
 <body>
@@ -2558,7 +2566,7 @@ function onAuth(res) {
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
   if (res.prefs?.at) applyServerPrefs(res.prefs); else socket.emit('prefs', prefsNow()); // sunucuda yoksa bu cihazın ayarlarını yükle
-  initReadState(res);
+  initReadState(res); S.calls = res.calls || {};
   pushSync(); setTimeout(pushNudge, 4000); setTimeout(() => pullBackup(), 15000);
   socket.emit('vis', document.visibilityState === 'visible');
   { const ac = new URLSearchParams(location.search).get('ac'), kim = new URLSearchParams(location.search).get('kim');
@@ -3377,12 +3385,13 @@ function homeHTML() {
   // 1) Şu an seste olanlar
   const rooms = [];
   for (const sv of S.servers) for (const c of sv.channels) { const who = S.voice?.[c.id]; if (who?.length && voiceLike(c.type)) rooms.push({ sv, c, who, f: who.filter(n => fr.has(n)).length }); }
+  for (const [cid, who] of Object.entries(S.calls || {})) { const d = S.dms.find(x => x.id === cid); if (d && who.length) rooms.push({ call: true, sv: { id: '', name: d.group ? 'Grup araması' : 'Özel arama' }, c: { id: 'call:' + cid, name: d.group ? groupName(d) : dn(d.with), chat: cid, w: d.with }, who, f: 99 }); }
   rooms.sort((a, b) => b.f - a.f || b.who.length - a.who.length);
   const voiceSec = rooms.length ? `<section class="hm-sec"><h5>${ic('mic')}Şu an seste</h5><div class="hm-rooms">${rooms.slice(0, 6).map(r => {
     const here = myVoice === r.c.id, names = r.who.map(dn);
     return `<div class="hm-room ${here ? 'here' : ''}"><div class="hm-avs">${r.who.slice(0, 4).map(n => av(n)).join('')}${r.who.length > 4 ? `<span class="more">+${r.who.length - 4}</span>` : ''}</div>
       <div class="hm-rt"><b>${esc(names.slice(0, 2).join(', '))}${names.length > 2 ? ` ve ${names.length - 2} kişi` : ''}</b><small>${esc(r.sv.name)} › ${esc(r.c.name)}</small></div>
-      ${here ? '<span class="hm-here">Buradasın</span>' : `<button class="primary hm-join" data-jv="${r.c.id}" data-sv="${r.sv.id}">Katıl</button>`}</div>`; }).join('')}</div></section>` : '';
+      ${here ? '<span class="hm-here">Buradasın</span>' : (r.call ? `<button class="primary hm-join" data-jc="${esc(r.c.chat)}" data-jw="${esc(r.c.w || '')}">Katıl</button>` : `<button class="primary hm-join" data-jv="${r.c.id}" data-sv="${r.sv.id}">Katıl</button>`)}</div>`; }).join('')}</div></section>` : '';
   // 2) Seni bekleyenler
   const items = [];
   for (const n of sc.reqIn) items.push(`<div class="hm-it" data-go="friends"><span class="hm-ic req">${ic('userplus')}</span><span class="hm-t"><b>${esc(dn(n))}</b> sana arkadaşlık isteği gönderdi</span><span class="hm-acts"><button class="btns2" data-acc="${esc(n)}">Kabul et</button></span></div>`);
@@ -3408,6 +3417,7 @@ function homeHTML() {
 function wireHome() {
   const M = $('#messages');
   M.querySelectorAll('[data-jv]').forEach(b => b.onclick = e => { e.stopPropagation(); selectServer(b.dataset.sv); setTimeout(() => joinVoice(b.dataset.jv), 150); });
+  M.querySelectorAll('[data-jc]').forEach(b => b.onclick = e => { e.stopPropagation(); openChat(b.dataset.jc, b.dataset.jw || undefined); setTimeout(() => joinVoice('call:' + b.dataset.jc), 200); });
   M.querySelectorAll('[data-chat]').forEach(r => r.onclick = () => openChat(r.dataset.chat, r.dataset.with || undefined));
   M.querySelectorAll('[data-mch]').forEach(r => r.onclick = () => { const s = S.servers.find(s => s.channels.some(c => c.id === r.dataset.mch)); if (s) selectServer(s.id, r.dataset.mch); });
   M.querySelectorAll('[data-usv]').forEach(r => r.onclick = () => selectServer(r.dataset.usv, r.dataset.uch));
@@ -3499,7 +3509,7 @@ function renderDMSide() {
     });
   }, 2);
   $('#side-list').innerHTML = `<div class="room ${!S.channel ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d =>
-    `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, S.online.has(d.with))}${esc(d.with)}`}</div>`).join('')
+    `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''} ${S.calls?.[d.id]?.length ? 'incall' : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, S.online.has(d.with))}${esc(d.with)}`}</div>`).join('')
     : `<p style="padding:6px 20px;color:var(--muted);font-size:14px">Henüz sohbet yok.</p>`);
   $('#side-list').querySelectorAll('.room[data-id]').forEach(r => r.onclick = () => openChat(r.dataset.id, r.dataset.w));
   $('#fr-link').onclick = () => { document.body.classList.remove('drawer'); showFriends(); };
@@ -3588,6 +3598,7 @@ const drafts = {};
 let draftFor = null;
 const lastCh = JSON.parse(store.get('kanka-lastch') || '{}');
 function enterRoom(id, placeholder, hello) {
+  setTimeout(renderCallBar, 0);
   if (draftFor && draftFor !== id) { const v = $('#input').value; v.trim() ? drafts[draftFor] = v : delete drafts[draftFor]; }
   if (draftFor !== id) { $('#input').value = drafts[id] || ''; requestAnimationFrame(growInput); }
   draftFor = id;
@@ -4763,7 +4774,7 @@ async function joinVoiceNow(chId) {
     if (r.stage) stageSt[chId] = r.stage;
     { const f = vch(); if (f?.c.type === 'stage' && f.c.canManage && !r.stage?.speakers?.includes(S.me)) socket.emit('stageSpeaker', { name: S.me, on: true }, () => {});
       if (f && !canSpeakNow()) toast(f.c.type === 'stage' ? '🎧 Sahnede dinleyicisin. Konuşmak için ✋ el kaldır.' : '🎧 Bu odada sadece dinleyebilirsin'); }
-    applyMute(); startSpeakDetect(); watchMic(); vqStart(); playSound('join');
+    applyMute(); startSpeakDetect(); watchMic(); vqStart(); renderCallBar(); playSound('join');
     setTimeout(() => tip('voice', '#voicebar', 'Sesli odadasın 🎧', 'Buradan mikrofonunu kapatabilir, kamerayı açabilir, ekranını paylaşabilir ve gürültü engellemeyi yönetebilirsin.', 'right'), 900);
     r.peers.forEach(p => { peerNames[p.sid] = p.name; makePeer(p.sid); }); pushOverlay();
     const ch = S.servers.flatMap(s => s.channels.map(c => ({ ...c, s: s.name }))).find(c => c.id === chId);
@@ -4889,7 +4900,7 @@ function closePeer(sid) {
   document.getElementById('a-' + sid)?.remove(); document.getElementById('as-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
-function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; clearInterval(vqT); vqTick(); pushOverlay(); }
+function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; setTimeout(renderCallBar, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
@@ -5305,7 +5316,20 @@ function renderStage() {
     }, 1000);
   } else if (!watching && stageStats) { clearInterval(stageStats); stageStats = null; }
 }
-socket.on('voiceState', v => { S.voice = v; if (S.view === 'server' && S.server) renderSide(); pushOverlay(); refreshHome(); refreshRoomCards(); });
+// ---- Süren özel aramalar (DM/grup): listede yeşil telefon, sohbette "Katıl" şeridi, ana sayfada kart ----
+S.calls = {};
+function renderCallBar() {
+  $('#callbar')?.remove();
+  const ch = S.channel; if (!ch || !/^(dm|g):/.test(ch.id)) return;
+  const who = S.calls[ch.id] || [], here = myVoice === 'call:' + ch.id;
+  if (!who.length || here) return;
+  const bar = document.createElement('div'); bar.id = 'callbar';
+  bar.innerHTML = `<span class="cb-pulse">${ic('phoneCall')}</span><span class="cb-avs">${who.slice(0, 4).map(n => av(n)).join('')}</span><span class="cb-t"><b>Arama sürüyor</b><small>${who.slice(0, 3).map(n => esc(dn(n))).join(', ')}${who.length > 3 ? ` ve ${who.length - 3} kişi` : ''} konuşuyor</small></span><button class="primary" id="cb-join">${ic('phoneCall')}Katıl</button>`;
+  $('#messages').before(bar);
+  $('#cb-join').onclick = () => joinVoice('call:' + ch.id);
+}
+socket.on('calls', c => { S.calls = c || {}; renderCallBar(); if (S.view === 'dm') renderDMSide(); refreshHome(); });
+socket.on('voiceState', v => { S.voice = v; if (S.view === 'server' && S.server) renderSide(); pushOverlay(); refreshHome(); refreshRoomCards(); renderCallBar(); });
 if (!navigator.mediaDevices?.getDisplayMedia) $('#vscreen').style.display = 'none';
 
 // ================= Emoji seçici =================

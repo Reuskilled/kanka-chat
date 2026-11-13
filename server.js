@@ -819,7 +819,15 @@ function voiceKick(chIds, onlyName, reason) {
 }
 const voiceFlags = new Map(); // socket.id -> { m: mikrofon kapalı }
 const flagsState = () => { const o = {}; for (const [ch, room] of voice) { if (ch.startsWith('call:')) continue; for (const [sid, n] of room) { const f = voiceFlags.get(sid) || {}, md = voiceMedia.get(sid) || {}; if (f.m || md.cam || md.screen) (o[ch] ||= {})[n] = { m: !!f.m, cam: !!md.cam, screen: !!md.screen }; } } return o; };
-const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceLive', liveState()); io.emit('voiceFlags', flagsState()); };
+// Özel sohbet aramaları (DM/grup) sadece o sohbetin üyelerine görünür: "Arama sürüyor · Katıl"
+const callsFor = name => { const o = {}; for (const [k, m] of voice) if (k.startsWith('call:') && m.size && canAccess(name, k.slice(5))) o[k.slice(5)] = [...new Set(m.values())]; return o; };
+let lastCallsSig = '';
+function pushCalls() {
+  const sig = JSON.stringify([...voice].filter(([k]) => k.startsWith('call:')).map(([k, m]) => [k, [...m.values()]]));
+  if (sig === lastCallsSig) return; lastCallsSig = sig;
+  for (const n of new Set(online.values())) io.to('user:' + n).emit('calls', callsFor(n));
+}
+const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceLive', liveState()); io.emit('voiceFlags', flagsState()); pushCalls(); };
 function pushServers(names) {
   for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
 }
@@ -1101,7 +1109,7 @@ io.on('connection', socket => {
     db.sessions[token] = name; save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
-      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
+      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
       myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), reportCounts: reportCounts(name), beta: db.beta.on
     };
@@ -1514,9 +1522,11 @@ io.on('connection', socket => {
 
   // ----- Özel arama (DM ve grup) -----
   socket.on('ring', ({ chId, video } = {}) => {
-    if (!isPrivateChat(chId) || !canAccess(me, chId)) return;
+    if (!isPrivateChat(chId) || !canAccess(me, chId) || limited('ring|' + me, 6, 60e3)) return;
     for (const n of chatMembers(chId)) if (n !== me && !db.users[n]?.blocked?.includes(me))
-      io.to('user:' + n).emit('ring', { from: me, chatId: chId, callId: 'call:' + chId, video: !!video, title: chId.startsWith('g:') ? groupTitle(groupOf(chId)) : me });
+    { const title = chId.startsWith('g:') ? groupTitle(groupOf(chId)) : me;
+      io.to('user:' + n).emit('ring', { from: me, chatId: chId, callId: 'call:' + chId, video: !!video, title });
+      sendPush(n, { title: chId.startsWith('g:') ? `${me} · ${title}` : me, body: video ? '📹 Görüntülü arıyor… Dokun, katıl' : '📞 Sesli arıyor… Dokun, katıl', tag: 'call-' + chId, ch: chId, from: me, dm: true }); }
   });
   socket.on('ringCancel', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('ringCancel', { chatId: chId }); });
   socket.on('callDecline', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('callDecline', { from: me, chatId: chId }); });
