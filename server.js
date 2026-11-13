@@ -569,6 +569,8 @@ function chView(s, c, viewer, manager) {
     private: everyoneDenied(ov, 'view'), ann: everyoneDenied(ov, 'send'), locked: voiceLike(c.type) && everyoneDenied(ov, 'connect'),
     readonly: viewer ? !chPerm(s, c, viewer, 'send') : false, canConnect: viewer ? chPerm(s, c, viewer, 'connect') : true };
   if (manager) v.perms = c.perms || {};
+  // Görme izni kısıtlı odada üye listesi sadece odayı görebilenleri göstersin
+  if (!s.public && (c.allowUsers?.length || Object.values(ov).some(o => o && o.view !== undefined))) v.viewers = membersOf(s).filter(n => seesChannel(s, c, n));
   return v;
 }
 for (const s of db.servers) migrateCats(s);

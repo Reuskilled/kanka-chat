@@ -3468,7 +3468,7 @@ function selectChannel(id) {
   document.body.classList.remove('vview'); renderPip();
   document.body.classList.remove('drawer');
   S.channel = S.server.channels.find(c => c.id === id);
-  S.unread.delete(id);
+  S.unread.delete(id); renderMembers();
   setHeader(`${roomIcon(S.channel)} ${esc(S.channel.name)}`, S.channel.topic || S.server.name, true);
   $('#follow-btn')?.remove();
   if (S.channel.news) { const fb = document.createElement('button'); fb.id = 'follow-btn'; fb.className = 'followb'; fb.innerHTML = `${ic('megaphone')}<span>Takip et</span>`; fb.onclick = () => showFollow(S.server, S.channel); $('#head-actions').prepend(fb); }
@@ -4280,6 +4280,8 @@ function renderMembers() {
   if (S.view === 'dm') names = S.channel?.group ? S.channel.members : S.channel?.with ? [S.me, S.channel.with] : [S.me];
   else names = S.server?.members || [];
   const srv = S.view === 'server' ? S.server : null;
+  const chNow = srv && S.channel && srv.channels.find(c => c.id === S.channel.id);
+  if (chNow?.viewers) names = names.filter(n => chNow.viewers.includes(n)); // gizli oda: sadece görebilenler
   const item = n => {
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n);
