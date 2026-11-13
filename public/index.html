@@ -174,6 +174,27 @@
   .pop.more .danger { color: var(--red); }
   .sys { align-self: center; margin: 12px 0; padding: 5px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-2); font-weight: 800; font-size: 12.5px; }
 
+  .row.botrow .av.botav { background: #f2652f; overflow: hidden; } .row.botrow .av.botav img { width: 100%; height: 100%; object-fit: cover; }
+  .botbadge { font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 6px; margin-left: 6px; background: var(--accent); color: #1a0f0a; letter-spacing: .4px; }
+  .bembed { --tone: #5aa9ff; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--tone); border-radius: 12px; padding: 10px 14px; max-width: 480px; margin-top: 2px; }
+  .bembed .bt { display: block; font-weight: 800; margin-bottom: 2px; }
+  .bembed p { white-space: pre-wrap; color: var(--ink); opacity: .92; font-size: 14px; line-height: 1.45; }
+  .bembed .bf { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; font-size: 13.5px; font-weight: 700; }
+  .bembed .bf small { display: block; color: var(--muted); font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+  .row.botrow .eph { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 700; }
+  #suggest.cmd { max-height: 340px; overflow-y: auto; } #suggest.cmd button { width: 330px; } #suggest.cmd button b { color: var(--accent-2); min-width: 92px; text-align: left; } #suggest.cmd button small { color: var(--muted); font-weight: 600; font-size: 12px; text-align: left; }
+  .botgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 12px; margin: 6px 0 18px; }
+  .kbmod { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--card); display: flex; flex-direction: column; transition: border-color .2s, box-shadow .2s; }
+  .kbmod.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .kbmod .bh { height: 50px; background: linear-gradient(135deg, var(--g1), var(--g2)); }
+  .kbmod .bi { width: 50px; height: 50px; border-radius: 50%; background: #16110f; display: grid; place-items: center; font-size: 24px; margin: -25px auto 0; border: 3px solid var(--card); position: relative; }
+  .kbmod h5 { text-align: center; margin: 8px 8px 4px; font-size: 15px; font-weight: 800; }
+  .kbmod p { font-size: 12.5px; color: var(--muted); text-align: center; padding: 0 12px; flex: 1; line-height: 1.4; }
+  .kbmod .bb { margin: 12px auto 14px; padding: 7px 16px; border-radius: 10px; font-weight: 800; font-size: 13px; background: var(--accent); color: #1a0f0a; }
+  .kbmod .bb.off { background: var(--hover); color: var(--ink); }
+  .kbmod .bb.soon { background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: default; }
+  .botset { border: 1px solid var(--line); border-radius: 16px; padding: 6px 16px 14px; background: var(--panel); }
+  .botset h4 { margin: 12px 0 4px; font-size: 15px; } .botset .cmdlist { font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--muted); line-height: 1.8; }
   .kcard { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; width: 300px; max-width: 100%; }
   .kcard .kt { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
   .kcard h4 { font-size: 17px; margin: 4px 0 2px; }
@@ -3147,7 +3168,7 @@ function showServerSettings(s, tab, focus) {
   s = S.servers.find(x => x.id === s.id) || s;
   const P = p => perm(s, p), mod = isMod(s, S.me);
   const tabs = [['general', 'Genel', 'gear', P('manageServer')], ['roles', 'Roller', 'tag', P('manageRoles')], ['channels', 'Odalar', 'hash', mod], ['members', 'Üyeler', 'users', !s.public && (P('manageRoles') || P('kick') || P('ban') || P('timeout'))],
-    ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
+    ['bot', 'Kanka Bot', 'shield', P('manageServer')], ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
     ['emoji', 'Emojiler', 'smile', mod], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
@@ -3165,6 +3186,41 @@ function showServerSettings(s, tab, focus) {
   const done = msg => r => { if (r?.error) return toast(r.error); if (msg) toast(msg); again(); };
   const roleChecks = (sel, name) => (s.customRoles || []).map(r => `<label class="chk"><input type="checkbox" name="${name}" value="${r.id}" ${sel.includes(r.id) ? 'checked' : ''}><span class="rdot" style="background:${r.color}"></span>${esc(r.name)}</label>`).join('') || '<p class="hint">Henüz rol yok. Önce Roller sekmesinden rol oluştur.</p>';
   const page = {
+    bot: () => {
+      const b = s.bot || {}, m = b.mod || {};
+      const MODS = [
+        ['mod', '🛡️', 'Mod', 'Anti-nuke, otomatik moderasyon, uyarı, susturma, mesaj temizleme ve oda kilidi.', '#f59e0b', '#ef4444'],
+        ['welcome', '👋', 'Karşılama', 'Yeni gelene hoş geldin mesajı ve otomatik rol.', '#a855f7', '#ec4899'],
+        ['team', '🎮', 'Takım Kur', '/takım valorant 5: dolunca herkes sesli odaya taşınır.', '#22c55e', '#06b6d4'],
+        ['level', '⭐', 'Seviye', 'Mesaj ve sesten XP, sıralama tablosu, ödül rolleri.', '#f59e0b', '#f97316'],
+        ['giveaway', '🎁', 'Çekiliş', 'Tepkiyle katılınan süreli çekilişler.', '#2dd4bf', '#3b82f6'],
+        ['ticket', '🛟', 'Destek', 'Tepkiyle açılan özel destek odaları.', '#a855f7', '#f472b6'],
+        ['match', '🏆', 'Maç Kartı', 'Maç bitince skor sohbete düşer. Üyeler profil ayarlarından açar.', '#22c55e', '#0ea5e9']];
+      const card = ([k, e, n, d, g1, g2]) => {
+        const on = k === 'mod' ? !!m.on : false, soon = !['mod', 'match'].includes(k);
+        return `<div class="kbmod ${on ? 'on' : ''}" style="--g1:${g1};--g2:${g2}"><div class="bh"></div><div class="bi">${e}</div><h5>${n}</h5><p>${d}</p>
+          ${soon ? '<span class="bb soon">Yakında</span>' : k === 'match' ? '<span class="bb soon">Hazır</span>' : `<button class="bb ${on ? 'off' : ''}" data-bot="${k}">${on ? 'Kapat' : 'Aç'}</button>`}</div>`;
+      };
+      const tg = (k, t) => `<label class="switch">${t}<input type="checkbox" data-mk="${k}" ${m[k] ? 'checked' : ''}></label>`;
+      main.innerHTML = `<div class="st-page"><h3>Kanka Bot</h3><p class="hint">Ayrı ayrı bot kurmana gerek yok: ihtiyacın olan modülü aç, Kanka Bot hemen çalışmaya başlar. Komutları görmek için sohbete <b>/</b> yaz.</p>
+        <div class="botgrid">${MODS.map(card).join('')}</div>
+        ${m.on ? `<div class="botset"><h4>🛡️ Mod ayarları</h4>
+          <div class="st-field">${tg('antinuke', 'Anti-nuke (bir yetkili 1 dakikada 3\'ten fazla ban, atma, oda ya da rol silme yaparsa durdur ve yetkilerini al)')}
+          ${tg('spam', 'Spam koruması (aynı mesajı tekrarlayan ya da çok hızlı yazan 5 dk susturulur)')}
+          ${tg('invites', 'Başka sunucuların davet linklerini engelle')}
+          ${tg('links', 'Tüm linkleri engelle')}
+          ${tg('mentions', 'Bir mesajda 5\'ten fazla etiketi engelle')}
+          ${tg('caps', 'BÜYÜK HARFLE bağırmayı engelle')}</div>
+          <div class="st-field"><label>Yasaklı kelimeler</label><input class="field" id="bm-words" maxlength="500" placeholder="virgülle ayır: kelime1, kelime2" value="${esc(m.words || '')}"><p class="hint" style="margin-top:6px">Yöneticiler ve moderatörler otomatik moderasyondan etkilenmez.</p></div>
+          <div class="st-field"><label>Kayıt odası</label><select class="field" id="bm-log"><option value="">Kapalı</option>${s.channels.filter(c => (c.type || 'text') === 'text').map(c => `<option value="${c.id}" ${m.logCh === c.id ? 'selected' : ''}>#${esc(c.name)}</option>`).join('')}</select><p class="hint" style="margin-top:6px">Yasaklama, susturma, engellenen mesajlar ve anti-nuke uyarıları bu odaya yazılır. Odayı sadece yetkililerin görebileceği şekilde ayarla.</p></div>
+          <div class="st-field"><label>Uyarı sınırı</label><select class="field" id="bm-warn" style="width:200px">${[2, 3, 4, 5].map(v => `<option value="${v}" ${(m.warnLimit || 3) === v ? 'selected' : ''}>${v} uyarıda 1 saat sustur</option>`).join('')}</select></div>
+          <div class="st-field"><button class="primary" id="bm-save" style="width:auto;padding:11px 22px">Kaydet</button></div>
+          <h4>Komutlar</h4><div class="cmdlist">/uyar @isim sebep<br>/uyarılar @isim · /uyarısil @isim<br>/sustur @isim 10 sebep<br>/temizle 20<br>/kilitle · /kilidiaç</div></div>` : ''}</div>`;
+      const saveMod = (cfg, msg) => socket.emit('botSave', { serverId: s.id, module: 'mod', cfg }, done(msg));
+      main.querySelectorAll('[data-bot]').forEach(x => x.onclick = () => saveMod({ on: !m.on }, m.on ? 'Mod modülü kapatıldı' : 'Mod modülü açıldı 🛡️'));
+      main.querySelectorAll('[data-mk]').forEach(x => x.onchange = () => socket.emit('botSave', { serverId: s.id, module: 'mod', cfg: { [x.dataset.mk]: x.checked } }, r => r?.error ? toast(r.error) : toast('Kaydedildi')));
+      if ($('#bm-save')) $('#bm-save').onclick = () => saveMod({ words: $('#bm-words').value, logCh: $('#bm-log').value || null, warnLimit: +$('#bm-warn').value }, 'Kaydedildi');
+    },
     general: () => {
       main.innerHTML = `<div class="st-page"><h3>Genel</h3><p class="hint">Sunucunun adı, simgesi ve temel kuralları.</p>
         <div class="st-field"><label>Sunucu adı</label><input class="field" id="sv-name" maxlength="40" value="${esc(s.name)}"></div>
@@ -3733,6 +3789,11 @@ function msgHTML(m, prev) {
   if (m.kind === 'system') return day + `<div class="sys">${ic('star')}${esc(m.text.replace(/\s*\p{Extended_Pictographic}\ufe0f?/gu, ''))}</div>`;
   if (m.kind === 'birthday') return day + `<div class="bday" data-id="${m.id}"><span class="big">${ic('cake')}</span><p>Bugün ${esc(m.text)} kankamızın doğum günü!</p><span class="hint">İyi ki doğdun ${esc(m.text)} 🎉 Kutlamayı unutmayın!</span></div>`;
   if (m.kind === 'daily') return day + `<div class="daily" data-id="${m.id}"><div class="kt">${ic('sun')}GÜNÜN SORUSU</div><p>${esc(m.text)}</p></div>`;
+  if (m.kind === 'bot') {
+    const T = { info: '#5aa9ff', ok: '#3fcf8e', warn: '#f6c445', danger: '#ef5a5a' }[m.bot?.tone] || '#5aa9ff', b = m.bot || {};
+    return day + `<div class="row botrow" data-id="${m.id}"><div class="av botav"><img src="/icon-192.png" alt=""></div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname" style="color:var(--accent)">Kanka Bot</span><span class="botbadge">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
+      <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<p>${esc(b.text)}</p>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}</div></div>`;
+  }
   const mine = m.author === S.me && !m.xfrom;
   const cont = !newDay && prev && prev.kind !== 'system' && prev.author === m.author && m.time - prev.time < 5 * 60e3 && !m.replyTo;
   const lvl = S.users[m.author] ? `<span class="lvl">Sv ${S.users[m.author].level}</span>` : '';
@@ -3884,7 +3945,7 @@ socket.on('message', ({ channelId, msg }) => {
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
   box.insertAdjacentHTML('beforeend', msgHTML(msg, S.msgs[S.msgs.length - 2]));
   box.querySelector(`.row[data-id="${msg.id}"]`)?.classList.add('new');
-  if (atBottom || msg.author === S.me) box.scrollTop = box.scrollHeight;
+  if (atBottom || msg.author === S.me || msg.ephemeral) box.scrollTop = box.scrollHeight;
   else if (msg.author) showJumpNew();
 });
 function showJumpNew() {
@@ -4020,16 +4081,21 @@ $('#chat').addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('#dr
 $('#input').addEventListener('paste', e => { const fl = [...e.clipboardData.files]; if (fl.length) { e.preventDefault(); addFiles(fl); } });
 
 // @etiket önerileri
-let sugg = [], suggI = 0;
-function hideSuggest() { sugg = []; $('#suggest').style.display = 'none'; }
+let sugg = [], suggI = 0, suggCmd = false;
+const CMDS = [['/zar', 'Zar at (örn. /zar 20)'], ['/yazitura', 'Yazı tura at'], ['/xox', 'XOX oyunu başlat'], ['/anket', 'Soru | seçenek 1 | seçenek 2'], ['/plan', 'Ne | ne zaman'], ['/şarkı', 'Çalma listesine ekle'], ['/izle', 'Birlikte YouTube izle'], ['/yardım', 'Kanka Bot komutlarını gör']];
+const MOD_CMDS = [['/uyar', '@isim sebep · uyarı ver'], ['/uyarılar', '@isim · uyarılarını gör'], ['/uyarısil', '@isim · uyarıları sıfırla'], ['/sustur', '@isim dakika sebep'], ['/temizle', 'sayı · son mesajları sil'], ['/kilitle', 'Odayı yazmaya kapat'], ['/kilidiaç', 'Odayı yeniden aç']];
+function hideSuggest() { sugg = []; suggCmd = false; $('#suggest').style.display = 'none'; $('#suggest').classList.remove('cmd'); }
 function renderSuggest() {
   if (!sugg.length) return hideSuggest();
-  $('#suggest').innerHTML = sugg.map((n, i) => `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(n)}">${av(n)}${esc(n)}</button>`).join('');
+  $('#suggest').classList.toggle('cmd', suggCmd);
+  $('#suggest').innerHTML = suggCmd ? sugg.map((n, i) => `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(n)}"><b>${esc(n)}</b><small>${esc([...CMDS, ...MOD_CMDS].find(c => c[0] === n)?.[1] || '')}</small></button>`).join('')
+    : sugg.map((n, i) => `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(n)}">${av(n)}${esc(n)}</button>`).join('');
   $('#suggest').style.display = 'block';
   $('#suggest').querySelectorAll('button').forEach(b => b.onclick = () => { suggI = sugg.indexOf(b.dataset.n); pickSuggestion(); });
 }
 function pickSuggestion() {
   if (!sugg.length) return false;
+  if (suggCmd) { const inp = $('#input'); inp.value = sugg[suggI] + ' '; inp.setSelectionRange(inp.value.length, inp.value.length); hideSuggest(); inp.focus(); return true; }
   const inp = $('#input'), pos = inp.selectionStart, before = inp.value.slice(0, pos).replace(/@[\p{L}\p{N}_.-]*$/u, '@' + sugg[suggI] + ' ');
   inp.value = before + inp.value.slice(pos); inp.setSelectionRange(before.length, before.length);
   hideSuggest(); inp.focus(); return true;
@@ -4037,6 +4103,13 @@ function pickSuggestion() {
 let lastTyping = 0;
 $('#input').addEventListener('input', () => {
   if (Date.now() - lastTyping > 2000) { lastTyping = Date.now(); socket.emit('typing'); }
+  const cm = /^(\/[\p{L}]*)$/u.exec($('#input').value);
+  if (cm) {
+    const list = [...CMDS, ...(S.view === 'server' && S.server?.bot?.mod?.on && isMod(S.server, S.me) ? MOD_CMDS : [])];
+    sugg = list.map(c => c[0]).filter(c => c.startsWith(cm[1].toLocaleLowerCase('tr'))).slice(0, 15); suggI = 0; suggCmd = true;
+    return renderSuggest();
+  }
+  suggCmd = false;
   const m = /@([\p{L}\p{N}_.-]*)$/u.exec($('#input').value.slice(0, $('#input').selectionStart));
   if (!m) return hideSuggest();
   const pool = S.view === 'server' ? S.server.members : (S.channel?.with ? [S.channel.with] : []);
