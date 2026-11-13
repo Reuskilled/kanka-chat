@@ -182,7 +182,25 @@
   .bembed .bf { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; font-size: 13.5px; font-weight: 700; }
   .bembed .bf small { display: block; color: var(--muted); font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
   .row.botrow .eph { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 700; }
-  #suggest.cmd { max-height: 340px; overflow-y: auto; } #suggest.cmd button { width: 330px; } #suggest.cmd button b { color: var(--accent-2); min-width: 92px; text-align: left; } #suggest.cmd button small { color: var(--muted); font-weight: 600; font-size: 12px; text-align: left; }
+  #suggest.cmd { left: 12px; width: min(460px, calc(100% - 24px)); padding: 6px; border-radius: 18px; background: color-mix(in srgb, var(--card) 96%, #000); box-shadow: 0 18px 50px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.03) inset; }
+  #suggest.cmd .sg-sc { max-height: min(360px, 52vh); overflow-y: auto; scrollbar-width: thin; padding: 0 2px; }
+  #suggest.cmd .sg-g { display: flex; align-items: center; gap: 7px; padding: 10px 10px 6px; font-size: 11px; font-weight: 900; letter-spacing: .7px; color: var(--muted); text-transform: uppercase; }
+  #suggest.cmd .sg-g img { width: 18px; height: 18px; border-radius: 50%; background: #f2652f; } #suggest.cmd .sg-g .ic { width: 14px; height: 14px; } #suggest.cmd .sg-g .botbadge { margin-left: 0; font-size: 9px; }
+  #suggest.cmd button { width: 100%; gap: 12px; padding: 8px 10px; border-radius: 12px; position: relative; text-align: left; transition: background .12s; }
+  #suggest.cmd button.sel { background: var(--hover); box-shadow: inset 3px 0 0 var(--accent); }
+  #suggest.cmd .sg-ic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); border: 1px solid color-mix(in srgb, var(--c) 28%, transparent); }
+  #suggest.cmd .sg-ic .ic { width: 18px; height: 18px; }
+  #suggest.cmd .sg-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  #suggest.cmd .sg-t b { font-size: 14.5px; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } #suggest.cmd .sg-t b u { text-decoration: none; color: var(--accent); }
+  #suggest.cmd .sg-t em { font-style: normal; font-size: 11.5px; font-weight: 700; color: var(--muted); background: rgba(255,255,255,.05); border: 1px solid var(--line); padding: 0 6px; border-radius: 6px; line-height: 18px; }
+  #suggest.cmd .sg-t small { font-size: 12.5px; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #suggest.cmd kbd, #cmdhint kbd { font: 800 10.5px ui-monospace, monospace; color: var(--muted); background: rgba(255,255,255,.05); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 6px; }
+  #suggest.cmd button kbd { opacity: 0; } #suggest.cmd button.sel kbd { opacity: 1; }
+  #suggest.cmd .sg-f { display: flex; gap: 12px; justify-content: flex-end; padding: 8px 10px 4px; border-top: 1px solid var(--line); margin-top: 4px; font-size: 11.5px; color: var(--muted); font-weight: 700; }
+  #suggest.cmd .sg-none { padding: 18px; text-align: center; color: var(--muted); font-weight: 700; font-size: 13px; }
+  #cmdhint { display: none; position: absolute; bottom: 58px; left: 12px; max-width: calc(100% - 24px); z-index: 4; padding: 8px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.35); font-size: 13px; font-weight: 700; color: var(--muted); align-items: center; gap: 8px; flex-wrap: wrap; }
+  #cmdhint b { color: var(--accent-2); } #cmdhint span { padding: 1px 8px; border-radius: 7px; border: 1px dashed var(--line); } #cmdhint span.on { border-style: solid; border-color: var(--accent); color: var(--ink); background: var(--accent-soft); }
+  #cmdhint small { color: var(--muted); font-weight: 600; margin-left: 4px; }
   .botgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 12px; margin: 6px 0 18px; }
   .kbhero { display: flex; gap: 18px; align-items: center; padding: 18px; border-radius: 18px; background: linear-gradient(135deg, #3a2218, #2b1a14); border: 1px solid var(--line); margin: 8px 0 18px; }
   .kbhero img, .kbav { width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; background: #f2652f; object-fit: cover; }
@@ -2253,7 +2271,7 @@
         <button type="button" data-a="xox"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>XOX oyna</button>
         <button type="button" data-a="sched"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Mesajı zamanla</button>
       </div>
-      <div id="suggest"></div>
+      <div id="suggest"></div><div id="cmdhint" aria-live="polite"></div>
       <textarea id="input" rows="1" maxlength="2000" autocomplete="off" spellcheck="true"></textarea>
       <div id="recbar"><span class="dot"></span><span id="rectime">0:00</span> kaydediliyor... <button type="button" id="rec-cancel">Vazgeç</button></div>
       <button type="button" id="emo-btn" title="Emoji" aria-label="Emoji seç"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/></svg></button>
@@ -4062,7 +4080,7 @@ $('#compose').onsubmit = e => {
   const text = $('#input').value.trim();
   if (att.length) { $('#input').value = ''; growInput(); hideSuggest(); if (S.channel) delete drafts[S.channel.id]; return sendWithFiles(text); }
   if (!text) return;
-  $('#input').value = ''; growInput(); hideSuggest(); if (S.channel) delete drafts[S.channel.id];
+  $('#input').value = ''; growInput(); hideSuggest(); $('#cmdhint').style.display = 'none'; if (S.channel) delete drafts[S.channel.id];
   const [cmd, ...rest] = text.split(' '); const arg = rest.join(' ');
   const parts = arg.split('|').map(s => s.trim()).filter(Boolean);
   if (cmd === '/plan') return send({ kind: 'plan', title: parts[0], when: parts[1] });
@@ -4158,31 +4176,64 @@ $('#input').addEventListener('paste', e => { const fl = [...e.clipboardData.file
 
 // @etiket önerileri
 let sugg = [], suggI = 0, suggCmd = false;
-const CMDS = [['/zar', 'Zar at (örn. /zar 20)'], ['/yazitura', 'Yazı tura at'], ['/xox', 'XOX oyunu başlat'], ['/anket', 'Soru | seçenek 1 | seçenek 2'], ['/plan', 'Ne | ne zaman'], ['/şarkı', 'Çalma listesine ekle'], ['/izle', 'Birlikte YouTube izle'], ['/yardım', 'Kanka Bot komutlarını gör']];
-const MOD_CMDS = [['/uyar', '@isim sebep · uyarı ver'], ['/uyarılar', '@isim · uyarılarını gör'], ['/uyarısil', '@isim · uyarıları sıfırla'], ['/sustur', '@isim dakika sebep'], ['/temizle', 'sayı · son mesajları sil'], ['/kilitle', 'Odayı yazmaya kapat'], ['/kilidiaç', 'Odayı yeniden aç']];
-function hideSuggest() { sugg = []; suggCmd = false; $('#suggest').style.display = 'none'; $('#suggest').classList.remove('cmd'); }
+// Komut paleti: [komut, açıklama, ikon, renk, argümanlar, ayırıcı]
+const CMDS = [['/zar', 'Zar at, şansını dene', 'dice', '#f6c445', ['yüz sayısı']], ['/yazitura', 'Yazı mı tura mı?', 'coin', '#ffb347', []], ['/xox', 'XOX oyunu başlat, biri katılsın', 'grid', '#7ec8ff', []],
+  ['/anket', 'Anket başlat, herkes oy versin', 'poll', '#a78bfa', ['soru', 'seçenek 1', 'seçenek 2'], '|'], ['/plan', 'Plan kur, kim geliyor görülsün', 'calendar', '#6fd39b', ['ne yapıyoruz', 'ne zaman'], '|'],
+  ['/şarkı', 'Çalma listesine şarkı ekle', 'music', '#f472b6', ['şarkı adı ya da link']], ['/izle', 'Birlikte YouTube izle', 'tv', '#ff6b6b', ['YouTube linki']], ['/yardım', "Kanka Bot'un tüm komutları", 'sparkle', '#ff8a4c', []]];
+const MOD_CMDS = [['/uyar', 'Üyeye uyarı ver, sınırda susturulur', 'flag', '#f6c445', ['@isim', 'sebep']], ['/sustur', 'Üyeyi belirli bir süre sustur', 'hourglass', '#ff8a4c', ['@isim', 'dakika', 'sebep']],
+  ['/uyarılar', 'Üyenin uyarılarını gör', 'log', '#5aa9ff', ['@isim']], ['/uyarısil', 'Uyarıları sıfırla', 'refresh', '#6fd39b', ['@isim']], ['/temizle', 'Son mesajları topluca sil', 'trash', '#ff6b6b', ['sayı']],
+  ['/kilitle', 'Odayı yazmaya kapat', 'lock', '#ef5a5a', []], ['/kilidiaç', 'Odayı yeniden aç', 'unlock', '#3fcf8e', []]];
+const cmdDef = c => [...CMDS, ...MOD_CMDS].find(x => x[0] === c);
+const modCmdsOn = () => S.view === 'server' && S.server?.bot?.mod?.on && isMod(S.server, S.me);
+let suggQ = '';
+function hideSuggest() { const was = sugg.length && !suggCmd; sugg = []; suggCmd = false; $('#suggest').style.display = 'none'; $('#suggest').classList.remove('cmd'); if (was) cmdHint(); }
+function cmdRow(n, i) {
+  const [c, d, icn, col, args = []] = cmdDef(n), q = suggQ.length > 1 && c.startsWith(suggQ) ? suggQ.length : 0;
+  return `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(c)}" data-i="${i}"><i class="sg-ic" style="--c:${col}">${ic(icn)}</i><span class="sg-t"><b><span>${q ? `<u>${esc(c.slice(0, q))}</u>${esc(c.slice(q))}` : esc(c)}</span>${args.map(a => `<em>${esc(a)}</em>`).join('')}</b><small>${esc(d)}</small></span><kbd>↵</kbd></button>`;
+}
 function renderSuggest() {
-  if (!sugg.length) return hideSuggest();
+  if (!sugg.length && !suggCmd) return hideSuggest();
   $('#suggest').classList.toggle('cmd', suggCmd);
-  $('#suggest').innerHTML = suggCmd ? sugg.map((n, i) => `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(n)}"><b>${esc(n)}</b><small>${esc([...CMDS, ...MOD_CMDS].find(c => c[0] === n)?.[1] || '')}</small></button>`).join('')
-    : sugg.map((n, i) => `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(n)}">${av(n)}${esc(n)}</button>`).join('');
+  if (suggCmd) {
+    const fun = sugg.filter(n => CMDS.some(c => c[0] === n)), mod = sugg.filter(n => MOD_CMDS.some(c => c[0] === n));
+    let k = 0; const rows = arr => arr.map(n => cmdRow(n, k++)).join('');
+    const funH = fun.length ? `<div class="sg-g">${ic('sparkle')}Kanka komutları</div>${rows(fun)}` : '', modH = mod.length ? `<div class="sg-g"><img src="/icon-192.png" alt="">Kanka Bot · Moderasyon<span class="botbadge">BOT</span></div>${rows(mod)}` : '';
+    sugg = [...fun, ...mod];
+    $('#suggest').innerHTML = `<div class="sg-sc">${sugg.length ? funH + modH : `<div class="sg-none">"${esc(suggQ)}" diye bir komut yok</div>`}</div><div class="sg-f"><span><kbd>↑</kbd> <kbd>↓</kbd> gez</span><span><kbd>Tab</kbd> seç</span><span><kbd>Esc</kbd> kapat</span></div>`;
+    $('#suggest').style.display = 'block';
+    $('#suggest').querySelector('button.sel')?.scrollIntoView({ block: 'nearest' });
+    $('#suggest').querySelectorAll('button[data-n]').forEach(b => { b.onclick = () => { suggI = +b.dataset.i; pickSuggestion(); }; b.onmousemove = () => { if (suggI !== +b.dataset.i) { suggI = +b.dataset.i; $('#suggest').querySelectorAll('button[data-n]').forEach(x => x.classList.toggle('sel', +x.dataset.i === suggI)); } }; });
+    return;
+  }
+  $('#suggest').innerHTML = sugg.map((n, i) => `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(n)}">${av(n)}${esc(n)}</button>`).join('');
+  $('#cmdhint').style.display = 'none';
   $('#suggest').style.display = 'block';
   $('#suggest').querySelectorAll('button').forEach(b => b.onclick = () => { suggI = sugg.indexOf(b.dataset.n); pickSuggestion(); });
 }
 function pickSuggestion() {
   if (!sugg.length) return false;
-  if (suggCmd) { const inp = $('#input'); inp.value = sugg[suggI] + ' '; inp.setSelectionRange(inp.value.length, inp.value.length); hideSuggest(); inp.focus(); return true; }
+  if (suggCmd) { const inp = $('#input'), d = cmdDef(sugg[suggI]); inp.value = sugg[suggI] + (d?.[4]?.length ? ' ' : ''); inp.setSelectionRange(inp.value.length, inp.value.length); hideSuggest(); inp.focus(); cmdHint(); return true; }
   const inp = $('#input'), pos = inp.selectionStart, before = inp.value.slice(0, pos).replace(/@[\p{L}\p{N}_.-]*$/u, '@' + sugg[suggI] + ' ');
   inp.value = before + inp.value.slice(pos); inp.setSelectionRange(before.length, before.length);
   hideSuggest(); inp.focus(); return true;
 }
+function cmdHint() {
+  const el = $('#cmdhint'), v = $('#input').value, m = /^(\/\S+)\s([\s\S]*)$/u.exec(v), d = m && cmdDef(m[1].toLocaleLowerCase('tr'));
+  if (!d || !d[4]?.length || (d[0] && MOD_CMDS.some(c => c[0] === d[0]) && !modCmdsOn())) { el.style.display = 'none'; return; }
+  const rest = m[2], parts = d[5] ? rest.split(d[5]) : rest.split(/\s+/), cur = Math.min(parts.length - 1, d[4].length - 1);
+  el.innerHTML = `<b>${esc(d[0])}</b>${d[4].map((a, i) => `${i && d[5] ? '<small>|</small>' : ''}<span class="${i === cur ? 'on' : ''}">${esc(a)}</span>`).join('')}<small>${esc(d[1])}</small>`;
+  el.style.display = sugg.length && !suggCmd ? 'none' : 'flex';
+}
 let lastTyping = 0;
 $('#input').addEventListener('input', () => {
   if (Date.now() - lastTyping > 2000) { lastTyping = Date.now(); socket.emit('typing'); }
+  cmdHint();
   const cm = /^(\/[\p{L}]*)$/u.exec($('#input').value);
   if (cm) {
-    const list = [...CMDS, ...(S.view === 'server' && S.server?.bot?.mod?.on && isMod(S.server, S.me) ? MOD_CMDS : [])];
-    sugg = list.map(c => c[0]).filter(c => c.startsWith(cm[1].toLocaleLowerCase('tr'))).slice(0, 15); suggI = 0; suggCmd = true;
+    const list = [...CMDS, ...(modCmdsOn() ? MOD_CMDS : [])], q = cm[1].toLocaleLowerCase('tr'), w = q.slice(1);
+    suggQ = q; sugg = list.filter(c => c[0].startsWith(q)).map(c => c[0]);
+    if (!sugg.length && w.length > 1) sugg = list.filter(c => c[1].toLocaleLowerCase('tr').includes(w)).map(c => c[0]);
+    suggI = 0; suggCmd = true;
     return renderSuggest();
   }
   suggCmd = false;
@@ -4203,7 +4254,7 @@ $('#input').addEventListener('keydown', e => {
     if (m) { e.preventDefault(); form('Mesajı düzenle', 'Enter ile kaydet, Esc ile vazgeç.', [{ k: 'text', p: 'Mesaj', v: m.text }], v => socket.emit('edit', { msgId: m.id, text: v.text })); }
     return;
   }
-  if (!sugg.length) { if (e.key === 'Escape') cancelReply(); return; }
+  if (!sugg.length) { if (e.key === 'Escape') { cancelReply(); hideSuggest(); $('#cmdhint').style.display = 'none'; } return; }
   if (e.key === 'Enter') { e.preventDefault(); pickSuggestion(); return; }
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); suggI = (suggI + (e.key === 'ArrowDown' ? 1 : sugg.length - 1)) % sugg.length; renderSuggest(); }
   if (e.key === 'Tab') { e.preventDefault(); pickSuggestion(); }
