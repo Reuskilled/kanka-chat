@@ -2869,6 +2869,7 @@ function showWelcome(s, force) {
 
 // ================= Sunucu görünümü =================
 function selectServer(id, channelId) {
+  $('#callbar')?.remove();
   closeSrvMenu(); document.body.classList.remove('discover');
   S.view = 'server';
   S.server = S.servers.find(s => s.id === id) || S.servers[0];
@@ -3358,6 +3359,7 @@ function showFriends(tab = friendTab) {
   else if (tab !== 'home') body = lists[tab].map(n => row(n, actLine(n) || esc(S.users[n]?.status || (S.online.has(n) ? 'Çevrimiçi' : 'Çevrimdışı')),
     `<button data-dm="${esc(n)}" title="Mesaj" aria-label="Mesaj gönder">${ic('chat')}</button><button data-rem="${esc(n)}" title="Arkadaşlıktan çıkar" aria-label="Arkadaşlıktan çıkar">${ic('x')}</button>`)).join('');
   const empty = { online: 'Şu an çevrimiçi arkadaşın yok.', all: 'Henüz arkadaşın yok. Sağ üstten arkadaş ekle!', pending: 'Bekleyen istek yok.', blocked: 'Kimseyi engellemedin.' }[tab];
+  $('#callbar')?.remove();
   $('#messages').innerHTML = `<div class="ftabs">
       <button class="${tab === 'home' ? 'on' : ''}" data-ft="home">${ic('sparkle')}Ana sayfa</button><button class="${tab === 'online' ? 'on' : ''}" data-ft="online">Çevrimiçi</button><button class="${tab === 'all' ? 'on' : ''}" data-ft="all">Tümü</button>
       <button class="${tab === 'pending' ? 'on' : ''}" data-ft="pending">Bekleyen${sc.reqIn.length ? `<span class="cnt">${sc.reqIn.length}</span>` : ''}</button><button class="${tab === 'blocked' ? 'on' : ''}" data-ft="blocked">Engellenen</button>
@@ -5320,7 +5322,7 @@ function renderStage() {
 S.calls = {};
 function renderCallBar() {
   $('#callbar')?.remove();
-  const ch = S.channel; if (!ch || !/^(dm|g):/.test(ch.id)) return;
+  const ch = S.channel; if (!ch || !/^(dm|g):/.test(ch.id) || S.view !== 'dm' || $('#messages .ftabs')) return;
   const who = S.calls[ch.id] || [], here = myVoice === 'call:' + ch.id;
   if (!who.length || here) return;
   const bar = document.createElement('div'); bar.id = 'callbar';
