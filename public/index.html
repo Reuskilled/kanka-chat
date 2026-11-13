@@ -3600,7 +3600,7 @@ const drafts = {};
 let draftFor = null;
 const lastCh = JSON.parse(store.get('kanka-lastch') || '{}');
 function enterRoom(id, placeholder, hello) {
-  setTimeout(renderCallBar, 0);
+  setTimeout(() => S.channel?.id === id && renderCallBar(), 0);
   if (draftFor && draftFor !== id) { const v = $('#input').value; v.trim() ? drafts[draftFor] = v : delete drafts[draftFor]; }
   if (draftFor !== id) { $('#input').value = drafts[id] || ''; requestAnimationFrame(growInput); }
   draftFor = id;
@@ -5322,7 +5322,7 @@ function renderStage() {
 S.calls = {};
 function renderCallBar() {
   $('#callbar')?.remove();
-  const ch = S.channel; if (!ch || !/^(dm|g):/.test(ch.id) || S.view !== 'dm' || $('#messages .ftabs')) return;
+  const ch = S.channel; if (!ch || !/^(dm|g):/.test(ch.id) || S.view !== 'dm') return;
   const who = S.calls[ch.id] || [], here = myVoice === 'call:' + ch.id;
   if (!who.length || here) return;
   const bar = document.createElement('div'); bar.id = 'callbar';
