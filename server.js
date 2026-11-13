@@ -624,7 +624,7 @@ const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s
   discoverable: !!s.discoverable, description: s.description || '', category: s.category || null,
   setup: viewer && s.owner === viewer ? setupOf(s) : null,
   afk: s.afk || null,
-  bot: viewer && can(s, viewer, 'manageServer') ? botCfg(s) : { mod: { on: botOn(s, 'mod') } },
+  bot: viewer && can(s, viewer, 'manageServer') ? botCfg(s) : { added: !!s.bot?.added, mod: { on: botOn(s, 'mod') } },
   welcome: s.welcome || null, accepted: !s.welcome?.enabled || !!s.accepted?.[viewer] || s.owner === viewer
 });
 const findChannel = chId => {
@@ -729,7 +729,22 @@ function botCfg(s) {
   for (const [k, def] of Object.entries(BOT_MODS)) s.bot[k] = { ...def, ...(s.bot[k] || {}) };
   return s.bot;
 }
-const botOn = (s, mod) => !!s?.bot?.[mod]?.on;
+const botOn = (s, mod) => !!s?.bot?.added && !!s.bot[mod]?.on;
+const botRole = s => (s.customRoles || []).find(r => r.bot);
+// Kanka Bot otomatik işlemi bu kişiye uygulayabilir mi? (rol sırası: botun rolü kişinin en yüksek rolünden üstte olmalı)
+const botOutranks = (s, n) => { if (s.owner === n) return false; const r = botRole(s); const br = r ? 1000 - s.customRoles.indexOf(r) : 600; return br > rankOf(s, n); };
+function botAddTo(s, by, withMod = true) {
+  const b = botCfg(s); if (b.added) return false;
+  b.added = true; b.addedBy = by; b.addedAt = Date.now(); if (withMod) b.mod.on = true;
+  s.customRoles ||= [];
+  if (!botRole(s)) s.customRoles.unshift({ id: id(), name: 'Kanka Bot', color: '#ff8a4c', perms: [], hoist: false, bot: true });
+  setupOf(s).bot = true;
+  audit(s, by, 'Kanka Bot\'u ekledi', withMod ? 'Mod modülü açık' : '');
+  const ch = s.channels.find(c => (c.type || 'text') === 'text' && !everyoneDenied(ovOf(s, c), 'send')) || s.channels.find(c => (c.type || 'text') === 'text');
+  if (ch) botPost(ch.id, { title: '🤖 Kanka Bot sunucuya katıldı!', text: `Selam ${s.name}! ${by} beni ekledi. Komutlarımı görmek için /yardım yaz${withMod ? ', moderasyon benden 🛡️' : ''}.`, tone: 'ok' });
+  return true;
+}
+for (const s0 of db.servers) if (s0.bot?.mod?.on && s0.bot.added === undefined) s0.bot.added = true; // eski kurulum
 function botPost(chId, { title, text, tone = 'info', fields } = {}) {
   const msg = { id: id(), kind: 'bot', time: Date.now(), bot: { title: clean(title, 80), text: clean(text, 900), tone, fields: (fields || []).slice(0, 6).map(([a, b]) => [clean(a, 40), clean(b, 120)]) }, reactions: {} };
   const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
@@ -750,8 +765,9 @@ function nukeCheck(s, actor, what) {
   const k = s.id + '|' + actor, now = Date.now();
   const arr = (nukeMap.get(k) || []).filter(t => now - t < 60e3); arr.push(now); nukeMap.set(k, arr);
   if (arr.length < 4) return false; // 1 dakikada 3 işleme kadar normal, 4.sü durdurulur
-  const had = s.roles?.[actor] || (s.memberRoles?.[actor] || []).length;
-  delete s.roles[actor]; delete s.memberRoles?.[actor];
+  const can0 = botOutranks(s, actor), had = can0 && (s.roles?.[actor] || (s.memberRoles?.[actor] || []).length);
+  if (can0) { delete s.roles[actor]; delete s.memberRoles?.[actor]; }
+  else io.to('user:' + s.owner).emit('toast', `🛡️ Kanka Bot: ${actor} kısa sürede çok fazla ${what} yapmaya çalıştı, işlem durduruldu. Rolü botun rolünden yüksek olduğu için yetkilerini alamadım.`);
   nukeMap.delete(k);
   modLog(s, { title: '🛡️ Anti-nuke devrede', text: `${actor} 1 dakikada çok fazla ${what} yapmaya çalıştı. İşlem durduruldu${had ? ' ve yetkileri alındı' : ''}.`, tone: 'danger' });
   if (had) {
@@ -783,7 +799,7 @@ function automod(s, chId, me, text) {
     const k = s.id + '|' + me, now = Date.now(), arr = (spamMap.get(k) || []).filter(x => now - x.t < 15e3);
     arr.push({ t: now, x: text.trim().toLocaleLowerCase('tr') }); spamMap.set(k, arr);
     const same = arr.filter(a => a.x && a.x === arr.at(-1).x).length, fast = arr.filter(a => now - a.t < 6e3).length;
-    if (same >= 4 || fast >= 6) {
+    if ((same >= 4 || fast >= 6) && botOutranks(s, me)) {
       s.timeouts ||= {}; s.timeouts[me] = now + 5 * 60e3; spamMap.delete(k);
       audit(s, BOT_NAME, 'Spam yüzünden susturdu', `${me} · 5 dk`);
       botPost(chId, { title: 'Spam engellendi', text: `${me} çok hızlı ya da aynı mesajı tekrar tekrar gönderdiği için 5 dakika susturuldu.`, tone: 'warn' });
@@ -1650,7 +1666,11 @@ io.on('connection', socket => {
       slowMap.set(key, Date.now());
     }
     if (srv && (!p.kind || p.kind === 'text')) { const am = automod(srv, cur, me, p.text); if (am) return cb({ error: am }); }
-    cb(postMessage(me, cur, p));
+    const res = postMessage(me, cur, p); cb(res);
+    if (res?.ok !== false && !res?.error && srv?.bot?.added && /@kanka\s?bot\b/i.test(p.text || '')) {
+      const ch0 = cur, who = me;
+      setTimeout(() => botPost(ch0, { title: `Selam ${who}! 👋`, text: 'Ben Kanka Bot. Komutlarımı görmek için /yardım yaz' + (botOn(srv, 'mod') ? '. Bu sunucuda moderasyon bende 🛡️' : '.'), tone: 'info' }), 700);
+    }
   });
   // ----- Kanka Bot komutları (/uyar, /sustur, /temizle, /kilitle ...) -----
   function botCommand(s, text) {
@@ -1659,8 +1679,9 @@ io.on('connection', socket => {
     const target = () => { const n = (rest[0] || '').replace(/^@/, ''); return membersOf(s).find(x => x.toLocaleLowerCase('tr') === n.toLocaleLowerCase('tr')) || null; };
     const reason = k => clean(rest.slice(k).join(' '), 120);
     const modCmds = ['/uyar', '/uyarılar', '/uyarilar', '/uyarısil', '/uyarisil', '/sustur', '/temizle', '/kilitle', '/kilidiaç', '/kilidiac', '/aç', '/ac'];
-    if (cmd === '/yardım' || cmd === '/yardim' || cmd === '/komutlar') return W({ title: 'Kanka Bot komutları', tone: 'info', text: 'Herkes: /zar · /yazitura · /xox · /anket · /plan · /şarkı · /izle' + (botOn(s, 'mod') ? '\n\nYetkililer:\n/uyar @isim sebep · uyarı ver\n/uyarılar @isim · uyarıları gör\n/uyarısil @isim · uyarıları sıfırla\n/sustur @isim 10 sebep · dakika olarak sustur\n/temizle 20 · son mesajları sil (en çok 100)\n/kilitle · odayı yazmaya kapat\n/kilidiaç · odayı yeniden aç' : '\n\nMod modülü kapalı. Sunucu ayarları → Kanka Bot\'tan açabilirsin.') });
+    if (cmd === '/yardım' || cmd === '/yardim' || cmd === '/komutlar') return W({ title: 'Kanka Bot komutları', tone: 'info', text: 'Herkes: /zar · /yazitura · /xox · /anket · /plan · /şarkı · /izle' + (!s.bot?.added ? '\n\nKanka Bot bu sunucuda ekli değil. Eklemek için: Sunucu ayarları → Kanka Bot.' : botOn(s, 'mod') ? '\n\nYetkililer:\n/uyar @isim sebep · uyarı ver\n/uyarılar @isim · uyarıları gör\n/uyarısil @isim · uyarıları sıfırla\n/sustur @isim 10 sebep · dakika olarak sustur\n/temizle 20 · son mesajları sil (en çok 100)\n/kilitle · odayı yazmaya kapat\n/kilidiaç · odayı yeniden aç' : '\n\nMod modülü kapalı. Sunucu ayarları → Kanka Bot\'tan açabilirsin.') });
     if (!modCmds.includes(cmd)) return false;
+    if (!s.bot?.added) return W({ title: 'Kanka Bot bu sunucuda yok', tone: 'warn', text: 'Bu komut için önce Kanka Bot\'u ekle: Sunucu ayarları → Kanka Bot → Botu ekle.' });
     if (!botOn(s, 'mod')) return W({ title: 'Mod modülü kapalı', tone: 'warn', text: 'Bu komut için sunucu ayarları → Kanka Bot → Mod modülünü aç.' });
     const c = s.channels.find(x => x.id === cur);
     if (cmd === '/uyar') {
@@ -1669,7 +1690,9 @@ io.on('connection', socket => {
       s.warns ||= {}; const arr = (s.warns[n] ||= []); arr.push({ by: me, time: Date.now(), reason: reason(1) });
       const lim = s.bot.mod.warnLimit || 3;
       audit(s, me, 'Uyardı', `${n} (${arr.length}/${lim})${reason(1) ? ' · ' + reason(1) : ''}`);
-      if (arr.length >= lim) {
+      if (arr.length >= lim && !botOutranks(s, n)) {
+        botPost(cur, { title: `${n} uyarıldı (${arr.length}/${lim})`, text: 'Uyarı sınırına ulaştı ama Kanka Bot\'un rolü bu kişininkinden düşük olduğu için otomatik susturamadı. Rol sırasını Sunucu ayarları → Roller\'den değiştirebilirsin.', tone: 'warn', fields: [['Yetkili', me]] });
+      } else if (arr.length >= lim) {
         s.timeouts ||= {}; s.timeouts[n] = Date.now() + 60 * 60e3; s.warns[n] = [];
         botPost(cur, { title: `${n} susturuldu`, text: `${lim} uyarıya ulaştığı için 1 saat susturuldu.`, tone: 'danger', fields: [['Son uyarı', reason(1) || 'Sebep belirtilmedi'], ['Yetkili', me]] });
         io.to('user:' + n).emit('toast', `${s.name} sunucusunda ${lim} uyarıya ulaştığın için 1 saat susturuldun`);
@@ -1733,10 +1756,24 @@ io.on('connection', socket => {
     }
     return false;
   }
+  socket.on('botAdd', ({ serverId, mod = true } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Bot eklemek için sunucuyu yönetme yetkin olmalı' });
+    if (s.public) return cb({ error: 'Bu sunucuya bot eklenemez' });
+    botAddTo(s, me, !!mod); pushSrv(s); cb({ ok: true });
+  });
+  socket.on('botRemove', ({ serverId } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Yetkin yok' });
+    const b = botCfg(s); if (!b.added) return cb({ ok: true });
+    b.added = false; for (const k of Object.keys(BOT_MODS)) b[k].on = false;
+    const r = botRole(s); if (r) s.customRoles = s.customRoles.filter(x => x !== r);
+    audit(s, me, 'Kanka Bot\'u sunucudan attı');
+    pushSrv(s); cb({ ok: true });
+  });
   socket.on('botSave', ({ serverId, module, cfg } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Kanka Bot ayarları için sunucuyu yönetme yetkin olmalı' });
     const def = BOT_MODS[module]; if (!def || !cfg || typeof cfg !== 'object') return cb({ error: 'Geçersiz modül' });
     const b = botCfg(s), was = b[module].on;
+    if (!b.added && cfg.on) return cb({ error: 'Önce Kanka Bot\'u sunucuya ekle' });
     for (const k of Object.keys(def)) if (k in cfg) {
       const v = cfg[k];
       if (typeof def[k] === 'boolean') b[module][k] = !!v;
@@ -1974,6 +2011,7 @@ io.on('connection', socket => {
     const perms = (role.perms || []).filter(p => PERMS.includes(p) && (s.owner === me || can(s, me, p)));
     const color = /^#[0-9a-f]{6}$/i.test(role.color) ? role.color : '#99aab5';
     let r = s.customRoles.find(x => x.id === role.id);
+    if (r?.bot) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); r.color = color; pushSrv(s); return cb({ ok: true, id: r.id }); }
     if (r) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); Object.assign(r, { name, color, perms, hoist: !!role.hoist }); audit(s, me, 'Rolü düzenledi', name); }
     else { if (s.customRoles.length >= 30) return cb({ error: 'En fazla 30 rol' }); r = { id: id(), name, color, perms, hoist: !!role.hoist }; s.customRoles.push(r); audit(s, me, 'Rol oluşturdu', name); }
     pushSrv(s); cb({ ok: true, id: r.id });
@@ -1982,6 +2020,7 @@ io.on('connection', socket => {
   socket.on('roleDelete', ({ serverId, roleId } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Yetkin yok' });
     const r = s.customRoles.find(x => x.id === roleId); if (!r || !outranksRole(s, r)) return cb({ error: 'Bu rolü silemezsin' });
+    if (r.bot) return cb({ error: 'Bu rol Kanka Bot\'a ait. Kaldırmak için botu sunucudan at.' });
     if (nukeCheck(s, me, 'rol silme')) return cb({ error: 'Kanka Bot: Kısa sürede çok fazla rol sildin, işlem durduruldu.' });
     s.customRoles = s.customRoles.filter(x => x !== r);
     for (const n in s.memberRoles) s.memberRoles[n] = s.memberRoles[n].filter(x => x !== roleId);
@@ -1998,7 +2037,7 @@ io.on('connection', socket => {
   socket.on('memberRoles', ({ serverId, name, roles } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageRoles'); if (!s || !membersOf(s).includes(name)) return cb({ error: 'Yetkin yok' });
     const old = s.memberRoles[name] || [];
-    const want = (roles || []).filter(rid => s.customRoles.some(r => r.id === rid));
+    const want = (roles || []).filter(rid => s.customRoles.some(r => r.id === rid && !r.bot));
     for (const rid of new Set([...old, ...want])) if (old.includes(rid) !== want.includes(rid) && !outranksRole(s, s.customRoles.find(r => r.id === rid))) return cb({ error: 'Senden yüksek bir rolü veremez/alamazsın' });
     if (want.length) s.memberRoles[name] = want; else delete s.memberRoles[name];
     audit(s, me, 'Rollerini değiştirdi', name); pushSrv(s); cb({ ok: true });

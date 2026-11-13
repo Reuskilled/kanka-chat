@@ -184,6 +184,23 @@
   .row.botrow .eph { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 700; }
   #suggest.cmd { max-height: 340px; overflow-y: auto; } #suggest.cmd button { width: 330px; } #suggest.cmd button b { color: var(--accent-2); min-width: 92px; text-align: left; } #suggest.cmd button small { color: var(--muted); font-weight: 600; font-size: 12px; text-align: left; }
   .botgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 12px; margin: 6px 0 18px; }
+  .kbhero { display: flex; gap: 18px; align-items: center; padding: 18px; border-radius: 18px; background: linear-gradient(135deg, #3a2218, #2b1a14); border: 1px solid var(--line); margin: 8px 0 18px; }
+  .kbhero img, .kbav { width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; background: #f2652f; object-fit: cover; }
+  .kbhero h4 { font-size: 18px; margin-bottom: 4px; display: flex; align-items: center; } .kbhero p { color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+  .kbhero .primary { width: auto; padding: 11px 20px; margin-top: 12px; }
+  .kbperm { list-style: none; margin: 14px 0; display: grid; gap: 8px; } .kbperm li { display: flex; gap: 10px; align-items: flex-start; font-weight: 700; font-size: 14px; }
+  .kbperm li .ic { color: var(--green); flex-shrink: 0; margin-top: 2px; } .kbperm li small { display: block; color: var(--muted); font-weight: 600; font-size: 12.5px; }
+  .kbtop { text-align: center; } .kbtop .kbav { width: 84px; height: 84px; margin: 0 auto 10px; display: block; box-shadow: 0 10px 30px rgba(255,138,76,.35); }
+  .kbtop h3 { display: flex; align-items: center; justify-content: center; } .kbtop p { color: var(--muted); }
+  .kbsoon { color: var(--muted); font-size: 13px; font-weight: 700; margin: -6px 0 16px; }
+  .mem.botmem .av { background: #f2652f; overflow: hidden; } .mem.botmem .av img { width: 100%; height: 100%; object-fit: cover; }
+  .bots-hero { border-radius: 22px; padding: 26px; background: radial-gradient(600px 300px at 90% 0%, rgba(255,138,76,.35), transparent 70%), linear-gradient(135deg, #2e1d16, #1d1411); border: 1px solid var(--line); display: flex; gap: 22px; align-items: center; margin-bottom: 20px; }
+  .bots-hero img { width: 96px; height: 96px; border-radius: 50%; background: #f2652f; box-shadow: 0 14px 40px rgba(255,138,76,.4); }
+  .bots-hero h2 { display: flex; align-items: center; font-size: 26px; margin-bottom: 6px; } .bots-hero p { color: var(--muted); max-width: 560px; line-height: 1.5; }
+  .bots-hero .primary { width: auto; padding: 12px 22px; margin-top: 14px; }
+  .hm-botcta { display: flex; gap: 16px; align-items: center; padding: 16px 18px; border-radius: 18px; border: 1px solid var(--line); background: linear-gradient(135deg, #3a2218, #241813); }
+  .hm-botcta img { width: 54px; height: 54px; border-radius: 50%; background: #f2652f; flex-shrink: 0; } .hm-botcta span { flex: 1; } .hm-botcta b { display: block; font-size: 15px; } .hm-botcta small { color: var(--muted); font-weight: 600; }
+  .hm-botcta .primary { width: auto; padding: 10px 16px; white-space: nowrap; }
   .kbmod { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--card); display: flex; flex-direction: column; transition: border-color .2s, box-shadow .2s; }
   .kbmod.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .kbmod .bh { height: 50px; background: linear-gradient(135deg, var(--g1), var(--g2)); }
@@ -2853,8 +2870,9 @@ function loadDiscover() {
   socket.emit('discover', { q: discQ, cat: discCat }, r => {
     if (S.view !== 'discover') return;
     const cats = r.cats || [];
-    $('#side-list').innerHTML = `<div class="label">Kategoriler</div>` + [[null, 'Tümü', 'compass'], ...cats.map(c => [c, c, 'hash'])].map(([k, t, i]) => `<div class="room ${discCat === k ? 'active' : ''}" data-cat="${esc(k || '')}"><div class="ico">${ic(i)}</div>${esc(t)}</div>`).join('');
+    $('#side-list').innerHTML = `<div class="room" data-bots><div class="ico">${ic('shield')}</div>Botlar</div><div class="label">Kategoriler</div>` + [[null, 'Tümü', 'compass'], ...cats.map(c => [c, c, 'hash'])].map(([k, t, i]) => `<div class="room ${discCat === k ? 'active' : ''}" data-cat="${esc(k || '')}"><div class="ico">${ic(i)}</div>${esc(t)}</div>`).join('');
     $('#side-list').querySelectorAll('[data-cat]').forEach(d => d.onclick = () => { discCat = d.dataset.cat || null; loadDiscover(); });
+    $('#side-list').querySelector('[data-bots]').onclick = showBots;
     $('#dc-list').innerHTML = (r.list || []).length ? `<div class="dc-grid">${r.list.map(o => discCard(o)).join('')}</div>` : `<div class="dc-empty">${ic('compass')}<br>Burada henüz sunucu yok. Kendi sunucunu kur ve Sunucu ayarları › Keşif'ten herkese aç!</div>`;
     window.__discList = r.list || [];
     $('#dc-list').querySelectorAll('[data-dj]').forEach(b => b.onclick = () => {
@@ -3163,6 +3181,66 @@ function askBan(srv, n, after) {
   form(`${esc(n)} yasaklansın mı?`, 'Sunucudan atılır ve davet linkiyle bir daha giremez. Yasağı ayarlardan kaldırabilirsin.', [{ k: 'reason', p: 'Sebep (isteğe bağlı)', opt: true }], v =>
     socket.emit('ban', { serverId: srv.id, name: n, reason: v.reason }, x => { if (x.error) return toast(x.error); toast(`${n} yasaklandı`); after?.(); }));
 }
+// ================= Kanka Bot =================
+const KB_MODS = [
+  ['mod', '🛡️', 'Mod', 'Anti-nuke, otomatik moderasyon, uyarı, susturma, mesaj temizleme ve oda kilidi.', '#f59e0b', '#ef4444'],
+  ['match', '🏆', 'Maç Kartı', 'LoL, Valorant ve CS2 maçı bitince skor sohbete kendiliğinden düşer.', '#22c55e', '#0ea5e9']];
+const kbCard = (added, m = {}) => ([k, e, n, d, g1, g2]) => {
+  const on = k === 'mod' && added && !!m.on;
+  return `<div class="kbmod ${on ? 'on' : ''}" style="--g1:${g1};--g2:${g2}"><div class="bh"></div><div class="bi">${e}</div><h5>${n}</h5><p>${d}</p>
+    ${k === 'match' ? '<span class="bb soon">Herkeste açık</span>' : added ? `<button class="bb ${on ? 'off' : ''}" data-bot="${k}">${on ? 'Kapat' : 'Aç'}</button>` : '<span class="bb soon">Botla gelir</span>'}</div>`;
+};
+const myBotServers = () => S.servers.filter(x => !x.public && (x.owner === S.me || x.myPerms?.includes('manageServer')));
+function openBotAdd(s) {
+  modal(`<div class="kbtop"><img class="kbav" src="/icon-192.png" alt=""><h3>Kanka Bot<span class="botbadge">BOT</span></h3><p><b>${esc(s.name)}</b> sunucusuna eklenecek</p></div>
+    <ul class="kbperm"><li>${ic('check')}<span>Mesajları okuyup yazabilir<small>Komutlara cevap verir, kayıt odasına not düşer</small></span></li>
+      <li>${ic('check')}<span>Kurallara uymayan mesajları engelleyebilir<small>Davet linki, spam, toplu etiket, yasaklı kelime</small></span></li>
+      <li>${ic('check')}<span>Üyeleri uyarıp susturabilir<small>Sadece rolü kendi rolünden düşük olanları</small></span></li>
+      <li>${ic('check')}<span>Yetkisini kötüye kullananı durdurabilir<small>Anti-nuke: kısa sürede çok fazla ban, atma ya da silme</small></span></li></ul>
+    <label class="chk" style="margin:4px 0 14px"><input type="checkbox" id="kb-mod" checked><span>Mod modülünü hemen aç</span></label>
+    <p class="hint" style="margin-bottom:14px">Botu istediğin zaman Sunucu ayarları → Kanka Bot'tan atabilirsin.</p>
+    <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="kb-ok" style="background:var(--accent);color:#1a0f0a;width:auto;padding:11px 22px">Yetkilendir</button></div>`);
+  $('#mx').onclick = closeModal;
+  $('#kb-ok').onclick = () => socket.emit('botAdd', { serverId: s.id, mod: $('#kb-mod').checked }, r => {
+    if (r?.error) return toast(r.error);
+    closeModal(); toast('🤖 Kanka Bot sunucuya katıldı!', null, false, { type: 'party' });
+    if (S.view !== 'server' || S.server?.id !== s.id) selectServer(s.id);
+  });
+}
+function botProfile() {
+  const s = S.server; if (!s) return;
+  const mng = s.owner === S.me || s.myPerms?.includes('manageServer');
+  modal(`<div class="kbtop"><img class="kbav" src="/icon-192.png" alt=""><h3>Kanka Bot<span class="botbadge">BOT</span></h3><p>Kanka'nın resmi botu · her zaman çevrimiçi</p></div>
+    <div class="pc-sec" style="margin-top:14px"><h5>Bu sunucuda açık modüller</h5><div class="badges">${s.bot?.mod?.on ? '<span>🛡️ Mod</span>' : ''}<span>🏆 Maç Kartı</span></div></div>
+    <div class="pc-sec"><h5>Nasıl kullanılır?</h5><p class="hint">Sohbete <b>/</b> yazınca komutlar çıkar. <b>@Kanka Bot</b> yazarsan sana cevap verir.</p></div>
+    <div class="rowb">${mng ? '<button id="kb-set">Ayarlar</button>' : ''}<button class="primary" id="mx" style="background:var(--accent);color:#1a0f0a;width:auto;padding:10px 20px">Kapat</button></div>`);
+  $('#mx').onclick = closeModal;
+  if ($('#kb-set')) $('#kb-set').onclick = () => showServerSettings(s, 'bot');
+}
+function showBots() {
+  S.view = 'discover'; document.body.classList.add('discover'); document.body.classList.remove('vview', 'drawer');
+  S.channel = null; renderRail();
+  setHeader(`${ic('shield')} Botlar`, 'Sunucuna tek tıkla ekle', false); $('#head-actions').innerHTML = '';
+  $('#side-head').className = 'shead'; $('#side-head').style.backgroundImage = ''; $('#side-head').onclick = null; $('#side-head').innerHTML = '<h3>Keşfet</h3>';
+  $('#side-list').innerHTML = `<div class="room" data-dsv><div class="ico">${ic('compass')}</div>Sunucular</div><div class="room active"><div class="ico">${ic('shield')}</div>Botlar</div>`;
+  $('#side-list').querySelector('[data-dsv]').onclick = showDiscover;
+  $('#discover').innerHTML = `<div class="bots-hero"><img src="/icon-192.png" alt=""><div><h2>Kanka Bot<span class="botbadge">BOT</span></h2><p>Discord'da her iş için ayrı bot kurman gerekirdi. Kanka Bot tek başına yetiyor: sunucunu korur, kural bozanı uyarır, maç sonuçlarını sohbete düşürür. Her gün yeni modül geliyor.</p>
+    <button class="primary" id="bots-add">${ic('plus')} Sunucuna ekle</button></div></div><div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Karşılama · Takım Kur · Seviye · Çekiliş · Destek</p>`;
+  $('#bots-add').onclick = pickBotServer;
+}
+function pickBotServer() {
+  const list = myBotServers();
+  if (!list.length) {
+    modal(`<div class="kbtop"><img class="kbav" src="/icon-192.png" alt=""><h3>Önce sunucunu kur</h3><p>Kanka Bot'u eklemek için yönettiğin bir sunucu olmalı. Hazır şablonlarla 10 saniyede kurarsın, sonra botu tek tıkla eklersin.</p></div>
+      <div class="rowb" style="margin-top:16px"><button id="mx">Vazgeç</button><button class="primary" id="kb-new" style="background:var(--accent);color:#1a0f0a;width:auto;padding:11px 22px">${ic('plus')} Sunucu kur</button></div>`);
+    $('#mx').onclick = closeModal; $('#kb-new').onclick = () => { closeModal(); setTimeout(showTemplates, 200); };
+    return;
+  }
+  modal(`<h3>${ic('shield')}Hangi sunucuya eklensin?</h3><p class="hint">Yönettiğin sunucular</p><div style="display:grid;gap:8px;margin:14px 0">${list.map(x => `<button class="lrow" data-kbs="${x.id}" style="margin:0" ${x.bot?.added ? 'disabled' : ''}><span class="hm-ic srv" style="width:30px;height:30px">${x.iconImg ? `<img src="${esc(x.iconImg)}" alt="">` : esc(x.icon || x.name[0])}</span>${esc(x.name)}${x.bot?.added ? '<small style="margin-left:auto;color:var(--muted)">Zaten ekli</small>' : ''}</button>`).join('')}</div>
+    <div class="rowb"><button id="mx">Vazgeç</button><button class="lnk" id="kb-new2">Yeni sunucu kur</button></div>`);
+  $('#mx').onclick = closeModal; $('#kb-new2').onclick = () => { closeModal(); setTimeout(showTemplates, 200); };
+  $('#modal-box').querySelectorAll('[data-kbs]').forEach(b => b.onclick = () => openBotAdd(S.servers.find(x => x.id === b.dataset.kbs)));
+}
 let ssOpen = null;
 function showServerSettings(s, tab, focus) {
   s = S.servers.find(x => x.id === s.id) || s;
@@ -3188,22 +3266,17 @@ function showServerSettings(s, tab, focus) {
   const page = {
     bot: () => {
       const b = s.bot || {}, m = b.mod || {};
-      const MODS = [
-        ['mod', '🛡️', 'Mod', 'Anti-nuke, otomatik moderasyon, uyarı, susturma, mesaj temizleme ve oda kilidi.', '#f59e0b', '#ef4444'],
-        ['welcome', '👋', 'Karşılama', 'Yeni gelene hoş geldin mesajı ve otomatik rol.', '#a855f7', '#ec4899'],
-        ['team', '🎮', 'Takım Kur', '/takım valorant 5: dolunca herkes sesli odaya taşınır.', '#22c55e', '#06b6d4'],
-        ['level', '⭐', 'Seviye', 'Mesaj ve sesten XP, sıralama tablosu, ödül rolleri.', '#f59e0b', '#f97316'],
-        ['giveaway', '🎁', 'Çekiliş', 'Tepkiyle katılınan süreli çekilişler.', '#2dd4bf', '#3b82f6'],
-        ['ticket', '🛟', 'Destek', 'Tepkiyle açılan özel destek odaları.', '#a855f7', '#f472b6'],
-        ['match', '🏆', 'Maç Kartı', 'Maç bitince skor sohbete düşer. Üyeler profil ayarlarından açar.', '#22c55e', '#0ea5e9']];
-      const card = ([k, e, n, d, g1, g2]) => {
-        const on = k === 'mod' ? !!m.on : false, soon = !['mod', 'match'].includes(k);
-        return `<div class="kbmod ${on ? 'on' : ''}" style="--g1:${g1};--g2:${g2}"><div class="bh"></div><div class="bi">${e}</div><h5>${n}</h5><p>${d}</p>
-          ${soon ? '<span class="bb soon">Yakında</span>' : k === 'match' ? '<span class="bb soon">Hazır</span>' : `<button class="bb ${on ? 'off' : ''}" data-bot="${k}">${on ? 'Kapat' : 'Aç'}</button>`}</div>`;
-      };
+      if (!b.added) {
+        main.innerHTML = `<div class="st-page"><h3>Kanka Bot</h3>
+          <div class="kbhero"><img src="/icon-192.png" alt=""><div><h4>Kanka Bot<span class="botbadge">BOT</span></h4><p>Ayrı ayrı bot aramana gerek yok. Kanka Bot'u ekle, sunucunu korusun: anti-nuke, otomatik moderasyon, uyarı ve susturma komutları.</p>
+          <button class="primary" id="kb-add">${ic('plus')} Botu sunucuya ekle</button></div></div>
+          <div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Karşılama · Takım Kur · Seviye · Çekiliş · Destek</p></div>`;
+        $('#kb-add').onclick = () => openBotAdd(s);
+        return;
+      }
       const tg = (k, t) => `<label class="switch">${t}<input type="checkbox" data-mk="${k}" ${m[k] ? 'checked' : ''}></label>`;
-      main.innerHTML = `<div class="st-page"><h3>Kanka Bot</h3><p class="hint">Ayrı ayrı bot kurmana gerek yok: ihtiyacın olan modülü aç, Kanka Bot hemen çalışmaya başlar. Komutları görmek için sohbete <b>/</b> yaz.</p>
-        <div class="botgrid">${MODS.map(card).join('')}</div>
+      main.innerHTML = `<div class="st-page"><h3>Kanka Bot</h3><p class="hint">Kanka Bot bu sunucuda üye. Modülleri buradan açıp kapatırsın. Komutları görmek için sohbete <b>/</b> yaz.</p>
+        <div class="botgrid">${KB_MODS.map(kbCard(true, m)).join('')}</div><p class="kbsoon">Yakında: Karşılama · Takım Kur · Seviye · Çekiliş · Destek</p>
         ${m.on ? `<div class="botset"><h4>🛡️ Mod ayarları</h4>
           <div class="st-field">${tg('antinuke', 'Anti-nuke (bir yetkili 1 dakikada 3\'ten fazla ban, atma, oda ya da rol silme yaparsa durdur ve yetkilerini al)')}
           ${tg('spam', 'Spam koruması (aynı mesajı tekrarlayan ya da çok hızlı yazan 5 dk susturulur)')}
@@ -3211,15 +3284,17 @@ function showServerSettings(s, tab, focus) {
           ${tg('links', 'Tüm linkleri engelle')}
           ${tg('mentions', 'Bir mesajda 5\'ten fazla etiketi engelle')}
           ${tg('caps', 'BÜYÜK HARFLE bağırmayı engelle')}</div>
-          <div class="st-field"><label>Yasaklı kelimeler</label><input class="field" id="bm-words" maxlength="500" placeholder="virgülle ayır: kelime1, kelime2" value="${esc(m.words || '')}"><p class="hint" style="margin-top:6px">Yöneticiler ve moderatörler otomatik moderasyondan etkilenmez.</p></div>
+          <div class="st-field"><label>Yasaklı kelimeler</label><input class="field" id="bm-words" maxlength="500" placeholder="virgülle ayır: kelime1, kelime2" value="${esc(m.words || '')}"><p class="hint" style="margin-top:6px">Yöneticiler ve moderatörler otomatik moderasyondan etkilenmez. Bot, rolü kendi rolünden yüksek olanları otomatik susturamaz.</p></div>
           <div class="st-field"><label>Kayıt odası</label><select class="field" id="bm-log"><option value="">Kapalı</option>${s.channels.filter(c => (c.type || 'text') === 'text').map(c => `<option value="${c.id}" ${m.logCh === c.id ? 'selected' : ''}>#${esc(c.name)}</option>`).join('')}</select><p class="hint" style="margin-top:6px">Yasaklama, susturma, engellenen mesajlar ve anti-nuke uyarıları bu odaya yazılır. Odayı sadece yetkililerin görebileceği şekilde ayarla.</p></div>
-          <div class="st-field"><label>Uyarı sınırı</label><select class="field" id="bm-warn" style="width:200px">${[2, 3, 4, 5].map(v => `<option value="${v}" ${(m.warnLimit || 3) === v ? 'selected' : ''}>${v} uyarıda 1 saat sustur</option>`).join('')}</select></div>
+          <div class="st-field"><label>Uyarı sınırı</label><select class="field" id="bm-warn" style="width:220px">${[2, 3, 4, 5].map(v => `<option value="${v}" ${(m.warnLimit || 3) === v ? 'selected' : ''}>${v} uyarıda 1 saat sustur</option>`).join('')}</select></div>
           <div class="st-field"><button class="primary" id="bm-save" style="width:auto;padding:11px 22px">Kaydet</button></div>
-          <h4>Komutlar</h4><div class="cmdlist">/uyar @isim sebep<br>/uyarılar @isim · /uyarısil @isim<br>/sustur @isim 10 sebep<br>/temizle 20<br>/kilitle · /kilidiaç</div></div>` : ''}</div>`;
+          <h4>Komutlar</h4><div class="cmdlist">/uyar @isim sebep<br>/uyarılar @isim · /uyarısil @isim<br>/sustur @isim 10 sebep<br>/temizle 20<br>/kilitle · /kilidiaç</div></div>` : ''}
+        <div class="st-field" style="margin-top:22px"><button class="lrow danger" id="kb-rm" style="margin:0;color:var(--red)">${ic('door')}Kanka Bot'u sunucudan at</button><p class="hint" style="margin-top:6px">Bot atılınca bütün modüller kapanır ve Kanka Bot rolü silinir.</p></div></div>`;
       const saveMod = (cfg, msg) => socket.emit('botSave', { serverId: s.id, module: 'mod', cfg }, done(msg));
       main.querySelectorAll('[data-bot]').forEach(x => x.onclick = () => saveMod({ on: !m.on }, m.on ? 'Mod modülü kapatıldı' : 'Mod modülü açıldı 🛡️'));
       main.querySelectorAll('[data-mk]').forEach(x => x.onchange = () => socket.emit('botSave', { serverId: s.id, module: 'mod', cfg: { [x.dataset.mk]: x.checked } }, r => r?.error ? toast(r.error) : toast('Kaydedildi')));
       if ($('#bm-save')) $('#bm-save').onclick = () => saveMod({ words: $('#bm-words').value, logCh: $('#bm-log').value || null, warnLimit: +$('#bm-warn').value }, 'Kaydedildi');
+      $('#kb-rm').onclick = () => confirmBox('Kanka Bot sunucudan atılsın mı? Bütün modüller kapanır.', () => socket.emit('botRemove', { serverId: s.id }, done('Kanka Bot sunucudan atıldı')));
     },
     general: () => {
       main.innerHTML = `<div class="st-page"><h3>Genel</h3><p class="hint">Sunucunun adı, simgesi ve temel kuralları.</p>
@@ -3470,7 +3545,8 @@ function homeHTML() {
       <button class="hm-card" data-q="discover"><span class="hm-ic">${ic('compass')}</span><b>Keşfet</b><small>Herkese açık topluluklar</small></button></div>
       ${know.length ? `<h6>Tanıyor olabileceklerin</h6><div class="hm-know">${know.map(k => `<div class="hm-k">${av(k.n, S.online.has(k.n))}<span><b>${esc(dn(k.n))}</b><small>${esc(k.srv.slice(0, 2).join(', '))}</small></span><button class="btns2" data-addf="${esc(k.n)}">${ic('userplus')}Ekle</button></div>`).join('')}</div>` : ''}</section>`;
   }
-  return `<div class="hm">${voiceSec}${waitSec}${startSec}</div>`;
+  const botSec = !S.servers.some(x => !x.public && x.owner === S.me) ? `<section class="hm-sec"><div class="hm-botcta"><img src="/icon-192.png" alt=""><span><b>Kendi sunucunu kur, Kanka Bot korusun</b><small>Arkadaş grubun için hazır şablon + moderasyonu üstlenen bot. Discord'daki gibi 5 bot kurmana gerek yok.</small></span><button class="primary" data-q="create">${ic('plus')} Sunucu kur</button></div></section>` : '';
+  return `<div class="hm">${voiceSec}${waitSec}${botSec}${startSec}</div>`;
 }
 function wireHome() {
   const M = $('#messages');
@@ -4163,8 +4239,10 @@ function renderMembers() {
   const groups = [['Yönetici', n => roleOf(srv, n) === 'admin' && S.online.has(n)], ...hoist.map(r => [r.name, n => S.online.has(n) && topHoist(n) === r]),
     ['Moderatörler', n => roleOf(srv, n) === 'mod' && !topHoist(n) && S.online.has(n)],
     ['Çevrimiçi', n => roleOf(srv, n) === 'member' && !topHoist(n) && S.online.has(n)], ['Çevrimdışı', n => !S.online.has(n)]];
-  $('#members').innerHTML = groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(item).join('') : ''; }).join('');
-  $('#members').querySelectorAll('.mem').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
+  $('#members').innerHTML = (srv?.bot?.added ? `<div class="label" style="padding:14px 8px 6px">Botlar — 1</div><div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="color:var(--accent)">Kanka Bot<span class="botbadge">BOT</span></span><small>${srv.bot.mod?.on ? 'Moderasyon · /yardım' : '/yardım yaz'}</small></div></div>` : '') +
+    groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(item).join('') : ''; }).join('');
+  $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
+  $('#members').querySelector('.mem.botmem')?.addEventListener('click', e => { e.stopPropagation(); botProfile(); });
 }
 const lvlFloor = L => 5 * (L - 1) ** 2;
 function xpBar(u) {
@@ -5669,6 +5747,7 @@ const SETUP_STEPS = [
   { k: 'icon', icon: 'image', t: 'Simge ekle', d: 'Listede öne çıksın' },
   { k: 'invite', icon: 'userplus', t: 'Arkadaş davet et', d: 'Davet linkini paylaş' },
   { k: 'channels', icon: 'hash', t: 'Odaları düzenle', d: 'Yeni oda aç ya da adlandır' },
+  { k: 'bot', icon: 'shield', t: "Kanka Bot'u ekle", d: 'Moderasyonu bota bırak' },
   { k: 'members', icon: 'users', t: '3 üyeye ulaş', d: '' },
 ];
 const onbState = () => ({ join: S.servers.some(s => s.id !== 's1'), msg: !!S.onb?.msg, voice: !!S.onb?.voice, invite: !!S.onb?.invite, profile: !!S.onb?.profile });
@@ -5677,7 +5756,7 @@ let onbWon = '';
 function onbModel() {
   const s = S.view === 'server' ? S.server : null;
   if (s && s.owner === S.me && s.setup && !s.setup.done && !s.setup.dismissed) {
-    const m = (s.members || []).length, st = { icon: !!s.iconImg, invite: !!s.setup.invite, channels: !!s.setup.channels, members: m >= 3 };
+    const m = (s.members || []).length, st = { icon: !!s.iconImg, invite: !!s.setup.invite, channels: !!s.setup.channels, bot: !!s.bot?.added, members: m >= 3 };
     const steps = SETUP_STEPS.map(x => ({ ...x, d: x.k === 'members' ? `${Math.min(m, 3)}/3 üye` : x.d, done: st[x.k] }));
     return { mode: 'setup', id: s.id, title: 'Sunucunu hazırla', sub: s.name, steps, n: steps.filter(x => x.done).length, total: steps.length, extra: m };
   }
@@ -5751,6 +5830,7 @@ function onbGo(mode, k) {
     const s = S.server;
     if (k === 'icon') return showServerSettings(s, 'general');
     if (k === 'channels') return showServerSettings(s, 'channels');
+    if (k === 'bot') return openBotAdd(s);
     return showInvite(s);
   }
   if (k === 'join') return showDiscover();
