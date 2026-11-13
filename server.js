@@ -640,7 +640,7 @@ function canAccess(name, chId) {
   if (chId.startsWith('dm:')) return dmPeers(chId).includes(name);
   if (chId.startsWith('g:')) return !!groupOf(chId)?.members.includes(name);
   const f = findChannel(chId);
-  return !!f && (f.c.type === 'text' || f.c.type === 'forum') && (f.s.public || f.s.members.includes(name)) && !f.s.bans?.[name] && seesChannel(f.s, f.c, name);
+  return !!f && (f.c.type === 'text' || f.c.type === 'forum' || voiceLike(f.c.type)) && (f.s.public || f.s.members.includes(name)) && !f.s.bans?.[name] && seesChannel(f.s, f.c, name);
 }
 function dmsFor(name) {
   const dms = Object.keys(db.messages)
