@@ -1569,6 +1569,9 @@
   .themes button:hover { transform: translateY(-2px); } .themes button.on { border-color: #fff; box-shadow: 0 0 0 3px var(--accent); }
   .themes .none { background: var(--card); border: 2px dashed var(--line); display: grid; place-items: center; color: var(--muted); } .themes .none .ic { width: 18px; height: 18px; }
   .themes label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); font-size: 12.5px; font-weight: 800; color: var(--muted); }
+  .apthemes { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: stretch; }
+  .apthemes button { width: auto !important; height: auto !important; padding: 10px !important; border: 2px solid var(--line) !important; text-align: left; font-weight: 800; box-shadow: none !important; }
+  .apthemes button.on { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-soft) !important; }
   .themes input[type=color] { width: 30px; height: 30px; border: 0; padding: 0; background: none; cursor: pointer; }
   .frames { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
   .frames button { display: grid; justify-items: center; gap: 8px; padding: 12px 6px 10px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font-weight: 800; font-size: 12.5px; position: relative; }
@@ -2330,6 +2333,35 @@
   #vdock { display: none; }
   @keyframes vdIn { from { opacity: 0; transform: translateY(16px); } } @keyframes vdPulse { 50% { box-shadow: 0 0 0 7px rgba(111,211,155,0); } }
   .row .col { min-width: 0; } .mtch { max-width: 100%; }
+@media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
+    /* Ayarlar: telefonda liste → sayfa (iOS / Discord gibi) */
+    #modal .box.settings.mset { display: flex !important; flex-direction: column; }
+    .box.settings.mset .msh { display: flex; align-items: center; gap: 8px; padding: 10px 12px; flex-shrink: 0; background: var(--bg); border-bottom: 1px solid var(--line); position: relative; z-index: 3; }
+    .box.settings.mset .msh-b { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--card); flex-shrink: 0; transition: background .15s, transform .15s; }
+    .box.settings.mset .msh-b:active { transform: scale(.92); background: var(--hover); }
+    .box.settings.mset .msh-b .ic { width: 20px; height: 20px; } .box.settings.mset .msh-back .ic { transform: rotate(90deg); }
+    .box.settings.mset .msh-t { flex: 1; min-width: 0; text-align: center; font-size: 17px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .box.settings.mset.mlist .msh-back { visibility: hidden; }
+    /* liste görünümü */
+    .box.settings.mset.mlist .st-main { display: none !important; }
+    .box.settings.mset.mlist .st-nav { display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; flex: 1; min-height: 0; overflow-y: auto !important; overflow-x: hidden !important; gap: 8px !important; padding: 16px 14px calc(20px + env(safe-area-inset-bottom)) !important; background: var(--panel); border: 0 !important; -webkit-mask-image: none; mask-image: none; }
+    .box.settings.mset.mlist .st-nav h4 { display: block !important; padding: 10px 6px 2px !important; font-size: 11.5px; letter-spacing: .08em; color: var(--muted); }
+    .box.settings.mset.mlist .st-nav h4:first-child { display: none !important; }
+    .box.settings.mset.mlist .st-nav button { display: flex !important; align-items: center; gap: 14px; width: 100% !important; min-height: 58px; padding: 10px 14px !important; border-radius: 16px !important; background: var(--card) !important; box-shadow: none !important; font-size: 15.5px; font-weight: 800; color: var(--ink); white-space: normal; text-align: left; position: relative; animation: msIn .28s cubic-bezier(.2,.8,.2,1) both; }
+    .box.settings.mset.mlist .st-nav button:nth-of-type(2) { animation-delay: .02s; } .box.settings.mset.mlist .st-nav button:nth-of-type(3) { animation-delay: .04s; } .box.settings.mset.mlist .st-nav button:nth-of-type(4) { animation-delay: .06s; } .box.settings.mset.mlist .st-nav button:nth-of-type(5) { animation-delay: .08s; } .box.settings.mset.mlist .st-nav button:nth-of-type(n+6) { animation-delay: .1s; }
+    .box.settings.mset.mlist .st-nav button:active { background: var(--hover) !important; transform: scale(.985); }
+    .box.settings.mset.mlist .st-nav button .ic { width: 38px !important; height: 38px !important; padding: 9px; margin: 0 !important; border-radius: 12px; background: var(--accent-soft); color: var(--accent); flex-shrink: 0; box-sizing: border-box; }
+    .box.settings.mset.mlist .st-nav button::after { content: ''; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-top: 2px solid var(--muted); transform: rotate(45deg); flex-shrink: 0; opacity: .7; }
+    .box.settings.mset.mlist .st-nav button .cnt { margin-left: auto; }
+    .box.settings.mset.mlist .st-nav .out { margin-top: 10px !important; color: var(--red) !important; } .box.settings.mset.mlist .st-nav .out .ic { background: rgba(255,107,107,.14); color: var(--red); } .box.settings.mset.mlist .st-nav .out::after { display: none; }
+    .box.settings.mset.mlist .st-nav #mx, .box.settings.mset .st-nav #mx { display: none !important; }
+    .box.settings.mset .st-ver { text-align: center; color: var(--muted); font-size: 12px; padding: 8px; }
+    /* sayfa görünümü */
+    .box.settings.mset:not(.mlist) .st-nav { display: none !important; }
+    .box.settings.mset:not(.mlist) .st-main { animation: msPage .28s cubic-bezier(.2,.8,.2,1); }
+    .box.settings.mset .st-main .st-page > h3:first-child { display: none; }
+  }
+  @keyframes msIn { from { opacity: 0; transform: translateY(8px); } } @keyframes msPage { from { opacity: 0; transform: translateX(24px); } }
 </style>
 </head>
 <body>
@@ -2763,7 +2795,9 @@ function readImage(cb) {
 }
 $('#settings').onclick = () => showSettings();
 const PALETTE = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#ff9f43', '#e5484d', '#8b6b5a'];
-function showSettings(tab = 'profile') {
+function showSettings(tab) {
+  if (tab && !$('#modal').classList.contains('open')) msetDirect = true;
+  tab ||= 'profile';
   const u = S.users[S.me];
   const KEYS = ['avatar', 'status', 'bio', 'banner', 'color', 'birthday', 'music', 'displayName', 'pronouns', 'theme', 'bannerImg', 'frame', 'socials'];
   const OBJ = { theme: null, socials: {}, frame: null, bannerImg: null, avatar: null, banner: null };
@@ -2809,7 +2843,7 @@ function showSettings(tab = 'profile') {
     admin: () => '<div id="adm-root"></div>',
     act: () => actPageHTML(),
     look: () => `<div class="st-page"><h3>Görünüm</h3><p class="hint">Bu ayarlar sadece bu cihazda geçerli.</p>
-      <div class="st-field"><label>Tema</label><div class="themes">${Object.entries(THEMES).map(([k, t]) => { const v = { ...{ '--bg': '#17110e', '--panel': '#211915', '--card': '#2b211c' }, ...t.v };
+      <div class="st-field"><label>Tema</label><div class="themes apthemes">${Object.entries(THEMES).map(([k, t]) => { const v = { ...{ '--bg': '#17110e', '--panel': '#211915', '--card': '#2b211c' }, ...t.v };
         return `<button data-theme="${k}" class="${(store.get('kanka-theme') || 'sicak') === k ? 'on' : ''}" style="background:${v['--panel']};color:${t.light ? '#3b2a1e' : '#f4e6d8'}"><div class="pv" style="background:${v['--bg']}"><i style="background:${v['--card']}"></i><i style="background:${v['--card']}"></i></div>${t.name}</button>`; }).join('')}</div></div>
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'turuncu') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
       <div class="pc-sec" style="margin-top:18px"><label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
@@ -3522,6 +3556,40 @@ $('#head-more').onclick = e => {
   ro.observe($('#compose')); ro.observe($('#replybar'));
 })();
 
+
+// --- Ayarlar telefonda: önce kategori listesi, dokununca sayfa, ‹ ile geri ---
+var msetMode = 'list', msetDirect = false;
+const msetKey = () => { const n = $('#modal-box .st-nav'); return n ? (n.querySelector('h4')?.textContent || '') + '|' + (n.querySelector('.cs-title')?.textContent || '') : ''; };
+const msetOn = () => innerWidth <= 760 || (matchMedia('(pointer: coarse)').matches && (innerHeight <= 520 || innerWidth <= 900));
+function msetEnhance(fresh) {
+  const box = $('#modal-box'), nav = box.querySelector('.st-nav');
+  box.dataset.mkey = msetKey();
+  if (!box.classList.contains('settings') || !nav || !msetOn()) { box.classList.remove('mset', 'mlist'); return; }
+  if (fresh) msetMode = msetDirect ? 'page' : 'list';
+  msetDirect = false;
+  box.classList.add('mset');
+  nav.querySelectorAll('button[data-tab], button[data-ctab]').forEach(b => b.addEventListener('click', () => { msetMode = 'page'; setTimeout(msetApply, 0); }, { capture: true }));
+  msetApply();  setTimeout(msetApply, 0); // kullanıcı ayarlarında seçili sekme bir an sonra işaretleniyor
+}
+function msetApply() {
+  const box = $('#modal-box'), nav = box.querySelector('.st-nav'); if (!nav || !box.classList.contains('mset')) return;
+  box.classList.toggle('mlist', msetMode === 'list');
+  const raw = nav.querySelector('.cs-title')?.textContent.trim() || nav.querySelector('h4')?.textContent.trim() || 'Ayarlar';
+  const h4 = nav.querySelector('h4'), title = h4?.dataset.t || (raw === 'KULLANICI AYARLARI' ? 'Ayarlar' : raw.charAt(0) + raw.slice(1).toLocaleLowerCase('tr'));
+  const cur = nav.querySelector('button.on')?.childNodes; const curT = cur ? [...cur].filter(x => x.nodeType === 3).map(x => x.textContent).join('').trim() : '';
+  let h = box.querySelector(':scope > .msh'); if (!h) { h = document.createElement('div'); h.className = 'msh'; box.prepend(h); }
+  h.innerHTML = `<button class="msh-b msh-back" aria-label="Geri">${ic('chevron')}</button><b class="msh-t">${esc(msetMode === 'list' ? title : curT || title)}</b><button class="msh-b msh-x" aria-label="Kapat">${ic('x')}</button>`;
+  h.querySelector('.msh-x').onclick = () => { if (saveGuard()) return; const mx = nav.querySelector('#mx'); mx ? mx.click() : closeModal(); };
+  h.querySelector('.msh-back').onclick = () => msetBack();
+  if (msetMode === 'page') { ovOpen('msetpage', () => msetBack(true)); box.querySelector('.st-main')?.scrollTo?.(0, 0); }
+}
+function msetBack(fromPop) {
+  if (saveGuard()) return fromPop ? false : undefined;
+  msetMode = 'list'; msetApply();
+  if (!fromPop) ovClosed('msetpage');
+}
+addEventListener('resize', () => { if ($('#modal').classList.contains('open')) msetEnhance(false); });
+
 // ================= Kanka Bot =================
 const KB_MODS = [
   ['mod', '🛡️', 'Mod', 'Anti-nuke, otomatik moderasyon, uyarı, susturma, mesaj temizleme ve oda kilidi.', '#f59e0b', '#ef4444'],
@@ -3584,6 +3652,7 @@ function pickBotServer() {
 }
 let ssOpen = null;
 function showServerSettings(s, tab, focus) {
+  if (tab && !$('#modal').classList.contains('open')) msetDirect = true;
   s = S.servers.find(x => x.id === s.id) || s;
   const P = p => perm(s, p), mod = isMod(s, S.me);
   const tabs = [['general', 'Genel', 'gear', P('manageServer')], ['roles', 'Roller', 'tag', P('manageRoles')], ['channels', 'Odalar', 'hash', mod], ['members', 'Üyeler', 'users', !s.public && (P('manageRoles') || P('kick') || P('ban') || P('timeout'))],
@@ -3592,7 +3661,7 @@ function showServerSettings(s, tab, focus) {
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
   ssOpen = { id: s.id, tab, focus };
-  modal(`<nav class="st-nav"><h4>${esc(s.name.toUpperCase())}</h4>${tabs.map(([k, t, i]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${ic(i)}${t}</button>`).join('')}
+  modal(`<nav class="st-nav"><h4 data-t="${esc(s.name)}">${esc(s.name.toLocaleUpperCase('tr'))}</h4>${tabs.map(([k, t, i]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${ic(i)}${t}</button>`).join('')}
       ${s.public ? '' : `<button class="out" id="ss-leave">${ic('door')}Sunucudan ayrıl</button>`}<button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="ss-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>SUNUCU</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div>
@@ -7297,9 +7366,9 @@ function wireOverlaySettings() {
   window.kankaDesktop.overlayConfig().then(draw);
 }
 
-function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); const was = $('#modal').classList.contains('open'); $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); if (!was) ovOpen('modal', () => { if (saveGuard()) return false; closeModalRaw(); }); }
+function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); const was = $('#modal').classList.contains('open'), wasSet = was && $('#modal-box').classList.contains('settings'), wasKey = $('#modal-box').dataset.mkey; $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); if (!was) ovOpen('modal', () => { if (saveGuard()) return false; closeModalRaw(); }); msetEnhance(!wasSet || wasKey !== msetKey()); }
 function closeModalRaw() { $('#modal').classList.remove('open'); window.onMyActivity = null; }
-function closeModal() { const was = $('#modal').classList.contains('open'); closeModalRaw(); if (was) ovClosed('modal'); }
+function closeModal() { const was = $('#modal').classList.contains('open'); closeModalRaw(); if (ovStack?.some(o => o.name === 'msetpage')) ovClosed('msetpage'); if (was) ovClosed('modal'); }
 $('#modal').onclick = e => { if (e.target.id === 'modal' && !saveGuard()) closeModal(); };
 function form(title, hint, fields, onOk) {
   modal(`<form id="mform"><h3>${title}</h3>${hint ? `<p class="hint">${hint}</p>` : '<div style="height:10px"></div>'}` +
