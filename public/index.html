@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Kanka Chat</title>
 <meta name="theme-color" content="#17110e">
 <meta name="description" content="Kankalarınla sohbet, sesli odalar ve daha fazlası">
@@ -2224,6 +2224,83 @@
   #callbar .primary { width: auto; padding: 9px 18px; border-radius: 11px; background: #3fcf8e; color: #0b1a12; display: inline-flex; gap: 6px; align-items: center; font-weight: 900; } #callbar .primary .ic { width: 16px; height: 16px; }
   .room.incall::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #3fcf8e; margin-left: auto; box-shadow: 0 0 0 3px rgba(63,207,142,.25); animation: cbp 1.4s infinite; flex-shrink: 0; }
   @media (max-width: 760px) { #callbar { margin: 8px 10px 0; } #callbar .cb-avs { display: none; } }
+
+  /* ================= Telefon deneyimi ================= */
+  .mention.bot { background: rgba(255,138,76,.18); color: var(--accent); }
+  #mem-btn { display: none; position: relative; } #head-more { display: none; }
+  @media (max-width: 760px) {
+    #head-actions > .hx { display: none !important; } #head-more.show { display: flex; }
+    #head h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } #subtitle { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  }
+  #mem-btn .mb-n { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--green); color: #0b1a12; font-size: 10.5px; font-weight: 900; display: grid; place-items: center; border: 2px solid var(--panel); }
+  #mem-btn .mb-n:empty { display: none; }
+  #members .mdr-h { display: none; }
+  @media (max-width: 1100px) {
+    #mem-btn.show { display: flex; }
+    #members { display: block !important; position: fixed; top: 0; right: 0; bottom: 0; width: min(312px, 86vw); z-index: 16; margin: 0; border-radius: 24px 0 0 24px; border: none; border-left: 1px solid var(--line);
+      transform: translateX(calc(100% + 30px)); transition: transform .26s cubic-bezier(.2,.8,.2,1), box-shadow .26s; overflow-y: auto; overscroll-behavior: contain;
+      padding: calc(10px + env(safe-area-inset-top)) 10px calc(16px + env(safe-area-inset-bottom)); background: var(--panel); }
+    body.mdrawer #members { transform: none; box-shadow: -24px 0 70px rgba(0,0,0,.55); }
+    body.mdrawer::after { content: ''; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 15; animation: fadeIn .2s; }
+    #members .mdr-h { display: flex; align-items: center; gap: 10px; padding: 6px 6px 8px 10px; position: sticky; top: calc(-10px - env(safe-area-inset-top)); background: var(--panel); z-index: 2; }
+    #members .mdr-h b { flex: 1; font-size: 17px; font-weight: 900; } #members .mdr-h small { color: var(--muted); font-weight: 700; font-size: 12.5px; display: block; }
+    #members .mdr-h button { width: 36px; height: 36px; border-radius: 50%; background: var(--card); display: grid; place-items: center; }
+    body.gdrag #members, body.gdrag #rail, body.gdrag #side { transition: none !important; }
+  }
+  @keyframes fadeIn { from { opacity: 0; } }
+  @media (max-width: 760px) {
+    #app { height: 100vh; height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+    #input, .field, select, textarea, input[type=text], input[type=search], input[type=password], input[type=email] { font-size: 16px !important; }
+    #compose { margin-bottom: calc(10px + env(safe-area-inset-bottom)); }
+    #rail, #side { padding-top: calc(env(safe-area-inset-top) + 8px); padding-bottom: env(safe-area-inset-bottom); }
+    #head { padding-top: 8px; }
+    #onbm { margin: 6px 10px 0; padding: 4px 10px 4px 4px; border-radius: 14px; } #onbm .oring { transform: scale(.78); margin: -4px -3px; } #onbm > span b { font-size: 13px; } #onbm > span small { font-size: 11.5px; }
+    .bots-hero { flex-direction: column; text-align: center; padding: 22px 18px; gap: 12px; } .bots-hero h2 { justify-content: center; font-size: 24px; } .bots-hero p { max-width: none; font-size: 14px; } .bots-hero img { width: 84px; height: 84px; }
+    .kbhero { flex-direction: column; text-align: center; } .kbhero h4 { justify-content: center; }
+    .ftabs { -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent); mask-image: linear-gradient(90deg, #000 82%, transparent); padding-right: 40px !important; scroll-snap-type: x proximity; } .ftabs button { scroll-snap-align: start; }
+    /* ayar pencereleri: ince sekme şeridi + sabit kapat */
+    #modal .box.settings { display: flex !important; flex-direction: column; top: env(safe-area-inset-top); }
+    .box.settings .st-nav { flex-direction: row !important; flex-wrap: nowrap; align-items: center !important; justify-content: flex-start !important; gap: 6px; padding: 10px 60px 10px 10px !important; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; flex-shrink: 0; border-right: none; border-bottom: 1px solid var(--line); min-height: 0; }
+    .box.settings .st-nav::-webkit-scrollbar { display: none; }
+    .box.settings .st-nav > * { width: auto !important; flex-shrink: 0; }
+    .box.settings .st-nav h4, .box.settings .st-nav .cs-title { display: none !important; }
+    .box.settings .st-nav button { display: inline-flex; align-items: center; white-space: nowrap; padding: 8px 13px; border-radius: 999px; font-size: 13.5px; min-height: 38px; background: var(--card); box-shadow: none; margin: 0 !important; border: 0 !important; }
+    .box.settings .st-nav button.on { background: var(--accent-soft); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--accent); }
+    .box.settings .st-nav .ic { width: 16px; height: 16px; margin-right: 6px; }
+    .box.settings .st-nav .out { color: var(--red); padding-top: 8px !important; border-radius: 999px !important; }
+    .box.settings .st-nav #mx { display: grid !important; position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; min-height: 0; padding: 0; border-radius: 50%; place-items: center; font-size: 0; z-index: 6; background: var(--hover); box-shadow: -14px 0 14px var(--bg); }
+    .box.settings .st-nav #mx .ic { margin: 0; width: 18px; height: 18px; }
+    .box.settings .st-main { padding: 18px 16px calc(24px + env(safe-area-inset-bottom)) !important; overflow-y: auto; flex: 1; min-height: 0; }
+    .box.settings .st-save { margin: 20px -16px 0 !important; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important; }
+    #messages .row { -webkit-touch-callout: none; }
+  }
+  @media (hover: none) { #suggest.cmd .sg-f, #suggest.cmd kbd { display: none; } #messages .row .bubble, #messages .row .who { -webkit-user-select: none; user-select: none; } }
+  /* kaydırarak yanıtla */
+  .row .swr { position: absolute; left: 10px; top: 50%; width: 34px; height: 34px; margin-top: -17px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; opacity: 0; transform: scale(.5); pointer-events: none; }
+  .row .swr .ic { width: 18px; height: 18px; } .row .swr.go { background: var(--accent); color: #1a0f0a; }
+  .row.swiping > .col, .row.swiping > .av { transition: none !important; } .row.swback > .col, .row.swback > .av { transition: transform .22s cubic-bezier(.2,.8,.2,1); }
+  /* uzun basma menüsü */
+  #msheet { position: fixed; inset: 0; z-index: 60; display: none; }
+  #msheet.open { display: block; }
+  #msheet .ms-bg { position: absolute; inset: 0; background: rgba(0,0,0,.55); opacity: 0; transition: opacity .2s; }
+  #msheet.open.in .ms-bg { opacity: 1; }
+  #msheet .ms-p { position: absolute; left: 0; right: 0; bottom: 0; max-height: 82vh; overflow-y: auto; background: var(--panel); border-radius: 24px 24px 0 0; border-top: 1px solid var(--line); padding: 8px 14px calc(14px + env(safe-area-inset-bottom)); transform: translateY(105%); transition: transform .28s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -20px 60px rgba(0,0,0,.5); overscroll-behavior: contain; }
+  #msheet.open.in .ms-p { transform: none; } #msheet.drag .ms-p { transition: none; }
+  #msheet .ms-grip { width: 42px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 12px; }
+  #msheet .ms-prev { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 16px; background: var(--card); margin-bottom: 12px; }
+  #msheet .ms-prev .av { width: 30px; height: 30px; font-size: 12px; border: none; flex-shrink: 0; }
+  #msheet .ms-prev b { font-size: 13.5px; } #msheet .ms-prev p { color: var(--muted); font-size: 13.5px; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+  #msheet .ms-re { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 12px; }
+  #msheet .ms-re button { flex: 1; aspect-ratio: 1; max-width: 52px; border-radius: 50%; background: var(--card); font-size: 24px; display: grid; place-items: center; transition: transform .12s; }
+  #msheet .ms-re button:active { transform: scale(1.18); } #msheet .ms-re button.on { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+  #msheet .ms-re .more .ic { width: 22px; height: 22px; color: var(--muted); }
+  #msheet .ms-emo { display: none; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 12px; } #msheet .ms-emo.on { display: grid; } #msheet .ms-emo button { font-size: 24px; padding: 6px 0; border-radius: 10px; } #msheet .ms-emo button:active { background: var(--hover); }
+  #msheet .ms-acts { background: var(--card); border-radius: 18px; overflow: hidden; }
+  #msheet .ms-acts button { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; font-weight: 800; font-size: 15px; text-align: left; }
+  #msheet .ms-acts button + button { border-top: 1px solid var(--line); }
+  #msheet .ms-acts button .ic { width: 20px; height: 20px; color: var(--muted); } #msheet .ms-acts button.danger, #msheet .ms-acts button.danger .ic { color: var(--red); }
+  #msheet .ms-acts button:active { background: var(--hover); }
+  .row.pressing { transition: transform .35s; transform: scale(.985); } .row.picked { background: var(--hover); border-radius: 14px; }
 </style>
 </head>
 <body>
@@ -2251,7 +2328,7 @@
     </div>
   </aside>
   <main id="chat" class="panel">
-    <div id="head"><button class="hbtn" id="menu-btn" aria-label="Menü"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div style="flex:1;min-width:0"><h2 id="title"></h2><small id="subtitle"></small></div><div id="head-actions" style="display:flex;gap:6px"></div></div>
+    <div id="head"><button class="hbtn" id="menu-btn" aria-label="Menü"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div style="flex:1;min-width:0"><h2 id="title"></h2><small id="subtitle"></small></div><div id="head-actions" style="display:flex;gap:6px"></div><button class="hbtn" id="mem-btn" aria-label="Üyeleri göster" title="Üyeler"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 4 6"/></svg><span class="mb-n"></span></button><button class="hbtn" id="head-more" aria-label="Diğer" title="Diğer"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></div>
     <div id="watch"><div class="bar"><span id="watch-info"></span><span><button id="watch-change">Değiştir</button><button id="watch-close">Kapat</button></span></div><div id="yt-wrap"><div id="yt"></div></div></div>
     <div id="stage" aria-label="Sesli oda"></div>
     <div id="discover" aria-label="Sunucuları keşfet"></div>
@@ -2284,6 +2361,7 @@
     <div id="drop">Dosyaları buraya bırak</div>
   </main>
   <aside id="members" class="panel"></aside>
+  <div id="msheet" aria-hidden="true"><div class="ms-bg"></div><div class="ms-p" role="dialog" aria-label="Mesaj işlemleri"></div></div>
 </div>
 
 <div id="modal"><div class="box" id="modal-box"></div></div>
@@ -2483,6 +2561,7 @@ function fmt(t) {
   let h = esc(t)
     .replace(/```(?:\w+\n)?([\s\S]+?)```/g, (_, c) => `\u0000${codes.push(`<pre><code>${c.replace(/^\n/, '')}</code></pre>`) - 1}\u0000`)
     .replace(/`([^`\n]+)`/g, (_, c) => `\u0000${codes.push(`<code>${c}</code>`) - 1}\u0000`);
+  h = h.replace(/@kanka\s?bot\b/gi, () => `\u0000${codes.push('<span class="mention bot">@Kanka Bot</span>') - 1}\u0000`);
   h = h.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
     .replace(/@([\p{L}\p{N}_.-]+)/gu, (m, n) => S.users[n] || /^(everyone|herkes)$/i.test(n) ? `<span class="mention${n === S.me || /^(everyone|herkes)$/i.test(n) ? ' me' : ''}">@${n}</span>` : (S.server?.customRoles || []).find(r => r.name === n) ? `<span class="mention" style="color:${(S.server.customRoles.find(r => r.name === n)).color}">@${n}</span>` : m)
     .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
@@ -3200,6 +3279,192 @@ function askBan(srv, n, after) {
   form(`${esc(n)} yasaklansın mı?`, 'Sunucudan atılır ve davet linkiyle bir daha giremez. Yasağı ayarlardan kaldırabilirsin.', [{ k: 'reason', p: 'Sebep (isteğe bağlı)', opt: true }], v =>
     socket.emit('ban', { serverId: srv.id, name: n, reason: v.reason }, x => { if (x.error) return toast(x.error); toast(`${n} yasaklandı`); after?.(); }));
 }
+
+// ================= Telefon deneyimi: geri tuşu, çekmeceler, kaydırma, uzun basma =================
+const isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+const narrow = () => innerWidth <= 760;
+const shortPh = p => {
+  if (!narrow()) return p;
+  let m = /^(.+?) odasına bir şeyler yaz/.exec(p); if (m) return `Mesaj · #${m[1]}`;
+  m = /^(.+?) kişisine mesaj yaz/.exec(p); if (m) return `Mesaj · @${m[1]}`;
+  return p.replace(/\s*\(@ ile etiketle\)/, '');
+};
+const buzz = (ms = 10) => { try { navigator.vibrate?.(ms); } catch (e) {} };
+// --- Geri tuşu: açık katmanları sırayla kapatır (pencere, çekmece, menü, resim) ---
+var ovStack = [], popSkip = 0, atBase = false;
+const mobileNav = isTouch || innerWidth <= 1100;
+function ovOpen(name, close) {
+  if (!mobileNav || !ovStack || ovStack.at(-1)?.name === name) return;
+  try { history.pushState({ kov: name }, ''); } catch (e) { return; }
+  ovStack.push({ name, close });
+}
+function ovClosed(name) {
+  if (!mobileNav || !ovStack) return;
+  const i = ovStack.map(o => o.name).lastIndexOf(name); if (i < 0) return;
+  ovStack.splice(i, 1);
+  popSkip++; history.back();
+}
+if (mobileNav) { history.replaceState({ kbase: 1 }, ''); history.pushState({ kapp: 1 }, ''); }
+addEventListener('popstate', () => {
+  if (popSkip > 0) { popSkip--; return; }
+  const o = ovStack.pop();
+  if (o) { if (o.close() === false) { history.pushState({ kov: o.name }, ''); ovStack.push(o); } return; }
+  // Açık bir şey yoksa: telefonda sohbetten geri = oda listesi (Discord gibi); oradan geri = uygulamadan çık
+  if (narrow() && !document.body.classList.contains('drawer') && (S.view === 'server' || S.view === 'dm' || S.view === 'discover')) { atBase = true; document.body.classList.add('drawer'); }
+});
+const reArm = () => { if (atBase) { atBase = false; history.pushState({ kapp: 1 }, ''); } };
+function openDrawer() { closeMembers(); document.body.classList.add('drawer'); ovOpen('drawer', () => document.body.classList.remove('drawer')); }
+function closeDrawer() { if (!document.body.classList.contains('drawer')) return; document.body.classList.remove('drawer'); if (atBase) reArm(); else ovClosed('drawer'); }
+new MutationObserver(() => { if (!document.body.classList.contains('drawer')) { if (atBase) reArm(); else if (ovStack.some(o => o.name === 'drawer')) ovClosed('drawer'); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+function openMembers() { if (document.body.classList.contains('drawer')) document.body.classList.remove('drawer'); renderMembers(); document.body.classList.add('mdrawer'); buzz(6); ovOpen('mdrawer', () => document.body.classList.remove('mdrawer')); }
+function closeMembers() { if (!document.body.classList.contains('mdrawer')) return; document.body.classList.remove('mdrawer'); ovClosed('mdrawer'); }
+
+// --- Mesaj işlemleri (⋯ menüsü ve uzun basma menüsü aynı listeyi kullanır) ---
+function msgActs(m) {
+  const mine = m.author === S.me, mod = S.view === 'server' && isMod(S.server, S.me);
+  const canDel = (mine || mod) && !m.ephemeral, canPin = (S.view === 'dm' || mod) && !m.ephemeral && m.author;
+  return [['reply', 'reply', 'Yanıtla'], m.author || m.kind === 'bot' ? ['thread', 'thread', 'Konu başlat'] : null,
+    m.text || m.bot?.text ? ['copy', 'copy', 'Metni kopyala'] : null,
+    canPin ? ['pin', 'pin', m.pinned ? 'Sabitlemeyi kaldır' : 'Sabitle'] : null,
+    mine && m.kind === 'text' && m.text ? ['edit', 'edit', 'Düzenle'] : null,
+    !mine && m.author ? ['report', 'flag', 'Şikayet et', 'danger'] : null,
+    canDel ? ['del', 'trash', 'Sil', 'danger'] : null].filter(Boolean).filter(x => !m.ephemeral || x[0] === 'copy');
+}
+function runMsgAct(m, a) {
+  if (a === 'reply') startReply(m);
+  if (a === 'pin') socket.emit('pin', m.id);
+  if (a === 'thread') openThread(m.id);
+  if (a === 'copy') navigator.clipboard?.writeText(m.text || m.bot?.text || '').then(() => toast('Kopyalandı'));
+  if (a === 'edit') form('Mesajı düzenle', '', [{ k: 'text', p: 'Mesaj', v: m.text }], v => socket.emit('edit', { msgId: m.id, text: v.text }));
+  if (a === 'del') confirmBox('Bu mesaj silinsin mi?', () => socket.emit('delete', m.id));
+  if (a === 'report') showReport({ kind: 'msg', msg: m, chId: S.channel.id });
+}
+// --- Uzun basma menüsü (alttan açılan sayfa) ---
+const QUICK_RE = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
+const SHEET_EMO = ['😀', '😁', '🤣', '😊', '😍', '🥰', '😘', '😎', '🤩', '🥳', '🤔', '🙄', '😴', '😭', '😡', '🤯', '🥶', '😱', '🤝', '🙏', '👏', '🙌', '💪', '👀', '💀', '🤡', '🎉', '💯', '✅', '❌', '⭐', '💔'];
+function openMsgSheet(m) {
+  const el = $('#msheet'), p = el.querySelector('.ms-p'), my = e => (m.reactions?.[e] || []).includes(S.me);
+  const txt = m.text || m.bot?.title || m.plan?.title || m.poll?.question || m.song?.title || (m.files?.length ? m.files.length + ' dosya' : m.image ? 'Resim' : m.kind === 'match' ? 'Maç kartı' : '');
+  const who = m.kind === 'bot' ? 'Kanka Bot' : dn(m.author || '');
+  p.innerHTML = `<div class="ms-grip"></div><div class="ms-prev">${m.kind === 'bot' ? '<div class="av" style="background:#f2652f;overflow:hidden"><img src="/icon-192.png" alt="" style="width:100%;height:100%"></div>' : av(m.author || '')}<div style="min-width:0"><b>${esc(who)}</b> <small style="color:var(--muted);font-weight:700">${hm(m.time)}</small><p>${esc(txt)}</p></div></div>
+    ${m.ephemeral ? '' : `<div class="ms-re">${QUICK_RE.map(e => `<button class="${my(e) ? 'on' : ''}" data-qe="${e}" aria-label="${e} tepkisi">${e}</button>`).join('')}<button class="more" data-qmore aria-label="Diğer tepkiler">${ic('smile')}</button></div>
+    <div class="ms-emo">${SHEET_EMO.map(e => `<button data-qe="${e}">${e}</button>`).join('')}</div>`}
+    <div class="ms-acts">${msgActs(m).map(([a, i, t, c]) => `<button data-sa="${a}" ${c ? `class="${c}"` : ''}>${ic(i)}${t}</button>`).join('')}</div>`;
+  el.classList.add('open'); el.setAttribute('aria-hidden', 'false'); requestAnimationFrame(() => el.classList.add('in'));
+  document.querySelector(`.row[data-id="${m.id}"]`)?.classList.add('picked');
+  ovOpen('msheet', () => closeMsgSheet(true));
+  p.onclick = e => {
+    const q = e.target.closest('[data-qe]'); if (q) { socket.emit('react', { msgId: m.id, emoji: q.dataset.qe }); buzz(8); return closeMsgSheet(); }
+    if (e.target.closest('[data-qmore]')) { p.querySelector('.ms-emo').classList.toggle('on'); return; }
+    const a = e.target.closest('[data-sa]'); if (a) { closeMsgSheet(); setTimeout(() => runMsgAct(m, a.dataset.sa), 120); }
+  };
+  el.querySelector('.ms-bg').onclick = () => closeMsgSheet();
+  // aşağı çekerek kapat
+  let y0 = null, dy = 0;
+  p.ontouchstart = e => { if (p.scrollTop > 0) return; y0 = e.touches[0].clientY; dy = 0; el.classList.add('drag'); };
+  p.ontouchmove = e => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); p.style.transform = `translateY(${dy}px)`; };
+  p.ontouchend = () => { if (y0 === null) return; el.classList.remove('drag'); p.style.transform = ''; y0 = null; if (dy > 90) closeMsgSheet(); };
+}
+function closeMsgSheet(fromBack) {
+  const el = $('#msheet'); if (!el.classList.contains('open')) return;
+  el.classList.remove('in'); el.setAttribute('aria-hidden', 'true');
+  document.querySelectorAll('.row.picked').forEach(r => r.classList.remove('picked'));
+  setTimeout(() => el.classList.remove('open'), 260);
+  if (!fromBack) ovClosed('msheet');
+}
+// --- Dokunma hareketleri: uzun basma, kaydırarak yanıtla, çekmeceleri parmakla açıp kapat ---
+(() => {
+  if (!isTouch) return;
+  let g = null, lp = null;
+  const B = document.body, side = () => $('#side').getBoundingClientRect().right || 356, memW = () => $('#members').offsetWidth || 300;
+  const setDrawerX = x => { for (const el of [$('#rail'), $('#side')]) el.style.transform = `translateX(${x}px)`; };
+  const clearDrag = () => { B.classList.remove('gdrag'); for (const el of [$('#rail'), $('#side'), $('#members')]) el.style.transform = ''; };
+  document.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0], tg = e.target;
+    if (tg.closest('#msheet, #modal.open, input, textarea, select, .ftabs, .ptargets, .ax-games, #suggest, .xox, .hm-rooms, video, iframe')) return;
+    g = { x0: t.clientX, y0: t.clientY, t0: Date.now(), dx: 0, dy: 0, mode: null, tg };
+    g.row = !B.classList.contains('drawer') && !B.classList.contains('mdrawer') ? tg.closest('#messages .row[data-id]') : null;
+    if (g.row && !tg.closest('button, a, .wave, video, .xox')) {
+      g.row.classList.add('pressing');
+      lp = setTimeout(() => { if (!g || g.mode) return; g.mode = 'lp'; g.row.classList.remove('pressing'); const m = S.msgs.find(x => x.id === g.row.dataset.id); if (m && !m.kind?.match?.(/^(system|daily|birthday)$/)) { buzz(15); openMsgSheet(m); } }, 430);
+    }
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!g || g.mode === 'lp') return;
+    const t = e.touches[0]; g.dx = t.clientX - g.x0; g.dy = t.clientY - g.y0;
+    if (!g.mode) {
+      if (Math.abs(g.dx) < 10 && Math.abs(g.dy) < 10) return;
+      clearTimeout(lp); g.row?.classList.remove('pressing');
+      if (Math.abs(g.dy) > Math.abs(g.dx) * .9) { g.mode = 'scroll'; return; }
+      const L = B.classList.contains('drawer'), M = B.classList.contains('mdrawer');
+      if (L && g.dx < 0) g.mode = 'closeL';
+      else if (M && g.dx > 0) g.mode = 'closeM';
+      else if (!L && !M && g.dx > 0 && g.row && g.x0 > 28) g.mode = 'reply';
+      else if (!L && !M && g.dx > 0 && narrow() && $('#menu-btn').offsetParent) g.mode = 'openL';
+      else if (!L && !M && g.dx < 0 && $('#mem-btn').classList.contains('show') && $('#mem-btn').offsetParent && !g.tg.closest('#rail, #side')) g.mode = 'openM';
+      else { g.mode = 'none'; return; }
+      B.classList.add('gdrag');
+      if (g.mode === 'reply') { g.row.classList.add('swiping'); if (!g.row.querySelector('.swr')) g.row.insertAdjacentHTML('afterbegin', `<span class="swr">${ic('reply')}</span>`); }
+    }
+    if (g.mode === 'scroll' || g.mode === 'none') return;
+    e.preventDefault();
+    const W = side(), MW = memW();
+    if (g.mode === 'openL') setDrawerX(Math.min(0, -W - 20 + g.dx));
+    if (g.mode === 'closeL') setDrawerX(Math.min(0, g.dx));
+    if (g.mode === 'openM') $('#members').style.transform = `translateX(${Math.max(0, MW + 30 + g.dx)}px)`;
+    if (g.mode === 'closeM') $('#members').style.transform = `translateX(${Math.max(0, g.dx)}px)`;
+    if (g.mode === 'reply') {
+      const d = Math.min(Math.max(0, g.dx), 96), k = Math.min(1, d / 64), ico = g.row.querySelector('.swr');
+      for (const el of g.row.querySelectorAll(':scope > .col, :scope > .av')) el.style.transform = `translateX(${d * .85}px)`;
+      ico.style.opacity = k; ico.style.transform = `scale(${.5 + .5 * k})`;
+      if (k >= 1 && !ico.classList.contains('go')) { ico.classList.add('go'); buzz(8); } else if (k < 1) ico.classList.remove('go');
+    }
+  }, { passive: false });
+  const end = () => {
+    clearTimeout(lp); if (!g) return; g.row?.classList.remove('pressing');
+    const fast = Math.abs(g.dx) / Math.max(1, Date.now() - g.t0) > .45;
+    if (g.mode === 'reply') {
+      const ok = g.dx > 64, row = g.row;
+      row.classList.remove('swiping'); row.classList.add('swback');
+      for (const el of row.querySelectorAll(':scope > .col, :scope > .av')) el.style.transform = '';
+      const ico = row.querySelector('.swr'); if (ico) { ico.style.opacity = 0; ico.style.transform = 'scale(.5)'; }
+      setTimeout(() => { row.classList.remove('swback'); row.querySelector('.swr')?.remove(); }, 260);
+      if (ok) { const m = S.msgs.find(x => x.id === row.dataset.id); if (m && !m.ephemeral) { startReply(m); buzz(12); } }
+    } else if (g.mode === 'openL' || g.mode === 'closeL' || g.mode === 'openM' || g.mode === 'closeM') {
+      clearDrag();
+      if (g.mode === 'openL' && (g.dx > 70 || fast)) openDrawer();
+      if (g.mode === 'closeL' && (g.dx < -60 || fast)) closeDrawer();
+      if (g.mode === 'openM' && (g.dx < -70 || fast)) openMembers();
+      if (g.mode === 'closeM' && (g.dx > 60 || fast)) closeMembers();
+    }
+    B.classList.remove('gdrag'); g = null;
+  };
+  document.addEventListener('touchend', end, { passive: true }); document.addEventListener('touchcancel', end, { passive: true });
+  document.addEventListener('contextmenu', e => { if (e.target.closest('#messages .row')) e.preventDefault(); });
+})();
+addEventListener('resize', () => { const i = $('#input'); if (i?.dataset.ph) i.placeholder = shortPh(i.dataset.ph); });
+
+
+// --- Başlıktaki fazla düğmeler telefonda ⋯ menüsüne ---
+function headFit() {
+  const box = $('#head-actions'), btns = [...box.children].filter(b => b.tagName === 'BUTTON' || b.classList.contains('hbtn'));
+  const keep = S.view === 'dm' && S.channel && !S.channel.group ? 2 : 1;
+  btns.forEach((b, i) => b.classList.toggle('hx', i >= keep));
+  $('#head-more').classList.toggle('show', btns.length > keep);
+}
+new MutationObserver(headFit).observe($('#head-actions'), { childList: true });
+$('#head-more').onclick = e => {
+  e.stopPropagation();
+  const hidden = [...$('#head-actions').children].filter(b => b.classList.contains('hx'));
+  const el = $('#msheet'), p = el.querySelector('.ms-p');
+  p.innerHTML = `<div class="ms-grip"></div><div class="ms-acts">${hidden.map((b, i) => `<button data-hb="${i}">${b.querySelector('svg')?.outerHTML || ''}${esc(b.title || b.getAttribute('aria-label') || b.textContent.trim() || 'Seçenek')}</button>`).join('')}</div>`;
+  el.classList.add('open'); requestAnimationFrame(() => el.classList.add('in')); ovOpen('msheet', () => closeMsgSheet(true));
+  p.onclick = ev => { const x = ev.target.closest('[data-hb]'); if (!x) return; const target = hidden[+x.dataset.hb]; closeMsgSheet(); setTimeout(() => target?.click(), 140); };
+  el.querySelector('.ms-bg').onclick = () => closeMsgSheet();
+  p.ontouchstart = p.ontouchmove = p.ontouchend = null;
+};
+
 // ================= Kanka Bot =================
 const KB_MODS = [
   ['mod', '🛡️', 'Mod', 'Anti-nuke, otomatik moderasyon, uyarı, susturma, mesaj temizleme ve oda kilidi.', '#f59e0b', '#ef4444'],
@@ -3345,7 +3610,7 @@ function showServerSettings(s, tab, focus) {
       main.innerHTML = `<div class="st-page"><h3>Roller</h3><p class="hint">Rollerle üyelere renk ve yetki verirsin. Listede üstteki rol daha güçlüdür; kendinden yüksek rolleri düzenleyemezsin.</p>
         <button class="primary" id="r-new" style="width:auto;padding:10px 18px;margin-bottom:14px">${ic('plus')}Rol oluştur</button>
         ${roles.map((r, i) => `<div class="ss-row ${edit?.id === r.id ? 'open' : ''}"><b><span class="rdot" style="background:${r.color}"></span>${esc(r.name)}<small style="color:var(--muted);font-weight:700">${Object.values(s.memberRoles || {}).filter(x => x.includes(r.id)).length} üye</small></b>
-          <button data-up="${r.id}" ${i ? '' : 'disabled'} title="Yukarı">${ic('up')}</button><button data-down="${r.id}" ${i < roles.length - 1 ? '' : 'disabled'} title="Aşağı">${ic('chevron')}</button><button data-edit="${r.id}">Düzenle</button><button class="danger" data-del="${r.id}">${ic('trash')}</button></div>`).join('') || '<p class="hint">Henüz rol yok.</p>'}
+          <button data-up="${r.id}" ${i ? '' : 'disabled'} title="Yukarı">${ic('up')}</button><button data-down="${r.id}" ${i < roles.length - 1 ? '' : 'disabled'} title="Aşağı">${ic('chevron')}</button><button data-edit="${r.id}">Düzenle</button>${r.bot ? '<span class="botbadge" title="Kanka Bot\'a ait rol, silinemez">BOT</span>' : `<button class="danger" data-del="${r.id}">${ic('trash')}</button>`}</div>`).join('') || '<p class="hint">Henüz rol yok.</p>'}
         ${edit ? `<form id="r-form" class="ss-row open" style="display:block;margin-top:14px"><h4 style="margin:0 0 10px">${edit.id ? 'Rolü düzenle' : 'Yeni rol'}</h4>
           <div class="ss-grid"><input class="field" name="name" maxlength="30" placeholder="Rol adı (örn. Kankalar)" value="${esc(edit.name)}" required style="margin:0"><input class="field" name="color" type="color" value="${esc(edit.color)}" style="margin:0;height:44px;padding:4px"></div>
           <label class="chk"><input type="checkbox" name="hoist" ${edit.hoist ? 'checked' : ''}><span>Üye listesinde ayrı göster<small>Bu roldekiler sağdaki listede kendi başlıkları altında görünür</small></span></label>
@@ -3462,8 +3727,12 @@ function showServerSettings(s, tab, focus) {
   };
   page[tab]();
 }
-$('#menu-btn').onclick = e => { e.stopPropagation(); document.body.classList.toggle('drawer'); };
-document.addEventListener('click', e => { if (document.body.classList.contains('drawer') && !e.target.closest('#rail, #side, #menu-btn, #modal')) document.body.classList.remove('drawer'); });
+$('#menu-btn').onclick = e => { e.stopPropagation(); document.body.classList.contains('drawer') ? closeDrawer() : openDrawer(); };
+$('#mem-btn').onclick = e => { e.stopPropagation(); document.body.classList.contains('mdrawer') ? closeMembers() : openMembers(); };
+document.addEventListener('click', e => {
+  if (document.body.classList.contains('drawer') && !e.target.closest('#rail, #side, #menu-btn, #modal, #msheet')) closeDrawer();
+  if (document.body.classList.contains('mdrawer') && !e.target.closest('#members, #mem-btn, #modal, .umenu, .vpop, #msheet')) closeMembers();
+});
 function selectChannel(id) {
   if (++chSwitches === 5 && matchMedia('(pointer: fine)').matches) setTimeout(() => tip('ctrlk', '#side-head', 'Hızlı geçiş ⚡', '<kbd>Ctrl</kbd> + <kbd>K</kbd> ile istediğin odaya ya da kişiye anında atla.', 'right'), 600);
   document.body.classList.remove('vview'); renderPip();
@@ -3759,7 +4028,7 @@ function enterRoom(id, placeholder, hello) {
   $('#jumpnew')?.remove();
   helloHTML = hello; cancelReply();
   $('#compose').style.display = 'flex';
-  $('#input').placeholder = placeholder;
+  $('#input').dataset.ph = placeholder; $('#input').placeholder = shortPh(placeholder);
   $('#input').disabled = /^(Susturuldun|Bu oda salt okunur)/.test(placeholder);
   typers.clear(); renderTyping();
   socket.emit('join', id, r => {
@@ -3970,7 +4239,7 @@ $('#messages').addEventListener('scroll', () => {
 window.addEventListener('focus', () => { if (S.channel) markRead(S.channel.id); });
 
 $('#messages').addEventListener('click', e => {
-  if (matchMedia('(max-width: 760px)').matches && !e.target.closest('button, a, img, .rref, .tools')) {
+  if (matchMedia('(max-width: 760px)').matches && !isTouch && !e.target.closest('button, a, img, .rref, .tools')) {
     const row = e.target.closest('.row'); const was = row?.classList.contains('hl');
     document.querySelectorAll('.row.hl').forEach(r => r.classList.remove('hl')); if (row && !was) row.classList.add('hl');
   }
@@ -4000,33 +4269,15 @@ $('#messages').onclick = e => {
     b => socket.emit('react', { msgId: t.dataset.emo, emoji: b.dataset.e }));
   else if (t.dataset.reply) startReply(find(t.dataset.reply));
   else if (t.dataset.more) {
-    const m = find(t.dataset.more), mine = m.author === S.me;
-    const canDel = mine || (S.view === 'server' && isMod(S.server, S.me));
-    const canPin = S.view === 'dm' || isMod(S.server, S.me);
-    openPop(t, 'more',
-      `<button data-a="reply">${ic('reply')}Yanıtla</button>` + `<button data-a="thread">${ic('thread')}Konu başlat</button>` +
-      (m.text ? `<button data-a="copy">${ic('copy')}Metni kopyala</button>` : '') +
-      (canPin ? `<button data-a="pin">${ic('pin')}${m.pinned ? 'Sabitlemeyi kaldır' : 'Sabitle'}</button>` : '') +
-      (mine && m.kind === 'text' && m.text ? `<button data-a="edit">${ic('edit')}Düzenle</button>` : '') +
-      (!mine && m.author ? `<button data-a="report" class="danger">${ic('flag')}Şikayet et</button>` : '') +
-      (canDel ? `<button data-a="del" class="danger">${ic('trash')}Sil</button>` : ''),
-      b => {
-        const a = b.dataset.a;
-        if (a === 'reply') startReply(m);
-        if (a === 'pin') socket.emit('pin', m.id);
-        if (a === 'thread') openThread(m.id);
-        if (a === 'copy') navigator.clipboard?.writeText(m.text).then(() => toast('Kopyalandı'));
-        if (a === 'edit') form('Mesajı düzenle', '', [{ k: 'text', p: 'Mesaj', v: m.text }], v => socket.emit('edit', { msgId: m.id, text: v.text }));
-        if (a === 'del') confirmBox('Bu mesaj silinsin mi?', () => socket.emit('delete', m.id));
-        if (a === 'report') showReport({ kind: 'msg', msg: m, chId: S.channel.id });
-      });
+    const m = find(t.dataset.more);
+    openPop(t, 'more', msgActs(m).map(([a, i, t2, c]) => `<button data-a="${a}" ${c ? `class="${c}"` : ''}>${ic(i)}${t2}</button>`).join(''), b => runMsgAct(m, b.dataset.a));
   }
   else if (t.dataset.xox) socket.emit('xoxMove', { msgId: t.dataset.xox, i: +t.dataset.i });
   else if (t.dataset.plan) socket.emit('planToggle', t.dataset.plan);
   else if (t.dataset.poll) socket.emit('vote', { msgId: t.dataset.poll, index: +t.dataset.i });
-  else if (t.dataset.view !== undefined) { $('#viewer img').src = t.src; $('#viewer').style.display = 'flex'; }
+  else if (t.dataset.view !== undefined) { $('#viewer img').src = t.src; $('#viewer').style.display = 'flex'; ovOpen('viewer', () => $('#viewer').style.display = 'none'); }
 };
-$('#viewer').onclick = () => $('#viewer').style.display = 'none';
+$('#viewer').onclick = () => { $('#viewer').style.display = 'none'; ovClosed('viewer'); };
 
 socket.on('message', ({ channelId, msg }) => {
   if (channelId !== S.channel?.id) return;
@@ -4293,10 +4544,14 @@ function renderMembers() {
   const groups = [['Yönetici', n => roleOf(srv, n) === 'admin' && S.online.has(n)], ...hoist.map(r => [r.name, n => S.online.has(n) && topHoist(n) === r]),
     ['Moderatörler', n => roleOf(srv, n) === 'mod' && !topHoist(n) && S.online.has(n)],
     ['Çevrimiçi', n => roleOf(srv, n) === 'member' && !topHoist(n) && S.online.has(n)], ['Çevrimdışı', n => !S.online.has(n)]];
-  $('#members').innerHTML = (srv?.bot?.added ? `<div class="label" style="padding:14px 8px 6px">Botlar — 1</div><div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="color:var(--accent)">Kanka Bot<span class="botbadge">BOT</span></span><small>${srv.bot.mod?.on ? 'Moderasyon · /yardım' : '/yardım yaz'}</small></div></div>` : '') +
+  const onl = names.filter(n => S.online.has(n)).length;
+  const mb = $('#mem-btn'); mb.classList.toggle('show', !!(srv && S.channel) || !!S.channel?.group); mb.querySelector('.mb-n').textContent = onl ? (onl > 99 ? '99+' : onl) : '';
+  const mdrH = `<div class="mdr-h"><span style="flex:1"><b>Üyeler</b><small>${S.channel ? (srv ? '#' + esc(S.channel.name) + ' · ' : '') : ''}${onl} çevrimiçi · ${names.length} kişi</small></span><button id="mdr-x" aria-label="Kapat">${ic('x')}</button></div>`;
+  $('#members').innerHTML = mdrH + (srv?.bot?.added ? `<div class="label" style="padding:14px 8px 6px">Botlar — 1</div><div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="color:var(--accent)">Kanka Bot<span class="botbadge">BOT</span></span><small>${srv.bot.mod?.on ? 'Moderasyon · /yardım' : '/yardım yaz'}</small></div></div>` : '') +
     groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(item).join('') : ''; }).join('');
   $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
   $('#members').querySelector('.mem.botmem')?.addEventListener('click', e => { e.stopPropagation(); botProfile(); });
+  $('#mdr-x').onclick = e => { e.stopPropagation(); closeMembers(); };
 }
 const lvlFloor = L => 5 * (L - 1) ** 2;
 function xpBar(u) {
@@ -6985,8 +7240,9 @@ function wireOverlaySettings() {
   window.kankaDesktop.overlayConfig().then(draw);
 }
 
-function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); }
-function closeModal() { $('#modal').classList.remove('open'); window.onMyActivity = null; }
+function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); const was = $('#modal').classList.contains('open'); $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); if (!was) ovOpen('modal', () => { if (saveGuard()) return false; closeModalRaw(); }); }
+function closeModalRaw() { $('#modal').classList.remove('open'); window.onMyActivity = null; }
+function closeModal() { const was = $('#modal').classList.contains('open'); closeModalRaw(); if (was) ovClosed('modal'); }
 $('#modal').onclick = e => { if (e.target.id === 'modal' && !saveGuard()) closeModal(); };
 function form(title, hint, fields, onOk) {
   modal(`<form id="mform"><h3>${title}</h3>${hint ? `<p class="hint">${hint}</p>` : '<div style="height:10px"></div>'}` +
