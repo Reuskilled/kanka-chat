@@ -559,6 +559,13 @@ function migrateCats(s) {
 }
 // Oda görünümü (izleyene göre)
 const everyoneDenied = (ov, k) => ov['@everyone']?.[k] === false;
+// Görme izni kısıtlı odayı kimler görebiliyor? Herkese açık (çok üyeli) sunucuda da hızlı olsun diye 2 sn önbellek
+const viewersCache = new Map();
+function viewersOf(s, c) {
+  const k = s.id + '|' + c.id, hit = viewersCache.get(k), now = Date.now();
+  if (hit && now - hit.t < 2000) return hit.v;
+  const v = membersOf(s).filter(n => seesChannel(s, c, n)); viewersCache.set(k, { t: now, v }); return v;
+}
 function chView(s, c, viewer, manager) {
   const ov = ovOf(s, c);
   const P = k => viewer ? chPerm(s, c, viewer, k) : true;
@@ -570,7 +577,7 @@ function chView(s, c, viewer, manager) {
     readonly: viewer ? !chPerm(s, c, viewer, 'send') : false, canConnect: viewer ? chPerm(s, c, viewer, 'connect') : true };
   if (manager) v.perms = c.perms || {};
   // Görme izni kısıtlı odada üye listesi sadece odayı görebilenleri göstersin
-  if (!s.public && (c.allowUsers?.length || Object.values(ov).some(o => o && o.view !== undefined))) v.viewers = membersOf(s).filter(n => seesChannel(s, c, n));
+  if (c.allowUsers?.length || Object.values(ov).some(o => o && o.view !== undefined)) v.viewers = viewersOf(s, c);
   return v;
 }
 for (const s of db.servers) migrateCats(s);
@@ -926,6 +933,7 @@ function pushCalls() {
 }
 const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceLive', liveState()); io.emit('voiceFlags', flagsState()); pushCalls(); };
 function pushServers(names) {
+  viewersCache.clear(); // izin değişmiş olabilir: listeyi baştan hesapla, aynı gönderimde tekrar kullan
   for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
 }
 const membersOf = s => s.public ? Object.keys(db.users) : s.members;
