@@ -1231,6 +1231,7 @@
   @media (max-width: 560px) { .fr { grid-template-columns: 110px 1fr 32px 40px; font-size: 12.5px; } .fstats { grid-template-columns: 1fr 1fr; } }
   /* ===== Odalar: sürükle-bırak, menüler, izinler ===== */
   #side-list .room { position: relative; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  @media (hover: none) { #members .mem, #rail .srv, .vuser, #side-head { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; } }
   #side-list .room .rn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #side-list .room .rset { margin-left: auto; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: var(--muted); opacity: 0; transition: opacity .12s, background .12s; flex-shrink: 0; }
   #side-list .room:hover .rset, #side-list .room.active .rset { opacity: 1; }
@@ -3485,6 +3486,8 @@ function closeMsgSheet(fromBack) {
   }, { passive: true });
   document.addEventListener('touchmove', e => {
     if (!g || g.mode === 'lp') return;
+    // Oda sürükle-bırak başladıysa çekmece hareketi devre dışı (ikisi aynı anda çalışınca çekmece yarıda takılıyordu)
+    if (B.classList.contains('dnd') || dndOn) { clearTimeout(lp); g.row?.classList.remove('pressing'); if (g.mode && g.mode !== 'scroll' && g.mode !== 'none') clearDrag(); g = null; return; }
     const t = e.touches[0]; g.dx = t.clientX - g.x0; g.dy = t.clientY - g.y0;
     if (!g.mode) {
       if (Math.abs(g.dx) < 10 && Math.abs(g.dy) < 10) return;
@@ -3535,6 +3538,14 @@ function closeMsgSheet(fromBack) {
   };
   document.addEventListener('touchend', end, { passive: true }); document.addEventListener('touchcancel', end, { passive: true });
   document.addEventListener('contextmenu', e => { if (e.target.closest('#messages .row')) e.preventDefault(); });
+  // Parmak kaydırırken ya da uzun basma işlemi sürerken telefonun kendi basılı tut menüsü açılmasın
+  document.addEventListener('contextmenu', e => {
+    if ((g && g.mode && g.mode !== 'none') || B.classList.contains('gdrag') || $('#msheet')?.classList.contains('open')) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+  // Uygulama arka plana giderse ya da dokunma yarıda kesilirse çekmeceler yarıda kalmasın
+  const reset = () => { clearTimeout(lp); if (g?.row) { g.row.classList.remove('pressing', 'swiping'); for (const el of g.row.querySelectorAll(':scope > .col, :scope > .av')) el.style.transform = ''; g.row.querySelector('.swr')?.remove(); } clearDrag(); g = null; };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) reset(); });
+  addEventListener('blur', reset);
 })();
 addEventListener('resize', () => { const i = $('#input'); if (i?.dataset.ph) i.placeholder = shortPh(i.dataset.ph); });
 
@@ -6626,6 +6637,7 @@ function chDnD(root, s, rerender) {
     const listOf = key => key ? L.cats.find(k => k.id === key).channels : L.top;
     const without = arr => arr.filter(x => x !== id);
     const start = () => {
+      if (document.body.classList.contains('gdrag')) return cleanup(); // çekmece kaydırılıyorsa sürükle-bırak başlamasın
       started = dndOn = true;
       const r = el.getBoundingClientRect(); offX = sx - r.left; offY = sy - r.top;
       ghost = el.cloneNode(true); ghost.className += ' dnd-ghost'; ghost.style.width = r.width + 'px'; ghost.removeAttribute('data-drag');
