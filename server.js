@@ -923,6 +923,48 @@ function botWelcome(s, name) {
   if (txt.includes('@' + name)) notifyUser(name, { from: BOT_NAME, text: txt, channelId: ch.id, where: `${s.name} · #${ch.name}`, mention: true });
   if (gave) { save(); pushServers(membersOf(s)); }
 }
+// ---- Kanka HQ: sık sorulanlara Kanka Bot'tan hazır cevap ----
+// Sadece soru gibi duran mesajlara cevap verir; aynı konuyu bir odada 3 dk, aynı kişiye 30 dk içinde tekrar anlatmaz.
+const HQ_FAQ = [
+  { id: 'amac', q: /(amac[ıi]|ama[çc]\s*ne|ne\s*i[şs]e\s*yar|bura(s[ıi])?\s*(ne|neresi)|kanka\s*(chat\s*|hq\s*)?(ne|nedir|neyin)|bu\s*(site|uygulama|platform)\s*ne)/,
+    title: 'Kanka Chat ne? 🦝', text: 'Discord gibi düşün ama Türk yapımı: sesli odalar, ekran yayını, sunucular, arkadaşlar, botlar. Türkiye\'de VPN\'siz sorunsuz çalışır, tamamen ücretsiz. Şu an betada, yorumlara göre her gün geliştiriliyor. Nasıl kullanılacağı #nasıl-kullanılır odasında.' },
+  { id: 'mobil', q: /(mobil|telefon|android|ios|iphone|play\s*store|app\s*store|apk)/,
+    title: 'Telefonda var mı? 📱', text: 'Var! Telefonun tarayıcısından kankahq.com\'u aç, menüden "Ana ekrana ekle" de. Uygulama gibi açılır, bildirimler de gelir. Play Store sürümü beta bitince geliyor.' },
+  { id: 'pc', q: /(windows|masa\s*[üu]st[üu]|bilgisayar\s*uygulama|pc\s*(uygulama|s[üu]r[üu]m)|\.exe|indir(ebilir|eyim|ece[ğg]|mek))/,
+    title: 'Windows uygulaması 💻', text: 'Var: kankahq.com/indir/KankaChat-Kurulum.exe ya da sitenin üstündeki şeritten "Ücretsiz indir". Oyun içi bildirimler, oyun katmanı ve "Oynuyor" durumu uygulamada.' },
+  { id: 'bildirim', q: /bildirim/,
+    title: 'Bildirimler 🔔', text: 'Bir sunucuyu sessize almak için soldaki simgesine sağ tıkla (telefonda basılı tut) → "Sunucuyu sessize al". Tek bir oda için odanın üstündeki menüden bildirim ayarını seç. Hepsini birden: sol alttaki ⚙️ → Bildirim ve uygulama.' },
+  { id: 'sunucu', q: /(sunucu|server)\w*\s*(nas[ıi]l\s*)?(kur|a[çc]|olu[şs]tur|yap)/,
+    title: 'Sunucu kurmak 🏠', text: 'Soldaki çubukta + simgesine bas, adını yaz, hazır. Arkadaşlarını davet linkiyle çağırırsın, roller ve odalar sunucu ayarlarında. Herkese açık yapıp Keşfet\'te de çıkabilirsin.' },
+  { id: 'discord', q: /(discord(dan|tan|la)?\s*(ne\s*)?fark|neden\s*discord\s*de[ğg]il|discord\s*var\s*(zaten|ya)|discord\s*(dururken|varken))/,
+    title: 'Discord\'dan farkı? ⚔️', text: 'Türkiye\'de erişim sorunu yok, Türkçe ve Türk kullanıcılar için yapılıyor. Ekran yayını, yüksek ses kalitesi gibi şeyler için Nitro yok, hepsi ücretsiz. Bir de istekleriniz gerçekten ekleniyor: #yorumlarla-yapıyorum.' },
+  { id: 'ucret', q: /([üu]cretli|[üu]cretsiz|bedava|para\s*(l[ıi]|m[ıi]|ister)|nitro|premium)/,
+    title: 'Ücretli mi? 💸', text: 'Hayır, tamamen ücretsiz. Yayın kalitesi, ses kalitesi, yükleme gibi şeyler için ücretli paket yok.' },
+  { id: 'ses', q: /(ses(im)?\s*(gelmiyor|gitmiyor|yok|duyulmuyor)|mikrofon(um)?\s*(çal[ıi][şs]m[ıi]yor|gitmiyor|yok|alm[ıi]yor)|beni\s*duym|duyam[ıi]yor)/, noQ: true,
+    title: 'Ses sorunu 🎙️', text: 'Önce tarayıcının mikrofon iznini kontrol et (adres çubuğundaki 🔒 simgesi). Sonra sol alttaki ⚙️ → Ses ve görüntü bölümünden doğru mikrofonu seç, orada test de edebilirsin. Hâlâ olmuyorsa #hata-bildir\'e yaz.' },
+  { id: 'yayin', q: /(yay[ıi]n|ekran\s*payla[şs])\w*\s*(nas[ıi]l|a[çc])/,
+    title: 'Yayın açmak 📺', text: 'Bir sesli odaya gir, alttaki ses çubuğunda ekran simgesine bas. Kaliteyi (720p\'den 1440p 60 FPS\'e kadar) ve oyun sesini orada seçersin. İzleyenler "Yayını izle"ye basınca görür.' },
+  { id: 'partner', q: /(partner|reklam\s*(yap|ver|al))/,
+    title: 'Partnerlik 🤝', text: 'Kanka Partner rozeti alan sunucular Keşfet\'te üst sıralarda çıkar. Kanka\'da aktif bir sunucun varsa @Pisago\'ya yaz, beraber bakalım.' },
+  { id: 'kim', q: /(kim\s*yapt[ıi]|yapan\s*kim|kim\s*(geli[şs]tir|kodla)|sahibi\s*kim|kurucu(su)?\s*kim)/,
+    title: 'Kim yapıyor? 🛠️', text: 'Kanka Chat\'i @Pisago geliştiriyor, yapım sürecini Instagram\'da paylaşıyor. Fikrin varsa #yorumlarla-yapıyorum\'a yaz.' },
+  { id: 'hata', q: /((hata|bug)\s*(buldum|var|ald[ıi]m|veriyor)|çal[ıi][şs]m[ıi]yor|bozuk)/, noQ: true,
+    title: 'Hata mı buldun? 🐞', text: 'Ne yaptığını ve ne olduğunu #hata-bildir odasına yazar mısın? Ekran görüntüsü varsa çok işe yarar. Genelde aynı gün düzeltiyoruz.' },
+];
+const faqSeen = new Map();
+const looksQuestion = t => /\?/.test(t) || /(\s|^)(m[ıiuü]|m[ıiuü]s[ıiuü]n|m[ıiuü]y[ıiuü]z|m[ıiuü]d[ıiuü]r)(\s|$|\W)/.test(t) || /(^|\s)(ne|neden|nas[ıi]l|nerede|nereden|niye|kim|hangi|nedir|ne\s*zaman)(\s|$|\W)/.test(t);
+function hqFaq(s, chId, name, text) {
+  if (s.id !== 's1' || !s.bot?.added || s.bot.faqOff || name === BOT_NAME || siteAdmin(name)) return;
+  const c = s.channels.find(x => x.id === chId); if (!c || (c.type || 'text') !== 'text' || /hata|yorum/.test(c.name)) return;
+  const t = String(text || '').toLocaleLowerCase('tr').trim(); if (t.length < 6 || t.length > 220 || /^\//.test(t) || /https?:\/\//.test(t)) return;
+  const q = looksQuestion(t), now = Date.now();
+  const hit = HQ_FAQ.find(f => (q || f.noQ) && f.q.test(t)); if (!hit) return;
+  const kc = chId + '|' + hit.id, ku = name + '|' + hit.id;
+  if (now - (faqSeen.get(kc) || 0) < 3 * 60e3 || now - (faqSeen.get(ku) || 0) < 30 * 60e3) return;
+  faqSeen.set(kc, now); faqSeen.set(ku, now);
+  if (faqSeen.size > 5000) for (const [k, v] of faqSeen) if (now - v > 60 * 60e3) faqSeen.delete(k);
+  setTimeout(() => botPost(chId, { title: hit.title, text: `@${name} ${hit.text.replace(/@Pisago/g, '@' + s.owner)}`, tone: 'info' }), 900);
+}
 function botBye(s, name) {
   if (!botOn(s, 'welcome') || !s.bot.welcome.bye) return;
   const ch = welcomeChannel(s, s.bot.welcome); if (!ch) return;
@@ -1998,6 +2040,7 @@ io.on('connection', socket => {
     }
     if (srv && (!p.kind || p.kind === 'text')) { const am = automod(srv, cur, me, p.text); if (am) return cb({ error: am }); }
     const res = postMessage(me, cur, p); cb(res);
+    if (srv && res?.ok !== false && !res?.error && (!p.kind || p.kind === 'text') && !p.replyTo?.bot) hqFaq(srv, cur, me, p.text);
     if (res?.ok !== false && !res?.error && srv?.bot?.added && /@kanka\s?bot\b/i.test(p.text || '')) {
       const ch0 = cur, who = me;
       setTimeout(() => botPost(ch0, { title: `Selam ${who}! 👋`, text: 'Ben Kanka Bot. Komutlarımı görmek için /yardım yaz' + (botOn(srv, 'mod') ? '. Bu sunucuda moderasyon bende 🛡️' : '.'), tone: 'info' }), 700);
