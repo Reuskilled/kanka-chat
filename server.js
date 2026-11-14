@@ -57,6 +57,32 @@ function clientIp(remote, xff) {
   return r || 'bilinmiyor';
 }
 const reqIp = req => clientIp(req.socket?.remoteAddress, req.headers['x-forwarded-for']);
+// ---------- İki adımlı doğrulama (TOTP, Google Authenticator vb.) ----------
+const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+const b32enc = buf => { let bits = '', out = ''; for (const b of buf) bits += b.toString(2).padStart(8, '0'); for (let i = 0; i + 5 <= bits.length; i += 5) out += B32[parseInt(bits.slice(i, i + 5), 2)]; return out; };
+const b32dec = str => { let bits = ''; for (const c of String(str).toUpperCase().replace(/[^A-Z2-7]/g, '')) bits += B32.indexOf(c).toString(2).padStart(5, '0'); const out = []; for (let i = 0; i + 8 <= bits.length; i += 8) out.push(parseInt(bits.slice(i, i + 8), 2)); return Buffer.from(out); };
+function totpAt(secret, counter) {
+  const c = Buffer.alloc(8); c.writeBigUInt64BE(BigInt(counter));
+  const h = crypto.createHmac('sha1', b32dec(secret)).update(c).digest(), o = h[h.length - 1] & 15;
+  return String(((h.readUInt32BE(o) & 0x7fffffff) % 1e6)).padStart(6, '0');
+}
+// Kod doğruysa kullanılan adımı döndürür (aynı kod iki kez kullanılamasın diye), değilse -1
+function totpCheck(secret, code, last = -1) {
+  code = String(code || '').replace(/\s/g, ''); if (!/^\d{6}$/.test(code)) return -1;
+  const now = Math.floor(Date.now() / 30e3);
+  for (const w of [0, -1, 1]) { const ctr = now + w; if (ctr > last && totpAt(secret, ctr) === code) return ctr; }
+  return -1;
+}
+const hashCode = c => crypto.createHash('sha256').update(String(c).toUpperCase().replace(/[^A-Z0-9]/g, '')).digest('hex');
+// Kullanıcının 2FA'sı açıksa kodu (ya da yedek kodu) doğrular. Kapalıysa her zaman geçer.
+function tfaPass(u, code) {
+  if (!u?.tfa?.on) return true;
+  const ctr = totpCheck(u.tfa.secret, code, u.tfa.last ?? -1);
+  if (ctr >= 0) { u.tfa.last = ctr; return true; }
+  const h = hashCode(code), i = (u.tfa.backup || []).indexOf(h);
+  if (String(code || '').replace(/[^A-Za-z0-9]/g, '').length >= 8 && i >= 0) { u.tfa.backup.splice(i, 1); return true; }
+  return false;
+}
 // Güvenlik olayları (yönetim panelinde görünür)
 function secLog(kind, who, detail) {
   const l = (db.secLog ||= []); const last = l[0];
@@ -1375,6 +1401,13 @@ try {
 } catch {}
 
 // ---------- Bağlantı ----------
+const tfaPending = new Map(); // isim -> { secret, exp } (kurulum sırasında)
+// Çöp kutusundaki sunucular 7 gün sonra kalıcı silinir
+setInterval(() => {
+  const now = Date.now(); let n = 0;
+  for (const t of [...(db.trash || [])]) if (now - t.at > 7 * 864e5) { for (const c of t.server.channels || []) delete db.messages[c.id]; db.trash = db.trash.filter(x => x !== t); n++; }
+  if (n) save();
+}, 3600e3);
 io.on('connection', socket => {
   // Tek bir bağlantıdan olağandışı yoğunlukta istek gelirse (betik/saldırı) bağlantıyı kes
   { let n = 0, t0 = Date.now();
@@ -1404,7 +1437,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), reportCounts: reportCounts(name), beta: db.beta.on
+      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on
     };
   }
 
@@ -1476,7 +1509,7 @@ io.on('connection', socket => {
     save(); cb(start(u.name));
   });
 
-  socket.on('login', ({ name, password } = {}, cb) => {
+  socket.on('login', ({ name, password, code } = {}, cb) => {
     const key = 'login|' + ip + '|' + clean(name, 190).toLowerCase(), now = Date.now();
     const fails = (limits.get(key) || []).filter(t => now - t < 600e3);
     if (fails.length >= 5) return cb({ error: `Çok fazla hatalı deneme. ${Math.ceil((600e3 - (now - fails[0])) / 60000)} dakika sonra tekrar dene.` });
@@ -1484,6 +1517,11 @@ io.on('connection', socket => {
     if (ipFails.length >= 25) return cb({ error: 'Bu bağlantıdan çok fazla hatalı giriş denendi. 15 dakika sonra tekrar dene.' });
     const u = findUserBy(name);
     if (!u || hashPw(String(password ?? ''), u.salt) !== u.hash) { fails.push(now); limits.set(key, fails); ipFails.push(now); limits.set('loginip|' + ip, ipFails); if (ipFails.length === 25) secLog('giris-denemesi', 'ip:' + ip, '15 dakikada 25 hatalı giriş'); return cb({ error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Kullanıcı adı / e-posta ya da şifre yanlış.' }); }
+    if (u.tfa?.on) {
+      if (!code) return cb({ needTfa: true });
+      if (!tfaPass(u, code)) { fails.push(now); limits.set(key, fails); return cb({ needTfa: true, error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Doğrulama kodu yanlış. Uygulamadaki güncel 6 haneli kodu ya da bir yedek kodu yaz.' }); }
+      save();
+    }
     limits.delete(key);
     if (u.siteBan) return cb({ error: banText(u), banned: true });
     cb(start(u.name));
@@ -1550,11 +1588,92 @@ io.on('connection', socket => {
       msgs.push({ yer: k.startsWith('dm:') ? 'DM: ' + dmPeers(k).filter(n => n !== me).join(', ') : (findChannel(k) ? findChannel(k).s.name + ' #' + findChannel(k).c.name : k), zaman: new Date(m.time).toISOString(), tur: m.kind, metin: m.text || '', resim: m.image || null });
     cb({ ok: true, data: { aciklama: 'Kanka Chat hesabında hakkında tuttuğumuz veriler (KVKK md. 11)', indirilme: new Date().toISOString(), profil: profile, sunucular: serversFor(me).filter(s => !s.public).map(s => ({ ad: s.name, sahip: s.owner === me, katilim: s.joinedAt?.[me] ? new Date(s.joinedAt[me]).toISOString() : null })), mesajlar: msgs } });
   });
-  socket.on('deleteAccount', ({ password, confirm } = {}, cb = () => {}) => {
+  // ----- İki adımlı doğrulama -----
+  socket.on('tfaStatus', (cb = () => {}) => { const u = db.users[me]; if (!u) return cb({}); cb({ on: !!u.tfa?.on, backupLeft: u.tfa?.backup?.length || 0, at: u.tfa?.at || null }); });
+  socket.on('tfaSetup', ({ password } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+    if (hashPw(String(password ?? ''), u.salt) !== u.hash) return cb({ error: 'Şifre yanlış' });
+    if (u.tfa?.on) return cb({ error: 'İki adımlı doğrulama zaten açık' });
+    const secret = b32enc(crypto.randomBytes(20));
+    tfaPending.set(me, { secret, exp: Date.now() + 15 * 60e3 });
+    const uri = `otpauth://totp/${encodeURIComponent('Kanka:' + me)}?secret=${secret}&issuer=Kanka&digits=6&period=30`;
+    require('qrcode').toString(uri, { type: 'svg', margin: 1, color: { dark: '#17110e', light: '#ffffff' } }, (e, svg) => cb({ ok: true, secret: secret.replace(/(.{4})/g, '$1 ').trim(), uri, svg: e ? null : svg }));
+  });
+  socket.on('tfaEnable', ({ code } = {}, cb = () => {}) => {
+    const u = db.users[me], p = tfaPending.get(me); if (!u) return cb({ error: 'Giriş yap' });
+    if (!p || p.exp < Date.now()) return cb({ error: 'Kurulum süresi doldu, baştan başla' });
+    if (limited('tfa|' + me, 10, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+    const ctr = totpCheck(p.secret, code); if (ctr < 0) return cb({ error: 'Kod yanlış. Uygulamadaki güncel 6 haneli kodu yaz (her 30 saniyede değişir).' });
+    const backup = Array.from({ length: 10 }, () => { const c = Array.from({ length: 8 }, () => CODE_ABC[crypto.randomInt(CODE_ABC.length)]).join(''); return c.slice(0, 4) + '-' + c.slice(4); });
+    u.tfa = { on: true, secret: p.secret, last: ctr, backup: backup.map(hashCode), at: Date.now() };
+    tfaPending.delete(me); secLog('2fa-acildi', me, ''); save();
+    cb({ ok: true, backup });
+  });
+  socket.on('tfaDisable', ({ password, code } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+    if (hashPw(String(password ?? ''), u.salt) !== u.hash) return cb({ error: 'Şifre yanlış' });
+    if (!tfaPass(u, code)) return cb({ error: 'Doğrulama kodu yanlış' });
+    delete u.tfa; secLog('2fa-kapatildi', me, ''); save(); cb({ ok: true });
+  });
+  socket.on('tfaNewBackup', ({ code } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u?.tfa?.on) return cb({ error: 'İki adımlı doğrulama kapalı' });
+    if (limited('tfa|' + me, 10, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+    if (!tfaPass(u, code)) return cb({ error: 'Doğrulama kodu yanlış' });
+    const backup = Array.from({ length: 10 }, () => { const c = Array.from({ length: 8 }, () => CODE_ABC[crypto.randomInt(CODE_ABC.length)]).join(''); return c.slice(0, 4) + '-' + c.slice(4); });
+    u.tfa.backup = backup.map(hashCode); save(); cb({ ok: true, backup });
+  });
+  // ----- Sunucu silme (7 gün çöp kutusu), geri getirme, sahiplik devri -----
+  const ownerCheck = (s, password, code, cb) => {
+    const u = db.users[me];
+    if (!s || s.owner !== me) { cb({ error: 'Bunu sadece sunucunun sahibi yapabilir' }); return false; }
+    if (s.public) { cb({ error: 'Bu sunucu silinemez' }); return false; }
+    if (limited('pw|' + me, 5, 600e3)) { cb({ error: 'Çok fazla deneme, biraz bekle.' }); return false; }
+    if (hashPw(String(password ?? ''), u.salt) !== u.hash) { cb({ error: 'Şifre yanlış' }); return false; }
+    if (!tfaPass(u, code)) { cb({ error: 'İki adımlı doğrulama kodu yanlış', needTfa: true }); return false; }
+    return true;
+  };
+  socket.on('serverDelete', ({ serverId, name, password, code } = {}, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId);
+    if (s && String(name || '').trim() !== s.name) return cb({ error: 'Onay için sunucunun adını aynen yaz' });
+    if (!ownerCheck(s, password, code, cb)) return;
+    voiceKick(s.channels.map(c => c.id), null, `${s.name} sunucusu kapatıldı`);
+    const who = membersOf(s);
+    db.servers = db.servers.filter(x => x !== s);
+    (db.trash ||= []).push({ server: s, at: Date.now(), by: me });
+    audit(s, me, 'Sunucuyu sildi (7 gün çöp kutusunda)');
+    secLog('sunucu-silindi', me, `${s.name} (${s.id})`); save();
+    pushServers(who); for (const n of who) if (n !== me) io.to('user:' + n).emit('toast', `${s.name} sunucusu kapatıldı`);
+    cb({ ok: true });
+  });
+  socket.on('trashList', (cb = () => {}) => {
+    const now = Date.now();
+    cb((db.trash || []).filter(t => t.server.owner === me).map(t => ({ id: t.server.id, name: t.server.name, icon: t.server.icon, iconImg: t.server.iconImg || null, members: t.server.members.length, at: t.at, left: Math.max(0, Math.ceil((t.at + 7 * 864e5 - now) / 864e5)) })));
+  });
+  socket.on('serverRestore', ({ serverId } = {}, cb = () => {}) => {
+    const t = (db.trash || []).find(x => x.server.id === serverId && x.server.owner === me);
+    if (!t) return cb({ error: 'Sunucu bulunamadı ya da süresi doldu' });
+    db.trash = db.trash.filter(x => x !== t); db.servers.push(t.server);
+    audit(t.server, me, 'Sunucuyu geri getirdi'); save();
+    pushServers(membersOf(t.server)); for (const n of membersOf(t.server)) if (n !== me) io.to('user:' + n).emit('toast', `${t.server.name} sunucusu geri açıldı 🎉`);
+    cb({ ok: true });
+  });
+  socket.on('serverTransfer', ({ serverId, to, password, code } = {}, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId);
+    if (!ownerCheck(s, password, code, cb)) return;
+    if (!to || to === me || !s.members.includes(to) || !db.users[to]) return cb({ error: 'Sahipliği bu sunucunun bir üyesine devredebilirsin' });
+    s.owner = to; delete s.roles?.[to];
+    audit(s, me, 'Sahipliği devretti', to); secLog('sahiplik-devri', me, `${s.name} → ${to}`); save();
+    pushServers(membersOf(s)); io.to('user:' + to).emit('toast', `👑 ${me}, ${s.name} sunucusunun sahipliğini sana devretti`);
+    cb({ ok: true });
+  });
+  socket.on('deleteAccount', ({ password, confirm, code } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
     if (hashPw(String(password ?? ''), u.salt) !== u.hash) return cb({ error: 'Şifre yanlış' });
     if (String(confirm || '') !== me) return cb({ error: 'Onay için kullanıcı adını aynen yaz' });
+    if (!tfaPass(u, code)) return cb({ error: 'İki adımlı doğrulama kodu yanlış', needTfa: true });
     if (db.servers.find(x => x.id === 's1')?.owner === me) return cb({ error: 'Kanka HQ sahibi hesabını silemez' });
     const name = me, touched = onlineNames();
     deleteUserData(name);
@@ -2686,6 +2805,7 @@ io.on('connection', socket => {
   socket.on('leaveServer', (serverId, cb = () => {}) => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || s.public) return cb({ error: 'Bu sunucudan ayrılamazsın' });
+    if (s.owner === me && s.members.some(n => n !== me)) return cb({ error: 'Sunucunun sahibisin. Ayrılmadan önce Sunucu ayarları → Genel → Sahipliği devret, ya da sunucuyu sil.', owner: true });
     s.members = s.members.filter(n => n !== me);
     botBye(s, me);
     voiceKick(s.channels.map(c => c.id), me, 'Sunucudan ayrıldın');

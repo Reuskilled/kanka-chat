@@ -109,6 +109,20 @@
   .rm-row .av { width: 32px; height: 32px; font-size: 13px; } .rm-row > span { flex: 1; min-width: 0; } .rm-row b { display: block; font-size: 14px; } .rm-row small { color: var(--muted); font-size: 12px; font-weight: 600; }
   .rm-row button { padding: 6px 12px; border-radius: 9px; font-weight: 800; font-size: 12.5px; background: var(--accent); color: #1a0f0a; } .rm-row button.out { background: var(--hover); color: var(--ink); }
   .ricon { margin-left: 4px; font-size: 13px; }
+  .tfa-card { padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+  .tfa-top { display: flex; gap: 12px; align-items: flex-start; } .tfa-top b { display: block; font-size: 15px; } .tfa-top span { color: var(--muted); font-size: 13px; font-weight: 600; line-height: 1.45; }
+  .tfa-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--hover); color: var(--muted); flex-shrink: 0; } .tfa-ic.on { background: rgba(63,207,142,.15); color: #3fcf8e; } .tfa-ic .ic { width: 20px; height: 20px; }
+  .tfa-acts { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; } .danger-t { color: var(--red) !important; }
+  .tfa-ask { text-align: center; } .tfa-ask .tfa-ic { margin: 0 auto 10px; width: 52px; height: 52px; border-radius: 16px; background: var(--accent-soft); color: var(--accent); } .tfa-ask .tfa-ic.on { background: rgba(63,207,142,.15); color: #3fcf8e; }
+  .tfa-ask h3 { margin: 0 0 6px; } .tfa-ask .rp-lbl, .tfa-ask .field { text-align: left; } .tfa-ask .rowb { justify-content: center; }
+  .tfa-in { font: 800 26px ui-monospace, monospace !important; letter-spacing: .3em; text-align: center !important; max-width: 240px; margin: 12px auto !important; display: block; }
+  .tfa-err { color: var(--red); font-weight: 800; font-size: 13px; margin: 0 0 8px; }
+  .tfa-qr { width: 190px; height: 190px; margin: 10px auto; padding: 8px; background: #fff; border-radius: 14px; } .tfa-qr svg { width: 100%; height: 100%; display: block; }
+  .tfa-key { display: inline-block; margin-top: 6px; padding: 6px 10px; border-radius: 8px; background: var(--bg); font: 800 14px ui-monospace, monospace; letter-spacing: .08em; color: var(--ink); user-select: all; }
+  .tfa-open { display: inline-block; margin-top: 8px; color: var(--accent-2); font-weight: 800; }
+  .tfa-codes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0; } .tfa-codes code { padding: 8px; border-radius: 10px; background: var(--bg); font: 800 15px ui-monospace, monospace; letter-spacing: .06em; }
+  .trash-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin-bottom: 6px; }
+  .trash-row .tr-t { flex: 1; min-width: 0; } .trash-row b { display: block; } .trash-row small { color: var(--muted); font-weight: 700; font-size: 12px; }
   .mbadge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: var(--red); color: #fff; font-size: 11.5px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .cat-label.hasun .cn { color: #fff; }
   .cat-label.hasun .cn::after { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: middle; }
@@ -2789,7 +2803,9 @@ $('#auth-form').onsubmit = e => {
   const busy = on => { if (btn) { btn.disabled = on; btn.classList.toggle('busy', on); } };
   if (authMode === 'login') {
     if (!val('a-name') || !$('#a-pass').value) return authErr({ error: 'Kullanıcı adı ve şifre gerekli.' });
-    busy(true); socket.emit('login', { name: val('a-name'), password: $('#a-pass').value }, r => { busy(false); onAuth(r); });
+    const creds = { name: val('a-name'), password: $('#a-pass').value };
+    const go = code => { busy(true); socket.emit('login', { ...creds, code }, r => { busy(false); if (r.needTfa) return tfaLogin(r.error, go); closeModal(); onAuth(r); }); };
+    go();
   } else if (authMode === 'register') {
     if (!val('a-name') || !$('#a-pass').value) return authErr({ error: 'Kullanıcı adı ve şifre gerekli.' });
     if (!val('a-mail')) return authErr({ error: 'E-posta adresini yaz.', field: 'email' });
@@ -2817,6 +2833,80 @@ function showAuth() {
 }
 function hideBoot() { const b = $('#boot'); if (!b || b.classList.contains('out')) return; b.classList.add('out'); setTimeout(() => b.remove(), 400); }
 setTimeout(() => { const t = $('#boot-t'); if (t && $('#boot')) t.textContent = 'Sunucuya ulaşılamıyor, tekrar deneniyor…'; }, 7000);
+function drawTfa() {
+  const el = $('#tfa-card'); if (!el) return;
+  socket.emit('tfaStatus', st => {
+    S.tfa = !!st.on;
+    el.innerHTML = st.on
+      ? `<div class="tfa-top"><span class="tfa-ic on">${ic('lock')}</span><div><b>Açık · hesabın korunuyor</b><span>Girişte şifrenin yanında doğrulama uygulamandaki kod da isteniyor. Kalan yedek kod: <b>${st.backupLeft}</b></span></div></div>
+         <div class="tfa-acts"><button class="btns2" id="tfa-nb">Yeni yedek kodlar</button><button class="btns2 danger-t" id="tfa-off">Kapat</button></div>`
+      : `<div class="tfa-top"><span class="tfa-ic">${ic('lock')}</span><div><b>Kapalı</b><span>Açarsan, biri şifreni ele geçirse bile telefonundaki doğrulama kodu olmadan hesabına giremez. Özellikle sunucu sahipleri için önerilir.</span></div></div>
+         <div class="tfa-acts"><button class="primary" id="tfa-on" style="width:auto;padding:10px 18px">İki adımlı doğrulamayı aç</button></div>`;
+    $('#tfa-on') && ($('#tfa-on').onclick = tfaWizard);
+    $('#tfa-off') && ($('#tfa-off').onclick = () => {
+      modal(`<div class="tfa-ask"><div class="tfa-ic">${ic('lock')}</div><h3>İki adımlı doğrulama kapatılsın mı?</h3><p class="hint">Hesabın sadece şifreyle korunacak.</p>
+        <label class="rp-lbl">Şifren</label><input class="field" id="tf-pw" type="password" autocomplete="current-password">${tfaField()}
+        <div class="rowb"><button id="mx">Vazgeç</button><button class="primary danger-btn" id="tf-go" style="width:auto;padding:11px 22px">Kapat</button></div></div>`, 'rep');
+      $('#mx').onclick = () => showSettings('account');
+      $('#tf-go').onclick = () => socket.emit('tfaDisable', { password: $('#tf-pw').value, code: tfaVal() }, r => { if (r.error) return toast(r.error); S.tfa = false; toast('İki adımlı doğrulama kapatıldı'); showSettings('account'); });
+    });
+    $('#tfa-nb') && ($('#tfa-nb').onclick = () => {
+      modal(`<div class="tfa-ask"><div class="tfa-ic">${ic('lock')}</div><h3>Yeni yedek kodlar</h3><p class="hint">Eski yedek kodların geçersiz olur.</p>${tfaField()}
+        <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="tf-go" style="width:auto;padding:11px 22px">Oluştur</button></div></div>`, 'rep');
+      $('#mx').onclick = () => showSettings('account');
+      $('#tf-go').onclick = () => socket.emit('tfaNewBackup', { code: tfaVal() }, r => r.error ? toast(r.error) : showBackup(r.backup));
+    });
+  });
+}
+function tfaWizard() {
+  modal(`<div class="tfa-ask"><div class="tfa-ic">${ic('lock')}</div><h3>İki adımlı doğrulamayı aç</h3><p class="hint">Önce şifreni doğrula.</p>
+    <label class="rp-lbl">Şifren</label><input class="field" id="tf-pw" type="password" autocomplete="current-password">
+    <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="tf-go" style="width:auto;padding:11px 22px">Devam</button></div></div>`, 'rep');
+  $('#mx').onclick = () => showSettings('account');
+  $('#tf-go').onclick = () => socket.emit('tfaSetup', { password: $('#tf-pw').value }, r => {
+    if (r.error) return toast(r.error);
+    modal(`<div class="tfa-ask wide"><h3>1. Doğrulama uygulamasını aç</h3><p class="hint">Telefonundaki <b>Google Authenticator</b>, <b>Microsoft Authenticator</b> ya da benzeri bir uygulamayla bu kodu tara.</p>
+      <div class="tfa-qr">${r.svg || ''}</div>
+      <p class="hint" style="text-align:center">Tarayamıyor musun? Uygulamaya elle şu anahtarı gir:<br><code class="tfa-key">${esc(r.secret)}</code>${/Android|iPhone|iPad/i.test(navigator.userAgent) ? `<br><a href="${esc(r.uri)}" class="tfa-open">Bu telefondaki uygulamada aç</a>` : ''}</p>
+      <h3 style="margin-top:14px">2. Uygulamadaki 6 haneli kodu yaz</h3>
+      <input class="field tfa-in" id="tfa-c" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+      <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="tf-ok" style="width:auto;padding:11px 22px">Aç</button></div></div>`, 'rep');
+    $('#mx').onclick = () => showSettings('account');
+    const ok = () => socket.emit('tfaEnable', { code: $('#tfa-c').value }, x => { if (x.error) return toast(x.error); S.tfa = true; showBackup(x.backup, true); });
+    $('#tf-ok').onclick = ok; $('#tfa-c').oninput = e => { if (/^\d{6}$/.test(e.target.value.trim())) ok(); };
+    setTimeout(() => $('#tfa-c')?.focus(), 50);
+  });
+}
+function showBackup(codes, fresh) {
+  const txt = 'Kanka yedek kodları (' + S.me + ')\nHer kod bir kez kullanılır.\n\n' + codes.join('\n');
+  modal(`<div class="tfa-ask wide"><div class="tfa-ic on">${ic('check')}</div><h3>${fresh ? 'İki adımlı doğrulama açıldı 🎉' : 'Yeni yedek kodların'}</h3>
+    <p class="hint">Telefonunu kaybedersen bu kodlarla giriş yapabilirsin. Her kod <b>bir kez</b> kullanılır. <b>Bunları şimdi kaydet</b>, bir daha gösterilmeyecek.</p>
+    <div class="tfa-codes">${codes.map(c => `<code>${esc(c)}</code>`).join('')}</div>
+    <div class="rowb"><button class="btns2" id="bk-cp">Kopyala</button><button class="btns2" id="bk-dl">İndir (.txt)</button><button class="primary" id="mx" style="width:auto;padding:11px 22px">Kaydettim</button></div></div>`, 'rep');
+  $('#bk-cp').onclick = () => navigator.clipboard?.writeText(txt).then(() => toast('Yedek kodlar kopyalandı'));
+  $('#bk-dl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' })); a.download = 'kanka-yedek-kodlar.txt'; a.click(); };
+  $('#mx').onclick = () => showSettings('account');
+}
+function drawTrash() {
+  const el = $('#trash-box'); if (!el) return;
+  socket.emit('trashList', list => {
+    el.innerHTML = list?.length ? list.map(t => `<div class="trash-row"><span class="hm-ic srv">${t.iconImg ? `<img src="${esc(t.iconImg)}" alt="">` : esc(t.icon || t.name[0])}</span><span class="tr-t"><b>${esc(t.name)}</b><small>${t.members} üye · ${t.left} gün içinde kalıcı silinecek</small></span><button class="btns2" data-restore="${t.id}">Geri getir</button></div>`).join('')
+      : '<p class="hint" style="margin-top:0">Sildiğin sunucular 7 gün boyunca burada durur, istersen geri getirirsin. Şu an boş.</p>';
+    el.querySelectorAll('[data-restore]').forEach(b => b.onclick = () => socket.emit('serverRestore', { serverId: b.dataset.restore }, r => { if (r.error) return toast(r.error); toast('Sunucu geri geldi 🎉'); drawTrash(); }));
+  });
+}
+// Girişte iki adımlı doğrulama kodu sor
+function tfaLogin(err, go) {
+  modal(`<div class="tfa-ask"><div class="tfa-ic">${ic('lock')}</div><h3>İki adımlı doğrulama</h3><p class="hint">Doğrulama uygulamandaki (Google Authenticator vb.) 6 haneli kodu yaz. Telefonun yanında değilse yedek kodlarından birini kullanabilirsin.</p>
+    <input class="field tfa-in" id="tfa-c" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="000000" autofocus>${err ? `<p class="tfa-err">${esc(err)}</p>` : ''}
+    <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="tfa-ok" style="width:auto;padding:11px 22px">Giriş yap</button></div></div>`, 'rep');
+  const ok = () => { const v = $('#tfa-c').value.trim(); if (v) go(v); };
+  $('#mx').onclick = closeModal; $('#tfa-ok').onclick = ok; $('#tfa-c').onkeydown = e => { if (e.key === 'Enter') ok(); };
+  $('#tfa-c').oninput = e => { const v = e.target.value.replace(/\s/g, ''); if (/^\d{6}$/.test(v)) ok(); };
+  setTimeout(() => $('#tfa-c')?.focus(), 50);
+}
+const tfaField = () => S.tfa ? `<label class="rp-lbl">İki adımlı doğrulama kodu</label><input class="field" id="tfa-f" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="6 haneli kod ya da yedek kod">` : '';
+const tfaVal = () => $('#tfa-f')?.value.trim() || undefined;
 function onAuth(res) {
   hideBoot();
   if (res.error) { store.set('kanka-token', null); showAuth(); return setTimeout(() => $('#auth-err') && authErr(res), 0); }
@@ -2830,7 +2920,7 @@ function onAuth(res) {
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
   if ($('#a-pass')) $('#a-pass').value = '';
-  S.myEmail = res.myEmail || null; S.siteAdmin = !!res.siteAdmin; S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
+  S.myEmail = res.myEmail || null; S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
   renderMe(); renderModPill();
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
@@ -3870,7 +3960,34 @@ function showServerSettings(s, tab, focus) {
         <label class="switch">Yavaş mod (üyeler için mesaj arası bekleme)<select class="field" id="sv-slow" style="width:120px;margin:0">${[[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [30, '30 sn'], [60, '1 dk'], [300, '5 dk']].map(([v, t]) => `<option value="${v}" ${s.slow === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
         <label class="switch">AFK odası (hareketsiz kalanlar taşınır)<select class="field" id="sv-afk" style="width:170px;margin:0"><option value="">Kapalı</option>${s.channels.filter(c => c.type === 'voice').map(c => `<option value="${c.id}" ${s.afk?.ch === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
         <label class="switch">AFK süresi<select class="field" id="sv-afkm" style="width:120px;margin:0">${[1, 5, 10, 15, 30, 60].map(v => `<option value="${v}" ${(s.afk?.min || 10) === v ? 'selected' : ''}>${v} dk</option>`).join('')}</select></label></div>
-        ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${PUB}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}</div>`;
+        ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${PUB}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}
+        ${!s.public && s.owner === S.me ? `<div class="st-sec danger" style="margin-top:22px">Tehlikeli bölge</div>
+          <div class="acc-danger"><span><b>Sahipliği devret</b>Sunucuyu başka bir üyeye verirsin. Sen yönetici olarak kalmazsın, istersen yeni sahip sana rol verir.</span><button class="btns2" id="sv-xfer">Devret</button></div>
+          <div class="acc-danger" style="margin-top:8px"><span><b>Sunucuyu sil</b>Sunucu herkesten kaldırılır ve 7 gün boyunca çöp kutusunda durur. Bu sürede Ayarlar → Hesap'tan geri getirebilirsin, sonra kalıcı silinir.</span><button class="danger-btn btns2" id="sv-del">Sunucuyu sil</button></div>` : ''}</div>`;
+      if ($('#sv-del')) $('#sv-del').onclick = () => {
+        modal(`<div class="rp-head del">${ic('trash')}<div><h3>${esc(s.name)} silinsin mi?</h3><p class="hint">Sunucu ${s.members.length} üyenin listesinden hemen kalkar. <b>7 gün</b> içinde geri getirebilirsin.</p></div></div>
+          <label class="rp-lbl">Onaylamak için sunucunun adını yaz: <b>${esc(s.name)}</b></label><input class="field" id="sd-name" autocomplete="off">
+          <label class="rp-lbl">Şifren</label><input class="field" id="sd-pw" type="password" autocomplete="current-password">${tfaField()}
+          <div class="rowb"><button id="mx">Vazgeç</button><button class="primary danger-btn" id="sd-go" disabled>Sunucuyu sil</button></div>`, 'rep');
+        $('#mx').onclick = () => showServerSettings(s, 'general');
+        $('#sd-name').oninput = () => $('#sd-go').disabled = $('#sd-name').value.trim() !== s.name;
+        $('#sd-go').onclick = () => socket.emit('serverDelete', { serverId: s.id, name: $('#sd-name').value, password: $('#sd-pw').value, code: tfaVal() }, r => {
+          if (r.error) return toast(r.error);
+          ssOpen = null; closeModal(); toast(`${s.name} silindi. 7 gün içinde Ayarlar → Hesap'tan geri getirebilirsin.`); if (S.server?.id === s.id) showFriends();
+        });
+      };
+      if ($('#sv-xfer')) $('#sv-xfer').onclick = () => {
+        const others = s.members.filter(n => n !== S.me);
+        if (!others.length) return toast('Devredebileceğin başka üye yok');
+        modal(`<div class="rp-head">${ic('crown')}<div><h3>Sahipliği devret</h3><p class="hint">Yeni sahip sunucuyu tamamen yönetebilir, seni de çıkarabilir.</p></div></div>
+          <label class="rp-lbl">Yeni sahip</label><select class="field" id="sx-to">${others.map(n => `<option value="${esc(n)}">${esc(dn(n))} (@${esc(n)})</option>`).join('')}</select>
+          <label class="rp-lbl">Şifren</label><input class="field" id="sx-pw" type="password" autocomplete="current-password">${tfaField()}
+          <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="sx-go" style="width:auto;padding:11px 22px">Devret</button></div>`, 'rep');
+        $('#mx').onclick = () => showServerSettings(s, 'general');
+        $('#sx-go').onclick = () => confirmBox(`${$('#sx-to').value} sunucunun yeni sahibi olsun mu? Bu işlemi sadece yeni sahip geri alabilir.`, () => socket.emit('serverTransfer', { serverId: s.id, to: $('#sx-to').value, password: $('#sx-pw').value, code: tfaVal() }, r => {
+          if (r.error) return toast(r.error); ssOpen = null; closeModal(); toast('Sahiplik devredildi 👑');
+        }));
+      };
       $('#sv-save').onclick = () => socket.emit('updateServer', { serverId: s.id, name: $('#sv-name').value, icon: $('#sv-icon').value }, done('Kaydedildi'));
       $('#sv-img').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, iconImg: url }, done()), 512);
       $('#sv-bn').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, banner: url }, done('Afiş güncellendi')));
@@ -7366,6 +7483,10 @@ function accountPageHTML(u) {
     <div class="st-sec">Davet kodların</div>
     <p class="hint" style="margin-top:0">${S.beta ? 'Kanka kapalı betada. Bu kodlarla arkadaşlarını sıra beklemeden içeri alabilirsin.' : 'Arkadaşlarını davet et.'} Kodunla katılan her kişi için <b style="color:var(--text)">+50 XP</b>.</p>
     <div id="acc-codes" class="codes"><p class="hint">Yükleniyor…</p></div>
+    <div class="st-sec">İki adımlı doğrulama</div>
+    <div class="tfa-card" id="tfa-card"><p class="hint">Yükleniyor…</p></div>
+    <div class="st-sec">Silinen sunucularım</div>
+    <div id="trash-box"><p class="hint" style="margin-top:0">Yükleniyor…</p></div>
     <div class="st-sec">Verilerin</div>
     <p class="hint" style="margin-top:0">Hakkında tuttuğumuz her şeyi (profil, sunucular, mesajların) bir dosya olarak indirebilirsin. Ayrıntılar <a href="/gizlilik" target="_blank" style="color:var(--accent)">Gizlilik Politikası</a>'nda.</p>
     <div class="st-field"><button class="btns2" id="acc-export">${ic('download')} Verilerimi indir</button></div>
@@ -7373,6 +7494,7 @@ function accountPageHTML(u) {
     <div class="acc-danger"><span><b>Hesabı kalıcı olarak sil</b>Profilin, mesajların ve özel mesajların silinir. Kurduğun sunucular en yetkili üyeye devredilir. Geri alınamaz.</span><button class="danger-btn" id="acc-del">Hesabı sil</button></div></div>`;
 }
 function wireAccount() {
+  drawTfa(); drawTrash();
   $('#em-save').onclick = () => socket.emit('setEmail', { email: $('#em-new').value, password: $('#em-pw').value }, r => {
     if (r.error) return toast(r.error);
     S.myEmail = r.email; toast('E-postan kaydedildi'); showSettings('account');
@@ -7392,11 +7514,11 @@ function wireAccount() {
     modal(`<div class="rp-head del">${ic('trash')}<div><h3>Hesabın silinsin mi?</h3><p class="hint">Bu işlem <b>geri alınamaz</b>.</p></div></div>
       <ul class="del-list"><li>Profilin, rozetlerin, XP'in ve ayarların silinir</li><li>Gönderdiğin tüm mesajlar ve özel mesajlaşmaların silinir</li><li>Kurduğun sunucular en yetkili üyeye devredilir; üye yoksa silinir</li></ul>
       <label class="rp-lbl">Onaylamak için kullanıcı adını yaz: <b>${esc(S.me)}</b></label><input class="field" id="del-name" autocomplete="off">
-      <label class="rp-lbl">Şifren</label><input class="field" id="del-pw" type="password" autocomplete="current-password">
+      <label class="rp-lbl">Şifren</label><input class="field" id="del-pw" type="password" autocomplete="current-password">${tfaField()}
       <div class="rowb"><button id="mx">Vazgeç</button><button class="primary danger-btn" id="del-go" disabled>Hesabımı kalıcı olarak sil</button></div>`, 'rep');
     $('#mx').onclick = closeModal;
     $('#del-name').oninput = () => $('#del-go').disabled = $('#del-name').value !== S.me;
-    $('#del-go').onclick = () => socket.emit('deleteAccount', { password: $('#del-pw').value, confirm: $('#del-name').value }, r => {
+    $('#del-go').onclick = () => socket.emit('deleteAccount', { password: $('#del-pw').value, confirm: $('#del-name').value, code: tfaVal() }, r => {
       if (r.error) return toast(r.error);
       store.set('kanka-token', null); closeModal();
       modal(`<div class="rp-done"><div class="rp-ok">${ic('check')}</div><h3>Hesabın silindi</h3><p class="hint">Görüşmek üzere kanka. Kapı her zaman açık 🦝</p></div>`, 'rep');
