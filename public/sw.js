@@ -1,5 +1,5 @@
 // Kanka Chat service worker: uygulama kabuğunu önbellekte tutar, çevrimdışıyken de açılır
-const CACHE = 'kanka-v63';
+const CACHE = 'kanka-v64';
 const SHELL = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {

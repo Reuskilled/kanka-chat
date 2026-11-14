@@ -82,6 +82,33 @@
   .mention[data-u] { cursor: pointer; } .mention[data-u]:hover { text-decoration: underline; }
   .chref { color: var(--accent-2); background: rgba(255,138,76,.12); padding: 0 4px; border-radius: 6px; font-weight: 700; cursor: pointer; text-decoration: none; }
   .chref:hover { background: rgba(255,138,76,.25); }
+  .rl-list { display: grid; gap: 6px; }
+  .rl-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .rl-row.open { border-color: var(--accent); }
+  .rl-row > button { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; color: var(--muted); flex-shrink: 0; } .rl-row > button:hover:not(:disabled) { background: var(--hover); color: var(--ink); } .rl-row > button:disabled { opacity: .3; }
+  .rl-row > button .ic { width: 16px; height: 16px; }
+  .rl-row .rl-ed { width: auto; padding: 0 12px; font-weight: 800; font-size: 13px; background: var(--hover); color: var(--ink); }
+  .rl-row .rl-del:hover:not(:disabled) { color: var(--red); }
+  .rl-eye.on { color: var(--accent) !important; background: var(--accent-soft) !important; }
+  .rl-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; font-size: 17px; background: color-mix(in srgb, var(--c) 18%, transparent); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); }
+  .rl-ic i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); } .rl-ic.big { width: 48px; height: 48px; border-radius: 14px; font-size: 24px; } .rl-ic.big i { width: 16px; height: 16px; }
+  .rl-t { flex: 1; min-width: 0; } .rl-t b { display: flex; align-items: center; gap: 6px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .rl-t small { color: var(--muted); font-weight: 700; font-size: 12px; }
+  .rl-ed-box { margin-top: 14px; padding: 16px; border-radius: 18px; background: var(--card); border: 1px solid var(--accent); }
+  .rl-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; } .rl-head h4 { margin: 0; font-size: 18px; } .rl-head small { color: var(--muted); font-weight: 700; }
+  .rl-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--bg); margin-bottom: 14px; } .rl-tabs button { flex: 1; padding: 8px; border-radius: 9px; font-weight: 800; font-size: 13px; color: var(--muted); } .rl-tabs button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  .rl-sw { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; } .rl-sw button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); } .rl-sw button.on { border-color: var(--ink); transform: scale(1.1); }
+  .rl-sw input[type=color] { width: 34px; height: 30px; border: 1px solid var(--line); border-radius: 8px; background: none; padding: 2px; cursor: pointer; }
+  .rl-pg { margin-bottom: 12px; } .rl-pg h5 { display: flex; align-items: center; gap: 6px; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; } .rl-pg h5 .ic { width: 14px; height: 14px; }
+  .rl-perm { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; cursor: pointer; } .rl-perm:hover { background: var(--hover); }
+  .rl-perm > span { flex: 1; min-width: 0; } .rl-perm b { display: block; font-size: 14px; } .rl-perm small { color: var(--muted); font-size: 12.5px; font-weight: 600; } .rl-perm.danger b { color: #ffb4a8; }
+  .rl-perm input { position: absolute; opacity: 0; pointer-events: none; } .rl-perm .tg { width: 40px; height: 24px; border-radius: 99px; background: var(--line); position: relative; flex-shrink: 0; transition: background .15s; }
+  .rl-perm .tg::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; } .rl-perm input:checked + .tg { background: var(--accent); } .rl-perm input:checked + .tg::after { transform: translateX(16px); }
+  .rl-perm input:disabled + .tg { opacity: .35; } .rl-perm:has(input:disabled) { cursor: not-allowed; }
+  .rl-quick { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); font-weight: 700; } .rl-quick button { padding: 5px 10px; border-radius: 8px; background: var(--hover); color: var(--ink); font-weight: 800; font-size: 12.5px; }
+  .rm-list { display: grid; gap: 4px; max-height: 340px; overflow-y: auto; } .rm-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; } .rm-row:hover { background: var(--hover); } .rm-row.in { background: var(--accent-soft); }
+  .rm-row .av { width: 32px; height: 32px; font-size: 13px; } .rm-row > span { flex: 1; min-width: 0; } .rm-row b { display: block; font-size: 14px; } .rm-row small { color: var(--muted); font-size: 12px; font-weight: 600; }
+  .rm-row button { padding: 6px 12px; border-radius: 9px; font-weight: 800; font-size: 12.5px; background: var(--accent); color: #1a0f0a; } .rm-row button.out { background: var(--hover); color: var(--ink); }
+  .ricon { margin-left: 4px; font-size: 13px; }
   .mbadge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: var(--red); color: #fff; font-size: 11.5px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .cat-label.hasun .cn { color: #fff; }
   .cat-label.hasun .cn::after { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: middle; }
@@ -2644,9 +2671,15 @@ const isMod = (s, n) => ['admin', 'mod'].includes(roleOf(s, n)) || (n === S.me &
 const perm = (s, p) => !!s && (s.owner === S.me || !!s.myPerms?.includes(p));
 const rolesOf = (s, n) => s ? (s.customRoles || []).filter(r => (s.memberRoles?.[n] || []).includes(r.id)) : [];
 const roleColor = (s, n) => rolesOf(s, n).find(r => r.color && r.color !== '#99aab5')?.color || null;
-const PERM_TXT = { manageServer: ['Sunucuyu yönet', 'Ad, simge, filtre ve yavaş modu değiştirir'], manageRoles: ['Rolleri yönet', 'Rol oluşturur, düzenler ve üyelere verir'],
-  manageChannels: ['Odaları yönet', 'Oda açar, siler, düzenler, özel yapar'], manageMessages: ['Mesajları yönet', 'Mesaj siler, salt okunur odalara yazar'],
-  kick: ['Üye at', 'Üyeleri sunucudan çıkarır'], ban: ['Üye yasakla', 'Üyeleri kalıcı olarak yasaklar'], timeout: ['Sustur', 'Üyeleri bir süre susturur'], mentionEveryone: ['@everyone kullan', 'Herkesi aynı anda etiketler'] };
+const PERM_TXT = { manageServer: ['Sunucuyu yönet', 'Ad, simge, afiş, filtre, yavaş mod ve hoş geldin ekranını değiştirir'], manageRoles: ['Rolleri yönet', 'Kendinden düşük rolleri oluşturur, düzenler ve üyelere verir'],
+  manageChannels: ['Odaları yönet', 'Oda ve kategori açar, siler, düzenler, izinlerini ayarlar'], manageEmojis: ['Emojileri yönet', 'Sunucuya özel emoji ekler ve siler'], viewAudit: ['Kayıtları görüntüle', 'Sunucuda kimin ne değiştirdiğini görür'],
+  manageMessages: ['Mesajları yönet', 'Başkalarının mesajını siler, sabitler, salt okunur odalara yazar'], mentionEveryone: ['@herkes ve tüm rolleri etiketle', '@herkes kullanır, etiketlenemez rolleri de etiketler'],
+  kick: ['Üye at', 'Üyeleri sunucudan çıkarır (geri gelebilirler)'], ban: ['Üye yasakla', 'Üyeleri kalıcı olarak yasaklar'], timeout: ['Sustur (yazı)', 'Üyeleri bir süre yazamaz ve seslere giremez yapar, uyarı verir'],
+  voiceMute: ['Seste sustur', 'Sesli odadaki birinin mikrofonunu kapatır, o açamaz'], voiceMove: ['Seste taşı ve çıkar', 'Sesli odadakileri başka odaya taşır ya da bağlantısını keser'] };
+const PERM_GROUPS = [['Genel', 'gear', ['manageServer', 'manageRoles', 'manageChannels', 'manageEmojis', 'viewAudit']], ['Sohbet', 'chat', ['manageMessages', 'mentionEveryone']],
+  ['Üyeler', 'users', ['kick', 'ban', 'timeout']], ['Ses', 'volume', ['voiceMute', 'voiceMove']]];
+const PERM_DANGER = new Set(['manageServer', 'manageRoles', 'ban']);
+const roleIconOf = (s, n) => (s?.customRoles || []).find(r => r.icon && (s.memberRoles?.[n] || []).includes(r.id))?.icon || '';
 const TIMEOUTS = [[1, '1 dakika'], [5, '5 dakika'], [10, '10 dakika'], [60, '1 saat'], [1440, '1 gün'], [10080, '1 hafta']];
 const timedOutLeft = (s, n) => Math.max(0, (s?.timeouts?.[n] || 0) - Date.now());
 const badge = r => r === 'admin' ? '<span class="badge admin">Yönetici</span>' : r === 'mod' ? '<span class="badge mod">Moderatör</span>' : '';
@@ -3279,18 +3312,30 @@ function userMenu(n, x, y) {
     (srv && perm(srv, 'manageRoles') && (srv.customRoles || []).length && !self ? `<hr><button data-u="rolesub" class="arr">Roller${ic('chevron')}</button><div class="sub" id="u-roles">${srv.customRoles.map(r => chk('role:' + r.id, `<span class="rdot" style="background:${r.color};margin-right:8px"></span>${esc(r.name)}`, (srv.memberRoles?.[n] || []).includes(r.id))).join('')}</div>` : '') +
     (tgt && (perm(srv, 'timeout') || perm(srv, 'kick') || perm(srv, 'ban')) ? '<hr>' + (perm(srv, 'timeout') ? b('to', timedOutLeft(srv, n) ? `${esc(n)} susturmasını kaldır` : `${esc(n)} kullanıcısını sustur`, 'danger') : '') +
       (perm(srv, 'kick') ? b('kick', `${esc(n)} kullanıcısını at`, 'danger') : '') + (perm(srv, 'ban') ? b('ban', `${esc(n)} kullanıcısını yasakla`, 'danger') : '') : '') +
+    (() => { // sesli oda moderasyonu
+      if (!srv || self || n === srv.owner) return '';
+      const vc = srv.channels.find(c => voiceLike(c.type) && (S.voice[c.id] || []).includes(n)); if (!vc) return '';
+      const vm = perm(srv, 'voiceMute'), mv = perm(srv, 'voiceMove'); if (!vm && !mv) return '';
+      const sm = !!S.vflags?.[vc.id]?.[n]?.sm, others = srv.channels.filter(c => voiceLike(c.type) && c.id !== vc.id);
+      return `<hr><div class="ui" style="padding:4px 10px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">${ic('volume')} ${esc(vc.name)}</div>` +
+        (vm ? b(sm ? 'vunmute' : 'vmute', sm ? 'Ses susturmasını kaldır' : 'Seste sustur', sm ? '' : 'danger') : '') +
+        (mv && others.length ? `<button data-u="vmovesub" class="arr">Başka odaya taşı${ic('chevron')}</button><div class="sub" id="u-vmove">${others.map(c => `<button data-vmove="${c.id}">${esc(c.name)}</button>`).join('')}</div>` : '') +
+        (mv ? b('vkick', 'Sesten çıkar', 'danger') : '');
+    })() +
     '<hr>' + b('copy', `<span>Kullanıcı adını kopyala</span>${ic('idcopy')}`);
   document.body.appendChild(m);
   const place = () => { const w = m.offsetWidth, h = m.offsetHeight; m.style.left = Math.max(8, x + w + 8 > innerWidth ? x - w : x) + 'px'; m.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + 'px'; };
   place();
   if ($('#u-vol')) $('#u-vol').oninput = e => { vol[n] = +e.target.value; store.set('kanka-vol', JSON.stringify(vol)); applyPeerAudio(); };
   m.onclick = e => {
+    const vmv = e.target.closest('[data-vmove]'); if (vmv) { closeUMenu(); return socket.emit('voiceMod', { serverId: srv.id, name: n, action: 'move', to: vmv.dataset.vmove }, r => r.error ? toast(r.error) : toast(`${n} taşındı`)); }
     const inv = e.target.closest('[data-inv]');
     if (inv) { const s = S.servers.find(x => x.id === inv.dataset.inv); closeUMenu(); openDM(n); return setTimeout(() => { $('#input').value = `${PUB}/davet/${s.invite}`; $('#input').focus(); toast('Davet linki mesaj kutusuna kondu, göndermen yeterli'); }, 400); }
     const t = e.target.closest('[data-u]'); if (!t) return;
     const a = t.dataset.u; e.stopPropagation();
     if (a === 'invsub') { t.classList.toggle('open'); $('#u-inv').classList.toggle('open'); return place(); }
     if (a === 'rolesub') { t.classList.toggle('open'); $('#u-roles').classList.toggle('open'); return place(); }
+    if (a === 'vmovesub') { t.classList.toggle('open'); $('#u-vmove').classList.toggle('open'); return place(); }
     if (a.startsWith('role:')) {
       const rid = a.slice(5), cur = srv.memberRoles?.[n] || [], next = cur.includes(rid) ? cur.filter(x => x !== rid) : [...cur, rid];
       return socket.emit('memberRoles', { serverId: srv.id, name: n, roles: next }, r => { if (r.error) return toast(r.error); t.querySelector('.box2').classList.toggle('on'); });
@@ -3309,6 +3354,8 @@ function userMenu(n, x, y) {
     else if (a === 'ignore') { uIgnored.has(n) ? uIgnored.delete(n) : uIgnored.add(n); saveU(); if (S.channel) renderMessages(); toast(uIgnored.has(n) ? `${n} yok sayılıyor. Mesajları gizlenir.` : 'Yok sayma kaldırıldı'); }
     else if (a === 'block') { const on = !sc.blocked.includes(n); const go = () => socket.emit('block', { name: n, on }, r => r.error ? toast(r.error) : toast(on ? `${n} engellendi` : 'Engel kaldırıldı')); on ? confirmBox(`${n} engellensin mi?`, go) : go(); }
     else if (a === 'to') timedOutLeft(srv, n) ? socket.emit('timeout', { serverId: srv.id, name: n, minutes: 0 }, r => r.error ? toast(r.error) : toast('Susturma kaldırıldı')) : askTimeout(srv, n);
+    else if (a === 'vmute' || a === 'vunmute') socket.emit('voiceMod', { serverId: srv.id, name: n, action: a === 'vmute' ? 'mute' : 'unmute' }, r => r.error ? toast(r.error) : toast(a === 'vmute' ? `${n} seste susturuldu` : `${n} kişisinin ses susturması kaldırıldı`));
+    else if (a === 'vkick') socket.emit('voiceMod', { serverId: srv.id, name: n, action: 'disconnect' }, r => r.error ? toast(r.error) : toast(`${n} sesten çıkarıldı`));
     else if (a === 'kick') confirmBox(`${n} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: srv.id, name: n }, r => r.error ? toast(r.error) : toast(`${n} atıldı`)));
     else if (a === 'ban') askBan(srv, n);
     else if (a === 'copy') navigator.clipboard?.writeText(n).then(() => toast('Kopyalandı'));
@@ -3737,7 +3784,7 @@ function showServerSettings(s, tab, focus) {
   const P = p => perm(s, p), mod = isMod(s, S.me);
   const tabs = [['general', 'Genel', 'gear', P('manageServer')], ['roles', 'Roller', 'tag', P('manageRoles')], ['channels', 'Odalar', 'hash', mod], ['members', 'Üyeler', 'users', !s.public && (P('manageRoles') || P('kick') || P('ban') || P('timeout'))],
     ['bot', 'Kanka Bot', 'shield', P('manageServer')], ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
-    ['emoji', 'Emojiler', 'smile', mod], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod]].filter(t => t[3]);
+    ['emoji', 'Emojiler', 'smile', mod || P('manageEmojis')], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod || P('viewAudit')]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
   ssOpen = { id: s.id, tab, focus };
@@ -3835,25 +3882,58 @@ function showServerSettings(s, tab, focus) {
       if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(`${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
     },
     roles: () => {
-      const roles = s.customRoles || [], edit = roles.find(r => r.id === ssOpen.focus) || (ssOpen.focus === 'new' ? { id: '', name: '', color: '#ffb347', perms: [], hoist: true } : null);
-      main.innerHTML = `<div class="st-page"><h3>Roller</h3><p class="hint">Rollerle üyelere renk ve yetki verirsin. Listede üstteki rol daha güçlüdür; kendinden yüksek rolleri düzenleyemezsin.</p>
+      const roles = s.customRoles || [], edit = roles.find(r => r.id === ssOpen.focus) || (ssOpen.focus === 'new' ? { id: '', name: '', color: '#ffb347', perms: [], hoist: true, mentionable: true, icon: '' } : null);
+      const rtab = edit ? (ssOpen.rtab && (edit.id || ssOpen.rtab !== 'members') ? ssOpen.rtab : 'look') : null;
+      const cnt = r => Object.values(s.memberRoles || {}).filter(x => x.includes(r.id)).length;
+      const SW = ['#ff8a4c', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#e5484d', '#99aab5', '#ffffff'];
+      main.innerHTML = `<div class="st-page"><h3>Roller</h3><p class="hint">Rollerle üyelere renk, simge ve yetki verirsin. Listede üstteki rol daha güçlüdür; kendinden yüksek rolleri düzenleyemezsin. <b>Göz</b> simgesi rolü üye listesinde ayrı başlık altında gösterir.</p>
         <button class="primary" id="r-new" style="width:auto;padding:10px 18px;margin-bottom:14px">${ic('plus')}Rol oluştur</button>
-        ${roles.map((r, i) => `<div class="ss-row ${edit?.id === r.id ? 'open' : ''}"><b><span class="rdot" style="background:${r.color}"></span>${esc(r.name)}<small style="color:var(--muted);font-weight:700">${Object.values(s.memberRoles || {}).filter(x => x.includes(r.id)).length} üye</small></b>
-          <button data-up="${r.id}" ${i ? '' : 'disabled'} title="Yukarı">${ic('up')}</button><button data-down="${r.id}" ${i < roles.length - 1 ? '' : 'disabled'} title="Aşağı">${ic('chevron')}</button><button data-edit="${r.id}">Düzenle</button>${r.bot ? '<span class="botbadge" title="Kanka Bot\'a ait rol, silinemez">BOT</span>' : `<button class="danger" data-del="${r.id}">${ic('trash')}</button>`}</div>`).join('') || '<p class="hint">Henüz rol yok.</p>'}
-        ${edit ? `<form id="r-form" class="ss-row open" style="display:block;margin-top:14px"><h4 style="margin:0 0 10px">${edit.id ? 'Rolü düzenle' : 'Yeni rol'}</h4>
-          <div class="ss-grid"><input class="field" name="name" maxlength="30" placeholder="Rol adı (örn. Kankalar)" value="${esc(edit.name)}" required style="margin:0"><input class="field" name="color" type="color" value="${esc(edit.color)}" style="margin:0;height:44px;padding:4px"></div>
-          <label class="chk"><input type="checkbox" name="hoist" ${edit.hoist ? 'checked' : ''}><span>Üye listesinde ayrı göster<small>Bu roldekiler sağdaki listede kendi başlıkları altında görünür</small></span></label>
-          <h4 style="margin:10px 0 2px">Yetkiler</h4>${Object.entries(PERM_TXT).map(([k, [t, d]]) => `<label class="chk"><input type="checkbox" name="p" value="${k}" ${edit.perms.includes(k) ? 'checked' : ''} ${P(k) ? '' : 'disabled'}><span>${t}<small>${d}</small></span></label>`).join('')}
-          <div class="rowb"><button type="button" id="r-cancel">Vazgeç</button><button class="primary">${edit.id ? 'Kaydet' : 'Oluştur'}</button></div></form>` : ''}</div>`;
-      $('#r-new').onclick = () => { ssOpen.focus = 'new'; page.roles(); };
-      main.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { ssOpen.focus = b.dataset.edit; page.roles(); });
+        <div class="rl-list">${roles.map((r, i) => `<div class="rl-row ${edit?.id === r.id ? 'open' : ''}"><span class="rl-ic" style="--c:${r.color}">${r.icon ? esc(r.icon) : '<i></i>'}</span>
+          <div class="rl-t"><b style="color:${r.color}">${esc(r.name)}${r.bot ? '<span class="botbadge">BOT</span>' : ''}</b><small>${cnt(r)} üye · ${r.perms.length ? r.perms.length + ' yetki' : 'yetki yok'}${r.mentionable === false ? ' · etiketlenemez' : ''}</small></div>
+          ${r.bot ? '' : `<button class="rl-eye ${r.hoist ? 'on' : ''}" data-hoist="${r.id}" title="${r.hoist ? 'Üye listesinde ayrı gösteriliyor' : 'Üye listesinde ayrı göster'}">${ic('eye')}</button>`}
+          <button data-up="${r.id}" ${i ? '' : 'disabled'} title="Yukarı">${ic('up')}</button><button data-down="${r.id}" ${i < roles.length - 1 ? '' : 'disabled'} title="Aşağı">${ic('chevron')}</button>
+          <button class="rl-ed" data-edit="${r.id}">Düzenle</button>${r.bot ? '' : `<button data-del="${r.id}" title="Sil" class="rl-del">${ic('trash')}</button>`}</div>`).join('') || '<p class="hint">Henüz rol yok. "Rol oluştur" ile başla, örn. Moderatör, Kankalar, Takım.</p>'}</div>
+        ${edit ? `<form id="r-form" class="rl-ed-box"><div class="rl-head"><span class="rl-ic big" style="--c:${esc(edit.color)}" id="r-prev-ic">${edit.icon ? esc(edit.icon) : '<i></i>'}</span><div><h4 id="r-prev-n" style="color:${esc(edit.color)}">${esc(edit.name || 'Yeni rol')}</h4><small>${edit.id ? 'Rolü düzenle' : 'Yeni rol'}</small></div></div>
+          <div class="rl-tabs">${[['look', 'Görünüm'], ['perms', 'Yetkiler'], ...(edit.id && !edit.bot ? [['members', `Üyeler (${cnt(edit)})`]] : [])].map(([k, t]) => `<button type="button" data-rtab="${k}" class="${rtab === k ? 'on' : ''}">${t}</button>`).join('')}</div>
+          <div class="rl-pane" data-pane="look" ${rtab === 'look' ? '' : 'hidden'}>
+            <div class="st-field"><label>Rol adı</label><input class="field" name="name" maxlength="30" placeholder="örn. Kankalar" value="${esc(edit.name)}" required ${edit.bot ? 'disabled' : ''}></div>
+            <div class="st-field"><label>Renk</label><div class="rl-sw">${SW.map(c => `<button type="button" data-sw="${c}" style="background:${c}" class="${edit.color.toLowerCase() === c ? 'on' : ''}"></button>`).join('')}<input type="color" name="color" value="${esc(edit.color)}" title="Özel renk"></div></div>
+            ${edit.bot ? '' : `<div class="st-field"><label>Simge (emoji)</label><div style="display:flex;gap:8px;align-items:center"><input class="field" name="icon" maxlength="8" placeholder="örn. 🛡️" value="${esc(edit.icon || '')}" style="width:110px;text-align:center;margin:0;font-size:18px"><span class="hint" style="margin:0">Üye listesinde ismin yanında görünür. Boş bırakabilirsin.</span></div></div>
+            <label class="chk"><input type="checkbox" name="hoist" ${edit.hoist ? 'checked' : ''}><span>Üye listesinde ayrı göster<small>Bu roldekiler sağdaki listede "${esc(edit.name || 'rol adı')}" başlığı altında toplanır</small></span></label>
+            <label class="chk"><input type="checkbox" name="mentionable" ${edit.mentionable !== false ? 'checked' : ''}><span>Herkes bu rolü @etiketleyebilsin<small>Kapalıysa sadece "@herkes ve tüm rolleri etiketle" yetkisi olanlar etiketleyebilir</small></span></label>`}
+          </div>
+          <div class="rl-pane" data-pane="perms" ${rtab === 'perms' ? '' : 'hidden'}>${edit.bot ? '<p class="hint">Kanka Bot rolünün yetkileri bot modüllerinden gelir.</p>' : PERM_GROUPS.map(([g, gi, keys]) => `<div class="rl-pg"><h5>${ic(gi)}${g}</h5>${keys.map(k => `<label class="rl-perm ${PERM_DANGER.has(k) ? 'danger' : ''}"><span><b>${PERM_TXT[k][0]}</b><small>${PERM_TXT[k][1]}</small></span><input type="checkbox" name="p" value="${k}" ${edit.perms.includes(k) ? 'checked' : ''} ${P(k) ? '' : 'disabled title="Bu yetki sende yok, başkasına veremezsin"'}><i class="tg"></i></label>`).join('')}</div>`).join('')}
+            ${edit.bot ? '' : '<div class="rl-quick"><span>Hızlı seçim:</span><button type="button" data-preset="mod">Moderatör</button><button type="button" data-preset="voice">Ses yetkilisi</button><button type="button" data-preset="none">Hiçbiri</button></div>'}</div>
+          <div class="rl-pane" data-pane="members" ${rtab === 'members' ? '' : 'hidden'}><input class="field" id="rm-q" placeholder="Üye ara…" style="margin:0 0 10px"><div class="rm-list" id="rm-list"></div></div>
+          <div class="rowb"><button type="button" id="r-cancel">Kapat</button>${rtab === 'members' ? '' : `<button class="primary">${edit.id ? 'Kaydet' : 'Oluştur'}</button>`}</div></form>` : ''}</div>`;
+      $('#r-new').onclick = () => { ssOpen.focus = 'new'; ssOpen.rtab = 'look'; page.roles(); };
+      main.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { ssOpen.focus = b.dataset.edit; ssOpen.rtab = 'look'; page.roles(); });
+      main.querySelectorAll('[data-hoist]').forEach(b => b.onclick = () => { const r = roles.find(x => x.id === b.dataset.hoist); socket.emit('roleHoist', { serverId: s.id, roleId: r.id, hoist: !r.hoist }, done(r.hoist ? 'Rol artık listede ayrı gösterilmiyor' : 'Rol üye listesinde ayrı gösteriliyor')); });
       main.querySelectorAll('[data-up],[data-down]').forEach(b => b.onclick = () => socket.emit('roleMove', { serverId: s.id, roleId: b.dataset.up || b.dataset.down, dir: b.dataset.up ? -1 : 1 }, done()));
       main.querySelectorAll('[data-del]').forEach(b => b.onclick = () => confirmBox(`"${roles.find(r => r.id === b.dataset.del).name}" rolü silinsin mi?`, () => socket.emit('roleDelete', { serverId: s.id, roleId: b.dataset.del }, r => { if (r.error) return toast(r.error); toast('Rol silindi'); showServerSettings(s, 'roles'); })));
-      if ($('#r-form')) {
-        $('#r-cancel').onclick = () => { ssOpen.focus = null; page.roles(); };
-        $('#r-form').onsubmit = e => { e.preventDefault(); const f = e.target;
-          socket.emit('roleSave', { serverId: s.id, role: { id: edit.id, name: f.name.value, color: f.color.value, hoist: f.hoist.checked, perms: [...f.querySelectorAll('[name=p]:checked')].map(x => x.value) } }, r => { if (r.error) return toast(r.error); toast('Rol kaydedildi'); ssOpen.focus = null; again(); }); };
+      if (!$('#r-form')) return;
+      const f = $('#r-form');
+      f.querySelectorAll('[data-rtab]').forEach(b => b.onclick = () => { ssOpen.rtab = b.dataset.rtab; f.querySelectorAll('[data-rtab]').forEach(x => x.classList.toggle('on', x === b)); f.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== b.dataset.rtab); f.querySelector('.rowb .primary')?.toggleAttribute('hidden', b.dataset.rtab === 'members'); if (b.dataset.rtab === 'members') drawMembers(); });
+      const prev = () => { const c = f.color.value; $('#r-prev-n').textContent = (f.name?.value || 'Yeni rol'); $('#r-prev-n').style.color = c; $('#r-prev-ic').style.setProperty('--c', c); $('#r-prev-ic').innerHTML = f.icon?.value ? esc(f.icon.value) : '<i></i>'; f.querySelectorAll('[data-sw]').forEach(x => x.classList.toggle('on', x.dataset.sw === c.toLowerCase())); };
+      f.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { f.color.value = b.dataset.sw; prev(); });
+      f.color.oninput = prev; if (f.name) f.name.oninput = prev; if (f.icon) f.icon.oninput = prev;
+      const PRE = { mod: ['manageMessages', 'kick', 'timeout', 'voiceMute', 'voiceMove', 'viewAudit', 'manageEmojis'], voice: ['voiceMute', 'voiceMove'], none: [] };
+      f.querySelectorAll('[data-preset]').forEach(b => b.onclick = () => f.querySelectorAll('[name=p]').forEach(x => { if (!x.disabled) x.checked = PRE[b.dataset.preset].includes(x.value); }));
+      $('#r-cancel').onclick = () => { ssOpen.focus = null; page.roles(); };
+      f.onsubmit = e => { e.preventDefault();
+        socket.emit('roleSave', { serverId: s.id, role: { id: edit.id, name: f.name.value, color: f.color.value, icon: f.icon?.value || '', hoist: !!f.hoist?.checked, mentionable: !!f.mentionable?.checked, perms: [...f.querySelectorAll('[name=p]:checked')].map(x => x.value) } }, r => { if (r.error) return toast(r.error); toast(edit.id ? 'Rol kaydedildi' : 'Rol oluşturuldu'); if (!edit.id) { ssOpen.focus = r.id; ssOpen.rtab = 'members'; } again(); }); };
+      // Üyeler sekmesi: arama, tek tıkla ekle/çıkar
+      function drawMembers() {
+        const cur = S.servers.find(x => x.id === s.id) || s, q = ($('#rm-q').value || '').toLocaleLowerCase('tr');
+        const all = (cur.public ? Object.keys(S.users).filter(n => n !== 'Claude') : cur.members).filter(n => !q || n.toLocaleLowerCase('tr').includes(q) || dn(n).toLocaleLowerCase('tr').includes(q));
+        const has = n => (cur.memberRoles?.[n] || []).includes(edit.id);
+        const list = [...all].sort((a, b) => has(b) - has(a) || dn(a).localeCompare(dn(b), 'tr')).slice(0, 120);
+        $('#rm-list').innerHTML = list.map(n => `<div class="rm-row ${has(n) ? 'in' : ''}">${av(n, S.online.has(n))}<span><b>${esc(dn(n))}</b><small>@${esc(n)}</small></span><button type="button" data-rm="${esc(n)}" class="${has(n) ? 'out' : ''}">${has(n) ? 'Çıkar' : 'Ekle'}</button></div>`).join('') || '<p class="hint">Üye bulunamadı</p>';
+        $('#rm-list').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { const n = b.dataset.rm, on = has(n); b.disabled = true;
+          socket.emit('roleMembers', { serverId: s.id, roleId: edit.id, [on ? 'remove' : 'add']: [n] }, r => { b.disabled = false; if (r?.error) return toast(r.error); const sv = S.servers.find(x => x.id === s.id); if (sv) { sv.memberRoles ||= {}; const l = sv.memberRoles[n] || []; sv.memberRoles[n] = on ? l.filter(x => x !== edit.id) : [...l, edit.id]; } drawMembers(); }); });
       }
+      $('#rm-q').oninput = drawMembers;
+      if (rtab === 'members') drawMembers();
     },
     channels: () => {
       const back = () => ssOpen && showServerSettings(S.servers.find(x => x.id === s.id) || s, 'channels');
@@ -4795,7 +4875,7 @@ function renderMembers() {
   const item = n => {
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n);
-    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
@@ -5285,6 +5365,8 @@ socket.on('social', soc => {
   if (newReq && S.view !== 'dm') { S.unreadDM = true; renderRail(); }
   if (S.view === 'dm') { renderDMSide(); if (!S.channel) showFriends(); }
 });
+socket.on('srvMute', ({ on, by }) => { const was = srvMutedNow; srvMutedNow = !!on; applyMute(); if (was !== srvMutedNow) toast(on ? `🔇 ${by ? esc(by) + ' seni' : 'Bir yetkili seni'} seste susturdu` : '🔊 Seste susturman kaldırıldı'); });
+socket.on('voiceMoveTo', ({ ch, by }) => { if (!myVoice) return; toast(`${by ? esc(by) : 'Bir yetkili'} seni başka bir sesli odaya taşıdı`); joinVoiceNow(ch); });
 socket.on('voiceKicked', ({ ch, reason }) => {
   if (myVoice !== ch) return;
   leaveVoice(false); toast(reason || 'Ses odasından çıkarıldın');
@@ -5632,6 +5714,7 @@ function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null;
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
+  srvMutedNow = false;
   socket.emit('voiceLeave'); cleanupVoice();
   if (!switching) {
     stopVideo(true); localStream?.getTracks().forEach(t => t.stop()); localStream = null; stopMic(); stopSpeakDetect();
@@ -5866,7 +5949,7 @@ const typingTarget = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || 
 document.addEventListener('keydown', e => { if (myVoice && pttOn() && e.code === 'KeyV' && !typingTarget(e) && !pttDown) { pttDown = true; applyMute(); } });
 document.addEventListener('keyup', e => { if (e.code === 'KeyV' && pttDown) { pttDown = false; applyMute(); } });
 window.addEventListener('blur', () => { if (pttDown) { pttDown = false; applyMute(); } });
-$('#mute').onclick = () => { if (!canSpeakNow()) return toast(vch()?.c.type === 'stage' ? 'Sahnede konuşmak için ✋ el kaldır' : 'Bu odada konuşma iznin yok'); muted = !muted; applyMute(); };
+$('#mute').onclick = () => { if (!canSpeakNow()) return toast(srvMutedNow ? 'Bir yetkili seni seste susturdu, kaldırana kadar konuşamazsın' : vch()?.c.type === 'stage' ? 'Sahnede konuşmak için ✋ el kaldır' : 'Bu odada konuşma iznin yok'); muted = !muted; applyMute(); };
 $('#vleave').onclick = () => leaveVoice(false);
 const streamOk = () => vch()?.c.canStream === false ? (toast('Bu odada kamera ve ekran paylaşma iznin yok'), false) : true;
 $('#vcam').onclick = () => streamOk() && startVideo('cam');
@@ -7002,7 +7085,8 @@ const setChNotif = (id, v) => { const o = chNotif(); v === 'mentions' ? delete o
 const notifMode = id => chNotif()[id] || 'mentions';
 const vch = () => { if (!myVoice) return null; for (const s of S.servers) { const c = s.channels.find(x => x.id === myVoice); if (c) return { s, c }; } return null; };
 let stageSt = {};
-const canSpeakNow = () => { const f = vch(); if (!f) return true; if (f.c.type === 'stage') return !!stageSt[f.c.id]?.speakers?.includes(S.me); return f.c.canSpeak !== false; };
+let srvMutedNow = false; // yetkili seni seste susturduysa
+const canSpeakNow = () => { if (srvMutedNow) return false; const f = vch(); if (!f) return true; if (f.c.type === 'stage') return !!stageSt[f.c.id]?.speakers?.includes(S.me); return f.c.canSpeak !== false; };
 const stageSilenced = n => { const f = vch(); return !!f && f.c.type === 'stage' && !stageSt[f.c.id]?.speakers?.includes(n); };
 function refreshPeerAudio() { for (const sid of Object.keys(peerNames)) { const a = document.getElementById('a-' + sid); if (a) a.muted = uMuted.has(peerNames[sid]) || stageSilenced(peerNames[sid]); } }
 

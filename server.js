@@ -536,8 +536,8 @@ const allUsers = () => Object.values(db.users).map(pubUser);
 
 const serversFor = name => db.servers.filter(s => (s.public || s.members.includes(name)) && !s.bans?.[name]);
 // ---------- Roller ve izinler ----------
-const PERMS = ['manageServer', 'manageRoles', 'manageChannels', 'manageMessages', 'kick', 'ban', 'timeout', 'mentionEveryone'];
-const MOD_PERMS = ['manageChannels', 'manageMessages', 'kick', 'timeout', 'mentionEveryone'];
+const PERMS = ['manageServer', 'manageRoles', 'manageChannels', 'manageEmojis', 'viewAudit', 'manageMessages', 'mentionEveryone', 'kick', 'ban', 'timeout', 'voiceMute', 'voiceMove'];
+const MOD_PERMS = ['manageChannels', 'manageEmojis', 'viewAudit', 'manageMessages', 'kick', 'timeout', 'mentionEveryone', 'voiceMute', 'voiceMove'];
 function permsOf(s, n) {
   if (s.owner === n) return new Set(PERMS);
   const p = new Set(s.roles?.[n] === 'mod' ? MOD_PERMS : []);
@@ -1092,6 +1092,7 @@ const pushPresence = () => io.emit('presence', presenceList());
 const voiceMedia = new Map();       // socket.id -> { cam, screen } (yayın rozetleri için)
 const liveState = () => { const o = {}; for (const [ch, m] of voice) { if (ch.startsWith('call:')) continue; const l = [...m].filter(([sid]) => voiceMedia.get(sid)?.screen).map(([, n]) => n); if (l.length) o[ch] = l; } return o; };
 // Odadakileri sesten çıkar (oda silindi, sunucudan atıldı vb.)
+const srvMuted = new Set(); // 'sunucuId|isim': yetkili tarafından seste susturulanlar
 function voiceKick(chIds, onlyName, reason) {
   let any = false;
   for (const ch of chIds) {
@@ -1109,7 +1110,7 @@ function voiceKick(chIds, onlyName, reason) {
   if (any) pushVoice();
 }
 const voiceFlags = new Map(); // socket.id -> { m: mikrofon kapalı }
-const flagsState = () => { const o = {}; for (const [ch, room] of voice) { if (ch.startsWith('call:')) continue; for (const [sid, n] of room) { const f = voiceFlags.get(sid) || {}, md = voiceMedia.get(sid) || {}; if (f.m || md.cam || md.screen) (o[ch] ||= {})[n] = { m: !!f.m, cam: !!md.cam, screen: !!md.screen }; } } return o; };
+const flagsState = () => { const o = {}; for (const [ch, room] of voice) { if (ch.startsWith('call:')) continue; for (const [sid, n] of room) { const f = voiceFlags.get(sid) || {}, md = voiceMedia.get(sid) || {}; const sm = srvMuted.size && srvMuted.has((findChannel(ch)?.s?.id || '') + '|' + n); if (f.m || md.cam || md.screen || sm) (o[ch] ||= {})[n] = { m: !!f.m, cam: !!md.cam, screen: !!md.screen, ...(sm ? { sm: true } : {}) }; } } return o; };
 // Özel sohbet aramaları (DM/grup) sadece o sohbetin üyelerine görünür: "Arama sürüyor · Katıl"
 const callsFor = name => { const o = {}; for (const [k, m] of voice) if (k.startsWith('call:') && m.size && canAccess(name, k.slice(5))) o[k.slice(5)] = [...new Set(m.values())]; return o; };
 let lastCallsSig = '';
@@ -1220,7 +1221,7 @@ function postMessage(me, chId, p = {}) {
     }
     const mentioned = new Set([...(msg.text || '').matchAll(/@([\p{L}\p{N}_.-]+)/gu)].map(m => m[1]));
     if (/@(everyone|herkes)\b/i.test(msg.text || '') && can(f.s, me, 'mentionEveryone')) { membersOf(f.s).forEach(n => mentioned.add(n)); msg.everyone = true; }
-    for (const r of f.s.customRoles || []) if ((msg.text || '').includes('@' + r.name)) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) mentioned.add(n);
+    for (const r of f.s.customRoles || []) if ((msg.text || '').includes('@' + r.name) && (r.mentionable !== false || can(f.s, me, 'mentionEveryone'))) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) mentioned.add(n);
     for (const n of mentioned) {
       if (n !== me && db.users[n] && canAccess(n, chId))
         notifyUser(n, { from: me, text: preview, channelId: chId, where, mention: true });
@@ -2222,8 +2223,9 @@ io.on('connection', socket => {
     const color = /^#[0-9a-f]{6}$/i.test(role.color) ? role.color : '#99aab5';
     let r = s.customRoles.find(x => x.id === role.id);
     if (r?.bot) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); r.color = color; pushSrv(s); return cb({ ok: true, id: r.id }); }
-    if (r) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); Object.assign(r, { name, color, perms, hoist: !!role.hoist }); audit(s, me, 'Rolü düzenledi', name); }
-    else { if (s.customRoles.length >= 30) return cb({ error: 'En fazla 30 rol' }); r = { id: id(), name, color, perms, hoist: !!role.hoist }; s.customRoles.push(r); audit(s, me, 'Rol oluşturdu', name); }
+    const icon = [...clean(role.icon, 16)].slice(0, 2).join('') || null, mentionable = !!role.mentionable;
+    if (r) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); Object.assign(r, { name, color, perms, hoist: !!role.hoist, icon, mentionable }); audit(s, me, 'Rolü düzenledi', name); }
+    else { if (s.customRoles.length >= 30) return cb({ error: 'En fazla 30 rol' }); r = { id: id(), name, color, perms, hoist: !!role.hoist, icon, mentionable }; s.customRoles.push(r); audit(s, me, 'Rol oluşturdu', name); }
     pushSrv(s); cb({ ok: true, id: r.id });
   });
   const outranksRole = (s, r) => s.owner === me || rankOf(s, me) > 1000 - s.customRoles.indexOf(r);
@@ -2243,6 +2245,46 @@ io.on('connection', socket => {
     if (i < 0 || j < 0 || j >= s.customRoles.length) return cb({ ok: true });
     if (!outranksRole(s, s.customRoles[i]) || !outranksRole(s, s.customRoles[j])) return cb({ error: 'Senden yüksek rolleri taşıyamazsın' });
     [s.customRoles[i], s.customRoles[j]] = [s.customRoles[j], s.customRoles[i]]; pushSrv(s); cb({ ok: true });
+  });
+  socket.on('roleHoist', ({ serverId, roleId, hoist } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Yetkin yok' });
+    const r = s.customRoles.find(x => x.id === roleId); if (!r || r.bot || !outranksRole(s, r)) return cb({ error: 'Bu rolü düzenleyemezsin' });
+    r.hoist = !!hoist; audit(s, me, hoist ? 'Rolü listede ayrı gösterdi' : 'Rolü listede ayrı göstermeyi kapattı', r.name); pushSrv(s); cb({ ok: true });
+  });
+  // Rolün içinden toplu üye ekle / çıkar
+  socket.on('roleMembers', ({ serverId, roleId, add = [], remove = [] } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Rolleri yönetme yetkin yok' });
+    const r = s.customRoles.find(x => x.id === roleId); if (!r || r.bot) return cb({ error: 'Rol bulunamadı' });
+    if (!outranksRole(s, r)) return cb({ error: 'Senden yüksek bir rolü veremez/alamazsın' });
+    const mem = new Set(membersOf(s)); let n = 0;
+    for (const name of (Array.isArray(add) ? add : []).slice(0, 200)) if (mem.has(name)) { const l = (s.memberRoles[name] ||= []); if (!l.includes(r.id)) { l.push(r.id); n++; } }
+    for (const name of (Array.isArray(remove) ? remove : []).slice(0, 200)) { const l = s.memberRoles[name]; if (l?.includes(r.id)) { s.memberRoles[name] = l.filter(x => x !== r.id); if (!s.memberRoles[name].length) delete s.memberRoles[name]; n++; } }
+    if (n) { audit(s, me, 'Rol üyelerini düzenledi', `${r.name} · ${n} değişiklik`); pushSrv(s); }
+    cb({ ok: true, changed: n });
+  });
+  // Sesli oda moderasyonu: sunucuda sustur, bağlantıyı kes, başka odaya taşı
+  socket.on('voiceMod', ({ serverId, name, action, to } = {}, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId); if (!me || !s) return cb({ error: 'Yetkin yok' });
+    const need = action === 'mute' || action === 'unmute' ? 'voiceMute' : 'voiceMove';
+    if (!can(s, me, need)) return cb({ error: need === 'voiceMute' ? 'Seste susturma yetkin yok' : 'Seste taşıma yetkin yok' });
+    if (name !== me && (name === s.owner || !outranks(s, me, name))) return cb({ error: 'Bu kişiye bunu yapamazsın' });
+    const chIds = s.channels.filter(c => voiceLike(c.type)).map(c => c.id);
+    const cur = chIds.find(ch => [...(voice.get(ch)?.values() || [])].includes(name));
+    if (!cur) return cb({ error: 'Bu kişi şu an bu sunucuda seste değil' });
+    if (action === 'mute' || action === 'unmute') {
+      const on = action === 'mute';
+      on ? srvMuted.add(s.id + '|' + name) : srvMuted.delete(s.id + '|' + name);
+      for (const [sid, n] of voice.get(cur) || []) if (n === name) { io.to(sid).emit('srvMute', { on, by: me }); if (on) { voiceFlags.set(sid, { ...(voiceFlags.get(sid) || {}), m: true }); } }
+      io.emit('voiceFlags', flagsState());
+      audit(s, me, on ? 'Seste susturdu' : 'Ses susturmasını kaldırdı', name);
+    } else if (action === 'disconnect') {
+      voiceKick([cur], name, `${me} seni sesli odadan çıkardı`); audit(s, me, 'Sesten çıkardı', name);
+    } else if (action === 'move') {
+      const c = s.channels.find(x => x.id === to && voiceLike(x.type)); if (!c || c.id === cur) return cb({ error: 'Geçersiz oda' });
+      for (const [sid, n] of voice.get(cur) || []) if (n === name) io.to(sid).emit('voiceMoveTo', { ch: c.id, by: me });
+      audit(s, me, 'Sesli odaya taşıdı', `${name} → ${c.name}`);
+    } else return cb({ error: 'Geçersiz işlem' });
+    save(); cb({ ok: true });
   });
   socket.on('memberRoles', ({ serverId, name, roles } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageRoles'); if (!s || !membersOf(s).includes(name)) return cb({ error: 'Yetkin yok' });
@@ -2454,7 +2496,7 @@ io.on('connection', socket => {
 
   // ----- Özel emojiler -----
   socket.on('addEmoji', ({ serverId, name, url } = {}, cb = () => {}) => {
-    const s = adminServer(serverId, false); if (!s) return cb({ error: 'Emoji eklemek için moderatör olmalısın' });
+    const s = adminServer(serverId, false) || permServer(serverId, 'manageEmojis'); if (!s) return cb({ error: 'Emoji eklemek için emoji yönetme yetkin olmalı' });
     name = clean(name, 24).toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (name.length < 2) return cb({ error: 'Emoji adı en az 2 karakter olmalı (a-z, 0-9, _)' });
     if (!UPLOAD_RE.test(url || '')) return cb({ error: 'Geçersiz resim' });
@@ -2464,12 +2506,12 @@ io.on('connection', socket => {
     save(); pushServers(membersOf(s)); cb({ ok: true });
   });
   socket.on('removeEmoji', ({ serverId, name } = {}, cb = () => {}) => {
-    const s = adminServer(serverId, false); if (!s || !s.emojis?.[name]) return cb({ error: 'Yetkin yok' });
+    const s = adminServer(serverId, false) || permServer(serverId, 'manageEmojis'); if (!s || !s.emojis?.[name]) return cb({ error: 'Yetkin yok' });
     delete s.emojis[name]; audit(s, me, 'Emoji sildi', ':' + name + ':');
     save(); pushServers(membersOf(s)); cb({ ok: true });
   });
   socket.on('audit', (serverId, cb) => {
-    const s = adminServer(serverId, false); cb(s ? (s.audit || []).slice(0, 100) : []);
+    const s = adminServer(serverId, false) || permServer(serverId, 'viewAudit'); cb(s ? (s.audit || []).slice(0, 100) : []);
   });
 
   // ----- Konular -----
@@ -2680,10 +2722,14 @@ io.on('connection', socket => {
     socket.to('v:' + chId).emit('voiceJoined', { sid: socket.id, name: me });
     myVoice = chId; socket.join('v:' + chId);
     pushVoice();
-    cb({ peers, stage: f?.c.type === 'stage' ? stageView(chId) : null });
+    cb({ peers, stage: f?.c.type === 'stage' ? stageView(chId) : null, srvMuted: !!f && srvMuted.has(f.s.id + '|' + me) });
+    if (f && srvMuted.has(f.s.id + '|' + me)) socket.emit('srvMute', { on: true });
   });
   socket.on('voiceLeave', leaveVoice);
-  socket.on('vflags', ({ m } = {}) => { if (!myVoice) return; const was = !!voiceFlags.get(socket.id)?.m; voiceFlags.set(socket.id, { m: !!m }); if (was !== !!m) io.emit('voiceFlags', flagsState()); });
+  socket.on('vflags', ({ m } = {}) => {
+    if (!myVoice) return;
+    const sv = findChannel(myVoice)?.s; if (sv && !m && srvMuted.has(sv.id + '|' + me)) { m = true; socket.emit('srvMute', { on: true }); }
+    const was = !!voiceFlags.get(socket.id)?.m; voiceFlags.set(socket.id, { m: !!m }); if (was !== !!m) io.emit('voiceFlags', flagsState()); });
   socket.on('signal', ({ to, data } = {}) => {
     if (!myVoice || !voice.get(myVoice)?.has(to)) return;
     io.to(to).emit('signal', { from: socket.id, data });
