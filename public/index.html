@@ -2822,15 +2822,41 @@ socket.on('connect', () => {
   if (myVoice) { const ch = myVoice; cleanupVoice(); joinVoice(ch); }
 });
 function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); location.reload(); }
-function readImage(cb) {
+// Resim seç ve yükle. Büyük fotoğraflar küçültülür, telefonun HEIC/AVIF/BMP gibi biçimleri tarayıcı açabiliyorsa WebP'ye çevrilir.
+// (Eskiden 4,5 MB üstü resimler bağlantı sınırına takılıp hiçbir hata göstermeden yüklenmiyordu.)
+function readImage(cb, max = 1920) {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-  inp.onchange = () => {
+  inp.onchange = async () => {
     const f = inp.files[0]; if (!f) return;
-    if (f.size > 5 * 1024 * 1024) return toast('Resim en fazla 5 MB olabilir');
-    const r = new FileReader(); r.onload = () => socket.emit('upload', { data: r.result }, res => res.error ? toast(res.error) : cb(res.url)); r.readAsDataURL(f);
+    const OK = /^image\/(png|jpeg|gif|webp)$/;
+    const anim = f.type === 'image/gif' || (f.type === 'image/webp' && f.size < 4 * 1024 * 1024 && await isAnimWebp(f));
+    const send = data => {
+      let doneT = false; const t = setTimeout(() => { if (!doneT) toast('Resim yüklenemedi, bağlantını kontrol edip tekrar dene'); }, 25000);
+      socket.emit('upload', { data }, res => { doneT = true; clearTimeout(t); res?.error ? toast(res.error) : cb(res.url); });
+    };
+    const asData = blob => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(blob); });
+    try {
+      if (anim) { // hareketli resim: olduğu gibi gönder (küçültmek animasyonu bozar)
+        if (f.size > 4 * 1024 * 1024) return toast('Hareketli resim (GIF) en fazla 4 MB olabilir');
+        return send(await asData(f));
+      }
+      let img;
+      try { img = await createImageBitmap(f); }
+      catch { img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(f); }); }
+      const w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+      if (OK.test(f.type) && k === 1 && f.size <= 1.5 * 1024 * 1024) return send(await asData(f)); // zaten uygun
+      toast('Resim hazırlanıyor…');
+      const c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      let q = .9, blob;
+      do { blob = await new Promise(r => c.toBlob(r, 'image/webp', q)); if (!blob || blob.type !== 'image/webp') blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q)); q -= .15; } while (blob && blob.size > 3.5 * 1024 * 1024 && q > .3);
+      if (!blob || blob.size > 4 * 1024 * 1024) return toast('Resim çok büyük, daha küçük bir resim seç');
+      send(await asData(blob));
+    } catch { toast('Bu resim açılamadı. PNG, JPG, GIF ya da WebP dene'); }
   };
   inp.click();
 }
+async function isAnimWebp(f) { try { const b = new Uint8Array(await f.slice(0, 64).arrayBuffer()); return String.fromCharCode(...b.slice(12, 16)) === 'VP8X' && !!(b[20] & 2); } catch { return false; } }
 $('#settings').onclick = () => showSettings();
 const PALETTE = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#ff9f43', '#e5484d', '#8b6b5a'];
 function showSettings(tab) {
@@ -2912,7 +2938,7 @@ function showSettings(tab) {
     if (t === 'profile') {
       const avEl = () => { $('#st-av').style.background = draft.color; $('#st-av').innerHTML = draft.avatar ? `<img src="${esc(draft.avatar)}" alt="">` : initial(S.me); };
       avEl();
-      $('#st-up').onclick = () => readImage(url => { draft.avatar = url; open('profile'); preview(); });
+      $('#st-up').onclick = () => readImage(url => { draft.avatar = url; open('profile'); preview(); }, 512);
       if ($('#st-rm')) $('#st-rm').onclick = () => { draft.avatar = null; open('profile'); preview(); };
       $('#st-presets').querySelectorAll('[data-av]').forEach(b => b.onclick = () => { draft.avatar = b.dataset.av; open('profile'); preview(); });
       if ($('#sw-banner')) swatches('#sw-banner', 'banner', [null, '#ff7a59', '#e5484d', '#ff6b9a', '#b07cff', '#4aa8ff', '#2fd3c3', '#4cc38a', '#f6c445', '#3a2c24']);
@@ -3796,7 +3822,7 @@ function showServerSettings(s, tab, focus) {
         <label class="switch">AFK süresi<select class="field" id="sv-afkm" style="width:120px;margin:0">${[1, 5, 10, 15, 30, 60].map(v => `<option value="${v}" ${(s.afk?.min || 10) === v ? 'selected' : ''}>${v} dk</option>`).join('')}</select></label></div>
         ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${PUB}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}</div>`;
       $('#sv-save').onclick = () => socket.emit('updateServer', { serverId: s.id, name: $('#sv-name').value, icon: $('#sv-icon').value }, done('Kaydedildi'));
-      $('#sv-img').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, iconImg: url }, done()));
+      $('#sv-img').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, iconImg: url }, done()), 512);
       $('#sv-bn').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, banner: url }, done('Afiş güncellendi')));
       $('#sv-bnc').onchange = e => socket.emit('updateServer', { serverId: s.id, banner: null, bannerColor: e.target.value }, done('Afiş rengi ayarlandı'));
       if ($('#sv-bnrm')) $('#sv-bnrm').onclick = () => socket.emit('updateServer', { serverId: s.id, banner: null, bannerColor: null }, done('Afiş kaldırıldı'));
@@ -3910,7 +3936,7 @@ function showServerSettings(s, tab, focus) {
         <div class="ep-grid" style="grid-template-columns:repeat(8,1fr);padding:0;margin-bottom:12px">${Object.entries(s.emojis || {}).map(([n, u]) => `<button data-rmemo="${n}" title=":${n}:"><img src="${esc(u)}" alt=":${n}:"></button>`).join('')}</div>
         <button class="primary" id="sv-emo" style="width:auto;padding:10px 18px">${ic('plus')}Emoji yükle</button></div>`;
       $('#sv-emo').onclick = () => readImage(url => form('Emoji adı', 'Sohbette :ad: yazarak kullanılacak (a-z, 0-9, _).', [{ k: 'name', p: 'örn. kanka' }], v =>
-        socket.emit('addEmoji', { serverId: s.id, name: v.name, url }, r => { if (r.error) return toast(r.error); toast(`:${v.name.toLowerCase()}: eklendi`); showServerSettings(s, 'emoji'); })));
+        socket.emit('addEmoji', { serverId: s.id, name: v.name, url }, r => { if (r.error) return toast(r.error); toast(`:${v.name.toLowerCase()}: eklendi`); showServerSettings(s, 'emoji'); })), 160);
       main.querySelectorAll('[data-rmemo]').forEach(b => b.onclick = () => confirmBox(`:${b.dataset.rmemo}: emojisi silinsin mi?`, () => socket.emit('removeEmoji', { serverId: s.id, name: b.dataset.rmemo }, () => showServerSettings(s, 'emoji'))));
     },
     reports: () => { main.innerHTML = `<div class="st-page"><h3>Şikayetler</h3><p class="hint">Üyelerin bu sunucuda şikayet ettiği mesaj ve kişiler. ${S.siteAdmin ? 'Kanka yönetimi olduğun için şikayet edenleri görüyorsun; diğer moderatörler görmez.' : 'Şikayet edenlerin adı sana gösterilmez.'}</p><div id="ss-rep"></div></div>`; reportsPanel($('#ss-rep'), s.id); },
