@@ -748,7 +748,7 @@ const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s
   discoverable: !!s.discoverable, description: s.description || '', category: s.category || null,
   setup: viewer && s.owner === viewer ? setupOf(s) : null,
   afk: s.afk || null,
-  bot: viewer && can(s, viewer, 'manageServer') ? botCfg(s) : { added: !!s.bot?.added, mod: { on: botOn(s, 'mod') } },
+  bot: viewer && can(s, viewer, 'manageServer') ? botCfg(s) : { added: !!s.bot?.added, mod: { on: botOn(s, 'mod') }, welcome: { on: botOn(s, 'welcome') } },
   welcome: s.welcome || null, accepted: !s.welcome?.enabled || !!s.accepted?.[viewer] || s.owner === viewer
 });
 const findChannel = chId => {
@@ -847,7 +847,41 @@ function audit(s, by, action, target = '') {
 const BOT_NAME = 'Kanka Bot';
 const BOT_MODS = {
   mod: { on: false, antinuke: true, invites: true, links: false, spam: true, mentions: true, caps: false, words: '', logCh: null, warnLimit: 3 },
+  welcome: { on: false, ch: null, text: '{üye} aramıza katıldı! 🎉 Kendini #tanışma odasında tanıt.', count: true, role: null, bye: false, byeText: '{üye} aramızdan ayrıldı. Yolun açık olsun 👋' },
 };
+const WELCOME_TITLES = ['👋 Aramıza hoş geldin!', '🎉 Yeni kanka geldi!', '🦝 Bir kanka daha!', '🚀 Ekibe katıldı!', '✨ Selam, yeni yüz!'];
+const ordinalTr = n => n + '.';
+// Karşılama modülü: yeni üyeyi seçilen odada kartla karşılar, sırasını söyler, istersen rol verir
+function welcomeChannel(s, w) {
+  return s.channels.find(c => c.id === w.ch && (c.type || 'text') === 'text')
+    || s.channels.find(c => (c.type || 'text') === 'text' && !c.news && !everyoneDenied(ovOf(s, c), 'send'));
+}
+function welcomeFill(s, t, name, count) {
+  return String(t || '').replace(/\{(üye|uye|kullanıcı)\}/gi, '@' + name).replace(/\{sunucu\}/gi, s.name).replace(/\{(sayı|sayi)\}/gi, String(count));
+}
+function botWelcome(s, name) {
+  if (!botOn(s, 'welcome') || name === BOT_NAME) return;
+  const w = s.bot.welcome, ch = welcomeChannel(s, w); if (!ch) return;
+  const count = s.public ? userCount() : s.members.length;
+  const u = db.users[name], fields = [];
+  if (w.count) fields.push(['Üye', `${ordinalTr(count)} kanka`]);
+  if (u && badgesOf(u).includes('beta')) fields.push(['Rozet', '🧪 Beta Tester']);
+  let gave = null;
+  const r = w.role && (s.customRoles || []).find(x => x.id === w.role && !x.bot);
+  if (r && !s.public) {
+    const br = botRole(s), ok = !br || s.customRoles.indexOf(r) > s.customRoles.indexOf(br);
+    if (ok) { s.memberRoles ||= {}; const l = (s.memberRoles[name] ||= []); if (!l.includes(r.id)) { l.push(r.id); gave = r.name; } }
+    else modLog(s, { title: '👋 Karşılama: rol verilemedi', text: `"${r.name}" rolü Kanka Bot'un rolünden yukarıda. Roller sekmesinde Kanka Bot rolünü onun üstüne taşı.`, tone: 'warn' });
+  }
+  if (gave) fields.push(['Rol', gave]);
+  botPost(ch.id, { title: WELCOME_TITLES[count % WELCOME_TITLES.length], text: welcomeFill(s, w.text, name, count) || `@${name} aramıza katıldı!`, tone: 'ok', fields });
+  if (gave) { save(); pushServers(membersOf(s)); }
+}
+function botBye(s, name) {
+  if (!botOn(s, 'welcome') || !s.bot.welcome.bye) return;
+  const ch = welcomeChannel(s, s.bot.welcome); if (!ch) return;
+  botPost(ch.id, { title: '👋 Görüşürüz', text: welcomeFill(s, s.bot.welcome.byeText, name, s.members.length).replace('@' + name, name), tone: 'info' });
+}
 function botCfg(s) {
   s.bot ||= {};
   for (const [k, def] of Object.entries(BOT_MODS)) s.bot[k] = { ...def, ...(s.bot[k] || {}) };
@@ -869,6 +903,18 @@ function botAddTo(s, by, withMod = true) {
   return true;
 }
 for (const s0 of db.servers) if (s0.bot?.mod?.on && s0.bot.added === undefined) s0.bot.added = true; // eski kurulum
+// Resmi sunucuda Kanka Bot karşılama modülüyle gelir (bir kez)
+(function hqBot() {
+  const hq = db.servers.find(x => x.id === 's1'); if (!hq || hq.hqBotV1) return;
+  const b = botCfg(hq); b.added = true; b.addedBy ||= hq.owner || BOT_NAME; b.addedAt ||= Date.now();
+  b.welcome.on = true;
+  b.welcome.ch = (hq.channels.find(c => c.name === 'genel' && (c.type || 'text') === 'text') || {}).id || null;
+  b.welcome.text = '{üye} Kanka HQ\'ya katıldı! 🎉 Kendini #tanışma odasında tanıt, takım arıyorsan #takım-arıyorum.';
+  hq.customRoles ||= [];
+  if (!(hq.customRoles || []).some(r => r.bot)) hq.customRoles.unshift({ id: id(), name: 'Kanka Bot', color: '#ff8a4c', perms: [], hoist: false, bot: true });
+  hq.hqBotV1 = true; save();
+  if (b.welcome.ch) setTimeout(() => botPost(b.welcome.ch, { title: '🤖 Kanka Bot burada!', text: 'Bundan sonra Kanka HQ\'ya gelen her yeni kankayı ben karşılayacağım. Sunucuna eklemek için: Keşfet → Botlar.', tone: 'ok' }), 3000);
+})();
 function botPost(chId, { title, text, tone = 'info', fields } = {}) {
   const msg = { id: id(), kind: 'bot', time: Date.now(), bot: { title: clean(title, 80), text: clean(text, 900), tone, fields: (fields || []).slice(0, 6).map(([a, b]) => [clean(a, 40), clean(b, 120)]) }, reactions: {} };
   const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
@@ -1360,6 +1406,7 @@ io.on('connection', socket => {
     io.emit('users', allUsers());
     pushServers(onlineNames()); // herkese açık sunucunun üye listesi değişti
     cb(start(name));
+    for (const sv of db.servers) if (sv.public) setTimeout(() => botWelcome(sv, name), 1500);
   });
   socket.on('betaInfo', (cb = () => {}) => cb(betaInfo()));
   socket.on('checkCode', (code, cb = () => {}) => {
@@ -1885,8 +1932,17 @@ io.on('connection', socket => {
   }
   socket.on('botAdd', ({ serverId, mod = true } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Bot eklemek için sunucuyu yönetme yetkin olmalı' });
-    if (s.public) return cb({ error: 'Bu sunucuya bot eklenemez' });
+    if (s.public && !(s.id === 's1' && siteAdmin(me))) return cb({ error: 'Bu sunucuya bot eklenemez' });
     botAddTo(s, me, !!mod); pushSrv(s); cb({ ok: true });
+  });
+  socket.on('botWelcomeTest', ({ serverId } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Yetkin yok' });
+    if (!botOn(s, 'welcome')) return cb({ error: 'Önce Karşılama modülünü aç' });
+    if (limited('wtest|' + me, 5, 60e3)) return cb({ error: 'Biraz bekle' });
+    const w = s.bot.welcome, ch = welcomeChannel(s, w); if (!ch) return cb({ error: 'Karşılama odası yok' });
+    const count = s.public ? userCount() : s.members.length;
+    botPost(ch.id, { title: '🧪 Deneme · ' + WELCOME_TITLES[count % WELCOME_TITLES.length], text: welcomeFill(s, w.text, me, count), tone: 'ok', fields: w.count ? [['Üye', `${ordinalTr(count)} kanka`]] : [] });
+    cb({ ok: true, ch: ch.name });
   });
   socket.on('botRemove', ({ serverId } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Yetkin yok' });
@@ -1907,9 +1963,12 @@ io.on('connection', socket => {
       else if (k === 'warnLimit') b[module][k] = Math.min(Math.max(parseInt(v) || 3, 2), 10);
       else if (k === 'logCh') b[module][k] = s.channels.some(c => c.id === v && (c.type || 'text') === 'text') ? v : null;
       else if (k === 'words') b[module][k] = clean(v, 500);
+      else if (k === 'ch') b[module][k] = s.channels.some(c => c.id === v && (c.type || 'text') === 'text') ? v : null;
+      else if (k === 'text' || k === 'byeText') b[module][k] = clean(v, 400);
+      else if (k === 'role') { const r = (s.customRoles || []).find(x => x.id === v && !x.bot); b[module][k] = r ? r.id : null; }
     }
-    if (was !== b[module].on) audit(s, me, b[module].on ? 'Kanka Bot modülünü açtı' : 'Kanka Bot modülünü kapattı', module === 'mod' ? 'Mod' : module);
-    else audit(s, me, 'Kanka Bot ayarlarını değiştirdi', module === 'mod' ? 'Mod' : module);
+    if (was !== b[module].on) audit(s, me, b[module].on ? 'Kanka Bot modülünü açtı' : 'Kanka Bot modülünü kapattı', { mod: 'Mod', welcome: 'Karşılama' }[module] || module);
+    else audit(s, me, 'Kanka Bot ayarlarını değiştirdi', { mod: 'Mod', welcome: 'Karşılama' }[module] || module);
     pushSrv(s); cb({ ok: true });
   });
 
@@ -2554,7 +2613,7 @@ io.on('connection', socket => {
     inviteGuard('u:' + me, !!s); inviteGuard('ip:' + ip, !!s);
     if (!s) return cb({ error: 'Davet kodu geçersiz' });
     if (s.bans?.[me]) return cb({ error: 'Bu sunucudan yasaklandın' });
-    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); save(); pushServers(s.members); }
+    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); save(); pushServers(s.members); botWelcome(s, me); }
     cb(serverView(s, me));
   });
 
@@ -2562,6 +2621,7 @@ io.on('connection', socket => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || s.public) return cb({ error: 'Bu sunucudan ayrılamazsın' });
     s.members = s.members.filter(n => n !== me);
+    botBye(s, me);
     voiceKick(s.channels.map(c => c.id), me, 'Sunucudan ayrıldın');
     if (s.owner === me) s.owner = s.members[0] || null;
     if (!s.members.length) db.servers = db.servers.filter(x => x !== s);

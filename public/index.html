@@ -231,6 +231,11 @@
   .kbmod .bb { margin: 12px auto 14px; padding: 7px 16px; border-radius: 10px; font-weight: 800; font-size: 13px; background: var(--accent); color: #1a0f0a; }
   .kbmod .bb.off { background: var(--hover); color: var(--ink); }
   .kbmod .bb.soon { background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: default; }
+  .wvars { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .wvar { padding: 4px 10px; border-radius: 8px; background: var(--hover); color: var(--accent-2); font-weight: 800; font-size: 12.5px; border: 1px solid var(--line); cursor: pointer; }
+  .wprev .bmsg { border-left: 4px solid #22c55e; background: var(--card); border-radius: 12px; padding: 12px 14px; }
+  .wprev .bmsg b { font-size: 14.5px; } .wprev .bmsg p { margin-top: 4px; font-size: 14px; color: var(--ink); white-space: pre-wrap; }
+  .wprev .bf { margin-top: 8px; font-size: 13px; } .wprev .bf span { display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
   .botset { border: 1px solid var(--line); border-radius: 16px; padding: 6px 16px 14px; background: var(--panel); }
   .botset h4 { margin: 12px 0 4px; font-size: 15px; } .botset .cmdlist { font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--muted); line-height: 1.8; }
   .kcard { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; width: 300px; max-width: 100%; }
@@ -3593,9 +3598,10 @@ addEventListener('resize', () => { if ($('#modal').classList.contains('open')) m
 // ================= Kanka Bot =================
 const KB_MODS = [
   ['mod', '🛡️', 'Mod', 'Anti-nuke, otomatik moderasyon, uyarı, susturma, mesaj temizleme ve oda kilidi.', '#f59e0b', '#ef4444'],
+  ['welcome', '👋', 'Karşılama', 'Yeni gelen her üyeyi kartla karşılar, kaçıncı kanka olduğunu söyler, istersen otomatik rol verir.', '#ff8a4c', '#f472b6'],
   ['match', '🏆', 'Maç Kartı', 'LoL, Valorant ve CS2 maçı bitince skor sohbete kendiliğinden düşer.', '#22c55e', '#0ea5e9']];
-const kbCard = (added, m = {}) => ([k, e, n, d, g1, g2]) => {
-  const on = k === 'mod' && added && !!m.on;
+const kbCard = (added, b = {}) => ([k, e, n, d, g1, g2]) => {
+  const on = added && !!b[k]?.on;
   return `<div class="kbmod ${on ? 'on' : ''}" style="--g1:${g1};--g2:${g2}"><div class="bh"></div><div class="bi">${e}</div><h5>${n}</h5><p>${d}</p>
     ${k === 'match' ? '<span class="bb soon">Herkeste açık</span>' : added ? `<button class="bb ${on ? 'off' : ''}" data-bot="${k}">${on ? 'Kapat' : 'Aç'}</button>` : '<span class="bb soon">Botla gelir</span>'}</div>`;
 };
@@ -3620,7 +3626,7 @@ function botProfile() {
   const s = S.server; if (!s) return;
   const mng = s.owner === S.me || s.myPerms?.includes('manageServer');
   modal(`<div class="kbtop"><img class="kbav" src="/icon-192.png" alt=""><h3>Kanka Bot<span class="botbadge">BOT</span></h3><p>Kanka'nın resmi botu · her zaman çevrimiçi</p></div>
-    <div class="pc-sec" style="margin-top:14px"><h5>Bu sunucuda açık modüller</h5><div class="badges">${s.bot?.mod?.on ? '<span>🛡️ Mod</span>' : ''}<span>🏆 Maç Kartı</span></div></div>
+    <div class="pc-sec" style="margin-top:14px"><h5>Bu sunucuda açık modüller</h5><div class="badges">${s.bot?.mod?.on ? '<span>🛡️ Mod</span>' : ''}${s.bot?.welcome?.on ? '<span>👋 Karşılama</span>' : ''}<span>🏆 Maç Kartı</span></div></div>
     <div class="pc-sec"><h5>Nasıl kullanılır?</h5><p class="hint">Sohbete <b>/</b> yazınca komutlar çıkar. <b>@Kanka Bot</b> yazarsan sana cevap verir.</p></div>
     <div class="rowb">${mng ? '<button id="kb-set">Ayarlar</button>' : ''}<button class="primary" id="mx" style="background:var(--accent);color:#1a0f0a;width:auto;padding:10px 20px">Kapat</button></div>`);
   $('#mx').onclick = closeModal;
@@ -3633,8 +3639,8 @@ function showBots() {
   $('#side-head').className = 'shead'; $('#side-head').style.backgroundImage = ''; $('#side-head').onclick = null; $('#side-head').innerHTML = '<h3>Keşfet</h3>';
   $('#side-list').innerHTML = `<div class="room" data-dsv><div class="ico">${ic('compass')}</div>Sunucular</div><div class="room active"><div class="ico">${ic('shield')}</div>Botlar</div>`;
   $('#side-list').querySelector('[data-dsv]').onclick = showDiscover;
-  $('#discover').innerHTML = `<div class="bots-hero"><img src="/icon-192.png" alt=""><div><h2>Kanka Bot<span class="botbadge">BOT</span></h2><p>Discord'da her iş için ayrı bot kurman gerekirdi. Kanka Bot tek başına yetiyor: sunucunu korur, kural bozanı uyarır, maç sonuçlarını sohbete düşürür. Her gün yeni modül geliyor.</p>
-    <button class="primary" id="bots-add">${ic('plus')} Sunucuna ekle</button></div></div><div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Karşılama · Takım Kur · Seviye · Çekiliş · Destek</p>`;
+  $('#discover').innerHTML = `<div class="bots-hero"><img src="/icon-192.png" alt=""><div><h2>Kanka Bot<span class="botbadge">BOT</span></h2><p>Discord'da her iş için ayrı bot kurman gerekirdi. Kanka Bot tek başına yetiyor: sunucunu korur, kural bozanı uyarır, yeni gelenleri karşılar, maç sonuçlarını sohbete düşürür. Her gün yeni modül geliyor.</p>
+    <button class="primary" id="bots-add">${ic('plus')} Sunucuna ekle</button></div></div><div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş · Destek</p>`;
   $('#bots-add').onclick = pickBotServer;
 }
 function pickBotServer() {
@@ -3680,13 +3686,13 @@ function showServerSettings(s, tab, focus) {
         main.innerHTML = `<div class="st-page"><h3>Kanka Bot</h3>
           <div class="kbhero"><img src="/icon-192.png" alt=""><div><h4>Kanka Bot<span class="botbadge">BOT</span></h4><p>Ayrı ayrı bot aramana gerek yok. Kanka Bot'u ekle, sunucunu korusun: anti-nuke, otomatik moderasyon, uyarı ve susturma komutları.</p>
           <button class="primary" id="kb-add">${ic('plus')} Botu sunucuya ekle</button></div></div>
-          <div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Karşılama · Takım Kur · Seviye · Çekiliş · Destek</p></div>`;
+          <div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş · Destek</p></div>`;
         $('#kb-add').onclick = () => openBotAdd(s);
         return;
       }
       const tg = (k, t) => `<label class="switch">${t}<input type="checkbox" data-mk="${k}" ${m[k] ? 'checked' : ''}></label>`;
       main.innerHTML = `<div class="st-page"><h3>Kanka Bot</h3><p class="hint">Kanka Bot bu sunucuda üye. Modülleri buradan açıp kapatırsın. Komutları görmek için sohbete <b>/</b> yaz.</p>
-        <div class="botgrid">${KB_MODS.map(kbCard(true, m)).join('')}</div><p class="kbsoon">Yakında: Karşılama · Takım Kur · Seviye · Çekiliş · Destek</p>
+        <div class="botgrid">${KB_MODS.map(kbCard(true, b)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş · Destek</p>
         ${m.on ? `<div class="botset"><h4>🛡️ Mod ayarları</h4>
           <div class="st-field">${tg('antinuke', 'Anti-nuke (bir yetkili 1 dakikada 3\'ten fazla ban, atma, oda ya da rol silme yaparsa durdur ve yetkilerini al)')}
           ${tg('spam', 'Spam koruması (aynı mesajı tekrarlayan ya da çok hızlı yazan 5 dk susturulur)')}
@@ -3699,9 +3705,32 @@ function showServerSettings(s, tab, focus) {
           <div class="st-field"><label>Uyarı sınırı</label><select class="field" id="bm-warn" style="width:220px">${[2, 3, 4, 5].map(v => `<option value="${v}" ${(m.warnLimit || 3) === v ? 'selected' : ''}>${v} uyarıda 1 saat sustur</option>`).join('')}</select></div>
           <div class="st-field"><button class="primary" id="bm-save" style="width:auto;padding:11px 22px">Kaydet</button></div>
           <h4>Komutlar</h4><div class="cmdlist">/uyar @isim sebep<br>/uyarılar @isim · /uyarısil @isim<br>/sustur @isim 10 sebep<br>/temizle 20<br>/kilitle · /kilidiaç</div></div>` : ''}
+        ${b.welcome?.on ? (() => { const w = b.welcome, txt = s.channels.filter(c => (c.type || 'text') === 'text'), roles = (s.customRoles || []).filter(r => !r.bot);
+          return `<div class="botset"><h4>👋 Karşılama ayarları</h4>
+          <div class="st-field"><label>Karşılama odası</label><select class="field" id="bw-ch"><option value="">Otomatik (herkesin yazabildiği ilk oda)</option>${txt.map(c => `<option value="${c.id}" ${w.ch === c.id ? 'selected' : ''}>#${esc(c.name)}</option>`).join('')}</select></div>
+          <div class="st-field"><label>Karşılama mesajı</label><textarea class="field" id="bw-text" maxlength="400" rows="3" style="resize:vertical">${esc(w.text || '')}</textarea>
+            <div class="wvars">${['{üye}', '{sunucu}', '{sayı}'].map(v => `<button type="button" class="wvar" data-wv="${v}">${v}</button>`).join('')}<span class="hint">Tıkla, mesaja eklensin</span></div></div>
+          <div class="st-field"><label>Önizleme</label><div class="wprev" id="bw-prev"></div></div>
+          <div class="st-field"><label class="switch">Kaçıncı üye olduğunu kartta göster<input type="checkbox" id="bw-count" ${w.count ? 'checked' : ''}></label>
+            ${s.public ? '' : `<label class="switch">Yeni gelene otomatik rol ver<select class="field" id="bw-role" style="width:190px;margin:0"><option value="">Verme</option>${roles.map(r => `<option value="${r.id}" ${w.role === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></label>`}
+            ${s.public ? '' : `<label class="switch">Biri ayrılınca "görüşürüz" mesajı at<input type="checkbox" id="bw-bye" ${w.bye ? 'checked' : ''}></label>`}</div>
+          ${s.public ? '' : `<div class="st-field" id="bw-byef" style="${w.bye ? '' : 'display:none'}"><label>Ayrılma mesajı</label><input class="field" id="bw-byet" maxlength="400" value="${esc(w.byeText || '')}"></div>`}
+          ${!s.public && roles.length ? '<p class="hint">Otomatik rol için Roller sekmesinde Kanka Bot rolü, verilecek rolün üstünde olmalı.</p>' : ''}
+          <div class="st-field" style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" id="bw-save" style="width:auto;padding:11px 22px">Kaydet</button><button class="lrow" id="bw-test" style="margin:0">${ic('sparkle')}Deneme mesajı gönder</button></div></div>`; })() : ''}
         <div class="st-field" style="margin-top:22px"><button class="lrow danger" id="kb-rm" style="margin:0;color:var(--red)">${ic('door')}Kanka Bot'u sunucudan at</button><p class="hint" style="margin-top:6px">Bot atılınca bütün modüller kapanır ve Kanka Bot rolü silinir.</p></div></div>`;
-      const saveMod = (cfg, msg) => socket.emit('botSave', { serverId: s.id, module: 'mod', cfg }, done(msg));
-      main.querySelectorAll('[data-bot]').forEach(x => x.onclick = () => saveMod({ on: !m.on }, m.on ? 'Mod modülü kapatıldı' : 'Mod modülü açıldı 🛡️'));
+      const saveMod = (cfg, msg, module = 'mod') => socket.emit('botSave', { serverId: s.id, module, cfg }, done(msg));
+      const MODN = { mod: ['Mod', '🛡️'], welcome: ['Karşılama', '👋'] };
+      main.querySelectorAll('[data-bot]').forEach(x => x.onclick = () => { const k = x.dataset.bot, on = !!b[k]?.on; saveMod({ on: !on }, on ? `${MODN[k][0]} modülü kapatıldı` : `${MODN[k][0]} modülü açıldı ${MODN[k][1]}`, k); });
+      if ($('#bw-text')) {
+        const prev = () => { const n = S.me, cnt = s.public ? (S.users?.length || s.members.length) : s.members.length + 1;
+          const t = ($('#bw-text').value || '').replace(/\{(üye|uye)\}/gi, '@' + n).replace(/\{sunucu\}/gi, s.name).replace(/\{(sayı|sayi)\}/gi, cnt);
+          $('#bw-prev').innerHTML = `<div class="bmsg ok"><b>👋 Aramıza hoş geldin!</b><p>${esc(t)}</p>${$('#bw-count').checked ? `<div class="bf"><span>Üye</span>${cnt}. kanka</div>` : ''}</div>`; };
+        $('#bw-text').oninput = prev; $('#bw-count').onchange = prev; prev();
+        main.querySelectorAll('[data-wv]').forEach(x => x.onclick = () => { const ta = $('#bw-text'), p = ta.selectionStart ?? ta.value.length; ta.value = ta.value.slice(0, p) + x.dataset.wv + ta.value.slice(ta.selectionEnd ?? p); ta.focus(); prev(); });
+        if ($('#bw-bye')) $('#bw-bye').onchange = () => { $('#bw-byef').style.display = $('#bw-bye').checked ? '' : 'none'; };
+        $('#bw-save').onclick = () => saveMod({ ch: $('#bw-ch').value || null, text: $('#bw-text').value, count: $('#bw-count').checked, ...($('#bw-role') ? { role: $('#bw-role').value || null, bye: $('#bw-bye').checked, byeText: $('#bw-byet').value } : {}) }, 'Karşılama ayarları kaydedildi', 'welcome');
+        $('#bw-test').onclick = () => socket.emit('botWelcomeTest', { serverId: s.id }, r => r?.error ? toast(r.error) : toast(`Deneme mesajı #${r.ch} odasına gönderildi`));
+      }
       main.querySelectorAll('[data-mk]').forEach(x => x.onchange = () => socket.emit('botSave', { serverId: s.id, module: 'mod', cfg: { [x.dataset.mk]: x.checked } }, r => r?.error ? toast(r.error) : toast('Kaydedildi')));
       if ($('#bm-save')) $('#bm-save').onclick = () => saveMod({ words: $('#bm-words').value, logCh: $('#bm-log').value || null, warnLimit: +$('#bm-warn').value }, 'Kaydedildi');
       $('#kb-rm').onclick = () => confirmBox('Kanka Bot sunucudan atılsın mı? Bütün modüller kapanır.', () => socket.emit('botRemove', { serverId: s.id }, done('Kanka Bot sunucudan atıldı')));
@@ -4673,7 +4702,7 @@ function renderMembers() {
   const onl = names.filter(n => S.online.has(n)).length;
   const mb = $('#mem-btn'); mb.classList.toggle('show', !!(srv && S.channel) || !!S.channel?.group); mb.querySelector('.mb-n').textContent = onl ? (onl > 99 ? '99+' : onl) : '';
   const mdrH = `<div class="mdr-h"><span style="flex:1"><b>Üyeler</b><small>${S.channel ? (srv ? '#' + esc(S.channel.name) + ' · ' : '') : ''}${onl} çevrimiçi · ${names.length} kişi</small></span><button id="mdr-x" aria-label="Kapat">${ic('x')}</button></div>`;
-  $('#members').innerHTML = mdrH + (srv?.bot?.added ? `<div class="label" style="padding:14px 8px 6px">Botlar — 1</div><div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="color:var(--accent)">Kanka Bot<span class="botbadge">BOT</span></span><small>${srv.bot.mod?.on ? 'Moderasyon · /yardım' : '/yardım yaz'}</small></div></div>` : '') +
+  $('#members').innerHTML = mdrH + (srv?.bot?.added ? `<div class="label" style="padding:14px 8px 6px">Botlar — 1</div><div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="color:var(--accent)">Kanka Bot<span class="botbadge">BOT</span></span><small>${[srv.bot.mod?.on && 'Moderasyon', srv.bot.welcome?.on && 'Karşılama'].filter(Boolean).join(' · ') || '/yardım yaz'}</small></div></div>` : '') +
     groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(item).join('') : ''; }).join('');
   $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
   $('#members').querySelector('.mem.botmem')?.addEventListener('click', e => { e.stopPropagation(); botProfile(); });
