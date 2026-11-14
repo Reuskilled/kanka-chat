@@ -31,6 +31,60 @@
   a { color: var(--accent-2); }
   ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
 
+
+  /* ================= YENİ ARAYÜZ (deneme): Ayarlar › Görünüm › Yeni arayüz ya da ?arayuz=yeni ================= */
+  #side .livenow, #me-xp, .srv .rvc { display: none; }
+  body.ui2:not(.light) { --bg: #0f0b09; --panel: #17110e; --card: #241b17; --hover: #2c221d; --line: rgba(255,232,214,.08); --other: #241b17; }
+  body.ui2 #app { padding: 10px; gap: 10px; background: radial-gradient(900px 500px at 12% -10%, rgba(255,106,44,.10), transparent 60%), radial-gradient(700px 500px at 110% 110%, rgba(255,192,77,.05), transparent 60%), var(--bg); }
+  body.ui2 .panel { border-radius: 26px; border: 1px solid var(--line); }
+  body.ui2:not(.light) #chat { background: #1c1512; }
+  body.ui2:not(.light) #rail { background: linear-gradient(180deg, #1a1310, #140f0c); }
+  body.ui2 #rail { width: 76px; gap: 10px; }
+  body.ui2 .srv { width: 52px; height: 52px; border-radius: 17px; border: none; background: var(--card); }
+  body.ui2 .srv:hover { border-radius: 15px; }
+  body.ui2 .srv.active { border-radius: 17px; outline: 2.5px solid var(--accent); outline-offset: 3px; background: var(--card); color: var(--ink); }
+  body.ui2 .srv.home { box-shadow: 0 6px 18px rgba(255,106,44,.35); }
+  body.ui2 .srv.home.active { outline-color: var(--ink); background: #F2652F; color: #fff; }
+  body.ui2 .srv.dash { background: rgba(255,232,214,.04); border: 1.5px dashed rgba(255,232,214,.14); }
+  body.ui2 .srv img { border-radius: inherit; }
+  body.ui2 .srv .rvc { display: flex; position: absolute; right: -5px; bottom: -5px; height: 20px; min-width: 20px; padding: 0 5px; align-items: center; gap: 2px; border-radius: 10px; background: #3ddc97; color: #07261a; font-size: 11px; font-weight: 900; border: 3px solid #160f0c; z-index: 2; }
+  body.ui2 .srv .rvc .ic { width: 11px; height: 11px; stroke-width: 2.6; }
+  body.ui2 #side { width: 280px; }
+  body.ui2 .room { border-radius: 12px; margin: 1px 10px; padding: 7px 9px; }
+  body.ui2 .room .ico { width: 28px; height: 28px; border-radius: 9px; background: rgba(255,232,214,.05); }
+  body.ui2 .room.unread .ico { background: rgba(255,106,44,.13); color: var(--accent); }
+  body.ui2 .room.active { background: #2c221d; }
+  body.ui2 .room.active .ico { background: var(--accent); color: #fff; }
+  body.ui2.light .room.active { background: var(--hover); }
+  /* Şu an canlı */
+  body.ui2 #side .livenow { display: block; padding: 4px 10px 2px; }
+  body.ui2 .livenow .ln-h { display: flex; align-items: center; gap: 8px; padding: 8px 8px 6px; font-size: 11.5px; font-weight: 900; letter-spacing: .07em; color: var(--muted); }
+  body.ui2 .livenow .ln-h::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  body.ui2 .lcard { display: block; width: 100%; text-align: left; border-radius: 16px; padding: 10px 11px; margin-bottom: 6px; background: linear-gradient(135deg, rgba(61,220,151,.10), rgba(61,220,151,.03)); border: 1px solid rgba(61,220,151,.22); transition: transform .15s, border-color .15s; }
+  body.ui2 .lcard:hover { transform: translateY(-1px); border-color: rgba(61,220,151,.45); }
+  body.ui2 .lcard.me { background: linear-gradient(135deg, rgba(255,106,44,.16), rgba(255,106,44,.04)); border-color: rgba(255,106,44,.35); }
+  body.ui2 .lcard .lt { display: flex; align-items: center; gap: 7px; font-weight: 800; font-size: 14px; min-width: 0; }
+  body.ui2 .lcard .lt > .ic { width: 16px; height: 16px; color: #3ddc97; flex-shrink: 0; } body.ui2 .lcard.me .lt > .ic { color: var(--accent); }
+  body.ui2 .lcard .lt .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body.ui2 .lcard .vtm { margin-left: auto; }
+  body.ui2 .lcard.me .vtm { color: var(--accent); background: rgba(255,106,44,.14); }
+  body.ui2 .lcard .ltag { flex-shrink: 0; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; background: #ff5a5f; color: #fff; letter-spacing: .04em; }
+  body.ui2 .lcard .who { display: flex; align-items: center; margin-top: 8px; min-width: 0; }
+  body.ui2 .lcard .who .av { width: 26px; height: 26px; font-size: 11px; margin-right: -7px; border: 2.5px solid #1b1915; }
+  body.ui2 .lcard .who .av.spk { box-shadow: 0 0 0 2px #3ddc97; }
+  body.ui2 .lcard .who em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--muted); margin-left: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* alttaki profil kartı + XP çizgisi */
+  body.ui2 #me { border-radius: 18px; margin: 10px; }
+  body.ui2 #me-xp { display: block; height: 4px; border-radius: 3px; background: rgba(255,232,214,.08); overflow: hidden; margin-top: 9px; }
+  body.ui2 #me-xp i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), #ffc04d); }
+  /* sohbet */
+  body.ui2 #head { min-height: 64px; padding: 12px 16px 12px 20px; }
+  body.ui2 #compose { border-radius: 20px; border: 1.5px solid rgba(255,232,214,.12); box-shadow: 0 10px 30px rgba(0,0,0,.25); margin: 0 18px 16px; }
+  body.ui2.light #compose { border-color: var(--line); box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+  body.ui2 #send { border-radius: 14px; }
+  body.ui2 #members { width: 270px; padding: 6px 12px; }
+  @media (max-width: 760px) { body.ui2 #app { padding: 0; gap: 0; } body.ui2 .panel { border-radius: 0; } }
+
   /* ---------- Giriş ---------- */
   #auth { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
     background: radial-gradient(circle at 20% 20%, rgba(255,138,76,.18) 0, transparent 40%), radial-gradient(circle at 80% 80%, rgba(255,179,71,.12) 0, transparent 40%), var(--bg); }
@@ -3067,7 +3121,8 @@ function showSettings(tab) {
       <div class="st-field"><label>Tema</label><div class="themes apthemes">${Object.entries(THEMES).map(([k, t]) => { const v = { ...{ '--bg': '#17110e', '--panel': '#211915', '--card': '#2b211c' }, ...t.v };
         return `<button data-theme="${k}" class="${(store.get('kanka-theme') || 'sicak') === k ? 'on' : ''}" style="background:${v['--panel']};color:${t.light ? '#3b2a1e' : '#f4e6d8'}"><div class="pv" style="background:${v['--bg']}"><i style="background:${v['--card']}"></i><i style="background:${v['--card']}"></i></div>${t.name}</button>`; }).join('')}</div></div>
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'turuncu') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
-      <div class="pc-sec" style="margin-top:18px"><label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
+      <div class="pc-sec" style="margin-top:18px"><label class="switch">Yeni arayüz (deneme)<input type="checkbox" id="p-ui2" ${uiNew() ? 'checked' : ''}></label>
+      <label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
     notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Mikrofon</label><button class="btns2" id="st-mic">${ic('mic')} Mikrofonu test et</button></div><div class="st-field"><label>Başlangıç rehberi</label><button class="btns2" id="st-onb">${ic('sprout')} Rehberi baştan göster</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
         <label class="switch">Bilgisayar açılınca Kanka Chat'i başlat<input type="checkbox" id="as-on"></label>
@@ -3142,6 +3197,7 @@ function showSettings(tab) {
     if (t === 'look') {
       $('#st-main').querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { store.set('kanka-theme', b.dataset.theme); applyTheme(); open('look'); });
       $('#st-main').querySelectorAll('[data-acc]').forEach(b => b.onclick = () => { store.set('kanka-accent', b.dataset.acc); applyTheme(); open('look'); preview(); });
+      $('#p-ui2').onchange = e => { store.set('kanka-ui', e.target.checked ? '2' : null); applyUI(); toast(e.target.checked ? 'Yeni arayüz açık. Beğenmezsen buradan kapatabilirsin.' : 'Eski arayüze dönüldü'); };
       $('#p-snd').onchange = e => { store.set('kanka-sound', e.target.checked ? null : 'off'); if (e.target.checked) playSound('mention'); };
       $('#p-ptt').onchange = e => { store.set('kanka-ptt', e.target.checked ? 'on' : null); applyMute(); };
     }
@@ -3175,13 +3231,16 @@ function muteServerFor(sid, ms) {
   store.set('kanka-muteuntil', JSON.stringify(mu)); S.unreadServers.delete(sid); saveMuted(); renderRail(); if (S.view === 'server') renderSide();
 }
 setInterval(() => { const mu = muteUntil(), now = Date.now(); let ch = false; for (const [k, v] of Object.entries(mu)) if (v <= now) { delete mu[k]; mutedServers.delete(k); ch = true; } if (ch) { store.set('kanka-muteuntil', JSON.stringify(mu)); saveMuted(); renderRail(); } }, 30e3);
+const railVoiceN = s => new Set(s.channels.filter(c => voiceLike(c.type)).flatMap(c => S.voice?.[c.id] || [])).size;
+const railVoiceBadge = s => { const n = railVoiceN(s); return n ? `<span class="rvc">${ic('volume')}${n}</span>` : ''; };
+function updRailVoice() { $('#rail')?.querySelectorAll('.srv[data-id]').forEach(b => { const s = S.servers.find(x => x.id === b.dataset.id); if (!s) return; b.querySelector('.rvc')?.remove(); b.insertAdjacentHTML('beforeend', railVoiceBadge(s)); }); }
 function renderRail() {
   const unreadN = S.unread.size + (S.unreadDM ? 1 : 0);
   window.kankaDesktop?.badge(unreadN);
   document.title = (unreadN ? `(${unreadN}) ` : '') + 'Kanka Chat';
   $('#rail').innerHTML =
     `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button><div class="rsep"></div>` +
-    orderedServers().map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''} ${mutedServers.has(s.id) ? 'smuted' : ''}" data-id="${s.id}" aria-label="${esc(s.name)}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) && !(S.view === 'server' && s.id === S.server?.id) ? '<span class="upill"></span>' : ''}${(() => { const n = mentCount(s); return n ? `<span class="mcnt">${n > 9 ? '9+' : n}</span>` : ''; })()}</button>`).join('') +
+    orderedServers().map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''} ${mutedServers.has(s.id) ? 'smuted' : ''}" data-id="${s.id}" aria-label="${esc(s.name)}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) && !(S.view === 'server' && s.id === S.server?.id) ? '<span class="upill"></span>' : ''}${(() => { const n = mentCount(s); return n ? `<span class="mcnt">${n > 9 ? '9+' : n}</span>` : ''; })()}${railVoiceBadge(s)}</button>`).join('') +
     `<button class="srv dash" id="add-srv" title="Sunucu oluştur" aria-label="Sunucu oluştur">${ic('plus')}</button><button class="srv dash" id="join-srv" title="Davet koduyla katıl" aria-label="Davet koduyla katıl">${ic('link')}</button><button class="srv dash ${S.view === 'discover' ? 'active' : ''}" id="disc-srv" title="Sunucuları keşfet" aria-label="Sunucuları keşfet">${ic('compass')}</button>`;
   $('#disc-srv').onclick = () => showDiscover();
   $('#disc-srv').classList.toggle('hint', !S.servers.some(s => s.id !== 's1') && S.view !== 'discover');
@@ -3318,6 +3377,18 @@ function selectServer(id, channelId) {
   if (ch) selectChannel(ch.id); else renderSide();
   if (S.server.welcome?.enabled && !S.server.accepted && !welcomeShown.has(S.server.id)) setTimeout(() => showWelcome(S.server), 200);
 }
+// Yeni arayüz: odalar listesinin en üstünde "Şu an canlı" (seste olan odalar, süre, yayın)
+function liveNowHTML(s, seen = () => true) {
+  const list = s.channels.filter(c => voiceLike(c.type) && (S.voice?.[c.id] || []).length && seen(c)).sort((a, b) => (myVoice === b.id) - (myVoice === a.id) || S.voice[b.id].length - S.voice[a.id].length).slice(0, 4);
+  if (!list.length) return '<div class="livenow"></div>';
+  return `<div class="livenow"><div class="ln-h">ŞU AN CANLI</div>${list.map(c => {
+    const who = S.voice[c.id], live = (S.live?.[c.id] || []).length, mine = myVoice === c.id;
+    const names = who.map(n => n === S.me ? 'Sen' : dn(n)), txt = live ? `${esc(dn(S.live[c.id][0]))} yayında` : names.slice(0, 3).join(', ') + (who.length > 3 ? ` +${who.length - 3}` : '');
+    return `<button type="button" class="lcard ${mine ? 'me' : ''}" data-golive="${c.id}"><span class="lt">${ic('volume')}<span class="nm">${esc(c.name)}</span>${live ? '<span class="ltag">● CANLI</span>' : ''}<em class="vtm" data-vt="${c.id}">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em></span>
+      <span class="who">${who.slice(0, 5).map(n => av(n).replace('class="av', `class="av${speaking.has(n) ? ' spk' : ''}`)).join('')}<em>${txt}</em></span></button>`;
+  }).join('')}</div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-golive]'); if (!b) return; const r = document.querySelector(`#side-list .room[data-id="${b.dataset.golive}"]`); if (myVoice === b.dataset.golive) openVoiceChat?.(); else r?.click(); });
 function renderSide() {
   if (S.view === 'dm') return renderDMSide();
   const s = S.server;
@@ -3340,7 +3411,7 @@ function renderSide() {
   const va = viewAs?.sid === s.id ? viewAs : null;
   const seen = c => !va || permAs(s, ovC(s, c), va.roles, 'view');
   const top = topChs(s).filter(seen), cats = catsOf(s).filter(k => !va || s.channels.some(c => c.cat === k.id && seen(c)));
-  $('#side-list').innerHTML =
+  $('#side-list').innerHTML = liveNowHTML(s, seen) +
     (!top.length && !cats.length && canAdd ? `<div class="side-empty">Henüz oda yok.<button data-newch>${ic('plus')} Oda oluştur</button></div>` : '') +
     (top.length ? `<div class="toplist">${top.map(row).join('')}</div>` : '') +
     cats.map(k => { const key = s.id + '|' + k.id, closed = shut.has(key), list = s.channels.filter(c => c.cat === k.id);
@@ -5507,6 +5578,9 @@ function renderMe() {
   { const h = av(S.me, true); if ($('#me-av').innerHTML !== h) $('#me-av').innerHTML = h; } // değişmediyse yeniden çizme (resim titremesin)
   $('#me-av').onclick = e => { e.stopPropagation(); toggleStatusMenu(); }; $('#me-av').style.cursor = 'pointer'; $('#me-av').title = S.myStatus !== 'online' && S.myStatusUntil ? `${STATUS[S.myStatus][0]} · ${leftTxt(S.myStatusUntil)}` : 'Durumunu değiştir';
   $('#me-name').textContent = S.me;
+  { let x = $('#me-xp'); if (!x) { $('#me .row1').insertAdjacentHTML('afterend', '<div id="me-xp" title=""><i></i></div>'); x = $('#me-xp'); }
+    const lo = lvlFloor(u.level), hi = lvlFloor(u.level + 1), pct = Math.max(2, Math.min(100, Math.round((u.xp - lo) / (hi - lo) * 100)));
+    x.firstChild.style.width = pct + '%'; x.title = `Seviye ${u.level} · ${u.xp} / ${hi} XP`; }
   $('#me-lvl').innerHTML = actLine(S.me) || (u.status ? esc(u.status) : '') || `Seviye ${u.level}${u.streak ? ` · <span class="streak">${ic('fire')} ${u.streak} gün</span>` : ''}`;
 }
 function setPresence(list) {
@@ -6346,7 +6420,7 @@ function renderCallBar() {
   $('#cb-join').onclick = () => joinVoice('call:' + ch.id);
 }
 socket.on('calls', c => { S.calls = c || {}; renderCallBar(); if (S.view === 'dm') renderDMSide(); refreshHome(); });
-socket.on('voiceState', v => { S.voice = v; if (S.view === 'server' && S.server) renderSide(); pushOverlay(); refreshHome(); refreshRoomCards(); renderCallBar(); });
+socket.on('voiceState', v => { S.voice = v; updRailVoice(); if (S.view === 'server' && S.server) renderSide(); pushOverlay(); refreshHome(); refreshRoomCards(); renderCallBar(); });
 if (!navigator.mediaDevices?.getDisplayMedia) $('#vscreen').style.display = 'none';
 
 // ================= Emoji seçici =================
@@ -6522,6 +6596,10 @@ const THEMES = {
   acik: { name: 'Açık krem', light: true, v: { '--bg': '#f6eee4', '--panel': '#fffaf4', '--card': '#ffffff', '--hover': '#f7e9da', '--line': '#ecdccb', '--ink': '#3b2a1e', '--muted': '#8a7362', '--accent-soft': '#ffe6d6', '--other': '#ffffff' } },
 };
 const ACCENTS = { turuncu: ['#ff8a4c', '#ffb347', '#f26b3a', '#ff8f5a'], pembe: ['#ff6b9a', '#ff9fc0', '#e8457a', '#ff7aa8'], mor: ['#a77bff', '#c9a8ff', '#7c4dff', '#a77bff'], mavi: ['#4aa8ff', '#8fd0ff', '#2f7de1', '#4aa8ff'], yesil: ['#3ecf8e', '#8ef0c0', '#1fa971', '#3ecf8e'] };
+const uiNew = () => store.get('kanka-ui') === '2';
+function applyUI() { document.body.classList.toggle('ui2', uiNew()); if (S.me) { if (S.view === 'server' && S.server) renderSide(); renderRail(); renderMe(); } }
+{ const q = new URLSearchParams(location.search).get('arayuz'); if (q === 'yeni' || q === 'eski') { store.set('kanka-ui', q === 'yeni' ? '2' : null); history.replaceState(null, '', location.pathname + location.search.replace(/[?&]arayuz=[^&]*/, '').replace(/^&/, '?') + location.hash); } }
+document.body.classList.toggle('ui2', uiNew());
 function applyTheme() {
   const t = THEMES[store.get('kanka-theme')] || THEMES.sicak, a = ACCENTS[store.get('kanka-accent')] || ACCENTS.turuncu;
   const r = document.documentElement.style;
