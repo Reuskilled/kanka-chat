@@ -17,6 +17,8 @@ try { Object.assign(config, JSON.parse(fs.readFileSync(CONFIG(), 'utf8'))); } ca
 // Eski sürümler yerel sunucuya bağlıydı: kullanıcı adresi kendisi seçmediyse yeni sunucuya geç
 if ((!config.serverChosen || OLD_SERVERS.includes(config.server)) && config.server !== DEFAULT_SERVER) { config.server = DEFAULT_SERVER; config.presenceKey = null; }
 const saveConfig = () => { try { fs.writeFileSync(CONFIG(), JSON.stringify(config, null, 2)); } catch {} };
+// Bu bilgisayarın kimliği: aynı hesap birden fazla bilgisayarda açıkken sunucu bildirimleri karıştırmasın
+if (!config.devId) { config.devId = require('crypto').randomBytes(8).toString('hex'); saveConfig(); }
 
 let win = null, tray = null, quitting = false, splash = null, splashShown = 0;
 const ICON = path.join(__dirname, 'icon.png');
@@ -265,7 +267,7 @@ async function presenceLoop() {
     if (st.game !== currentGame) { currentGame = st.game; updateOverlay(); }
     try {
       const matches = config.matchCards === false ? [] : RICH.takeMatches(); // biten maçlar: sunucu maç sonu kartı yapar
-      const r = await fetch(config.server + '/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: config.presenceKey, ...st, matches }), signal: AbortSignal.timeout(8000) });
+      const r = await fetch(config.server + '/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: config.presenceKey, dev: config.devId, ...st, matches }), signal: AbortSignal.timeout(8000) });
       if (r.ok) for (const m of matches) RICH.doneMatch(m.key);
       lastStatus = st.game ? `Oynuyor: ${st.game}${st.rich?.state ? ' · ' + st.rich.state : ''}` : st.music ? `Dinliyor: ${st.music.title}` : 'Etkinlik: boşta';
     } catch { lastStatus = 'Etkinlik: sunucuya ulaşılamadı'; }

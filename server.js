@@ -298,6 +298,7 @@ function deliverMatch(u, m) {
   const f = findChannel(chId);
   if (f) for (const n of membersOf(f.s)) if (n !== u.name) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
 }
+const autoSrc = new Map(); // kullanıcı -> (kaynak -> son bildirim)
 app.post('/api/presence', express.json({ limit: '24kb' }), async (req, res) => {
   const { key, game, detail, music, rich } = req.body || {};
   const u = key && Object.values(db.users).find(x => x.presenceKey === key);
@@ -310,21 +311,35 @@ app.post('/api/presence', express.json({ limit: '24kb' }), async (req, res) => {
       try { deliverMatch(u, m); } catch (e) { console.error('maç kartı', e); }
     }
   }
-  const prev = u.auto && Date.now() - u.auto.at < 45e3 ? u.auto : {}, now = Date.now();
-  const g = typeof game === 'string' && game.trim() ? clean(game, 60) : null;
+  // Aynı hesap birden fazla bilgisayardan (ör. ev bilgisayarı + sunucu) bildirebilir: her kaynak ayrı tutulur, sonra birleştirilir.
+  // Eskiden biri "oyun var", diğeri "oyun yok" deyince "Oynuyor" her 10 saniyede bir gidip geliyordu.
+  const now = Date.now(), srcId = reqIp(req) + '|' + clean(req.body.dev, 40);
+  const srcs = autoSrc.get(u.name) || new Map(); autoSrc.set(u.name, srcs);
+  for (const [k, v] of srcs) if (now - v.at > 45e3) srcs.delete(k);
+  const sp = srcs.get(srcId) || {};
+  const prev = u.auto && now - u.auto.at < 45e3 && !u.auto.gone ? u.auto : {};
+  let g = typeof game === 'string' && game.trim() ? clean(game, 60) : null, gDetail = clean(detail, 40), r = g ? cleanRich(rich) : null;
+  // Tek seferlik algılama boşluğu (görev listesi geç cevap verdi vb.) oyunu düşürmesin: 25 sn tolerans
+  if (!g && sp.game && now - sp.gameSeen < 25e3) { g = sp.game.name; gDetail = sp.game.detail; r = sp.game.rich || null; }
   const m = music && typeof music.title === 'string' && music.title.trim() ? { title: clean(music.title, 120), artist: clean(music.artist, 120), album: clean(music.album, 120) || null } : null;
-  if (m) {
-    const dur = +music.dur, pos = +music.pos, same = prev.music?.title === m.title && prev.music?.artist === m.artist;
-    if (dur > 1000 && dur < 3600e3 && pos >= 0 && pos <= dur) { m.dur = Math.round(dur); m.start = now - Math.round(pos); if (same && prev.music.start && Math.abs(prev.music.start - m.start) < 3000) m.start = prev.music.start; }
-    else m.start = same ? prev.music.start : now;
-    m.art = same ? prev.music.art : null;
+  srcs.set(srcId, { at: now, game: g ? { name: g, detail: gDetail, ...(r ? { rich: r } : {}) } : null, gameSeen: typeof game === 'string' && game.trim() ? now : sp.gameSeen || 0, music: m, musicRaw: m ? music : null });
+  // Birleştir: oyun bildiren en yeni kaynak, müzik bildiren en yeni kaynak
+  const live = [...srcs.values()];
+  const gs = live.filter(x => x.game).sort((a, b) => b.gameSeen - a.gameSeen)[0];
+  const ms = live.filter(x => x.music).sort((a, b) => b.at - a.at)[0];
+  const mm = ms ? { ...ms.music } : null;
+  if (mm) {
+    const dur = +ms.musicRaw.dur, pos = +ms.musicRaw.pos, same = prev.music?.title === mm.title && prev.music?.artist === mm.artist;
+    if (dur > 1000 && dur < 3600e3 && pos >= 0 && pos <= dur) { mm.dur = Math.round(dur); mm.start = now - Math.round(pos); if (same && prev.music.start && Math.abs(prev.music.start - mm.start) < 3000) mm.start = prev.music.start; }
+    else mm.start = same ? prev.music.start : now;
+    mm.art = same ? prev.music.art : null;
   }
-  const r = g ? cleanRich(rich) : null;
+  const gg = gs?.game;
   const next = { at: now,
-    game: g ? { name: g, detail: clean(detail, 40), start: prev.game?.name === g ? prev.game.start : now, ...(r ? { rich: r } : {}) } : null,
-    music: m };
+    game: gg ? { name: gg.name, detail: gg.detail, start: prev.game?.name === gg.name ? prev.game.start : now, ...(gg.rich ? { rich: gg.rich } : {}) } : null,
+    music: mm };
   const sig = x => JSON.stringify([x.game?.name, x.game?.detail, x.game?.rich && { ...x.game.rich }, x.music?.title, x.music?.artist, x.music?.start]);
-  const changed = sig(prev) !== sig(next) || !prev.at;
+  const changed = sig(prev) !== sig(next) || !prev.at || !!u.auto?.gone;
   u.auto = next;
   if (changed) {
     pushActivity(u);
