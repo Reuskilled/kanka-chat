@@ -88,25 +88,45 @@ app.get('/api/davet/:code', (req, res) => {
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
 for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
-// ---------- Beta bekleme listesi (/beta) ----------
-// İlk 300 kayıt "Beta Tester" kontenjanına girer; sonrası yedek listeye. E-posta tekrar kaydolursa aynı sırayı döndürür.
-const BETA_FILE = path.join(DATA_DIR, 'beta.json'), BETA_CAP = 300;
-let beta = []; try { beta = JSON.parse(fs.readFileSync(BETA_FILE, 'utf8')); } catch {}
-const betaHits = new Map();
+// ---------- Beta kayıt sayfası (/beta) ----------
+// Sayfadan gelen kayıt uygulamanın bekleme listesine (db.waitlist) girer. Kontenjan doluysa yedekte bekler;
+// değilse hemen davet kodu üretilir, ekranda gösterilir ve e-postayla da gönderilir.
+const BETA_OLD = path.join(DATA_DIR, 'beta.json');
+let betaMigrated = false;
+function betaMigrate() { // ilk sürümün ayrı listesini bekleme listesine taşı
+  if (betaMigrated) return; betaMigrated = true;
+  let old = []; try { old = JSON.parse(fs.readFileSync(BETA_OLD, 'utf8')); } catch { return; }
+  for (const o of old) if (!db.waitlist.some(w => w.email === o.email)) db.waitlist.push({ email: o.email, name: o.name, at: o.at, ref: 'beta-sayfa' });
+  save(); try { fs.renameSync(BETA_OLD, BETA_OLD + '.tasindi'); } catch {}
+}
+const betaCount = () => userCount() + db.waitlist.filter(w => !w.joined).length;
 app.get('/beta', (req, res) => res.sendFile(path.join(__dirname, 'public', 'beta.html')));
-app.get('/api/beta', (req, res) => res.json({ count: beta.length, cap: BETA_CAP }));
+app.get('/api/beta', (req, res) => { betaMigrate(); res.json({ count: Math.min(betaCount(), db.beta.cap || 300), cap: db.beta.cap || 300 }); });
 app.post('/api/beta', (req, res) => {
-  const ip = reqIp(req), now = Date.now();
-  const h = (betaHits.get(ip) || []).filter(t => now - t < 3600e3);
-  if (h.length >= 5) return res.status(429).json({ error: 'Çok fazla deneme, biraz sonra tekrar dene.' });
-  h.push(now); betaHits.set(ip, h);
-  const name = String(req.body?.name || '').trim().slice(0, 24), email = String(req.body?.email || '').trim().toLowerCase().slice(0, 120);
+  betaMigrate();
+  const ip = reqIp(req), cap = db.beta.cap || 300;
+  const name = clean(req.body?.name, 24), email = clean(req.body?.email, 190).toLowerCase();
   if (name.length < 2) return res.status(400).json({ error: 'Kullanıcı adını yaz.' });
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return res.status(400).json({ error: 'Geçerli bir e-posta yaz.' });
+  if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Geçerli bir e-posta yaz.' });
   if (req.body?.kvkk !== true) return res.status(400).json({ error: 'Aydınlatma metnini onaylaman gerekiyor.' });
-  let i = beta.findIndex(b => b.email === email); const again = i >= 0;
-  if (i < 0) { beta.push({ name, email, at: now, src: String(req.body?.src || '').slice(0, 20) }); i = beta.length - 1; try { fs.writeFileSync(BETA_FILE + '.tmp', JSON.stringify(beta)); fs.renameSync(BETA_FILE + '.tmp', BETA_FILE); } catch {} }
-  res.json({ pos: i + 1, inCap: i < BETA_CAP, count: beta.length, cap: BETA_CAP, again: again || undefined });
+  const acct = Object.values(db.users).find(u => u.email === email);
+  if (acct) return res.json({ account: true, count: Math.min(betaCount(), cap), cap });
+  let i = db.waitlist.findIndex(w => w.email === email); const again = i >= 0;
+  if (!again) {
+    if (limited('beta|' + ip, 5, 3600e3)) return res.status(429).json({ error: 'Çok fazla deneme, biraz sonra tekrar dene.' });
+    db.waitlist.push({ email, name, at: Date.now(), ref: 'beta-sayfa' + (req.body?.src ? ':' + clean(req.body.src, 20) : '') }); i = db.waitlist.length - 1;
+  }
+  const w = db.waitlist[i];
+  const inCap = !db.beta.on || !betaFull();
+  let mailed = !!w.mailed;
+  if (inCap) {
+    if (!w.code || db.codes[w.code]?.usedBy) w.code = newCode('kanka', 'Beta sayfası: ' + email);
+    w.invited ||= Date.now();
+    if (!w.mailed) { w.mailed = Date.now(); mailed = true; sendInviteMail(email, w.code).then(ok => { if (!ok) { delete w.mailed; save(); } }); }
+  }
+  save();
+  if (!again) for (const n of siteAdmins()) io.to('user:' + n).emit('waitlistNew', db.waitlist.filter(x => !x.invited).length);
+  res.json({ pos: Math.min(userCount() + 1 + db.waitlist.filter((x, j) => j < i && !x.joined).length, 999999), inCap, code: inCap ? w.code : null, mailed: inCap && mailed && !!getMailer(), again: again || undefined, count: Math.min(betaCount(), cap), cap });
 });
 // ---------- Yedek indirme (sadece Kanka yönetimi; masaüstü uygulaması her gün bilgisayara çeker) ----------
 app.get('/api/yedek/:name', (req, res) => {
@@ -851,11 +871,13 @@ const BADGES = {
   kurucu: ['🏰', 'Kurucu', 'Bir sunucu kurdu'],
   sosyal: ['🤝', 'Sosyal kelebek', '5+ arkadaş'],
   caylak: ['🐣', 'Çaylak', 'Başlangıç rehberini bitirdi'],
+  beta: ['🧪', 'Beta Tester', 'Kanka betasındaki ilk 300 kişiden biri'],
 };
 function badgesOf(u) {
   const order = Object.values(db.users).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map(x => x.name);
   const b = [];
   if (order.indexOf(u.name) < 100) b.push('erken');
+  if (order.indexOf(u.name) < 300) b.push('beta');
   if (u.night) b.push('gece');
   if ((u.msgs || u.xp || 0) >= 100) b.push('sohbet');
   if ((u.msgs || u.xp || 0) >= 1000) b.push('efsane');

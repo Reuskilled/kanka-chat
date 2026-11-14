@@ -48,7 +48,12 @@ button:disabled{opacity:.6}
 .ok p{margin-top:8px;color:#d8c2b4;font-weight:600;font-size:15px;line-height:1.45}
 .ok .badge{display:inline-flex;align-items:center;gap:8px;margin-top:16px;background:#241914;border:1px solid #ff8a4c55;border-radius:99px;padding:6px 14px 6px 6px;font-weight:900;font-size:14px}
 .ok .badge svg{width:28px;height:28px}
-.ok button{margin-top:18px;width:100%}
+.ok button{margin-top:12px;width:100%}
+.ok .sec{background:#2a1f1b;color:#ffb37a;box-shadow:none}
+.code{display:none;margin-top:18px;background:#150f0f;border:2px dashed #ff8a4c66;border-radius:16px;padding:14px}
+.code span{display:block;font-size:12px;font-weight:800;color:#a8978d;letter-spacing:1px;text-transform:uppercase}
+.code b{font-size:28px;font-weight:900;letter-spacing:2px;color:#fff}
+.go{display:none;margin-top:14px;font:900 18px Nunito,sans-serif;text-decoration:none;border-radius:16px;padding:17px;background:#ff8a4c;color:#1a0f0a;box-shadow:0 10px 30px rgba(255,138,76,.35)}
 .feats{margin-top:34px;display:grid;gap:12px}
 .f{display:flex;gap:14px;align-items:center;background:#150f0f;border:2px solid #221a19;border-radius:18px;padding:14px 16px}
 .f svg{width:46px;height:46px;flex:none}
@@ -90,7 +95,9 @@ details p{margin-top:10px;color:#d8c2b4;font-size:14px;font-weight:600;line-heig
     <h2 id="oh">Yerin ayrıldı!</h2>
     <p id="op">Beta açılınca davetin e-postana gelecek.</p>
     <div class="badge" id="bd"><svg viewBox="0 0 160 160"><rect width="160" height="160" rx="40" fill="#f26631"/><path d="M64 26 L70 40 L70 64 L40 116 Q34 132 52 132 L108 132 Q126 132 120 116 L90 64 L90 40 L96 26 L86 36 L74 36Z" fill="#fff"/><path d="M54 100 L106 100 L116 118 Q118 124 110 124 L50 124 Q42 124 44 118Z" fill="#f26631"/><rect x="58" y="74" width="44" height="18" rx="9" fill="#17110e"/></svg>Beta Tester rozeti senin</div>
-    <button id="sh" type="button">Kankana gönder</button>
+    <div class="code" id="cd"><span>Davet kodun</span><b id="cv">KNK-XXXXXX</b></div>
+    <a class="go" id="go" href="/">Hesabımı şimdi aç</a>
+    <button id="sh" type="button" class="sec">Kankana gönder</button>
   </div>
 
   <div class="feats">
@@ -103,8 +110,8 @@ details p{margin-top:10px;color:#d8c2b4;font-size:14px;font-weight:600;line-heig
     <h3>Sorular</h3>
     <details><summary>Telefonda var mı?</summary><p>Var. İndirmene gerek yok, telefonun tarayıcısından açılıyor. Paylaş menüsünden "Ana Ekrana Ekle" dersen uygulama gibi tam ekran açılır, bildirim de gelir.</p></details>
     <details><summary>Ücretli mi?</summary><p>Hayır. Sunucu kurmak, sesli odalar, ekran paylaşımı ve Kanka Bot ücretsiz.</p></details>
-    <details><summary>Beta ne zaman açılıyor?</summary><p>Çok yakında. Açıldığı gün davetin e-postana gelecek. Takipte kal.</p></details>
-    <details><summary>300 dolunca ne olacak?</summary><p>Kayıt kapanmıyor ama yedek listeye alınırsın. Beta Tester rozeti sadece ilk 300 kişiye özel.</p></details>
+    <details><summary>Kaydolunca ne oluyor?</summary><p>Kontenjan doluysa yedeğe alınırsın; değilse davet kodun anında ekrana gelir ve e-postana da gönderilir. Kodla hesabını açarsın, Beta Tester rozeti profiline eklenir.</p></details>
+    <details><summary>300 dolunca ne olacak?</summary><p>Yedek listeye alınırsın, yer açıldıkça davet gönderiyoruz. Beta Tester rozeti sadece ilk 300 kişiye özel.</p></details>
   </div>
 
   <div class="foot">Kanka · yorumlarla yapılıyor<br><a href="/gizlilik">Gizlilik</a><a href="/kosullar">Şartlar</a></div>
@@ -128,9 +135,13 @@ $('fm').onsubmit=async e=>{e.preventDefault();$('er').textContent='';
   try{const r=await fetch('/api/beta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,kvkk:true,src})});const d=await r.json();
     if(!r.ok)throw new Error(d.error||'Bir sorun oldu');setCount(d.count,d.cap);try{localStorage.setItem('kbeta',JSON.stringify(d))}catch{}done(d)}
   catch(err){$('er').textContent=err.message||'Bağlantı sorunu, tekrar dene.';$('bt').disabled=false;$('bt').textContent='Yerimi ayır'}};
-function done(d){$('fm').style.display='none';$('ok').style.display='block';$('ps').textContent='#'+d.pos;
-  if(!d.inCap){$('oh').textContent='Yedek listedesin';$('op').textContent='İlk 300 doldu ama yer açılırsa ya da beta genişleyince haber vereceğiz.';$('bd').style.display='none'}
-  else if(d.again){$('oh').textContent='Zaten listedesin!'}}
+function done(d){$('fm').style.display='none';$('ok').style.display='block';
+  if(d.account){$('ps').textContent='👋';$('oh').textContent='Zaten hesabın var!';$('op').textContent='Bu e-postayla açılmış bir Kanka hesabı var. Giriş yapman yeterli.';$('bd').style.display='none';$('go').style.display='block';$('go').textContent='Giriş yap';$('go').href='/';return}
+  $('ps').textContent='#'+d.pos;
+  if(!d.inCap){$('oh').textContent='Yedek listedesin';$('op').textContent='Kontenjan şu an dolu. Yer açılınca davet kodun e-postana gelecek.';$('bd').style.display='none';return}
+  $('oh').textContent=d.again?'Zaten listedesin!':'Yerin ayrıldı!';
+  $('op').textContent=d.mailed?'Davet kodunu e-postana da gönderdik. Hemen girmek istersen aşağıdaki düğmeye bas.':'Hemen girmek için aşağıdaki düğmeye bas, kodun otomatik yazılır.';
+  if(d.code){$('cd').style.display='block';$('cv').textContent=d.code;$('go').style.display='block';$('go').href='/kod/'+encodeURIComponent(d.code)}}
 $('sh').onclick=async()=>{const u=location.origin+'/beta',t='Kanka betası açılıyor, ilk 300 kişiye rozet veriyolar. Gel beraber girelim:';
   if(navigator.share){try{await navigator.share({title:'Kanka Beta',text:t,url:u})}catch{}}else{try{await navigator.clipboard.writeText(t+' '+u);$('sh').textContent='Link kopyalandı'}catch{}}};
 </script>
