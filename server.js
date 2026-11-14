@@ -1262,7 +1262,7 @@ function getMailer() {
   return mailer;
 }
 // Linkler istekteki adrese göre değil, yönetimin kaydettiği adrese göre kurulur (link zehirlemesine karşı)
-const baseUrl = () => (mailCfg?.url || process.env.PUBLIC_URL || 'https://kankahq.com').replace(/\/+$/, '');
+const baseUrl = () => ((mailCfg?.url && !/sslip\.io|\/\/\d+\.\d+\.\d+\.\d+/.test(mailCfg.url) ? mailCfg.url : '') || process.env.PUBLIC_URL || 'https://kankahq.com').replace(/\/+$/, '');
 const mailHtml = (title, body, btn, url) => `<!doctype html><html><body style="margin:0;background:#17120f;font-family:Segoe UI,Arial,sans-serif;color:#f3e9e1">
 <div style="max-width:480px;margin:0 auto;padding:36px 22px"><div style="font-size:22px;font-weight:800;color:#ff8a4c;margin-bottom:22px">🦝 Kanka Chat</div>
 <div style="background:#231b17;border:1px solid #3a2e27;border-radius:20px;padding:28px"><h1 style="font-size:20px;margin:0 0 12px">${title}</h1><div style="font-size:15px;line-height:1.6;color:#d8c9bd">${body}</div>

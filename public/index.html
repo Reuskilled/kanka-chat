@@ -2643,6 +2643,9 @@ const TIMEOUTS = [[1, '1 dakika'], [5, '5 dakika'], [10, '10 dakika'], [60, '1 s
 const timedOutLeft = (s, n) => Math.max(0, (s?.timeouts?.[n] || 0) - Date.now());
 const badge = r => r === 'admin' ? '<span class="badge admin">Yönetici</span>' : r === 'mod' ? '<span class="badge mod">Moderatör</span>' : '';
 const notifOn = () => store.get('kanka-notif') !== 'off';
+// Paylaşılan linkler her zaman kankahq.com olsun (masaüstü uygulaması eski IP adresinden açılıyor olsa bile)
+const PUB = /sslip\.io$|^\d+\.\d+\.\d+\.\d+$/.test(location.hostname) ? 'https://kankahq.com' : location.origin;
+const ownHost = h => h === location.host || h === 'kankahq.com' || h === 'www.kankahq.com';
 const ytId = u => (/(?:youtu\.be\/|[?&]v=|shorts\/|embed\/)([\w-]{11})/.exec(u) || [])[1];
 const serverEmojis = () => (S.view === 'server' && S.server?.emojis) || {};
 function fmt(t) {
@@ -3249,7 +3252,7 @@ function userMenu(n, x, y) {
   if ($('#u-vol')) $('#u-vol').oninput = e => { vol[n] = +e.target.value; store.set('kanka-vol', JSON.stringify(vol)); applyPeerAudio(); };
   m.onclick = e => {
     const inv = e.target.closest('[data-inv]');
-    if (inv) { const s = S.servers.find(x => x.id === inv.dataset.inv); closeUMenu(); openDM(n); return setTimeout(() => { $('#input').value = `${location.origin}/davet/${s.invite}`; $('#input').focus(); toast('Davet linki mesaj kutusuna kondu, göndermen yeterli'); }, 400); }
+    if (inv) { const s = S.servers.find(x => x.id === inv.dataset.inv); closeUMenu(); openDM(n); return setTimeout(() => { $('#input').value = `${PUB}/davet/${s.invite}`; $('#input').focus(); toast('Davet linki mesaj kutusuna kondu, göndermen yeterli'); }, 400); }
     const t = e.target.closest('[data-u]'); if (!t) return;
     const a = t.dataset.u; e.stopPropagation();
     if (a === 'invsub') { t.classList.toggle('open'); $('#u-inv').classList.toggle('open'); return place(); }
@@ -3783,7 +3786,7 @@ function showServerSettings(s, tab, focus) {
         <label class="switch">Yavaş mod (üyeler için mesaj arası bekleme)<select class="field" id="sv-slow" style="width:120px;margin:0">${[[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [30, '30 sn'], [60, '1 dk'], [300, '5 dk']].map(([v, t]) => `<option value="${v}" ${s.slow === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
         <label class="switch">AFK odası (hareketsiz kalanlar taşınır)<select class="field" id="sv-afk" style="width:170px;margin:0"><option value="">Kapalı</option>${s.channels.filter(c => c.type === 'voice').map(c => `<option value="${c.id}" ${s.afk?.ch === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
         <label class="switch">AFK süresi<select class="field" id="sv-afkm" style="width:120px;margin:0">${[1, 5, 10, 15, 30, 60].map(v => `<option value="${v}" ${(s.afk?.min || 10) === v ? 'selected' : ''}>${v} dk</option>`).join('')}</select></label></div>
-        ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${location.origin}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}</div>`;
+        ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${PUB}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}</div>`;
       $('#sv-save').onclick = () => socket.emit('updateServer', { serverId: s.id, name: $('#sv-name').value, icon: $('#sv-icon').value }, done('Kaydedildi'));
       $('#sv-img').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, iconImg: url }, done()));
       $('#sv-bn').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, banner: url }, done('Afiş güncellendi')));
@@ -3794,7 +3797,7 @@ function showServerSettings(s, tab, focus) {
       const afkSave = () => socket.emit('updateServer', { serverId: s.id, afkCh: $('#sv-afk').value || null, afkMin: +$('#sv-afkm').value }, r => r.error ? toast(r.error) : toast($('#sv-afk').value ? 'AFK odası ayarlandı' : 'AFK kapatıldı'));
       $('#sv-afk').onchange = afkSave; $('#sv-afkm').onchange = afkSave;
       $('#sv-slow').onchange = e => socket.emit('updateServer', { serverId: s.id, slow: +e.target.value }, r => r.error ? toast(r.error) : toast('Yavaş mod güncellendi'));
-      if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(`${location.origin}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
+      if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(`${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
     },
     roles: () => {
       const roles = s.customRoles || [], edit = roles.find(r => r.id === ssOpen.focus) || (ssOpen.focus === 'new' ? { id: '', name: '', color: '#ffb347', perms: [], hoist: true } : null);
@@ -4305,7 +4308,7 @@ function roomGo(id) {
 const refreshRoomCards = () => document.querySelectorAll('.roomc[data-room]').forEach(el => { const h = roomCardHTML(el.dataset.room); if (el.outerHTML !== h) el.outerHTML = h; });
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-roomgo]'); if (go) { e.preventDefault(); e.stopPropagation(); return roomGo(go.dataset.roomgo); }
-  const a = e.target.closest('#messages a[href], #thread a[href]'); if (!a || a.host !== location.host) return;
+  const a = e.target.closest('#messages a[href], #thread a[href]'); if (!a || !ownHost(a.host)) return;
   const id = roomIds(a.getAttribute('href'))[0]; if (id) { e.preventDefault(); e.stopPropagation(); roomGo(id); }
 }, true);
 function invFetch() {
@@ -4326,7 +4329,7 @@ document.addEventListener('click', e => {
   const go = e.target.closest('[data-invgo]'); if (go) { e.preventDefault(); e.stopPropagation(); return invGo(go.dataset.invgo); }
   const a = e.target.closest('#messages a[href], #thread a[href]'); if (!a) return;
   const c = invCodes(a.getAttribute('href'))[0];
-  if (c && (a.host === location.host || /\/davet\//.test(a.pathname))) { e.preventDefault(); e.stopPropagation(); invGo(c); } // linki tarayıcıda açma, uygulamanın içinde katıl
+  if (c && (ownHost(a.host) || /\/davet\//.test(a.pathname))) { e.preventDefault(); e.stopPropagation(); invGo(c); } // linki tarayıcıda açma, uygulamanın içinde katıl
 }, true);
 function previewHTML(p) {
   return `<a class="lprev ${p.image ? 'img' : ''}" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer"><span class="lp-t"><small>${esc(p.site)}</small><b>${esc(p.title)}</b>${p.desc ? `<span>${esc(p.desc)}</span>` : ''}</span>${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</a>`;
@@ -6403,7 +6406,7 @@ function tip(key, sel, title, text, place = 'top', tries = 0) {
 // --- Davet penceresi ---
 function showInvite(s) {
   if (!s?.invite) return toast('Bu sunucunun davet linki yok.');
-  const link = `${location.origin}/davet/${s.invite}`, text = `${s.name} sunucusuna gel, Kanka'da takılıyoruz! 🦝`;
+  const link = `${PUB}/davet/${s.invite}`, text = `${s.name} sunucusuna gel, Kanka'da takılıyoruz! 🦝`;
   const mark = () => socket.emit('onbMark', { k: 'invite', serverId: s.id }, () => {});
   const enc = encodeURIComponent, cnt = (s.members || []).length;
   const share = [
@@ -6728,7 +6731,7 @@ function chMenu(s, c, x, y, lite) {
   if (!lite) items.push({ t: 'Odayı düzenle', icon: 'gear', act: () => showChSettings(s, 'ch', c.id, 'general') }, { t: 'İzinleri düzenle', icon: 'shield', act: () => showChSettings(s, 'ch', c.id, 'perms') }, { t: 'Odayı çoğalt', icon: 'copy', act: () => socket.emit('chDuplicate', { serverId: s.id, channelId: c.id }, r => r?.error ? toast(r.error) : toast('Oda çoğaltıldı')) }, '-');
   if (!voiceLike(c.type)) items.push(nb('all', 'Tüm mesajlarda bildir'), nb('mentions', 'Sadece @bahsedilince'), nb('none', 'Odayı sessize al'), '-');
   if (c.news) items.push({ t: 'Duyuruları takip et', icon: 'megaphone', act: () => showFollow(s, c) });
-  items.push({ t: 'Bağlantıyı kopyala', icon: 'link', act: () => navigator.clipboard?.writeText(`${location.origin}/?oda=${c.id}`).then(() => toast('Bağlantı kopyalandı')) });
+  items.push({ t: 'Bağlantıyı kopyala', icon: 'link', act: () => navigator.clipboard?.writeText(`${PUB}/?oda=${c.id}`).then(() => toast('Bağlantı kopyalandı')) });
   if (!lite) items.push('-', { t: 'Odayı sil', icon: 'trash', danger: true, act: () => askDeleteCh(s, c) });
   ctxMenu(x, y, items);
 }
@@ -7234,7 +7237,7 @@ function wireAccount() {
     const el = $('#acc-codes'); if (!el || r.error) return;
     el.innerHTML = r.codes.map(c => `<div class="code ${c.usedBy ? 'used' : ''}"><span class="cv">${esc(c.code)}</span>${c.usedBy ? `<span class="cu">${av(c.usedBy)}<b>${esc(c.usedBy)}</b> katıldı</span>` : `<span class="cu free">Kullanılmadı</span><button data-cp="${esc(c.code)}">${ic('link')}Linki kopyala</button>`}</div>`).join('') +
       (r.joined ? `<p class="hint">Şimdiye kadar <b style="color:var(--text)">${r.joined}</b> kişi senin davetinle katıldı 🎉</p>` : '');
-    el.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(`${location.origin}/kod/${b.dataset.cp}`).then(() => toast('Davet linki kopyalandı, arkadaşına gönder')));
+    el.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(`${PUB}/kod/${b.dataset.cp}`).then(() => toast('Davet linki kopyalandı, arkadaşına gönder')));
   });
   $('#acc-export').onclick = () => socket.emit('exportData', r => {
     if (r.error) return toast(r.error);
@@ -7313,10 +7316,10 @@ function adminPanel(el, sub = 'reports') {
     $('#b-capsave').onclick = () => socket.emit('adminBetaSet', { cap: +$('#b-cap').value }, x => x.error ? toast(x.error) : (toast('Sınır kaydedildi'), re()));
     $('#c-go').onclick = () => socket.emit('adminCodes', { n: +$('#c-n').value, note: $('#c-note').value }, x => {
       if (x.error) return toast(x.error);
-      navigator.clipboard?.writeText(x.codes.map(c => `${location.origin}/kod/${c}`).join('\n'));
+      navigator.clipboard?.writeText(x.codes.map(c => `${PUB}/kod/${c}`).join('\n'));
       toast(`${x.codes.length} kod üretildi, linkler panoya kopyalandı`); re();
     });
-    B.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(`${location.origin}/kod/${b.dataset.cp}`).then(() => toast('Link kopyalandı')));
+    B.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(`${PUB}/kod/${b.dataset.cp}`).then(() => toast('Link kopyalandı')));
     armBtn($('#w-go'), `${$('#w-n').value} kişiye gönderilsin mi?`, () => {
       $('#w-go').classList.add('busy');
       socket.emit('adminInviteWait', { n: +$('#w-n').value }, x => {
@@ -7325,7 +7328,7 @@ function adminPanel(el, sub = 'reports') {
         if (!x.sent.length) return toast('Sırada bekleyen kimse yok');
         const manual = x.sent.filter(s => !s.sent);
         $('#w-res').innerHTML = `<div class="acc-warn ${manual.length ? '' : 'ok'}">${ic(manual.length ? 'mail' : 'check')}<span><b>${x.sent.length - manual.length} davet e-postayla gitti${manual.length ? `, ${manual.length} tanesini elle göndermelisin` : ''}</b>
-          ${manual.map(s => `${esc(s.email)} → <code>${location.origin}/kod/${esc(s.code)}</code>`).join('<br>')}</span></div>`;
+          ${manual.map(s => `${esc(s.email)} → <code>${PUB}/kod/${esc(s.code)}</code>`).join('<br>')}</span></div>`;
         setTimeout(re, manual.length ? 60000 : 1500);
       });
     });
@@ -7337,7 +7340,7 @@ function adminPanel(el, sub = 'reports') {
       <ol class="steps"><li><b>kankahq1@gmail.com</b> gibi bir Gmail hesabında <b>2 adımlı doğrulama</b>yı aç.</li><li><a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent)">myaccount.google.com/apppasswords</a> adresinde "Kanka" adıyla bir <b>uygulama şifresi</b> oluştur (16 harf).</li><li>Aşağıya yapıştır, kaydet ve test et. Gmail günde 500 e-posta gönderir, beta için fazlasıyla yeter.</li></ol>
       <div class="st-field st-2"><div><label>Gönderen Gmail adresi</label><input class="field" id="m-user" value="${esc(c.user || '')}" placeholder="kankahq1@gmail.com" style="margin:0"></div>
         <div><label>Uygulama şifresi</label><input class="field" id="m-pass" type="password" placeholder="${c.hasPass ? '•••• kayıtlı (değiştirmek için yaz)' : 'abcd efgh ijkl mnop'}" style="margin:0"></div></div>
-      <div class="st-field"><label>Site adresi (e-postadaki linkler buna gider)</label><input class="field" id="m-url" value="${esc(c.url || location.origin)}"></div>
+      <div class="st-field"><label>Site adresi (e-postadaki linkler buna gider)</label><input class="field" id="m-url" value="${esc(c.url && !/sslip/.test(c.url) ? c.url : PUB)}"></div>
       <details class="adm-adv"><summary>Gmail dışı bir SMTP kullan</summary><div class="st-field st-2"><div><label>SMTP sunucusu</label><input class="field" id="m-host" value="${esc(c.host || '')}" placeholder="boş = Gmail" style="margin:0"></div><div><label>Port</label><input class="field" id="m-port" type="number" value="${c.port || 465}" style="margin:0"></div></div></details>
       <div class="rowb" style="justify-content:flex-start"><button class="primary" id="m-save" style="width:auto;padding:11px 20px">Kaydet</button><button class="btns2" id="m-test">${ic('send')} Test e-postası gönder</button></div></div>`;
     $('#m-save').onclick = () => socket.emit('adminMail', { set: { user: $('#m-user').value, pass: $('#m-pass').value, url: $('#m-url').value, host: $('#m-host').value, port: $('#m-port').value } }, x => x.error ? toast(x.error) : (toast('Kaydedildi'), adminPanel(el, 'mail')));

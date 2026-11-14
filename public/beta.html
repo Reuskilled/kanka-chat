@@ -142,7 +142,7 @@ function done(d){$('fm').style.display='none';$('ok').style.display='block';
   $('oh').textContent=d.again?'Zaten listedesin!':'Yerin ayrıldı!';
   $('op').textContent=d.mailed?'Davet kodunu e-postana da gönderdik. Hemen girmek istersen aşağıdaki düğmeye bas.':'Hemen girmek için aşağıdaki düğmeye bas, kodun otomatik yazılır.';
   if(d.code){$('cd').style.display='block';$('cv').textContent=d.code;$('go').style.display='block';$('go').href='/kod/'+encodeURIComponent(d.code)}}
-$('sh').onclick=async()=>{const u=location.origin+'/beta',t='Kanka betası açılıyor, ilk 300 kişiye rozet veriyolar. Gel beraber girelim:';
+$('sh').onclick=async()=>{const u=(/sslip\.io$|^\d+\.\d+\.\d+\.\d+$/.test(location.hostname)?'https://kankahq.com':location.origin)+'/beta',t='Kanka betası açılıyor, ilk 300 kişiye rozet veriyolar. Gel beraber girelim:';
   if(navigator.share){try{await navigator.share({title:'Kanka Beta',text:t,url:u})}catch{}}else{try{await navigator.clipboard.writeText(t+' '+u);$('sh').textContent='Link kopyalandı'}catch{}}};
 </script>
 </body>

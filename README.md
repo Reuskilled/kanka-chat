@@ -2,7 +2,7 @@
 
 Sıcak ve samimi, Discord tarzı gerçek zamanlı sohbet uygulaması.
 
-**Canlı:** https://185-208-172-60.sslip.io
+**Canlı:** https://kankahq.com
 
 ## Klasörler
 - `server.js`, `public/`: sunucu ve web arayüzü (Node.js, Express, Socket.IO)

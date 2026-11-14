@@ -10,7 +10,7 @@ exit /b
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$Domain = '185-208-172-60.sslip.io'
+$Domain = 'kankahq.com'
 $Src = $env:KANKA_SRC
 $Dst = 'C:\KankaChat'
 $Host.UI.RawUI.WindowTitle = 'Kanka Chat kurulumu'
@@ -68,7 +68,7 @@ try {
     Invoke-WebRequest 'https://caddyserver.com/api/download?os=windows&arch=amd64' -OutFile "$Dst\caddy.exe" -UseBasicParsing
   }
   @"
-$Domain {
+$Domain, 185-208-172-60.sslip.io {
 	encode gzip
 	reverse_proxy 127.0.0.1:3000
 }

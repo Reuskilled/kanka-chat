@@ -9,12 +9,13 @@ const fs = require('fs');
 // Ana süreçte beklenmeyen bir hata olursa kullanıcıya çirkin hata kutusu gösterme, sadece kaydet
 process.on('uncaughtException', e => { try { console.error('[kanka] hata:', e?.stack || e); } catch {} });
 
-const DEFAULT_SERVER = 'https://185-208-172-60.sslip.io';
+const DEFAULT_SERVER = 'https://kankahq.com';
+const OLD_SERVERS = ['https://185-208-172-60.sslip.io'];
 const CONFIG = () => path.join(app.getPath('userData'), 'ayarlar.json');
 let config = { server: DEFAULT_SERVER, presenceKey: null, startHidden: false };
 try { Object.assign(config, JSON.parse(fs.readFileSync(CONFIG(), 'utf8'))); } catch {}
 // Eski sürümler yerel sunucuya bağlıydı: kullanıcı adresi kendisi seçmediyse yeni sunucuya geç
-if (!config.serverChosen && config.server !== DEFAULT_SERVER) { config.server = DEFAULT_SERVER; config.presenceKey = null; }
+if ((!config.serverChosen || OLD_SERVERS.includes(config.server)) && config.server !== DEFAULT_SERVER) { config.server = DEFAULT_SERVER; config.presenceKey = null; }
 const saveConfig = () => { try { fs.writeFileSync(CONFIG(), JSON.stringify(config, null, 2)); } catch {} };
 
 let win = null, tray = null, quitting = false, splash = null, splashShown = 0;
