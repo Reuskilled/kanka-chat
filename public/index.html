@@ -858,6 +858,11 @@
   #send:hover { transform: rotate(-8deg) scale(1.06); }
   #plus { transition: transform .25s var(--ease), background .15s; }
   #plus.open { transform: rotate(45deg); }
+  .mem .mtyp { display: none; align-items: center; gap: 2px; font-size: 12px; font-weight: 800; color: var(--accent-2); }
+  .mem .mtyp .typing-dots { margin-right: 4px; } .mem .mtyp .typing-dots i { width: 5px; height: 5px; }
+  .mem.typing .mtyp { display: flex; }
+  .mem.typing .info > :not(:first-child):not(.mtyp) { display: none; }
+  .mem.typing > .av { box-shadow: 0 0 0 2px var(--accent-2); transition: box-shadow .2s; }
   .typing-dots { display: inline-flex; gap: 3px; margin-right: 6px; vertical-align: middle; }
   .typing-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); animation: dot 1.2s infinite; }
   .typing-dots i:nth-child(2) { animation-delay: .15s } .typing-dots i:nth-child(3) { animation-delay: .3s }
@@ -4729,6 +4734,7 @@ $('#input').addEventListener('keydown', e => {
 function renderTyping() {
   const names = [...typers.keys()];
   $('#typing').innerHTML = !names.length ? '' : `<span class="typing-dots"><i></i><i></i><i></i></span><b>${esc(names.slice(0, 3).join(', '))}</b> ${names.length > 1 ? 'yazıyorlar' : 'yazıyor'}`;
+  memTyping();
 }
 socket.on('typing', ({ channelId, name }) => {
   if (channelId !== S.channel?.id) return;
@@ -4749,7 +4755,7 @@ function renderMembers() {
   const item = n => {
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n);
-    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}</div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
@@ -4764,7 +4770,10 @@ function renderMembers() {
   $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
   $('#members').querySelector('.mem.botmem')?.addEventListener('click', e => { e.stopPropagation(); botProfile(); });
   $('#mdr-x').onclick = e => { e.stopPropagation(); closeMembers(); };
+  memTyping();
 }
+// Bu odada yazan kişiler üye listesinde "yazıyor" olarak görünür
+function memTyping() { $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.classList.toggle('typing', typers.has(m.dataset.n) && m.dataset.n !== S.me)); }
 const lvlFloor = L => 5 * (L - 1) ** 2;
 function xpBar(u) {
   const lo = lvlFloor(u.level), hi = lvlFloor(u.level + 1), pct = Math.round((u.xp - lo) / (hi - lo) * 100);
