@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kanka Beta · ilk 300 kişi</title>
+<meta name="description" content="Türkiye'nin Discord alternatifi Kanka'nın betası açılıyor. VPN yok, Kanka Bot ücretsiz. İlk 300 kişiye kalıcı Beta Tester rozeti.">
+<meta property="og:title" content="Kanka Beta · ilk 300 kişi">
+<meta property="og:description" content="VPN'siz Discord hissi. İlk 300 kişiye kalıcı Beta Tester rozeti.">
+<meta property="og:image" content="/marka/hq-afis.png">
+<meta name="theme-color" content="#0d0908">
+<link rel="icon" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Nunito,system-ui,sans-serif;background:#0d0908;color:#fff;min-height:100vh;-webkit-font-smoothing:antialiased}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(700px 520px at 85% -5%,rgba(255,122,61,.28),transparent 70%),radial-gradient(600px 600px at -10% 105%,rgba(255,90,40,.14),transparent 70%);pointer-events:none}
+.w{position:relative;max-width:520px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:34px}
+.top img{width:46px;height:46px;border-radius:13px;box-shadow:0 8px 30px rgba(255,138,76,.4)}
+.top b{font-size:22px;font-weight:900}
+.pill{margin-left:auto;font-size:12px;font-weight:900;letter-spacing:2px;background:#ff8a4c;color:#1a0f0a;padding:5px 12px;border-radius:99px}
+h1{font-size:44px;line-height:1.02;font-weight:900;letter-spacing:-1.5px}
+h1 em{font-style:normal;color:#ff8a4c}
+.sub{margin-top:14px;font-size:17px;color:#d8c2b4;font-weight:600;line-height:1.45}
+.ctr{margin-top:28px;background:#1a1414;border:2px solid #2c2220;border-radius:22px;padding:20px 22px}
+.ctr .n{display:flex;align-items:baseline;gap:8px}
+.ctr .n b{font-size:46px;font-weight:900;color:#ff8a4c;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.ctr .n span{font-size:18px;color:#bfa999;font-weight:800}
+.ctr .n i{margin-left:auto;font-style:normal;font-size:13px;font-weight:800;color:#ffb37a}
+.bar{margin-top:12px;height:12px;border-radius:99px;background:#2c2220;overflow:hidden}
+.ctr.low .n b,.ctr.low .n span{display:none}.ctr.low .n:before{content:'Kayıtlar açık';font-size:24px;font-weight:900}.ctr.low .n i{font-size:14px}
+.bar div{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#ff8a4c,#ffb37a);transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+form{margin-top:18px;display:grid;gap:12px}
+input[type=text],input[type=email]{width:100%;font:700 16px Nunito,sans-serif;color:#fff;background:#150f0f;border:2px solid #2c2220;border-radius:16px;padding:16px 18px;outline:none}
+input:focus{border-color:#ff8a4c}
+input::placeholder{color:#7c6c64}
+label.k{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#bfa999;font-weight:600;line-height:1.4}
+label.k input{margin-top:2px;width:18px;height:18px;accent-color:#ff8a4c;flex:none}
+label.k a{color:#ffb37a}
+button{font:900 18px Nunito,sans-serif;border:0;border-radius:16px;padding:17px;background:#ff8a4c;color:#1a0f0a;cursor:pointer;box-shadow:0 10px 30px rgba(255,138,76,.35);transition:transform .1s}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.6}
+.err{color:#ff7b6b;font-size:14px;font-weight:800;min-height:18px}
+.ok{display:none;margin-top:18px;text-align:center;background:#1a1414;border:2px solid #ff8a4c;border-radius:22px;padding:28px 20px}
+.ok .pos{font-size:64px;font-weight:900;color:#ff8a4c;letter-spacing:-2px;line-height:1}
+.ok h2{margin-top:10px;font-size:24px;font-weight:900}
+.ok p{margin-top:8px;color:#d8c2b4;font-weight:600;font-size:15px;line-height:1.45}
+.ok .badge{display:inline-flex;align-items:center;gap:8px;margin-top:16px;background:#241914;border:1px solid #ff8a4c55;border-radius:99px;padding:6px 14px 6px 6px;font-weight:900;font-size:14px}
+.ok .badge svg{width:28px;height:28px}
+.ok button{margin-top:18px;width:100%}
+.feats{margin-top:34px;display:grid;gap:12px}
+.f{display:flex;gap:14px;align-items:center;background:#150f0f;border:2px solid #221a19;border-radius:18px;padding:14px 16px}
+.f svg{width:46px;height:46px;flex:none}
+.f b{display:block;font-size:16px;font-weight:900}
+.f span{font-size:14px;color:#bfa999;font-weight:600}
+.q{margin-top:30px}
+.q h3{font-size:18px;font-weight:900;margin-bottom:10px}
+details{background:#150f0f;border:2px solid #221a19;border-radius:16px;padding:14px 16px;margin-bottom:10px}
+summary{font-weight:800;cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";float:right;color:#ff8a4c;font-weight:900}
+details[open] summary:after{content:"–"}
+details p{margin-top:10px;color:#d8c2b4;font-size:14px;font-weight:600;line-height:1.5}
+.foot{margin-top:28px;text-align:center;font-size:13px;color:#7c6c64;font-weight:700}
+.foot a{color:#a8978d;margin:0 6px}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="top"><img src="/icon-192.png" alt=""><b>Kanka</b><span class="pill">BETA</span></div>
+  <h1>Discord'a VPN'le girmekten <em>sıkılmadın mı?</em></h1>
+  <p class="sub">Kanka'nın betası açılıyor. Sunucular, sesli odalar, ekran paylaşımı. VPN'siz, Türkçe. Kapılar sadece ilk 300 kişiye açık.</p>
+
+  <div class="ctr">
+    <div class="n"><b id="cnt">0</b><span>/ 300 kişi</span><i id="left"></i></div>
+    <div class="bar"><div id="fill"></div></div>
+  </div>
+
+  <form id="fm" novalidate>
+    <input type="text" id="nm" placeholder="Kullanıcı adın" maxlength="24" autocomplete="nickname" required>
+    <input type="email" id="em" placeholder="E-posta adresin" maxlength="120" autocomplete="email" inputmode="email" required>
+    <label class="k"><input type="checkbox" id="kv"><span>Beta davetini gönderebilmeniz için e-postamın kullanılmasını kabul ediyorum. <a href="/gizlilik" target="_blank">Aydınlatma metni</a></span></label>
+    <div class="err" id="er"></div>
+    <button id="bt" type="submit">Yerimi ayır</button>
+  </form>
+
+  <div class="ok" id="ok">
+    <div class="pos" id="ps">#1</div>
+    <h2 id="oh">Yerin ayrıldı!</h2>
+    <p id="op">Beta açılınca davetin e-postana gelecek.</p>
+    <div class="badge" id="bd"><svg viewBox="0 0 160 160"><rect width="160" height="160" rx="40" fill="#f26631"/><path d="M64 26 L70 40 L70 64 L40 116 Q34 132 52 132 L108 132 Q126 132 120 116 L90 64 L90 40 L96 26 L86 36 L74 36Z" fill="#fff"/><path d="M54 100 L106 100 L116 118 Q118 124 110 124 L50 124 Q42 124 44 118Z" fill="#f26631"/><rect x="58" y="74" width="44" height="18" rx="9" fill="#17110e"/></svg>Beta Tester rozeti senin</div>
+    <button id="sh" type="button">Kankana gönder</button>
+  </div>
+
+  <div class="feats">
+    <div class="f"><svg viewBox="0 0 160 160"><rect width="160" height="160" rx="40" fill="#f26631"/><path d="M42 32 L58 50 Q80 42 102 50 L118 32 Q124 54 120 68 Q128 102 80 108 Q32 102 40 68 Q36 54 42 32Z" fill="#fff"/><path d="M50 66 Q65 54 80 66 Q95 54 110 66 Q95 80 80 70 Q65 80 50 66Z" fill="#f26631"/><rect x="40" y="114" width="80" height="30" rx="15" fill="#17110e"/><text x="80" y="135" font-family="Nunito" font-weight="900" font-size="20" fill="#fff" text-anchor="middle">VPN</text><line x1="46" y1="140" x2="114" y2="118" stroke="#f26631" stroke-width="6" stroke-linecap="round"/></svg><div><b>VPN yok, kurulum yok</b><span>Tarayıcıdan aç, gir, konuş.</span></div></div>
+    <div class="f"><svg viewBox="0 0 160 160"><rect width="160" height="160" rx="40" fill="#f26631"/><line x1="80" y1="22" x2="80" y2="40" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="80" cy="20" r="8" fill="#17110e" stroke="#fff" stroke-width="4"/><path d="M38 50 L54 62 L106 62 L122 50 L122 118 Q122 132 108 132 L52 132 Q38 132 38 118Z" fill="#fff"/><rect x="48" y="78" width="64" height="26" rx="13" fill="#17110e"/><circle cx="66" cy="91" r="6" fill="#f26631"/><circle cx="94" cy="91" r="6" fill="#f26631"/></svg><div><b>Kanka Bot ücretsiz</b><span>Moderasyon, anti-nuke, komutlar hazır.</span></div></div>
+    <div class="f"><svg viewBox="0 0 160 160"><rect width="160" height="160" rx="40" fill="#f26631"/><path d="M64 26 L70 40 L70 64 L40 116 Q34 132 52 132 L108 132 Q126 132 120 116 L90 64 L90 40 L96 26 L86 36 L74 36Z" fill="#fff"/><path d="M54 100 L106 100 L116 118 Q118 124 110 124 L50 124 Q42 124 44 118Z" fill="#f26631"/><rect x="58" y="74" width="44" height="18" rx="9" fill="#17110e"/></svg><div><b>Kalıcı Beta Tester rozeti</b><span>Sadece ilk 300 kişiye. Bir daha verilmeyecek.</span></div></div>
+  </div>
+
+  <div class="q">
+    <h3>Sorular</h3>
+    <details><summary>Telefonda var mı?</summary><p>Var. İndirmene gerek yok, telefonun tarayıcısından açılıyor. Paylaş menüsünden "Ana Ekrana Ekle" dersen uygulama gibi tam ekran açılır, bildirim de gelir.</p></details>
+    <details><summary>Ücretli mi?</summary><p>Hayır. Sunucu kurmak, sesli odalar, ekran paylaşımı ve Kanka Bot ücretsiz.</p></details>
+    <details><summary>Beta ne zaman açılıyor?</summary><p>Çok yakında. Açıldığı gün davetin e-postana gelecek. Takipte kal.</p></details>
+    <details><summary>300 dolunca ne olacak?</summary><p>Kayıt kapanmıyor ama yedek listeye alınırsın. Beta Tester rozeti sadece ilk 300 kişiye özel.</p></details>
+  </div>
+
+  <div class="foot">Kanka · yorumlarla yapılıyor<br><a href="/gizlilik">Gizlilik</a><a href="/kosullar">Şartlar</a></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);let shown=0;
+function setCount(n,cap){const t0=performance.now(),from=shown;shown=n;
+  (function tick(t){const p=Math.min(1,(t-t0)/900),v=Math.round(from+(n-from)*(1-Math.pow(1-p,3)));$('cnt').textContent=v;if(p<1)requestAnimationFrame(tick)})(t0);
+  $('fill').style.width=Math.max(4,Math.min(100,n/cap*100))+'%';const l=cap-n;$('left').textContent=l>0?(l+' yer kaldı'):'kontenjan doldu';
+  document.querySelector('.ctr').classList.toggle('low',n<30)}
+fetch('/api/beta').then(r=>r.json()).then(d=>setCount(d.count,d.cap)).catch(()=>{});
+setInterval(()=>fetch('/api/beta').then(r=>r.json()).then(d=>{if(d.count!==shown)setCount(d.count,d.cap)}).catch(()=>{}),15000);
+const src=new URLSearchParams(location.search).get('k')||'';
+try{const s=JSON.parse(localStorage.getItem('kbeta')||'null');if(s)done(s)}catch{}
+$('fm').onsubmit=async e=>{e.preventDefault();$('er').textContent='';
+  const name=$('nm').value.trim(),email=$('em').value.trim();
+  if(name.length<2)return $('er').textContent='Kullanıcı adını yaz.';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return $('er').textContent='Geçerli bir e-posta yaz.';
+  if(!$('kv').checked)return $('er').textContent='Aydınlatma metnini onaylaman gerekiyor.';
+  $('bt').disabled=true;$('bt').textContent='Ayrılıyor...';
+  try{const r=await fetch('/api/beta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,kvkk:true,src})});const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Bir sorun oldu');setCount(d.count,d.cap);try{localStorage.setItem('kbeta',JSON.stringify(d))}catch{}done(d)}
+  catch(err){$('er').textContent=err.message||'Bağlantı sorunu, tekrar dene.';$('bt').disabled=false;$('bt').textContent='Yerimi ayır'}};
+function done(d){$('fm').style.display='none';$('ok').style.display='block';$('ps').textContent='#'+d.pos;
+  if(!d.inCap){$('oh').textContent='Yedek listedesin';$('op').textContent='İlk 300 doldu ama yer açılırsa ya da beta genişleyince haber vereceğiz.';$('bd').style.display='none'}
+  else if(d.again){$('oh').textContent='Zaten listedesin!'}}
+$('sh').onclick=async()=>{const u=location.origin+'/beta',t='Kanka betası açılıyor, ilk 300 kişiye rozet veriyolar. Gel beraber girelim:';
+  if(navigator.share){try{await navigator.share({title:'Kanka Beta',text:t,url:u})}catch{}}else{try{await navigator.clipboard.writeText(t+' '+u);$('sh').textContent='Link kopyalandı'}catch{}}};
+</script>
+</body>
+</html>

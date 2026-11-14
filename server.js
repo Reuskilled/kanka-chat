@@ -88,6 +88,26 @@ app.get('/api/davet/:code', (req, res) => {
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
 for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+// ---------- Beta bekleme listesi (/beta) ----------
+// İlk 300 kayıt "Beta Tester" kontenjanına girer; sonrası yedek listeye. E-posta tekrar kaydolursa aynı sırayı döndürür.
+const BETA_FILE = path.join(DATA_DIR, 'beta.json'), BETA_CAP = 300;
+let beta = []; try { beta = JSON.parse(fs.readFileSync(BETA_FILE, 'utf8')); } catch {}
+const betaHits = new Map();
+app.get('/beta', (req, res) => res.sendFile(path.join(__dirname, 'public', 'beta.html')));
+app.get('/api/beta', (req, res) => res.json({ count: beta.length, cap: BETA_CAP }));
+app.post('/api/beta', (req, res) => {
+  const ip = reqIp(req), now = Date.now();
+  const h = (betaHits.get(ip) || []).filter(t => now - t < 3600e3);
+  if (h.length >= 5) return res.status(429).json({ error: 'Çok fazla deneme, biraz sonra tekrar dene.' });
+  h.push(now); betaHits.set(ip, h);
+  const name = String(req.body?.name || '').trim().slice(0, 24), email = String(req.body?.email || '').trim().toLowerCase().slice(0, 120);
+  if (name.length < 2) return res.status(400).json({ error: 'Kullanıcı adını yaz.' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return res.status(400).json({ error: 'Geçerli bir e-posta yaz.' });
+  if (req.body?.kvkk !== true) return res.status(400).json({ error: 'Aydınlatma metnini onaylaman gerekiyor.' });
+  let i = beta.findIndex(b => b.email === email); const again = i >= 0;
+  if (i < 0) { beta.push({ name, email, at: now, src: String(req.body?.src || '').slice(0, 20) }); i = beta.length - 1; try { fs.writeFileSync(BETA_FILE + '.tmp', JSON.stringify(beta)); fs.renameSync(BETA_FILE + '.tmp', BETA_FILE); } catch {} }
+  res.json({ pos: i + 1, inCap: i < BETA_CAP, count: beta.length, cap: BETA_CAP, again: again || undefined });
+});
 // ---------- Yedek indirme (sadece Kanka yönetimi; masaüstü uygulaması her gün bilgisayara çeker) ----------
 app.get('/api/yedek/:name', (req, res) => {
   const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), who = tok && db.sessions[tok];
