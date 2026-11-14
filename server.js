@@ -874,7 +874,9 @@ function botWelcome(s, name) {
     else modLog(s, { title: '👋 Karşılama: rol verilemedi', text: `"${r.name}" rolü Kanka Bot'un rolünden yukarıda. Roller sekmesinde Kanka Bot rolünü onun üstüne taşı.`, tone: 'warn' });
   }
   if (gave) fields.push(['Rol', gave]);
-  botPost(ch.id, { title: WELCOME_TITLES[count % WELCOME_TITLES.length], text: welcomeFill(s, w.text, name, count) || `@${name} aramıza katıldı!`, tone: 'ok', fields });
+  const txt = welcomeFill(s, w.text, name, count) || `@${name} aramıza katıldı!`;
+  botPost(ch.id, { title: WELCOME_TITLES[count % WELCOME_TITLES.length], text: txt, tone: 'ok', fields });
+  if (txt.includes('@' + name)) notifyUser(name, { from: BOT_NAME, text: txt, channelId: ch.id, where: `${s.name} · #${ch.name}`, mention: true });
   if (gave) { save(); pushServers(membersOf(s)); }
 }
 function botBye(s, name) {
