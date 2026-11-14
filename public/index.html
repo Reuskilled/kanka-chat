@@ -3116,6 +3116,7 @@ const discCard = (o, preview) => `<div class="dc-card">${srvArt(o, 'cb')}${srvIc
   <div class="cm"><span class="on">${o.online ?? 0} çevrimiçi</span><span>${o.members ?? 0} üye</span>${o.category ? `<span class="chip">${esc(o.category)}</span>` : ''}</div>
   ${preview ? '' : `<button class="cj ${o.joined ? 'joined' : ''}" data-dj="${esc(o.invite)}" data-did="${esc(o.id)}">${o.joined ? 'Sunucuyu aç' : 'Katıl'}</button>`}</div></div>`;
 function showDiscover() {
+  hideSuggest(); $('#cmdhint').style.display = 'none';
   S.view = 'discover'; document.body.classList.add('discover'); document.body.classList.remove('vview', 'drawer'); renderPip?.();
   S.channel = null; renderRail();
   setHeader(`${ic('compass')} Sunucuları keşfet`, 'Yeni kankalar, yeni topluluklar', false); $('#head-actions').innerHTML = '';
@@ -3754,6 +3755,7 @@ function botProfile() {
   if ($('#kb-set')) $('#kb-set').onclick = () => showServerSettings(s, 'bot');
 }
 function showBots() {
+  hideSuggest(); $('#cmdhint').style.display = 'none';
   S.view = 'discover'; document.body.classList.add('discover'); document.body.classList.remove('vview', 'drawer');
   S.channel = null; renderRail();
   setHeader(`${ic('shield')} Botlar`, 'Sunucuna tek tıkla ekle', false); $('#head-actions').innerHTML = '';
@@ -4065,6 +4067,7 @@ function openDMHome() {
 }
 let friendTab = 'home';
 function showFriends(tab = friendTab) {
+  hideSuggest(); $('#cmdhint').style.display = 'none';
   document.body.classList.remove('discover');
   document.body.classList.remove('vview'); renderPip();
   friendTab = tab;
@@ -4332,8 +4335,9 @@ let draftFor = null;
 const lastCh = JSON.parse(store.get('kanka-lastch') || '{}');
 function enterRoom(id, placeholder, hello) {
   setTimeout(() => S.channel?.id === id && renderCallBar(), 0);
-  if (draftFor && draftFor !== id) { const v = $('#input').value; v.trim() ? drafts[draftFor] = v : delete drafts[draftFor]; }
+  if (draftFor && draftFor !== id) { const v = $('#input').value; v.trim() && !/^\/\S*$/.test(v.trim()) ? drafts[draftFor] = v : delete drafts[draftFor]; }
   if (draftFor !== id) { $('#input').value = drafts[id] || ''; requestAnimationFrame(growInput); }
+  hideSuggest(); $('#cmdhint').style.display = 'none'; // oda değişince komut / etiket önerisi açık kalmasın
   draftFor = id;
   if (S.view === 'server' && S.server) { lastCh[S.server.id] = id; store.set('kanka-lastch', JSON.stringify(lastCh)); }
   $('#jumpnew')?.remove();
