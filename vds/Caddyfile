@@ -1,0 +1,10 @@
+kankahq.com, 185-208-172-60.sslip.io {
+	encode gzip
+	reverse_proxy 127.0.0.1:3000
+}
+www.kankahq.com {
+	redir https://kankahq.com{uri} permanent
+}
+http://185.208.172.60 {
+	redir https://kankahq.com{uri}
+}
