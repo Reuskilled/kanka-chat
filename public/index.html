@@ -123,6 +123,10 @@
   .tfa-codes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0; } .tfa-codes code { padding: 8px; border-radius: 10px; background: var(--bg); font: 800 15px ui-monospace, monospace; letter-spacing: .06em; }
   .trash-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin-bottom: 6px; }
   .trash-row .tr-t { flex: 1; min-width: 0; } .trash-row b { display: block; } .trash-row small { color: var(--muted); font-weight: 700; font-size: 12px; }
+  .vtime { margin-left: 6px; font-variant-numeric: tabular-nums; font-weight: 800; opacity: .85; }
+  .vtime:not(:empty)::before { content: '· '; opacity: .6; }
+  .vtm { margin-left: auto; font-style: normal; font-size: 11px; font-weight: 800; color: #3fcf8e; font-variant-numeric: tabular-nums; padding: 1px 6px; border-radius: 6px; background: rgba(63,207,142,.12); flex-shrink: 0; }
+  .vtm:empty { display: none; } #side-list .vtm + .vlim { margin-left: 6px; }
   .srvtip { position: fixed; z-index: 60; padding: 9px 12px; border-radius: 12px; background: #0f0b09; color: var(--ink); box-shadow: 0 8px 24px rgba(0,0,0,.5); pointer-events: none; max-width: 260px; animation: popIn .12s var(--ease-out); }
   .srvtip::before { content: ''; position: absolute; left: -5px; top: 50%; margin-top: -5px; width: 10px; height: 10px; background: #0f0b09; transform: rotate(45deg); }
   .srvtip b { display: block; font-weight: 900; font-size: 14px; } .srvtip small { display: flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 700; font-size: 12px; margin-top: 2px; } .srvtip small .ic { width: 12px; height: 12px; }
@@ -2471,7 +2475,7 @@
     <div class="shead" id="side-head"></div>
     <div id="side-list"></div>
     <div id="me">
-      <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vq" class="vq" hidden><i></i><em></em></span></div><div class="vc" id="vname"></div><button type="button" class="vb-chat" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>Oda sohbeti</button>
+      <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vtime" class="vtime"></span><span id="vq" class="vq" hidden><i></i><em></em></span></div><div class="vc" id="vname"></div><button type="button" class="vb-chat" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>Oda sohbeti</button>
         <div class="btns"><button id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="vns" title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button></div></div>
       <div class="row1"><div id="me-av"></div><div><div class="n" id="me-name"></div><div class="s" id="me-lvl"></div></div>
         <button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
@@ -2928,7 +2932,7 @@ function onAuth(res) {
   store.set('kanka-token', res.token);
   S.me = res.user.name;
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
-  setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {};
+  setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {}; setVoiceAge(res.voiceAge);
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ice?.length) ICE.iceServers = res.ice;
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
@@ -3313,7 +3317,7 @@ function renderSide() {
   const canAdd = canAddCh(s), manage = canManageCh(s);
   const isUn = c => S.unread.has(c.id) && notifMode(c.id) !== 'none' && c.id !== S.channel?.id;
   const tRow = c => { const mc = mentCountCh(c.id); return `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${isUn(c) || mc ? 'unread' : ''} ${mc ? 'has-ment' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${mc ? `<span class="mbadge">${mc > 9 ? '9+' : mc}</span>` : chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` };
-  const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
+  const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${(S.voice[c.id] || []).length ? `<em class="vtm" data-vt="${c.id}" title="Sohbet bu kadar zamandır sürüyor">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em>` : ''}${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n);
         return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(dn(n))}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
   const vOrder = c => { const l = [...(S.voice[c.id] || [])]; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l; };
@@ -5720,6 +5724,16 @@ function setNS(mode) {
   renderNSBtn();
 }
 function renderNSBtn() { const b = $('#vns'); if (!b) return; const on = !!NS_AI[nsMode()]; b.classList.toggle('off', !on); b.title = on ? 'Gürültü engelleme: açık' : 'Gürültü engelleme: kapalı'; }
+// Seste geçen süre: odanın sohbeti ne zamandır sürüyor (yan menü) ve senin ne zamandır orada olduğun (alttaki ses çubuğu)
+const voiceSince = {}; let myVoiceAt = 0;
+function setVoiceAge(a) { const now = Date.now(); for (const k in voiceSince) if (!(k in (a || {}))) delete voiceSince[k]; for (const [k, ms] of Object.entries(a || {})) { const t = now - ms; if (!voiceSince[k] || Math.abs(voiceSince[k] - t) > 3000) voiceSince[k] = t; } tickVoiceTimes(); }
+const vDur = ms => { const t = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, sec = t % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}` : `${m}:${String(sec).padStart(2, '0')}`; };
+function tickVoiceTimes() {
+  const now = Date.now();
+  document.querySelectorAll('.vtm[data-vt]').forEach(e => { const t = voiceSince[e.dataset.vt]; e.textContent = t ? vDur(now - t) : ''; });
+  const v = $('#vtime'); if (v) { v.textContent = myVoice && myVoiceAt ? vDur(now - myVoiceAt) : ''; v.title = myVoice ? 'Bu sesli odada geçirdiğin süre' : ''; }
+}
+setInterval(tickVoiceTimes, 1000);
 let myVoice = null, localStream = null, muted = false, videoStream = null, videoKind = null, pttDown = false;
 const peers = {}, peerNames = {}, peerMedia = {}, peerVideo = {}, speaking = new Set();
 const vol = JSON.parse(store.get('kanka-vol') || '{}');
@@ -5733,7 +5747,7 @@ async function joinVoiceNow(chId) {
   if (myVoice) leaveVoice(true);
   return new Promise(resolve => socket.emit('voiceJoin', chId, r => {
     if (r.error) { toast(r.error); return resolve(false); }
-    myVoice = chId; muted = false;
+    myVoice = chId; muted = false; myVoiceAt = Date.now(); tickVoiceTimes();
     if (r.stage) stageSt[chId] = r.stage;
     { const f = vch(); if (f?.c.type === 'stage' && f.c.canManage && !r.stage?.speakers?.includes(S.me)) socket.emit('stageSpeaker', { name: S.me, on: true }, () => {});
       if (f && !canSpeakNow()) toast(f.c.type === 'stage' ? '🎧 Sahnede dinleyicisin. Konuşmak için ✋ el kaldır.' : '🎧 Bu odada sadece dinleyebilirsin'); }
@@ -5863,7 +5877,7 @@ function closePeer(sid) {
   document.getElementById('a-' + sid)?.remove(); document.getElementById('as-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
-function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; setTimeout(renderCallBar, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
+function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; myVoiceAt = 0; tickVoiceTimes(); setTimeout(renderCallBar, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
@@ -6039,6 +6053,7 @@ socket.on('streamWatch', ({ from, name, on }) => {
   if (on && videoKind === 'screen') { if (!watchers.has(from)) toast(`${esc(name)} yayınını izliyor`); watchers.add(from); } else watchers.delete(from);
   feedPeer(from); sendMedia(); renderStage();
 });
+socket.on('voiceAge', setVoiceAge);
 socket.on('voiceLive', l => { S.live = l; if (S.view === 'server' && S.server) renderSide(); });
 
 // --- Konuşma algılama ---

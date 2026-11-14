@@ -1113,6 +1113,14 @@ function notifyUser(name, n) {
     tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend });
 }
 const presenceList = () => onlineNames().map(n => { const st = statusOf(n); return st && onMobile(n) ? [n, st, 'm'] : [n, st]; }).filter(x => x[1]);
+// Odadaki sohbet ne zamandır sürüyor: oda boşken doluya geçince başlar, tamamen boşalınca sıfırlanır
+const voiceStart = new Map();
+function voiceAges() {
+  const now = Date.now(), o = {};
+  for (const k of [...voiceStart.keys()]) if (!voice.get(k)?.size) voiceStart.delete(k);
+  for (const [k, m] of voice) if (m.size) { if (!voiceStart.has(k)) voiceStart.set(k, now); o[k] = now - voiceStart.get(k); } // saat farkı olmasın diye "kaç ms önce" gönderilir
+  return o;
+}
 const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.startsWith('call:')).map(([k, m]) => [k, [...new Set(m.values())]]));
 const pushPresence = () => io.emit('presence', presenceList());
 const voiceMedia = new Map();       // socket.id -> { cam, screen } (yayın rozetleri için)
@@ -1145,7 +1153,7 @@ function pushCalls() {
   if (sig === lastCallsSig) return; lastCallsSig = sig;
   for (const n of new Set(online.values())) io.to('user:' + n).emit('calls', callsFor(n));
 }
-const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceLive', liveState()); io.emit('voiceFlags', flagsState()); pushCalls(); };
+const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceAge', voiceAges()); io.emit('voiceLive', liveState()); io.emit('voiceFlags', flagsState()); pushCalls(); };
 function pushServers(names) {
   viewersCache.clear(); // izin değişmiş olabilir: listeyi baştan hesapla, aynı gönderimde tekrar kullan
   for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
@@ -1435,7 +1443,7 @@ io.on('connection', socket => {
     db.sessions[token] = name; save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
-      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
+      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), voiceAge: voiceAges(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
       myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on
     };
