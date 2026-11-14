@@ -57,7 +57,10 @@ async function latestSha() {
   try {
     const r = await fetch(`https://github.com/${REPO}.git/info/refs?service=git-upload-pack`, { headers: { 'User-Agent': 'git/2.40 kanka-guncelleyici' }, signal: AbortSignal.timeout(20000) });
     if (r.ok) { const m = (await r.text()).match(new RegExp(`([0-9a-f]{40}) refs/heads/${BRANCH}\\b`)); if (m) return { sha: m[1] }; }
-  } catch {}
+    if (!st.refsWarn) { st.refsWarn = 1; log('git adresi okunamadı: ' + r.status); }
+  } catch (e) { if (!st.refsWarn) { st.refsWarn = 1; log('git adresi okunamadı: ' + e.message); } }
+  if (Date.now() - (st.apiAt || 0) < 15 * 60e3) return null; // API yedek: en fazla 15 dakikada bir
+  st.apiAt = Date.now();
   const h = { ...H }; if (st.etag) h['If-None-Match'] = st.etag;
   const r = await fetch(`https://api.github.com/repos/${REPO}/commits/${BRANCH}`, { headers: h, signal: AbortSignal.timeout(20000) });
   if (r.status === 304) return null;

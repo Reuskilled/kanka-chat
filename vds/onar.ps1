@@ -22,7 +22,12 @@ try {
   Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.CommandLine -like '*guncelleyici.js*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 
   Adim 'Yeni guncelleyici indiriliyor'
-  Invoke-WebRequest "https://raw.githubusercontent.com/Reuskilled/kanka-chat/main/vds/guncelleyici.js?t=$(Get-Random)" -OutFile "$Dst\guncelleyici.js" -UseBasicParsing
+  # raw.githubusercontent birkaç dakika eski dosyayı verebiliyor: en son commit'in kendisinden indir
+  $ref = 'main'
+  try { $refs = (Invoke-WebRequest 'https://github.com/Reuskilled/kanka-chat.git/info/refs?service=git-upload-pack' -UserAgent 'git/2.40' -UseBasicParsing).Content
+    if ($refs -match '([0-9a-f]{40}) refs/heads/main') { $ref = $Matches[1] } } catch {}
+  Write-Host "    Surum: $($ref.Substring(0, [Math]::Min(7, $ref.Length)))" -ForegroundColor DarkGray
+  Invoke-WebRequest "https://raw.githubusercontent.com/Reuskilled/kanka-chat/$ref/vds/guncelleyici.js" -OutFile "$Dst\guncelleyici.js" -UseBasicParsing
 
   Adim 'Paketler kuruluyor (1-2 dakika surebilir)'
   $npm = Join-Path $env:ProgramFiles 'nodejs\npm.cmd'
