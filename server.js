@@ -621,6 +621,81 @@ function chView(s, c, viewer, manager) {
   return v;
 }
 for (const s of db.servers) migrateCats(s);
+// Resmi sunucu düzeni (bir kez uygulanır). Var olan odalar silinmez: adı eşleşen oda yerinde kullanılır, eksikler eklenir.
+(function hqLayout() {
+  const s = db.servers.find(x => x.id === 's1'); if (!s || s.hqLayoutV1) return;
+  const RO = { '@everyone': { send: false } };
+  const PLAN = [
+    ['📌 BAŞLARKEN', [
+      ['kurallar', 'text', 'Okumadan geçme. Kısa, söz.', RO, ['kurallar']],
+      ['duyurular', 'text', 'Kanka\'daki yenilikler ve beta haberleri', RO, ['duyurular']],
+      ['nasıl-kullanılır', 'text', 'Telefonda, masaüstünde ve tarayıcıda Kanka', RO, ['nasıl-kullanılır']],
+    ]],
+    ['💬 SOHBET', [
+      ['genel', 'text', 'Her şeyden konuş. Hoş geldin kanka!', null, ['genel']],
+      ['tanışma', 'text', 'Kendini tanıt: adın, oynadığın oyunlar, nereden geldin', null, ['tanışma', 'tanisma']],
+      ['medya', 'text', 'Ekran görüntüleri, klipler, capsler', null, ['medya']],
+    ]],
+    ['🎮 OYUN', [
+      ['oyun', 'text', 'Oyun sohbeti', null, ['oyun']],
+      ['takım-arıyorum', 'text', 'Oyun, rank ve saat yaz; takımını bul', null, ['takım-arıyorum', 'takim-ariyorum']],
+      ['Oyun Odası 1', 'voice', '', null, ['oyun odası 1']],
+      ['Oyun Odası 2', 'voice', '', null, ['oyun odası 2']],
+    ]],
+    ['🧪 BETA', [
+      ['yorumlarla-yapıyorum', 'text', 'Ne eklenmeli? Yaz, en çok tepki alan fikir sıradaki videoda yapılıyor', null, ['yorumlarla-yapıyorum', 'fikirler', 'öneriler']],
+      ['hata-bildir', 'text', 'Bir şey bozuksa buraya: ne yaptın, ne oldu, telefon mu bilgisayar mı', null, ['hata-bildir', 'hatalar', 'bug']],
+    ]],
+    ['🔊 SESLİ', [
+      ['Sohbet', 'voice', '', null, ['sohbet']],
+      ['Müzik', 'voice', '', null, ['müzik']],
+    ]],
+  ];
+  const norm = x => String(x || '').toLocaleLowerCase('tr').trim();
+  const used = new Set(), cats = [], ordered = [];
+  for (const [catName, chans] of PLAN) {
+    let k = s.categories.find(x => norm(x.name).replace(/^[^a-zçğıöşü]+/u, '') === norm(catName).replace(/^[^a-zçğıöşü]+/u, ''));
+    if (!k) k = { id: id(), name: catName, perms: {} }; else k.name = catName;
+    cats.push(k);
+    for (const [name, type, topic, perms, alias] of chans) {
+      let c = s.channels.find(x => !used.has(x) && (x.type || 'text') === type && alias.includes(norm(x.name)));
+      if (!c) c = { id: id(), name, type, perms: {}, sync: true };
+      used.add(c); c.cat = k.id;
+      if (topic && !c.topic) c.topic = topic;
+      if (perms) { c.perms = { ...(c.perms || {}), '@everyone': { ...(c.perms?.['@everyone'] || {}), ...perms['@everyone'] } }; c.sync = false; }
+      if (name === 'duyurular') c.news = true;
+      ordered.push(c);
+    }
+  }
+  const rest = s.channels.filter(c => !used.has(c)); // planda olmayan odalar korunur, sohbet kategorisinin sonuna
+  const chat = cats[1];
+  for (const c of rest) { if (!c.cat || !cats.some(k => k.id === c.cat)) c.cat = (s.categories.find(k => k.id === c.cat) ? c.cat : chat.id); }
+  s.categories = [...cats, ...s.categories.filter(k => !cats.includes(k) && rest.some(c => c.cat === k.id))];
+  s.channels = s.categories.flatMap(k => [...ordered, ...rest].filter(c => c.cat === k.id));
+  // Kurallar ve nasıl kullanılır odalarına ilk mesajlar (oda boşsa)
+  const owner = s.owner && db.users[s.owner];
+  const post = (name, text) => {
+    const c = s.channels.find(x => x.name === name); if (!c || !owner || (db.messages[c.id] || []).length) return;
+    (db.messages[c.id] ||= []).push({ id: id(), author: owner.name, color: owner.color, time: Date.now(), kind: 'text', text, reactions: {} });
+  };
+  post('kurallar', [
+    '**Kanka HQ kuralları** 🦝',
+    '1. Saygı. Hakaret, taciz, nefret söylemi yok.',
+    '2. Spam ve reklam yok. Sunucu davetini sormadan atma.',
+    '3. +18, şiddet ve yasa dışı içerik yok.',
+    '4. Kimsenin kişisel bilgisini paylaşma.',
+    '5. Hata bulursan #hata-bildir, fikrin varsa #yorumlarla-yapıyorum.',
+    'Kurallara uymayan uyarılır, tekrar ederse çıkarılır. İyi sohbetler kanka!',
+  ].join('\n'));
+  post('nasıl-kullanılır', [
+    '**Kanka\'yı nereden kullanırım?**',
+    '📱 **Telefon:** kankahq.com\'u tarayıcıda aç → Paylaş → "Ana Ekrana Ekle". Uygulama gibi açılır, bildirim gelir.',
+    '💻 **Bilgisayar:** Tarayıcıdan kankahq.com ya da masaüstü uygulaması.',
+    '🎙️ **Sesli oda:** Soldaki 🔊 odalara tıkla, bağlan. Ekran paylaşımı da orada.',
+    '🧪 **Beta:** İlk 300 kişiye kalıcı Beta Tester rozeti. Kankanı getir: kankahq.com/beta',
+  ].join('\n'));
+  s.hqLayoutV1 = true; save();
+})();
 // ---------- Sunucu şablonları ----------
 const MOD = ['manageChannels', 'manageMessages', 'kick', 'timeout', 'mentionEveryone'];
 const TEMPLATES = {
@@ -732,7 +807,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 function birthdays(s) {
   const md = ymd().slice(5);
   if (s.bday === ymd()) return;
-  const ch = s.channels.find(c => c.type === 'text'); if (!ch) return;
+  const ch = s.channels.find(c => c.type === 'text' && !c.news && !everyoneDenied(ovOf(s, c), 'send')) || s.channels.find(c => c.type === 'text'); if (!ch) return;
   const who = membersOf(s).filter(n => db.users[n]?.birthday === md);
   s.bday = ymd();
   for (const n of who) {
@@ -744,7 +819,7 @@ function birthdays(s) {
 }
 function dailyQuestion(s) {
   birthdays(s);
-  const ch = s.channels.find(c => c.type === 'text');
+  const ch = s.channels.find(c => c.type === 'text' && !c.news && !everyoneDenied(ovOf(s, c), 'send')) || s.channels.find(c => c.type === 'text');
   if (!ch || s.daily === today()) return;
   s.daily = today();
   const q = QUESTIONS[Math.floor(Date.now() / 864e5) % QUESTIONS.length];
