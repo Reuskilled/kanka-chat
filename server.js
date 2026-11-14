@@ -321,8 +321,11 @@ app.post('/api/presence', express.json({ limit: '24kb' }), async (req, res) => {
   let g = typeof game === 'string' && game.trim() ? clean(game, 60) : null, gDetail = clean(detail, 40), r = g ? cleanRich(rich) : null;
   // Tek seferlik algılama boşluğu (görev listesi geç cevap verdi vb.) oyunu düşürmesin: 25 sn tolerans
   if (!g && sp.game && now - sp.gameSeen < 25e3) { g = sp.game.name; gDetail = sp.game.detail; r = sp.game.rich || null; }
+  // Oyunun kendi servisi bir turluk cevap vermezse (ajan, mod, skor) ayrıntı düşüp "Oynuyor" yazısıyla gidip gelmesin
+  const richNow = !!r;
+  if (g && !r && sp.game?.name === g && sp.game.rich && now - (sp.richSeen || 0) < 25e3) { r = sp.game.rich; if (!gDetail) gDetail = sp.game.detail; }
   const m = music && typeof music.title === 'string' && music.title.trim() ? { title: clean(music.title, 120), artist: clean(music.artist, 120), album: clean(music.album, 120) || null } : null;
-  srcs.set(srcId, { at: now, game: g ? { name: g, detail: gDetail, ...(r ? { rich: r } : {}) } : null, gameSeen: typeof game === 'string' && game.trim() ? now : sp.gameSeen || 0, music: m, musicRaw: m ? music : null });
+  srcs.set(srcId, { at: now, game: g ? { name: g, detail: gDetail, ...(r ? { rich: r } : {}) } : null, gameSeen: typeof game === 'string' && game.trim() ? now : sp.gameSeen || 0, richSeen: richNow ? now : sp.richSeen || 0, music: m, musicRaw: m ? music : null });
   // Birleştir: oyun bildiren en yeni kaynak, müzik bildiren en yeni kaynak
   const live = [...srcs.values()];
   const gs = live.filter(x => x.game).sort((a, b) => b.gameSeen - a.gameSeen)[0];
