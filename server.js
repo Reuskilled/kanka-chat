@@ -1598,7 +1598,10 @@ io.on('connection', socket => {
     const secret = b32enc(crypto.randomBytes(20));
     tfaPending.set(me, { secret, exp: Date.now() + 15 * 60e3 });
     const uri = `otpauth://totp/${encodeURIComponent('Kanka:' + me)}?secret=${secret}&issuer=Kanka&digits=6&period=30`;
-    require('qrcode').toString(uri, { type: 'svg', margin: 1, color: { dark: '#17110e', light: '#ffffff' } }, (e, svg) => cb({ ok: true, secret: secret.replace(/(.{4})/g, '$1 ').trim(), uri, svg: e ? null : svg }));
+    const out = svg => cb({ ok: true, secret: secret.replace(/(.{4})/g, '$1 ').trim(), uri, svg });
+    let qr = null; try { qr = require('qrcode'); } catch {} // paket kurulamamışsa QR'sız devam: kod elle girilir
+    if (!qr) return out(null);
+    qr.toString(uri, { type: 'svg', margin: 1, color: { dark: '#17110e', light: '#ffffff' } }, (e, svg) => out(e ? null : svg));
   });
   socket.on('tfaEnable', ({ code } = {}, cb = () => {}) => {
     const u = db.users[me], p = tfaPending.get(me); if (!u) return cb({ error: 'Giriş yap' });

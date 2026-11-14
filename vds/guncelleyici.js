@@ -85,12 +85,24 @@ async function checkCode() {
 async function finishPending() {
   if (st.needNpm) {
     log('Paketler kuruluyor...');
-    if (process.platform === 'win32') execFileSync('cmd.exe', ['/c', 'npm install --omit=dev --no-audit --no-fund'], { cwd: APP, stdio: 'ignore', windowsHide: true });
-    else execFileSync('npm', ['install', '--omit=dev', '--no-audit', '--no-fund'], { cwd: APP, stdio: 'ignore' });
-    st.needNpm = false; save(); log('Paketler kuruldu');
+    try { npmInstall(); st.needNpm = false; st.npmFail = 0; save(); log('Paketler kuruldu'); }
+    catch (e) { st.npmFail = (st.npmFail || 0) + 1; save(); log(`Paket kurulumu olmadı (${st.npmFail}. deneme): ${e.message} — ayrıntı: kayitlar\\npm-guncelleme.log`); }
   }
+  // paket kurulamasa bile sunucu yeni koda geçsin; kurulum sonraki turlarda yeniden denenir
   if (st.needRestart) { restartServer(); st.needRestart = false; save(); }
   if (st.needCaddy) { restartCaddy(); st.needCaddy = false; save(); }
+}
+
+// Görev SYSTEM hesabıyla çalışıyor: npm'yi node'un yanından çağır, SYSTEM'in eksik npm klasörünü oluştur, çıktıyı dosyaya yaz
+function npmInstall() {
+  const out = fs.openSync(path.join(APP, 'kayitlar', 'npm-guncelleme.log'), 'w');
+  try {
+    if (process.platform === 'win32') {
+      if (process.env.APPDATA) fs.mkdirSync(path.join(process.env.APPDATA, 'npm'), { recursive: true });
+      const npm = path.join(path.dirname(process.execPath), 'npm.cmd');
+      execFileSync('cmd.exe', ['/d', '/s', '/c', `"${fs.existsSync(npm) ? npm : 'npm'}" install --omit=dev --no-audit --no-fund`], { cwd: APP, stdio: ['ignore', out, out], windowsHide: true, windowsVerbatimArguments: true, timeout: 10 * 60e3 });
+    } else execFileSync('npm', ['install', '--omit=dev', '--no-audit', '--no-fund'], { cwd: APP, stdio: ['ignore', out, out], timeout: 10 * 60e3 });
+  } finally { fs.closeSync(out); }
 }
 
 async function checkDesktop() {
@@ -145,7 +157,8 @@ async function checkDesktopBranch() {
 let busy = false, n = 0;
 async function tick() {
   if (busy) return; busy = true;
-  try { await finishPending(); await checkCode(); } catch (e) { log('Hata (kod): ' + e.message); }
+  try { await finishPending(); } catch (e) { log('Hata (bekleyen iş): ' + e.message); }
+  try { await checkCode(); } catch (e) { log('Hata (kod): ' + e.message); }
   if (n++ % 5 === 0) { try { await checkDesktop(); } catch (e) { log('Hata (masaüstü): ' + e.message); } // GitHub sınırı için 5 dakikada bir
     try { await checkDesktopBranch(); } catch (e) { log('Hata (masaüstü dalı): ' + e.message); } }
   busy = false;
