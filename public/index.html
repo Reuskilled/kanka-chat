@@ -513,7 +513,7 @@
   .on-dot.st-invisible::after { background: #80848e; }
   .on-dot.mob::after { width: 9px; height: 14px; border-radius: 3px; right: -4px; bottom: -4px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.38), inset 0 2px 0 rgba(0,0,0,.25); }
   .pc-av.on-dot.mob::after { width: 14px; height: 22px; border-radius: 5px; }
-  .pav .pdot.mob { border-radius: 26%; width: calc(var(--s) * .15); height: calc(var(--s) * .23); box-shadow: inset 0 calc(var(--s) * -.03) 0 rgba(0,0,0,.38); }
+  .pav .pdot.mob { border-radius: 26%; width: calc(var(--s) * .2); height: calc(var(--s) * .3); box-shadow: inset 0 calc(var(--s) * -.03) 0 rgba(0,0,0,.38); }
   #statusmenu { position: absolute; left: 10px; bottom: 72px; z-index: 12; width: 250px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 6px; box-shadow: 0 18px 40px rgba(0,0,0,.5); animation: popIn .18s var(--ease-out); transform-origin: bottom left; }
   #statusmenu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 10px; text-align: left; font-weight: 700; }
   #statusmenu button:hover { background: var(--hover); }
@@ -1571,7 +1571,7 @@
   .pav { position: relative; width: var(--s); height: var(--s); flex-shrink: 0; }
   .pav .av { position: relative; z-index: 1; width: 100%; height: 100%; font-size: calc(var(--s) * .4); border: 6px solid var(--card); box-sizing: border-box; }
   .pf-side.themed .pav .av { border-color: rgba(30,20,15,.9); }
-  .pav .pdot { position: absolute; z-index: 2; right: calc(var(--s) * .04); bottom: calc(var(--s) * .04); width: calc(var(--s) * .2); height: calc(var(--s) * .2); border-radius: 50%; border: calc(var(--s) * .05) solid var(--card); }
+  .pav .pdot { position: absolute; z-index: 2; right: calc(var(--s) * .01); bottom: calc(var(--s) * .01); width: calc(var(--s) * .27); height: calc(var(--s) * .27); border-radius: 50%; border: calc(var(--s) * .055) solid var(--card); box-sizing: border-box; }
   .pav[class*="fr-"]::before { content: ''; position: absolute; inset: calc(var(--s) * -.035); border-radius: 50%; z-index: 0; }
   .fr-halka::before { background: var(--accent); }
   .fr-gokkusagi::before { background: conic-gradient(#ff5d5d, #ffb347, #f6e05e, #4cc38a, #4aa8ff, #b07cff, #ff5d5d); animation: spin 4s linear infinite; }
@@ -1588,6 +1588,7 @@
   .vp-top .pav .av { border-color: var(--card); }
   .vpop.themed .vp-top .pav .av { border-color: rgba(30,20,15,.95); }
   .vp-top .pf-badges { max-width: 140px; padding: 4px 6px; }
+  .vp-st { display: inline-flex; align-items: center; gap: 5px; } .vp-st b { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
   .vp-un { color: #cbb8aa; font-size: 12.5px; font-weight: 700; margin-top: 1px; } .vp-un i { font-style: normal; margin: 0 5px; opacity: .5; }
   .vp-mut { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12.5px; font-weight: 800; color: var(--muted); cursor: pointer; }
   .vp-mut:hover { color: var(--ink); } .vp-mut:empty { display: none; }
@@ -5114,7 +5115,7 @@ function voicePop(n, anchor, chId) {
       ${u.status ? `<div class="vp-bub" title="${esc(u.status)}"><span>${esc(u.status)}</span></div>` : ''}</div>
     <div class="vp-in">
       <button class="vp-name" id="vp-nm">${esc(dn(n))}</button>
-      <div class="vp-un"><span>@${esc(n)}</span>${u.pronouns ? `<i>•</i><span>${esc(u.pronouns)}</span>` : ''}${badge(roleOf(srv, n))}</div>
+      <div class="vp-un"><span>@${esc(n)}</span>${u.pronouns ? `<i>•</i><span>${esc(u.pronouns)}</span>` : ''}<i>•</i><span class="vp-st"><b style="background:${dotColor(n)}"></b>${esc(stTxt)}</span>${badge(roleOf(srv, n))}</div>
       ${hasB ? `<div class="vp-badges">${badgesHTML(u, 'sm')}</div>` : ''}
       ${tags ? `<div class="vp-tags">${tags}</div>` : ''}
       ${act ? `<div class="vp-sec vp-now">${act.replace('<div class="pc-sec">', '<div>')}</div>` : ''}
