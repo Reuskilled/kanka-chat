@@ -5325,6 +5325,11 @@ socket.on('notify', n => {
     else if (n.dm) openChat(n.channelId, n.from);
     else { const s = S.servers.find(s => s.channels.some(c => c.id === n.channelId)); if (s) selectServer(s.id, n.channelId); }
   }, true, { type: 'msg', av: n.from });
+  // Masaüstü uygulamasında oyundayken bildirim ekranın köşesinde (oyun içi katman) görünür
+  if (!document.hasFocus() && window.kankaDesktop?.overlayNotify) {
+    const u = S.users[n.from] || {}, av = u.avatar ? (/^https:\/\//.test(u.avatar) ? u.avatar : location.origin.startsWith('https') ? location.origin + u.avatar : null) : null;
+    window.kankaDesktop.overlayNotify({ t: n.friend ? `${dn(n.from)} arkadaşlık isteği gönderdi` : title.replace(n.from, dn(n.from)), x: n.friend ? '' : String(n.text || '').slice(0, 140), w: n.where || '', c: u.color || userColor(n.from), av, i: (dn(n.from) || '?')[0].toUpperCase() });
+  }
   if (!document.hasFocus() && !pushActive && 'Notification' in window && Notification.permission === 'granted') {
     const opt = { body: n.text, icon: '/icon-192.png', badge: '/icon-192.png', tag: n.channelId || 'kanka' };
     navigator.serviceWorker?.ready ? navigator.serviceWorker.ready.then(r => r.showNotification(title, opt)).catch(() => new Notification(title, opt)) : new Notification(title, opt);
@@ -7486,6 +7491,7 @@ function wireOverlaySettings() {
       <label class="switch">Oyun içi katmanı göster<input type="checkbox" id="ov-on" ${c.on ? 'checked' : ''}></label>
       <label class="switch">Sadece oyun açıkken göster<input type="checkbox" id="ov-game" ${c.onlyGame ? 'checked' : ''}></label>
       <label class="switch">Sadece konuşanları göster<input type="checkbox" id="ov-sp" ${c.onlySpeaking ? 'checked' : ''}></label>
+      ${'notifs' in c ? `<label class="switch">Oyundayken bildirimleri köşede göster (özel mesaj, etiket)<input type="checkbox" id="ov-nt" ${c.notifs ? 'checked' : ''}></label>` : ''}
       <div class="ov-row"><span>Konum</span><div class="ov-pos">${[['tl', 'Sol üst'], ['tr', 'Sağ üst'], ['bl', 'Sol alt'], ['br', 'Sağ alt']].map(([k, t]) => `<button data-pos="${k}" class="${c.pos === k ? 'on' : ''}" title="${t}"><i class="${k}"></i></button>`).join('')}</div></div>
       <div class="ov-row"><span>Boyut</span><div class="ov-seg">${[[0.85, 'Küçük'], [1, 'Normal'], [1.2, 'Büyük']].map(([v, t]) => `<button data-size="${v}" class="${Math.abs((c.size || 1) - v) < .01 ? 'on' : ''}">${t}</button>`).join('')}</div></div>
       <div class="ov-row"><span>Saydamlık</span><input type="range" class="krange" id="ov-op" min="0.4" max="1" step="0.05" value="${c.opacity ?? 1}"></div>
@@ -7494,6 +7500,7 @@ function wireOverlaySettings() {
     $('#ov-on').onchange = e => set({ on: e.target.checked });
     $('#ov-game').onchange = e => set({ onlyGame: e.target.checked });
     $('#ov-sp').onchange = e => set({ onlySpeaking: e.target.checked });
+    if ($('#ov-nt')) $('#ov-nt').onchange = e => set({ notifs: e.target.checked });
     el.querySelectorAll('[data-pos]').forEach(b => b.onclick = () => set({ pos: b.dataset.pos, preview: true }));
     el.querySelectorAll('[data-size]').forEach(b => b.onclick = () => set({ size: +b.dataset.size, preview: true }));
     $('#ov-op').onchange = e => set({ opacity: +e.target.value, preview: true });

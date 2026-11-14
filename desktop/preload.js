@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('kankaDesktop', {
   installUpdate: () => ipcRenderer.invoke('kanka:install-update'),
   overlay: st => ipcRenderer.send('kanka:overlay', st),
   overlayConfig: p => ipcRenderer.invoke('kanka:overlayConfig', p || null),
+  overlayNotify: n => ipcRenderer.send('kanka:overlayNotify', n),
   // Bilgisayarın genelinde (oyun dahil) son klavye/fare hareketinden bu yana geçen saniye; ekran kilitliyse -1
   idleTime: () => ipcRenderer.invoke('kanka:idle'),
   // Kanka yönetimi: sunucu yedeğini bu bilgisayara indir (Belgeler/Kanka Yedekleri)

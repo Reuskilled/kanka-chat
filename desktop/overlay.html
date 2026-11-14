@@ -28,6 +28,16 @@
   .more { font-size: 11.5px; font-weight: 700; color: #cbb8aa; padding: 2px 10px; border-radius: 999px; background: rgba(15,11,9,.55); }
   body.only .u:not(.sp) { display: none; }
   body.only .head, body.only .more { display: none; }
+  .nt { display: flex; gap: 10px; align-items: flex-start; width: 270px; padding: 10px 12px 10px 10px; border-radius: 14px; background: rgba(15,11,9,.9); color: #f3e9e1; border-left: 3px solid #ff8a4c;
+    box-shadow: 0 6px 20px rgba(0,0,0,.45); animation: nin .3s cubic-bezier(.2,.9,.3,1.2) both; }
+  body.tr .nt, body.br .nt { border-left: none; border-right: 3px solid #ff8a4c; }
+  @keyframes nin { from { opacity: 0; transform: translateX(-16px) scale(.96); } }
+  body.tr .nt, body.br .nt { animation-name: ninr; } @keyframes ninr { from { opacity: 0; transform: translateX(16px) scale(.96); } }
+  .nt .av { width: 34px; height: 34px; }
+  .nt .nb { min-width: 0; flex: 1; } .nt .nb b { display: block; font-size: 13px; color: #fff; }
+  .nt .nb p { font-size: 12.5px; line-height: 1.35; color: #e2d4ca; margin-top: 2px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+  .nt .nb small { display: block; font-size: 11px; color: #a8978d; margin-top: 3px; font-weight: 600; }
+  .gap { height: 6px; }
   .hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 </style>
 </head>
@@ -37,17 +47,19 @@
 const MIC_OFF = '<svg viewBox="0 0 24 24"><path d="M9 9v2a3 3 0 0 0 5.1 2.1M15 9.3V6a3 3 0 0 0-5.8-1"/><path d="M5 11a7 7 0 0 0 11.7 5.2M19 11a7 7 0 0 1-.6 2.8M12 18v3M3 3l18 18"/></svg>';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 let last = '';
-window.render = (st, cfg) => {
-  cfg = cfg || {};
+window.render = (st, cfg, notes) => {
+  cfg = cfg || {}; notes = notes || [];
   document.body.className = (cfg.pos || 'tl') + (cfg.onlySpeaking ? ' only' : '');
   document.getElementById('box').style.opacity = cfg.opacity ?? 1;
   document.body.style.zoom = cfg.scale || 1;
-  if (!st) { document.getElementById('box').innerHTML = ''; last = ''; return; }
-  const key = JSON.stringify([st, cfg.pos, cfg.onlySpeaking]); if (key === last) return; last = key;
-  const users = st.users || [], max = 10;
+  if (!st && !notes.length) { document.getElementById('box').innerHTML = ''; last = ''; return; }
+  const key = JSON.stringify([st, cfg.pos, cfg.onlySpeaking, notes.map(n => n.at + n.t)]); if (key === last) return; last = key;
+  const users = st?.users || [], max = 10;
   const row = u => `<div class="u ${u.sp ? 'sp' : ''}"><div class="av" style="background:${esc(u.c || '#5b4a40')}">${u.av ? `<img src="${esc(u.av)}" alt="" onerror="this.remove()">` : esc((u.n || '?')[0].toUpperCase())}</div><div class="n"><b>${esc(u.n)}</b>${u.m ? MIC_OFF : ''}</div></div>`;
-  document.getElementById('box').innerHTML = `<div class="head"><i>K</i><span>${esc(st.room || 'Sesli oda')}${st.server ? ' · ' + esc(st.server) : ''}</span></div>` +
-    users.slice(0, max).map(row).join('') + (users.length > max ? `<div class="more">+${users.length - max} kişi daha</div>` : '');
+  const note = n => `<div class="nt"><div class="av" style="background:${esc(n.c || '#5b4a40')}">${n.av ? `<img src="${esc(n.av)}" alt="" onerror="this.remove()">` : esc(n.i || '?')}</div><div class="nb"><b>${esc(n.t)}</b>${n.x ? `<p>${esc(n.x)}</p>` : ''}${n.w ? `<small>${esc(n.w)}</small>` : ''}</div></div>`;
+  const voice = st ? `<div class="head"><i>K</i><span>${esc(st.room || 'Sesli oda')}${st.server ? ' · ' + esc(st.server) : ''}</span></div>` +
+    users.slice(0, max).map(row).join('') + (users.length > max ? `<div class="more">+${users.length - max} kişi daha</div>` : '') : '';
+  document.getElementById('box').innerHTML = voice + (voice && notes.length ? '<div class="gap"></div>' : '') + notes.map(note).join('');
 };
 </script>
 </body>

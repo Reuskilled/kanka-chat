@@ -308,8 +308,9 @@ ipcMain.handle('kanka:autostart', (e, p) => {
 });
 // ---------------- Oyun içi katman: sesli odadakiler ve kim konuşuyor ----------------
 // Her zaman üstte, şeffaf, tıklamaları oyuna geçiren küçük bir pencere. Kenarlıksız/pencereli tam ekran oyunlarda görünür.
-config.overlay = { on: true, pos: 'tl', onlyGame: true, onlySpeaking: false, opacity: 1, size: 1, ...(config.overlay || {}) };
-let overlay = null, ovState = null, ovHidden = false, ovPreview = 0, currentGame = null;
+config.overlay = { on: true, pos: 'tl', onlyGame: true, onlySpeaking: false, opacity: 1, size: 1, notifs: true, ...(config.overlay || {}) };
+let overlay = null, ovState = null, ovHidden = false, ovPreview = 0, currentGame = null, ovNotes = [];
+const NOTE_MS = 6500;
 const OV_W = 300, OV_H = 560;
 function placeOverlay() {
   if (!alive(overlay)) return;
@@ -333,12 +334,16 @@ function updateOverlay(force) {
 }
 function updateOverlay_(force) {
   if (quitting) return;
-  const c = config.overlay, preview = Date.now() < ovPreview, st = preview ? (ovState || SAMPLE) : ovState;
-  const want = !!st && (preview || (c.on && !ovHidden && st.users?.length && (!c.onlyGame || currentGame) && !(alive(win) && win.isFocused() && win.isVisible())));
+  const c = config.overlay, preview = Date.now() < ovPreview, st0 = preview ? (ovState || SAMPLE) : ovState;
+  const away = !(alive(win) && win.isFocused() && win.isVisible());
+  ovNotes = ovNotes.filter(n => Date.now() - n.at < NOTE_MS);
+  const notes = preview && !ovNotes.length && c.notifs ? [{ t: 'Kanka seni etiketledi', x: 'akşam valo var mı?', w: 'Önizleme · #genel', c: '#4aa8ff', i: 'K' }] : (c.notifs && !ovHidden && away && (!c.onlyGame || currentGame) ? ovNotes : []);
+  const voiceOk = !!st0 && (preview || (c.on && !ovHidden && st0.users?.length && (!c.onlyGame || currentGame) && away));
+  const want = voiceOk || notes.length > 0;
   if (!want) { if (alive(overlay) && overlay.isVisible()) overlay.hide(); return; }
   const o = ensureOverlay();
   const cfg = { pos: c.pos, onlySpeaking: preview ? false : c.onlySpeaking, opacity: c.opacity, scale: c.size };
-  o.webContents.executeJavaScript(`window.render && window.render(${JSON.stringify(st)}, ${JSON.stringify(cfg)})`).catch(() => {});
+  o.webContents.executeJavaScript(`window.render && window.render(${JSON.stringify(voiceOk ? st0 : null)}, ${JSON.stringify(cfg)}, ${JSON.stringify(notes)})`).catch(() => {});
   if (!o.isVisible() || force) { o.showInactive(); o.setAlwaysOnTop(true, 'screen-saver'); }
 }
 ipcMain.on('kanka:overlay', (e, st) => {
@@ -349,6 +354,15 @@ ipcMain.on('kanka:overlay', (e, st) => {
   } else ovState = null;
   updateOverlay();
 });
+// Oyundayken gelen özel mesaj / etiket bildirimi: katmanın köşesinde birkaç saniye görünür
+ipcMain.on('kanka:overlayNotify', (e, n) => {
+  if (e.sender !== win?.webContents || !n || typeof n !== 'object' || !config.overlay.notifs) return;
+  const s = (v, m) => String(v ?? '').slice(0, m);
+  ovNotes.push({ at: Date.now(), t: s(n.t, 80), x: s(n.x, 140), w: s(n.w, 60), c: /^#[0-9a-f]{3,8}$/i.test(n.c) ? n.c : '#5b4a40', av: /^https:\/\//.test(n.av || '') ? s(n.av, 400) : null, i: s(n.i, 2) });
+  ovNotes = ovNotes.slice(-3);
+  updateOverlay();
+  setTimeout(() => updateOverlay(), NOTE_MS + 100);
+});
 ipcMain.handle('kanka:overlayConfig', (e, p) => {
   if (p && typeof p === 'object') {
     const o = config.overlay;
@@ -356,6 +370,7 @@ ipcMain.handle('kanka:overlayConfig', (e, p) => {
     if (['tl', 'tr', 'bl', 'br'].includes(p.pos)) o.pos = p.pos;
     if (typeof p.onlyGame === 'boolean') o.onlyGame = p.onlyGame;
     if (typeof p.onlySpeaking === 'boolean') o.onlySpeaking = p.onlySpeaking;
+    if (typeof p.notifs === 'boolean') o.notifs = p.notifs;
     if (+p.opacity >= .3 && +p.opacity <= 1) o.opacity = +p.opacity;
     if (+p.size >= .8 && +p.size <= 1.3) o.size = +p.size;
     saveConfig(); placeOverlay();
