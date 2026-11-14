@@ -2306,10 +2306,19 @@
   #messages .bubble .lprev img { width: 84px; height: 84px; margin: 0; object-fit: cover; border-radius: 8px; flex-shrink: 0; cursor: pointer; }
   /* ---------- Ana sayfa ---------- */
   .ftabs button .ic { width: 15px; height: 15px; margin-right: 5px; vertical-align: -2px; }
-  .flist.hm { padding: 0; }
+  .flist.hm { padding: 0; max-width: none; }
 
   /* ---------- Yuva (ana sayfa) ---------- */
-  .hm.yv { max-width: 1180px; gap: 16px; padding: 18px 20px 28px; }
+  .hp-wrap { display: flex; flex-direction: column; min-height: calc(100% - 10px); }
+  .hp-list { flex: 1; }
+  .hp-lb { margin: 14px 2px 6px; padding: 12px 10px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+  .hp-lr { display: flex; align-items: center; gap: 9px; padding: 6px 4px; border-radius: 10px; cursor: pointer; }
+  .hp-lr:hover { background: var(--hover); } .hp-lr.me { background: var(--accent-soft); }
+  .hp-lr .rk { width: 20px; text-align: center; font-weight: 900; font-size: 13px; color: var(--muted); } .hp-lr .av { width: 28px; height: 28px; font-size: 12px; }
+  .hp-lr .t { flex: 1; min-width: 0; } .hp-lr b { display: block; font-size: 13.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hp-lr small { display: block; font-size: 11.5px; font-weight: 800; color: var(--accent-2); white-space: nowrap; }
+  .hp-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 28px 10px; color: var(--muted); font-size: 13px; }
+  .hp-empty .ic { width: 30px; height: 30px; color: var(--accent); } .hp-empty b { color: var(--ink); font-size: 14.5px; } .hp-empty .primary { width: auto; padding: 9px 14px; font-size: 13.5px; margin-top: 6px; }
+  .hm.yv { max-width: none; gap: 16px; padding: 18px 20px 28px; }
   .yv-hero { position: relative; overflow: hidden; display: flex; align-items: center; gap: 22px; padding: 22px 26px; border-radius: 22px; background: linear-gradient(120deg, #3a1d10, #24130c 60%); border: 1px solid rgba(255,154,77,.18); }
   body.light .yv-hero { background: linear-gradient(120deg, #ffe2cf, #fff3ea 60%); border-color: rgba(242,101,47,.25); }
   .yv-hero::after { content: ''; position: absolute; right: -60px; top: -60px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,106,44,.32), transparent 70%); pointer-events: none; }
@@ -5236,12 +5245,28 @@ function renderMembers() {
   const onl = names.filter(n => S.online.has(n)).length;
   const mb = $('#mem-btn'); mb.classList.toggle('show', !!(srv && S.channel) || !!S.channel?.group); mb.querySelector('.mb-n').textContent = onl ? (onl > 99 ? '99+' : onl) : '';
   const mdrH = `<div class="mdr-h"><span style="flex:1"><b>Üyeler</b><small>${S.channel ? (srv ? '#' + esc(S.channel.name) + ' · ' : '') : ''}${onl} çevrimiçi · ${names.length} kişi</small></span><button id="mdr-x" aria-label="Kapat">${ic('x')}</button></div>`;
+  if (S.view === 'dm' && !S.channel) return homeSidePanel(item, mdrH);
   $('#members').innerHTML = mdrH + (srv?.bot?.added ? `<div class="label" style="padding:14px 8px 6px">Botlar — 1</div><div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="color:var(--accent)">Kanka Bot<span class="botbadge">BOT</span></span><small>${[srv.bot.mod?.on && 'Moderasyon', srv.bot.welcome?.on && 'Karşılama'].filter(Boolean).join(' · ') || '/yardım yaz'}</small></div></div>` : '') +
     groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(item).join('') : ''; }).join('');
   $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
   $('#members').querySelector('.mem.botmem')?.addEventListener('click', e => { e.stopPropagation(); botProfile(); });
   $('#mdr-x').onclick = e => { e.stopPropagation(); closeMembers(); };
   memTyping();
+}
+// Yuva'da sağ panel: arkadaşlar ne yapıyor (seste / oyunda / çevrimiçi) + Kanka HQ haftanın en aktifleri
+let lbHQ = null, lbAt = 0;
+function homeSidePanel(item, mdrH) {
+  const fr = S.social?.friends || [], inV = n => S.servers.some(sv => sv.channels.some(c => voiceLike(c.type) && (S.voice?.[c.id] || []).includes(n)));
+  const on = fr.filter(n => S.online.has(n)), v = on.filter(inV), g = on.filter(n => !inV(n) && S.users[n]?.activities?.game), rest = on.filter(n => !v.includes(n) && !g.includes(n)), off = fr.filter(n => !S.online.has(n));
+  const grp = (t, l) => l.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${l.length}</div>` + l.map(item).join('') : '';
+  if (Date.now() - lbAt > 120e3 && hqServer()) { lbAt = Date.now(); socket.emit('leaderboard', hqServer().id, l => { lbHQ = l || []; if (S.view === 'dm' && !S.channel) renderMembers(); }); }
+  const lb = (lbHQ || []).slice(0, 5);
+  const lbH = lb.length ? `<div class="hp-lb"><div class="label" style="padding:4px 4px 8px">🏆 Kanka HQ'nun en aktifleri</div>${lb.map((x, i) => `<div class="hp-lr ${x.name === S.me ? 'me' : ''}" data-n="${esc(x.name)}"><span class="rk">${['🥇', '🥈', '🥉'][i] || i + 1}</span>${av(x.name, S.online.has(x.name))}<span class="t"><b>${esc(dn(x.name))}</b><small>Seviye ${x.level}${x.streak ? ` · 🔥 ${x.streak} gün` : ''}</small></span></div>`).join('')}</div>` : '';
+  const none = !fr.length ? `<div class="hp-empty">${ic('userplus')}<b>Henüz arkadaşın yok</b><small>Arkadaş ekleyince burada seste mi, oyunda mı görürsün.</small><button class="primary" id="hp-inv">Arkadaşını davet et</button></div>` : '';
+  $('#members').innerHTML = mdrH.replace('<b>Üyeler</b>', '<b>Arkadaşlar</b>') + `<div class="hp-wrap"><div class="hp-list">${none}${grp('🔊 Seste', v)}${grp('🎮 Oyunda', g)}${grp('Çevrimiçi', rest)}${grp('Çevrimdışı', off.slice(0, 30))}</div>${lbH}</div>`;
+  $('#members').querySelectorAll('.mem[data-n], .hp-lr[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
+  $('#hp-inv')?.addEventListener('click', () => showInvite(hqServer()));
+  $('#mdr-x')?.addEventListener('click', e => { e.stopPropagation(); closeMembers(); });
 }
 // Bu odada yazan kişiler üye listesinde "yazıyor" olarak görünür
 function memTyping() { $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.classList.toggle('typing', typers.has(m.dataset.n) && m.dataset.n !== S.me)); }
