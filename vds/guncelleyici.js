@@ -14,7 +14,7 @@ const STATE = path.join(APP, 'veri', 'guncelleme.json');
 const LOG = path.join(APP, 'kayitlar', 'guncelleme.log');
 const SYNC = [ // depodaki yol -> sunucudaki yol
   ['server.js', 'server.js'], ['package.json', 'package.json'], ['package-lock.json', 'package-lock.json'],
-  ['public', 'public'], ['vds/guncelleyici.js', 'guncelleyici.js'],
+  ['public', 'public'], ['vds/guncelleyici.js', 'guncelleyici.js'], ['vds/Caddyfile', 'Caddyfile'],
 ];
 const H = { 'User-Agent': 'kanka-guncelleyici', Accept: 'application/vnd.github+json' };
 
@@ -38,6 +38,12 @@ function syncPath(src, dst, changed) {
 }
 
 function ps(cmd) { return execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', cmd], { encoding: 'utf8', windowsHide: true }); }
+function restartCaddy() {
+  if (process.platform !== 'win32') return log('(test) https sunucusu yeniden başlatılacaktı');
+  // calistir-https.cmd döngüsü Caddy'yi 5 saniye içinde yeni ayarla açar
+  ps("Get-Process caddy -ErrorAction SilentlyContinue | Stop-Process -Force");
+  log('Https sunucusu yeni ayarla yeniden başlatıldı');
+}
 function restartServer() {
   if (process.platform !== 'win32') return log('(test) sunucu yeniden başlatılacaktı');
   // calistir-uygulama.cmd döngüsü sunucuyu 3 saniye içinde yeniden açar
@@ -68,6 +74,7 @@ async function checkCode() {
     if (changed.length) log('Güncellenen dosyalar: ' + changed.join(', '));
     if (changed.some(f => /^package(-lock)?\.json$/.test(f))) st.needNpm = true;
     if (changed.some(f => f === 'server.js' || /^package/.test(f))) st.needRestart = true;
+    if (changed.includes('Caddyfile')) st.needCaddy = true;
     st.sha = j.sha; save();
     await finishPending();
     if (changed.includes('guncelleyici.js')) { log('Güncelleyici kendini güncelledi, yeniden başlıyor'); process.exit(0); }
@@ -83,6 +90,7 @@ async function finishPending() {
     st.needNpm = false; save(); log('Paketler kuruldu');
   }
   if (st.needRestart) { restartServer(); st.needRestart = false; save(); }
+  if (st.needCaddy) { restartCaddy(); st.needCaddy = false; save(); }
 }
 
 async function checkDesktop() {
