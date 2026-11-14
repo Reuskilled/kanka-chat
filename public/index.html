@@ -285,6 +285,7 @@
   #suggest button { display: flex; align-items: center; gap: 8px; width: 200px; padding: 7px 10px; border-radius: 10px; font-weight: 700; }
   #suggest button:hover, #suggest button.sel { background: var(--hover); }
   #suggest .av { width: 24px; height: 24px; font-size: 11px; border-width: 2px; }
+  #suggest .sgch { width: 24px; height: 24px; border-radius: 8px; background: var(--accent-soft); display: grid; place-items: center; color: var(--accent); flex-shrink: 0; } #suggest .sgch .ic { width: 14px; height: 14px; }
   #drop { display: none; position: absolute; inset: 0; background: rgba(23,17,14,.85); border: 3px dashed var(--accent); border-radius: 24px; z-index: 6; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: var(--accent); }
 
   /* ---------- Üyeler ---------- */
@@ -2662,7 +2663,7 @@ function fmt(t) {
   h = h.replace(/@kanka\s?bot\b/gi, () => `\u0000${codes.push('<span class="mention bot">@Kanka Bot</span>') - 1}\u0000`);
   h = h.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
     .replace(/@([\p{L}\p{N}_.-]+)/gu, (m, n) => S.users[n] || /^(everyone|herkes)$/i.test(n) ? `<span class="mention${n === S.me || /^(everyone|herkes)$/i.test(n) ? ' me' : ''}"${S.users[n] ? ` data-u="${n}" role="button" tabindex="0"` : ''}>@${n}</span>` : (S.server?.customRoles || []).find(r => r.name === n) ? `<span class="mention" style="color:${(S.server.customRoles.find(r => r.name === n)).color}">@${n}</span>` : m)
-    .replace(/(^|[\s(])#([\p{L}\p{N}_-]+)/gu, (m, pre, n) => { const c = S.view === 'server' && S.server?.channels.find(x => x.name === n && !voiceLike(x.type)); return c ? `${pre}<a class="chref" data-goch="${c.id}">#${n}</a>` : m; })
+    .replace(/(^|[\s(])#([\p{L}\p{N}_-]+)/gu, (m, pre, n) => { const nl = n.toLocaleLowerCase('tr'), c = S.view === 'server' && S.server?.channels.find(x => !voiceLike(x.type) && (x.name === n || x.name.toLocaleLowerCase('tr') === nl)); return c ? `${pre}<a class="chref" data-goch="${c.id}">#${n}</a>` : m; })
     .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
     .replace(/(^|[^*\w])\*([^*\n]+)\*(?!\w)/g, '$1<i>$2</i>')
     .replace(/(^|[^_\w])_([^_\n]+)_(?!\w)/g, '$1<i>$2</i>')
@@ -4644,7 +4645,7 @@ $('#chat').addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('#dr
 $('#input').addEventListener('paste', e => { const fl = [...e.clipboardData.files]; if (fl.length) { e.preventDefault(); addFiles(fl); } });
 
 // @etiket önerileri
-let sugg = [], suggI = 0, suggCmd = false;
+let sugg = [], suggI = 0, suggCmd = false, suggCh = false;
 // Komut paleti: [komut, açıklama, ikon, renk, argümanlar, ayırıcı]
 const CMDS = [['/zar', 'Zar at, şansını dene', 'dice', '#f6c445', ['yüz sayısı']], ['/yazitura', 'Yazı mı tura mı?', 'coin', '#ffb347', []], ['/xox', 'XOX oyunu başlat, biri katılsın', 'grid', '#7ec8ff', []],
   ['/anket', 'Anket başlat, herkes oy versin', 'poll', '#a78bfa', ['soru', 'seçenek 1', 'seçenek 2'], '|'], ['/plan', 'Plan kur, kim geliyor görülsün', 'calendar', '#6fd39b', ['ne yapıyoruz', 'ne zaman'], '|'],
@@ -4655,7 +4656,7 @@ const MOD_CMDS = [['/uyar', 'Üyeye uyarı ver, sınırda susturulur', 'flag', '
 const cmdDef = c => [...CMDS, ...MOD_CMDS].find(x => x[0] === c);
 const modCmdsOn = () => S.view === 'server' && S.server?.bot?.mod?.on && isMod(S.server, S.me);
 let suggQ = '';
-function hideSuggest() { const was = sugg.length && !suggCmd; sugg = []; suggCmd = false; $('#suggest').style.display = 'none'; $('#suggest').classList.remove('cmd'); if (was) cmdHint(); }
+function hideSuggest() { const was = sugg.length && !suggCmd; sugg = []; suggCmd = false; suggCh = false; $('#suggest').style.display = 'none'; $('#suggest').classList.remove('cmd'); if (was) cmdHint(); }
 function cmdRow(n, i) {
   const [c, d, icn, col, args = []] = cmdDef(n), q = suggQ.length > 1 && c.startsWith(suggQ) ? suggQ.length : 0;
   return `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(c)}" data-i="${i}"><i class="sg-ic" style="--c:${col}">${ic(icn)}</i><span class="sg-t"><b><span>${q ? `<u>${esc(c.slice(0, q))}</u>${esc(c.slice(q))}` : esc(c)}</span>${args.map(a => `<em>${esc(a)}</em>`).join('')}</b><small>${esc(d)}</small></span><kbd>↵</kbd></button>`;
@@ -4674,7 +4675,9 @@ function renderSuggest() {
     $('#suggest').querySelectorAll('button[data-n]').forEach(b => { b.onclick = () => { suggI = +b.dataset.i; pickSuggestion(); }; b.onmousemove = () => { if (suggI !== +b.dataset.i) { suggI = +b.dataset.i; $('#suggest').querySelectorAll('button[data-n]').forEach(x => x.classList.toggle('sel', +x.dataset.i === suggI)); } }; });
     return;
   }
-  $('#suggest').innerHTML = sugg.map((n, i) => `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(n)}">${av(n)}${esc(n)}</button>`).join('');
+  $('#suggest').innerHTML = suggCh
+    ? sugg.map((n, i) => { const c = S.server?.channels.find(x => x.name === n); return `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(n)}"><span class="sgch">${c ? roomIcon(c) : '#'}</span>${esc(n)}</button>`; }).join('')
+    : sugg.map((n, i) => `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(n)}">${av(n)}${esc(n)}</button>`).join('');
   $('#cmdhint').style.display = 'none';
   $('#suggest').style.display = 'block';
   $('#suggest').querySelectorAll('button').forEach(b => b.onclick = () => { suggI = sugg.indexOf(b.dataset.n); pickSuggestion(); });
@@ -4682,7 +4685,7 @@ function renderSuggest() {
 function pickSuggestion() {
   if (!sugg.length) return false;
   if (suggCmd) { const inp = $('#input'), d = cmdDef(sugg[suggI]); inp.value = sugg[suggI] + (d?.[4]?.length ? ' ' : ''); inp.setSelectionRange(inp.value.length, inp.value.length); hideSuggest(); inp.focus(); cmdHint(); return true; }
-  const inp = $('#input'), pos = inp.selectionStart, before = inp.value.slice(0, pos).replace(/@[\p{L}\p{N}_.-]*$/u, '@' + sugg[suggI] + ' ');
+  const inp = $('#input'), pos = inp.selectionStart, before = suggCh ? inp.value.slice(0, pos).replace(/#[\p{L}\p{N}_-]*$/u, '#' + sugg[suggI] + ' ') : inp.value.slice(0, pos).replace(/@[\p{L}\p{N}_.-]*$/u, '@' + sugg[suggI] + ' ');
   inp.value = before + inp.value.slice(pos); inp.setSelectionRange(before.length, before.length);
   hideSuggest(); inp.focus(); return true;
 }
@@ -4706,9 +4709,19 @@ $('#input').addEventListener('input', () => {
     return renderSuggest();
   }
   suggCmd = false;
-  const m = /@([\p{L}\p{N}_.-]*)$/u.exec($('#input').value.slice(0, $('#input').selectionStart));
+  const upto = $('#input').value.slice(0, $('#input').selectionStart);
+  // #oda önerileri
+  const hm = S.view === 'server' && /(?:^|[\s(])#([\p{L}\p{N}_-]*)$/u.exec(upto);
+  if (hm) {
+    const q = hm[1].toLocaleLowerCase('tr');
+    sugg = S.server.channels.filter(c => !voiceLike(c.type) && c.name.toLocaleLowerCase('tr').includes(q)).sort((a, b) => b.name.toLocaleLowerCase('tr').startsWith(q) - a.name.toLocaleLowerCase('tr').startsWith(q)).slice(0, 8).map(c => c.name);
+    suggI = 0; suggCh = true; return renderSuggest();
+  }
+  suggCh = false;
+  const m = /@([\p{L}\p{N}_.-]*)$/u.exec(upto);
   if (!m) return hideSuggest();
-  const pool = S.view === 'server' ? S.server.members : (S.channel?.with ? [S.channel.with] : []);
+  // herkese açık sunucuda üye listesi tutulmaz: herkes etiketlenebilir
+  const pool = S.view === 'server' ? (S.server.public ? Object.keys(S.users).filter(n => n !== 'Claude') : S.server.members) : (S.channel?.group ? S.channel.members : S.channel?.with ? [S.channel.with] : []);
   sugg = pool.filter(n => n !== S.me && n.toLowerCase().startsWith(m[1].toLowerCase())).slice(0, 6); suggI = 0;
   renderSuggest();
 });
