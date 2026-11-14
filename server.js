@@ -1017,6 +1017,10 @@ const online = new Map();            // socket.id -> kullanıcı adı
 const voice = new Map();             // kanal id -> Map(socket.id -> ad)
 const onlineNames = () => [...new Set(online.values())];
 const idleSockets = new Set();
+// Telefondan bağlı oturumlar: kişinin bütün açık oturumları telefondaysa durum noktası telefon simgesi olur
+const mobileSockets = new Set();
+const isMobileUA = ua => /Android|iPhone|iPod|iPad|Mobile/i.test(ua || '') && !/Electron|KankaChat/i.test(ua || '');
+const onMobile = name => { const socks = [...online].filter(([, n]) => n === name).map(([sid]) => sid); return socks.length > 0 && socks.every(sid => mobileSockets.has(sid)); };
 function statusOf(name) {
   const chosen = db.users[name]?.presence || 'online';
   if (chosen === 'invisible') return null;
@@ -1064,7 +1068,7 @@ function notifyUser(name, n) {
   sendPush(name, { direct: !!n.mention, title, body: n.friend ? 'sana arkadaşlık isteği gönderdi' : String(n.text || '').slice(0, 160) + (n.dm ? '' : n.where ? `\n${n.where}` : ''),
     tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend });
 }
-const presenceList = () => onlineNames().map(n => [n, statusOf(n)]).filter(x => x[1]);
+const presenceList = () => onlineNames().map(n => { const st = statusOf(n); return st && onMobile(n) ? [n, st, 'm'] : [n, st]; }).filter(x => x[1]);
 const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.startsWith('call:')).map(([k, m]) => [k, [...new Set(m.values())]]));
 const pushPresence = () => io.emit('presence', presenceList());
 const voiceMedia = new Map();       // socket.id -> { cam, screen } (yayın rozetleri için)
@@ -1363,7 +1367,7 @@ io.on('connection', socket => {
   function start(name) {
     me = name;
     socket.join('user:' + name);
-    online.set(socket.id, name);
+    online.set(socket.id, name); if (isMobileUA(socket.handshake.headers['user-agent'])) mobileSockets.add(socket.id);
     pushPresence();
     const u = db.users[name], t = ymd(), y = ymd(new Date(Date.now() - 864e5));
     let reward = null;
@@ -2669,7 +2673,7 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     leaveVoice();
-    online.delete(socket.id); idleSockets.delete(socket.id); visibleSockets.delete(socket.id);
+    online.delete(socket.id); idleSockets.delete(socket.id); visibleSockets.delete(socket.id); mobileSockets.delete(socket.id);
     pushPresence();
   });
 });
