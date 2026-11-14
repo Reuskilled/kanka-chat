@@ -843,6 +843,19 @@
     background: var(--card); border: 1px solid var(--accent); box-shadow: 0 14px 40px rgba(0,0,0,.5); transform: translateX(-50%); max-width: calc(100vw - 32px); }
   #updbar.on { display: flex; animation: updIn .45s var(--ease-out); }
   body.has-tb #updbar { top: 46px; }
+  /* Web'den girenlere üstte sabit "Windows uygulaması" şeridi */
+  #appbar { display: none; }
+  body.has-ab #appbar { display: flex; position: fixed; top: 0; left: 0; right: 0; height: 40px; z-index: 40; align-items: center; justify-content: center; gap: 12px; padding: 0 48px;
+    background: linear-gradient(90deg, #f2652f, #ff8a4c 55%, #f2652f); color: #1a0f0a; font-size: 13.5px; font-weight: 700; }
+  #appbar .ab-i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: rgba(26,15,10,.14); } #appbar .ab-i .ic { width: 15px; height: 15px; }
+  #appbar b { font-weight: 900; } #appbar span.ab-t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #appbar a.ab-go { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 9px; background: #1a0f0a; color: #fff; font-weight: 900; font-size: 12.5px; text-decoration: none; white-space: nowrap; transition: transform .12s; }
+  #appbar a.ab-go:hover { transform: translateY(-1px); } #appbar a.ab-go .ic { width: 14px; height: 14px; }
+  #appbar .ab-x { position: absolute; right: 10px; top: 7px; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #1a0f0a; opacity: .7; }
+  #appbar .ab-x:hover { opacity: 1; background: rgba(26,15,10,.12); } #appbar .ab-x .ic { width: 15px; height: 15px; }
+  body.has-ab #app { height: calc(100vh - 40px); margin-top: 40px; }
+  body.has-ab #toasts, body.has-ab #updbar { top: 52px; }
+  @media (max-width: 760px) { body.has-ab #appbar .ab-more { display: none; } }
   @keyframes updIn { from { opacity: 0; transform: translate(-50%, -16px) scale(.96); } }
   #updbar .ui { width: 36px; height: 36px; border-radius: 11px; background: var(--mine); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   #updbar .ui .ic { width: 20px; height: 20px; color: #fff; }
@@ -2469,6 +2482,7 @@
   </form>
 </div>
 
+<div id="appbar" role="region" aria-label="Windows uygulaması"><span class="ab-i"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.5v7H3zM12 4.3 21 3v8.5h-9zM3 12.5h7.5v7L3 18.5zM12 12.5h9V21l-9-1.3z" fill="currentColor" stroke="none"/></svg></span><span class="ab-t"><b>Kanka Chat artık Windows'ta!</b><span class="ab-more"> Oyun içi bildirimler, oyun katmanı ve "Oynuyor" durumu uygulamada.</span></span><a class="ab-go" id="ab-go" href="/indir/KankaChat-Kurulum.exe" download><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Ücretsiz indir</a><button class="ab-x" id="ab-x" type="button" title="Kapat" aria-label="Kapat"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
 <div id="app" style="display:none">
   <nav id="rail" class="panel"></nav>
   <aside id="side" class="panel">
@@ -6524,6 +6538,15 @@ applyTheme();
 if (!window.kankaDesktop && /Windows/.test(navigator.userAgent)) fetch('/indir/KankaChat-Kurulum.exe', { method: 'HEAD' }).then(r => { if (r.ok) $('#get-app').style.display = 'inline-block'; }).catch(() => {});
 if (window.kankaDesktop) document.documentElement.classList.add('desktop');
 if (window.kankaDesktop?.customTitlebar) { document.body.classList.add('has-tb'); applyTheme(); }
+// Windows'ta tarayıcıdan girenlere üstte uygulama şeridi. Kapatınca 5 gün, indirince 60 gün gösterilmez.
+(() => {
+  const until = +store.get('kanka-appbar') || 0;
+  if (window.kankaDesktop || !/Windows/.test(navigator.userAgent) || /Mobile|Android/.test(navigator.userAgent) || until > Date.now()) return;
+  const hide = days => { store.set('kanka-appbar', String(Date.now() + days * 864e5)); document.body.classList.remove('has-ab'); };
+  $('#ab-x').onclick = () => hide(5);
+  $('#ab-go').onclick = () => { setTimeout(() => hide(60), 300); toast('İndirme başladı. Dosyayı açınca Kanka Chat kendiliğinden kurulur ve açılır.'); };
+  fetch('/indir/KankaChat-Kurulum.exe', { method: 'HEAD' }).then(r => r.ok && document.body.classList.add('has-ab')).catch(() => {});
+})();
 // ================= Telefona/bilgisayara yükleme (PWA) =================
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 let installEvt = null;
