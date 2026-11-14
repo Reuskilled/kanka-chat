@@ -1858,12 +1858,14 @@ io.on('connection', socket => {
     const u = db.users[me]; if (!u) return cb({});
     if (p && typeof p === 'object') {
       const ch = {}; for (const [k, v] of Object.entries(p.ch || {}).slice(0, 500)) if (typeof k === 'string' && k.length < 80 && ['all', 'none'].includes(v)) ch[k] = v;
-      u.prefs = { notif: p.notif !== false, muted: (Array.isArray(p.muted) ? p.muted : []).filter(x => typeof x === 'string' && x.length < 40).slice(0, 200), ch,
+      const ids = a => (Array.isArray(a) ? a : []).filter(x => typeof x === 'string' && x.length < 40).slice(0, 200);
+      const mu = {}; for (const [k, v] of Object.entries(p.muteUntil || {}).slice(0, 200)) if (typeof k === 'string' && k.length < 40 && +v > Date.now()) mu[k] = +v;
+      u.prefs = { notif: p.notif !== false, muted: ids(p.muted), ch, order: p.order ? ids(p.order) : u.prefs?.order || [], muteUntil: mu,
         read: u.prefs?.read || {}, at: Date.now() };
       save();
-      for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('prefs', { notif: u.prefs.notif, muted: u.prefs.muted, ch });
+      for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('prefs', { notif: u.prefs.notif, muted: u.prefs.muted, ch, order: u.prefs.order, muteUntil: mu });
     }
-    cb(u.prefs ? { notif: u.prefs.notif, muted: u.prefs.muted, ch: u.prefs.ch, read: u.prefs.read || {}, at: u.prefs.at } : null);
+    cb(u.prefs ? { notif: u.prefs.notif, muted: u.prefs.muted, ch: u.prefs.ch, order: u.prefs.order || [], muteUntil: u.prefs.muteUntil || {}, read: u.prefs.read || {}, at: u.prefs.at } : null);
   });
   socket.on('read', id => { // okundu bilgisi her cihazda aynı olsun
     const u = db.users[me]; if (!u || typeof id !== 'string' || id.length > 80) return;

@@ -123,6 +123,21 @@
   .tfa-codes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0; } .tfa-codes code { padding: 8px; border-radius: 10px; background: var(--bg); font: 800 15px ui-monospace, monospace; letter-spacing: .06em; }
   .trash-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin-bottom: 6px; }
   .trash-row .tr-t { flex: 1; min-width: 0; } .trash-row b { display: block; } .trash-row small { color: var(--muted); font-weight: 700; font-size: 12px; }
+  .srvtip { position: fixed; z-index: 60; padding: 9px 12px; border-radius: 12px; background: #0f0b09; color: var(--ink); box-shadow: 0 8px 24px rgba(0,0,0,.5); pointer-events: none; max-width: 260px; animation: popIn .12s var(--ease-out); }
+  .srvtip::before { content: ''; position: absolute; left: -5px; top: 50%; margin-top: -5px; width: 10px; height: 10px; background: #0f0b09; transform: rotate(45deg); }
+  .srvtip b { display: block; font-weight: 900; font-size: 14px; } .srvtip small { display: flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 700; font-size: 12px; margin-top: 2px; } .srvtip small .ic { width: 12px; height: 12px; }
+  .srvtip .st-v { display: flex; align-items: center; gap: 6px; margin-top: 7px; color: #3fcf8e; } .srvtip .st-v > .ic { width: 16px; height: 16px; }
+  .srvtip .st-avs { display: flex; } .srvtip .st-avs .av { width: 26px; height: 26px; font-size: 11px; border: 2px solid #0f0b09; margin-left: -6px; } .srvtip .st-avs .av:first-child { margin-left: 0; }
+  .srvtip em { font-style: normal; font-weight: 800; font-size: 12px; color: var(--muted); }
+  .srv.smuted { opacity: .55; } .srv.smuted.active { opacity: 1; }
+  body.rdrag, body.rdrag * { cursor: grabbing !important; user-select: none; }
+  .srv.rsrc { opacity: .3; } .srv.rghost { position: fixed; z-index: 70; pointer-events: none; transform: scale(1.08); box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+  .rline { position: fixed; z-index: 69; width: 56px; height: 3px; border-radius: 3px; background: var(--accent); pointer-events: none; }
+  .ctxm { min-width: 240px; }
+  .ctx-title { padding: 6px 10px 4px; font-size: 11px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ctxm button small { display: block; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .ctxm .ctx-arr { margin-left: auto; display: grid; } .ctxm .ctx-arr .ic { width: 14px; height: 14px; transform: rotate(-90deg); }
+  .ctxm .ctx-back .ic { transform: rotate(90deg); } .ctxm .ctx-ok { margin-left: auto; font-style: normal; color: var(--accent); font-weight: 900; }
   .mbadge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: var(--red); color: #fff; font-size: 11.5px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .cat-label.hasun .cn { color: #fff; }
   .cat-label.hasun .cn::after { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: middle; }
@@ -3127,19 +3142,34 @@ function showSettings(tab) {
 }
 
 // ================= Kenar şerit =================
+// Sunucu sırası (sürükle-bırak) ve süreli susturma: her cihazda aynı olsun diye ayarlarla birlikte saklanır
+const srvOrder = () => { try { return JSON.parse(store.get('kanka-srvorder') || '[]'); } catch { return []; } };
+const muteUntil = () => { try { return JSON.parse(store.get('kanka-muteuntil') || '{}'); } catch { return {}; } };
+function orderedServers() {
+  const o = srvOrder(), pos = id => { const i = o.indexOf(id); return i < 0 ? 1e6 : i; };
+  return S.servers.map((s, i) => [s, i]).sort((a, b) => pos(a[0].id) - pos(b[0].id) || a[1] - b[1]).map(x => x[0]);
+}
+function setSrvOrder(ids) { store.set('kanka-srvorder', JSON.stringify(ids)); syncPrefs(); renderRail(); }
+function muteServerFor(sid, ms) {
+  const mu = muteUntil();
+  if (ms) { mutedServers.add(sid); if (ms === Infinity) delete mu[sid]; else mu[sid] = Date.now() + ms; }
+  else { mutedServers.delete(sid); delete mu[sid]; }
+  store.set('kanka-muteuntil', JSON.stringify(mu)); S.unreadServers.delete(sid); saveMuted(); renderRail(); if (S.view === 'server') renderSide();
+}
+setInterval(() => { const mu = muteUntil(), now = Date.now(); let ch = false; for (const [k, v] of Object.entries(mu)) if (v <= now) { delete mu[k]; mutedServers.delete(k); ch = true; } if (ch) { store.set('kanka-muteuntil', JSON.stringify(mu)); saveMuted(); renderRail(); } }, 30e3);
 function renderRail() {
   const unreadN = S.unread.size + (S.unreadDM ? 1 : 0);
   window.kankaDesktop?.badge(unreadN);
   document.title = (unreadN ? `(${unreadN}) ` : '') + 'Kanka Chat';
   $('#rail').innerHTML =
     `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button><div class="rsep"></div>` +
-    S.servers.map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''}" data-id="${s.id}" title="${esc(s.name)}${mutedServers.has(s.id) ? ' (sessizde)' : ''}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) && !(S.view === 'server' && s.id === S.server?.id) ? '<span class="upill"></span>' : ''}${(() => { const n = mentCount(s); return n ? `<span class="mcnt">${n > 9 ? '9+' : n}</span>` : ''; })()}</button>`).join('') +
+    orderedServers().map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''} ${mutedServers.has(s.id) ? 'smuted' : ''}" data-id="${s.id}" aria-label="${esc(s.name)}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) && !(S.view === 'server' && s.id === S.server?.id) ? '<span class="upill"></span>' : ''}${(() => { const n = mentCount(s); return n ? `<span class="mcnt">${n > 9 ? '9+' : n}</span>` : ''; })()}</button>`).join('') +
     `<button class="srv dash" id="add-srv" title="Sunucu oluştur" aria-label="Sunucu oluştur">${ic('plus')}</button><button class="srv dash" id="join-srv" title="Davet koduyla katıl" aria-label="Davet koduyla katıl">${ic('link')}</button><button class="srv dash ${S.view === 'discover' ? 'active' : ''}" id="disc-srv" title="Sunucuları keşfet" aria-label="Sunucuları keşfet">${ic('compass')}</button>`;
   $('#disc-srv').onclick = () => showDiscover();
   $('#disc-srv').classList.toggle('hint', !S.servers.some(s => s.id !== 's1') && S.view !== 'discover');
   renderOnb();
   $('#home').onclick = openDMHome;
-  $('#rail').querySelectorAll('.srv[data-id]').forEach(b => b.onclick = () => selectServer(b.dataset.id));
+  $('#rail').querySelectorAll('.srv[data-id]').forEach(b => b.onclick = () => { if (railDragged) return; selectServer(b.dataset.id); });
   $('#add-srv').onclick = () => showTemplates();
   $('#join-srv').onclick = () => form('Sunucuya katıl', 'Arkadaşının gönderdiği davet linkini ya da kodunu yapıştır.', [{ k: 'code', p: 'Davet linki ya da kodu' }], v => joinInvite(v.code));
 }
@@ -3503,7 +3533,7 @@ function toggleSrvMenu() {
     if (a === 'newch') showCreateChannel(s);
     if (a === 'newcat') showCreateCategory(s);
     if (a === 'viewas') setTimeout(() => startViewAs(s), 30);
-    if (a === 'read') { s.channels.forEach(c => S.unread.delete(c.id)); S.unreadServers.delete(s.id); renderRail(); renderSide(); toast('Hepsi okundu olarak işaretlendi'); }
+    if (a === 'read') { s.channels.forEach(c => { markRead(c.id); S.unread.delete(c.id); }); S.unreadServers.delete(s.id); renderRail(); renderSide(); toast('Hepsi okundu olarak işaretlendi'); }
     if (a === 'info') showServerInfo(s);
     if (a === 'welcome') showWelcome(s, true);
     if (a === 'lb') showLeaderboard();
@@ -4423,7 +4453,7 @@ const readSent = {};
 const markRead = id => { lastRead[id] = Date.now(); store.set('kanka-read', JSON.stringify(lastRead)); clearTimeout(readSent[id]); readSent[id] = setTimeout(() => { delete readSent[id]; socket.emit('read', id); }, 700); };
 socket.on('readSync', ({ id, t }) => { lastRead[id] = Math.max(lastRead[id] || 0, t); store.set('kanka-read', JSON.stringify(lastRead)); if (S.unread.delete(id)) { if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; for (const sv of S.servers) if (!sv.channels.some(c => S.unread.has(c.id))) S.unreadServers.delete(sv.id); renderRail(); if (S.view === 'server') renderSide(); else if (S.view === 'dm') renderDMSide?.(); refreshHome(); } });
 // Bildirim tercihleri hesapta: bir cihazda değişince hepsinde geçerli, telefon bildirimi de uyar
-const prefsNow = () => ({ notif: notifOn(), muted: [...mutedServers], ch: Object.fromEntries(Object.entries(chNotif()).filter(([, v]) => v === 'all' || v === 'none')) });
+const prefsNow = () => ({ notif: notifOn(), muted: [...mutedServers], ch: Object.fromEntries(Object.entries(chNotif()).filter(([, v]) => v === 'all' || v === 'none')), order: srvOrder(), muteUntil: muteUntil() });
 let prefsT = null;
 const syncPrefs = () => { clearTimeout(prefsT); prefsT = setTimeout(() => socket.emit('prefs', prefsNow()), 300); };
 function applyServerPrefs(p) {
@@ -4431,6 +4461,8 @@ function applyServerPrefs(p) {
   store.set('kanka-notif', p.notif === false ? 'off' : null);
   mutedServers.clear(); (p.muted || []).forEach(x => mutedServers.add(x)); store.set('kanka-muted', JSON.stringify([...mutedServers]));
   store.set('kanka-chnotif', JSON.stringify(p.ch || {}));
+  if (Array.isArray(p.order)) store.set('kanka-srvorder', JSON.stringify(p.order));
+  if (p.muteUntil) store.set('kanka-muteuntil', JSON.stringify(p.muteUntil));
 }
 socket.on('prefs', p => { applyServerPrefs(p); renderRail(); if (S.view === 'server') renderSide(); });
 function initReadState(res) {
@@ -6976,15 +7008,111 @@ function chDnD(root, s, rerender) {
 }
 
 // --- Sağ tık menüsü ---
-function ctxMenu(x, y, items) {
+function ctxMenu(x, y, items, title) {
   closeUMenu();
   const m = document.createElement('div'); m.className = 'umenu ctxm'; m.setAttribute('role', 'menu');
-  m.innerHTML = items.map((it, i) => it === '-' ? '<hr>' : `<button data-i="${i}" class="${it.danger ? 'danger' : ''}">${ic(it.icon)}<span>${it.t}</span></button>`).join('');
-  document.body.appendChild(m);
-  const W = innerWidth, H = innerHeight, w = m.offsetWidth, h = m.offsetHeight;
-  m.style.left = Math.min(x, W - w - 8) + 'px'; m.style.top = Math.min(y, H - h - 8) + 'px';
-  m.onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return; closeUMenu(); items[+b.dataset.i].act(); };
+  const draw = (list, back) => {
+    m.innerHTML = (back ? `<button data-back class="ctx-back">${ic('chevron')}<span>Geri</span></button><hr>` : title ? `<div class="ctx-title">${title}</div>` : '') +
+      list.map((it, i) => it === '-' ? '<hr>' : `<button data-i="${i}" class="${it.danger ? 'danger' : ''} ${it.on ? 'on' : ''}">${ic(it.icon || 'chevron')}<span>${it.t}${it.sub2 ? `<small>${it.sub2}</small>` : ''}</span>${it.sub ? `<i class="ctx-arr">${ic('chevron')}</i>` : it.on ? '<i class="ctx-ok">✓</i>' : ''}</button>`).join('');
+    m.onclick = e => {
+      if (e.target.closest('[data-back]')) return draw(items);
+      const b = e.target.closest('[data-i]'); if (!b) return; const it = list[+b.dataset.i];
+      if (it.sub) { e.stopPropagation(); return draw(it.sub, true); }
+      closeUMenu(); it.act();
+    };
+    const W = innerWidth, H = innerHeight, w = m.offsetWidth, h = m.offsetHeight;
+    m.style.left = Math.max(8, Math.min(x, W - w - 8)) + 'px'; m.style.top = Math.max(8, Math.min(y, H - h - 8)) + 'px';
+  };
+  document.body.appendChild(m); draw(items);
 }
+// Sol çubukta sunucuya sağ tık / basılı tut menüsü
+function railMenu(s, x, y) {
+  const muted = mutedServers.has(s.id), mu = muteUntil()[s.id], P = p => s.owner === S.me || !!s.myPerms?.includes(p);
+  const list = orderedServers(), i = list.findIndex(x => x.id === s.id), ids = list.map(x => x.id);
+  const move = to => { const a = ids.filter(x => x !== s.id); a.splice(Math.max(0, Math.min(a.length, to)), 0, s.id); setSrvOrder(a); };
+  const modes = s.channels.filter(c => !voiceLike(c.type)).map(c => notifMode(c.id)), allM = modes.length && modes.every(v => v === modes[0]) ? modes[0] : null;
+  const setAll = v => { s.channels.filter(c => !voiceLike(c.type)).forEach(c => setChNotif(c.id, v)); if (S.view === 'server') renderSide(); toast('Bildirim ayarı tüm odalara uygulandı'); };
+  const until = mu ? new Date(mu).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + (new Date(mu).toDateString() !== new Date().toDateString() ? ' (yarın)' : '') : '';
+  ctxMenu(x, y, [
+    { t: 'Okundu olarak işaretle', icon: 'check', act: () => { s.channels.forEach(c => { if (S.unread.has(c.id) || mentCountCh(c.id)) markRead(c.id); S.unread.delete(c.id); }); S.unreadServers.delete(s.id); renderRail(); if (S.view === 'server') renderSide(); toast('Hepsi okundu'); } },
+    { t: 'Sunucuya davet et', icon: 'userplus', act: () => showInvite(s) },
+    '-',
+    muted ? { t: 'Sunucunun sesini aç', icon: 'bell', sub2: mu ? `${until} saatine kadar sessizde` : 'Sen açana kadar sessizde', act: () => { muteServerFor(s.id, 0); toast('Sunucunun sesi açıldı'); } }
+      : { t: 'Sunucuyu sessize al', icon: 'bell', sub: [[15, '15 dakika'], [60, '1 saat'], [480, '8 saat'], [1440, '24 saat'], [0, 'Ben açana kadar']].map(([m, t]) => ({ t, icon: 'clock', act: () => { muteServerFor(s.id, m ? m * 60e3 : Infinity); toast(`${s.name} ${m ? t + ' sessizde' : 'sessize alındı'}. Etiketlenince yine haber veririz.`); } })) },
+    { t: 'Bildirim ayarları', icon: 'bell', sub2: allM === 'all' ? 'Tüm mesajlar' : allM === 'none' ? 'Hiçbiri' : allM === 'mentions' ? 'Sadece @bahsetmeler' : 'Odalara göre farklı', sub: [
+      { t: 'Tüm mesajlar', icon: 'chat', on: allM === 'all', act: () => setAll('all') }, { t: 'Sadece @bahsetmeler', icon: 'at', on: allM === 'mentions', act: () => setAll('mentions') }, { t: 'Hiçbiri', icon: 'bell', on: allM === 'none', act: () => setAll('none') }] },
+    '-',
+    { t: 'Şuraya taşı', icon: 'grid', sub: [
+      ...(i > 0 ? [{ t: 'En üste', icon: 'up', act: () => move(0) }, { t: 'Bir yukarı', icon: 'up', act: () => move(i - 1) }] : []),
+      ...(i < list.length - 1 ? [{ t: 'Bir aşağı', icon: 'chevron', act: () => move(i + 1) }, { t: 'En alta', icon: 'chevron', act: () => move(list.length) }] : []),
+      { t: 'İpucu: sunucuyu sürükleyerek de taşıyabilirsin', icon: 'sparkle', act: () => {} }] },
+    ...(['manageServer', 'manageRoles', 'manageChannels', 'kick', 'ban'].some(P) || isMod(s, S.me) ? [{ t: 'Sunucu ayarları', icon: 'gear', act: () => showServerSettings(s) }] : []),
+    '-',
+    ...(s.public ? [] : [{ t: 'Sunucudan ayrıl', icon: 'door', danger: true, act: () => confirmBox(`${s.name} sunucusundan ayrılmak istiyor musun?`, () => socket.emit('leaveServer', s.id, r => r.error ? toast(r.error) : toast('Sunucudan ayrıldın'))) }]),
+    { t: 'Sunucu kimliğini kopyala', icon: 'idcopy', act: () => navigator.clipboard?.writeText(s.id).then(() => toast('Sunucu kimliği kopyalandı')) },
+  ], esc(s.name));
+}
+// Sol çubuk: üzerine gelince ad + sesteki kişiler, sağ tık menüsü, sürükleyerek sıralama
+let railDragged = false, railTouchAt = 0;
+(() => {
+  const rail = $('#rail'); let tip = null, tipFor = null;
+  const hideTip = () => { tip?.remove(); tip = null; tipFor = null; };
+  const showTip = b => {
+    const s = S.servers.find(x => x.id === b.dataset.id); if (!s) return;
+    const inVoice = [...new Set(s.channels.filter(c => voiceLike(c.type)).flatMap(c => S.voice?.[c.id] || []))];
+    tip?.remove(); tip = document.createElement('div'); tip.className = 'srvtip'; tipFor = b;
+    tip.innerHTML = `<b>${esc(s.name)}</b>${mutedServers.has(s.id) ? `<small>${ic('bell')} Sessizde</small>` : ''}` +
+      (inVoice.length ? `<div class="st-v">${ic('volume')}<span class="st-avs">${inVoice.slice(0, 5).map(n => av(n)).join('')}</span>${inVoice.length > 5 ? `<em>+${inVoice.length - 5}</em>` : ''}</div>` : '');
+    document.body.appendChild(tip);
+    const r = b.getBoundingClientRect(); tip.style.left = (r.right + 12) + 'px'; tip.style.top = Math.max(8, r.top + r.height / 2 - tip.offsetHeight / 2) + 'px';
+  };
+  if (matchMedia('(hover: hover)').matches) {
+    rail.addEventListener('mouseover', e => { const b = e.target.closest('.srv[data-id]'); if (b && b !== tipFor && !document.body.classList.contains('rdrag')) showTip(b); else if (!b) hideTip(); });
+    rail.addEventListener('mouseleave', hideTip);
+  }
+  rail.addEventListener('dragstart', e => { if (e.target.closest?.('.srv[data-id]')) e.preventDefault(); });
+  rail.addEventListener('contextmenu', e => { const b = e.target.closest('.srv[data-id]'); if (!b) return; e.preventDefault(); if (railTouchAt && Date.now() - railTouchAt < 1500) return; hideTip(); const s = S.servers.find(x => x.id === b.dataset.id); if (s) railMenu(s, e.clientX, e.clientY); });
+  // Sürükle-bırak: farede 6 px oynatınca, dokunmada basılı tutunca başlar. Dokunmada bırakınca oynatmadıysa menü açılır.
+  rail.addEventListener('pointerdown', e => {
+    const b = e.target.closest('.srv[data-id]'); if (!b || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const touch = e.pointerType !== 'mouse', sx = e.clientX, sy = e.clientY; let started = false, ghost = null, line = null, holdT = null, target = -1, moved = false;
+    railDragged = false; if (touch) railTouchAt = Date.now();
+    const ids = () => orderedServers().map(x => x.id);
+    const start = () => {
+      started = true; hideTip(); document.body.classList.add('rdrag'); b.classList.add('rsrc'); navigator.vibrate?.(12);
+      const r = b.getBoundingClientRect(); ghost = b.cloneNode(true); ghost.className = 'srv rghost'; ghost.style.left = r.left + 'px'; ghost.style.top = r.top + 'px'; document.body.appendChild(ghost);
+      line = document.createElement('div'); line.className = 'rline'; document.body.appendChild(line);
+    };
+    const move = ev => {
+      if (!started) { const d = Math.hypot(ev.clientX - sx, ev.clientY - sy); if (touch) { if (d > 10) cleanup(); return; } if (d < 6) return; start(); }
+      moved = moved || Math.hypot(ev.clientX - sx, ev.clientY - sy) > 6;
+      ghost.style.top = (ev.clientY - 24) + 'px';
+      const btns = [...rail.querySelectorAll('.srv[data-id]')], rr = btns.map(x => x.getBoundingClientRect());
+      target = rr.filter(r => r.top + r.height / 2 < ev.clientY).length;
+      const y = target < rr.length ? rr[target].top - 5 : rr[rr.length - 1].bottom + 5; line.style.top = y + 'px'; line.style.left = (rr[0].left - 4) + 'px';
+    };
+    const blockTouch = ev => { if (started) ev.preventDefault(); };
+    const finish = ev => {
+      if (started) {
+        railDragged = true; setTimeout(() => railDragged = false, 50);
+        if (moved && target >= 0) { const a = ids(), from = a.indexOf(b.dataset.id); a.splice(from, 1); a.splice(target > from ? target - 1 : target, 0, b.dataset.id); setSrvOrder(a); }
+        else if (touch) {
+          const s = S.servers.find(x => x.id === b.dataset.id), r = b.getBoundingClientRect();
+          // parmağı kaldırınca gelen tıklama menüyü hemen kapatmasın
+          const eat = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', eat, true); setTimeout(() => removeEventListener('click', eat, true), 400);
+          s && setTimeout(() => railMenu(s, r.right + 8, r.top), 0);
+        }
+      }
+      cleanup();
+    };
+    const cleanup = () => {
+      clearTimeout(holdT); removeEventListener('pointermove', move); removeEventListener('pointerup', finish); removeEventListener('pointercancel', cleanup); removeEventListener('touchmove', blockTouch);
+      ghost?.remove(); line?.remove(); b.classList.remove('rsrc'); document.body.classList.remove('rdrag');
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', finish); addEventListener('pointercancel', cleanup); addEventListener('touchmove', blockTouch, { passive: false });
+    if (touch) holdT = setTimeout(start, 420);
+  });
+})();
 function chMenu(s, c, x, y, lite) {
   const nm = notifMode(c.id), nb = (v, t) => ({ t: `${nm === v ? '● ' : ''}${t}`, icon: 'bell', act: () => { setChNotif(c.id, v); renderSide(); toast(`#${esc(c.name)}: ${t}`); } });
   const items = [];
