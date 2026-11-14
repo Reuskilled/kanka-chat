@@ -181,6 +181,11 @@
   .vtime:not(:empty)::before { content: '· '; opacity: .6; }
   .vtm { margin-left: auto; font-style: normal; font-size: 11px; font-weight: 800; color: #3fcf8e; font-variant-numeric: tabular-nums; padding: 1px 6px; border-radius: 6px; background: rgba(63,207,142,.12); flex-shrink: 0; }
   .vtm:empty { display: none; } #side-list .vtm + .vlim { margin-left: 6px; }
+  .srv.rdm { padding: 0; border: none; background: none; overflow: visible; animation: popIn .25s var(--ease-out); }
+  .srv.rdm .av { width: 48px; height: 48px; font-size: 18px; border-radius: 50%; }
+  body.ui2 .srv.rdm .av { width: 52px; height: 52px; }
+  .srv.rdm .rdm-g { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; }
+  .srv.rdm .mcnt { z-index: 2; }
   .srvtip { position: fixed; z-index: 60; padding: 9px 12px; border-radius: 12px; background: #0f0b09; color: var(--ink); box-shadow: 0 8px 24px rgba(0,0,0,.5); pointer-events: none; max-width: 260px; animation: popIn .12s var(--ease-out); }
   .srvtip::before { content: ''; position: absolute; left: -5px; top: 50%; margin-top: -5px; width: 10px; height: 10px; background: #0f0b09; transform: rotate(45deg); }
   .srvtip b { display: block; font-weight: 900; font-size: 14px; } .srvtip small { display: flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 700; font-size: 12px; margin-top: 2px; } .srvtip small .ic { width: 12px; height: 12px; }
@@ -421,8 +426,8 @@
   .song .n { width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
   .song a { font-weight: 800; text-decoration: none; word-break: break-all; }
   .song small { display: block; color: var(--muted); }
-  #toasts { position: fixed; right: 20px; top: 20px; z-index: 90; display: flex; flex-direction: column; gap: 8px; max-width: min(380px, calc(100vw - 40px)); }
-  body.has-tb #toasts { top: 46px; }
+  #toasts { position: fixed; right: 20px; bottom: 20px; top: auto; flex-direction: column-reverse; z-index: 90; display: flex; flex-direction: column; gap: 8px; max-width: min(380px, calc(100vw - 40px)); }
+  body.has-tb #toasts { top: auto; }
   body:has(#modal.open .box.settings) #toasts { top: auto; bottom: 20px; }
   .toast { background: var(--card); border: 1px solid var(--accent); border-radius: 16px; padding: 12px 16px; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,.5); cursor: pointer; animation: pop .2s ease-out; }
   .toast b { color: var(--accent-2); }
@@ -1113,7 +1118,7 @@
     #head-actions .hbtn { width: 34px; height: 34px; }
     #messages { padding: 10px 12px; } .row .col { max-width: 85%; }
     #compose { margin: 0 10px 10px; } #replybar { margin: 0 10px; }
-    #toasts { left: 12px; right: 12px; top: 12px; max-width: none; } #jumpnew { bottom: 80px; }
+    #toasts { left: 12px; right: 12px; top: 12px; bottom: auto; flex-direction: column; max-width: none; } #jumpnew { bottom: 80px; }
     .tools { opacity: 1; pointer-events: auto; display: none; } .row.hl .tools { display: flex; }
     #modal .box { width: calc(100vw - 24px); }
     .bubble img { max-width: 100%; }
@@ -2309,13 +2314,18 @@
   .flist.hm { padding: 0; max-width: none; }
 
   /* ---------- Yuva (ana sayfa) ---------- */
-  .hp-wrap { display: flex; flex-direction: column; min-height: calc(100% - 10px); }
-  .hp-list { flex: 1; }
-  .hp-lb { margin: 14px 2px 6px; padding: 12px 10px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
-  .hp-lr { display: flex; align-items: center; gap: 9px; padding: 6px 4px; border-radius: 10px; cursor: pointer; }
-  .hp-lr:hover { background: var(--hover); } .hp-lr.me { background: var(--accent-soft); }
-  .hp-lr .rk { width: 20px; text-align: center; font-weight: 900; font-size: 13px; color: var(--muted); } .hp-lr .av { width: 28px; height: 28px; font-size: 12px; }
-  .hp-lr .t { flex: 1; min-width: 0; } .hp-lr b { display: block; font-size: 13.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hp-lr small { display: block; font-size: 11.5px; font-weight: 800; color: var(--accent-2); white-space: nowrap; }
+  .hp-lb { padding: 8px 4px; }
+  .hp-h { font-size: 15px; font-weight: 900; padding: 6px 6px 10px; }
+  .hp-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--card); margin-bottom: 8px; }
+  .hp-tabs button { flex: 1; height: 32px; border-radius: 9px; font-weight: 900; font-size: 13px; color: var(--muted); } .hp-tabs button.on { background: var(--hover); color: var(--ink); }
+  .hp-lr { display: flex; align-items: center; gap: 10px; padding: 7px 6px; border-radius: 12px; cursor: pointer; }
+  .hp-lr:hover { background: var(--hover); } .hp-lr.me { background: var(--accent-soft); } .hp-lr.sep { margin-top: 8px; border-top: 1px dashed var(--line); border-radius: 0 0 12px 12px; padding-top: 10px; }
+  .hp-lr .rk { width: 24px; text-align: center; font-size: 17px; flex-shrink: 0; } .hp-lr .rk .n { font-size: 13px; font-weight: 900; color: var(--muted); }
+  .hp-lr .av { width: 34px; height: 34px; font-size: 14px; flex-shrink: 0; } .hp-lr.top .av { width: 38px; height: 38px; }
+  .hp-lr .t { flex: 1; min-width: 0; } .hp-lr b { display: block; font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hp-lr small { display: block; font-size: 11.5px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hp-lr em { font-style: normal; flex-shrink: 0; font-size: 12px; font-weight: 900; padding: 2px 7px; border-radius: 7px; } .hp-lr em.lv { background: rgba(255,192,77,.14); color: #ffc04d; } .hp-lr em.sk { background: rgba(255,106,44,.14); color: var(--accent); }
+  .hp-load { padding: 20px 8px; color: var(--muted); font-weight: 700; font-size: 13px; text-align: center; }
+  .hp-tip { margin: 12px 6px 4px; font-size: 12px; font-weight: 700; color: var(--muted); line-height: 1.45; }
   .hp-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 28px 10px; color: var(--muted); font-size: 13px; }
   .hp-empty .ic { width: 30px; height: 30px; color: var(--accent); } .hp-empty b { color: var(--ink); font-size: 14.5px; } .hp-empty .primary { width: auto; padding: 9px 14px; font-size: 13.5px; margin-top: 6px; }
   .hm.yv { max-width: none; gap: 16px; padding: 18px 20px 28px; }
@@ -2601,7 +2611,7 @@
     <div id="side-list"></div>
     <div id="me">
       <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vtime" class="vtime"></span><span id="vq" class="vq" hidden><i></i><em></em></span></div><div class="vc" id="vname"></div><button type="button" class="vb-chat" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>Oda sohbeti</button>
-        <div class="btns"><button id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="vns" title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button></div></div>
+        <div class="btns"><button id="deaf" title="Hoparlörü kapat" aria-label="Hoparlörü kapat"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/></svg></button><button id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="vns" title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button></div></div>
       <div class="row1"><div id="me-av"></div><div><div class="n" id="me-name"></div><div class="s" id="me-lvl"></div></div>
         <button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
     </div>
@@ -2734,6 +2744,9 @@ const ICON = {
   refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+  headset: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/>',
+  headsetoff: '<path d="M4 15v-3a8 8 0 0 1 13.6-5.7M20 12v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><path d="M16 21h2a2 2 0 0 0 2-2v-3M3 3l18 18"/>',
+  rcompass: '<path d="M5.2 7.6 4.6 3.8l3.7 1.6M18.8 7.6l.6-3.8-3.7 1.6"/><circle cx="12" cy="13" r="8.5"/><path d="M5.3 12.2c1.6-1.7 3.9-1.9 5.4-.6l1.3 1 1.3-1c1.5-1.3 3.8-1.1 5.4.6"/><path d="m14.6 15.6-1.4 2.9-2.6-2.4 1.4-2.9z" fill="currentColor" stroke-width="1.2"/>',
   home: '<path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
   activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
   more: '<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3.2"/>',
@@ -3289,6 +3302,15 @@ function muteServerFor(sid, ms) {
   store.set('kanka-muteuntil', JSON.stringify(mu)); S.unreadServers.delete(sid); saveMuted(); renderRail(); if (S.view === 'server') renderSide();
 }
 setInterval(() => { const mu = muteUntil(), now = Date.now(); let ch = false; for (const [k, v] of Object.entries(mu)) if (v <= now) { delete mu[k]; mutedServers.delete(k); ch = true; } if (ch) { store.set('kanka-muteuntil', JSON.stringify(mu)); saveMuted(); renderRail(); } }, 30e3);
+// Biri özel mesaj atınca sol çubukta, ana sayfanın altında profili çıkar (okuyunca kaybolur)
+const dmCnt = {};
+function railDMs() {
+  for (const k of Object.keys(dmCnt)) if (!S.unread.has(k)) delete dmCnt[k];
+  const list = (S.dms || []).filter(d => S.unread.has(d.id) && d.id !== S.channel?.id).sort((a, b) => (b.last || 0) - (a.last || 0)).slice(0, 5);
+  return list.map(d => { const n = dmCnt[d.id] || 1, name = d.group ? groupName(d) : dn(d.with);
+    return `<button class="srv rdm" data-dmo="${esc(d.id)}" data-w="${esc(d.with || '')}" aria-label="${esc(name)}: okunmamış mesaj">${d.group ? `<span class="rdm-g">${ic('users')}</span>` : av(d.with)}<span class="mcnt">${n > 9 ? '9+' : n}</span></button>`; }).join('');
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-dmo]'); if (!b) return; delete dmCnt[b.dataset.dmo]; openChat(b.dataset.dmo, b.dataset.w || undefined); });
 const railVoiceN = s => new Set(s.channels.filter(c => voiceLike(c.type)).flatMap(c => S.voice?.[c.id] || [])).size;
 const railVoiceBadge = s => { const n = railVoiceN(s); return n ? `<span class="rvc">${ic('volume')}${n}</span>` : ''; };
 function updRailVoice() { $('#rail')?.querySelectorAll('.srv[data-id]').forEach(b => { const s = S.servers.find(x => x.id === b.dataset.id); if (!s) return; b.querySelector('.rvc')?.remove(); b.insertAdjacentHTML('beforeend', railVoiceBadge(s)); }); }
@@ -3297,9 +3319,9 @@ function renderRail() {
   window.kankaDesktop?.badge(unreadN);
   document.title = (unreadN ? `(${unreadN}) ` : '') + 'Kanka Chat';
   $('#rail').innerHTML =
-    `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button><div class="rsep"></div>` +
+    `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button>${railDMs()}<div class="rsep"></div>` +
     orderedServers().map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''} ${mutedServers.has(s.id) ? 'smuted' : ''}" data-id="${s.id}" aria-label="${esc(s.name)}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) && !(S.view === 'server' && s.id === S.server?.id) ? '<span class="upill"></span>' : ''}${(() => { const n = mentCount(s); return n ? `<span class="mcnt">${n > 9 ? '9+' : n}</span>` : ''; })()}${railVoiceBadge(s)}</button>`).join('') +
-    `<button class="srv dash" id="add-srv" title="Sunucu oluştur" aria-label="Sunucu oluştur">${ic('plus')}</button><button class="srv dash" id="join-srv" title="Davet koduyla katıl" aria-label="Davet koduyla katıl">${ic('link')}</button><button class="srv dash ${S.view === 'discover' ? 'active' : ''}" id="disc-srv" title="Sunucuları keşfet" aria-label="Sunucuları keşfet">${ic('compass')}</button>`;
+    `<button class="srv dash" id="add-srv" title="Sunucu oluştur" aria-label="Sunucu oluştur">${ic('plus')}</button><button class="srv dash" id="join-srv" title="Davet koduyla katıl" aria-label="Davet koduyla katıl">${ic('link')}</button><button class="srv dash ${S.view === 'discover' ? 'active' : ''}" id="disc-srv" title="Sunucuları keşfet" aria-label="Sunucuları keşfet">${ic('rcompass')}</button>`;
   $('#disc-srv').onclick = () => showDiscover();
   $('#disc-srv').classList.toggle('hint', !S.servers.some(s => s.id !== 's1') && S.view !== 'discover');
   renderOnb();
@@ -3462,7 +3484,7 @@ function renderSide() {
   const tRow = c => { const mc = mentCountCh(c.id); return `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${isUn(c) || mc ? 'unread' : ''} ${mc ? 'has-ment' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${mc ? `<span class="mbadge">${mc > 9 ? '9+' : mc}</span>` : chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` };
   const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${(S.voice[c.id] || []).length ? `<em class="vtm" data-vt="${c.id}" title="Sohbet bu kadar zamandır sürüyor">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em>` : ''}${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n);
-        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(dn(n))}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
+        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(dn(n))}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.d ? ic('headsetoff', 'vm') : fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
   const vOrder = c => { const l = [...(S.voice[c.id] || [])]; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l; };
   const row = c => voiceLike(c.type) ? vRow(c) : tRow(c);
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
@@ -5254,18 +5276,21 @@ function renderMembers() {
   memTyping();
 }
 // Yuva'da sağ panel: arkadaşlar ne yapıyor (seste / oyunda / çevrimiçi) + Kanka HQ haftanın en aktifleri
-let lbHQ = null, lbAt = 0;
+let hqTops = null, lbAt = 0, lbTab = 'lvl';
 function homeSidePanel(item, mdrH) {
-  const fr = S.social?.friends || [], inV = n => S.servers.some(sv => sv.channels.some(c => voiceLike(c.type) && (S.voice?.[c.id] || []).includes(n)));
-  const on = fr.filter(n => S.online.has(n)), v = on.filter(inV), g = on.filter(n => !inV(n) && S.users[n]?.activities?.game), rest = on.filter(n => !v.includes(n) && !g.includes(n)), off = fr.filter(n => !S.online.has(n));
-  const grp = (t, l) => l.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${l.length}</div>` + l.map(item).join('') : '';
-  if (Date.now() - lbAt > 120e3 && hqServer()) { lbAt = Date.now(); socket.emit('leaderboard', hqServer().id, l => { lbHQ = l || []; if (S.view === 'dm' && !S.channel) renderMembers(); }); }
-  const lb = (lbHQ || []).slice(0, 5);
-  const lbH = lb.length ? `<div class="hp-lb"><div class="label" style="padding:4px 4px 8px">🏆 Kanka HQ'nun en aktifleri</div>${lb.map((x, i) => `<div class="hp-lr ${x.name === S.me ? 'me' : ''}" data-n="${esc(x.name)}"><span class="rk">${['🥇', '🥈', '🥉'][i] || i + 1}</span>${av(x.name, S.online.has(x.name))}<span class="t"><b>${esc(dn(x.name))}</b><small>Seviye ${x.level}${x.streak ? ` · 🔥 ${x.streak} gün` : ''}</small></span></div>`).join('')}</div>` : '';
-  const none = !fr.length ? `<div class="hp-empty">${ic('userplus')}<b>Henüz arkadaşın yok</b><small>Arkadaş ekleyince burada seste mi, oyunda mı görürsün.</small><button class="primary" id="hp-inv">Arkadaşını davet et</button></div>` : '';
-  $('#members').innerHTML = mdrH.replace('<b>Üyeler</b>', '<b>Arkadaşlar</b>') + `<div class="hp-wrap"><div class="hp-list">${none}${grp('🔊 Seste', v)}${grp('🎮 Oyunda', g)}${grp('Çevrimiçi', rest)}${grp('Çevrimdışı', off.slice(0, 30))}</div>${lbH}</div>`;
-  $('#members').querySelectorAll('.mem[data-n], .hp-lr[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
-  $('#hp-inv')?.addEventListener('click', () => showInvite(hqServer()));
+  if (Date.now() - lbAt > 120e3) { lbAt = Date.now(); socket.emit('hqTops', r => { if (r) { hqTops = r; if (S.view === 'dm' && !S.channel) renderMembers(); } }); }
+  const t = hqTops, list = t ? (lbTab === 'lvl' ? t.lvl : t.stk) : [];
+  const medal = i => ['🥇', '🥈', '🥉'][i] || `<span class="n">${i + 1}</span>`;
+  const val = x => lbTab === 'lvl' ? `<em class="lv">Sv ${x.level}</em>` : `<em class="sk">🔥 ${x.streak}</em>`;
+  const sub = x => lbTab === 'lvl' ? `${x.xp.toLocaleString('tr-TR')} XP${x.streak ? ` · 🔥 ${x.streak} gün` : ''}` : `${x.streak} günlük seri · Sv ${x.level}`;
+  const mine = t?.me && !list.some(x => x.name === S.me) ? `<div class="hp-lr me sep" data-n="${esc(S.me)}"><span class="rk"><span class="n">${lbTab === 'lvl' ? t.me.lvlRank : t.me.stkRank}</span></span>${av(S.me, true)}<span class="t"><b>Sen</b><small>${sub(t.me)}</small></span>${val(t.me)}</div>` : '';
+  $('#members').innerHTML = mdrH.replace('<b>Üyeler</b>', '<b>Sıralama</b>') + `<div class="hp-lb">
+    <div class="hp-h">🏆 Kanka HQ sıralaması</div>
+    <div class="hp-tabs"><button class="${lbTab === 'lvl' ? 'on' : ''}" data-lb="lvl">⭐ Seviye</button><button class="${lbTab === 'stk' ? 'on' : ''}" data-lb="stk">🔥 Seri</button></div>
+    ${!t ? '<div class="hp-load">Yükleniyor…</div>' : list.length ? list.map((x, i) => `<div class="hp-lr ${x.name === S.me ? 'me' : ''} ${i < 3 ? 'top' : ''}" data-n="${esc(x.name)}"><span class="rk">${medal(i)}</span>${av(x.name, S.online.has(x.name))}<span class="t"><b>${esc(dn(x.name))}</b><small>${sub(x)}</small></span>${val(x)}</div>`).join('') + mine : '<div class="hp-load">Henüz serisi olan yok. Her gün bir mesaj at, ilk sen ol!</div>'}
+    <p class="hp-tip">${lbTab === 'lvl' ? 'Mesaj atarak, seste kalarak ve etkinliklere katılarak XP kazanırsın.' : 'Seri, her gün en az bir mesaj atınca büyür. Bir gün atlarsan sıfırlanır.'}</p></div>`;
+  $('#members').querySelectorAll('.hp-lr[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
+  $('#members').querySelectorAll('[data-lb]').forEach(b => b.onclick = e => { e.stopPropagation(); lbTab = b.dataset.lb; renderMembers(); });
   $('#mdr-x')?.addEventListener('click', e => { e.stopPropagation(); closeMembers(); });
 }
 // Bu odada yazan kişiler üye listesinde "yazıyor" olarak görünür
@@ -5777,8 +5802,8 @@ socket.on('notify', n => {
   if (n.channelId === S.channel?.id && document.hasFocus()) return;
   if (n.mention && !n.dm && n.channelId) { rememberMention(n); refreshHome(); renderRail(); if (S.view === 'server') renderSide(); } else if (n.dm || n.friend) refreshHome();
   if (!n.dm && n.channelId && notifMode(n.channelId) === 'none') return;
-  if (!notifOn() || isDnd()) { if (n.dm) { S.unread.add(n.channelId); if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); } return; }
-  if (n.dm) { S.unread.add(n.channelId); if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); }
+  if (!notifOn() || isDnd()) { if (n.dm) { S.unread.add(n.channelId); dmCnt[n.channelId] = (dmCnt[n.channelId] || 0) + 1; if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); } return; }
+  if (n.dm) { S.unread.add(n.channelId); dmCnt[n.channelId] = (dmCnt[n.channelId] || 0) + 1; if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); }
   playSound('mention');
   const title = n.friend ? `${n.from}` : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? `${n.from} sana yazdı` : `${n.from} seni etiketledi`;
   toast(`<b>${esc(title)}</b><br>${esc(n.text)}<small>${esc(n.where)}</small>`, () => {
@@ -6046,7 +6071,8 @@ function makePeer(sid) {
       let a = document.getElementById('a-' + sid);
       if (!a) { a = document.createElement('audio'); a.id = 'a-' + sid; a.autoplay = true; document.body.appendChild(a); }
       a.srcObject = e.streams[0] || new MediaStream([e.track]);
-      a.volume = vol[peerNames[sid]] ?? 1; a.muted = uMuted.has(peerNames[sid]) || stageSilenced(peerNames[sid]);
+      if (deaf) { a.dataset.dm = ''; }
+      a.volume = vol[peerNames[sid]] ?? 1; a.muted = deaf || uMuted.has(peerNames[sid]) || stageSilenced(peerNames[sid]);
       meter(sid, () => peerNames[sid], new MediaStream([e.track]));
     } else {
       peerVideo[sid] = new MediaStream([e.track]);
@@ -6099,7 +6125,7 @@ function closePeer(sid) {
   document.getElementById('a-' + sid)?.remove(); document.getElementById('as-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
-function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; myVoiceAt = 0; tickVoiceTimes(); setTimeout(renderCallBar, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
+function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; myVoiceAt = 0; if (deaf) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(renderCallBar, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
@@ -6338,12 +6364,26 @@ function setSpeaking(name, sid, on) {
 // --- Bas-konuş ve susturma ---
 const pttOn = () => store.get('kanka-ptt') === 'on';
 const micLive = () => !muted && (!pttOn() || pttDown) && canSpeakNow();
+// Hoparlörü kapat (sağırlaştır): kimseyi duymazsın, mikrofonun da kapanır; açınca eski haline döner
+let deaf = false, deafWasMuted = false;
+const deafOn = () => deaf;
+function applyDeaf() {
+  document.querySelectorAll('audio[id^="a-"], audio[id^="as-"], video').forEach(a => { if (deaf) { a.dataset.dm = a.muted ? '1' : ''; a.muted = true; } else if ('dm' in a.dataset) { a.muted = a.dataset.dm === '1'; delete a.dataset.dm; } });
+  const b = $('#deaf'); if (b) { b.innerHTML = ic(deaf ? 'headsetoff' : 'headset'); b.classList.toggle('off', deaf); b.title = deaf ? 'Hoparlörü aç' : 'Hoparlörü kapat'; }
+}
+function toggleDeaf(on = !deaf) {
+  if (on === deaf) return; deaf = on;
+  if (deaf) { deafWasMuted = muted; muted = true; } else muted = deafWasMuted;
+  applyDeaf(); applyMute(); playSound(deaf ? 'leave' : 'join');
+}
+document.addEventListener('click', e => { if (e.target.closest('#deaf')) toggleDeaf(); });
 function applyMute() {
   localStream?.getAudioTracks().forEach(t => t.enabled = micLive());
   $('#mute').innerHTML = ic(muted ? 'micoff' : pttOn() && !pttDown ? 'keyboard' : 'mic');
   $('#mute').title = muted ? 'Sesi aç' : pttOn() ? 'Bas-konuş: V tuşuna basılı tut' : 'Sustur';
   $('#mute').classList.toggle('off', muted);
-  if (myVoice) socket.emit('vflags', { m: muted || !canSpeakNow() });
+  if (!muted && deaf) { deaf = false; applyDeaf(); } // mikrofonu açınca hoparlör de açılır
+  if (myVoice) socket.emit('vflags', { m: muted || !canSpeakNow(), d: deaf });
   pushOverlay();
 }
 const typingTarget = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;

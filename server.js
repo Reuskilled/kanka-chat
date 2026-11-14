@@ -1195,7 +1195,7 @@ function voiceKick(chIds, onlyName, reason) {
   if (any) pushVoice();
 }
 const voiceFlags = new Map(); // socket.id -> { m: mikrofon kapalı }
-const flagsState = () => { const o = {}; for (const [ch, room] of voice) { if (ch.startsWith('call:')) continue; for (const [sid, n] of room) { const f = voiceFlags.get(sid) || {}, md = voiceMedia.get(sid) || {}; const sm = srvMuted.size && srvMuted.has((findChannel(ch)?.s?.id || '') + '|' + n); if (f.m || md.cam || md.screen || sm) (o[ch] ||= {})[n] = { m: !!f.m, cam: !!md.cam, screen: !!md.screen, ...(sm ? { sm: true } : {}) }; } } return o; };
+const flagsState = () => { const o = {}; for (const [ch, room] of voice) { if (ch.startsWith('call:')) continue; for (const [sid, n] of room) { const f = voiceFlags.get(sid) || {}, md = voiceMedia.get(sid) || {}; const sm = srvMuted.size && srvMuted.has((findChannel(ch)?.s?.id || '') + '|' + n); if (f.m || f.d || md.cam || md.screen || sm) (o[ch] ||= {})[n] = { m: !!f.m, ...(f.d ? { d: true } : {}), cam: !!md.cam, screen: !!md.screen, ...(sm ? { sm: true } : {}) }; } } return o; };
 // Özel sohbet aramaları (DM/grup) sadece o sohbetin üyelerine görünür: "Arama sürüyor · Katıl"
 const callsFor = name => { const o = {}; for (const [k, m] of voice) if (k.startsWith('call:') && m.size && canAccess(name, k.slice(5))) o[k.slice(5)] = [...new Set(m.values())]; return o; };
 let lastCallsSig = '';
@@ -2682,6 +2682,15 @@ io.on('connection', socket => {
     let rank = null; if (hq) { const xp = u.xp || 0; rank = 1 + membersOf(hq).reduce((a, n) => a + ((db.users[n]?.xp || 0) > xp ? 1 : 0), 0); }
     cb({ week, today: dow, last, rank });
   });
+  // Yuva sağ panel: Kanka HQ'da en yüksek seviye ve en uzun seri
+  socket.on('hqTops', (cb = () => {}) => {
+    const hq = db.servers.find(x => x.id === 's1'); if (!hq || !me) return cb(null);
+    const us = membersOf(hq).map(n => db.users[n]).filter(u => u && !u.siteBan), row = u => ({ name: u.name, level: level(u.xp), xp: u.xp || 0, streak: u.streak?.count || 0 });
+    const lvl = [...us].sort((a, b) => (b.xp || 0) - (a.xp || 0)).slice(0, 10).map(row);
+    const stk = us.filter(u => (u.streak?.count || 0) > 0).sort((a, b) => (b.streak?.count || 0) - (a.streak?.count || 0) || (b.xp || 0) - (a.xp || 0)).slice(0, 10).map(row);
+    const meU = db.users[me], myL = 1 + us.filter(u => (u.xp || 0) > (meU.xp || 0)).length, myS = 1 + us.filter(u => (u.streak?.count || 0) > (meU.streak?.count || 0)).length;
+    cb({ lvl, stk, me: { ...row(meU), lvlRank: myL, stkRank: myS } });
+  });
   socket.on('leaderboard', (serverId, cb) => {
     const s = db.servers.find(x => x.id === serverId);
     if (!s || !(s.public || s.members.includes(me))) return cb([]);
@@ -2922,10 +2931,10 @@ io.on('connection', socket => {
     if (f && srvMuted.has(f.s.id + '|' + me)) socket.emit('srvMute', { on: true });
   });
   socket.on('voiceLeave', leaveVoice);
-  socket.on('vflags', ({ m } = {}) => {
+  socket.on('vflags', ({ m, d } = {}) => {
     if (!myVoice) return;
     const sv = findChannel(myVoice)?.s; if (sv && !m && srvMuted.has(sv.id + '|' + me)) { m = true; socket.emit('srvMute', { on: true }); }
-    const was = !!voiceFlags.get(socket.id)?.m; voiceFlags.set(socket.id, { m: !!m }); if (was !== !!m) io.emit('voiceFlags', flagsState()); });
+    const pv = voiceFlags.get(socket.id) || {}; voiceFlags.set(socket.id, { m: !!m, d: !!d }); if (!!pv.m !== !!m || !!pv.d !== !!d) io.emit('voiceFlags', flagsState()); });
   socket.on('signal', ({ to, data } = {}) => {
     if (!myVoice || !voice.get(myVoice)?.has(to)) return;
     io.to(to).emit('signal', { from: socket.id, data });
