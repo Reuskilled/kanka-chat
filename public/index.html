@@ -2307,6 +2307,54 @@
   /* ---------- Ana sayfa ---------- */
   .ftabs button .ic { width: 15px; height: 15px; margin-right: 5px; vertical-align: -2px; }
   .flist.hm { padding: 0; }
+
+  /* ---------- Yuva (ana sayfa) ---------- */
+  .hm.yv { max-width: 1180px; gap: 16px; padding: 18px 20px 28px; }
+  .yv-hero { position: relative; overflow: hidden; display: flex; align-items: center; gap: 22px; padding: 22px 26px; border-radius: 22px; background: linear-gradient(120deg, #3a1d10, #24130c 60%); border: 1px solid rgba(255,154,77,.18); }
+  body.light .yv-hero { background: linear-gradient(120deg, #ffe2cf, #fff3ea 60%); border-color: rgba(242,101,47,.25); }
+  .yv-hero::after { content: ''; position: absolute; right: -60px; top: -60px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,106,44,.32), transparent 70%); pointer-events: none; }
+  .yv-hero .yv-me { width: 88px; height: 88px; border-radius: 26px; overflow: hidden; display: grid; place-items: center; color: #fff; font-weight: 900; transform: rotate(-6deg); box-shadow: 0 10px 30px rgba(0,0,0,.4); flex-shrink: 0; position: relative; z-index: 1; font-size: 34px; }
+  .yv-hero .yv-me img { width: 100%; height: 100%; object-fit: cover; }
+  .yv-ht { position: relative; z-index: 1; min-width: 0; }
+  .yv-ht h2 { font-size: 28px; font-weight: 900; line-height: 1.1; }
+  .yv-ht p { color: var(--muted); font-weight: 700; font-size: 14.5px; margin-top: 6px; }
+  .yv-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .yv-chips span { display: inline-flex; align-items: center; height: 30px; padding: 0 11px; border-radius: 10px; background: rgba(0,0,0,.25); font-size: 12.5px; font-weight: 800; }
+  body.light .yv-chips span { background: rgba(255,255,255,.7); }
+  .yv-ring { margin-left: auto; position: relative; z-index: 1; width: 108px; height: 108px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; background: conic-gradient(var(--accent) calc(var(--p) * 1%), rgba(255,232,214,.1) 0); }
+  .yv-ring div { width: 86px; height: 86px; border-radius: 50%; background: #2a170e; display: grid; place-content: center; text-align: center; }
+  body.light .yv-ring div { background: #fff6ef; }
+  .yv-ring b { font-size: 24px; font-weight: 900; line-height: 1; } .yv-ring small { font-size: 10.5px; font-weight: 900; color: var(--accent-2); white-space: nowrap; }
+  .yv-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; align-items: start; }
+  .yv-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .yv-card { border-radius: 20px; background: var(--card); border: 1px solid var(--line); padding: 16px; min-width: 0; }
+  .yv-card h3 { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 900; margin-bottom: 6px; }
+  .yv-card h3 .ic { width: 18px; height: 18px; color: var(--accent); }
+  .yv-card h3 em { margin-left: auto; font-style: normal; font-size: 12px; font-weight: 800; color: var(--muted); }
+  .yv-act { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .yv-act:last-of-type { border-bottom: none; }
+  .yv-av { position: relative; flex-shrink: 0; } .yv-av .av { width: 44px; height: 44px; font-size: 16px; }
+  .yv-t { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; border-radius: 7px; border: 3px solid var(--card); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 900; color: #fff; }
+  .yv-t .ic { width: 11px; height: 11px; } .yv-t.gr { background: #3ddc97; color: #052417; } .yv-t.re { background: var(--red); } .yv-t.gm { background: #7b61ff; }
+  .yv-room { width: 44px; height: 44px; border-radius: 14px; background: rgba(61,220,151,.13); color: #3ddc97; display: grid; place-items: center; flex-shrink: 0; }
+  .yv-tx { flex: 1; min-width: 0; } .yv-tx b { display: block; font-size: 14.5px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .yv-tx small { display: block; font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .yv-tx small strong { color: var(--ink); font-weight: 800; }
+  .yv-b { flex-shrink: 0; height: 34px; padding: 0 13px; border-radius: 10px; font-weight: 900; font-size: 12.5px; background: var(--hover); }
+  .yv-b.gr { background: #3ddc97; color: #052417; } .yv-b.or { background: var(--accent); color: #fff; }
+  .yv-here { flex-shrink: 0; font-size: 12px; font-weight: 900; color: var(--accent); }
+  .yv-calm { display: flex; align-items: center; gap: 12px; padding: 14px 4px; color: var(--muted); } .yv-calm .ic { width: 22px; height: 22px; color: var(--green); flex-shrink: 0; } .yv-calm b { display: block; color: var(--ink); } .yv-calm small { font-weight: 600; }
+  .yv-wk { margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .yv-wkh { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; } .yv-wkh b { font-size: 14.5px; font-weight: 900; } .yv-wkh span { font-size: 12px; color: var(--muted); font-weight: 700; }
+  .yv-bars { display: flex; gap: 10px; align-items: flex-end; height: 140px; margin-top: 10px; }
+  .yv-bar { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+  .yv-bar i { width: 100%; border-radius: 8px; background: rgba(61,220,151,.22); display: block; min-height: 3px; } .yv-bar.today i { background: linear-gradient(180deg, #3ddc97, #1f9e69); } .yv-bar.fut i { background: var(--line); }
+  .yv-bar > i { flex: 0 0 auto; } .yv-bar span { font-size: 11px; font-weight: 900; color: var(--muted); } .yv-bar.today span { color: #3ddc97; }
+  .yv-srv { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 8px 0; }
+  .yv-si { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-weight: 900; font-size: 17px; color: #fff; flex-shrink: 0; overflow: hidden; } .yv-si img { width: 100%; height: 100%; object-fit: cover; }
+  .yv-pt { font-style: normal; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 6px; background: rgba(155,123,255,.18); color: #b9a4ff; margin-left: 4px; vertical-align: 2px; }
+  .yv-more { font-size: 12.5px; font-weight: 900; color: var(--accent); margin-top: 4px; }
+  .yv .hm-list { margin-top: 4px; }
+  @media (max-width: 1100px) { .yv-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .hm.yv { padding: 12px; } .yv-hero { flex-wrap: wrap; padding: 18px; gap: 14px; } .yv-hero .yv-me { width: 64px; height: 64px; border-radius: 20px; } .yv-ht h2 { font-size: 22px; } .yv-ring { display: none; } }
   .hm { display: flex; flex-direction: column; gap: 26px; padding: 20px 24px 32px; max-width: 980px; }
   .hm-sec h5 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 12px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   .hm-sec h5 .ic { width: 15px; height: 15px; color: var(--accent); } .hm-sec h5 .cnt { margin-left: 2px; }
@@ -2677,6 +2725,7 @@ const ICON = {
   refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+  home: '<path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
   activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
   more: '<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3.2"/>',
   chevron: '<path d="m6 9 6 6 6-6"/>',
@@ -4309,7 +4358,7 @@ function showFriends(tab = friendTab) {
   friendTab = tab;
   S.view = 'dm'; S.channel = null; renderRail(); renderDMSide(); renderMembers();
   setWatch(null);
-  if (tab === 'home') setHeader(`${ic('sparkle')} Ana sayfa`, `${S.social.friends.length} arkadaş · ${S.social.friends.filter(n => S.online.has(n)).length} çevrimiçi`, false);
+  if (tab === 'home') setHeader(`${ic('home')} Yuva`, `${S.social.friends.length} arkadaş · ${S.social.friends.filter(n => S.online.has(n)).length} çevrimiçi`, false);
   else setHeader(`${ic('users')} Arkadaşlar`, `${S.social.friends.length} arkadaş`, false);
   $('#head-actions').innerHTML = '';
   $('#compose').style.display = 'none'; $('#typing').textContent = '';
@@ -4328,7 +4377,7 @@ function showFriends(tab = friendTab) {
   const empty = { online: 'Şu an çevrimiçi arkadaşın yok.', all: 'Henüz arkadaşın yok. Sağ üstten arkadaş ekle!', pending: 'Bekleyen istek yok.', blocked: 'Kimseyi engellemedin.' }[tab];
   $('#callbar')?.remove();
   $('#messages').innerHTML = `<div class="ftabs">
-      <button class="${tab === 'home' ? 'on' : ''}" data-ft="home">${ic('sparkle')}Ana sayfa</button><button class="${tab === 'online' ? 'on' : ''}" data-ft="online">Çevrimiçi</button><button class="${tab === 'all' ? 'on' : ''}" data-ft="all">Tümü</button>
+      <button class="${tab === 'home' ? 'on' : ''}" data-ft="home">${ic('home')}Yuva</button><button class="${tab === 'online' ? 'on' : ''}" data-ft="online">Çevrimiçi</button><button class="${tab === 'all' ? 'on' : ''}" data-ft="all">Tümü</button>
       <button class="${tab === 'pending' ? 'on' : ''}" data-ft="pending">Bekleyen${sc.reqIn.length ? `<span class="cnt">${sc.reqIn.length}</span>` : ''}</button><button class="${tab === 'blocked' ? 'on' : ''}" data-ft="blocked">Engellenen</button>
       <button class="addf" id="add-friend">${ic('userplus')}<span>Arkadaş ekle</span></button></div>
     <div class="flist ${tab === 'home' ? 'hm' : ''}">${body || `<div class="empty" style="padding:40px 0"><div class="big">${ic('users')}</div>${empty}</div>`}</div>`;
@@ -4384,7 +4433,65 @@ function homeHTML() {
       ${know.length ? `<h6>Tanıyor olabileceklerin</h6><div class="hm-know">${know.map(k => `<div class="hm-k">${av(k.n, S.online.has(k.n))}<span><b>${esc(dn(k.n))}</b><small>${esc(k.srv.slice(0, 2).join(', '))}</small></span><button class="btns2" data-addf="${esc(k.n)}">${ic('userplus')}Ekle</button></div>`).join('')}</div>` : ''}</section>`;
   }
   const botSec = !S.servers.some(x => !x.public && x.owner === S.me) ? `<section class="hm-sec"><div class="hm-botcta"><img src="/icon-192.png" alt=""><span><b>Kendi sunucunu kur, Kanka Bot korusun</b><small>Arkadaş grubun için hazır şablon + moderasyonu üstlenen bot. Discord'daki gibi 5 bot kurmana gerek yok.</small></span><button class="primary" data-q="create">${ic('plus')} Sunucu kur</button></div></section>` : '';
-  return `<div class="hm">${voiceSec}${waitSec}${botSec}${startSec}</div>`;
+  return yuvaHTML({ rooms, items, startSec, botSec });
+}
+// ================= Yuva: ana sayfanın yeni hali =================
+S.yuva = null; S.yuvaDisc = null; let yuvaAt = 0;
+function yuvaFetch() {
+  if (Date.now() - yuvaAt < 60e3) return; yuvaAt = Date.now();
+  socket.emit('yuva', r => { if (r) { S.yuva = r; refreshHome(); } });
+  socket.emit('discover', {}, r => { S.yuvaDisc = (r?.list || []).filter(x => x.id !== 's1' && !x.joined).slice(0, 3); refreshHome(); });
+}
+const vAgoTxt = t => { const m = Math.round((Date.now() - t) / 60e3); return m < 1 ? 'yeni girdi' : hm2(m) + "'dır"; };
+const hm2 = m => { m = m || 0; const h = Math.floor(m / 60), mm = m % 60; return h ? `${h} sa${mm ? ` ${mm} dk` : ''}` : `${mm} dk`; };
+function yuvaHTML({ rooms, items, startSec, botSec }) {
+  yuvaFetch();
+  const u = S.users[S.me] || { level: 1, xp: 0 }, sc = S.social, fr = sc.friends, y = S.yuva;
+  const hr = new Date().getHours(), greet = hr >= 5 && hr < 12 ? 'Günaydın' : hr < 18 && hr >= 12 ? 'İyi günler' : hr >= 18 && hr < 23 ? 'İyi akşamlar' : 'İyi geceler', emo = hr >= 5 && hr < 18 ? '☀️' : '🌙';
+  const lo = lvlFloor(u.level), hi = lvlFloor(u.level + 1), pct = Math.max(0, Math.min(100, Math.round((u.xp - lo) / (hi - lo) * 100)));
+  // arkadaşlar şu an ne yapıyor
+  const voiceOf = n => { for (const sv of S.servers) for (const c of sv.channels) if (voiceLike(c.type) && (S.voice?.[c.id] || []).includes(n)) return { sv, c }; return null; };
+  const acts = [];
+  for (const n of fr) {
+    if (!S.online.has(n)) continue;
+    const v = voiceOf(n), live = v && (S.live?.[v.c.id] || []).includes(n), g = S.users[n]?.activities?.game;
+    let line, btn, w;
+    if (live) { w = 4; line = `Yayında · <strong>${esc(v.sv.name)} › ${esc(v.c.name)}</strong>${(S.live[v.c.id] || []).length ? '' : ''}`; btn = myVoice === v.c.id ? '<span class="yv-here">Buradasın</span>' : `<button class="yv-b or" data-jv="${v.c.id}" data-sv="${v.sv.id}">İzle</button>`; }
+    else if (v) { w = 3; const k = (S.voice[v.c.id] || []).length; line = `Seste · <strong>${esc(v.c.name)}</strong>${voiceSince[v.c.id] ? ` · ${vAgoTxt(voiceSince[v.c.id])}` : ''}${k > 1 ? ` · ${k} kişi` : ''}`; btn = myVoice === v.c.id ? '<span class="yv-here">Buradasın</span>' : `<button class="yv-b gr" data-jv="${v.c.id}" data-sv="${v.sv.id}">Katıl</button>`; }
+    else if (g) { w = 2; line = `<strong>${esc(g.name)}</strong> oynuyor${g.rich?.state ? ` · ${esc(g.rich.state)}` : ''}${g.start ? ` · ${hm2(Math.round((Date.now() - g.start) / 60e3))}` : ''}`; btn = `<button class="yv-b" data-hi="${esc(n)}">Selam ver 👋</button>`; }
+    else { w = 1; line = esc(S.users[n]?.status || 'Çevrimiçi'); btn = `<button class="yv-b" data-hi="${esc(n)}">Selam ver 👋</button>`; }
+    const tag = live ? '<i class="yv-t re">●</i>' : v ? `<i class="yv-t gr">${ic('volume')}</i>` : g ? `<i class="yv-t gm">${esc((g.name || '?')[0])}</i>` : '';
+    acts.push({ w, h: `<div class="yv-act"><span class="yv-av">${av(n)}${tag}</span><span class="yv-tx"><b>${esc(dn(n))}</b><small>${line}</small></span>${btn}</div>` });
+  }
+  acts.sort((a, b) => b.w - a.w);
+  const inVoice = fr.filter(n => S.online.has(n) && voiceOf(n)).length, playing = fr.filter(n => S.online.has(n) && S.users[n]?.activities?.game).length;
+  // arkadaşı olmayan odalar da görünsün
+  const extra = rooms.filter(r => !r.call && !r.who.some(n => fr.includes(n))).slice(0, Math.max(0, 4 - acts.length)).map(r => `<div class="yv-act"><span class="yv-room">${ic('volume')}</span><span class="yv-tx"><b>${esc(r.c.name)}</b><small>${esc(r.sv.name)} · ${r.who.length} kişi${voiceSince[r.c.id] ? ` · ${hm2(Math.round((Date.now() - voiceSince[r.c.id]) / 60e3))}` : ''}</small></span>${myVoice === r.c.id ? '<span class="yv-here">Buradasın</span>' : `<button class="yv-b gr" data-jv="${r.c.id}" data-sv="${r.sv.id}">Katıl</button>`}</div>`);
+  const actList = [...acts.slice(0, 6).map(a => a.h), ...extra];
+  // haftalık ses grafiği
+  let chart = '';
+  if (y) {
+    const tot = y.week.reduce((a, x) => a + (x || 0), 0), mx = Math.max(30, ...y.week.map(x => x || 0)), diff = y.last ? Math.round((tot - y.last) / y.last * 100) : null;
+    chart = `<div class="yv-wk"><div class="yv-wkh"><b>Bu hafta seste</b><span>${tot ? hm2(tot) : 'Bu hafta henüz seste değilsin'}${diff != null ? ` · geçen haftadan %${Math.abs(diff)} ${diff >= 0 ? 'fazla' : 'az'}` : ''}</span></div>
+      <div class="yv-bars">${['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((d, i) => { const m = y.week[i]; return `<div class="yv-bar ${i === y.today ? 'today' : ''} ${m == null ? 'fut' : ''}" title="${d}: ${m == null ? '—' : hm2(m)}"><i style="height:${m ? Math.max(4, Math.round(m / mx * 108)) : 3}px"></i><span>${d}</span></div>`; }).join('')}</div></div>`;
+  }
+  const chips = [u.streak ? `🔥 ${u.streak} gün seri` : null, y && y.week.some(x => x) ? `⏱ Bu hafta seste ${hm2(y.week.reduce((a, x) => a + (x || 0), 0))}` : null, y?.rank ? `🏆 Kanka HQ'da ${y.rank}. sıradasın` : null].filter(Boolean);
+  const sub = inVoice || playing ? [inVoice && `${inVoice} arkadaşın seste`, playing && `${playing} kişi oyunda`].filter(Boolean).join(', ') + '.' : fr.length ? 'Kankaların şu an sakin.' : 'Arkadaş ekleyince burada ne yaptıklarını görürsün.';
+  const disc = S.yuvaDisc?.length ? `<section class="yv-card"><h3>${ic('compass')}Keşfet'te yükselenler</h3>${S.yuvaDisc.map(d => `<button class="yv-srv" data-disc="${esc(d.id)}"><span class="yv-si" style="${d.iconImg ? '' : `background:${d.bannerColor || 'var(--accent)'}`}">${d.iconImg ? `<img src="${esc(d.iconImg)}" alt="">` : esc(d.icon || d.name[0])}</span><span class="yv-tx"><b>${esc(d.name)}${d.badges?.some(b => b.id === 'partner') ? ' <i class="yv-pt">PARTNER</i>' : ''}</b><small>${esc(d.category)} · ${d.members} üye${d.online ? ` · ${d.online} çevrimiçi` : ''}</small></span></button>`).join('')}<button class="yv-more" data-q="discover">Tümünü gör →</button></section>` : '';
+  return `<div class="hm yv">
+    <section class="yv-hero"><div class="yv-me" style="background:${u.color || userColor(S.me)}">${u.avatar ? `<img src="${esc(u.avatar)}" alt="">` : initial(S.me)}</div><div class="yv-ht"><h2>${greet} ${esc(dn(S.me))} ${emo}</h2><p>${sub} Seviye ${u.level + 1}'e ${Math.max(0, hi - u.xp)} XP kaldı.</p>${chips.length ? `<div class="yv-chips">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : ''}</div>
+      <div class="yv-ring" style="--p:${pct}"><div><b>Sv ${u.level}</b><small>Sv ${u.level + 1}'e %${pct}</small></div></div></section>
+    <div class="yv-grid">
+      <section class="yv-card"><h3>${ic('activity')}Şu an kankalar${acts.length ? `<em>${acts.length} aktif</em>` : ''}</h3>
+        ${actList.length ? actList.join('') : `<div class="yv-calm">${ic('moon')}<span><b>Şu an kimse aktif değil</b><small>Bir sesli odaya girince arkadaşların burada seni görür.</small></span></div>`}
+        ${chart}</section>
+      <div class="yv-col">
+        <section class="yv-card"><h3>${ic('bell')}Seni bekleyenler${items.length ? `<em>${items.length}</em>` : ''}</h3>${items.length ? `<div class="hm-list">${items.join('')}</div>` : `<div class="yv-calm">${ic('check')}<span><b>Her şey okundu</b><small>Yeni mesaj, istek ya da etiket yok.</small></span></div>`}</section>
+        ${disc}
+      </div>
+    </div>
+    ${botSec}${startSec}
+  </div>`;
 }
 function wireHome() {
   const M = $('#messages');
@@ -4395,6 +4502,8 @@ function wireHome() {
   M.querySelectorAll('[data-usv]').forEach(r => r.onclick = () => selectServer(r.dataset.usv, r.dataset.uch));
   M.querySelectorAll('[data-go="friends"]').forEach(r => r.onclick = e => { if (!e.target.closest('button')) showFriends('pending'); });
   M.querySelectorAll('[data-addf]').forEach(b => b.onclick = () => socket.emit('friendRequest', b.dataset.addf, r => { if (r.error) return toast(r.error); toast(r.accepted ? 'Artık arkadaşsınız' : 'İstek gönderildi'); b.disabled = true; b.innerHTML = `${ic('check')}Gönderildi`; }));
+  M.querySelectorAll('[data-hi]').forEach(b => b.onclick = () => { const n = b.dataset.hi; openDM(n); setTimeout(() => { const i = $('#input'); if (i && !i.value) { i.value = 'selam 👋'; i.focus(); i.dispatchEvent(new Event('input')); } }, 450); });
+  M.querySelectorAll('[data-disc]').forEach(b => b.onclick = () => showDiscover());
   M.querySelectorAll('[data-q]').forEach(b => b.onclick = () => ({ invite: () => showInvite(hqServer()), create: () => showTemplates(), discover: () => showDiscover() })[b.dataset.q]());
 }
 const homeOpen = () => S.view === 'dm' && !S.channel && friendTab === 'home' && $('#messages .hm');

@@ -1156,6 +1156,15 @@ function notifyUser(name, n) {
 }
 const presenceList = () => onlineNames().map(n => { const st = statusOf(n); return st && onMobile(n) ? [n, st, 'm'] : [n, st]; }).filter(x => x[1]);
 // Odadaki sohbet ne zamandır sürüyor: oda boşken doluya geçince başlar, tamamen boşalınca sıfırlanır
+// Seste geçen süre (kişi başı, gün gün): Yuva'daki "Bu hafta seste" grafiği için. Dakikada bir sayılır, 21 gün tutulur.
+const dayKeyTR = (t = Date.now()) => new Date(t + 3 * 3600e3).toISOString().slice(0, 10);
+setInterval(() => {
+  const who = new Set(); for (const [, m] of voice) for (const n of m.values()) who.add(n);
+  if (!who.size) return;
+  const d = dayKeyTR(), cut = dayKeyTR(Date.now() - 21 * 864e5);
+  for (const n of who) { const u = db.users[n]; if (!u) continue; const v = (u.vmin ||= {}); v[d] = (v[d] || 0) + 1; for (const k of Object.keys(v)) if (k < cut) delete v[k]; }
+  save();
+}, 60e3);
 const voiceStart = new Map();
 function voiceAges() {
   const now = Date.now(), o = {};
@@ -2662,6 +2671,17 @@ io.on('connection', socket => {
     save(); pushSocial(me, name); io.emit('users', allUsers()); cb({ ok: true });
   });
 
+  // Yuva (ana sayfa) özeti: bu haftaki ses süresi gün gün, geçen haftanın toplamı, Kanka HQ sıralaması
+  socket.on('yuva', (cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb(null);
+    const now = new Date(Date.now() + 3 * 3600e3), dow = (now.getUTCDay() + 6) % 7; // 0 = Pazartesi
+    const day = i => u.vmin?.[dayKeyTR(Date.now() - (dow - i) * 864e5)] || 0;
+    const week = [0, 1, 2, 3, 4, 5, 6].map(i => i <= dow ? day(i) : null);
+    const last = [0, 1, 2, 3, 4, 5, 6].reduce((a, i) => a + (u.vmin?.[dayKeyTR(Date.now() - (dow + 7 - i) * 864e5)] || 0), 0);
+    const hq = db.servers.find(x => x.id === 's1');
+    let rank = null; if (hq) { const xp = u.xp || 0; rank = 1 + membersOf(hq).reduce((a, n) => a + ((db.users[n]?.xp || 0) > xp ? 1 : 0), 0); }
+    cb({ week, today: dow, last, rank });
+  });
   socket.on('leaderboard', (serverId, cb) => {
     const s = db.servers.find(x => x.id === serverId);
     if (!s || !(s.public || s.members.includes(me))) return cb([]);
