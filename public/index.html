@@ -693,7 +693,7 @@
   .tile .live-ov button { padding: 8px 16px; border-radius: 10px; background: #fff; color: #111; font-weight: 900; font-size: 13px; }
   .tile .tbadge { position: absolute; top: 6px; left: 6px; z-index: 3; display: flex; gap: 5px; }
   .tile .tbadge span { padding: 2px 7px; border-radius: 6px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 4px; }
-  .tile .tbadge .red { background: #f23f43; }
+  .tile .tbadge .red { background: #f23f43; } .tile .tbadge .sendq.warn { background: rgba(240,178,50,.92); color: #1a0f0a; }
   .tile .tbadge .ic { width: 12px; height: 12px; }
   .tile .tctl { position: absolute; right: 6px; bottom: 6px; z-index: 3; display: flex; gap: 6px; align-items: center; opacity: 0; transition: opacity .15s; }
   .tile:hover .tctl, .tile.focus .tctl { opacity: 1; }
@@ -5930,7 +5930,7 @@ socket.on('callDecline', ({ from, chatId }) => { if (outgoing?.chatId === chatId
 // Kalite: [genişlik, yükseklik, FPS, kbps]. Yayın sadece "İzle"ye basanlara gönderilir; izlemeyenin internetini yemez.
 const GO_Q = { '720p30': [1280, 720, 30, 2500, '720p', '30 FPS'], '1080p30': [1920, 1080, 30, 4500, '1080p', '30 FPS'], '1080p60': [1920, 1080, 60, 8000, '1080p', '60 FPS'], 'src60': [2560, 1440, 60, 12000, 'Kaynak', '1440p 60 FPS'] };
 let goOpts = { q: '1080p30', audio: true, motion: true }; try { goOpts = { ...goOpts, ...JSON.parse(store.get('kanka-golive') || '{}') }; } catch {}
-let goCur = null, screenAudio = null, watching = null, autoWatch = null;
+let sendStats = null, goCur = null, screenAudio = null, watching = null, autoWatch = null;
 const watchers = new Set();
 const mediaState = () => ({ cam: videoKind === 'cam', screen: videoKind === 'screen', streamId: videoStream?.id || null, viewers: watchers.size, q: videoKind === 'screen' ? goCur?.q : null, audio: !!screenAudio });
 const sendMedia = () => myVoice && socket.emit('media', mediaState());
@@ -5940,14 +5940,25 @@ function feedPeer(sid) {
   const vt = share ? videoStream.getVideoTracks()[0] : null, at = share && videoKind === 'screen' ? screenAudio : null;
   if (pc._vsender) pc._vsender.replaceTrack(vt).catch(() => {}); else if (vt) pc._vsender = pc.addTrack(vt, videoStream);
   if (pc._ssender) pc._ssender.replaceTrack(at).catch(() => {}); else if (at) pc._ssender = pc.addTrack(at, videoStream);
-  if (vt) tuneSender(pc);
+  if (vt) { preferHwCodec(pc); tuneSender(pc); }
+}
+// Yayında donanım kodlayıcısı olan H.264'ü öne al: VP8 yazılımla 1080p/60 kodlarken işlemci yetmiyor, Chrome da çözünürlüğü 360p'ye düşürüyordu
+function preferHwCodec(pc) {
+  try {
+    const tr = pc.getTransceivers().find(t => t.sender === pc._vsender); if (!tr?.setCodecPreferences || tr._pref) return;
+    const all = RTCRtpSender.getCapabilities?.('video')?.codecs; if (!all) return;
+    const h264 = all.filter(c => /h264/i.test(c.mimeType) && /packetization-mode=1/.test(c.sdpFmtpLine || ''));
+    if (!h264.length) return;
+    h264.sort((a, b) => /42e01f/.test(b.sdpFmtpLine) - /42e01f/.test(a.sdpFmtpLine));
+    tr.setCodecPreferences([...h264, ...all.filter(c => !h264.includes(c))]); tr._pref = true;
+  } catch {}
 }
 const feedAll = () => Object.keys(peers).forEach(feedPeer);
 function tuneSender(pc, tries = 0) {
   const snd = pc._vsender; if (!snd?.track) return;
   const p = snd.getParameters();
   if (!p.encodings?.length) { if (tries < 12) setTimeout(() => tuneSender(pc, tries + 1), 500); return; }
-  if (videoKind === 'screen') { const [, , fps, kbps] = GO_Q[goCur?.q] || GO_Q['1080p30']; p.encodings[0].maxBitrate = kbps * 1000; p.encodings[0].maxFramerate = fps; p.degradationPreference = goCur?.motion ? 'maintain-framerate' : 'maintain-resolution'; }
+  if (videoKind === 'screen') { const [, , fps, kbps] = GO_Q[goCur?.q] || GO_Q['1080p30']; p.encodings[0].maxBitrate = kbps * 1000; p.encodings[0].maxFramerate = fps; p.degradationPreference = goCur?.motion ? 'balanced' : 'maintain-resolution'; }
   else { p.encodings[0].maxBitrate = 1500e3; p.encodings[0].maxFramerate = 30; }
   snd.setParameters(p).catch(() => {});
 }
@@ -6263,7 +6274,7 @@ function renderStage() {
     el.querySelector('.tav').innerHTML = av(t.name);
     el.querySelector('.tname').textContent = t.sid === 'me' ? t.name + ' (sen)' : t.name;
     const viewers = t.sid === 'me' ? watchers.size : t.m?.viewers || 0, q = GO_Q[t.sid === 'me' ? goCur?.q : t.m?.q];
-    el.querySelector('.tbadge').innerHTML = live ? `<span class="red">${ic('live')}CANLI</span><span title="İzleyen">${ic('eye')}${viewers}</span>${q && t.sid !== watching ? `<span>${q[4]} · ${q[5].replace(/^1440p /, '')}</span>` : ''}${t.sid === watching ? '<span class="fpsx" hidden></span>' : ''}` : '';
+    el.querySelector('.tbadge').innerHTML = live ? `<span class="red">${ic('live')}CANLI</span><span title="İzleyen">${ic('eye')}${viewers}</span>${q && t.sid !== watching ? `<span>${q[4]} · ${q[5].replace(/^1440p /, '')}</span>` : ''}${t.sid === watching ? '<span class="fpsx" hidden></span>' : ''}${t.sid === 'me' ? '<span class="sendq" hidden></span>' : ''}` : '';
     const ov = el.querySelector('.live-ov');
     ov.hidden = !(live && t.sid !== 'me' && watching !== t.sid);
     if (!ov.hidden) { ov.innerHTML = `${ic('live')}<b>${esc(t.name)} yayında</b><button>Yayını izle</button>`; ov.querySelector('button').onclick = e => { e.stopPropagation(); watchStream(t.sid); }; }
@@ -6283,6 +6294,19 @@ function renderStage() {
   }
   st.querySelectorAll('.tile').forEach(el => { if (!keep.has(el.dataset.sid)) el.remove(); });
   layoutStage();
+  // Yayıncıya izleyicilere gerçekte ne gittiğini göster: çözünürlük, FPS ve neden düştüğü
+  if (videoKind === 'screen' && !sendStats) sendStats = setInterval(async () => {
+    const f = st.querySelector('.tile[data-sid="me"] .sendq'); if (!f) return;
+    const pcs = [...watchers].map(w => peers[w]).filter(Boolean); if (!pcs.length) { f.hidden = true; return; }
+    let worst = null;
+    for (const pc of pcs) { try { (await pc.getStats()).forEach(r => { if (r.type === 'outbound-rtp' && r.kind === 'video' && r.frameHeight && (!worst || r.frameHeight < worst.frameHeight)) worst = r; }); } catch {} }
+    if (!worst) return;
+    const why = { cpu: 'işlemci yetmiyor', bandwidth: 'internet hızı yetmiyor' }[worst.qualityLimitationReason];
+    f.hidden = false; f.className = 'sendq' + (why ? ' warn' : '');
+    f.textContent = `Giden: ${worst.frameHeight}p · ${Math.round(worst.framesPerSecond || 0)} FPS${why ? ' · ' + why : ''}`;
+    f.title = `Kodlayıcı: ${worst.encoderImplementation || '?'}${why ? '\nKalite düşük çünkü ' + why + '. Yayın kalitesini düşürmek daha akıcı yapar.' : ''}`;
+  }, 2000);
+  else if (videoKind !== 'screen' && sendStats) { clearInterval(sendStats); sendStats = null; }
   // İzlenen yayının gerçek çözünürlüğü ve FPS'i
   if (watching && !stageStats) {
     let last = 0, lt = performance.now();
