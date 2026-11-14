@@ -73,8 +73,22 @@
   .room:hover { background: var(--hover); color: var(--ink); }
   .room.active { background: var(--card); color: var(--ink); }
   .room.active .ico { background: var(--mine); }
-  .room.unread { color: var(--ink); }
-  .room.unread::after { content: ''; margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .room:not(.vroom):not(.active):not(.unread) { color: #a08a79; }
+  .room:not(.vroom):not(.active):not(.unread) .ico { opacity: .72; }
+  .room.unread { color: #fff; font-weight: 800; }
+  .room.unread .ico { background: var(--accent); color: #1a0f0a; opacity: 1; }
+  .room.unread:not(.has-ment)::after { content: ''; margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(255,138,76,.18); flex-shrink: 0; }
+  #side-list .room.unread::before { content: ''; position: absolute; left: -10px; top: 50%; width: 4px; height: 10px; margin-top: -5px; border-radius: 0 4px 4px 0; background: #fff; }
+  .mbadge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: var(--red); color: #fff; font-size: 11.5px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .cat-label.hasun .cn { color: #fff; }
+  .cat-label.hasun .cn::after { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: middle; }
+  .srv .upill { position: absolute; left: -16px; top: 50%; width: 5px; height: 10px; margin-top: -5px; border-radius: 0 4px 4px 0; background: #fff; transition: height .15s, margin-top .15s; }
+  .srv.active .upill { height: 38px; margin-top: -19px; }
+  .srv:hover .upill { height: 22px; margin-top: -11px; }
+  .srv .mcnt { position: absolute; right: -7px; bottom: -6px; min-width: 16px; height: 16px; padding: 0 4px; line-height: 1; border-radius: 99px; background: var(--red); color: #fff; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 3px solid var(--panel); box-sizing: content-box; }
+  #unreadbar { position: absolute; left: 14px; right: 14px; top: 8px; z-index: 6; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 12px; background: var(--accent); color: #1a0f0a; font-weight: 800; font-size: 13.5px; box-shadow: 0 8px 24px rgba(0,0,0,.35); cursor: pointer; }
+  #unreadbar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #unreadbar button { padding: 5px 10px; border-radius: 8px; background: rgba(26,15,10,.14); color: #1a0f0a; font-weight: 900; font-size: 12.5px; }
   .vusers { margin: 0 10px 4px 52px; }
   .vuser { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--muted); padding: 3px 0; }
   .vuser .av { width: 22px; height: 22px; font-size: 10px; border-width: 2px; }
@@ -677,7 +691,7 @@
   /* ================= Keşfet, hoş geldin, şablonlar ================= */
   #discover { display: none; flex: 1; overflow-y: auto; padding: 22px 26px 30px; }
   body.discover #discover { display: block; }
-  body.discover #messages, body.discover #typing, body.discover #replybar, body.discover #compose, body.discover #stage, body.discover #watch, body.discover #jumpnew { display: none !important; }
+  body.discover #messages, body.discover #typing, body.discover #replybar, body.discover #compose, body.discover #stage, body.discover #watch, body.discover #jumpnew, body.discover #unreadbar { display: none !important; }
   #disc-srv.active { color: #fff; background: var(--accent); border-color: var(--accent); }
   .dc-hero { border-radius: 22px; padding: 30px 32px; background: radial-gradient(120% 140% at 100% 100%, rgba(242,101,47,.45), rgba(242,101,47,0) 60%), var(--card); border: 1px solid var(--line); margin-bottom: 20px; }
   .dc-hero h2 { font-size: 28px; font-weight: 900; } .dc-hero p { color: var(--muted); margin: 6px 0 16px; font-weight: 600; }
@@ -2950,7 +2964,7 @@ function renderRail() {
   document.title = (unreadN ? `(${unreadN}) ` : '') + 'Kanka Chat';
   $('#rail').innerHTML =
     `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button><div class="rsep"></div>` +
-    S.servers.map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''}" data-id="${s.id}" title="${esc(s.name)}${mutedServers.has(s.id) ? ' (sessizde)' : ''}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) ? '<span class="dot"></span>' : ''}</button>`).join('') +
+    S.servers.map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''}" data-id="${s.id}" title="${esc(s.name)}${mutedServers.has(s.id) ? ' (sessizde)' : ''}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) && !(S.view === 'server' && s.id === S.server?.id) ? '<span class="upill"></span>' : ''}${(() => { const n = mentCount(s); return n ? `<span class="mcnt">${n > 9 ? '9+' : n}</span>` : ''; })()}</button>`).join('') +
     `<button class="srv dash" id="add-srv" title="Sunucu oluştur" aria-label="Sunucu oluştur">${ic('plus')}</button><button class="srv dash" id="join-srv" title="Davet koduyla katıl" aria-label="Davet koduyla katıl">${ic('link')}</button><button class="srv dash ${S.view === 'discover' ? 'active' : ''}" id="disc-srv" title="Sunucuları keşfet" aria-label="Sunucuları keşfet">${ic('compass')}</button>`;
   $('#disc-srv').onclick = () => showDiscover();
   $('#disc-srv').classList.toggle('hint', !S.servers.some(s => s.id !== 's1') && S.view !== 'discover');
@@ -3097,7 +3111,8 @@ function renderSide() {
   $('#side-head').onclick = e => { e.stopPropagation(); toggleSrvMenu(); };
   $('#side-head').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSrvMenu(); } };
   const canAdd = canAddCh(s), manage = canManageCh(s);
-  const tRow = c => `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${S.unread.has(c.id) && notifMode(c.id) !== 'none' ? 'unread' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>`;
+  const isUn = c => S.unread.has(c.id) && notifMode(c.id) !== 'none' && c.id !== S.channel?.id;
+  const tRow = c => { const mc = mentCountCh(c.id); return `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${isUn(c) || mc ? 'unread' : ''} ${mc ? 'has-ment' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${mc ? `<span class="mbadge">${mc > 9 ? '9+' : mc}</span>` : chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` };
   const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n);
         return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(dn(n))}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
@@ -3111,8 +3126,9 @@ function renderSide() {
     (!top.length && !cats.length && canAdd ? `<div class="side-empty">Henüz oda yok.<button data-newch>${ic('plus')} Oda oluştur</button></div>` : '') +
     (top.length ? `<div class="toplist">${top.map(row).join('')}</div>` : '') +
     cats.map(k => { const key = s.id + '|' + k.id, closed = shut.has(key), list = s.channels.filter(c => c.cat === k.id);
-      return `<div class="label cat-label ${closed ? 'shut' : ''}" data-catk="${esc(key)}" data-id="${k.id}" ${manage ? 'data-drag="cat"' : ''}>${ic('chevron')}<span class="cn">${esc(k.name)}</span>${canAdd ? `<button data-addcat="${k.id}" title="Bu kategoriye oda ekle" aria-label="Oda ekle">+</button>` : ''}</div>` +
-        list.filter(seen).filter(c => !closed || c.id === S.channel?.id || c.id === myVoice).map(row).join(''); }).join('');
+      const hasUn = closed && list.some(c => !voiceLike(c.type) && (isUn(c) || mentCountCh(c.id)));
+      return `<div class="label cat-label ${closed ? 'shut' : ''} ${hasUn ? 'hasun' : ''}" data-catk="${esc(key)}" data-id="${k.id}" ${manage ? 'data-drag="cat"' : ''}>${ic('chevron')}<span class="cn">${esc(k.name)}</span>${canAdd ? `<button data-addcat="${k.id}" title="Bu kategoriye oda ekle" aria-label="Oda ekle">+</button>` : ''}</div>` +
+        list.filter(seen).filter(c => !closed || c.id === S.channel?.id || c.id === myVoice || (!voiceLike(c.type) && (isUn(c) || mentCountCh(c.id)))).map(row).join(''); }).join('');
   if (va) $('#side-list').insertAdjacentHTML('afterbegin', `<div class="vabar">${ic('eye')}<span><b>${esc(va.label)}</b> gözünden görüyorsun</span><button id="va-x">Çık</button></div>`);
   const sl = $('#side-list');
   if (va) $('#va-x').onclick = () => { viewAs = null; renderSide(); };
@@ -3956,6 +3972,8 @@ const MENT_KEY = 'kanka-mentions';
 const mentionsAll = () => { try { return JSON.parse(store.get(MENT_KEY) || '[]'); } catch { return []; } };
 function rememberMention(n) { const l = mentionsAll().filter(x => !(x.channelId === n.channelId && x.text === n.text)); l.unshift({ from: n.from, text: String(n.text || '').slice(0, 140), channelId: n.channelId, where: n.where, t: Date.now() }); store.set(MENT_KEY, JSON.stringify(l.slice(0, 20))); }
 const pendingMentions = () => mentionsAll().filter(x => x.t > (lastRead[x.channelId] || 0) && S.servers.some(s => s.channels.some(c => c.id === x.channelId)));
+function mentCountCh(id) { return id === S.channel?.id ? 0 : mentionsAll().filter(x => x.channelId === id && x.t > (lastRead[id] || 0)).length; }
+function mentCount(sv) { return mutedServers.has(sv.id) ? 0 : sv.channels.reduce((a, c) => a + mentCountCh(c.id), 0); }
 function homeHTML() {
   const sc = S.social, fr = new Set(sc.friends);
   // 1) Şu an seste olanlar
@@ -4196,6 +4214,7 @@ function enterRoom(id, placeholder, hello) {
     renderMessages(true);
     const nl = $('#messages .newline');
     if (nl) centerIn(nl);
+    showUnreadBar(lr);
     markRead(id);
 
     $('#input').focus();
@@ -4449,6 +4468,19 @@ socket.on('message', ({ channelId, msg }) => {
   if (atBottom || msg.author === S.me || msg.ephemeral) box.scrollTop = box.scrollHeight;
   else if (msg.author) showJumpNew();
 });
+// Odaya girince: okunmamış mesaj varsa üstte "N yeni mesaj · saatten beri" şeridi
+function showUnreadBar(lr) {
+  $('#unreadbar')?.remove();
+  if (!lr || S.channel?.type === 'forum') return;
+  const fresh = S.msgs.filter(m => m.time > lr && m.author && m.author !== S.me);
+  if (!fresh.length) return;
+  const t = new Date(fresh[0].time), same = t.toDateString() === new Date().toDateString();
+  const when = same ? t.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : t.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) + ' ' + t.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  const b = document.createElement('div'); b.id = 'unreadbar'; b.setAttribute('role', 'button');
+  b.innerHTML = `<span>${fresh.length > 99 ? '99+' : fresh.length} yeni mesaj · ${when}'den beri</span><button type="button" id="ub-ok">Okundu</button>`;
+  b.onclick = e => { if (e.target.closest('#ub-ok')) return b.remove(); const nl = $('#messages .newline'); if (nl) centerIn(nl); b.remove(); };
+  $('#messages').before(b);
+}
 function showJumpNew() {
   let b = $('#jumpnew');
   if (!b) {
@@ -4459,7 +4491,7 @@ function showJumpNew() {
   b.dataset.n = +b.dataset.n + 1;
   b.innerHTML = `${ic('arrowDown')} ${b.dataset.n} yeni mesaj`;
 }
-$('#messages').addEventListener('scroll', () => { const box = $('#messages'); if (box.scrollHeight - box.scrollTop - box.clientHeight < 60) $('#jumpnew')?.remove(); }, { passive: true });
+$('#messages').addEventListener('scroll', () => { const box = $('#messages'); if (box.scrollHeight - box.scrollTop - box.clientHeight < 60) { $('#jumpnew')?.remove(); $('#unreadbar')?.remove(); } }, { passive: true });
 socket.on('update', ({ channelId, msg }) => {
   if (channelId !== S.channel?.id) return;
   const i = S.msgs.findIndex(m => m.id === msg.id);
@@ -5208,7 +5240,7 @@ socket.on('chanActivity', ({ channelId, serverId }) => {
 });
 socket.on('notify', n => {
   if (n.channelId === S.channel?.id && document.hasFocus()) return;
-  if (n.mention && !n.dm && n.channelId) { rememberMention(n); refreshHome(); } else if (n.dm || n.friend) refreshHome();
+  if (n.mention && !n.dm && n.channelId) { rememberMention(n); refreshHome(); renderRail(); if (S.view === 'server') renderSide(); } else if (n.dm || n.friend) refreshHome();
   if (!n.dm && n.channelId && notifMode(n.channelId) === 'none') return;
   if (!notifOn() || isDnd()) { if (n.dm) { S.unread.add(n.channelId); if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); } return; }
   if (n.dm) { S.unread.add(n.channelId); if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); }
