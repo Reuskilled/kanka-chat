@@ -14,7 +14,7 @@ try {
 
   if (Test-Path "$Dst\kayitlar\guncelleme.log") {
     Write-Host '  Onceki son kayitlar:' -ForegroundColor DarkGray
-    Get-Content "$Dst\kayitlar\guncelleme.log" -Tail 5 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
+    Get-Content "$Dst\kayitlar\guncelleme.log" -Tail 5 -Encoding UTF8 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
   }
 
   Adim 'Eski guncelleyici durduruluyor'
@@ -41,10 +41,10 @@ try {
   Adim 'Guncelleyici yeniden baslatiliyor'
   Start-ScheduledTask -TaskName 'KankaChat-Guncelleyici'
   Write-Host '    Yeni surum cekiliyor, 30 saniye bekleniyor...' -ForegroundColor DarkGray
-  Start-Sleep 30
+  Start-Sleep 40
   Write-Host ''
   Write-Host '  Son kayitlar:' -ForegroundColor Yellow
-  Get-Content "$Dst\kayitlar\guncelleme.log" -Tail 6 | ForEach-Object { Write-Host "    $_" }
+  Get-Content "$Dst\kayitlar\guncelleme.log" -Tail 6 -Encoding UTF8 | ForEach-Object { Write-Host "    $_" }
   Write-Host ''
   Write-Host '  TAMAM! Siteyi yenileyip bak.' -ForegroundColor Green
 } catch {

@@ -51,15 +51,25 @@ function restartServer() {
   log('Sunucu yeniden başlatıldı');
 }
 
-async function checkCode() {
+// En son commit: GitHub API saatte 60 istekle sınırlı (dakikada bir sorunca 403 veriyordu).
+// Bu yüzden git'in kendi adresinden okuyoruz; bu sınırlı değil. Olmazsa API'ye düşer.
+async function latestSha() {
+  try {
+    const r = await fetch(`https://github.com/${REPO}.git/info/refs?service=git-upload-pack`, { headers: { 'User-Agent': 'git/2.40 kanka-guncelleyici' }, signal: AbortSignal.timeout(20000) });
+    if (r.ok) { const m = (await r.text()).match(new RegExp(`([0-9a-f]{40}) refs/heads/${BRANCH}\\b`)); if (m) return { sha: m[1] }; }
+  } catch {}
   const h = { ...H }; if (st.etag) h['If-None-Match'] = st.etag;
   const r = await fetch(`https://api.github.com/repos/${REPO}/commits/${BRANCH}`, { headers: h, signal: AbortSignal.timeout(20000) });
-  if (r.status === 304) return;
-  if (!r.ok) { if (r.status !== 404 && r.status !== 409) log(`GitHub cevabı: ${r.status}`); return; }
-  const j = await r.json();
-  st.etag = r.headers.get('etag');
-  if (j.sha === st.sha) return save();
-  log(`Yeni sürüm bulundu ${j.sha.slice(0, 7)}: ${(j.commit?.message || '').split('\n')[0]}`);
+  if (r.status === 304) return null;
+  if (!r.ok) { if (r.status !== 404 && r.status !== 409) log(`GitHub cevabı: ${r.status}`); return null; }
+  const j = await r.json(); st.etag = r.headers.get('etag');
+  return { sha: j.sha, msg: (j.commit?.message || '').split('\n')[0] };
+}
+
+async function checkCode() {
+  const j = await latestSha(); if (!j) return;
+  if (j.sha === st.sha) return;
+  log(`Yeni sürüm bulundu ${j.sha.slice(0, 7)}${j.msg ? ': ' + j.msg : ''}`);
   const zr = await fetch(`https://codeload.github.com/${REPO}/zip/${j.sha}`, { headers: H, signal: AbortSignal.timeout(120000) });
   if (!zr.ok) throw new Error('Arşiv indirilemedi: ' + zr.status);
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kanka-'));
@@ -159,7 +169,7 @@ async function tick() {
   if (busy) return; busy = true;
   try { await finishPending(); } catch (e) { log('Hata (bekleyen iş): ' + e.message); }
   try { await checkCode(); } catch (e) { log('Hata (kod): ' + e.message); }
-  if (n++ % 5 === 0) { try { await checkDesktop(); } catch (e) { log('Hata (masaüstü): ' + e.message); } // GitHub sınırı için 5 dakikada bir
+  if (n++ % 30 === 0) { try { await checkDesktop(); } catch (e) { log('Hata (masaüstü): ' + e.message); } // GitHub API sınırı için 30 dakikada bir
     try { await checkDesktopBranch(); } catch (e) { log('Hata (masaüstü dalı): ' + e.message); } }
   busy = false;
 }
