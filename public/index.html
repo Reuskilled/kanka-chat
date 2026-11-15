@@ -1897,8 +1897,8 @@
   .rpc-gone { display: block; padding: 4px 8px; color: var(--muted); font-style: italic; }
   .rpc-note { margin: 10px 0 0; padding: 8px 12px; border-left: 3px solid var(--line); color: var(--ink); font-size: 13.5px; font-style: italic; }
   .rpc-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-  .rpc-acts > button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; background: var(--hover); font-size: 13px; font-weight: 800; transition: background .15s, color .15s; }
-  .rpc-acts > button .ic { width: 15px; height: 15px; }
+  .rpc-acts > button, .rpc-acts .adm-susp button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; background: var(--hover); font-size: 13px; font-weight: 800; transition: background .15s, color .15s; }
+  .rpc-acts > button .ic, .rpc-acts .adm-susp button .ic { width: 15px; height: 15px; }
   .rpc-acts > button.danger { color: var(--red); } .rpc-acts > button.ok { color: var(--green); margin-left: auto; }
   .rpc-acts > button.arm, .rpc-acts > button.danger.arm { background: var(--red); color: #fff; }
   .rpc-acts > button:hover { filter: brightness(1.15); }
@@ -2313,6 +2313,24 @@
   .ftabs button .ic { width: 15px; height: 15px; margin-right: 5px; vertical-align: -2px; }
   .flist.hm { padding: 0; max-width: none; }
 
+
+  /* ---------- Yönetim paneli ---------- */
+  .adm-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .adm-stat { border-radius: 14px; background: var(--card); border: 1px solid var(--line); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .adm-stat .ic { width: 18px; height: 18px; color: var(--accent); margin-bottom: 4px; } .adm-stat b { font-size: 24px; font-weight: 900; } .adm-stat small { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .adm-stat.gr .ic, .adm-stat.gr b { color: #3ddc97; } .adm-stat.warn .ic, .adm-stat.warn b { color: #ffc04d; } .adm-stat.red .ic, .adm-stat.red b { color: var(--red); }
+  .adm-click { cursor: pointer; border-radius: 10px; } .adm-click:hover { background: var(--hover); } .adm-click > .ic { width: 16px; height: 16px; transform: rotate(-90deg); color: var(--muted); }
+  .adm-rk { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 900; padding: 1px 7px; border-radius: 6px; background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); vertical-align: 2px; margin-left: 4px; } .adm-rk .ic { width: 11px; height: 11px; }
+  .adm-ucard { margin-top: 12px; border-radius: 14px; border: 1px solid var(--line); padding: 14px; background: var(--bg); }
+  .adm-mini { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; } .adm-mini span { display: flex; flex-direction: column; min-width: 74px; padding: 8px 10px; border-radius: 10px; background: var(--card); font-size: 11.5px; font-weight: 700; color: var(--muted); } .adm-mini b { font-size: 15px; color: var(--ink); } .adm-mini span.w b { color: #ffc04d; }
+  .adm-lbl { display: block; font-size: 12px; font-weight: 900; color: var(--muted); margin: 10px 0 6px; letter-spacing: .02em; }
+  .adm-susp { display: inline-flex; gap: 0; } .adm-susp select { border-radius: 10px 0 0 10px; background: var(--card); border: none; border-right: 1px solid var(--line); padding: 0 8px; font-weight: 800; font-size: 13px; } .adm-susp button { border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+  .adm-rankset select, .adm-team select, #t-rank { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; font-weight: 800; height: 40px; }
+  .adm-del { margin-top: 14px; border-radius: 12px; border: 1px solid rgba(255,107,107,.3); padding: 10px 12px; } .adm-del summary { cursor: pointer; font-weight: 900; color: var(--red); display: flex; align-items: center; gap: 6px; } .adm-del summary .ic { width: 16px; height: 16px; }
+  .adm-ranks { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin: 6px 0 14px; } .adm-ranks div { border-radius: 12px; padding: 9px 11px; background: color-mix(in srgb, var(--c) 10%, var(--card)); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); font-size: 12px; font-weight: 700; color: var(--muted); } .adm-ranks b { display: block; color: var(--c); font-size: 13.5px; }
+  .adm-team .atm { display: flex; align-items: center; gap: 10px; min-width: 0; } .adm-team .t b { display: block; } .adm-team .t small { display: block; color: var(--muted); font-weight: 700; font-size: 12px; }
+  .warn-pop { text-align: center; padding: 6px 4px; } .warn-pop .wp-ic { width: 64px; height: 64px; border-radius: 20px; margin: 0 auto 12px; display: grid; place-items: center; background: rgba(255,192,77,.14); color: #ffc04d; } .warn-pop .wp-ic .ic { width: 32px; height: 32px; }
+  .warn-pop h3 { font-size: 21px; font-weight: 900; } .warn-pop .wp-it { text-align: left; border-radius: 12px; border: 1px solid rgba(255,192,77,.3); background: rgba(255,192,77,.07); padding: 10px 12px; margin: 10px 0; } .warn-pop .wp-it b { display: block; } .warn-pop .wp-it small { color: var(--muted); font-weight: 700; }
   /* ---------- Yuva (ana sayfa) ---------- */
   .hp-lb { padding: 8px 4px; }
   .hp-h { font-size: 15px; font-weight: 900; padding: 6px 6px 10px; }
@@ -2747,6 +2765,7 @@ const ICON = {
   headset: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/>',
   headsetoff: '<path d="M4 15v-3a8 8 0 0 1 13.6-5.7M20 12v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><path d="M16 21h2a2 2 0 0 0 2-2v-3M3 3l18 18"/>',
   rcompass: '<path d="M5.2 7.6 4.6 3.8l3.7 1.6M18.8 7.6l.6-3.8-3.7 1.6"/><circle cx="12" cy="13" r="8.5"/><path d="M5.3 12.2c1.6-1.7 3.9-1.9 5.4-.6l1.3 1 1.3-1c1.5-1.3 3.8-1.1 5.4.6"/><path d="m14.6 15.6-1.4 2.9-2.6-2.4 1.4-2.9z" fill="currentColor" stroke-width="1.2"/>',
+  alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
   home: '<path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
   activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
   more: '<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3.2"/>',
@@ -3078,7 +3097,7 @@ function onAuth(res) {
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
   if ($('#a-pass')) $('#a-pass').value = '';
-  S.myEmail = res.myEmail || null; S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
+  S.myEmail = res.myEmail || null; S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.staff = res.staff || null; if (res.warns?.length) setTimeout(() => showWarns(res.warns), 1200); S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
   renderMe(); renderModPill();
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
@@ -3152,7 +3171,7 @@ function showSettings(tab) {
   const norm = (k, v) => JSON.stringify(k === 'socials' ? Object.fromEntries(Object.entries(v || {}).filter(([, x]) => x)) : v || (k in OBJ ? null : ''));
   const dirty = () => KEYS.some(k => norm(k, draft[k]) !== norm(k, u[k]));
   modal(`<nav class="st-nav"><h4>KULLANICI AYARLARI</h4>
-      <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button>${S.siteAdmin ? `<h4 style="margin-top:14px">YÖNETİM</h4><button data-tab="admin">${ic('shield')}Kanka yönetimi${S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>` : ''}
+      <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button>${S.staff ? `<h4 style="margin-top:14px">KANKA EKİBİ</h4><button data-tab="admin">${ic('shield')}Yönetim paneli${S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>` : ''}
       <button class="out" id="st-out">${ic('logout')}Çıkış yap</button><div class="st-ver" id="st-ver">Kanka Chat</div><button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="st-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div><div class="mini-card" id="st-card"></div></aside>`, 'settings');
@@ -3192,7 +3211,7 @@ function showSettings(tab) {
       <div class="st-field"><label>Tema</label><div class="themes apthemes">${Object.entries(THEMES).map(([k, t]) => { const v = { ...{ '--bg': '#17110e', '--panel': '#211915', '--card': '#2b211c' }, ...t.v };
         return `<button data-theme="${k}" class="${(store.get('kanka-theme') || 'sicak') === k ? 'on' : ''}" style="background:${v['--panel']};color:${t.light ? '#3b2a1e' : '#f4e6d8'}"><div class="pv" style="background:${v['--bg']}"><i style="background:${v['--card']}"></i><i style="background:${v['--card']}"></i></div>${t.name}</button>`; }).join('')}</div></div>
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'turuncu') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
-      <div class="pc-sec" style="margin-top:18px"><label class="switch">Yeni arayüz (deneme)<input type="checkbox" id="p-ui2" ${uiNew() ? 'checked' : ''}></label>
+      <div class="pc-sec" style="margin-top:18px"><label class="switch">Yeni arayüz<input type="checkbox" id="p-ui2" ${uiNew() ? 'checked' : ''}></label>
       <label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
     notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Mikrofon</label><button class="btns2" id="st-mic">${ic('mic')} Mikrofonu test et</button></div><div class="st-field"><label>Başlangıç rehberi</label><button class="btns2" id="st-onb">${ic('sprout')} Rehberi baştan göster</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
@@ -3268,7 +3287,7 @@ function showSettings(tab) {
     if (t === 'look') {
       $('#st-main').querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { store.set('kanka-theme', b.dataset.theme); applyTheme(); open('look'); });
       $('#st-main').querySelectorAll('[data-acc]').forEach(b => b.onclick = () => { store.set('kanka-accent', b.dataset.acc); applyTheme(); open('look'); preview(); });
-      $('#p-ui2').onchange = e => { store.set('kanka-ui', e.target.checked ? '2' : null); applyUI(); toast(e.target.checked ? 'Yeni arayüz açık. Beğenmezsen buradan kapatabilirsin.' : 'Eski arayüze dönüldü'); };
+      $('#p-ui2').onchange = e => { store.set('kanka-ui', e.target.checked ? null : '1'); applyUI(); toast(e.target.checked ? 'Yeni arayüz açık. Beğenmezsen buradan kapatabilirsin.' : 'Eski arayüze dönüldü'); };
       $('#p-snd').onchange = e => { store.set('kanka-sound', e.target.checked ? null : 'off'); if (e.target.checked) playSound('mention'); };
       $('#p-ptt').onchange = e => { store.set('kanka-ptt', e.target.checked ? 'on' : null); applyMute(); };
     }
@@ -5410,7 +5429,7 @@ socket.on('activity', ({ name, activities }) => {
   if (profileOpen === name && $('#modal').classList.contains('open') && $('#modal-box').classList.contains('pcard')) showProfile(name);
   if (S.view === 'dm' && !S.channel) showFriends();
 });
-const BADGE_IC = { erken: ['sprout', '#6fd39b'], gece: ['moon', '#b9a3ff'], sohbet: ['chat', '#7ec8ff'], efsane: ['crown', '#ffcf5c'], xox: ['grid', '#ff8a4c'], seri7: ['fire', '#ffb347'], kurucu: ['shield', '#ff9fc0'], sosyal: ['users', '#2fd3c3'] };
+const BADGE_IC = { ekip: ['shield', '#5aa9ff'], erken: ['sprout', '#6fd39b'], gece: ['moon', '#b9a3ff'], sohbet: ['chat', '#7ec8ff'], efsane: ['crown', '#ffcf5c'], xox: ['grid', '#ff8a4c'], seri7: ['fire', '#ffb347'], kurucu: ['shield', '#ff9fc0'], sosyal: ['users', '#2fd3c3'] };
 function friendBtn(n) {
   const sc = S.social;
   if (sc.blocked.includes(n)) return '';
@@ -6770,9 +6789,9 @@ const THEMES = {
   acik: { name: 'Açık krem', light: true, v: { '--bg': '#f6eee4', '--panel': '#fffaf4', '--card': '#ffffff', '--hover': '#f7e9da', '--line': '#ecdccb', '--ink': '#3b2a1e', '--muted': '#8a7362', '--accent-soft': '#ffe6d6', '--other': '#ffffff' } },
 };
 const ACCENTS = { turuncu: ['#ff8a4c', '#ffb347', '#f26b3a', '#ff8f5a'], pembe: ['#ff6b9a', '#ff9fc0', '#e8457a', '#ff7aa8'], mor: ['#a77bff', '#c9a8ff', '#7c4dff', '#a77bff'], mavi: ['#4aa8ff', '#8fd0ff', '#2f7de1', '#4aa8ff'], yesil: ['#3ecf8e', '#8ef0c0', '#1fa971', '#3ecf8e'] };
-const uiNew = () => store.get('kanka-ui') === '2';
+const uiNew = () => store.get('kanka-ui') !== '1'; // yeni arayüz varsayılan; '1' = eski arayüzü seçti
 function applyUI() { document.body.classList.toggle('ui2', uiNew()); if (S.me) { if (S.view === 'server' && S.server) renderSide(); renderRail(); renderMe(); } }
-{ const q = new URLSearchParams(location.search).get('arayuz'); if (q === 'yeni' || q === 'eski') { store.set('kanka-ui', q === 'yeni' ? '2' : null); history.replaceState(null, '', location.pathname + location.search.replace(/[?&]arayuz=[^&]*/, '').replace(/^&/, '?') + location.hash); } }
+{ const q = new URLSearchParams(location.search).get('arayuz'); if (q === 'yeni' || q === 'eski') { store.set('kanka-ui', q === 'yeni' ? null : '1'); history.replaceState(null, '', location.pathname + location.search.replace(/[?&]arayuz=[^&]*/, '').replace(/^&/, '?') + location.hash); } }
 document.body.classList.toggle('ui2', uiNew());
 function applyTheme() {
   const t = THEMES[store.get('kanka-theme')] || THEMES.sicak, a = ACCENTS[store.get('kanka-accent')] || ACCENTS.turuncu;
@@ -7854,6 +7873,8 @@ function reportsPanel(el, serverId, state = { status: 'open' }) {
         s && !r.targetGone && P('timeout') ? `<button data-x="to">${ic('hourglass')}1 saat sustur</button>` : '',
         s && !r.targetGone && P('kick') ? `<button data-x="kick" class="danger">${ic('logout')}At</button>` : '',
         s && !r.targetGone && P('ban') ? `<button data-x="ban" class="danger">${ic('ban')}Yasakla</button>` : '',
+        S.staff && !serverId && r.target !== S.me && !r.targetGone ? `<button data-x="warn">${ic('alert')}Uyar</button>` : '',
+        S.staff && S.staff !== 'destek' && !serverId && r.target !== S.me && !r.targetGone && !r.targetBanned ? `<button data-x="suspend">${ic('hourglass')}Askıya al</button>` : '',
         S.siteAdmin && r.target !== S.me && !r.targetGone && !r.targetBanned ? `<button data-x="siteban" class="danger">${ic('lock')}Hesabı kapat</button>` : '',
         `<button data-x="dismiss" class="ok">${ic('check')}Sorun yok</button>`].join('')
         : `<div class="rpc-res">${ic('check')}<span><b>${esc(r.action || 'Çözüldü')}</b> · ${esc(r.handledBy || '')} · ${r.handledAt ? ago(r.handledAt) : ''}</span><button data-x="reopen" class="alink">Tekrar aç</button></div>`;
@@ -7877,11 +7898,13 @@ function reportsPanel(el, serverId, state = { status: 'open' }) {
         if (x === 'kick') armBtn(b, 'Atılsın mı?', () => socket.emit('kick', { serverId: s.id, name: r.target }, y => y.error ? toast(y.error) : act('resolve', { label: 'Sunucudan atıldı' })));
         if (x === 'ban') armBtn(b, 'Yasaklansın mı?', () => socket.emit('ban', { serverId: s.id, name: r.target, reason: r.reasonText }, y => y.error ? toast(y.error) : act('resolve', { label: 'Sunucudan yasaklandı' })));
         if (x === 'siteban') armBtn(b, 'Kanka hesabı kapatılsın mı?', () => act('siteban', { reason: r.reasonText }));
+        if (x === 'warn') b.onclick = () => act('warn', { reason: r.reasonText });
+        if (x === 'suspend') armBtn(b, '1 gün askıya alınsın mı?', () => act('suspend', { label: '1', reason: r.reasonText }));
       });
     });
   });
 }
-const rcTotal = () => (S.rc?.site || 0) + (S.siteAdmin ? 0 : Object.values(S.rc?.servers || {}).reduce((a, b) => a + b, 0));
+const rcTotal = () => (S.rc?.site || 0) + (S.staff ? 0 : Object.values(S.rc?.servers || {}).reduce((a, b) => a + b, 0));
 function renderModPill() {
   let p = $('#mod-pill'); const n = rcTotal();
   if (!n) return p?.remove();
@@ -7891,7 +7914,7 @@ function renderModPill() {
   p.onclick = openReportsQueue;
 }
 function openReportsQueue() {
-  if (S.siteAdmin) return showSettings('admin');
+  if (S.staff) return showSettings('admin');
   const sid = Object.entries(S.rc?.servers || {}).find(([, c]) => c)?.[0], s = sid && S.servers.find(x => x.id === sid);
   if (s) showServerSettings(s, 'reports');
 }
@@ -7970,12 +7993,19 @@ function wireAccount() {
 }
 
 // ================= Kanka yönetimi (site yöneticisi) =================
-function adminPanel(el, sub = 'reports') {
-  const subs = [['reports', 'Şikayetler', 'flag'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'shield'], ['users', 'Kullanıcılar', 'users']];
-  el.innerHTML = `<div class="st-page"><h3>Kanka yönetimi</h3><p class="hint">Sadece sen görüyorsun.</p>
+function adminPanel(el, sub = 'overview') {
+  const R = S.staff, A = ['owner', 'admin'].includes(R);
+  const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['log', 'Kayıtlar', 'clock'],
+    ...(A ? [['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
+  if (!subs.some(x => x[0] === sub)) sub = 'overview';
+  el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
     <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;
   el.querySelectorAll('#adm-seg [data-s]').forEach(b => b.onclick = () => adminPanel(el, b.dataset.s));
   const B = el.querySelector('#adm-body');
+  if (sub === 'overview') return admOverview(B, el);
+  if (sub === 'team') return admTeam(B);
+  if (sub === 'log') return admLog(B);
+  if (sub === 'users') return admUsers(B);
   if (sub === 'reports') return reportsPanel(B, null);
   if (sub === 'sec') return socket.emit('adminSec', r => {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
@@ -8054,25 +8084,96 @@ function adminPanel(el, sub = 'reports') {
     $('#m-save').onclick = () => socket.emit('adminMail', { set: { user: $('#m-user').value, pass: $('#m-pass').value, url: $('#m-url').value, host: $('#m-host').value, port: $('#m-port').value } }, x => x.error ? toast(x.error) : (toast('Kaydedildi'), adminPanel(el, 'mail')));
     $('#m-test').onclick = () => { $('#m-test').classList.add('busy'); socket.emit('adminMail', { test: true }, x => { $('#m-test')?.classList.remove('busy'); toast(x.error ? x.error : `Test e-postası ${x.to} adresine gönderildi 🎉`, null, false, { type: x.error ? 'err' : 'ok' }); adminPanel(el, 'mail'); }); };
   });
-  if (sub === 'users') {
-    B.innerHTML = `<div class="adm-box"><h4>${ic('search')}Kullanıcı bul</h4><div class="adm-inl"><input class="field" id="u-q" placeholder="Kullanıcı adı ya da e-posta"><button class="btns2" id="u-go">Bul</button></div><div id="u-res"></div></div>
-      <div class="adm-box"><h4>${ic('lock')}Kapatılan hesaplar</h4><div id="u-banned"><p class="hint">Yükleniyor…</p></div></div>`;
-    const show = r => {
-      if (r.error) return $('#u-res').innerHTML = `<p class="hint">${esc(r.error)}</p>`;
-      const u = r.user;
-      $('#u-res').innerHTML = `<div class="adm-user">${av(u.name)}<div><b>${esc(u.name)}</b><small>${u.email ? esc(u.email) : 'E-posta yok'} · ${since(u.createdAt)}${u.invitedBy ? ' · davet: ' + esc(u.invitedBy) : ''} · ${u.servers} sunucu · ${u.reports} şikayet</small>${u.banned ? `<small class="no">Hesap kapalı: ${esc(u.banned.reason || '—')}</small>` : ''}</div></div>
-        <div class="rpc-acts"><button id="u-link">${ic('key')}Şifre sıfırlama linki</button>${u.banned ? `<button id="u-unban" class="ok">${ic('unlock')}Hesabı aç</button>` : `<button id="u-ban" class="danger">${ic('lock')}Hesabı kapat</button>`}</div><div id="u-out"></div>`;
-      $('#u-link').onclick = () => socket.emit('adminUser', { name: u.name, action: 'resetLink' }, x => { if (x.error) return toast(x.error); navigator.clipboard?.writeText(x.link); $('#u-out').innerHTML = `<div class="acc-warn ok">${ic('link')}<span><b>Link panoya kopyalandı (24 saat geçerli)</b><code>${esc(x.link)}</code></span></div>`; });
-      if ($('#u-ban')) armBtn($('#u-ban'), 'Kapatılsın mı?', () => socket.emit('adminUser', { name: u.name, action: 'ban', reason: 'Kural ihlali' }, x => { show(x); loadBanned(); }));
-      if ($('#u-unban')) $('#u-unban').onclick = () => socket.emit('adminUser', { name: u.name, action: 'unban' }, x => { show(x); loadBanned(); });
-    };
-    const loadBanned = () => socket.emit('adminBanned', r => { const e = $('#u-banned'); if (!e) return; e.innerHTML = (r.list || []).map(b => `<div class="lrow"><span>${av(b.name)} <b>${esc(b.name)}</b> <small style="color:var(--muted)">${esc(b.reason || '')} · ${esc(b.by)} · ${ago(b.at)}</small></span><button class="alink" data-ub="${esc(b.name)}">Aç</button></div>`).join('') || '<p class="hint">Kapatılan hesap yok.</p>';
-      e.querySelectorAll('[data-ub]').forEach(x => x.onclick = () => socket.emit('adminUser', { name: x.dataset.ub, action: 'unban' }, () => loadBanned())); });
-    $('#u-go').onclick = () => socket.emit('adminUser', { name: $('#u-q').value }, show);
-    $('#u-q').onkeydown = e => { if (e.key === 'Enter') $('#u-go').click(); };
-    loadBanned();
-  }
 }
+
+
+// ================= Yönetim paneli parçaları =================
+const STAFF_TR = { owner: 'Kurucu', admin: 'Yönetici', mod: 'Moderatör', destek: 'Destek' };
+const STAFF_CLR = { owner: '#ff9a4d', admin: '#ffc04d', mod: '#5aa9ff', destek: '#3ddc97' };
+const STAFF_CAN_C = { warn: ['owner', 'admin', 'mod', 'destek'], suspend: ['owner', 'admin', 'mod'], ban: ['owner', 'admin'], del: ['owner', 'admin'], reset: ['owner', 'admin'] };
+const sCan = a => (STAFF_CAN_C[a] || []).includes(S.staff);
+const staffChip = r => r ? `<span class="adm-rk" style="--c:${STAFF_CLR[r]}">${ic('shield')}${STAFF_TR[r]}</span>` : '';
+function admOverview(B, el) {
+  B.innerHTML = '<p class="hint">Yükleniyor…</p>';
+  socket.emit('adminStats', r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const c = (v, t, i, cl = '') => `<div class="adm-stat ${cl}">${ic(i)}<b>${v.toLocaleString('tr-TR')}</b><small>${t}</small></div>`;
+    B.innerHTML = `<div class="adm-stats">${c(r.users, 'Toplam üye', 'users')}${c(r.online, 'Şu an çevrimiçi', 'activity', 'gr')}${c(r.voice, 'Şu an seste', 'volume', 'gr')}${c(r.new1, 'Son 24 saatte katılan', 'userplus')}${c(r.new7, 'Son 7 günde katılan', 'sparkle')}${c(r.msgsToday, 'Son 24 saatte mesaj', 'chat')}${c(r.servers, 'Kurulan sunucu', 'grid')}${c(r.reports, 'Açık şikayet', 'flag', r.reports ? 'warn' : '')}${c(r.warned, 'Son 30 günde uyarılan', 'alert')}${c(r.banned, 'Kapalı / askıda hesap', 'lock', r.banned ? 'red' : '')}</div>
+      <div class="adm-box"><h4>${ic('userplus')}Yeni katılanlar</h4>${r.newest.map(u => `<div class="lrow adm-click adm-team" data-u="${esc(u.name)}"><span class="atm">${av(u.name)}<span class="t"><b>${esc(u.name)}</b><small>${ago(u.at)}${u.invitedBy ? ' · davet: ' + esc(u.invitedBy) : ''}</small></span></span>${ic('chevron')}</div>`).join('')}</div>`;
+    B.querySelectorAll('[data-u]').forEach(x => x.onclick = () => { adminPanel(el, 'users'); setTimeout(() => { $('#u-q').value = x.dataset.u; $('#u-go').click(); }, 50); });
+  });
+}
+function admUsers(B) {
+  B.innerHTML = `<div class="adm-box"><h4>${ic('search')}Kullanıcı bul</h4><div class="adm-inl"><input class="field" id="u-q" placeholder="Kullanıcı adı${sCan('reset') ? ' ya da e-posta' : ''}"><button class="btns2" id="u-go">Bul</button></div><div id="u-res"></div></div>
+    <div class="adm-box"><h4>${ic('lock')}Kapalı ve askıdaki hesaplar</h4><div id="u-banned"><p class="hint">Yükleniyor…</p></div></div>`;
+  const out = (h, ok = true) => { $('#u-out').innerHTML = `<div class="acc-warn ${ok ? 'ok' : ''}">${ic(ok ? 'check' : 'x')}<span>${h}</span></div>`; };
+  const show = r => {
+    if (r.error) return $('#u-res').innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const u = r.user, me = u.name === S.me, team = !!u.rank, owner = u.rank === 'owner';
+    const st = u.banned ? (u.banned.until ? `<small class="no">${ic('hourglass')} ${new Date(u.banned.until).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} tarihine kadar askıda · ${esc(u.banned.reason || '')} · ${esc(u.banned.by)}</small>` : `<small class="no">${ic('lock')} Hesap kapalı · ${esc(u.banned.reason || '')} · ${esc(u.banned.by)}</small>`) : '';
+    $('#u-res').innerHTML = `<div class="adm-ucard"><div class="adm-user">${av(u.name, u.online)}<div><b>${esc(u.name)} ${staffChip(u.rank)}</b><small>${u.email ? esc(u.email) + ' · ' : ''}${since(u.createdAt)}${u.invitedBy ? ' · davet: ' + esc(u.invitedBy) : ''}</small>${st}</div></div>
+      <div class="adm-mini"><span><b>Sv ${u.level}</b>${u.xp} XP</span><span><b>${u.msgs}</b>mesaj</span><span><b>🔥 ${u.streak}</b>seri</span><span><b>${u.servers}</b>sunucu</span><span class="${u.reports ? 'w' : ''}"><b>${u.reports}</b>şikayet</span><span class="${u.warns.length ? 'w' : ''}"><b>${u.warns.length}</b>uyarı</span></div>
+      ${me ? '<p class="hint">Bu sensin.</p>' : owner ? '<p class="hint">Kurucuya işlem yapılamaz.</p>' : `
+      <label class="adm-lbl">Sebep (uyarı, askıya alma ya da silme için)</label><input class="field" id="u-why" maxlength="300" placeholder="Örn. küfür, spam, taciz…">
+      <div class="rpc-acts">
+        ${sCan('warn') ? `<button id="u-warn">${ic('alert')}Uyar</button>` : ''}
+        ${sCan('suspend') && !team && !u.banned ? `<span class="adm-susp"><select id="u-days"><option value="1">1 gün</option><option value="3">3 gün</option><option value="7">7 gün</option><option value="30">30 gün</option></select><button id="u-susp">${ic('hourglass')}Askıya al</button></span>` : ''}
+        ${u.banned && (sCan('ban') || (sCan('suspend') && u.banned.until)) ? `<button id="u-unban" class="ok">${ic('unlock')}Hesabı aç</button>` : ''}
+        ${sCan('ban') && !team && !u.banned ? `<button id="u-ban" class="danger">${ic('lock')}Hesabı kapat</button>` : ''}
+        ${sCan('reset') ? `<button id="u-link">${ic('key')}Şifre sıfırlama linki</button>` : ''}
+      </div>
+      ${['owner', 'admin'].includes(S.staff) && !u.banned ? `<div class="adm-rankset"><label class="adm-lbl">Moderasyon ekibi rütbesi</label><div class="adm-inl"><select id="u-rank"><option value="">Ekipte değil</option>${S.staff === 'owner' ? `<option value="admin" ${u.rank === 'admin' ? 'selected' : ''}>Yönetici · her şey</option>` : ''}<option value="mod" ${u.rank === 'mod' ? 'selected' : ''}>Moderatör · uyarır, askıya alır</option><option value="destek" ${u.rank === 'destek' ? 'selected' : ''}>Destek · şikayetlere bakar, uyarır</option></select><button class="btns2" id="u-rset">Kaydet</button></div></div>` : ''}
+      ${sCan('del') && !team ? `<details class="adm-del"><summary>${ic('trash')}Hesabı kalıcı olarak sil</summary><p class="hint">Mesajları, sunucu üyelikleri ve profili silinir. Geri alınamaz. Onay için kullanıcı adını aynen yaz.</p><div class="adm-inl"><input class="field" id="u-delc" placeholder="${esc(u.name)}"><button class="danger btns2" id="u-del">Sil</button></div></details>` : ''}`}
+      <div id="u-out"></div>
+      ${u.warns.length ? `<h5 class="ax-h" style="margin-top:14px">Uyarı geçmişi</h5><div class="bk-list">${u.warns.map(w => `<div><span style="flex-direction:column;align-items:flex-start;gap:2px"><b>${esc(w.reason)}</b><small>${esc(w.by)} · ${ago(w.at)}${w.seen ? ' · gördü' : ' · henüz görmedi'}</small></span></div>`).join('')}</div>` : ''}</div>`;
+    const why = () => $('#u-why')?.value.trim();
+    const act = (o, msg) => socket.emit('adminUser', { name: u.name, ...o }, x => { if (x.error) return out(esc(x.error), false); show(x); out(msg); loadBanned(); });
+    $('#u-warn') && ($('#u-warn').onclick = () => { if (!why()) return out('Uyarı için bir sebep yaz. Kullanıcı bunu görecek.', false); act({ action: 'warn', reason: why() }, `<b>${esc(u.name)} uyarıldı.</b> Girişte ve şu an açıksa ekranında uyarıyı görecek.`); });
+    $('#u-susp') && armBtn($('#u-susp'), 'Emin misin?', () => act({ action: 'suspend', days: $('#u-days').value, reason: why() || 'Kural ihlali' }, `<b>${esc(u.name)} ${$('#u-days')?.value || 1} gün askıya alındı.</b>`));
+    $('#u-ban') && armBtn($('#u-ban'), 'Kapatılsın mı?', () => act({ action: 'ban', reason: why() || 'Kural ihlali' }, `<b>${esc(u.name)} hesabı kapatıldı.</b>`));
+    $('#u-unban') && ($('#u-unban').onclick = () => act({ action: 'unban' }, `<b>${esc(u.name)} hesabı açıldı.</b>`));
+    $('#u-link') && ($('#u-link').onclick = () => socket.emit('adminUser', { name: u.name, action: 'resetLink' }, x => { if (x.error) return out(esc(x.error), false); navigator.clipboard?.writeText(x.link); out(`<b>Link panoya kopyalandı (24 saat geçerli)</b><code>${esc(x.link)}</code>`); }));
+    $('#u-rset') && ($('#u-rset').onclick = () => socket.emit('staffSet', { name: u.name, rank: $('#u-rank').value || null }, x => { if (x.error) return out(esc(x.error), false); socket.emit('adminUser', { name: u.name }, y => { show(y); out($('#u-rank')?.value ? `<b>${esc(u.name)} ekibe alındı.</b> Kendisine bildirim gitti.` : `<b>${esc(u.name)} ekipten çıkarıldı.</b>`); }); }));
+    $('#u-del') && ($('#u-del').onclick = () => socket.emit('adminUser', { name: u.name, action: 'delete', confirm: $('#u-delc').value.trim(), reason: why() }, x => { if (x.error) return out(esc(x.error), false); $('#u-res').innerHTML = `<div class="acc-warn ok">${ic('check')}<span><b>${esc(x.deleted)} hesabı silindi.</b></span></div>`; }));
+  };
+  const loadBanned = () => socket.emit('adminBanned', r => { const e = $('#u-banned'); if (!e) return; const l = r.list || [];
+    e.innerHTML = l.length ? l.map(b => `<div class="lrow"><span>${av(b.name)} <b>${esc(b.name)}</b> <small style="color:var(--muted)">${b.until ? `${ic('hourglass')} ${new Date(b.until).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}'e kadar` : 'kalıcı'} · ${esc(b.reason || '')} · ${esc(b.by)}</small></span><button class="alink" data-uq="${esc(b.name)}">Aç</button></div>`).join('') : '<p class="hint">Kapalı hesap yok.</p>';
+    e.querySelectorAll('[data-uq]').forEach(x => x.onclick = () => { $('#u-q').value = x.dataset.uq; $('#u-go').click(); }); });
+  $('#u-go').onclick = () => socket.emit('adminUser', { name: $('#u-q').value.trim() }, show);
+  $('#u-q').onkeydown = e => { if (e.key === 'Enter') $('#u-go').click(); };
+  loadBanned();
+}
+function admTeam(B) {
+  B.innerHTML = '<p class="hint">Yükleniyor…</p>';
+  socket.emit('staffList', r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const edit = ['owner', 'admin'].includes(r.me);
+    B.innerHTML = `<div class="adm-box"><h4>${ic('shield')}Moderasyon ekibi · ${r.list.length} kişi</h4>
+      <div class="adm-ranks"><div style="--c:${STAFF_CLR.owner}"><b>Kurucu</b>Her şey, ekibi yönetir</div><div style="--c:${STAFF_CLR.admin}"><b>Yönetici</b>Her şey: hesap kapatma, silme, ekip</div><div style="--c:${STAFF_CLR.mod}"><b>Moderatör</b>Şikayetler, uyarı, askıya alma</div><div style="--c:${STAFF_CLR.destek}"><b>Destek</b>Şikayetlere bakar, uyarır</div></div>
+      ${r.list.map(m => `<div class="lrow adm-team"><span class="atm">${av(m.name, m.online)}<span class="t"><b>${esc(m.name)} ${staffChip(m.rank)}</b><small>${m.since ? since(m.since) + (m.by ? ' · ' + esc(m.by) + ' ekledi · ' : ' · ') : ''}son 30 günde ${m.acts} işlem</small></span></span>${edit && m.rank !== 'owner' && m.name !== S.me && (r.me === 'owner' || m.rank !== 'admin') ? `<button class="alink" data-rm="${esc(m.name)}">Çıkar</button>` : ''}</div>`).join('')}
+      ${edit ? `<h5 class="ax-h" style="margin-top:16px">Ekibe birini al</h5><div class="adm-inl"><input class="field" id="t-name" placeholder="Kullanıcı adı"><select id="t-rank">${r.me === 'owner' ? '<option value="admin">Yönetici</option>' : ''}<option value="mod" selected>Moderatör</option><option value="destek">Destek</option></select><button class="btns2" id="t-add">${ic('userplus')}Ekle</button></div><p class="hint" id="t-out" style="margin-top:6px">Eklenen kişiye bildirim gider; profilinde 🛡️ Kanka Ekibi rozeti çıkar.</p>` : '<p class="hint">Ekibi kurucu ve yöneticiler düzenler.</p>'}</div>`;
+    B.querySelectorAll('[data-rm]').forEach(b => armBtn(b, 'Emin misin?', () => socket.emit('staffSet', { name: b.dataset.rm, rank: null }, x => x.error ? toast(x.error) : admTeam(B))));
+    $('#t-add') && ($('#t-add').onclick = () => socket.emit('staffSet', { name: $('#t-name').value.trim(), rank: $('#t-rank').value }, x => { if (x.error) { $('#t-out').textContent = x.error; return; } toast('Ekibe eklendi 🛡️'); admTeam(B); }));
+  });
+}
+function admLog(B) {
+  B.innerHTML = '<p class="hint">Yükleniyor…</p>';
+  socket.emit('staffLogGet', r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    B.innerHTML = `<div class="adm-box"><h4>${ic('clock')}Ekip kayıtları${['owner', 'admin'].includes(S.staff) ? '' : ' · sadece seninkiler'}</h4>${r.list.length ? `<div class="bk-list">${r.list.map(l => `<div><span style="flex-direction:column;align-items:flex-start;gap:2px"><b>${esc(l.by)} · ${esc(l.action)}${l.target ? ' · ' + esc(l.target) : ''}</b><small>${ago(l.at)}${l.detail ? ' · ' + esc(l.detail) : ''}</small></span></div>`).join('')}</div>` : '<p class="hint">Henüz kayıt yok.</p>'}</div>`;
+  });
+}
+// Ekipten gelen uyarılar: girişte ve anında ekranda görünür, "Anladım" deyince görülmüş sayılır
+function showWarns(list) {
+  if (!list?.length) return;
+  modal(`<div class="warn-pop"><div class="wp-ic">${ic('alert')}</div><h3>Kanka ekibinden uyarı</h3><p class="hint">Kurallara uymayan bir davranış nedeniyle uyarıldın. Uyarılar tekrarlanırsa hesabın askıya alınabilir.</p>
+    ${list.map(w => `<div class="wp-it"><b>${esc(w.reason)}</b><small>${ago(w.at)}</small></div>`).join('')}
+    <button class="primary" id="wp-ok">Anladım</button><a class="alink" href="#" id="wp-rules" style="display:block;text-align:center;margin-top:10px">Kuralları oku</a></div>`, 'warnbox');
+  $('#wp-ok').onclick = () => { socket.emit('warnSeen', null, () => {}); closeModal(); };
+  $('#wp-rules').onclick = e => { e.preventDefault(); socket.emit('warnSeen', null, () => {}); closeModal(); const hq = hqServer(), k = hq?.channels.find(c => c.name === 'kurallar'); if (hq) selectServer(hq.id, k?.id); };
+}
+socket.on('siteWarn', w => showWarns([w]));
+socket.on('staffChanged', ({ rank, by }) => { S.staff = rank; S.siteAdmin = ['owner', 'admin'].includes(rank); toast(rank ? `🛡️ ${esc(by)} seni Kanka ekibine ${STAFF_TR[rank]} olarak aldı. Ayarlar › Yönetim paneli` : 'Kanka ekibinden çıkarıldın'); renderModPill?.(); });
 
 // ================= Etkinlik sayfası (sadece otomatik algılama) =================
 const verLt = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); return false; };

@@ -771,7 +771,18 @@ const CATS = ['Oyun', 'Sohbet', 'Müzik', 'Eğitim', 'Yazılım', 'Anime', 'Film
 
 // ---------- Sunucu rozetleri ----------
 // resmi: Kanka HQ · dogrulanmis/partner: site yöneticisi verir · topluluk: 15+ üye ve 7+ gün
-const siteAdmin = n => !!n && (db.servers.find(x => x.id === 's1')?.owner === n || (db.siteAdmins || []).includes(n));
+// ---- Kanka ekibi: rütbeler ----
+// owner: Kanka HQ sahibi (her şey + ekibi yönetir) · admin: yönetim (her şey, ekip hariç) · mod: şikayet, uyarı, askıya alma · destek: şikayetleri görür, uyarır
+const STAFF_RANKS = { owner: 'Kurucu', admin: 'Yönetici', mod: 'Moderatör', destek: 'Destek' };
+const staffRank = n => !n || !db.users?.[n] ? null : db.servers.find(x => x.id === 's1')?.owner === n ? 'owner' : db.staff?.[n]?.rank || ((db.siteAdmins || []).includes(n) ? 'admin' : null);
+const siteAdmin = n => ['owner', 'admin'].includes(staffRank(n));
+const siteMod = n => !!staffRank(n);
+const ALL_STAFF = ['owner', 'admin', 'mod', 'destek'];
+const STAFF_CAN = { warn: ALL_STAFF, reports: ALL_STAFF, lookup: ALL_STAFF, suspend: ['owner', 'admin', 'mod'], ban: ['owner', 'admin'], del: ['owner', 'admin'], email: ['owner', 'admin'], reset: ['owner', 'admin'] };
+const canStaff = (n, act) => (STAFF_CAN[act] || []).includes(staffRank(n));
+const staffList = () => [...new Set([db.servers.find(x => x.id === 's1')?.owner, ...Object.keys(db.staff || {}), ...(db.siteAdmins || [])])].filter(n => n && db.users[n] && staffRank(n));
+function staffLog(by, action, target, detail) { (db.staffLog ||= []).unshift({ at: Date.now(), by, action, target: target || null, detail: String(detail || '').slice(0, 200) }); if (db.staffLog.length > 1500) db.staffLog.length = 1500; }
+const isBanned = u => { if (!u?.siteBan) return false; if (u.siteBan.until && u.siteBan.until < Date.now()) { delete u.siteBan; save(); return false; } return true; };
 function srvBadges(s) {
   const b = [];
   if (s.id === 's1') b.push({ id: 'resmi', since: s.createdAt || null });
@@ -1081,6 +1092,7 @@ const BADGES = {
   sosyal: ['🤝', 'Sosyal kelebek', '5+ arkadaş'],
   caylak: ['🐣', 'Çaylak', 'Başlangıç rehberini bitirdi'],
   beta: ['🧪', 'Beta Tester', 'Kanka betasındaki ilk 300 kişiden biri'],
+  ekip: ['🛡️', 'Kanka Ekibi', 'Kanka Chat moderasyon ekibinde'],
 };
 function badgesOf(u) {
   const order = Object.values(db.users).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map(x => x.name);
@@ -1095,6 +1107,7 @@ function badgesOf(u) {
   if (db.servers.some(s => s.owner === u.name && !s.public)) b.push('kurucu');
   if ((u.friends || []).length >= 5) b.push('sosyal');
   if (u.onb?.rewarded) b.push('caylak');
+  if (staffRank(u.name)) b.unshift('ekip');
   return b;
 }
 
@@ -1391,31 +1404,40 @@ async function sendInviteMail(email, code) {
 const REPORT_REASONS = { spam: 'Spam ya da reklam', taciz: 'Taciz veya zorbalık', nefret: 'Nefret söylemi', cinsel: 'Cinsel içerik', siddet: 'Şiddet ya da tehdit', dolandir: 'Dolandırıcılık', cocuk: 'Çocuk güvenliği', taklit: 'Başkasını taklit', diger: 'Diğer' };
 const siteAdmins = () => { const s1 = db.servers.find(x => x.id === 's1')?.owner; return [...new Set([s1, ...(db.siteAdmins || [])].filter(Boolean))]; };
 const srvOf = id => id && db.servers.find(x => x.id === id);
-const reportVisible = (r, n) => siteAdmin(n) || (!!r.serverId && !!srvOf(r.serverId) && isMod(srvOf(r.serverId), n));
+const reportVisible = (r, n) => siteMod(n) || (!!r.serverId && !!srvOf(r.serverId) && isMod(srvOf(r.serverId), n));
 function reportCounts(n) {
   const open = db.reports.filter(r => r.status === 'open');
-  const out = { site: siteAdmin(n) ? open.length : 0, servers: {} };
+  const out = { site: siteMod(n) ? open.length : 0, servers: {} };
   for (const r of open) if (r.serverId && srvOf(r.serverId) && isMod(srvOf(r.serverId), n)) out.servers[r.serverId] = (out.servers[r.serverId] || 0) + 1;
   return out;
 }
 function pushReports(r) {
-  const who = new Set(siteAdmins());
+  const who = new Set(staffList());
   const s = srvOf(r.serverId); if (s) for (const n of s.members.concat(s.owner || [])) if (isMod(s, n)) who.add(n);
   for (const n of who) io.to('user:' + n).emit('reportCounts', reportCounts(n));
   return who;
 }
 const reportView = (r, n) => ({ ...r, by: siteAdmin(n) ? r.by : null, reasonText: REPORT_REASONS[r.reason] || r.reason, serverName: srvOf(r.serverId)?.name || null, targetGone: !db.users[r.target], targetBanned: !!db.users[r.target]?.siteBan,
   msgAlive: r.msg ? !!findMsg(r.chId, r.msg.id) : null, priors: db.reports.filter(x => x.target === r.target && x.id !== r.id).length });
-function siteBanUser(name, by, reason) {
+function siteBanUser(name, by, reason, until) {
   const u = db.users[name]; if (!u) return false;
-  u.siteBan = { by, at: Date.now(), reason: clean(reason, 160) };
+  u.siteBan = { by, at: Date.now(), reason: clean(reason, 160), ...(until ? { until } : {}) };
+  staffLog(by, until ? 'Askıya aldı' : 'Hesabı kapattı', name, (until ? `${Math.round((until - Date.now()) / 864e5)} gün · ` : '') + clean(reason, 160));
   for (const [t, n] of Object.entries(db.sessions)) if (n === name) delete db.sessions[t];
   for (const s of db.servers) voiceKick(s.channels.map(c => c.id), name, 'Hesabın kapatıldı');
   io.to('user:' + name).emit('siteBanned', u.siteBan.reason);
   setTimeout(() => io.in('user:' + name).disconnectSockets(true), 300);
   save(); return true;
 }
-const banText = u => 'Bu hesap Kanka Chat kurallarını ihlal ettiği için kapatıldı.' + (u.siteBan?.reason ? ` Sebep: ${u.siteBan.reason}` : '') + ' Hata olduğunu düşünüyorsan kankahq1@gmail.com adresine yaz.';
+function siteWarnUser(name, by, reason) {
+  const u = db.users[name]; if (!u) return null;
+  const w = { id: id(), at: Date.now(), by, reason: clean(reason, 300) || 'Kurallara uymayan davranış', seen: false };
+  (u.siteWarns ||= []).push(w); if (u.siteWarns.length > 50) u.siteWarns.shift();
+  staffLog(by, 'Uyardı', name, w.reason);
+  io.to('user:' + name).emit('siteWarn', { id: w.id, at: w.at, reason: w.reason, count: u.siteWarns.length });
+  save(); return w;
+}
+const banText = u => (u.siteBan?.until ? `Bu hesap ${new Date(u.siteBan.until).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })} tarihine kadar askıya alındı.` : 'Bu hesap Kanka Chat kurallarını ihlal ettiği için kapatıldı.') + (u.siteBan?.reason ? ` Sebep: ${u.siteBan.reason}` : '') + ' Hata olduğunu düşünüyorsan kankahq1@gmail.com adresine yaz.';
 
 setInterval(() => { // eski şikayetleri ve süresi dolan sıfırlama linklerini temizle (gizlilik politikasında yazan süreler)
   const lim = Date.now() - 730 * 864e5; db.reports = db.reports.filter(r => r.at > lim);
@@ -1496,7 +1518,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), voiceAge: voiceAges(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on
+      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on
     };
   }
 
@@ -1561,7 +1583,7 @@ io.on('connection', socket => {
     const r = db.resets[String(token || '')], u = r && db.users[r.name];
     if (!r || r.exp < Date.now() || !u) return cb({ error: 'Bu link geçersiz ya da süresi dolmuş. Yeni bir link iste.' });
     if (String(password ?? '').length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
-    if (u.siteBan) return cb({ error: banText(u) });
+    if (isBanned(u)) return cb({ error: banText(u) });
     u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(String(password), u.salt);
     for (const [t, n] of Object.entries(db.sessions)) if (n === u.name) delete db.sessions[t];
     for (const [t, x] of Object.entries(db.resets)) if (x.name === u.name) delete db.resets[t];
@@ -1582,7 +1604,7 @@ io.on('connection', socket => {
       save();
     }
     limits.delete(key);
-    if (u.siteBan) return cb({ error: banText(u), banned: true });
+    if (isBanned(u)) return cb({ error: banText(u), banned: true });
     cb(start(u.name));
   });
 
@@ -1590,7 +1612,7 @@ io.on('connection', socket => {
     const n = db.sessions[token];
     if (!n || !db.users[n]) return cb({ error: 'Oturum bulunamadı' });
     delete db.sessions[token];
-    if (db.users[n].siteBan) return cb({ error: banText(db.users[n]), banned: true });
+    if (isBanned(db.users[n])) return cb({ error: banText(db.users[n]), banned: true });
     cb(start(n));
   });
 
@@ -1780,7 +1802,7 @@ io.on('connection', socket => {
     if (!me) return cb({ error: 'Giriş yap' });
     let list;
     if (serverId) { const s = srvOf(serverId); if (!s || !isMod(s, me)) return cb({ error: 'Yetkin yok' }); list = db.reports.filter(r => r.serverId === serverId); }
-    else { if (!siteAdmin(me)) return cb({ error: 'Yetkin yok' }); list = db.reports; }
+    else { if (!siteMod(me)) return cb({ error: 'Yetkin yok' }); list = db.reports; }
     list = list.filter(r => status === 'all' || r.status === status).slice(0, 200);
     cb({ ok: true, reports: list.map(r => reportView(r, me)) });
   });
@@ -1798,6 +1820,14 @@ io.on('connection', socket => {
         if (s) audit(s, me, 'Şikayet üzerine mesaj sildi', `${r.target}: ${(r.msg.text || '').slice(0, 60)}`);
       }
       close('Mesaj silindi');
+    } else if (action === 'warn') {
+      if (!canStaff(me, 'warn')) return cb({ error: 'Yetkin yok' });
+      siteWarnUser(r.target, me, reason || REPORT_REASONS[r.reason]); close('Uyarıldı');
+    } else if (action === 'suspend') {
+      if (!canStaff(me, 'suspend')) return cb({ error: 'Yetkin yok' });
+      if (staffRank(r.target)) return cb({ error: 'Ekipten biri askıya alınamaz' });
+      const days = [1, 3, 7].includes(+label) ? +label : 1;
+      siteBanUser(r.target, me, reason || REPORT_REASONS[r.reason], Date.now() + days * 864e5); close(`${days} gün askıya alındı`);
     } else if (action === 'siteban') {
       if (!site) return cb({ error: 'Sadece Kanka yönetimi' });
       if (siteAdmin(r.target)) return cb({ error: 'Yönetici kapatılamaz' });
@@ -1874,16 +1904,70 @@ io.on('connection', socket => {
     }
     cb({ ok: true, cfg: mailCfg ? { user: mailCfg.user, host: mailCfg.host || '', port: mailCfg.port || 465, url: mailCfg.url || baseUrl(), hasPass: !!mailCfg.pass } : { url: baseUrl() }, ready: !!getMailer() && mailCfg?.ok === true, unverified: !!getMailer() && mailCfg?.ok !== true, failed: mailCfg?.ok === false });
   });
-  socket.on('adminUser', ({ name, action, reason } = {}, cb = () => {}) => {
-    if (!SA(cb)) return;
+  // ---- Yönetim paneli: kullanıcılar, ekip, istatistik, kayıtlar ----
+  const SM = cb => { if (siteMod(me)) return true; cb({ error: 'Sadece Kanka ekibi' }); return false; };
+  const userCard = u => ({ name: u.name, email: canStaff(me, 'email') && u.email ? u.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2') : null, createdAt: u.createdAt, invitedBy: u.invitedBy || null,
+    banned: isBanned(u) ? u.siteBan : null, reports: db.reports.filter(r => r.target === u.name).length, servers: serversFor(u.name).filter(s => !s.public).length,
+    level: level(u.xp), xp: u.xp || 0, msgs: u.msgs || 0, streak: u.streak?.count || 0, online: onlineNames().includes(u.name), rank: staffRank(u.name),
+    warns: (u.siteWarns || []).slice(-10).reverse().map(w => ({ at: w.at, by: w.by, reason: w.reason, seen: w.seen })) });
+  socket.on('adminUser', ({ name, action, reason, days, confirm } = {}, cb = () => {}) => {
+    if (!SM(cb)) return;
     const u = findUserBy(name); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
-    if (action === 'resetLink') return cb({ ok: true, link: `${baseUrl()}/?sifirla=${resetToken(u.name, 24)}` });
-    if (action === 'ban') { if (siteAdmin(u.name)) return cb({ error: 'Yönetici kapatılamaz' }); siteBanUser(u.name, me, reason); }
-    if (action === 'unban') { delete u.siteBan; save(); }
-    cb({ ok: true, user: { name: u.name, email: u.email ? u.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2') : null, createdAt: u.createdAt, invitedBy: u.invitedBy || null, banned: u.siteBan || null,
-      reports: db.reports.filter(r => r.target === u.name).length, servers: serversFor(u.name).filter(s => !s.public).length } });
+    const deny = () => cb({ error: 'Bunun için yetkin yok' });
+    if (action && u.name !== me && staffRank(u.name) === 'owner') return cb({ error: 'Kurucuya işlem yapılamaz' });
+    if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/?sifirla=${resetToken(u.name, 24)}` }); }
+    if (action === 'warn') { if (!canStaff(me, 'warn')) return deny(); if (u.name === me) return cb({ error: 'Kendini uyaramazsın' }); siteWarnUser(u.name, me, reason); }
+    if (action === 'suspend') { if (!canStaff(me, 'suspend')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri askıya alınamaz' }); const d = [1, 3, 7, 30].includes(+days) ? +days : 1; siteBanUser(u.name, me, reason || 'Kural ihlali', Date.now() + d * 864e5); }
+    if (action === 'ban') { if (!canStaff(me, 'ban')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri kapatılamaz' }); siteBanUser(u.name, me, reason); }
+    if (action === 'unban') { if (!canStaff(me, 'suspend')) return deny(); if (u.siteBan && !u.siteBan.until && !canStaff(me, 'ban')) return deny(); delete u.siteBan; staffLog(me, 'Hesabı açtı', u.name); save(); }
+    if (action === 'delete') {
+      if (!canStaff(me, 'del')) return deny();
+      if (staffRank(u.name)) return cb({ error: 'Ekipten birinin hesabı silinemez. Önce ekipten çıkar.' });
+      if (String(confirm || '') !== u.name) return cb({ error: 'Onay için kullanıcı adını aynen yaz' });
+      const nm = u.name, touched = onlineNames();
+      io.to('user:' + nm).emit('siteBanned', 'Hesabın Kanka yönetimi tarafından silindi' + (reason ? ': ' + clean(reason, 160) : ''));
+      setTimeout(() => io.in('user:' + nm).disconnectSockets(true), 200);
+      deleteUserData(nm); staffLog(me, 'Hesabı sildi', nm, reason); save();
+      io.emit('users', allUsers()); pushServers(touched.filter(n => n !== nm));
+      return cb({ ok: true, deleted: nm });
+    }
+    save(); cb({ ok: true, user: userCard(u) });
   });
-  socket.on('adminBanned', (cb = () => {}) => { if (!SA(cb)) return; cb({ ok: true, list: Object.values(db.users).filter(u => u.siteBan).map(u => ({ name: u.name, ...u.siteBan })) }); });
+  socket.on('adminBanned', (cb = () => {}) => { if (!SM(cb)) return; cb({ ok: true, list: Object.values(db.users).filter(isBanned).map(u => ({ name: u.name, ...u.siteBan })) }); });
+  socket.on('adminStats', (cb = () => {}) => {
+    if (!SM(cb)) return;
+    const now = Date.now(), us = Object.values(db.users), day = now - 864e5, on = onlineNames();
+    let msgsToday = 0; for (const l of Object.values(db.messages)) for (let i = l.length - 1; i >= 0 && l[i].time > day; i--) msgsToday++;
+    const inVoice = new Set(); for (const [, m] of voice) for (const n of m.values()) inVoice.add(n);
+    const newest = [...us].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 8).map(u => ({ name: u.name, at: u.createdAt || 0, invitedBy: u.invitedBy || null }));
+    cb({ ok: true, users: us.length, online: on.length, new1: us.filter(u => (u.createdAt || 0) > day).length, new7: us.filter(u => (u.createdAt || 0) > now - 7 * 864e5).length,
+      servers: db.servers.filter(s => !s.public).length, msgsToday, voice: inVoice.size, reports: db.reports.filter(r => r.status === 'open').length, banned: us.filter(isBanned).length,
+      warned: us.filter(u => (u.siteWarns || []).some(w => w.at > now - 30 * 864e5)).length, newest, rank: staffRank(me) });
+  });
+  socket.on('staffList', (cb = () => {}) => {
+    if (!SM(cb)) return;
+    cb({ ok: true, me: staffRank(me), ranks: STAFF_RANKS, list: staffList().map(n => ({ name: n, rank: staffRank(n), since: db.staff?.[n]?.at || null, by: db.staff?.[n]?.by || null, online: onlineNames().includes(n),
+      acts: (db.staffLog || []).filter(l => l.by === n && l.at > Date.now() - 30 * 864e5).length })).sort((a, b) => Object.keys(STAFF_RANKS).indexOf(a.rank) - Object.keys(STAFF_RANKS).indexOf(b.rank)) });
+  });
+  socket.on('staffSet', ({ name, rank } = {}, cb = () => {}) => {
+    const my = staffRank(me); if (!['owner', 'admin'].includes(my)) return cb({ error: 'Ekibi sadece kurucu ve yöneticiler düzenleyebilir' });
+    const u = findUserBy(name); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
+    if (u.name === me) return cb({ error: 'Kendi rütbeni değiştiremezsin' });
+    const cur = staffRank(u.name); if (cur === 'owner') return cb({ error: 'Kurucunun rütbesi değişmez' });
+    if (rank && !['admin', 'mod', 'destek'].includes(rank)) return cb({ error: 'Geçersiz rütbe' });
+    if (my !== 'owner' && (rank === 'admin' || cur === 'admin')) return cb({ error: 'Yönetici rütbesini sadece kurucu verebilir ya da alabilir' });
+    if (rank && isBanned(u)) return cb({ error: 'Kapatılmış bir hesap ekibe alınamaz' });
+    db.staff ||= {}; db.siteAdmins = (db.siteAdmins || []).filter(n => n !== u.name);
+    if (rank) db.staff[u.name] = { rank, at: db.staff[u.name]?.at || Date.now(), by: me }; else delete db.staff[u.name];
+    staffLog(me, rank ? (cur ? 'Rütbesini değiştirdi' : 'Ekibe aldı') : 'Ekipten çıkardı', u.name, rank ? STAFF_RANKS[rank] : STAFF_RANKS[cur] || '');
+    save();
+    io.to('user:' + u.name).emit('staffChanged', { rank: rank || null, by: me });
+    if (rank) notifyUser(u.name, { from: me, text: `Seni Kanka ekibine ${STAFF_RANKS[rank]} olarak aldı 🛡️ Ayarlar › Yönetim panelinden başlayabilirsin.`, where: 'Kanka ekibi' });
+    io.emit('users', allUsers());
+    cb({ ok: true });
+  });
+  socket.on('staffLogGet', (cb = () => {}) => { if (!SM(cb)) return; const all = siteAdmin(me); cb({ ok: true, list: (db.staffLog || []).filter(l => all || l.by === me).slice(0, 200) }); });
+  socket.on('warnSeen', (wid, cb = () => {}) => { const u = db.users[me]; if (!u) return cb({}); for (const w of u.siteWarns || []) if (!wid || w.id === wid) w.seen = true; save(); cb({ ok: true }); });
 
   socket.on('onbSet', (k, cb = () => {}) => {
     const u = db.users[me]; if (!u || !['dismissed', 'done', 'seen'].includes(k)) return cb({ error: 'Geçersiz' });
