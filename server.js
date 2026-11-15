@@ -120,9 +120,10 @@ function cleanSrc(x) {
   return Object.keys(o).some(k => k !== 'at') ? o : null;
 }
 const srcLabel = s => !s ? 'Doğrudan / bilinmiyor' : s.g || /google/i.test(s.s || '') && /cpc|ads|ppc|paid/i.test(s.m || 'cpc') ? `Google reklam${s.t ? ' · ' + s.t : s.c ? ' · ' + s.c : ''}` : s.s ? `${s.s}${s.c ? ' · ' + s.c : ''}${s.t ? ' · ' + s.t : ''}` : s.ref ? s.ref : s.lp ? 'Sayfa: ' + s.lp : 'Doğrudan / bilinmiyor';
+app.get('/discord-alternatifi', (req, res) => res.redirect(301, '/sesli-sohbet' + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '')));
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
-for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/discord-alternatifi', 'discord-alternatifi.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/sesli-sohbet', 'sesli-sohbet.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 // ---------- Beta kayıt sayfası (/beta) ----------
 // Sayfadan gelen kayıt uygulamanın bekleme listesine (db.waitlist) girer. Kontenjan doluysa yedekte bekler;
 // değilse hemen davet kodu üretilir, ekranda gösterilir ve e-postayla da gönderilir.
