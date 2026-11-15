@@ -849,7 +849,20 @@ const AVATAR_OK = a => UPLOAD_RE.test(a) || PRESET_AV.includes(a);
 // Başlangıç rehberi: bu tarihten önce açılmış hesaplara gösterilmez
 const ONB_SINCE = Date.parse('2026-11-11T15:00:00Z');
 const onbPush = (name, ob) => io.to('user:' + name).emit('onb', ob);
-const onbFlag = (name, k) => { const u = db.users[name]; if (!u) return; const ob = onbOf(u); if (ob.done || ob[k]) return; ob[k] = true; save(); onbPush(name, ob); };
+// Rehber adımı: rehber gizlenmiş olsa bile kaydedilir; beş adım bitince Çaylak rozeti ve +100 XP kendiliğinden verilir
+const onbFlag = (name, k) => { const u = db.users[name]; if (!u) return; const ob = onbOf(u); if (!ob[k]) { ob[k] = true; save(); if (!ob.done) onbPush(name, ob); } onbAward(name); };
+function onbSteps(u) {
+  const ob = u.onb || {}, n = u.name;
+  return { join: db.servers.some(x => x.id !== 's1' && (x.owner === n || (x.members || []).includes(n))), msg: !!(ob.msg || u.msgs > 0), voice: !!(ob.voice || Object.keys(u.vmin || {}).length),
+    invite: !!(ob.invite || Object.values(db.users).some(x => x.invitedBy === n)), profile: !!(ob.profile || u.bio || u.status) };
+}
+function onbAward(name) {
+  const u = db.users[name]; if (!u) return; const ob = onbOf(u); if (ob.rewarded) return;
+  const st = onbSteps(u); if (!Object.values(st).every(Boolean)) return;
+  ob.rewarded = true; u.xp = (u.xp || 0) + 100; save();
+  io.to('user:' + name).emit('onbReward', {}); io.emit('users', allUsers());
+}
+setTimeout(() => { for (const n of Object.keys(db.users)) onbAward(n); }, 5000); // eski hesaplar da hak ettiyse alsın
 const setupOf = s => { if (!s.setup) s.setup = (s.createdAt || 0) < ONB_SINCE || s.public ? { done: true } : {}; return s.setup; };
 const onbOf = u => { if (!u.onb) u.onb = (u.createdAt || 0) < ONB_SINCE ? { done: true } : {}; return u.onb; };
 
@@ -1631,8 +1644,7 @@ io.on('connection', socket => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     const ob = onbOf(u);
     if (ob.rewarded) return cb({ ok: true, already: true, onb: ob });
-    const join = serversFor(me).some(x => x.id !== 's1');
-    if (!(join && ob.msg && ob.voice && ob.invite && ob.profile)) return cb({ error: 'Adımlar henüz bitmedi' });
+    if (!Object.values(onbSteps(u)).every(Boolean)) return cb({ error: 'Adımlar henüz bitmedi' });
     ob.rewarded = true; u.xp = (u.xp || 0) + 100; save();
     io.emit('users', allUsers()); cb({ ok: true, xp: 100, onb: ob });
   });
@@ -2860,6 +2872,7 @@ io.on('connection', socket => {
 
   // ----- Sunucular -----
   socket.on('createServer', (arg, cb = () => {}) => {
+    setTimeout(() => onbAward(me), 800);
     if (!me) return;
     if (limited('srv|' + me, 5, 3600e3)) return cb({ error: 'Bir saatte en fazla 5 sunucu kurabilirsin' });
     const opts = typeof arg === 'string' ? { name: arg } : (arg || {});
@@ -2959,6 +2972,7 @@ io.on('connection', socket => {
     cb({ ok: true, invite: sv.invite });
   });
   socket.on('joinInvite', (code, cb = () => {}) => {
+    setTimeout(() => onbAward(me), 800);
     code = clean(code, 200).split(/[=/]/).pop();
     if (!me) return cb({ error: 'Giriş yapmalısın' });
     if (blockedUntil('u:' + me) || blockedUntil('ip:' + ip)) return cb({ error: 'Çok fazla geçersiz davet denedin. Bir saat sonra tekrar dene.' });
