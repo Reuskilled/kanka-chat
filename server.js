@@ -1498,7 +1498,9 @@ function deleteUserData(name) {
 // ---------- Sürüm takibi: sayfa değişince açık olan herkese "yenile" uyarısı ----------
 const INDEX = path.join(__dirname, 'public', 'index.html');
 let build = '';
-const readBuild = () => { try { const st = fs.statSync(INDEX); return st.size + '-' + Math.round(st.mtimeMs); } catch { return ''; } };
+// içerik özeti: güncelleyici her seferinde tüm dosyaları yeniden yazdığı için tarih değil içerik bakılır;
+// böylece sadece uygulamanın kendisi değişince "yenile" uyarısı çıkar (karşılama sayfası vb. değişince çıkmaz)
+const readBuild = () => { try { return crypto.createHash('sha1').update(fs.readFileSync(INDEX)).digest('hex').slice(0, 12); } catch { return ''; } };
 build = readBuild();
 let buildTimer = null;
 try {
