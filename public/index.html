@@ -1527,6 +1527,29 @@
   #slowtag { display: flex; align-items: center; gap: 6px; position: absolute; top: -26px; left: 16px; font-size: 12px; font-weight: 800; color: var(--muted); }
   #slowtag .ic { width: 13px; height: 13px; } #slowtag.wait { color: var(--accent-2); }
   #compose { position: relative; }
+
+  /* ses cihazı menüsü */
+  #mute, #deaf { position: relative; }
+  .vcar { position: absolute; right: -3px; bottom: -3px; width: 17px; height: 17px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; color: var(--muted); cursor: pointer; transition: color .12s, background .12s; }
+  .vcar .ic { width: 11px; height: 11px; stroke-width: 3; }
+  .vcar:hover { color: #1a120c; background: var(--accent); border-color: var(--accent); }
+  .umenu.devpop { width: 300px; padding: 12px; }
+  .devpop .dv-h, .devbox .dv-h { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 2px 2px 8px; }
+  .dv-h .ic { width: 15px; height: 15px; }
+  .dv-l { display: flex; flex-direction: column; gap: 2px; max-height: 210px; overflow-y: auto; }
+  .umenu .dv, .devbox .dv { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 9px; text-align: left; font-weight: 600; font-size: 13.5px; color: var(--ink); background: none; }
+  .dv span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dv i { font-style: normal; color: var(--accent); opacity: 0; font-weight: 800; }
+  .dv.on { background: rgba(255,138,76,.13); } .dv.on i { opacity: 1; }
+  .umenu .dv:hover, .devbox .dv:hover { background: rgba(255,255,255,.06); color: var(--ink); }
+  .dv-s { margin: 12px 2px 4px; } .dv-s label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px; } .dv-s b { color: var(--accent); }
+  .dv-m { height: 8px; border-radius: 4px; background: rgba(255,255,255,.07); overflow: hidden; margin: 8px 2px 2px; }
+  .dv-m i { display: block; height: 100%; width: 0; background: #3ec27a; border-radius: 4px; transition: width .05s linear; } .dv-m i.hot { background: #ff6b5a; }
+  .dv-note { font-size: 12.5px; color: var(--muted); margin: 6px 2px; line-height: 1.4; }
+  .dv-sep { height: 1px; background: var(--line); margin: 14px 0 12px; }
+  .umenu .dv-perm, .devbox .dv-perm, .umenu .dv-more { width: 100%; justify-content: center; margin-top: 8px; padding: 8px; border-radius: 9px; font-size: 13px; font-weight: 700; background: rgba(255,255,255,.05); color: var(--ink); display: flex; gap: 6px; align-items: center; }
+  .umenu .dv-more { margin-top: 12px; } .umenu .dv-more .ic { width: 15px; height: 15px; }
+  .devbox { background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 14px; padding: 12px; max-width: 460px; }
   .krange { width: 100%; accent-color: var(--accent); }
   .lim-v { color: var(--accent); margin-left: 6px; }
   .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -2635,7 +2658,7 @@
     <div id="side-list"></div>
     <div id="me">
       <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vtime" class="vtime"></span><span id="vq" class="vq" hidden><i></i><em></em></span></div><div class="vc" id="vname"></div><button type="button" class="vb-chat" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>Oda sohbeti</button>
-        <div class="btns"><button id="deaf" title="Hoparlörü kapat" aria-label="Hoparlörü kapat"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/></svg></button><button id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="vns" title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button></div></div>
+        <div class="btns"><button id="deaf" title="Hoparlörü kapat" aria-label="Hoparlörü kapat"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/></svg><span class="vcar" data-dev="out" title="Ses çıkışı ayarları"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></button><button id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="vns" title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button></div></div>
       <div class="row1"><div id="me-av"></div><div><div class="n" id="me-name"></div><div class="s" id="me-lvl"></div></div>
         <button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
     </div>
@@ -3222,7 +3245,7 @@ function showSettings(tab) {
       <div class="pc-sec" style="margin-top:18px"><label class="switch">Yeni arayüz<input type="checkbox" id="p-ui2" ${uiNew() ? 'checked' : ''}></label>
       <label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
-    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Mikrofon</label><button class="btns2" id="st-mic">${ic('mic')} Mikrofonu test et</button></div><div class="st-field"><label>Başlangıç rehberi</label><button class="btns2" id="st-onb">${ic('sprout')} Rehberi baştan göster</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
+    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Ses cihazları</label><div class="devbox" id="st-dev"></div><button class="btns2" id="st-mic" style="margin-top:10px">${ic('mic')} Mikrofonu test et</button></div><div class="st-field"><label>Başlangıç rehberi</label><button class="btns2" id="st-onb">${ic('sprout')} Rehberi baştan göster</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
         <label class="switch">Bilgisayar açılınca Kanka Chat'i başlat<input type="checkbox" id="as-on"></label>
         <label class="switch">Açılışta simge durumunda başlasın (saatin yanında)<input type="checkbox" id="as-hid"></label>
         <p class="hint" id="as-note">${window.kankaDesktop.autostart ? '' : 'Bu ayar Kanka Chat 1.0.6 ile geliyor. Şimdilik saatin yanındaki simgeye sağ tıklayıp "Bilgisayar açılınca başlat"ı işaretleyebilirsin.'}</p></div>` : ''}${overlaySettingsHTML()}<div class="st-field"><label>Gürültü engelleme (mikrofon)</label>
@@ -3289,7 +3312,7 @@ function showSettings(tab) {
         $('#as-hid').onchange = e => A({ hidden: e.target.checked }).then(() => toast(e.target.checked ? 'Açılışta saatin yanında, arka planda başlayacak' : 'Açılışta pencere açık başlayacak'));
       }
     }
-    if (t === 'notif') { $('#st-mic').onclick = () => micTest(null, () => showSettings('notif')); $('#st-onb').onclick = onbRestart; }
+    if (t === 'notif') { devPanel($('#st-dev'), ['in', 'out']); $('#st-mic').onclick = () => micTest(null, () => showSettings('notif')); $('#st-onb').onclick = onbRestart; }
     if (t === 'notif') $('#st-main').querySelectorAll('input[name=ns]').forEach(r => r.onchange = () => { setNS(r.value); toast('Gürültü engelleme ayarlandı'); });
     if (t === 'act') wireActPage(); else window.onMyActivity = null;
     if (t === 'look') {
@@ -3607,7 +3630,7 @@ document.addEventListener('keydown', e => {
 // ---- Kullanıcıya sağ tık (Discord gibi) ----
 const uNotes = JSON.parse(store.get('kanka-notes') || '{}'), uNicks = JSON.parse(store.get('kanka-nicks') || '{}'), uMuted = new Set(JSON.parse(store.get('kanka-umute') || '[]')), uNoVid = new Set(JSON.parse(store.get('kanka-novid') || '[]')), uIgnored = new Set(JSON.parse(store.get('kanka-ignore') || '[]'));
 const saveU = () => { store.set('kanka-notes', JSON.stringify(uNotes)); store.set('kanka-nicks', JSON.stringify(uNicks)); store.set('kanka-umute', JSON.stringify([...uMuted])); store.set('kanka-novid', JSON.stringify([...uNoVid])); store.set('kanka-ignore', JSON.stringify([...uIgnored])); };
-const applyPeerAudio = () => Object.entries(peerNames).forEach(([sid, n]) => { const a = document.getElementById('a-' + sid); if (a) { a.volume = vol[n] ?? 1; a.muted = uMuted.has(n); } });
+const applyPeerAudio = () => Object.entries(peerNames).forEach(([sid, n]) => { const a = document.getElementById('a-' + sid); if (a) { applySink(a); a.volume = Math.min(1, (vol[n] ?? 1) * ovol()); a.muted = uMuted.has(n); } });
 function closeUMenu() { document.querySelector('.umenu')?.remove(); }
 function userMenu(n, x, y) {
   closeUMenu();
@@ -5939,7 +5962,8 @@ function showPlaylist_() {
 // gt: GTCRN yapay zekâ modeli (alkış, klavye, köpek, fan; önerilen), rnn: RNNoise (hafif, sadece sabit uğultu), std: tarayıcı, off: kapalı
 const NS_AI = { gt: ['/vendor/ns/gtcrn.js', ['/vendor/ns/gtcrn.wasm'], '@sapphi-red/web-noise-suppressor/gtcrn'], rnn: ['/vendor/ns/rnnoise.js', ['/vendor/ns/rnnoise_simd.wasm', '/vendor/ns/rnnoise.wasm'], '@sapphi-red/web-noise-suppressor/rnnoise'] };
 const nsMode = () => { const m = store.get('kanka-ns'); return NS_AI[m] || m === 'std' || m === 'off' ? m : 'gt'; };
-let nsCtx = null, nsWasm = {}, nsNode = null, nsNodes = {}, nsSrc = null, nsDest = null, rawStream = null;
+let nsCtx = null, nsWasm = {}, nsNode = null, nsNodes = {}, nsSrc = null, nsDest = null, nsGain = null, rawStream = null;
+const inGain = () => { const v = parseFloat(store.get('kanka-ingain')); return isNaN(v) ? 1 : v; }, ovol = () => { const v = parseFloat(store.get('kanka-outvol')); return isNaN(v) ? 1 : v; };
 async function loadNS(mode) {
   nsCtx ||= new AudioContext({ sampleRate: 48000 });
   if (nsWasm[mode]) return;
@@ -5955,11 +5979,11 @@ async function nodeFor(mode) {
   n.connect(nsDest); return nsNodes[mode] = n;
 }
 async function routeNS() {
-  if (!nsSrc) return;
+  if (!nsSrc || !nsGain) return;
   const m = nsMode(); let target = nsDest;
   if (NS_AI[m]) try { target = await nodeFor(m); } catch (e) { console.warn(e); }
-  for (const n of [nsDest, ...Object.values(nsNodes)]) try { nsSrc.disconnect(n); } catch {}
-  nsSrc.connect(target); nsNode = target === nsDest ? null : target;
+  for (const n of [nsDest, ...Object.values(nsNodes)]) try { nsGain.disconnect(n); } catch {}
+  nsGain.connect(target); nsNode = target === nsDest ? null : target;
 }
 async function getMic() {
   const base = { echoCancellation: true, noiseSuppression: nsMode() !== 'off', autoGainControl: true }, dev = store.get('kanka-mic');
@@ -5969,6 +5993,7 @@ async function getMic() {
     nsCtx ||= new AudioContext({ sampleRate: 48000 }); if (nsCtx.state === 'suspended') await nsCtx.resume();
     if (nsCtx.state !== 'running') throw new Error('Ses motoru başlamadı: ' + nsCtx.state);
     nsSrc = nsCtx.createMediaStreamSource(rawStream); nsDest = nsCtx.createMediaStreamDestination();
+    nsGain = nsCtx.createGain(); nsGain.gain.value = inGain(); nsSrc.connect(nsGain);
     await routeNS(); nsWatch();
     return nsDest.stream;
   } catch (e) { console.warn('Gürültü engelleme açılamadı', e); return rawStream; }
@@ -5990,9 +6015,9 @@ function nsWatch() {
 }
 function stopMic() {
   rawStream?.getTracks().forEach(t => t.stop()); rawStream = null;
-  try { nsSrc?.disconnect(); } catch {}
+  try { nsSrc?.disconnect(); nsGain?.disconnect(); } catch {}
   for (const n of Object.values(nsNodes)) try { n.port.postMessage('destroy'); n.disconnect(); } catch {}
-  nsSrc = nsNode = nsDest = null; nsNodes = {};
+  nsSrc = nsNode = nsDest = nsGain = null; nsNodes = {};
 }
 function setNS(mode) {
   store.set('kanka-ns', mode === 'gt' ? null : mode);
@@ -6001,6 +6026,64 @@ function setNS(mode) {
   renderNSBtn();
 }
 function renderNSBtn() { const b = $('#vns'); if (!b) return; const on = !!NS_AI[nsMode()]; b.classList.toggle('off', !on); b.title = on ? 'Gürültü engelleme: açık' : 'Gürültü engelleme: kapalı'; }
+
+// ── Ses cihazları: mikrofon ve kulaklık butonlarındaki ok / sağ tık ile hızlı seçim ──
+const CARET = k => `<span class="vcar" data-dev="${k}" title="${k === 'in' ? 'Mikrofon ayarları' : 'Ses çıkışı ayarları'}">${ic('chevron')}</span>`;
+const canSink = () => 'setSinkId' in HTMLMediaElement.prototype;
+function applySink(a) { const id = store.get('kanka-spk') || ''; if (a?.setSinkId && (a.sinkId || '') !== id) a.setSinkId(id).catch(() => { if (id) { store.set('kanka-spk', null); a.setSinkId('').catch(() => {}); } }); }
+function setSpk(id) { store.set('kanka-spk', id || null); document.querySelectorAll('audio').forEach(applySink); if (mt?.loop) applySink(mt.loop); }
+function setInGain(v) { store.set('kanka-ingain', v === 1 ? null : String(v)); if (nsGain) nsGain.gain.setTargetAtTime(v, nsCtx.currentTime, .02); }
+function setOutVol(v) { store.set('kanka-outvol', v === 1 ? null : String(v)); applyPeerAudio(); }
+async function switchMic(id) {
+  store.set('kanka-mic', id || null);
+  if (!myVoice) return toast('Mikrofon seçildi, bir sonraki seste kullanılacak');
+  await micRecover('Mikrofon değiştirildi');
+}
+const devName = (d, i, w) => (d.label || `${w} ${i + 1}`).replace(/^(Varsayılan|Default|İletişim|Communications) - /i, '').replace(/\s*\([0-9a-f]{4}:[0-9a-f]{4}\)$/i, '');
+async function devPanel(el, kinds, foot) {
+  let all = []; try { all = await navigator.mediaDevices.enumerateDevices(); } catch {}
+  const real = k => all.filter(d => d.kind === k && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications');
+  const ins = real('audioinput'), outs = real('audiooutput'), noLabel = ins.length && ins.every(d => !d.label);
+  const curIn = store.get('kanka-mic') || '', curOut = store.get('kanka-spk') || '';
+  const list = (arr, cur, attr, w) => `<div class="dv-l"><button class="dv ${!cur || !arr.some(d => d.deviceId === cur) ? 'on' : ''}" data-${attr}=""><span>Sistem varsayılanı</span><i>✓</i></button>${arr.map((d, i) => `<button class="dv ${d.deviceId === cur ? 'on' : ''}" data-${attr}="${esc(d.deviceId)}"><span>${esc(devName(d, i, w))}</span><i>✓</i></button>`).join('')}</div>`;
+  const pIn = Math.round(inGain() * 100), pOut = Math.round(ovol() * 100);
+  el.innerHTML = (kinds.includes('in') ? `<div class="dv-h">${ic('mic')} Giriş cihazı</div>${list(ins, curIn, 'mic', 'Mikrofon')}
+      ${noLabel ? `<button class="dv-perm" data-perm>Cihaz adlarını göstermek için izin ver</button>` : ''}
+      <div class="dv-s"><label>Giriş sesi <b data-pv="in">%${pIn}</b></label><input type="range" class="krange" data-r="in" min="0" max="2" step="0.05" value="${inGain()}"></div>
+      ${nsGain ? `<div class="dv-m" title="Mikrofonuna gelen ses"><i></i></div>` : `<div class="dv-note">Ses göstergesi sesli odadayken görünür.</div>`}` : '') +
+    (kinds.includes('in') && kinds.includes('out') ? '<div class="dv-sep"></div>' : '') +
+    (kinds.includes('out') ? `<div class="dv-h">${ic('headset')} Çıkış cihazı</div>${canSink() ? (outs.length ? list(outs, curOut, 'spk', 'Hoparlör') : list([], '', 'spk', '')) : `<div class="dv-note">Bu tarayıcı çıkış cihazı seçmeyi desteklemiyor. Chrome, Edge ya da Kanka Windows uygulamasında seçebilirsin; şimdilik bilgisayarın ses ayarından değiştir.</div>`}
+      <div class="dv-s"><label>Çıkış sesi <b data-pv="out">%${pOut}</b></label><input type="range" class="krange" data-r="out" min="0" max="1" step="0.05" value="${ovol()}"></div>` : '') +
+    (foot ? `<button class="dv-more" data-more>${ic('gear')} Ses ayarları</button>` : '');
+  el.onclick = async e => {
+    e.stopPropagation();
+    const m = e.target.closest('[data-mic]'), sp = e.target.closest('[data-spk]');
+    if (m) { await switchMic(m.dataset.mic); return devPanel(el, kinds, foot); }
+    if (sp) { setSpk(sp.dataset.spk); toast(sp.dataset.spk ? 'Ses çıkışı değişti' : 'Ses çıkışı: sistem varsayılanı'); return devPanel(el, kinds, foot); }
+    if (e.target.closest('[data-perm]')) { try { (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach(t => t.stop()); } catch {} return devPanel(el, kinds, foot); }
+    if (e.target.closest('[data-more]')) { closeUMenu(); showSettings('notif'); }
+  };
+  el.querySelectorAll('input[data-r]').forEach(r => r.oninput = () => { const v = +r.value; el.querySelector(`[data-pv="${r.dataset.r}"]`).textContent = '%' + Math.round(v * 100); r.dataset.r === 'in' ? setInGain(v) : setOutVol(v); });
+  const bar = el.querySelector('.dv-m i');
+  if (bar && nsGain) {
+    const an = nsCtx.createAnalyser(); an.fftSize = 512; nsGain.connect(an); const d = new Float32Array(512); let lv = 0;
+    const tick = () => { if (!bar.isConnected || !nsGain) { try { an.disconnect(); nsGain?.disconnect(an); } catch {} return; }
+      an.getFloatTimeDomainData(d); let pk = 0; for (const v of d) pk = Math.max(pk, Math.abs(v)); lv = Math.max(pk, lv * .85);
+      bar.style.width = Math.min(100, Math.sqrt(lv) * 110) + '%'; bar.classList.toggle('hot', lv > .9); requestAnimationFrame(tick); };
+    tick();
+  }
+}
+function devPop(kind, anchor) {
+  closeUMenu();
+  const m = document.createElement('div'); m.className = 'umenu devpop'; m.setAttribute('role', 'dialog'); document.body.appendChild(m);
+  const place = () => { const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+    m.style.left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8)) + 'px';
+    m.style.top = (r.top - h - 10 > 8 ? r.top - h - 10 : Math.min(r.bottom + 10, innerHeight - h - 8)) + 'px'; };
+  devPanel(m, [kind], true).then(place); place();
+}
+document.addEventListener('click', e => { const c = e.target.closest('.vcar'); if (!c) return; e.stopPropagation(); e.preventDefault(); const b = c.closest('button') || c; document.querySelector('.devpop') ? closeUMenu() : devPop(c.dataset.dev, b); }, true);
+document.addEventListener('contextmenu', e => { const b = e.target.closest('#mute, #deaf'); if (!b) return; e.preventDefault(); devPop(b.id === 'mute' ? 'in' : 'out', b); });
+navigator.mediaDevices?.addEventListener?.('devicechange', () => { const p = document.querySelector('.devpop'); if (p && !p.querySelector('input:active')) devPanel(p, [p.querySelector('[data-mic]') ? 'in' : 'out'], true); });
 // Seste geçen süre: odanın sohbeti ne zamandır sürüyor (yan menü) ve senin ne zamandır orada olduğun (alttaki ses çubuğu)
 const voiceSince = {}; let myVoiceAt = 0;
 function setVoiceAge(a) { const now = Date.now(); for (const k in voiceSince) if (!(k in (a || {}))) delete voiceSince[k]; for (const [k, ms] of Object.entries(a || {})) { const t = now - ms; if (!voiceSince[k] || Math.abs(voiceSince[k] - t) > 3000) voiceSince[k] = t; } tickVoiceTimes(); }
@@ -6070,7 +6153,8 @@ function watchMic() { rawStream?.getAudioTracks().forEach(t => t.onended = () =>
 async function micRecover(msg) {
   if (!myVoice || micRecovering) return; micRecovering = true;
   try {
-    const old = localStream, fresh = await getMic(), nt = fresh.getAudioTracks()[0], oldT = old?.getAudioTracks() || [];
+    const old = localStream, oldT = old?.getAudioTracks() || []; stopMic();
+    const fresh = await getMic(), nt = fresh.getAudioTracks()[0];
     for (const pc of Object.values(peers)) for (const sn of pc.getSenders()) if (sn.track && oldT.includes(sn.track)) await sn.replaceTrack(nt).catch(() => {});
     localStream = fresh; oldT.forEach(t => t.stop());
     stopSpeakDetect(); startSpeakDetect(); applyMute(); watchMic(); toast(msg);
@@ -6096,13 +6180,13 @@ function makePeer(sid) {
     if (e.track.kind === 'audio' && e.streams[0] && (e.streams[0].id === peerMedia[sid]?.streamId || (mic?.srcObject && mic.srcObject.id !== e.streams[0].id))) {
       let a = document.getElementById('as-' + sid);
       if (!a) { a = document.createElement('audio'); a.id = 'as-' + sid; a.autoplay = true; document.body.appendChild(a); }
-      a.srcObject = new MediaStream([e.track]); a.volume = svol[peerNames[sid]] ?? 1; a.muted = watching !== sid;
+      a.srcObject = new MediaStream([e.track]); applySink(a); a.volume = Math.min(1, (svol[peerNames[sid]] ?? 1) * ovol()); a.muted = watching !== sid;
     } else if (e.track.kind === 'audio') {
       let a = document.getElementById('a-' + sid);
       if (!a) { a = document.createElement('audio'); a.id = 'a-' + sid; a.autoplay = true; document.body.appendChild(a); }
       a.srcObject = e.streams[0] || new MediaStream([e.track]);
       if (deaf) { a.dataset.dm = ''; }
-      a.volume = vol[peerNames[sid]] ?? 1; a.muted = deaf || uMuted.has(peerNames[sid]) || stageSilenced(peerNames[sid]);
+      applySink(a); a.volume = Math.min(1, (vol[peerNames[sid]] ?? 1) * ovol()); a.muted = deaf || uMuted.has(peerNames[sid]) || stageSilenced(peerNames[sid]);
       meter(sid, () => peerNames[sid], new MediaStream([e.track]));
     } else {
       peerVideo[sid] = new MediaStream([e.track]);
@@ -6399,7 +6483,7 @@ let deaf = false, deafWasMuted = false;
 const deafOn = () => deaf;
 function applyDeaf() {
   document.querySelectorAll('audio[id^="a-"], audio[id^="as-"], video').forEach(a => { if (deaf) { a.dataset.dm = a.muted ? '1' : ''; a.muted = true; } else if ('dm' in a.dataset) { a.muted = a.dataset.dm === '1'; delete a.dataset.dm; } });
-  const b = $('#deaf'); if (b) { b.innerHTML = ic(deaf ? 'headsetoff' : 'headset'); b.classList.toggle('off', deaf); b.title = deaf ? 'Hoparlörü aç' : 'Hoparlörü kapat'; }
+  const b = $('#deaf'); if (b) { b.innerHTML = ic(deaf ? 'headsetoff' : 'headset') + CARET('out'); b.classList.toggle('off', deaf); b.title = deaf ? 'Hoparlörü aç' : 'Hoparlörü kapat'; }
 }
 function toggleDeaf(on = !deaf) {
   if (on === deaf) return; deaf = on;
@@ -6409,7 +6493,7 @@ function toggleDeaf(on = !deaf) {
 document.addEventListener('click', e => { if (e.target.closest('#deaf')) toggleDeaf(); });
 function applyMute() {
   localStream?.getAudioTracks().forEach(t => t.enabled = micLive());
-  $('#mute').innerHTML = ic(muted ? 'micoff' : pttOn() && !pttDown ? 'keyboard' : 'mic');
+  $('#mute').innerHTML = ic(muted ? 'micoff' : pttOn() && !pttDown ? 'keyboard' : 'mic') + CARET('in');
   $('#mute').title = muted ? 'Sesi aç' : pttOn() ? 'Bas-konuş: V tuşuna basılı tut' : 'Sustur';
   $('#mute').classList.toggle('off', muted);
   if (!muted && deaf) { deaf = false; applyDeaf(); } // mikrofonu açınca hoparlör de açılır
@@ -7148,7 +7232,7 @@ function micTest(chId, back) {
   return new Promise(resolve => {
     const join = !!chId, live = !!myVoice;
     modal(`<div class="mh"><div class="mico" id="mt-ico">${ic('mic')}</div><div><h3>Sesin geliyor mu?</h3><p>${join ? 'Odaya girmeden önce mikrofonunu hızlıca kontrol edelim.' : 'Mikrofonunu ve gürültü engellemeyi buradan test edebilirsin.'}</p></div></div>
-      <div class="mlabel">Mikrofon</div><select class="msel" id="mt-dev" ${live ? 'disabled title="Sesli odadayken mikrofon değiştirilemez"' : ''}><option>Mikrofon aranıyor…</option></select>
+      <div class="mlabel">Mikrofon</div><select class="msel" id="mt-dev"><option>Mikrofon aranıyor…</option></select>
       <div class="mlabel">Ses seviyesi</div><div class="mbar" id="mt-bar">${'<i></i>'.repeat(30)}</div>
       <div class="mstat" id="mt-st"><span class="dotw"></span>Bir şeyler söyle, çubuk hareket etsin…</div>
       <div class="mtog" id="mt-ns" role="switch"><span><b>Gürültü engelleme</b><small>Klavye, alkış, fan gibi sesleri siler</small></span><i class="ksw"></i></div>
@@ -7165,7 +7249,7 @@ function micTest(chId, back) {
       mt.loop = new Audio(); mt.loop.srcObject = localStream; mt.loop.play().catch(() => {}); sw('#mt-loop', true);
     };
     $('#mt-hb').onclick = () => { const h = $('#mt-help'); h.hidden = !h.hidden; };
-    $('#mt-dev').onchange = e => { store.set('kanka-mic', e.target.value || null); mt.ok = false; mt.heard = 0; mtStart(); };
+    $('#mt-dev').onchange = e => { if (myVoice) return switchMic(e.target.value); store.set('kanka-mic', e.target.value || null); mt.ok = false; mt.heard = 0; mtStart(); };
     $('#mt-x').onclick = () => { if (!mt.join) store.set('kanka-mictest', '1'); const bk = mt.back; mtEnd(false); closeModal(); bk && setTimeout(bk, 230); };
     if ($('#mt-ok')) $('#mt-ok').onclick = () => { store.set('kanka-mictest', '1'); const ch = mt.chId, res = mt.resolve; mtEnd(true, true); closeModal(); joinVoiceNow(ch).then(res); };
     mtStart();
