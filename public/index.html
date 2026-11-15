@@ -2893,7 +2893,8 @@ function fmt(t) {
     .replace(/```(?:\w+\n)?([\s\S]+?)```/g, (_, c) => `\u0000${codes.push(`<pre><code>${c.replace(/^\n/, '')}</code></pre>`) - 1}\u0000`)
     .replace(/`([^`\n]+)`/g, (_, c) => `\u0000${codes.push(`<code>${c}</code>`) - 1}\u0000`);
   h = h.replace(/@kanka\s?bot\b/gi, () => `\u0000${codes.push('<span class="mention bot">@Kanka Bot</span>') - 1}\u0000`);
-  h = h.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
+  // link önce yer tutucuya alınır: içindeki @ad, _ , * ve # biçimlendirmeye girmesin
+  h = h.replace(/(https?:\/\/[^\s<]+)/g, u => `\u0000${codes.push(`<a href="${u}" target="_blank" rel="noopener">${u}</a>`) - 1}\u0000`)
     .replace(/@([\p{L}\p{N}_.-]+)/gu, (m, n) => S.users[n] || /^(everyone|herkes)$/i.test(n) ? `<span class="mention${n === S.me || /^(everyone|herkes)$/i.test(n) ? ' me' : ''}"${S.users[n] ? ` data-u="${n}" role="button" tabindex="0"` : ''}>@${n}</span>` : (S.server?.customRoles || []).find(r => r.name === n) ? `<span class="mention" style="color:${(S.server.customRoles.find(r => r.name === n)).color}">@${n}</span>` : m)
     .replace(/(^|[\s(])#([\p{L}\p{N}_-]+)/gu, (m, pre, n) => { const nl = n.toLocaleLowerCase('tr'), c = S.view === 'server' && S.server?.channels.find(x => !voiceLike(x.type) && (x.name === n || x.name.toLocaleLowerCase('tr') === nl)); return c ? `${pre}<a class="chref" data-goch="${c.id}">#${n}</a>` : m; })
     .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')

@@ -1330,9 +1330,10 @@ function postMessage(me, chId, p = {}) {
       if (pr.ch?.[chId] === 'all' && !(pr.muted || []).includes(f.s.id) && seesChannel(f.s, f.c, n) && !(msg.text || '').includes('@' + n))
         sendPush(n, { title: `${me} · #${f.c.name}`, body: (msg.text || (msg.files?.length ? 'dosya gönderdi' : 'görsel gönderdi')).slice(0, 160), tag: chId, ch: chId, from: me });
     }
-    const mentioned = new Set([...(msg.text || '').matchAll(/@([\p{L}\p{N}_.-]+)/gu)].map(m => m[1]));
-    if (/@(everyone|herkes)\b/i.test(msg.text || '') && can(f.s, me, 'mentionEveryone')) { membersOf(f.s).forEach(n => mentioned.add(n)); msg.everyone = true; }
-    for (const r of f.s.customRoles || []) if ((msg.text || '').includes('@' + r.name) && (r.mentionable !== false || can(f.s, me, 'mentionEveryone'))) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) mentioned.add(n);
+    const noUrl = (msg.text || '').replace(/https?:\/\/\S+/g, ' '); // link içindeki @ad etiket sayılmaz
+    const mentioned = new Set([...noUrl.matchAll(/@([\p{L}\p{N}_.-]+)/gu)].map(m => m[1]));
+    if (/@(everyone|herkes)\b/i.test(noUrl) && can(f.s, me, 'mentionEveryone')) { membersOf(f.s).forEach(n => mentioned.add(n)); msg.everyone = true; }
+    for (const r of f.s.customRoles || []) if (noUrl.includes('@' + r.name) && (r.mentionable !== false || can(f.s, me, 'mentionEveryone'))) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) mentioned.add(n);
     for (const n of mentioned) {
       if (n !== me && db.users[n] && canAccess(n, chId))
         notifyUser(n, { from: me, text: preview, channelId: chId, where, mention: true });
