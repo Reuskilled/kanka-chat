@@ -1550,6 +1550,7 @@
   .umenu .dv-perm, .devbox .dv-perm, .umenu .dv-more { width: 100%; justify-content: center; margin-top: 8px; padding: 8px; border-radius: 9px; font-size: 13px; font-weight: 700; background: rgba(255,255,255,.05); color: var(--ink); display: flex; gap: 6px; align-items: center; }
   .umenu .dv-more { margin-top: 12px; } .umenu .dv-more .ic { width: 15px; height: 15px; }
   .devbox { background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 14px; padding: 12px; max-width: 460px; }
+  .adm-src .lrow { display: flex; justify-content: space-between; gap: 10px; padding: 7px 4px; border-bottom: 1px solid var(--line); font-size: 13.5px; } .adm-src .lrow:last-child { border: 0; } .adm-srcn { white-space: nowrap; color: var(--muted); } .adm-srcn b { color: var(--ink); }
   .krange { width: 100%; accent-color: var(--accent); }
   .lim-v { color: var(--accent); margin-left: 6px; }
   .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -2934,8 +2935,15 @@ const isJumbo = t => { const x = t.replace(/:[a-z0-9_]{2,24}:/g, m => serverEmoj
 // ================= Giriş / Kayıt =================
 let authMode = 'login', authBeta = null;
 const QS = new URLSearchParams(location.search);
-const authQ = { kod: QS.get('kod'), davet: QS.get('davet'), sifirla: QS.get('sifirla') };
-if (authQ.kod || authQ.davet) authMode = 'register';
+const authQ = { kod: QS.get('kod'), davet: QS.get('davet'), sifirla: QS.get('sifirla'), kayit: QS.has('kayit') };
+// Reklam ölçümü: ilk geliş kaynağını 30 gün sakla, kayıt olurken sunucuya gönder (sadece kaynak bilgisi, kişisel veri yok)
+const firstSrc = (() => { try {
+  const old = JSON.parse(localStorage.getItem('kanka-src') || 'null'); if (old && Date.now() - old.at < 30 * 864e5) return old;
+  const g = k => QS.get(k) || undefined, ref = document.referrer && !document.referrer.includes(location.host) ? new URL(document.referrer).hostname.replace(/^www\./, '') : undefined;
+  const o = { s: g('utm_source'), m: g('utm_medium'), c: g('utm_campaign'), t: g('utm_term'), g: QS.has('gclid') ? 1 : undefined, lp: QS.get('lp') || undefined, ref, at: Date.now() };
+  if (o.s || o.g || o.ref || o.lp) { localStorage.setItem('kanka-src', JSON.stringify(o)); return o; } return null;
+} catch { return null; } })();
+if (authQ.kod || authQ.davet || authQ.kayit) authMode = 'register';
 if (authQ.sifirla) authMode = 'reset';
 const AUTH_IC = { user: 'user', mail: 'mail', lock: 'lock', code: 'ticket' };
 const afield = (id, ph, icn, type = 'text', extra = '') => `<label class="afield" id="af-${id}">${ic(AUTH_IC[icn] || icn)}<input id="${id}" type="${type}" placeholder="${ph}" ${extra}>${type === 'password' ? `<button type="button" class="peek" data-peek="${id}" aria-label="Şifreyi göster">${ic('eye')}</button>` : ''}</label>`;
@@ -3018,7 +3026,7 @@ $('#auth-form').onsubmit = e => {
     if (!val('a-name') || !$('#a-pass').value) return authErr({ error: 'Kullanıcı adı ve şifre gerekli.' });
     if (!val('a-mail')) return authErr({ error: 'E-posta adresini yaz.', field: 'email' });
     if (!$('#a-terms').checked) return authErr({ error: 'Kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
-    busy(true); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true }, r => { busy(false); r.error ? authErr(r) : onAuth(r); });
+    busy(true); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true, src: firstSrc }, r => { busy(false); r.error ? authErr(r) : onAuth(r); });
   } else if (authMode === 'forgot') {
     if (!val('a-who')) return authErr({ error: 'Kullanıcı adını ya da e-postanı yaz.' });
     busy(true); socket.emit('forgot', val('a-who'), r => { busy(false); r.error ? authErr(r) : renderAuth('sent'); });
@@ -8197,6 +8205,7 @@ function admOverview(B, el) {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
     const c = (v, t, i, cl = '') => `<div class="adm-stat ${cl}">${ic(i)}<b>${v.toLocaleString('tr-TR')}</b><small>${t}</small></div>`;
     B.innerHTML = `<div class="adm-stats">${c(r.users, 'Toplam üye', 'users')}${c(r.online, 'Şu an çevrimiçi', 'activity', 'gr')}${c(r.voice, 'Şu an seste', 'volume', 'gr')}${c(r.new1, 'Son 24 saatte katılan', 'userplus')}${c(r.new7, 'Son 7 günde katılan', 'sparkle')}${c(r.msgsToday, 'Son 24 saatte mesaj', 'chat')}${c(r.servers, 'Kurulan sunucu', 'grid')}${c(r.reports, 'Açık şikayet', 'flag', r.reports ? 'warn' : '')}${c(r.warned, 'Son 30 günde uyarılan', 'alert')}${c(r.banned, 'Kapalı / askıda hesap', 'lock', r.banned ? 'red' : '')}</div>
+      <div class="adm-box"><h4>${ic('activity')}Nereden geldiler <small style="font-weight:600;opacity:.6">son 30 gün · aktif = mesaj attı ya da sese girdi</small></h4>${(r.sources || []).length ? `<div class="adm-src">${r.sources.map(x => `<div class="lrow"><span class="t"><b>${x.ad ? '📢 ' : ''}${esc(x.k)}</b></span><span class="adm-srcn"><b>${x.n}</b> kayıt · <b>${x.act}</b> aktif${x.n ? ` <small>(%${Math.round(x.act / x.n * 100)})</small>` : ''}</span></div>`).join('')}</div>` : '<p class="hint">Henüz kaynak bilgisi olan kayıt yok.</p>'}</div>
       <div class="adm-box"><h4>${ic('userplus')}Yeni katılanlar</h4>${r.newest.map(u => `<div class="lrow adm-click adm-team" data-u="${esc(u.name)}"><span class="atm">${av(u.name)}<span class="t"><b>${esc(u.name)}</b><small>${ago(u.at)}${u.invitedBy ? ' · davet: ' + esc(u.invitedBy) : ''}</small></span></span>${ic('chevron')}</div>`).join('')}</div>`;
     B.querySelectorAll('[data-u]').forEach(x => x.onclick = () => { adminPanel(el, 'users'); setTimeout(() => { $('#u-q').value = x.dataset.u; $('#u-go').click(); }, 50); });
   });

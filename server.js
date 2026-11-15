@@ -111,9 +111,18 @@ app.get('/api/davet/:code', (req, res) => {
   const mem = membersOf(s), on = new Set(onlineNames());
   res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, badges: srvBadges(s), description: s.description || '', banner: s.banner || null, bannerColor: s.bannerColor || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
 });
+// Reklam ölçümü: kayıt olan kişinin ilk geldiği kaynak (utm / Google reklam tıklaması / yönlendiren site)
+function cleanSrc(x) {
+  if (!x || typeof x !== 'object') return null;
+  const c = (v, n = 60) => typeof v === 'string' ? v.replace(/[^\p{L}\p{N} ._\-+/]/gu, '').trim().slice(0, n) || undefined : undefined;
+  const o = { s: c(x.s), m: c(x.m), c: c(x.c), t: c(x.t, 80), g: x.g ? 1 : undefined, lp: c(x.lp), ref: c(x.ref), at: +x.at || undefined };
+  Object.keys(o).forEach(k => o[k] === undefined && delete o[k]);
+  return Object.keys(o).some(k => k !== 'at') ? o : null;
+}
+const srcLabel = s => !s ? 'Doğrudan / bilinmiyor' : s.g || /google/i.test(s.s || '') && /cpc|ads|ppc|paid/i.test(s.m || 'cpc') ? `Google reklam${s.t ? ' · ' + s.t : s.c ? ' · ' + s.c : ''}` : s.s ? `${s.s}${s.c ? ' · ' + s.c : ''}${s.t ? ' · ' + s.t : ''}` : s.ref ? s.ref : s.lp ? 'Sayfa: ' + s.lp : 'Doğrudan / bilinmiyor';
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
-for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/discord-alternatifi', 'discord-alternatifi.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 // ---------- Beta kayıt sayfası (/beta) ----------
 // Sayfadan gelen kayıt uygulamanın bekleme listesine (db.waitlist) girer. Kontenjan doluysa yedekte bekler;
 // değilse hemen davet kodu üretilir, ekranda gösterilir ve e-postayla da gönderilir.
@@ -1536,7 +1545,7 @@ io.on('connection', socket => {
     };
   }
 
-  socket.on('register', ({ name, password, email, code, invite, terms } = {}, cb = () => {}) => {
+  socket.on('register', ({ name, password, email, code, invite, terms, src } = {}, cb = () => {}) => {
     name = clean(name, 20); password = String(password ?? ''); email = clean(email, 190).toLowerCase();
     if (!NAME_RE.test(name)) return cb({ error: 'Kullanıcı adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin.' });
     if (password.length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
@@ -1549,6 +1558,7 @@ io.on('connection', socket => {
     if (w) return cb({ error: `Bu bağlantıdan çok fazla hesap açıldı. ${Math.ceil(w / 60)} dakika sonra tekrar dene.` });
     const salt = crypto.randomBytes(16).toString('hex');
     db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} };
+    const sr = cleanSrc(src); if (sr) db.users[name].src = sr; // hangi reklamdan / kelimeden geldi (ilk ziyaret)
     if (gate.code) {
       const c = db.codes[gate.code]; c.usedBy = name; c.usedAt = Date.now(); db.users[name].invitedBy = c.by;
       const inv = db.users[c.by];
@@ -1955,7 +1965,10 @@ io.on('connection', socket => {
     const newest = [...us].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 8).map(u => ({ name: u.name, at: u.createdAt || 0, invitedBy: u.invitedBy || null }));
     cb({ ok: true, users: us.length, online: on.length, new1: us.filter(u => (u.createdAt || 0) > day).length, new7: us.filter(u => (u.createdAt || 0) > now - 7 * 864e5).length,
       servers: db.servers.filter(s => !s.public).length, msgsToday, voice: inVoice.size, reports: db.reports.filter(r => r.status === 'open').length, banned: us.filter(isBanned).length,
-      warned: us.filter(u => (u.siteWarns || []).some(w => w.at > now - 30 * 864e5)).length, newest, rank: staffRank(me) });
+      warned: us.filter(u => (u.siteWarns || []).some(w => w.at > now - 30 * 864e5)).length, newest, rank: staffRank(me), sources: (() => {
+        const m = new Map(); for (const u of us) { if ((u.createdAt || 0) < now - 30 * 864e5) continue; const k = srcLabel(u.src), r = m.get(k) || { k, n: 0, act: 0, ad: !!(u.src?.g || /google/i.test(u.src?.s || '')) };
+          r.n++; if ((u.msgs || 0) > 0 || Object.keys(u.vmin || {}).length) r.act++; m.set(k, r); }
+        return [...m.values()].sort((a, b) => b.n - a.n).slice(0, 15); })() });
   });
   socket.on('staffList', (cb = () => {}) => {
     if (!SM(cb)) return;
