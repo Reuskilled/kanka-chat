@@ -11,96 +11,254 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kanka Chat · VPN'siz, Ücretsiz, Türkçe Sesli Sohbet</title>
 <meta name="description" content="Kanka Chat'te sesli odalar, ekran paylaşımı, sunucular ve roller var. VPN gerekmez, ücretsiz, tamamen Türkçe.">
-<meta property="og:title" content="Sesli sohbet, VPN'siz. Kanka'ya geç.">
+<meta property="og:title" content="Takılmak için bir yer. Kanka Chat.">
 <meta property="og:description" content="Sesli odalar, ekran paylaşımı, sunucular. VPN'siz, ücretsiz, Türkçe.">
 <meta property="og:image" content="https://kankahq.com/marka/uygulama.jpg">
 <link rel="canonical" href="https://kankahq.com/sesli-sohbet">
 <link rel="icon" href="/favicon.png">
 <style>
-  :root { --bg: #17120f; --panel: #211915; --card: #2a201b; --line: #3a2e27; --ink: #f3e9e1; --muted: #a8968a; --accent: #ff8a4c; }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: radial-gradient(circle at 20% -10%, rgba(255,138,76,.22), transparent 45%), radial-gradient(circle at 100% 30%, rgba(255,138,76,.08), transparent 40%), var(--bg); color: var(--ink); font: 16px/1.6 "Nunito", "Segoe UI", system-ui, sans-serif; }
-  a { color: inherit; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 22px; }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 19px; text-decoration: none; }
-  .brand img { width: 36px; height: 36px; border-radius: 10px; }
-  .login { color: var(--muted); font-weight: 800; text-decoration: none; font-size: 15px; } .login:hover { color: var(--accent); }
-  .hero { text-align: center; padding: 56px 0 30px; }
-  .pill { display: inline-block; padding: 6px 14px; border-radius: 99px; background: rgba(255,138,76,.12); color: var(--accent); font-weight: 800; font-size: 13.5px; margin-bottom: 18px; }
-  h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.05; margin: 0 0 18px; letter-spacing: -.02em; }
-  h1 em { font-style: normal; color: var(--accent); }
-  .lead { font-size: clamp(17px, 2.2vw, 21px); color: #d9c8bc; max-width: 640px; margin: 0 auto 30px; }
-  .cta { display: inline-flex; align-items: center; gap: 10px; padding: 17px 34px; border-radius: 16px; background: var(--accent); color: #1a0f0a; font-weight: 900; font-size: 18px; text-decoration: none; box-shadow: 0 14px 40px rgba(255,138,76,.35); transition: transform .15s; }
-  .cta:hover { transform: translateY(-2px); }
-  .sub { margin-top: 14px; color: var(--muted); font-size: 14px; }
-  .shot { margin: 46px auto 0; max-width: 1040px; border-radius: 22px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 40px 120px rgba(0,0,0,.6); }
-  .shot img { display: block; width: 100%; height: auto; }
-  section { padding: 70px 0 10px; }
-  h2 { font-size: clamp(26px, 3.6vw, 38px); text-align: center; margin: 0 0 34px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-  .f { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 24px; }
-  .f i { font-style: normal; font-size: 28px; display: block; margin-bottom: 10px; }
-  .f b { display: block; font-size: 18px; margin-bottom: 4px; }
-  .f span { color: var(--muted); font-size: 15px; }
-  .faq { max-width: 760px; margin: 0 auto; }
-  details { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; margin-bottom: 10px; }
-  summary { cursor: pointer; font-weight: 800; font-size: 17px; list-style: none; } summary::after { content: '+'; float: right; color: var(--accent); font-weight: 900; } details[open] summary::after { content: '−'; }
-  details p { color: #d4c3b7; margin: 10px 0 0; }
-  .final { text-align: center; padding: 80px 0 60px; }
-  footer { border-top: 1px solid var(--line); padding: 26px 0 40px; color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  footer a { color: var(--muted); margin-right: 14px; }
+  :root { --bg:#0f0b09; --panel:#1a130f; --card:#241b17; --line:#3a2c24; --ink:#f9efe4; --muted:#c9b4a3; --accent:#ff8a4c; --accent2:#ff5a2e; --green:#3fcf8e; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--ink); font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif; line-height:1.55; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  img { display:block; max-width:100%; height:auto; }
+  .wrap { max-width:1180px; margin:0 auto; padding:0 24px; }
+
+  /* üst menü */
+  nav { position:fixed; inset:0 0 auto; z-index:50; transition:background .25s, box-shadow .25s; }
+  nav.solid { background:rgba(15,11,9,.86); backdrop-filter:blur(14px); box-shadow:0 1px 0 var(--line); }
+  nav .wrap { display:flex; align-items:center; gap:28px; height:72px; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:900; font-size:20px; letter-spacing:-.3px; }
+  .brand img { width:34px; height:34px; border-radius:10px; }
+  nav .links { display:flex; gap:24px; margin:0 auto; font-weight:700; font-size:15px; color:#e7d8c8; }
+  nav .links a:hover { color:var(--accent); }
+  .pill { display:inline-flex; align-items:center; gap:8px; border-radius:999px; font-weight:800; padding:11px 22px; font-size:15px; transition:transform .15s, box-shadow .2s, background .2s; white-space:nowrap; }
+  .pill:hover { transform:translateY(-2px); }
+  .pill.light { background:var(--ink); color:#1a0f08; }
+  .pill.light:hover { box-shadow:0 10px 28px rgba(249,239,228,.25); color:var(--accent2); }
+  .pill.hot { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0f08; }
+  .pill.hot:hover { box-shadow:0 12px 30px rgba(255,110,60,.45); }
+  .pill.ghost { background:#2a1f1a; color:var(--ink); border:1px solid #4a3a30; }
+  .pill.ghost:hover { background:#33261f; }
+  .pill.big { padding:17px 32px; font-size:18px; }
+
+  /* hero */
+  .hero { position:relative; padding:150px 0 0; text-align:center; overflow:hidden;
+    background: radial-gradient(1200px 600px at 50% -10%, #ff8a4c33, transparent 60%), radial-gradient(800px 500px at 90% 30%, #ff5a2e22, transparent 60%), radial-gradient(700px 500px at 5% 40%, #f6c44514, transparent 60%), var(--bg); }
+  .hero .stars { position:absolute; inset:0; pointer-events:none; background-image: radial-gradient(2px 2px at 12% 22%, #ffd8b8aa, transparent), radial-gradient(2px 2px at 82% 18%, #ffd8b899, transparent), radial-gradient(1.5px 1.5px at 66% 34%, #ffd8b880, transparent), radial-gradient(1.5px 1.5px at 28% 44%, #ffd8b870, transparent), radial-gradient(2px 2px at 92% 52%, #ffd8b860, transparent), radial-gradient(1.5px 1.5px at 6% 62%, #ffd8b860, transparent); }
+  .tag { display:inline-flex; align-items:center; gap:8px; background:#2a1d16; border:1px solid #5a3b2a; color:#ffc49e; font-weight:800; font-size:13px; padding:7px 14px; border-radius:999px; margin-bottom:26px; letter-spacing:.3px; }
+  .tag i { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 0 4px #3fcf8e30; }
+  h1 { font-size:clamp(44px,8vw,96px); line-height:.98; font-weight:900; letter-spacing:-3px; text-transform:uppercase; max-width:980px; margin:0 auto; }
+  h1 em { font-style:normal; background:linear-gradient(120deg,#ffb37a,var(--accent) 40%,var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero p.lead { font-size:clamp(17px,2vw,21px); color:var(--muted); max-width:640px; margin:26px auto 36px; }
+  .hero .ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .hero .note { margin-top:16px; font-size:13px; color:#9b8574; }
+  .stage { position:relative; margin:70px auto 0; max-width:1080px; height:clamp(260px,46vw,560px); }
+  .stage .shot { position:absolute; border-radius:16px; overflow:hidden; border:1px solid #4a3a30; box-shadow:0 40px 90px rgba(0,0,0,.6), 0 0 0 6px #ffffff06; background:#17110e; }
+  .stage .main { left:50%; transform:translateX(-50%); width:82%; top:0; z-index:2; }
+  .stage .phone { width:21%; right:-1%; top:18%; z-index:3; border-radius:26px; border:6px solid #2a201b; animation:float 6s ease-in-out infinite; }
+  .stage .bubble { position:absolute; z-index:4; background:#241b17; border:1px solid #4a3a30; border-radius:16px; padding:12px 16px; display:flex; align-items:center; gap:10px; font-weight:700; font-size:14px; box-shadow:0 18px 40px rgba(0,0,0,.5); animation:float 7s ease-in-out infinite; text-align:left; }
+  .stage .bubble small { display:block; color:var(--muted); font-weight:600; font-size:12px; }
+  .stage .b1 { left:-2%; top:22%; animation-delay:-2s; }
+  .stage .b2 { left:4%; bottom:16%; animation-delay:-4s; }
+  .bubble .av { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; font-size:17px; flex:none; }
+  .hero .fade { position:absolute; left:0; right:0; bottom:0; height:180px; background:linear-gradient(transparent,var(--bg)); z-index:5; pointer-events:none; }
+  @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-12px); } }
+
+  /* rozet şeridi */
+  .strip { border-block:1px solid var(--line); background:#140f0c; }
+  .strip .wrap { display:flex; justify-content:space-around; flex-wrap:wrap; gap:18px; padding:22px 24px; }
+  .strip b { display:flex; align-items:center; gap:10px; font-size:15px; color:#e7d8c8; }
+  .strip b span { font-size:20px; }
+
+  /* özellik blokları */
+  .feat { padding:120px 0; }
+  .feat:nth-of-type(even) { background:linear-gradient(180deg,#140f0c,#120d0a); }
+  .feat .wrap { display:grid; grid-template-columns:1.25fr 1fr; gap:72px; align-items:center; }
+  .feat.flip .wrap { grid-template-columns:1fr 1.25fr; }
+  .feat.flip .media { order:2; }
+  .media { position:relative; }
+  .media img { border-radius:18px; border:1px solid #4a3a30; box-shadow:0 30px 70px rgba(0,0,0,.55); }
+  .media::before { content:''; position:absolute; inset:-30px; background:radial-gradient(closest-side, var(--glow, #ff8a4c33), transparent); z-index:-1; }
+  .kick { color:var(--accent); font-weight:900; font-size:13px; letter-spacing:1.4px; text-transform:uppercase; margin-bottom:14px; }
+  h2 { font-size:clamp(32px,4.4vw,52px); line-height:1.05; font-weight:900; letter-spacing:-1.5px; margin-bottom:20px; }
+  .feat p { font-size:18px; color:var(--muted); margin-bottom:22px; }
+  .ticks { list-style:none; display:grid; gap:12px; }
+  .ticks li { display:flex; gap:12px; align-items:flex-start; font-weight:600; color:#eadbcc; }
+  .ticks li::before { content:'✓'; flex:none; width:24px; height:24px; border-radius:8px; background:#ff8a4c22; color:var(--accent); display:grid; place-items:center; font-weight:900; font-size:13px; margin-top:1px; }
+
+  /* her yerde */
+  .every { padding:120px 0; text-align:center; position:relative; overflow:hidden; }
+  .every h2 { max-width:760px; margin:0 auto 18px; }
+  .every > .wrap > p { color:var(--muted); font-size:18px; max-width:620px; margin:0 auto 60px; }
+  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; text-align:left; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:28px; transition:transform .2s, border-color .2s; }
+  .card:hover { transform:translateY(-4px); border-color:#6a4a36; }
+  .card .ico { width:52px; height:52px; border-radius:15px; display:grid; place-items:center; font-size:26px; margin-bottom:18px; background:#ff8a4c1f; }
+  .card h3 { font-size:20px; font-weight:800; margin-bottom:8px; }
+  .card p { color:var(--muted); font-size:15.5px; }
+
+  /* sss */
+  .faq { padding:40px 0 110px; }
+  .faq .wrap { max-width:820px; }
+  .faq h2 { text-align:center; margin-bottom:34px; }
+  details { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 22px; margin-bottom:12px; }
+  summary { cursor:pointer; font-weight:800; font-size:17px; list-style:none; } summary::-webkit-details-marker { display:none; }
+  summary::after { content:'+'; float:right; color:var(--accent); font-weight:900; font-size:20px; line-height:1; } details[open] summary::after { content:'−'; }
+  details p { color:#d4c3b7; margin-top:10px; }
+
+  /* kapanış */
+  .final { padding:120px 0 140px; text-align:center; position:relative; overflow:hidden; background:radial-gradient(900px 420px at 50% 100%, #ff8a4c30, transparent 70%), var(--bg); }
+  .final img.mark { width:96px; height:96px; border-radius:26px; margin:0 auto 28px; box-shadow:0 20px 50px rgba(255,110,60,.35); animation:float 6s ease-in-out infinite; }
+  .final h2 { font-size:clamp(38px,6vw,72px); text-transform:uppercase; letter-spacing:-2px; margin-bottom:18px; }
+  .final p { color:var(--muted); font-size:19px; margin-bottom:34px; }
+
+  footer { background:#0b0806; border-top:1px solid var(--line); padding:56px 0 40px; }
+  footer .wrap { display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:40px; }
+  footer h4 { color:var(--accent); font-size:14px; font-weight:800; margin-bottom:14px; }
+  footer a { display:block; color:#cdb9a8; font-size:15px; margin-bottom:9px; } footer a:hover { color:var(--ink); }
+  footer .about { color:#9b8574; font-size:14px; max-width:340px; margin-top:12px; }
+  footer .bottom { grid-column:1 / -1; border-top:1px solid var(--line); padding-top:24px; display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; color:#8a7464; font-size:13px; }
+
+  .reveal { opacity:0; transform:translateY(34px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in { opacity:1; transform:none; }
+
+  @media (max-width:900px) {
+    nav .links { display:none; } nav .wrap { justify-content:space-between; }
+    .feat { padding:80px 0; } .feat .wrap, .feat.flip .wrap { grid-template-columns:1fr; gap:40px; } .feat.flip .media { order:0; }
+    .cards { grid-template-columns:1fr; }
+    .stage .bubble { display:none; } .stage .main { width:100%; } .stage .phone { width:30%; right:-2%; top:30%; }
+    footer .wrap { grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } .reveal { opacity:1; transform:none; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header><a class="brand" href="/"><img src="/icon-192.png" alt="">Kanka Chat</a><a class="login" href="/">Giriş yap</a></header>
 
-  <div class="hero">
-    <div class="pill">🇹🇷 Türkiye'de VPN'siz çalışır</div>
-    <h1>Sesli sohbet, VPN'siz.<br><em>Kanka'ya geç.</em></h1>
-    <p class="lead">Arkadaşlarınla sesli odalar, ekran paylaşımı, sunucular ve roller. Alıştığın her şey burada, VPN gerekmez, ücretsiz.</p>
-    <a class="cta" data-cta href="/?kayit=1">Ücretsiz katıl →</a>
-    <div class="sub">30 saniyede hesap aç · Tarayıcıdan, telefondan ya da Windows uygulamasından</div>
-    <div class="shot"><img src="/marka/uygulama.jpg" alt="Kanka Chat uygulamasından bir sunucu görünümü" width="1600" height="1000"></div>
+<nav id="nav">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/icon-192.png" alt="">Kanka Chat</a>
+    <div class="links"><a href="#sesli">Sesli odalar</a><a href="#sunucu">Sunucular</a><a href="#her-yerde">Her yerde</a><a href="#sss">SSS</a></div>
+    <a class="pill light" href="/">Giriş yap</a>
   </div>
+</nav>
 
-  <section>
-    <h2>Alıştığın her şey, burada</h2>
-    <div class="grid">
-      <div class="f"><i>🎧</i><b>Sesli odalar</b><span>Odaya tıkla, konuş. Kimin ne zamandır seste olduğunu da görürsün.</span></div>
-      <div class="f"><i>🖥️</i><b>Ekran ve kamera paylaşımı</b><span>Oyununu yayınla, arkadaşların izlesin.</span></div>
-      <div class="f"><i>🏠</i><b>Sunucular, kanallar, roller</b><span>Kendi sunucunu kur, kanal aç, rol ve izin ver.</span></div>
-      <div class="f"><i>🤫</i><b>Yapay zekâ gürültü engelleme</b><span>Klavye, fan, köpek sesi gider; sadece sesin kalır.</span></div>
-      <div class="f"><i>💻</i><b>Windows uygulaması</b><span>Oyun içi bildirimler ve oyun üstü katman.</span></div>
-      <div class="f"><i>🛡️</i><b>Moderasyon ekibi</b><span>Şikayet sistemi ve aktif ekip. Kurallara uymayanın hesabı kapanır.</span></div>
+<header class="hero">
+  <div class="stars"></div>
+  <div class="wrap">
+    <div class="tag"><i></i> VPN'siz · Ücretsiz · Tamamen Türkçe</div>
+    <h1>Kankalarınla <em>takılacağın</em> yer</h1>
+    <p class="lead">Arkadaş grubun, oyun ekibin ya da koca bir topluluk. Kanka Chat'te sesli odaya gir, ekranını paylaş, saatlerce sohbet et. Kurulum yok, VPN yok, ücret yok.</p>
+    <div class="ctas">
+      <a class="pill hot big" data-cta href="/?kayit=1">Ücretsiz katıl →</a>
+      <a class="pill ghost big" href="/">Tarayıcıda aç</a>
     </div>
-  </section>
-
-  <section>
-    <h2>Sık sorulanlar</h2>
-    <div class="faq">
-      <details><summary>Ücretli mi?</summary><p>Hayır, Kanka Chat ücretsiz. Sesli odalar, ekran paylaşımı, sunucu kurma; hepsi bedava.</p></details>
-      <details><summary>VPN gerekiyor mu?</summary><p>Hayır. Kanka Türkiye'den doğrudan açılır, VPN ya da DNS ayarı gerekmez.</p></details>
-      <details><summary>Telefonda var mı?</summary><p>Var. Telefonunun tarayıcısından kankahq.com'a gir, "Ana ekrana ekle" de; uygulama gibi açılır ve bildirim gelir.</p></details>
-      <details><summary>Başka bir uygulamadaki sunucumu taşıyabilir miyim?</summary><p>Evet. Kanal ve rol yapını Kanka'da kurmana yardım ediyoruz; Kanka HQ sunucusunda bize yazman yeterli. Eski uygulamanı bırakman da gerekmiyor, ikisini birlikte kullanabilirsin.</p></details>
-      <details><summary>Kim yapıyor?</summary><p>Kanka Chat, Türkiye'den küçük bir ekibin build in public geliştirdiği bir uygulama. Özelliklerin çoğu kullanıcıların isteklerinden geliyor.</p></details>
+    <div class="note">Kart bilgisi istenmez · 30 saniyede hesap</div>
+    <div class="stage">
+      <div class="shot main"><img src="/marka/lp/ses.jpg" alt="Kanka Chat sesli oda ve canlı yayın ekranı" width="1400" height="875"></div>
+      <div class="shot phone"><img src="/marka/lp/mobil.jpg" alt="Kanka Chat telefonda" width="640" height="1152"></div>
+      <div class="bubble b1"><div class="av" style="background:#3fcf8e26">🎧</div><div>Oyun Odası 1<small>4 kişi seste · 1:24</small></div></div>
+      <div class="bubble b2"><div class="av" style="background:#ff8a4c26">🔥</div><div>Elif yayında<small>Kanka HQ · 3 izleyen</small></div></div>
     </div>
-  </section>
-
-  <div class="final">
-    <h2>Kankaların seni bekliyor</h2>
-    <a class="cta" data-cta href="/?kayit=1">Ücretsiz katıl →</a>
   </div>
+  <div class="fade"></div>
+</header>
 
-  <footer><div><a href="/kosullar">Kullanım Şartları</a><a href="/gizlilik">Gizlilik</a></div><div>Kanka Chat, Türkiye'de geliştirilen bağımsız bir uygulamadır.</div></footer>
-</div>
+<div class="strip"><div class="wrap">
+  <b><span>🔓</span> VPN gerekmez</b><b><span>🆓</span> Tamamen ücretsiz</b><b><span>🇹🇷</span> Türkiye'de geliştirildi</b><b><span>📱</span> Telefon ve bilgisayar</b>
+</div></div>
+
+<section class="feat" id="sunucu">
+  <div class="wrap">
+    <div class="media reveal"><img src="/marka/lp/yuva.jpg" alt="Kanka Chat ana sayfa" loading="lazy" width="1400" height="875"></div>
+    <div class="reveal">
+      <div class="kick">Senin alanın</div>
+      <h2>Sadece davet ettiklerinin girdiği bir yer</h2>
+      <p>Sunucunu kur, kanallarını aç, rolleri dağıt. Kim konuşur, kim yönetir, kim neyi görür; hepsine sen karar verirsin.</p>
+      <ul class="ticks"><li>Hazır şablonlarla dakikalar içinde sunucu</li><li>Özel roller, izinler ve renkler</li><li>Davet linkiyle tek tıkla katılım</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="feat flip" id="sesli" style="--glow:#3fcf8e2a">
+  <div class="wrap">
+    <div class="media reveal"><img src="/marka/lp/oda.jpg" alt="Kanka Chat sesli oda" loading="lazy" width="1400" height="875"></div>
+    <div class="reveal">
+      <div class="kick">Sesli odalar</div>
+      <h2>Müsaitsen gir, değilsen sonra gel</h2>
+      <p>Arama yok, çalan telefon yok. Sesli odaya tek tıkla girersin, kim varsa onunla konuşursun. Ekranını, oyununu ya da kameranı paylaşmak bir tuş uzağında.</p>
+      <ul class="ticks"><li>Akıllı gürültü engelleme: klavye ve fan sesi gider</li><li>Ekran ve kamera paylaşımı</li><li>Görüşme ortasında mikrofon/kulaklık değiştir, kopma yok</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="feat" style="--glow:#8b7bff26">
+  <div class="wrap">
+    <div class="media reveal"><img src="/marka/lp/arkadas.jpg" alt="Kanka Chat arkadaşlar ekranı" loading="lazy" width="1400" height="875"></div>
+    <div class="reveal">
+      <div class="kick">Arkadaşlar</div>
+      <h2>Kim ne yapıyor, bir bakışta gör</h2>
+      <p>Kim seste, kim oyunda, kim yayında; ana sayfan söyler. Özel mesaj at, grup kur, beraber bir odaya geçin.</p>
+      <ul class="ticks"><li>Özel mesajlar ve grup sohbetleri</li><li>Okunmamış mesajlar net biçimde işaretli</li><li>Bildirimler telefonuna da gelir</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="every" id="her-yerde">
+  <div class="wrap">
+    <div class="kick reveal">Her yerde</div>
+    <h2 class="reveal">Bilgisayarda başla, telefonda devam et</h2>
+    <p class="reveal">İndirme zorunlu değil. Tarayıcıdan aç, istersen ana ekrana ekle; uygulama gibi çalışır.</p>
+    <div class="cards">
+      <div class="card reveal"><div class="ico">💻</div><h3>Bilgisayar</h3><p>Tarayıcıdan kankahq.com'a gir, hemen kullan. Windows uygulaması da var.</p></div>
+      <div class="card reveal"><div class="ico">📱</div><h3>Telefon</h3><p>Tarayıcıdan aç, "Ana ekrana ekle" de. Bildirimler ve sesli odalar telefonda da çalışır.</p></div>
+      <div class="card reveal"><div class="ico">🤖</div><h3>Kanka Bot</h3><p>Sorunun mu var? Kanka Bot sık sorulanları anında yanıtlar, sunucunu da karşılar.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="faq" id="sss">
+  <div class="wrap">
+    <h2 class="reveal">Sık sorulanlar</h2>
+    <details><summary>Ücretli mi?</summary><p>Hayır, Kanka Chat ücretsiz. Sesli odalar, ekran paylaşımı, sunucu kurma; hepsi bedava.</p></details>
+    <details><summary>VPN gerekiyor mu?</summary><p>Hayır. Kanka Türkiye'den doğrudan açılır, VPN ya da DNS ayarı gerekmez.</p></details>
+    <details><summary>Telefonda var mı?</summary><p>Var. Telefonunun tarayıcısından kankahq.com'a gir, "Ana ekrana ekle" de; uygulama gibi açılır ve bildirim gelir.</p></details>
+    <details><summary>Başka bir uygulamadaki sunucumu taşıyabilir miyim?</summary><p>Evet. Kanal ve rol yapını Kanka'da kurmana yardım ediyoruz; Kanka HQ sunucusunda bize yazman yeterli. Eski uygulamanı bırakman da gerekmiyor, ikisini birlikte kullanabilirsin.</p></details>
+    <details><summary>Kim yapıyor?</summary><p>Kanka Chat, Türkiye'den küçük bir ekibin herkesin önünde geliştirdiği bir uygulama. Özelliklerin çoğu kullanıcıların isteklerinden geliyor.</p></details>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <img class="mark" src="/marka/hq-simge.png" alt="">
+    <h2 class="reveal">Sohbete hazır mısın?</h2>
+    <p class="reveal">Kankaların seni bekliyor. Hesap aç, sunucunu kur, linki paylaş.</p>
+    <a class="pill hot big" data-cta href="/?kayit=1">Ücretsiz katıl →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div><a class="brand" href="/" style="display:flex"><img src="/icon-192.png" alt="">Kanka Chat</a><p class="about">Türkiye'de geliştirilen, VPN'siz çalışan ücretsiz sesli ve yazılı sohbet uygulaması.</p></div>
+    <div><h4>Ürün</h4><a href="#sesli">Sesli odalar</a><a href="#sunucu">Sunucular</a><a href="#her-yerde">Mobil</a></div>
+    <div><h4>Yasal</h4><a href="/kosullar">Kullanım Şartları</a><a href="/gizlilik">Gizlilik</a><a href="/kvkk">KVKK</a></div>
+    <div class="bottom"><span>© 2026 Kanka Chat</span><span>Kanka Chat, Türkiye'de geliştirilen bağımsız bir uygulamadır.</span></div>
+  </div>
+</footer>
+
 <script>
   // reklam ve kaynak bilgisini (utm, gclid) kayıt sayfasına taşı
   (function () {
     var q = new URLSearchParams(location.search); q.set('kayit', '1'); q.set('lp', 'sesli-sohbet');
     document.querySelectorAll('[data-cta]').forEach(function (a) { a.href = '/?' + q.toString(); });
   })();
+  // menü kaydırınca koyulaşsın
+  var nav = document.getElementById('nav');
+  addEventListener('scroll', function () { nav.classList.toggle('solid', scrollY > 30); }, { passive: true });
+  // bölümler görünür olunca yumuşakça gelsin
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .15 }) : null;
+  document.querySelectorAll('.reveal').forEach(function (el) { io ? io.observe(el) : el.classList.add('in'); });
 </script>
 </body>
 </html>
