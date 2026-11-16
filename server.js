@@ -2009,7 +2009,7 @@ io.on('connection', socket => {
     if (!canAccess(me, chId)) return cb({ error: 'Bu odaya erişimin yok' });
     if (cur) socket.leave(cur);
     cur = chId; socket.join(chId);
-    const s = serverOf(chId); if (s) dailyQuestion(s);
+    const s = serverOf(chId); if (s) try { dailyQuestion(s); } catch (e) { console.error('dailyQuestion', e); } // hata olsa da oda açılsın
     cb({ messages: (db.messages[chId] || []).slice(-150), playlist: db.playlists[chId] || [], watch: watch.get(chId) || null });
   });
 

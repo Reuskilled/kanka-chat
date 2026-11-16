@@ -4791,8 +4791,12 @@ function enterRoom(id, placeholder, hello) {
   $('#input').dataset.ph = placeholder; $('#input').placeholder = shortPh(placeholder);
   $('#input').disabled = /^(Susturuldun|Bu oda salt okunur)/.test(placeholder);
   typers.clear(); renderTyping();
+  // yeni oda yüklenene kadar eski odanın mesajları/boş ekranı görünmesin
+  S.msgs = []; histMore = false; roomLoading = id; $('#messages').innerHTML = '<div class="loadmore">Mesajlar yükleniyor…</div>';
   socket.emit('join', id, r => {
-    if (r.error) return toast(r.error);
+    if (roomLoading === id) roomLoading = null;
+    if (draftFor !== id) return; // bu arada başka odaya geçildiyse eski cevabı yok say
+    if (!r || r.error) { $('#messages').innerHTML = `<div class="loadmore">${esc(r?.error || 'Mesajlar yüklenemedi, sayfayı yenile')}</div>`; return r && toast(r.error); }
     S.msgs = r.messages; S.playlist = r.playlist;
     histMore = r.messages.length >= 150;
     const lr = lastRead[id] || 0;
@@ -4820,14 +4824,18 @@ const dayLabel = t => {
 };
 let lastMsgUsersSig = '';
 const msgUsersSig = () => JSON.stringify([...new Set(S.msgs.map(m => m.author).filter(Boolean))].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.color, u.avatar, u.frame, u.level, u.nameColor, u.avatarDeco]; }));
+let roomLoading = null;
 function renderMessages(toBottom) {
+  if (roomLoading) return; // oda yüklenirken eski/boş ekran çizme
   lastMsgUsersSig = msgUsersSig();
   const box = $('#messages');
   if (S.view === 'server' && S.channel?.type === 'forum') { const sc = box.scrollTop; box.innerHTML = forumHTML(); wireForum(box); box.scrollTop = toBottom ? 0 : sc; return; }
   const atBottom = toBottom || box.scrollHeight - box.scrollTop - box.clientHeight < 120;
   const quiet = !histMore && !S.msgs.some(m => m.author);
   let prev = null, html = histMore ? '<div class="loadmore" id="loadmore">Yukarı kaydırınca eski mesajlar yüklenir</div>' : quiet ? emptyHTML() : helloHTML;
-  for (const m of S.msgs) { if (m.id === newLineAt) html += '<div class="newline"><span>Yeni mesajlar</span></div>'; html += msgHTML(m, prev); prev = m; }
+  for (const m of S.msgs) { if (m.id === newLineAt) html += '<div class="newline"><span>Yeni mesajlar</span></div>';
+    // tek bir bozuk mesaj bütün odayı boş bırakmasın: o mesajı atla, gerisini göster
+    try { html += msgHTML(m, prev); prev = m; } catch (e) { console.error('Mesaj çizilemedi', m?.id, e); } }
   box.innerHTML = html;
   if (quiet) wireEmpty(box);
   if (atBottom) box.scrollTop = box.scrollHeight;
