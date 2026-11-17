@@ -796,12 +796,12 @@ async function dcFetch(code) {
   const hit = dcCache.get(code); if (hit && Date.now() - hit.t < 600e3) return hit.v;
   let r;
   try { r = await fetch('https://discord.com/api/v10/guilds/templates/' + encodeURIComponent(code), { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'KankaChat (https://kankahq.com, 1.0)' } }); }
-  catch { return { error: 'Discord\'a ulaşılamadı, biraz sonra tekrar dene' }; }
+  catch { return { error: 'Şablona ulaşılamadı, biraz sonra tekrar dene' }; }
   if (r.status === 404) return { error: 'Şablon bulunamadı. Linkin doğru olduğundan ve şablonun silinmediğinden emin ol.' };
-  if (r.status === 429) return { error: 'Discord şu an yoğun, bir dakika sonra tekrar dene' };
-  if (!r.ok) return { error: `Discord şablonu okunamadı (${r.status})` };
+  if (r.status === 429) return { error: 'Şablon servisi şu an yoğun, bir dakika sonra tekrar dene' };
+  if (!r.ok) return { error: `Şablon okunamadı (${r.status})` };
   const d = await r.json().catch(() => null);
-  if (!d?.serialized_source_guild) return { error: 'Discord şablonu okunamadı' };
+  if (!d?.serialized_source_guild) return { error: 'Şablon okunamadı' };
   const v = { code, name: d.name || '', guild: d.serialized_source_guild };
   dcCache.set(code, { t: Date.now(), v }); if (dcCache.size > 200) dcCache.delete(dcCache.keys().next().value);
   return v;
@@ -3018,7 +3018,7 @@ io.on('connection', socket => {
     };
     const finish = () => { db.servers.push(s); save(); pushServers([me]); cb(serverView(s, me)); };
     if (opts.discord) {
-      const code = dcCode(opts.discord); if (!code) return cb({ error: 'Geçerli bir Discord şablon linki yaz (discord.new/...)' });
+      const code = dcCode(opts.discord); if (!code) return cb({ error: 'Geçerli bir şablon linki ya da kodu yaz' });
       return dcFetch(code).then(t => {
         if (t.error) return cb(t);
         const c = dcConvert(t);
@@ -3042,10 +3042,10 @@ io.on('connection', socket => {
   });
   socket.on('discordTemplate', async (link, cb = () => {}) => {
     if (!me) return cb({ error: 'Giriş yap' });
-    const code = dcCode(link); if (!code) return cb({ error: 'Geçerli bir Discord şablon linki yaz (discord.new/...)' });
+    const code = dcCode(link); if (!code) return cb({ error: 'Geçerli bir şablon linki ya da kodu yaz' });
     if (limited('dctpl|' + me, 20, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle' });
     try { const t = await dcFetch(code); cb(t.error ? t : dcPreview(dcConvert(t), code)); }
-    catch (e) { console.error('Discord şablonu okunamadı', e); cb({ error: 'Şablon okunamadı, biraz sonra tekrar dene' }); }
+    catch (e) { console.error('Şablon okunamadı', e); cb({ error: 'Şablon okunamadı, biraz sonra tekrar dene' }); }
   });
 
   socket.on('createChannel', ({ serverId, name, type, cat, private: priv } = {}, cb = () => {}) => {
