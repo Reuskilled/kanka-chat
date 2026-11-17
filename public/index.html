@@ -7061,8 +7061,8 @@ function emojiSearch(q) {
   const out = [], seen = new Set();
   const add = k => { if (k && !seen.has(k)) { seen.add(k); out.push(k); } };
   EMO_ALL.filter(e => e === raw).forEach(add);
-  for (const [keys, val] of EMO_IDX) if (keys.some(k => k === qq || k.startsWith(qq) || (k.length >= 3 && qq.startsWith(k)))) val.forEach(add);
   if (S.view === 'server' && S.server?.emojis) for (const n of Object.keys(S.server.emojis)) if (n.includes(qq) || n.includes(raw.replace(/^:/, ''))) add(`${S.server.id}/${n}`);
+  for (const [keys, val] of EMO_IDX) if (keys.some(k => k === qq || k.startsWith(qq) || (k.length >= 3 && qq.startsWith(k)))) val.forEach(add);
   return out;
 }
 function toggleEmojiFav(key) {
@@ -7097,9 +7097,9 @@ function epSec(id, title, icon, keys, noCollapse, headIcon) {
 function renderEmojiPanel() {
   if (!$('#emojipanel')) return;
   const em = (S.view === 'server' && S.server?.emojis) || {};
-  const tabs = [...Object.keys(EMO), ...(Object.keys(em).length ? ['⭐'] : [])];
+  const tabs = Object.keys(EMO);
   if (!tabs.includes(epTab)) epTab = '😀';
-  $('#ep-tabs').innerHTML = tabs.map(t => `<button type="button" class="${t === epTab ? 'on' : ''}" data-t="${t}" title="${t === '⭐' ? 'Sunucu emojileri: ' + esc(S.server?.name || '') : ''}">${t === '⭐' ? ic('star') : t}</button>`).join('');
+  $('#ep-tabs').innerHTML = tabs.map(t => `<button type="button" class="${t === epTab ? 'on' : ''}" data-t="${t}">${t}</button>`).join('');
   let h = '';
   if (epQ) {
     const res = emojiSearch(epQ);
@@ -7109,12 +7109,12 @@ function renderEmojiPanel() {
     if (fav.length) h += epSec('fav', 'Favoriler', 'star', fav);
     const freq = freqKeys().filter(k => !eFav.includes(k) && resolveEmojiKey(k)).slice(0, 16);
     if (freq.length) h += epSec('freq', 'Sık kullanılan', 'clock', freq);
-    if (epTab === '⭐') {
+    if (Object.keys(em).length) {
       const sv = S.server || {};
       const ico = `<span class="ep-svi">${sv.iconImg ? `<img src="${esc(sv.iconImg)}" alt="">` : esc(sv.icon || '?')}</span>`;
       h += epSec('srv', `${sv.name || 'Sunucu'} emojileri`, null, Object.keys(em).map(n => `${sv.id}/${n}`), false, ico);
     }
-    else h += epSec('cat', 'Emojiler', null, EMO[epTab].split(' '));
+    h += epSec('cat', 'Emojiler', null, EMO[epTab].split(' '));
   }
   $('#ep-grid').innerHTML = h;
   emojiPreview(null);
@@ -7162,7 +7162,7 @@ $('#ep-grid').addEventListener('pointerdown', e => {
   epHeld = false;
   epHold = setTimeout(() => { epHeld = true; toggleEmojiFav(b.dataset.ins); buzz(15); }, 450);
 });
-['pointerup', 'pointercancel', 'pointerleave'].forEach(t => $('#ep-grid').addEventListener(t, () => clearTimeout(epHold)));
+['pointerup', 'pointercancel', 'pointerleave'].forEach(t => $('#ep-grid').addEventListener(t, () => { clearTimeout(epHold); if (epHeld) setTimeout(() => epHeld = false, 350); }));
 $('#ep-grid').onclick = e => {
   const h = e.target.closest('[data-epsec]');
   if (h) { const id = h.dataset.epsec; epColl.has(id) ? epColl.delete(id) : epColl.add(id); store.set('kanka-epcoll', JSON.stringify([...epColl])); renderEmojiPanel(); return; }
