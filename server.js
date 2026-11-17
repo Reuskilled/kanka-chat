@@ -1033,8 +1033,10 @@ function lastMsgTimes(name) {
 }
 const groupTitle = g => g.name || g.members.slice(0, 4).join(', ');
 const findMsg = (chId, msgId) => (db.messages[chId] || []).find(m => m.id === msgId);
-const roleOf = (s, n) => s.owner === n ? 'admin' : (s.roles?.[n] || 'member');
-const isMod = (s, n) => ['admin', 'mod'].includes(roleOf(s, n)) || can(s, n, 'manageChannels');
+const roleOf = (s, n) => s.roles?.[n] || 'member';
+// Sahiplik role bağlı değildir: sahip rolü ne olursa olsun tüm yetkilere sahiptir
+const isAdmin = (s, n) => s.owner === n || roleOf(s, n) === 'admin';
+const isMod = (s, n) => isAdmin(s, n) || roleOf(s, n) === 'mod' || can(s, n, 'manageChannels');
 const serverOf = chId => chId && !isPrivateChat(chId) ? findChannel(chId)?.s : null;
 const UPLOAD_RE = /^\/uploads\/[a-f0-9]+\.(png|jpe?g|gif|webp)$/;
 // Hazır rakun avatarları (public/avatar)
@@ -2702,6 +2704,7 @@ io.on('connection', socket => {
     const b = botCfg(s); if (!b.added) return cb({ ok: true });
     b.added = false; for (const k of Object.keys(BOT_MODS)) b[k].on = false;
     const r = botRole(s); if (r) s.customRoles = s.customRoles.filter(x => x !== r);
+    if (s.memberRoles) delete s.memberRoles[BOT_NAME];
     audit(s, me, 'Kanka Bot\'u sunucudan attı');
     pushSrv(s); cb({ ok: true });
   });
@@ -2945,8 +2948,10 @@ io.on('connection', socket => {
   const adminServer = (serverId, needAdmin) => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s) return null;
-    return (needAdmin ? roleOf(s, me) === 'admin' : isMod(s, me)) ? s : null;
+    return (needAdmin ? isAdmin(s, me) : isMod(s, me)) ? s : null;
   };
+  // Rol verilebilecek hedefler: üyeler ve sunucuya eklenmiş bot
+  const roleTarget = (s, name) => membersOf(s).includes(name) || (name === BOT_NAME && !!s.bot?.added);
   socket.on('serverBadge', ({ serverId, badge, on } = {}, cb = () => {}) => {
     if (!siteAdmin(me)) return cb({ error: 'Rozetleri sadece Kanka Chat yönetimi verebilir' });
     const s = db.servers.find(x => x.id === serverId);
@@ -2973,7 +2978,8 @@ io.on('connection', socket => {
   });
   socket.on('setRole', ({ serverId, name, role } = {}, cb = () => {}) => {
     const s = adminServer(serverId, true); if (!s) return cb({ error: 'Sadece yönetici rol verebilir' });
-    if (!membersOf(s).includes(name) || name === s.owner) return cb({ error: 'Bu kişinin rolü değiştirilemez' });
+    if (!roleTarget(s, name)) return cb({ error: 'Bu kişinin rolü değiştirilemez' });
+    if (name === s.owner && me !== s.owner) return cb({ error: 'Sunucu sahibinin rolünü sadece kendisi değiştirebilir' });
     if (role === 'mod') s.roles[name] = 'mod'; else delete s.roles[name];
     audit(s, me, role === 'mod' ? 'Moderatör yaptı' : 'Moderatörlüğü aldı', name);
     save(); pushServers(membersOf(s)); cb({ ok: true });
@@ -3020,9 +3026,12 @@ io.on('connection', socket => {
     const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Rolleri yönetme yetkin yok' });
     const r = s.customRoles.find(x => x.id === roleId); if (!r || r.bot) return cb({ error: 'Rol bulunamadı' });
     if (!outranksRole(s, r)) return cb({ error: 'Senden yüksek bir rolü veremez/alamazsın' });
-    const mem = new Set(membersOf(s)); let n = 0;
-    for (const name of (Array.isArray(add) ? add : []).slice(0, 200)) if (mem.has(name)) { const l = (s.memberRoles[name] ||= []); if (!l.includes(r.id)) { l.push(r.id); n++; } }
-    for (const name of (Array.isArray(remove) ? remove : []).slice(0, 200)) { const l = s.memberRoles[name]; if (l?.includes(r.id)) { s.memberRoles[name] = l.filter(x => x !== r.id); if (!s.memberRoles[name].length) delete s.memberRoles[name]; n++; } }
+    const mem = new Set(membersOf(s)); if (s.bot?.added) mem.add(BOT_NAME);
+    const addL = Array.isArray(add) ? add.slice(0, 200) : [], remL = Array.isArray(remove) ? remove.slice(0, 200) : [];
+    if ([...addL, ...remL].includes(s.owner) && me !== s.owner) return cb({ error: 'Sunucu sahibinin rollerini sadece kendisi değiştirebilir' });
+    let n = 0;
+    for (const name of addL) if (mem.has(name)) { const l = (s.memberRoles[name] ||= []); if (!l.includes(r.id)) { l.push(r.id); n++; } }
+    for (const name of remL) { const l = s.memberRoles[name]; if (l?.includes(r.id)) { s.memberRoles[name] = l.filter(x => x !== r.id); if (!s.memberRoles[name].length) delete s.memberRoles[name]; n++; } }
     if (n) { audit(s, me, 'Rol üyelerini düzenledi', `${r.name} · ${n} değişiklik`); pushSrv(s); }
     cb({ ok: true, changed: n });
   });
@@ -3059,7 +3068,8 @@ io.on('connection', socket => {
     save(); cb({ ok: true });
   });
   socket.on('memberRoles', ({ serverId, name, roles } = {}, cb = () => {}) => {
-    const s = permServer(serverId, 'manageRoles'); if (!s || !membersOf(s).includes(name)) return cb({ error: 'Yetkin yok' });
+    const s = permServer(serverId, 'manageRoles'); if (!s || !roleTarget(s, name)) return cb({ error: 'Yetkin yok' });
+    if (name === s.owner && me !== s.owner) return cb({ error: 'Sunucu sahibinin rollerini sadece kendisi değiştirebilir' });
     const old = s.memberRoles[name] || [];
     const want = (roles || []).filter(rid => s.customRoles.some(r => r.id === rid && !r.bot));
     for (const rid of new Set([...old, ...want])) if (old.includes(rid) !== want.includes(rid) && !outranksRole(s, s.customRoles.find(r => r.id === rid))) return cb({ error: 'Senden yüksek bir rolü veremez/alamazsın' });

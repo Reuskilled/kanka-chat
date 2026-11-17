@@ -3263,9 +3263,11 @@ const stLabel = n => STATUS[stOf(n)][0] + (isMob(n) ? ' · telefonda' : '');
 const av = (n, on) => `<div class="av ${on ? 'on-dot st-' + stOf(n) + (isMob(n) ? ' mob' : '') : ''}" style="background:${userColor(n)}">${avInner(n)}</div>`;
 const STATUS = { online: ['Çevrimiçi', '#23a55a'], idle: ['Boşta', '#f0b232'], dnd: ['Rahatsız etmeyin', '#f23f43'], invisible: ['Görünmez', '#80848e'] };
 const isDnd = () => S.myStatus === 'dnd';
-const roleOf = (s, n) => !s ? 'member' : s.owner === n ? 'admin' : (s.roles?.[n] || 'member');
-const isMod = (s, n) => ['admin', 'mod'].includes(roleOf(s, n)) || (n === S.me && !!s?.myPerms?.includes('manageChannels'));
+const roleOf = (s, n) => !s ? 'member' : (s.roles?.[n] || 'member');
+const isAdmin = (s, n) => !!s && (s.owner === n || roleOf(s, n) === 'admin');
+const isMod = (s, n) => isAdmin(s, n) || roleOf(s, n) === 'mod' || (n === S.me && !!s?.myPerms?.includes('manageChannels'));
 const perm = (s, p) => !!s && (s.owner === S.me || !!s.myPerms?.includes(p));
+const BOT_NAME = 'Kanka Bot';
 const rolesOf = (s, n) => s ? (s.customRoles || []).filter(r => (s.memberRoles?.[n] || []).includes(r.id)) : [];
 const roleColor = (s, n) => rolesOf(s, n).find(r => r.color && r.color !== '#99aab5')?.color || null;
 const PERM_TXT = { manageServer: ['Sunucuyu yönet', 'Ad, simge, afiş, filtre, yavaş mod ve hoş geldin ekranını değiştirir'], manageRoles: ['Rolleri yönet', 'Kendinden düşük rolleri oluşturur, düzenler ve üyelere verir'],
@@ -4112,7 +4114,7 @@ function userMenu(n, x, y) {
   const srv = S.view === 'server' ? S.server : null, self = n === S.me, sc = S.social, fr = sc.friends.includes(n);
   const inVoice = !!myVoice && Object.values(peerNames).includes(n);
   const others = S.servers.filter(s => !s.public && s.id !== srv?.id && !s.members.includes(n));
-  const tgt = srv && !srv.public && !self && n !== srv.owner && roleOf(srv, n) !== 'admin';
+  const tgt = srv && !srv.public && !self && n !== srv.owner && !isAdmin(srv, n);
   const b = (id, t, cls = '', extra = '') => `<button data-u="${id}" class="${cls}">${t}${extra}</button>`;
   const chk = (id, t, on) => `<button data-u="${id}"><span>${t}</span><span class="box2 ${on ? 'on' : ''}"></span></button>`;
   const m = document.createElement('div'); m.className = 'umenu'; m.setAttribute('role', 'menu');
@@ -4125,7 +4127,7 @@ function userMenu(n, x, y) {
     (self ? '' : '<hr>' + (others.length ? `<button data-u="invsub" class="arr">Sunucuya davet et${ic('chevron')}</button><div class="sub" id="u-inv">${others.map(s => `<button data-inv="${s.id}">${esc(s.name)}</button>`).join('')}</div>` : '') +
       b('friend', fr ? 'Arkadaşı çıkar' : sc.reqOut.includes(n) ? 'İsteği geri çek' : sc.reqIn.includes(n) ? 'İsteği kabul et' : 'Arkadaş ekle') +
       b('ignore', uIgnored.has(n) ? 'Yok saymayı bırak' : 'Yok say') + b('block', sc.blocked.includes(n) ? 'Engeli kaldır' : 'Engelle', 'danger') + b('report', 'Şikayet et', 'danger')) +
-    (srv && perm(srv, 'manageRoles') && (srv.customRoles || []).length && !self ? `<hr><button data-u="rolesub" class="arr">Roller${ic('chevron')}</button><div class="sub" id="u-roles">${srv.customRoles.map(r => chk('role:' + r.id, `<span class="rdot" style="background:${r.color};margin-right:8px"></span>${esc(r.name)}`, (srv.memberRoles?.[n] || []).includes(r.id))).join('')}</div>` : '') +
+    (srv && perm(srv, 'manageRoles') && (srv.customRoles || []).filter(r => !r.bot).length && (!self || srv.owner === S.me) && !(n === srv.owner && S.me !== srv.owner) ? `<hr><button data-u="rolesub" class="arr">Roller${ic('chevron')}</button><div class="sub" id="u-roles">${srv.customRoles.filter(r => !r.bot).map(r => chk('role:' + r.id, `<span class="rdot" style="background:${r.color};margin-right:8px"></span>${esc(r.name)}`, (srv.memberRoles?.[n] || []).includes(r.id))).join('')}</div>` : '') +
     (tgt && (perm(srv, 'timeout') || perm(srv, 'kick') || perm(srv, 'ban')) ? '<hr>' + (perm(srv, 'timeout') ? b('to', timedOutLeft(srv, n) ? `${esc(n)} susturmasını kaldır` : `${esc(n)} kullanıcısını sustur`, 'danger') : '') +
       (perm(srv, 'kick') ? b('kick', `${esc(n)} kullanıcısını at`, 'danger') : '') + (perm(srv, 'ban') ? b('ban', `${esc(n)} kullanıcısını yasakla`, 'danger') : '') : '') +
     (() => { // sesli oda moderasyonu
@@ -4195,7 +4197,7 @@ const saveMuted = () => { store.set('kanka-muted', JSON.stringify([...mutedServe
 function closeSrvMenu() { $('#srvmenu')?.remove(); $('#side-head')?.classList.remove('open'); }
 function toggleSrvMenu() {
   if ($('#srvmenu')) return closeSrvMenu();
-  const s = S.server, mod = isMod(s, S.me), admin = roleOf(s, S.me) === 'admin', muted = mutedServers.has(s.id);
+  const s = S.server, mod = isMod(s, S.me), admin = isAdmin(s, S.me), muted = mutedServers.has(s.id);
   const item = (id, label, icon, cls = '') => `<button data-m="${id}" class="${cls}">${label}${ic(icon)}</button>`;
   const m = document.createElement('div'); m.id = 'srvmenu'; m.setAttribute('role', 'menu');
   m.innerHTML =
@@ -4253,7 +4255,7 @@ function showServerInfo(s) {
     ${(s.badges || []).length ? `<div class="sect" style="margin-top:6px"><h4>Rozetler</h4>${s.badges.map(b => `<div class="lrow" style="align-items:flex-start;gap:12px">${badgeSvg(b.id, 28)}<span><b>${SRV_BADGES[b.id].t}</b><br><small style="color:var(--muted)">${SRV_BADGES[b.id].d}</small></span></div>`).join('')}</div>` : ''}
     ${s.siteAdmin ? `<div class="sect"><h4>Kanka Chat yönetimi</h4><div class="adm-badges">${['dogrulanmis', 'partner'].map(id => `<button data-adm="${id}" class="${(s.badges || []).some(b => b.id === id) ? 'on' : ''}">${badgeSvg(id, 20)}${(s.badges || []).some(b => b.id === id) ? SRV_BADGES[id].t + ' rozetini kaldır' : SRV_BADGES[id].t + ' yap'}</button>`).join('')}<button id="adm-onb">${ic('trophy')}Rehber istatistikleri</button></div></div>` : ''}
     <div class="srvinfo"><div><b>${members.length}</b><span>Üye</span></div><div><b style="color:var(--green)">${on}</b><span>Çevrimiçi</span></div><div><b>${text}+${voice}</b><span>Oda</span></div></div>
-    <div class="lrow"><span>Senin rolün</span>${badge(roleOf(s, S.me)) || '<span style="flex:0;color:var(--muted)">Üye</span>'}</div>
+    <div class="lrow"><span>Senin rolün</span>${s.owner === S.me ? '<span class="badge admin" style="flex:0">Kurucu</span>' : (badge(roleOf(s, S.me)) || '<span style="flex:0;color:var(--muted)">Üye</span>')}</div>
     <div class="lrow"><span>Özel emoji</span><span style="flex:0">${Object.keys(s.emojis || {}).length}</span></div>
     <div class="lrow"><span>Küfür filtresi · Yavaş mod</span><span style="flex:0;white-space:nowrap">${s.filter ? 'Açık' : 'Kapalı'} · ${s.slow ? s.slow + ' sn' : 'Kapalı'}</span></div>
     <div class="rowb"><button id="mx">Kapat</button>${s.public ? '' : `<button class="primary" id="si-inv">${ic('userplus')}Davet et</button>`}</div>`);
@@ -4682,13 +4684,15 @@ function openBotAdd(s) {
 }
 function botProfile() {
   const s = S.server; if (!s) return;
-  const mng = s.owner === S.me || s.myPerms?.includes('manageServer');
+  const mng = s.owner === S.me || s.myPerms?.includes('manageServer'), rs = rolesOf(s, BOT_NAME);
   modal(`<div class="kbtop"><img class="kbav" src="/icon-192.png" alt=""><h3>Kanka Bot<span class="botbadge">BOT</span></h3><p>Kanka'nın resmi botu · her zaman çevrimiçi</p></div>
     <div class="pc-sec" style="margin-top:14px"><h5>Bu sunucuda açık modüller</h5><div class="badges">${s.bot?.mod?.on ? '<span>🛡️ Mod</span>' : ''}${s.bot?.welcome?.on ? '<span>👋 Karşılama</span>' : ''}<span>🏆 Maç Kartı</span></div></div>
+    <div class="pc-sec"><h5>Roller</h5>${rs.length ? `<div class="badges">${rs.map(r => `<span style="color:${r.color}">${ic('tag')}${esc(r.name)}</span>`).join('')}</div>` : '<p class="hint" style="margin:0">Henüz rol verilmemiş.</p>'}</div>
     <div class="pc-sec"><h5>Nasıl kullanılır?</h5><p class="hint">Sohbete <b>/</b> yazınca komutlar çıkar. <b>@Kanka Bot</b> yazarsan sana cevap verir.</p></div>
-    <div class="rowb">${mng ? '<button id="kb-set">Ayarlar</button>' : ''}<button class="primary" id="mx" style="background:var(--accent);color:#1a0f0a;width:auto;padding:10px 20px">Kapat</button></div>`);
+    <div class="rowb">${perm(s, 'manageRoles') ? '<button id="kb-roles">Rolleri düzenle</button>' : ''}${mng ? '<button id="kb-set">Ayarlar</button>' : ''}<button class="primary" id="mx" style="background:var(--accent);color:#1a0f0a;width:auto;padding:10px 20px">Kapat</button></div>`);
   $('#mx').onclick = closeModal;
   if ($('#kb-set')) $('#kb-set').onclick = () => showServerSettings(s, 'bot');
+  if ($('#kb-roles')) $('#kb-roles').onclick = () => { closeModal(); showServerSettings(s, 'members', BOT_NAME); };
 }
 function showBots() {
   hideSuggest(); $('#cmdhint').style.display = 'none';
@@ -4738,7 +4742,7 @@ function showServerSettings(s, tab, focus) {
   $('#modal-box').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showServerSettings(s, b.dataset.tab));
   const main = $('#ss-main'), again = () => setTimeout(() => ssOpen && $('#ss-main') && showServerSettings(s, tab, ssOpen.focus), 60);
   const done = msg => r => { if (r?.error) return toast(r.error); if (msg) toast(msg); again(); };
-  const roleChecks = (sel, name) => (s.customRoles || []).map(r => `<label class="chk"><input type="checkbox" name="${name}" value="${r.id}" ${sel.includes(r.id) ? 'checked' : ''}><span class="rdot" style="background:${r.color}"></span>${esc(r.name)}</label>`).join('') || '<p class="hint">Henüz rol yok. Önce Roller sekmesinden rol oluştur.</p>';
+  const roleChecks = (sel, name) => (s.customRoles || []).filter(r => !r.bot).map(r => `<label class="chk"><input type="checkbox" name="${name}" value="${r.id}" ${sel.includes(r.id) ? 'checked' : ''}><span class="rdot" style="background:${r.color}"></span>${esc(r.name)}</label>`).join('') || '<p class="hint">Henüz rol yok. Önce Roller sekmesinden rol oluştur.</p>';
   const page = {
     bot: () => {
       const b = s.bot || {}, m = b.mod || {};
@@ -4918,10 +4922,11 @@ function showServerSettings(s, tab, focus) {
       // Üyeler sekmesi: arama, tek tıkla ekle/çıkar
       function drawMembers() {
         const cur = S.servers.find(x => x.id === s.id) || s, q = ($('#rm-q').value || '').toLocaleLowerCase('tr');
-        const all = (cur.public ? Object.keys(S.users).filter(n => n !== 'Claude') : cur.members).filter(n => !q || n.toLocaleLowerCase('tr').includes(q) || dn(n).toLocaleLowerCase('tr').includes(q));
+        const base = cur.public ? Object.keys(S.users).filter(n => n !== 'Claude') : [...cur.members, ...(cur.bot?.added ? [BOT_NAME] : [])];
+        const all = base.filter(n => !q || n.toLocaleLowerCase('tr').includes(q) || dn(n).toLocaleLowerCase('tr').includes(q));
         const has = n => (cur.memberRoles?.[n] || []).includes(edit.id);
         const list = [...all].sort((a, b) => has(b) - has(a) || dn(a).localeCompare(dn(b), 'tr')).slice(0, 120);
-        $('#rm-list').innerHTML = list.map(n => `<div class="rm-row ${has(n) ? 'in' : ''}">${av(n, S.online.has(n))}<span><b>${esc(dn(n))}</b><small>@${esc(n)}</small></span><button type="button" data-rm="${esc(n)}" class="${has(n) ? 'out' : ''}">${has(n) ? 'Çıkar' : 'Ekle'}</button></div>`).join('') || '<p class="hint">Üye bulunamadı</p>';
+        $('#rm-list').innerHTML = list.map(n => `<div class="rm-row ${has(n) ? 'in' : ''}">${n === BOT_NAME ? '<div class="av on-dot"><img src="/icon-192.png" alt=""></div>' : av(n, S.online.has(n))}<span><b>${esc(dn(n))}${n === BOT_NAME ? '<span class="botbadge">BOT</span>' : ''}</b><small>${n === BOT_NAME ? 'Sunucu botu' : '@' + esc(n)}</small></span>${n === cur.owner && cur.owner !== S.me ? '<button type="button" disabled title="Sahibin rollerini sadece kendisi değiştirebilir">—</button>' : `<button type="button" data-rm="${esc(n)}" class="${has(n) ? 'out' : ''}">${has(n) ? 'Çıkar' : 'Ekle'}</button>`}</div>`).join('') || '<p class="hint">Üye bulunamadı</p>';
         $('#rm-list').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { const n = b.dataset.rm, on = has(n); b.disabled = true;
           socket.emit('roleMembers', { serverId: s.id, roleId: edit.id, [on ? 'remove' : 'add']: [n] }, r => { b.disabled = false; if (r?.error) return toast(r.error); const sv = S.servers.find(x => x.id === s.id); if (sv) { sv.memberRoles ||= {}; const l = sv.memberRoles[n] || []; sv.memberRoles[n] = on ? l.filter(x => x !== edit.id) : [...l, edit.id]; } drawMembers(); }); });
       }
@@ -4952,16 +4957,18 @@ function showServerSettings(s, tab, focus) {
       draw();
     },
     members: () => {
-      const list = [...s.members].sort((a, b) => (b === s.owner) - (a === s.owner) || a.localeCompare(b, 'tr'));
+      const list = [...s.members, ...(s.bot?.added ? [BOT_NAME] : [])].sort((a, b) => (b === s.owner) - (a === s.owner) || a.localeCompare(b, 'tr'));
       main.innerHTML = `<div class="st-page"><h3>Üyeler</h3><p class="hint">${s.members.length} üye. Bir üyeye tıklayıp rol verebilir, susturabilir ya da yasaklayabilirsin.</p>
         <input class="field" id="m-q" placeholder="Üye ara">
-        ${list.map(n => { const rs = rolesOf(s, n), self = n === S.me || n === s.owner;
-          return `<div class="ss-row ${ssOpen.focus === n ? 'open' : ''}" data-mn="${esc(n.toLowerCase())}"><b>${av(n, S.online.has(n))}<span style="${roleColor(s, n) ? 'color:' + roleColor(s, n) : ''}">${esc(n)}</span>${badge(roleOf(s, n))}${timedOutLeft(s, n) ? `<span class="chip">${ic('hourglass')}${Math.ceil(timedOutLeft(s, n) / 60000)} dk</span>` : ''}</b>
+        ${list.map(n => { const rs = rolesOf(s, n), mine = n === S.me, ownerRow = n === s.owner, botRow = n === BOT_NAME;
+          const canRoles = !(ownerRow && !mine) && !(mine && !ownerRow), canManage = !mine && !ownerRow && !botRow;
+          const showMod = !botRow && isAdmin(s, S.me) && (canManage || (ownerRow && mine));
+          return `<div class="ss-row ${ssOpen.focus === n ? 'open' : ''}" data-mn="${esc(n.toLowerCase())}"><b>${botRow ? '<div class="av on-dot"><img src="/icon-192.png" alt=""></div>' : av(n, S.online.has(n))}<span style="${roleColor(s, n) ? 'color:' + roleColor(s, n) : ''}">${esc(botRow ? BOT_NAME : n)}</span>${ownerRow ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${botRow ? '<span class="botbadge">BOT</span>' : ''}${badge(roleOf(s, n))}${timedOutLeft(s, n) ? `<span class="chip">${ic('hourglass')}${Math.ceil(timedOutLeft(s, n) / 60000)} dk</span>` : ''}</b>
             <span class="chips">${rs.map(r => `<span class="chip"><span class="rdot" style="background:${r.color}"></span>${esc(r.name)}</span>`).join('')}</span>
-            ${self ? '' : `<button data-mo="${esc(n)}">Yönet</button>`}
-            ${self ? '' : `<div class="ss-sub">${P('manageRoles') ? `<form data-mr="${esc(n)}"><h4 style="margin:0 0 2px">Roller</h4>${roleChecks(s.memberRoles?.[n] || [], 'r')}${(s.customRoles || []).length ? '<div class="rowb" style="justify-content:flex-start"><button class="primary" style="width:auto;padding:9px 16px">Rolleri kaydet</button></div>' : ''}</form>` : ''}
-              <div class="rowb" style="justify-content:flex-start;flex-wrap:wrap">${roleOf(s, S.me) === 'admin' ? `<button data-mod="${esc(n)}">${ic('shield')}${roleOf(s, n) === 'mod' ? 'Moderatörlüğü al' : 'Moderatör yap'}</button>` : ''}
-              ${P('timeout') ? `<button data-to="${esc(n)}">${ic('hourglass')}${timedOutLeft(s, n) ? 'Susturmayı kaldır' : 'Sustur'}</button>` : ''}${P('kick') ? `<button class="danger" data-kick="${esc(n)}">At</button>` : ''}${P('ban') ? `<button class="danger" data-ban="${esc(n)}">${ic('ban')}Yasakla</button>` : ''}</div></div>`}</div>`; }).join('')}</div>`;
+            ${canRoles || canManage ? `<button data-mo="${esc(n)}">Yönet</button>` : ''}
+            ${canRoles || canManage ? `<div class="ss-sub">${canRoles && P('manageRoles') ? `<form data-mr="${esc(n)}"><h4 style="margin:0 0 2px">Roller</h4>${roleChecks(s.memberRoles?.[n] || [], 'r')}${(s.customRoles || []).some(r => !r.bot) ? '<div class="rowb" style="justify-content:flex-start"><button class="primary" style="width:auto;padding:9px 16px">Rolleri kaydet</button></div>' : ''}</form>` : ''}
+              ${canManage || showMod ? `<div class="rowb" style="justify-content:flex-start;flex-wrap:wrap">${showMod ? `<button data-mod="${esc(n)}">${ic('shield')}${roleOf(s, n) === 'mod' ? 'Moderatörlüğü al' : 'Moderatör yap'}</button>` : ''}
+              ${canManage && P('timeout') ? `<button data-to="${esc(n)}">${ic('hourglass')}${timedOutLeft(s, n) ? 'Susturmayı kaldır' : 'Sustur'}</button>` : ''}${canManage && P('kick') ? `<button class="danger" data-kick="${esc(n)}">At</button>` : ''}${canManage && P('ban') ? `<button class="danger" data-ban="${esc(n)}">${ic('ban')}Yasakla</button>` : ''}</div>` : ''}</div>` : ''}</div>`; }).join('')}</div>`;
       $('#m-q').oninput = e => main.querySelectorAll('[data-mn]').forEach(r => r.style.display = r.dataset.mn.includes(e.target.value.toLowerCase()) ? '' : 'none');
       main.querySelectorAll('[data-mo]').forEach(b => b.onclick = () => b.closest('.ss-row').classList.toggle('open'));
       main.querySelectorAll('[data-mr]').forEach(f => f.onsubmit = e => { e.preventDefault(); ssOpen.focus = f.dataset.mr; socket.emit('memberRoles', { serverId: s.id, name: f.dataset.mr, roles: [...f.querySelectorAll('[name=r]:checked')].map(x => x.value) }, done('Roller güncellendi')); });
@@ -6227,7 +6234,7 @@ function renderMembers() {
   const item = n => {
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n);
-    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
@@ -6238,7 +6245,7 @@ function renderMembers() {
   const mb = $('#mem-btn'); mb.classList.toggle('show', !!(srv && S.channel) || !!S.channel?.group); mb.querySelector('.mb-n').textContent = onl ? (onl > 99 ? '99+' : onl) : '';
   const mdrH = `<div class="mdr-h"><span style="flex:1"><b>Üyeler</b><small>${S.channel ? (srv ? '#' + esc(S.channel.name) + ' · ' : '') : ''}${onl} çevrimiçi · ${names.length} kişi</small></span><button id="mdr-x" aria-label="Kapat">${ic('x')}</button></div>`;
   if (S.view === 'dm' && !S.channel) return homeSidePanel(item, mdrH);
-  $('#members').innerHTML = mdrH + (srv?.bot?.added ? `<div class="label" style="padding:14px 8px 6px">Botlar — 1</div><div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="color:var(--accent)">Kanka Bot<span class="botbadge">BOT</span></span><small>${[srv.bot.mod?.on && 'Moderasyon', srv.bot.welcome?.on && 'Karşılama'].filter(Boolean).join(' · ') || '/yardım yaz'}</small></div></div>` : '') +
+  $('#members').innerHTML = mdrH + (srv?.bot?.added ? `<div class="label" style="padding:14px 8px 6px">Botlar — 1</div><div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="${roleColor(srv, BOT_NAME) ? 'color:' + roleColor(srv, BOT_NAME) : 'color:var(--accent)'}">Kanka Bot<span class="botbadge">BOT</span></span><small>${[srv.bot.mod?.on && 'Moderasyon', srv.bot.welcome?.on && 'Karşılama'].filter(Boolean).join(' · ') || '/yardım yaz'}${rolesOf(srv, BOT_NAME).length ? ' · ' + rolesOf(srv, BOT_NAME).map(r => esc(r.name)).join(', ') : ''}</small></div></div>` : '') +
     groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(item).join('') : ''; }).join('');
   $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
   $('#members').querySelector('.mem.botmem')?.addEventListener('click', e => { e.stopPropagation(); botProfile(); });
@@ -6472,13 +6479,13 @@ function profSideHTML(n, u, { srv, preview } = {}) {
     <div class="pf-ban" style="${banStyle(n, u)}"></div>
     <div class="pf-in">
       <div class="pf-top">${pAv(n, u, 108, !preview || true)}<div class="pf-badges">${badgesHTML(u)}</div></div>
-      <h2 class="pf-dn">${esc(u?.displayName || n)}${badge(r)}</h2>
+      <h2 class="pf-dn">${esc(u?.displayName || n)}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${badge(r)}</h2>
       <div class="pf-un">@${esc(n)}${u?.pronouns ? `<i>•</i>${esc(u.pronouns)}` : ''}</div>
       ${u?.status ? `<div class="pf-bubble">${esc(u.status)}</div>` : ''}
       <div class="pf-actslot"></div>
       <div class="pf-meta"><div><span>Kanka üyesi</span><b>${since(u?.createdAt) || '—'}</b></div>${srv && !srv.public ? `<div id="pf-jrow" hidden><span>Bu sunucuda</span><b id="pf-joined"></b></div>` : ''}</div>
-      ${roles.length ? `<div class="pf-roles"><h5>Roller</h5><div>${roles.map(x => `<span><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join('')}${srv && perm(srv, 'manageRoles') && !preview ? `<button id="pf-addrole" title="Rolleri düzenle">${ic('plus')}</button>` : ''}</div></div>`
-        : srv && !srv.public && perm(srv, 'manageRoles') && !preview && n !== S.me ? `<div class="pf-roles"><h5>Roller</h5><div><button id="pf-addrole" class="wide">${ic('plus')} Rol ver</button></div></div>` : ''}
+      ${roles.length ? `<div class="pf-roles"><h5>Roller</h5><div>${roles.map(x => `<span><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join('')}${srv && perm(srv, 'manageRoles') && !preview && (n !== srv.owner || S.me === srv.owner) ? `<button id="pf-addrole" title="Rolleri düzenle">${ic('plus')}</button>` : ''}</div></div>`
+        : srv && !srv.public && perm(srv, 'manageRoles') && !preview && (n !== srv.owner || S.me === srv.owner) && (n !== S.me || S.me === srv.owner) ? `<div class="pf-roles"><h5>Roller</h5><div><button id="pf-addrole" class="wide">${ic('plus')} Rol ver</button></div></div>` : ''}
     </div></div>`;
 }
 function profAboutHTML(n, u) {
@@ -6495,8 +6502,8 @@ function profAboutHTML(n, u) {
 function showProfile(n, tab = 'about') {
   profileOpen = n; closeVPop();
   const u = S.users[n] || { level: 1, xp: 0 }, srv = S.view === 'server' ? S.server : null, r = roleOf(srv, n), me = n === S.me;
-  const meAdmin = srv && roleOf(srv, S.me) === 'admin', meMod = srv && isMod(srv, S.me);
-  const canKick = srv && !srv.public && meMod && !me && r !== 'admin' && !(r === 'mod' && !meAdmin);
+  const meAdmin = srv && isAdmin(srv, S.me), meMod = srv && isMod(srv, S.me);
+  const canKick = srv && !srv.public && meMod && !me && n !== srv.owner && !isAdmin(srv, n) && !(r === 'mod' && !meAdmin);
   let mut = null;
   const tabs = () => [['about', 'Hakkında'], ['act', 'Aktivite'], ...(me ? [] : [['servers', `Ortak sunucular${mut ? ` · ${mut.servers.length}` : ''}`], ['friends', `Ortak arkadaşlar${mut ? ` · ${mut.friends.length}` : ''}`]])];
   modal(`<button class="pc-close" id="mx" aria-label="Kapat">${ic('x')}</button><div class="pf">${profSideHTML(n, u, { srv })}<div class="pf-main"><nav class="pf-tabs" id="pf-tabs"></nav><div class="pf-body" id="pf-body"></div></div></div>`, 'pcard2');
@@ -6528,7 +6535,7 @@ function showProfile(n, tab = 'about') {
     e.stopPropagation(); const b = e.currentTarget.getBoundingClientRect(), blocked = S.social.blocked.includes(n), items = [];
     items.push({ t: uNotes[n] ? 'Notu düzenle' : 'Not ekle', icon: 'edit', act: () => form('Not', `${esc(n)} hakkında sadece senin göreceğin bir not.`, [{ k: 'note', p: 'Not', v: uNotes[n] || '' }], v => { v.note.trim() ? uNotes[n] = v.note.trim() : delete uNotes[n]; saveU(); showProfile(n, tab); }) });
     items.push({ t: 'Kullanıcı adını kopyala', icon: 'copy', act: () => navigator.clipboard?.writeText(n).then(() => toast('Kopyalandı')) });
-    if (srv && !srv.public && r !== 'admin') {
+    if (srv && !srv.public && n !== srv.owner && !isAdmin(srv, n)) {
       const mod = [];
       if (perm(srv, 'manageRoles')) mod.push({ t: 'Rolleri düzenle', icon: 'tag', act: () => showServerSettings(srv, 'members', n) });
       if (meAdmin) mod.push({ t: r === 'mod' ? 'Moderatörlüğü al' : 'Moderatör yap', icon: 'shield', act: () => socket.emit('setRole', { serverId: srv.id, name: n, role: r === 'mod' ? 'member' : 'mod' }, x => x.error ? toast(x.error) : (closeModal(), toast('Rol güncellendi'))) });
