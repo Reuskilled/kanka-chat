@@ -895,6 +895,70 @@ function dcPreview(c, code) {
     counts: { channels: c.channels.length, categories: c.categories.length, roles: c.roles.length }, skipped: c.skipped };
 }
 const ovOfPreview = (c, ch) => { const k = ch.cat && c.categories.find(x => x.id === ch.cat); return (ch.sync && k ? k.perms : ch.perms)?.['@everyone']?.view === false; };
+// ---------- Mevcut sunucuya şablon uygulama ----------
+// Adı tutan kategori, aynı türde oda ve rol korunur (kimliği, mesajları, üye atamaları), izin ve ayarları şablondakiyle güncellenir.
+// Şablondaki yeniler eklenir, hiçbir şey silinmez. Önceki düzen 24 saat geri alınabilir.
+const TPL_UNDO_MS = 864e5;
+const tplKey = n => String(n || '').toLocaleLowerCase('tr').trim().replace(/[\s_-]+/g, '-');
+function dcMerge(s, c) {
+  const copy = x => JSON.parse(JSON.stringify(x || []));
+  const roles = copy(s.customRoles), cats = copy(s.categories), chans = copy(s.channels);
+  const view = { roles: r => ({ name: r.name, color: r.color }), categories: k => ({ name: k.name }), channels: ch => ({ name: ch.name, type: ch.type, news: !!ch.news }) };
+  const diff = {}; for (const g of ['add', 'update', 'keep']) diff[g] = { roles: [], categories: [], channels: [] };
+  const added = { roles: [], categories: [], channels: [] }, over = { roles: 0, categories: 0, channels: 0 };
+  const put = (g, kind, x) => { diff[g][kind].push(view[kind](x)); if (g === 'add') added[kind].push(x.id); };
+  // Yeni roller en alta eklenir: mevcut rollerin sırası ve üstünlüğü değişmez
+  const rid = {}, usedR = new Set();
+  for (const r of c.roles) {
+    const m = roles.find(x => !x.bot && !usedR.has(x) && tplKey(x.name) === tplKey(r.name));
+    if (m) { usedR.add(m); rid[r.id] = m.id; Object.assign(m, { color: r.color, perms: r.perms, hoist: r.hoist, icon: r.icon, mentionable: r.mentionable }); put('update', 'roles', m); }
+    else if (roles.length >= 30) over.roles++;
+    else { roles.push(r); usedR.add(r); rid[r.id] = r.id; put('add', 'roles', r); }
+  }
+  // Şablonun izinleri sunucudaki rol kimliklerine çevrilir; şablonda geçmeyen rol ve kişilerin mevcut izinleri kalır
+  const mapPerms = p => Object.fromEntries(Object.entries(p || {}).filter(([t]) => t === '@everyone' || rid[t]).map(([t, v]) => [t === '@everyone' ? t : rid[t], { ...v }]));
+  const merged = (old, p) => ({ ...(old || {}), ...mapPerms(p) });
+  const kid = {}, usedK = new Set(), tplCats = [];
+  for (const k of c.categories) {
+    const m = cats.find(x => !usedK.has(x) && tplKey(x.name) === tplKey(k.name));
+    if (m) { usedK.add(m); kid[k.id] = m.id; m.perms = merged(m.perms, k.perms); tplCats.push(m); put('update', 'categories', m); }
+    else if (cats.length >= 50) over.categories++;
+    else { const n = { ...k, perms: mapPerms(k.perms) }; cats.push(n); usedK.add(n); kid[k.id] = n.id; tplCats.push(n); put('add', 'categories', n); }
+  }
+  const oldOv = Object.fromEntries(s.channels.map(ch => [ch.id, ovOf(s, ch)]));
+  const cid = {}, usedC = new Set(), placed = [];
+  for (const t of c.channels) {
+    const cat = t.cat ? kid[t.cat] : undefined, tp = t.sync ? c.categories.find(k => k.id === t.cat)?.perms : t.perms;
+    const m = chans.find(x => !usedC.has(x) && x.type === t.type && tplKey(x.name) === tplKey(t.name));
+    let ch;
+    if (m) {
+      ch = m; put('update', 'channels', m);
+      for (const f of ['slow', 'limit', 'bitrate']) if (t[f] !== undefined) m[f] = t[f]; else delete m[f];
+      if (t.topic) m.topic = t.topic;
+      if (t.news) m.news = true;
+    } else if (chans.length >= 200) { over.channels++; continue; }
+    else { ch = { ...t, perms: {} }; chans.push(ch); put('add', 'channels', ch); }
+    usedC.add(ch); cid[t.id] = ch.id;
+    if (cat) ch.cat = cat; else delete ch.cat;
+    if (t.sync && cat) { ch.sync = true; ch.perms = {}; }
+    else { ch.sync = false; ch.perms = m ? merged(oldOv[m.id], tp) : mapPerms(tp); }
+    placed.push(ch);
+  }
+  // Düzen: önce şablondakiler şablon sırasıyla, sonra dokunulmayan mevcutlar kendi yerlerinde
+  const rest = chans.filter(x => !usedC.has(x));
+  const order = [...tplCats, ...cats.filter(k => !tplCats.includes(k))], catIds = new Set(order.map(k => k.id));
+  const grp = k => [...placed, ...rest].filter(x => (x.cat && catIds.has(x.cat) ? x.cat : null) === k);
+  const channels = [...grp(null), ...order.flatMap(k => grp(k.id))];
+  for (const r of roles) if (!usedR.has(r) && !r.bot) put('keep', 'roles', r);
+  for (const k of cats) if (!usedK.has(k)) put('keep', 'categories', k);
+  for (const ch of rest) put('keep', 'channels', ch);
+  const skipped = [...c.skipped];
+  if (over.roles) skipped.push(`${over.roles} rol (sunucuda en fazla 30 rol olabilir)`);
+  if (over.categories) skipped.push(`${over.categories} kategori (en fazla 50)`);
+  if (over.channels) skipped.push(`${over.channels} oda (en fazla 200 oda olabilir)`);
+  const afk = c.afk && cid[c.afk.ch] ? { ch: cid[c.afk.ch], min: c.afk.min } : s.afk || null;
+  return { roles, categories: order, channels, afk, lockChannels: !!c.lockChannels, added, diff, skipped };
+}
 
 // ---------- Sunucu rozetleri ----------
 // resmi: Kanka HQ · dogrulanmis/partner: site yöneticisi verir · topluluk: 15+ üye ve 7+ gün
@@ -930,6 +994,7 @@ const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s
   discoverable: !!s.discoverable, description: s.description || '', category: s.category || null,
   setup: viewer && s.owner === viewer ? setupOf(s) : null,
   afk: s.afk || null,
+  tplUndo: viewer && s.owner === viewer && s.tplUndo && Date.now() - s.tplUndo.t < TPL_UNDO_MS ? { t: s.tplUndo.t, channels: s.tplUndo.added.channels.length, categories: s.tplUndo.added.categories.length, roles: s.tplUndo.added.roles.length } : null,
   bot: viewer && can(s, viewer, 'manageServer') ? botCfg(s) : { added: !!s.bot?.added, mod: { on: botOn(s, 'mod') }, welcome: { on: botOn(s, 'welcome') } },
   welcome: s.welcome || null, accepted: !s.welcome?.enabled || !!s.accepted?.[viewer] || s.owner === viewer
 });
@@ -3046,6 +3111,62 @@ io.on('connection', socket => {
     if (limited('dctpl|' + me, 20, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle' });
     try { const t = await dcFetch(code); cb(t.error ? t : dcPreview(dcConvert(t), code)); }
     catch (e) { console.error('Şablon okunamadı', e); cb({ error: 'Şablon okunamadı, biraz sonra tekrar dene' }); }
+  });
+  // ----- Mevcut sunucuya şablon uygulama (sadece sahip) -----
+  const ownedServer = serverId => { const s = me && db.servers.find(x => x.id === serverId); return s && s.owner === me ? s : null; };
+  const tplLoad = async (serverId, link) => {
+    if (!ownedServer(serverId)) return { error: 'Şablonu sadece sunucu sahibi uygulayabilir' };
+    const code = dcCode(link); if (!code) return { error: 'Geçerli bir şablon linki ya da kodu yaz' };
+    if (limited('dctpl|' + me, 20, 600e3)) return { error: 'Çok fazla deneme, biraz bekle' };
+    const t = await dcFetch(code); if (t.error) return t;
+    const s = ownedServer(serverId); if (!s) return { error: 'Sunucu bulunamadı' };
+    s.categories ||= []; s.customRoles ||= []; s.memberRoles ||= {};
+    return { s, code, c: dcConvert(t) };
+  };
+  socket.on('tplPreview', async ({ serverId, link } = {}, cb = () => {}) => {
+    try { const r = await tplLoad(serverId, link); if (r.error) return cb(r); const m = dcMerge(r.s, r.c); cb({ name: r.c.name, ...m.diff, skipped: m.skipped }); }
+    catch (e) { console.error('Şablon önizlenemedi', e); cb({ error: 'Şablon okunamadı, biraz sonra tekrar dene' }); }
+  });
+  socket.on('tplApply', async ({ serverId, link } = {}, cb = () => {}) => {
+    try {
+      const r = await tplLoad(serverId, link); if (r.error) return cb(r);
+      const { s, code, c } = r, m = dcMerge(s, c);
+      s.tplUndo = { t: Date.now(), code, customRoles: s.customRoles, categories: s.categories, channels: s.channels, afk: s.afk || null, lockChannels: !!s.lockChannels, added: m.added };
+      Object.assign(s, { customRoles: m.roles, categories: m.categories, channels: m.channels, afk: m.afk });
+      if (m.lockChannels) s.lockChannels = true;
+      audit(s, me, 'Şablon uyguladı', `${c.name} · ${m.added.channels.length} oda, ${m.added.categories.length} kategori, ${m.added.roles.length} rol eklendi`);
+      pushSrv(s); cb({ ok: true });
+    } catch (e) { console.error('Şablon uygulanamadı', e); cb({ error: 'Şablon uygulanamadı, biraz sonra tekrar dene' }); }
+  });
+  socket.on('tplUndo', ({ serverId } = {}, cb = () => {}) => {
+    const s = ownedServer(serverId), u = s?.tplUndo;
+    if (!s) return cb({ error: 'Sadece sunucu sahibi geri alabilir' });
+    if (!u || Date.now() - u.t > TPL_UNDO_MS) return cb({ error: 'Geri alınacak şablon yok' });
+    const addedCh = new Set(u.added.channels), addedK = new Set(u.added.categories), addedR = new Set(u.added.roles);
+    const now = new Set(s.channels.map(ch => ch.id)), oldIds = new Set(u.channels.map(ch => ch.id));
+    const oldC = u.channels.filter(ch => now.has(ch.id)); // sonradan silinen oda geri gelmez, mesajları gitti
+    // Şablonla eklenen odalardan içine mesaj yazılmış olanlar kalır
+    const gone = s.channels.filter(ch => addedCh.has(ch.id) && !(db.messages[ch.id] || []).length);
+    if (!oldC.some(ch => ch.type === 'text')) { const i = gone.findIndex(ch => ch.type === 'text'); if (i >= 0) gone.splice(i, 1); }
+    const extra = s.channels.filter(ch => !oldIds.has(ch.id) && !gone.includes(ch));
+    const curK = new Map(s.categories.map(k => [k.id, k])), oldK = new Set(u.categories.map(k => k.id));
+    s.categories = [...u.categories, ...s.categories.filter(k => !oldK.has(k.id) && !addedK.has(k.id))];
+    const catIds = new Set(s.categories.map(k => k.id));
+    for (const ch of extra) if (ch.cat && !catIds.has(ch.cat)) { if (ch.sync) { ch.perms = { ...(curK.get(ch.cat)?.perms || {}) }; ch.sync = false; } delete ch.cat; }
+    const all = [...oldC, ...extra];
+    s.channels = [...all.filter(ch => !ch.cat || !catIds.has(ch.cat)), ...s.categories.flatMap(k => all.filter(ch => ch.cat === k.id))];
+    const curR = s.customRoles, oldR = new Set(u.customRoles.map(r => r.id));
+    s.customRoles = [...u.customRoles.filter(r => !r.bot || curR.some(x => x.id === r.id)), ...curR.filter(r => !oldR.has(r.id) && !addedR.has(r.id))];
+    const live = new Set(s.customRoles.map(r => r.id));
+    for (const n in s.memberRoles) { s.memberRoles[n] = s.memberRoles[n].filter(x => live.has(x)); if (!s.memberRoles[n].length) delete s.memberRoles[n]; }
+    for (const x of [...s.channels, ...s.categories]) for (const t in x.perms || {}) if (addedR.has(t)) delete x.perms[t];
+    s.afk = u.afk && s.channels.some(ch => ch.id === u.afk.ch) ? u.afk : null;
+    if (u.lockChannels) s.lockChannels = true; else delete s.lockChannels;
+    for (const ch of gone) { delete db.messages[ch.id]; delete db.playlists[ch.id]; }
+    if (gone.length) voiceKick(gone.map(ch => ch.id), null, 'Bulunduğun ses odası kaldırıldı');
+    delete s.tplUndo;
+    audit(s, me, 'Şablonu geri aldı', `${gone.length} oda kaldırıldı`);
+    pushSrv(s); cb({ ok: true, kept: s.channels.filter(ch => addedCh.has(ch.id)).length });
   });
 
   socket.on('createChannel', ({ serverId, name, type, cat, private: priv } = {}, cb = () => {}) => {

@@ -1965,6 +1965,11 @@
   .code .cu { flex: 1; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); } .code .cu .av { width: 20px; height: 20px; font-size: 10px; } .code .cu b { color: var(--ink); }
   .code button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9px; background: var(--hover); font-size: 12.5px; font-weight: 800; } .code button .ic { width: 14px; height: 14px; }
   .st-sec.danger { color: var(--red); }
+  .acc-tpl { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; border: 1px solid var(--line); margin-bottom: 8px; }
+  .acc-tpl span { flex: 1; font-size: 13px; color: var(--muted); line-height: 1.5; } .acc-tpl b { display: block; color: var(--ink); font-size: 14px; }
+  .ta-grp { margin-top: 10px; } .ta-grp > b { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+  .ta-grp.add > b { color: #4cc38a; } .ta-grp.upd > b { color: #f6c445; } .ta-grp .dt-roles { margin-top: 6px; max-height: 130px; overflow: auto; }
+  .dt-role .ic { width: 14px; height: 14px; color: var(--muted); } .dt-role.ta-cat { text-transform: uppercase; font-size: 11px; letter-spacing: .03em; }
   .acc-danger { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; border: 1px solid rgba(229,72,77,.4); margin-bottom: 40px; }
   .acc-danger span { flex: 1; font-size: 13px; color: var(--muted); line-height: 1.5; } .acc-danger b { display: block; color: var(--ink); font-size: 14px; }
   .acc-danger button { padding: 10px 16px; border-radius: 12px; font-weight: 800; white-space: nowrap; }
@@ -1995,7 +2000,7 @@
   .mail-st.bad { background: rgba(255,90,95,.1); } .mail-st.bad .ic { color: #ff6b6f; }
   .adm-adv { margin: 4px 0 10px; font-size: 13px; } .adm-adv summary { cursor: pointer; color: var(--muted); font-weight: 800; margin-bottom: 8px; }
   .adm-user { display: flex; gap: 12px; align-items: center; margin-top: 10px; } .adm-user .av { width: 40px; height: 40px; } .adm-user b { display: block; } .adm-user small { display: block; color: var(--muted); font-size: 12.5px; } .adm-user .no { color: var(--red); }
-  @media (max-width: 700px) { .adm-stats { grid-template-columns: 1fr; } .seg.big { grid-template-columns: 1fr 1fr; } .acc-danger { flex-direction: column; align-items: stretch; } }
+  @media (max-width: 700px) { .adm-stats { grid-template-columns: 1fr; } .seg.big { grid-template-columns: 1fr 1fr; } .acc-danger, .acc-tpl { flex-direction: column; align-items: stretch; } }
 
   /* ---------- Küçük profil 2.0 ---------- */
   .vpop { width: 320px; border-radius: 20px; --ring: var(--card); background: var(--card); border: 1px solid rgba(255,255,255,.07); box-shadow: 0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.3); }
@@ -3486,6 +3491,41 @@ const dtPreview = r => {
     <div class="dt-skip">${ic('info')}<span>Aktarılmayacaklar: mesajlar, üyeler, emojiler, sunucu simgesi${r.skipped.length ? ', ' + r.skipped.map(esc).join(', ') : ''}.</span></div></div>`;
 };
 
+const taCount = g => g.categories.length + g.channels.length + g.roles.length;
+const taPreview = r => {
+  const chips = g => [...g.categories.map(k => `<span class="dt-role ta-cat">${esc(k.name)}</span>`), ...g.channels.map(c => `<span class="dt-role">${roomIcon(c)}${esc(c.name)}</span>`),
+    ...g.roles.map(x => `<span class="dt-role"><i style="background:${esc(x.color)}"></i>${esc(x.name)}</span>`)].join('');
+  const grp = (cls, t, g) => taCount(g) ? `<div class="ta-grp ${cls}"><b>${t} · ${taCount(g)}</b><div class="dt-roles">${chips(g)}</div></div>` : '';
+  return `<div class="dt-box"><div class="dt-head"><b>${esc(r.name)}</b><small>${taCount(r.add)} eklenecek · ${taCount(r.update)} güncellenecek · ${taCount(r.keep)} dokunulmayacak</small></div>
+    ${grp('add', 'Eklenecek', r.add)}${grp('upd', 'Güncellenecek', r.update)}${grp('keep', 'Dokunulmayacak', r.keep)}
+    ${!taCount(r.add) && !taCount(r.update) ? '<p class="hint" style="margin-top:10px">Bu şablon sunucunda bir şey değiştirmiyor.</p>' : ''}
+    <div class="dt-skip">${ic('info')}<span>Hiçbir şey silinmez, mesajlar ve üyelerin rolleri korunur. Güncellenecek oda ve rollerin izin ve ayarları şablondakiyle değişir.${r.skipped.length ? ' Aktarılmayacaklar: ' + r.skipped.map(esc).join(', ') + '.' : ''}</span></div></div>`;
+};
+function openTplApply(s) {
+  modal(`<h3>Şablon uygula</h3><p class="hint">Şablondaki kategori, oda ve roller bu sunucuya eklenir. Adı aynı olanlar yeniden açılmaz, izin ve ayarları güncellenir.</p>
+    <input class="field" id="ta-link" maxlength="120" placeholder="Şablon linki ya da kodu" autocomplete="off" style="margin-top:10px"><div id="ta-prev"></div>
+    <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="ta-go" style="width:auto;padding:11px 22px" disabled>Uygula</button></div>`);
+  $('#mx').onclick = () => showServerSettings(s, 'general');
+  let last = '', ok = '', tm;
+  const load = () => {
+    const inp = $('#ta-link'); if (!inp) return;
+    const v = inp.value.trim();
+    if (!v) { last = ok = ''; $('#ta-prev').innerHTML = ''; $('#ta-go').disabled = true; return; }
+    if (v === last) return; last = v; ok = ''; $('#ta-go').disabled = true;
+    $('#ta-prev').innerHTML = '<div class="dt-wait">Şablon okunuyor…</div>';
+    socket.emit('tplPreview', { serverId: s.id, link: v }, r => {
+      if (!$('#ta-prev') || $('#ta-link').value.trim() !== v) return;
+      if (r.error) { last = ''; $('#ta-prev').innerHTML = `<div class="dt-err">${ic('alert')}${esc(r.error)}</div>`; return; }
+      $('#ta-prev').innerHTML = taPreview(r); ok = v; $('#ta-go').disabled = !taCount(r.add) && !taCount(r.update);
+    });
+  };
+  $('#ta-link').oninput = () => { clearTimeout(tm); tm = setTimeout(load, 500); };
+  $('#ta-link').onblur = load;
+  $('#ta-go').onclick = () => { const v = ok; if (!v) return; confirmBox('Şablon bu sunucuya uygulansın mı? 24 saat içinde Sunucu ayarları → Genel\'den geri alabilirsin.', () => socket.emit('tplApply', { serverId: s.id, link: v }, r => {
+    if (r.error) return toast(r.error); toast('Şablon uygulandı. 24 saat içinde geri alabilirsin.'); setTimeout(() => showServerSettings(s, 'general'), 300);
+  })); };
+  setTimeout(() => $('#ta-link')?.focus(), 30);
+}
 // ================= Keşfet =================
 let discCat = null, discQ = '';
 const srvArt = (o, cls) => `<div class="${cls}" style="${o.banner ? `background-image:url('${esc(o.banner)}')` : o.bannerColor ? `background-image:linear-gradient(135deg, ${o.bannerColor}, ${o.bannerColor}99)` : ''}"></div>`;
@@ -4261,6 +4301,9 @@ function showServerSettings(s, tab, focus) {
         <label class="switch">AFK odası (hareketsiz kalanlar taşınır)<select class="field" id="sv-afk" style="width:170px;margin:0"><option value="">Kapalı</option>${s.channels.filter(c => c.type === 'voice').map(c => `<option value="${c.id}" ${s.afk?.ch === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
         <label class="switch">AFK süresi<select class="field" id="sv-afkm" style="width:120px;margin:0">${[1, 5, 10, 15, 30, 60].map(v => `<option value="${v}" ${(s.afk?.min || 10) === v ? 'selected' : ''}>${v} dk</option>`).join('')}</select></label></div>
         ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${PUB}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}
+        ${s.owner === S.me ? `<div class="st-sec">Şablon</div>
+          <div class="acc-tpl"><span><b>Şablon uygula</b>Bir sunucu şablonunun kategori, oda, rol ve izinlerini bu sunucuya ekler. Hiçbir şey silinmez, mesajlar ve üyelerin rolleri korunur.</span><button class="btns2" id="sv-tpl">Şablon uygula</button></div>
+          ${s.tplUndo ? `<div class="acc-tpl"><span><b>Şablonu geri al</b>Şablonla eklenen ${s.tplUndo.channels} oda, ${s.tplUndo.categories} kategori ve ${s.tplUndo.roles} rol kaldırılır, güncellenenlerin eski hali geri gelir. ${new Date(s.tplUndo.t + 864e5).toLocaleString('tr', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} saatine kadar.</span><button class="btns2" id="sv-tplu">Geri al</button></div>` : ''}` : ''}
         ${!s.public && s.owner === S.me ? `<div class="st-sec danger" style="margin-top:22px">Tehlikeli bölge</div>
           <div class="acc-danger"><span><b>Sahipliği devret</b>Sunucuyu başka bir üyeye verirsin. Sen yönetici olarak kalmazsın, istersen yeni sahip sana rol verir.</span><button class="btns2" id="sv-xfer">Devret</button></div>
           <div class="acc-danger" style="margin-top:8px"><span><b>Sunucuyu sil</b>Sunucu herkesten kaldırılır ve 7 gün boyunca çöp kutusunda durur. Bu sürede Ayarlar → Hesap'tan geri getirebilirsin, sonra kalıcı silinir.</span><button class="danger-btn btns2" id="sv-del">Sunucuyu sil</button></div>` : ''}</div>`;
@@ -4288,6 +4331,10 @@ function showServerSettings(s, tab, focus) {
           if (r.error) return toast(r.error); ssOpen = null; closeModal(); toast('Sahiplik devredildi 👑');
         }));
       };
+      if ($('#sv-tpl')) $('#sv-tpl').onclick = () => openTplApply(s);
+      if ($('#sv-tplu')) $('#sv-tplu').onclick = () => confirmBox('Şablondan önceki düzene dönülsün mü? Şablonla eklenen oda, kategori ve roller kaldırılır, güncellenenlerin eski izin ve ayarları geri gelir. İçine mesaj yazılmış odalar silinmez.', () => socket.emit('tplUndo', { serverId: s.id }, r => {
+        if (r.error) return toast(r.error); toast(r.kept ? `Şablon geri alındı. İçine mesaj yazılmış ${r.kept} oda yerinde kaldı.` : 'Şablon geri alındı'); setTimeout(() => showServerSettings(s, 'general'), 300);
+      }));
       $('#sv-save').onclick = () => socket.emit('updateServer', { serverId: s.id, name: $('#sv-name').value, icon: $('#sv-icon').value }, done('Kaydedildi'));
       $('#sv-img').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, iconImg: url }, done()), 512);
       $('#sv-bn').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, banner: url }, done('Afiş güncellendi')));
