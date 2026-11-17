@@ -984,7 +984,7 @@ function srvBadges(s) {
 }
 const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
   id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, public: s.public, roles: s.roles,
-  emojis: s.emojis || {}, filter: !!s.filter, slow: s.slow || 0,
+  emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, filter: !!s.filter, slow: s.slow || 0,
   channels: (viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels).map(c => chView(s, c, viewer, viewer && can(s, viewer, 'manageChannels'))),
   categories: (s.categories || []).filter(k => !viewer || can(s, viewer, 'manageChannels') || s.channels.some(c => c.cat === k.id && seesChannel(s, c, viewer)))
     .map(k => ({ id: k.id, name: k.name, ...(viewer && can(s, viewer, 'manageChannels') ? { perms: k.perms || {} } : {}) })), members: s.public ? Object.keys(db.users) : s.members,
@@ -3050,12 +3050,28 @@ io.on('connection', socket => {
     if (!UPLOAD_RE.test(url || '')) return cb({ error: 'Geçersiz resim' });
     s.emojis ||= {};
     if (Object.keys(s.emojis).length >= 50) return cb({ error: 'En fazla 50 özel emoji eklenebilir' });
-    s.emojis[name] = url; audit(s, me, 'Emoji ekledi', ':' + name + ':');
+    s.emojis[name] = url;
+    s.emojiMeta ||= {}; s.emojiMeta[name] = { by: me, at: Date.now() };
+    audit(s, me, 'Emoji ekledi', ':' + name + ':');
     save(); pushServers(membersOf(s)); cb({ ok: true });
+  });
+  socket.on('renameEmoji', ({ serverId, name, to } = {}, cb = () => {}) => {
+    const s = adminServer(serverId, false) || permServer(serverId, 'manageEmojis'); if (!s || !s.emojis?.[name]) return cb({ error: 'Yetkin yok' });
+    to = clean(to, 24).toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (to.length < 2) return cb({ error: 'Emoji adı en az 2 karakter olmalı (a-z, 0-9, _)' });
+    if (to !== name && s.emojis[to]) return cb({ error: 'Bu adda bir emoji zaten var' });
+    if (to !== name) {
+      s.emojis[to] = s.emojis[name]; delete s.emojis[name];
+      if (s.emojiMeta?.[name]) { s.emojiMeta[to] = s.emojiMeta[name]; delete s.emojiMeta[name]; }
+      audit(s, me, 'Emoji adını değiştirdi', ':' + name + ': → :' + to + ':');
+      save(); pushServers(membersOf(s));
+    }
+    cb({ ok: true, name: to });
   });
   socket.on('removeEmoji', ({ serverId, name } = {}, cb = () => {}) => {
     const s = adminServer(serverId, false) || permServer(serverId, 'manageEmojis'); if (!s || !s.emojis?.[name]) return cb({ error: 'Yetkin yok' });
-    delete s.emojis[name]; audit(s, me, 'Emoji sildi', ':' + name + ':');
+    delete s.emojis[name]; if (s.emojiMeta) delete s.emojiMeta[name];
+    audit(s, me, 'Emoji sildi', ':' + name + ':');
     save(); pushServers(membersOf(s)); cb({ ok: true });
   });
   socket.on('audit', (serverId, cb) => {

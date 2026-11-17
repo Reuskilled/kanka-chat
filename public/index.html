@@ -557,6 +557,57 @@
   .ep-row button.fav .ep-star { color: var(--accent-2); }
   .ep-star:hover { color: var(--accent) !important; transform: scale(1.15); }
   .ep-empty { padding: 30px 12px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 700; }
+  /* Emoji bilgi kartı */
+  #einfo { position: fixed; z-index: 70; width: min(300px, calc(100vw - 20px)); background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 14px 34px rgba(0,0,0,.55); padding: 12px; display: none; animation: popIn .14s var(--ease-out); }
+  #einfo.on { display: block; }
+  .ei-top { display: flex; gap: 10px; align-items: flex-start; }
+  .ei-emo { width: 42px; height: 42px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-size: 34px; line-height: 1; background: rgba(0,0,0,.22); border-radius: 10px; overflow: hidden; }
+  .ei-emo img { width: 36px; height: 36px; object-fit: contain; }
+  .ei-name { font-weight: 900; font-size: 13.5px; margin-bottom: 3px; word-break: break-word; }
+  .ei-desc { font-size: 12px; color: var(--muted); font-weight: 600; line-height: 1.45; }
+  .ei-src { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 9px; }
+  .ei-lbl { font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 7px; }
+  .ei-srv { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .ei-ic { width: 34px; height: 34px; border-radius: 10px; background: var(--hover); display: flex; align-items: center; justify-content: center; font-weight: 900; overflow: hidden; flex: 0 0 auto; }
+  .ei-ic img { width: 100%; height: 100%; object-fit: cover; }
+  .ei-srv b { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ei-srv small { color: var(--muted); font-size: 11px; font-weight: 700; }
+  .ei-x { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); flex: 0 0 auto; }
+  .ei-x:hover { background: var(--hover); color: var(--ink); }
+  .ei-x .ic { width: 14px; height: 14px; }
+  .ei-up { display: flex; align-items: center; gap: 8px; margin-top: 9px; font-size: 11.5px; color: var(--muted); font-weight: 700; }
+  .ei-up .av { width: 24px; height: 24px; font-size: 10px; border: none; }
+  .ei-up b { color: var(--ink); }
+  .ei-up small { display: block; font-size: 10.5px; font-weight: 600; }
+  .ei-code { display: inline-block; background: rgba(0,0,0,.28); border-radius: 6px; padding: 1px 5px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+  .ei-uni { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ei-uni span { font-size: 10.5px; font-weight: 800; color: var(--muted); background: var(--hover); padding: 2px 7px; border-radius: 999px; }
+  .ei-acts { display: flex; gap: 6px; margin-top: 10px; }
+  .ei-acts button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 10px; background: var(--hover); font-size: 12px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+  .ei-acts button:hover { box-shadow: inset 0 0 0 1px var(--line); }
+  .ei-acts button.on { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent-2); }
+  .ei-acts .ic { width: 14px; height: 14px; }
+  @media (max-width: 700px) { #einfo { left: 10px !important; right: 10px !important; top: auto !important; bottom: calc(84px + env(safe-area-inset-bottom)) !important; width: auto !important; max-height: min(62vh, 430px); overflow-y: auto; } }
+  .uemoji { cursor: pointer; }
+  #messages img.cemoji { cursor: pointer; }
+  /* Emoji yönetimi */
+  .emo-drop { border: 1.5px dashed var(--line); border-radius: 14px; padding: 16px; text-align: center; margin: 10px 0 6px; transition: border-color .15s, background .15s; }
+  .emo-drop.on { border-color: var(--accent-2); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .emo-drop .primary { width: auto; padding: 10px 18px; }
+  .emo-tbl { margin-top: 10px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .emo-tr { display: grid; grid-template-columns: 54px 1fr 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; border-top: 1px solid var(--line); }
+  .emo-tr:first-child { border-top: none; }
+  .emo-th { font-size: 10.5px; font-weight: 900; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); background: rgba(0,0,0,.16); }
+  .emo-tr img { width: 32px; height: 32px; object-fit: contain; border-radius: 8px; }
+  .emo-n { font-weight: 800; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .emo-by { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); min-width: 0; }
+  .emo-by .av { width: 20px; height: 20px; font-size: 9px; flex: 0 0 auto; }
+  .emo-by span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .emo-acts { display: flex; gap: 4px; }
+  .emo-acts button { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+  .emo-acts button:hover { background: var(--hover); color: var(--ink); }
+  .emo-acts .red:hover { color: var(--red); }
+  @media (max-width: 700px) { .emo-tr { grid-template-columns: 46px 1fr auto; padding: 7px 8px; } .emo-tr .emo-by { display: none; } .emo-tr.emo-th { display: none; } }
   .vmsg { display: flex; align-items: center; gap: 10px; min-width: 230px; }
   .vmsg .play { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.18); font-size: 14px; flex-shrink: 0; }
   .row:not(.mine) .vmsg .play { background: var(--accent); color: #fff; }
@@ -2755,6 +2806,7 @@
       <button type="button" id="emo-btn" title="Emoji" aria-label="Emoji seç"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/></svg></button>
       <button type="button" id="mic-btn" title="Sesli mesaj" aria-label="Sesli mesaj kaydet"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <div id="emojipanel"><div class="ep-search"><input id="ep-q" type="text" inputmode="search" placeholder="Mükemmel emojiyi bul" autocomplete="off" spellcheck="false" aria-label="Emoji ara"><div class="ep-prev" id="ep-prev" aria-hidden="true"></div></div><div class="ep-tabs" id="ep-tabs"></div><div class="ep-grid" id="ep-grid"></div></div>
+      <div id="einfo" role="dialog" aria-live="polite"></div>
       <button id="send" type="submit" title="Gönder" aria-label="Gönder"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 20 4l-5 16-3-7z"/><path d="m12 13 8-9"/></svg></button>
     </form>
     <input type="file" id="file" multiple hidden>
@@ -2976,6 +3028,8 @@ const ytId = u => (/(?:youtu\.be\/|[?&]v=|shorts\/|embed\/)([\w-]{11})/.exec(u) 
 const serverEmojis = () => (S.view === 'server' && S.server?.emojis) || {};
 const EMOJI_TOKEN = /^:([a-z0-9_]{2,24}):$/;
 const EMOJI_RUN = /(?:\p{Regional_Indicator}{2}|[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0F|[\u{1F3FB}-\u{1F3FF}])?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|[\u{1F3FB}-\u{1F3FF}])?)*)+/gu;
+const EMOJI_SEG = (() => { try { return new Intl.Segmenter('tr', { granularity: 'grapheme' }); } catch { return null; } })();
+const splitEmojiKey = k => EMOJI_SEG ? [...EMOJI_SEG.segment(String(k))].map(x => x.segment) : [String(k)];
 function reactionHTML(key, id, us) {
   const m = EMOJI_TOKEN.exec(key), url = m && serverEmojis()[m[1]];
   return `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${id}" data-e="${esc(key)}" title="${esc(us.join(', '))}">${url ? `<img class="cemoji" src="${esc(url)}" alt="${esc(key)}">` : esc(key)}<span>${us.length}</span></button>`;
@@ -2997,7 +3051,7 @@ function fmt(t) {
     .replace(/\|\|([^|\n]+)\|\|/g, '<span class="spoiler" title="Görmek için tıkla">$1</span>');
   const em = serverEmojis();
   h = h.replace(/:([a-z0-9_]{2,24}):/g, (m, n) => em[n] ? `<img class="cemoji" src="${esc(em[n])}" alt=":${n}:" title=":${n}:">` : m);
-  h = h.replace(EMOJI_RUN, m => `<span class="uemoji">${m}</span>`);
+  h = h.replace(EMOJI_RUN, m => splitEmojiKey(m).map(e => `<span class="uemoji">${e}</span>`).join(''));
   return h.replace(/\u0000(\d+)\u0000/g, (_, i) => codes[i]);
 }
 const isJumbo = t => { const x = t.replace(/:[a-z0-9_]{2,24}:/g, m => serverEmojis()[m.slice(1, -1)] ? '' : m).replace(/\s/g, ''); return !!t.trim() && t.length < 40 && (/^(\p{Extended_Pictographic}|‍|️|\p{Emoji_Modifier})*$/u.test(x)); };
@@ -3235,36 +3289,41 @@ socket.on('connect', () => {
 function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); location.reload(); }
 // Resim seç ve yükle. Büyük fotoğraflar küçültülür, telefonun HEIC/AVIF/BMP gibi biçimleri tarayıcı açabiliyorsa WebP'ye çevrilir.
 // (Eskiden 4,5 MB üstü resimler bağlantı sınırına takılıp hiçbir hata göstermeden yüklenmiyordu.)
+function readImageFile(f, max = 1920) {
+  return new Promise((ok, no) => {
+    const OK = /^image\/(png|jpeg|gif|webp)$/;
+    const fail = msg => { toast(msg); no(Object.assign(new Error(msg), { shown: true })); };
+    const asData = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+    const send = data => new Promise((res, rej) => {
+      let doneT = false; const t = setTimeout(() => { if (!doneT) { toast('Resim yüklenemedi, bağlantını kontrol edip tekrar dene'); rej(Object.assign(new Error('zaman aşımı'), { shown: true })); } }, 25000);
+      socket.emit('upload', { data }, r => { doneT = true; clearTimeout(t); if (r?.error) { toast(r.error); rej(Object.assign(new Error(r.error), { shown: true })); } else res(r.url); });
+    });
+    (async () => {
+      try {
+        const anim = f.type === 'image/gif' || (f.type === 'image/webp' && f.size < 4 * 1024 * 1024 && await isAnimWebp(f));
+        if (anim) { // hareketli resim: olduğu gibi gönder (küçültmek animasyonu bozar)
+          if (f.size > 4 * 1024 * 1024) return fail('Hareketli resim (GIF) en fazla 4 MB olabilir');
+          return ok(await send(await asData(f)));
+        }
+        let img;
+        try { img = await createImageBitmap(f); }
+        catch { img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(f); }); }
+        const w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+        if (OK.test(f.type) && k === 1 && f.size <= 1.5 * 1024 * 1024) return ok(await send(await asData(f))); // zaten uygun
+        toast('Resim hazırlanıyor…');
+        const c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        let q = .9, blob;
+        do { blob = await new Promise(r => c.toBlob(r, 'image/webp', q)); if (!blob || blob.type !== 'image/webp') blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q)); q -= .15; } while (blob && blob.size > 3.5 * 1024 * 1024 && q > .3);
+        if (!blob || blob.size > 4 * 1024 * 1024) return fail('Resim çok büyük, daha küçük bir resim seç');
+        ok(await send(await asData(blob)));
+      } catch (e) { if (!e?.shown) fail('Bu resim açılamadı. PNG, JPG, GIF ya da WebP dene'); }
+    })();
+  });
+}
 function readImage(cb, max = 1920) {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-  inp.onchange = async () => {
-    const f = inp.files[0]; if (!f) return;
-    const OK = /^image\/(png|jpeg|gif|webp)$/;
-    const anim = f.type === 'image/gif' || (f.type === 'image/webp' && f.size < 4 * 1024 * 1024 && await isAnimWebp(f));
-    const send = data => {
-      let doneT = false; const t = setTimeout(() => { if (!doneT) toast('Resim yüklenemedi, bağlantını kontrol edip tekrar dene'); }, 25000);
-      socket.emit('upload', { data }, res => { doneT = true; clearTimeout(t); res?.error ? toast(res.error) : cb(res.url); });
-    };
-    const asData = blob => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(blob); });
-    try {
-      if (anim) { // hareketli resim: olduğu gibi gönder (küçültmek animasyonu bozar)
-        if (f.size > 4 * 1024 * 1024) return toast('Hareketli resim (GIF) en fazla 4 MB olabilir');
-        return send(await asData(f));
-      }
-      let img;
-      try { img = await createImageBitmap(f); }
-      catch { img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(f); }); }
-      const w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
-      if (OK.test(f.type) && k === 1 && f.size <= 1.5 * 1024 * 1024) return send(await asData(f)); // zaten uygun
-      toast('Resim hazırlanıyor…');
-      const c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      let q = .9, blob;
-      do { blob = await new Promise(r => c.toBlob(r, 'image/webp', q)); if (!blob || blob.type !== 'image/webp') blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q)); q -= .15; } while (blob && blob.size > 3.5 * 1024 * 1024 && q > .3);
-      if (!blob || blob.size > 4 * 1024 * 1024) return toast('Resim çok büyük, daha küçük bir resim seç');
-      send(await asData(blob));
-    } catch { toast('Bu resim açılamadı. PNG, JPG, GIF ya da WebP dene'); }
-  };
+  inp.onchange = () => { const f = inp.files[0]; if (f) readImageFile(f, max).then(cb, () => {}); };
   inp.click();
 }
 async function isAnimWebp(f) { try { const b = new Uint8Array(await f.slice(0, 64).arrayBuffer()); return String.fromCharCode(...b.slice(12, 16)) === 'VP8X' && !!(b[20] & 2); } catch { return false; } }
@@ -4537,12 +4596,63 @@ function showServerSettings(s, tab, focus) {
       $('#ds-save').onclick = () => socket.emit('discoverySave', { serverId: s.id, discoverable: $('#ds-on').checked, description: $('#ds-desc').value, category: $('#ds-cat').value }, done('Keşif ayarları kaydedildi'));
     },
     emoji: () => {
-      main.innerHTML = `<div class="st-page"><h3>Özel emojiler</h3><p class="hint">${Object.keys(s.emojis || {}).length}/50 · Sohbette :ad: yazarak kullanılır. Silmek için emojiye tıkla.</p>
-        <div class="ep-grid" style="grid-template-columns:repeat(8,1fr);padding:0;margin-bottom:12px">${Object.entries(s.emojis || {}).map(([n, u]) => `<button data-rmemo="${n}" title=":${n}:"><img src="${esc(u)}" alt=":${n}:"></button>`).join('')}</div>
-        <button class="primary" id="sv-emo" style="width:auto;padding:10px 18px">${ic('plus')}Emoji yükle</button></div>`;
-      $('#sv-emo').onclick = () => readImage(url => form('Emoji adı', 'Sohbette :ad: yazarak kullanılacak (a-z, 0-9, _).', [{ k: 'name', p: 'örn. kanka' }], v =>
-        socket.emit('addEmoji', { serverId: s.id, name: v.name, url }, r => { if (r.error) return toast(r.error); toast(`:${v.name.toLowerCase()}: eklendi`); showServerSettings(s, 'emoji'); })), 160);
-      main.querySelectorAll('[data-rmemo]').forEach(b => b.onclick = () => confirmBox(`:${b.dataset.rmemo}: emojisi silinsin mi?`, () => socket.emit('removeEmoji', { serverId: s.id, name: b.dataset.rmemo }, () => showServerSettings(s, 'emoji'))));
+      const em = s.emojis || {}, meta = s.emojiMeta || {}, names = Object.keys(em), left = Math.max(0, 50 - names.length);
+      const rows = names.map(n => {
+        const m = meta[n];
+        return `<div class="emo-tr"><img src="${esc(em[n])}" alt=":${n}:" data-eiemo="${n}" role="button" tabindex="0" title="Bilgi">
+          <span class="emo-n">:${n}:</span>
+          <span class="emo-by">${m?.by ? `${av(m.by)}<span>${esc(dn(m.by))}</span>` : '<span>—</span>'}</span>
+          <span class="emo-acts"><button type="button" data-edemo="${n}" title="Yeniden adlandır" aria-label="Yeniden adlandır">${ic('edit')}</button><button type="button" class="red" data-rmemo="${n}" title="Sil" aria-label="Sil">${ic('trash')}</button></span></div>`;
+      }).join('');
+      main.innerHTML = `<div class="st-page"><h3>Emoji</h3>
+        <p class="hint">Sunucuya özel emojiler. Sohbette <b>:ad:</b> yazarak kullanılır. <b>${left} yer mevcut.</b></p>
+        <div class="emo-drop" id="emo-drop">
+          <button class="primary" id="sv-emo" ${left ? '' : 'disabled'}>${ic('plus')}Emoji Yükle</button>
+          <p class="hint" style="margin:8px 0 0">PNG, JPG, GIF veya WebP dosyalarını buraya sürükle ya da tıkla. Aynı anda birden fazla dosya seçebilirsin; dosya adı emoji adı olur.</p>
+          <p class="hint" id="emo-stat" style="margin:6px 0 0;font-weight:800"></p>
+        </div>
+        ${names.length ? `<div class="emo-tbl"><div class="emo-tr emo-th"><span></span><span>Ad</span><span>Yükleyen</span><span></span></div>${rows}</div>`
+          : '<p class="hint" style="margin-top:14px">Henüz özel emoji yok. İlk emojini yükle, sohbete renk katsın.</p>'}
+      </div>`;
+      const doUpload = async files => {
+        const stat = $('#emo-stat'), used = new Set(Object.keys(s.emojis || {}));
+        let slots = 50 - used.size, ok = 0, fail = 0;
+        const list = [...files].filter(f => /^image\//.test(f.type) || /\.(png|jpe?g|gif|webp)$/i.test(f.name));
+        if (!list.length) return toast('Sadece PNG, JPG, GIF veya WebP dosyaları yüklenebilir');
+        if (!slots) return toast('Emoji sınırı doldu (50)');
+        for (let i = 0; i < list.length; i++) {
+          if (!slots) { fail += list.length - i; break; }
+          const f = list[i];
+          const base = f.name.replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 24);
+          if (base.length < 2) { fail++; toast(`"${f.name}" için geçerli ad yok (en az 2 harf: a-z, 0-9, _)`); continue; }
+          let name = base, k = 2;
+          while (used.has(name)) name = base.slice(0, 20) + '_' + k++;
+          stat.textContent = `${i + 1}/${list.length} yükleniyor · ${f.name}`;
+          try {
+            const url = await readImageFile(f, 160);
+            const r = await new Promise(res => socket.emit('addEmoji', { serverId: s.id, name, url }, res));
+            if (r?.error) { fail++; toast(r.error); if (/yetkin/.test(r.error)) break; continue; }
+            used.add(name); slots--; ok++;
+          } catch { fail++; }
+        }
+        stat.textContent = '';
+        if (ok || fail) toast(`${ok ? `${ok} emoji eklendi` : 'Emoji eklenemedi'}${fail ? ` · ${fail} atlandı` : ''}`);
+        showServerSettings(s, 'emoji');
+      };
+      const pick = () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/png,image/jpeg,image/gif,image/webp'; inp.multiple = true; inp.onchange = () => { if (inp.files?.length) doUpload(inp.files); }; inp.click(); };
+      const drop = $('#emo-drop');
+      $('#sv-emo').onclick = e => { e.stopPropagation(); pick(); };
+      drop.onclick = e => { if (!e.target.closest('button')) pick(); };
+      ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('on'); }));
+      drop.addEventListener('dragleave', e => { if (!drop.contains(e.relatedTarget)) drop.classList.remove('on'); });
+      drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('on'); if (e.dataTransfer?.files?.length) doUpload(e.dataTransfer.files); });
+      main.querySelectorAll('[data-eiemo]').forEach(im => { const go = () => emojiInfo(`${s.id}/${im.dataset.eiemo}`, im); im.onclick = go; im.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }; });
+      main.querySelectorAll('[data-edemo]').forEach(b => b.onclick = () => { const n = b.dataset.edemo;
+        form('Emoji adını değiştir', `:${n}: emojisine yeni bir ad ver. Harf, sayı ve alt çizgi kullanabilirsin.`, [{ k: 'name', p: 'örn. kanka', v: n }], v =>
+          socket.emit('renameEmoji', { serverId: s.id, name: n, to: v.name }, r => { if (r.error) return toast(r.error); toast(`:${n}: → :${r.name}:`); showServerSettings(s, 'emoji'); }));
+      });
+      main.querySelectorAll('[data-rmemo]').forEach(b => b.onclick = () => confirmBox(`:${b.dataset.rmemo}: emojisi silinsin mi? Sohbetteki eski kullanımların görünmez olur.`, () =>
+        socket.emit('removeEmoji', { serverId: s.id, name: b.dataset.rmemo }, r => { if (r?.error) return toast(r.error); showServerSettings(s, 'emoji'); })));
     },
     reports: () => { main.innerHTML = `<div class="st-page"><h3>Şikayetler</h3><p class="hint">Üyelerin bu sunucuda şikayet ettiği mesaj ve kişiler. ${S.siteAdmin ? 'Kanka yönetimi olduğun için şikayet edenleri görüyorsun; diğer moderatörler görmez.' : 'Şikayet edenlerin adı sana gösterilmez.'}</p><div id="ss-rep"></div></div>`; reportsPanel($('#ss-rep'), s.id); },
     bans: () => {
@@ -4895,8 +5005,6 @@ let eFav = [];
 let eUse = {};
 try { const f = JSON.parse(store.get('kanka-emofav') || '[]'); if (Array.isArray(f)) eFav = f.filter(x => typeof x === 'string').slice(0, 48); } catch {}
 try { const u = JSON.parse(store.get('kanka-emouse') || '{}'); if (u && typeof u === 'object') eUse = u; } catch {}
-const GRAPHEMER = (() => { try { return new Intl.Segmenter('tr', { granularity: 'grapheme' }); } catch { return null; } })();
-const splitEmojiKey = k => GRAPHEMER ? [...GRAPHEMER.segment(String(k))].map(x => x.segment) : [String(k)];
 // Eski sürüm art arda yazılan emojileri tek anahtar olarak kaydediyordu; tek tek ayır
 function normalizeEmojiPrefs(fav, use) {
   const nf = [], seen = new Set();
@@ -7078,10 +7186,12 @@ function toggleEmojiFav(key) {
 function emojiPreview(key) {
   const box = $('#ep-prev'); if (!box) return;
   const r = key && resolveEmojiKey(key);
-  if (!r) { box.classList.remove('on'); box.innerHTML = ''; return; }
+  epPrevKey = r ? key : null;
+  if (!r) { box.classList.remove('on'); box.innerHTML = ''; box.removeAttribute('title'); return; }
   const title = r.url ? r.name : (EMO_NAME.get(key) || key);
-  const src = r.url ? `${S.server?.name || 'Sunucu'} sunucusundan` : 'Emoji';
-  box.innerHTML = `<span class="pe">${r.url ? `<img src="${esc(r.url)}" alt="">` : r.e}</span><span class="pt"><span class="pn">${esc(title)}</span><span class="ps">${esc(src)}</span></span>`;
+  const src = r.url ? `${S.server?.name || 'Sunucu'} sunucusundan` : 'Varsayılan emoji';
+  box.innerHTML = `<span class="pe">${r.url ? `<img src="${esc(r.url)}" alt="">` : r.e}</span><span class="pt"><span class="pn">${esc(title)}</span><span class="ps">${esc(src)} · Bilgi için tıkla</span></span>`;
+  box.title = 'Emoji bilgisi';
   box.classList.add('on');
 }
 function epBtn(key) {
@@ -7180,6 +7290,86 @@ $('#ep-grid').addEventListener('keydown', e => {
   btns[Math.max(0, Math.min(btns.length - 1, j))]?.focus();
 });
 document.addEventListener('click', e => { if (!e.target.closest('#emojipanel, #emo-btn')) closeEmojiPanel(); });
+
+// ================= Emoji bilgi kartı =================
+let epPrevKey = null;
+const eiWhen = t => {
+  const d = Math.max(0, Date.now() - t), m = Math.floor(d / 60000), h = Math.floor(d / 3600000), g = Math.floor(d / 86400000);
+  if (m < 1) return 'az önce';
+  if (h < 1) return `${m} dakika önce`;
+  if (g < 1) return `${h} saat önce`;
+  if (g < 30) return `${g} gün önce`;
+  return new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+const closeEmojiInfo = () => $('#einfo')?.classList.remove('on');
+function emojiInfo(key, anchor) {
+  const box = $('#einfo'); if (!box) return;
+  const r = resolveEmojiKey(key); if (!r) return;
+  const custom = !!r.url;
+  const name = custom ? r.name : (EMO_NAME.get(key) || '');
+  const title = custom ? `:${r.name}:` : (name ? name[0].toLocaleUpperCase('tr') + name.slice(1) : 'Emoji');
+  const sv = custom ? (S.server || {}) : null;
+  const meta = custom ? sv.emojiMeta?.[r.name] : null;
+  const members = sv?.members?.length || 0;
+  const online = sv?.members?.filter(n => S.online?.has(n)).length || 0;
+  const uni = custom ? '' : [...key].map(c => 'U+' + c.codePointAt(0).toString(16).toUpperCase()).join(' ');
+  const fav = eFav.includes(key);
+  box.innerHTML = `
+    <div class="ei-top">
+      <div class="ei-emo">${custom ? `<img src="${esc(r.url)}" alt="">` : r.e}</div>
+      <div style="min-width:0;flex:1">
+        <div class="ei-name">${esc(title)}</div>
+        <div class="ei-desc">${custom
+          ? `Özel bir sunucu emojisi. Yalnızca <b>${esc(sv.name || 'bu sunucu')}</b> içinde, sohbete <span class="ei-code">:${esc(r.name)}:</span> yazarak kullanılabilir.`
+          : 'Varsayılan emoji. Sohbette her yerde kullanabilirsin.'}</div>
+      </div>
+      <button type="button" class="ei-x" data-eix aria-label="Kapat">${ic('x')}</button>
+    </div>
+    ${custom ? `<div class="ei-src"><div class="ei-lbl">Emoji kaynağı</div>
+      <div class="ei-srv"><span class="ei-ic">${sv.iconImg ? `<img src="${esc(sv.iconImg)}" alt="">` : esc(sv.icon || '?')}</span>
+        <span style="min-width:0;flex:1"><b>${esc(sv.name || 'Sunucu')}</b><small>${members} üye · ${online} çevrim içi${sv.discoverable ? ' · Keşfedilebilir' : ''}</small></span></div>
+      ${meta?.by ? `<div class="ei-up">${av(meta.by)}<span><b>${esc(dn(meta.by))}</b> sunucuya ekledi${meta.at ? `<small>${eiWhen(meta.at)}</small>` : ''}</span></div>` : ''}</div>`
+      : `<div class="ei-src"><div class="ei-lbl">Unicode</div><div class="ei-uni">${uni.split(' ').map(u => `<span>${u}</span>`).join('')}</div></div>`}
+    <div class="ei-acts">
+      <button type="button" data-eifav class="${fav ? 'on' : ''}">${ic('star')}${fav ? 'Favorilerde' : 'Favorilere ekle'}</button>
+      <button type="button" data-eicopy>${ic('copy')}Kopyala</button>
+    </div>`;
+  box.classList.add('on');
+  const w = box.offsetWidth, h = box.offsetHeight, vw = innerWidth, vh = innerHeight;
+  let left, top;
+  if (anchor && anchor.getBoundingClientRect) {
+    const rc = anchor.getBoundingClientRect();
+    left = rc.left + rc.width / 2 - w / 2;
+    top = rc.top - h - 8 >= 8 ? rc.top - h - 8 : rc.bottom + 8;
+  } else { left = (vw - w) / 2; top = Math.max(8, vh / 2 - h / 2); }
+  box.style.left = Math.min(Math.max(8, left), Math.max(8, vw - w - 8)) + 'px';
+  box.style.top = Math.min(Math.max(8, top), Math.max(8, vh - h - 8)) + 'px';
+  box.dataset.key = key;
+  const fb = box.querySelector('[data-eifav]');
+  fb.onclick = e => { e.stopPropagation(); toggleEmojiFav(key); const on = eFav.includes(key); fb.classList.toggle('on', on); fb.innerHTML = `${ic('star')}${on ? 'Favorilerde' : 'Favorilere ekle'}`; };
+  box.querySelector('[data-eicopy]').onclick = e => {
+    e.stopPropagation();
+    const txt = custom ? `:${r.name}:` : key;
+    const done = () => toast('Kopyalandı');
+    navigator.clipboard?.writeText(txt).then(done, () => toast('Kopyalanamadı'));
+  };
+  box.querySelector('[data-eix]').onclick = e => { e.stopPropagation(); closeEmojiInfo(); };
+}
+$('#messages').addEventListener('click', e => {
+  if (e.target.closest('.reacts')) return;
+  const ue = e.target.closest('.uemoji'), ce = e.target.closest('img.cemoji');
+  let key = null;
+  if (ue) key = ue.textContent;
+  else if (ce) { const m = /^:([a-z0-9_]{2,24}):$/.exec(ce.alt || ''); if (m && S.view === 'server' && S.server?.emojis?.[m[1]]) key = `${S.server.id}/${m[1]}`; }
+  if (!key) return;
+  e.preventDefault(); e.stopPropagation();
+  emojiInfo(key, ue || ce);
+}, true);
+document.addEventListener('click', e => { if (!e.target.closest('#einfo, .uemoji, img.cemoji, #ep-prev')) closeEmojiInfo(); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEmojiInfo(); });
+$('#messages').addEventListener('scroll', closeEmojiInfo, { passive: true });
+$('#ep-prev').addEventListener('click', () => { if (epPrevKey) emojiInfo(epPrevKey, $('#ep-prev')); });
+$('#ep-grid').addEventListener('contextmenu', e => { const b = e.target.closest('button[data-ins]'); if (!b) return; e.preventDefault(); emojiInfo(b.dataset.ins, b); });
 
 // ================= Sesli mesaj =================
 let rec = null, recChunks = [], recStart = 0, recTimer = null, recCancel = false;
