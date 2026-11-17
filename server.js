@@ -885,7 +885,7 @@ function dcConvert(t) {
   items.sort((a, b) => a.ci - b.ci || (voiceLike(a.ch.type) ? 1 : 0) - (voiceLike(b.ch.type) ? 1 : 0) || (a.src.position || 0) - (b.src.position || 0) || (a.src.id || 0) - (b.src.id || 0));
   const afkSrc = g.afk_channel_id != null && items.find(x => String(x.src.id) === String(g.afk_channel_id) && x.ch.type === 'voice');
   const afk = afkSrc ? { ch: afkSrc.ch.id, min: nearest([1, 5, 10, 15, 30, 60], (g.afk_timeout || 600) / 60) } : null;
-  return { name: clean(t.name || g.name, 40), roles, categories, channels: items.map(x => x.ch), afk, skipped };
+  return { name: clean(t.name || g.name, 40), roles, categories, channels: items.map(x => x.ch), afk, skipped, lockChannels: !has(evP, 4n) && !has(evP, 3n) };
 }
 function dcPreview(c, code) {
   const row = ch => ({ name: ch.name, type: ch.type, news: !!ch.news, private: ovOfPreview(c, ch) });
@@ -3024,6 +3024,7 @@ io.on('connection', socket => {
         const c = dcConvert(t);
         Object.assign(s, { customRoles: c.roles, categories: c.categories, channels: c.channels, template: 'discord', discordTemplate: code });
         if (c.afk) s.afk = c.afk;
+        if (c.lockChannels) s.lockChannels = true;
         finish();
       }).catch(e => { console.error('Discord şablonu aktarılamadı', e); cb({ error: 'Şablon aktarılamadı, biraz sonra tekrar dene' }); });
     }
