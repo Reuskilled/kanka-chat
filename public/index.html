@@ -48,9 +48,9 @@
   body.ui2 #rail { width: 76px; gap: 10px; }
   body.ui2 .srv { width: 52px; height: 52px; border-radius: 17px; border: none; background: var(--card); }
   body.ui2 .srv:hover { border-radius: 15px; }
-  body.ui2 .srv.active { border-radius: 17px; outline: 2.5px solid var(--accent); outline-offset: 3px; background: var(--card); color: var(--ink); }
+  body.ui2 .srv.active { border-radius: 17px; background: var(--card); color: var(--ink); }
   body.ui2 .srv.home { box-shadow: 0 6px 18px rgba(255,106,44,.35); }
-  body.ui2 .srv.home.active { outline-color: var(--ink); background: #F2652F; color: #fff; }
+  body.ui2 .srv.home.active { background: #F2652F; color: #fff; }
   body.ui2 .srv.dash { background: rgba(255,232,214,.04); border: 1.5px dashed rgba(255,232,214,.14); }
   body.ui2 .srv img { border-radius: inherit; }
   body.ui2 .srv .upill { left: -10px; width: 6px; height: 14px; margin-top: -7px; } body.ui2 .srv:hover .upill { height: 24px; margin-top: -12px; } body.ui2 .srv.active .upill { height: 40px; margin-top: -20px; }
@@ -2659,6 +2659,29 @@
   .inv-reset { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: none; border: 1px dashed var(--line); color: var(--ink); font-weight: 800; font-size: 13.5px; text-align: left; }
   .inv-reset:hover { border-color: var(--accent); } .inv-reset .ic { width: 15px; height: 15px; margin-right: 6px; vertical-align: -2px; } .inv-reset small { font-weight: 600; font-size: 12px; color: var(--muted); }
   .vv-bar .vv-chat { margin-left: auto; background: var(--accent); color: #fff; border-color: var(--accent); display: inline-flex; align-items: center; gap: 6px; } .vv-bar .vv-chat .ic { width: 15px; height: 15px; }
+  .vv-bar .vv-mem { display: inline-flex; align-items: center; gap: 6px; }
+  .vv-bar .vv-mem .ic { width: 15px; height: 15px; }
+  .vv-bar .vv-mem[hidden] { display: none; }
+  /* Yayında üyeleri gizle + tekerlekle yakınlaştırma */
+  #stage .tile.memoff { display: none; }
+  #stage .tile.zoomed { z-index: 3; }
+  #stage .tile.zoomed video { cursor: grab; touch-action: none; }
+  #zoomchip { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 8px;
+    padding: 5px 6px 5px 12px; border-radius: 999px; background: rgba(0,0,0,.62); border: 1px solid rgba(255,255,255,.16); color: #fff; font-size: 12px; font-weight: 800; }
+  #zoomchip[hidden] { display: none; }
+  #zoomchip b { font-variant-numeric: tabular-nums; }
+  #zoomchip small { color: rgba(255,255,255,.6); font-weight: 700; }
+  #zoomchip button { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.14); color: #fff; }
+  #zoomchip button:hover { background: rgba(255,255,255,.25); }
+  #zoomchip .ic { width: 12px; height: 12px; }
+  @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
+    .vv-bar { left: 10px; right: 10px; gap: 6px; }
+    .vv-bar b { min-width: 0; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; }
+    .vv-bar b .ic { flex: none; }
+    .vv-bar button { padding: 8px 10px; font-size: 0; gap: 7px; }
+    .vv-bar button .ic { width: 17px; height: 17px; }
+    #zoomchip small { display: none; }
+  }
   .vb-chat { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 5px 10px; border-radius: 9px; background: rgba(255,138,76,.14); color: var(--accent); font-weight: 800; font-size: 12px; } .vb-chat .ic { width: 14px; height: 14px; } .vb-chat:hover { background: var(--accent); color: #fff; }
   #callbar { display: flex; align-items: center; gap: 12px; margin: 10px 20px 0; padding: 10px 14px; border-radius: 16px; background: linear-gradient(135deg, rgba(63,207,142,.16), rgba(63,207,142,.04)); border: 1px solid rgba(63,207,142,.4); }
   #callbar .cb-pulse { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: #3fcf8e; color: #0b1a12; animation: cbp 1.4s infinite; flex-shrink: 0; } #callbar .cb-pulse .ic { width: 18px; height: 18px; }
@@ -2669,45 +2692,84 @@
   .room.incall::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #3fcf8e; margin-left: auto; box-shadow: 0 0 0 3px rgba(63,207,142,.25); animation: cbp 1.4s infinite; flex-shrink: 0; }
   @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) { #callbar { margin: 8px 10px 0; } #callbar .cb-avs { display: none; } }
   /* Sohbette arama günlüğü */
-  .calllog { display: flex; align-items: center; gap: 10px; max-width: 470px; margin: 6px 0; padding: 10px 12px; border-radius: 14px; background: var(--hover); border: 1px solid var(--line); }
+  .calllog { display: flex; align-items: center; gap: 10px; width: fit-content; max-width: min(470px, calc(100% - 132px)); margin: 6px 56px 6px 76px; padding: 10px 12px; border-radius: 14px; background: var(--hover); border: 1px solid var(--line); }
   .calllog .cl-ic { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: rgba(63,207,142,.14); color: #3fcf8e; flex-shrink: 0; }
   .calllog .cl-ic .ic { width: 17px; height: 17px; }
   .calllog.missed .cl-ic { background: rgba(239,90,90,.14); color: #ef5a5a; }
   .calllog.done .cl-ic { background: rgba(255,255,255,.06); color: var(--muted); }
+  .calllog.live { border-color: rgba(63,207,142,.28); background: linear-gradient(90deg, rgba(63,207,142,.08), transparent); }
+  .calllog.live .cl-t b { color: #3fcf8e; }
   .calllog .cl-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .calllog .cl-t b { font-size: 13.5px; }
   .calllog .cl-t small { color: var(--muted); font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .calllog .cl-go { display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 9px; background: rgba(63,207,142,.14); color: #3fcf8e; font-weight: 900; font-size: 12px; flex-shrink: 0; }
   .calllog .cl-go .ic { width: 14px; height: 14px; }
   .calllog .cl-go:hover { background: #3fcf8e; color: #0b1a12; }
+  @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
+    .calllog { margin: 6px 14px 6px 60px; max-width: min(470px, calc(100% - 74px)); }
+  }
   /* Sohbette süren arama: kim kiminle konuşuyor */
-  #dmcall { position: relative; margin: 10px 20px 0; padding: 14px 14px 12px; border-radius: 18px; overflow: hidden; background: radial-gradient(120% 160% at 50% -10%, rgba(242,101,47,.28), rgba(242,101,47,.04) 60%), linear-gradient(160deg, #231913, #1a1310); border: 1px solid #4a3426; }
-  #dmcall .dc-waves { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: flex-end; gap: 4px; height: 34px; opacity: .16; pointer-events: none; }
-  #dmcall .dc-waves i { width: 3px; height: 20px; border-radius: 2px; background: var(--accent); animation: dcw 1.8s infinite ease-in-out; }
-  #dmcall .dc-waves i:nth-child(2) { animation-delay: .18s; } #dmcall .dc-waves i:nth-child(3) { animation-delay: .36s; } #dmcall .dc-waves i:nth-child(4) { animation-delay: .54s; } #dmcall .dc-waves i:nth-child(5) { animation-delay: .72s; }
-  @keyframes dcw { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1.5); } }
-  #dmcall .dc-avs { position: relative; display: flex; align-items: flex-start; justify-content: center; gap: 16px; }
-  #dmcall .dc-p { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 82px; }
+  #dmcall { position: relative; margin: 10px 20px 0; }
+  #dmcall .dc-stage { position: relative; overflow: hidden; padding: 8px 12px 12px; border-radius: 18px; background: radial-gradient(120% 160% at 50% -20%, rgba(242,101,47,.24), rgba(242,101,47,.03) 62%), linear-gradient(160deg, #231913, #1a1310); border: 1px solid #4a3426; }
+  #dmcall .dc-top { position: relative; z-index: 1; display: flex; align-items: center; gap: 8px; }
+  #dmcall .dc-live { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(111,211,155,.10); border: 1px solid rgba(111,211,155,.22); color: var(--green); font-size: 11.5px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  #dmcall .dc-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: cbp 1.6s infinite; }
+  #dmcall .dc-tools { margin-left: auto; display: flex; gap: 6px; }
+  #dmcall .dc-tool { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 9px; background: rgba(255,232,214,.06); color: var(--ink); font-size: 12px; font-weight: 800; }
+  #dmcall .dc-tool .ic { width: 13px; height: 13px; }
+  #dmcall .dc-tool.icon { width: 30px; padding: 0; justify-content: center; }
+  #dmcall .dc-avs { position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: center; gap: 16px; padding-top: 8px; }
+  #dmcall .dc-p { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 82px; }
   #dmcall .dc-p .av { width: 54px; height: 54px; font-size: 21px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(255,255,255,.07); animation: dcIn .3s var(--ease-out); }
   #dmcall .dc-p.speaking .av { box-shadow: 0 0 0 3px var(--green), 0 0 18px rgba(111,211,155,.42); }
   #dmcall .dc-p small { max-width: 82px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; font-weight: 800; color: var(--muted); }
   #dmcall .dc-p.me small { color: var(--accent); }
   #dmcall .dc-more { align-self: center; font-weight: 900; color: var(--muted); }
+  #dmcall .dc-mb { position: absolute; right: 10px; bottom: 22px; width: 19px; height: 19px; border-radius: 50%; background: #e5484d; color: #fff; display: none; place-items: center; border: 2px solid #1e1511; z-index: 2; }
+  #dmcall .dc-mb .ic { width: 10px; height: 10px; stroke-width: 2.6; }
+  #dmcall.muted .dc-p.me .dc-mb { display: grid; }
   @keyframes dcIn { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  #dmcall .dc-meta { text-align: center; margin-top: 8px; }
-  #dmcall .dc-meta b { display: block; font-size: 14px; }
-  #dmcall .dc-meta small { display: block; margin-top: 2px; color: var(--green); font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums; }
-  #dmcall .dc-acts { position: relative; display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+  #dmcall .dc-acts { position: relative; z-index: 1; display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
   #dmcall .dc-b { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.07); color: var(--ink); flex-shrink: 0; }
   #dmcall .dc-b:hover { background: rgba(255,255,255,.14); }
   #dmcall .dc-b .ic { width: 18px; height: 18px; }
   #dmcall .dc-b.on { background: var(--accent); color: #1a0f0a; }
   #dmcall .dc-b.off { background: rgba(255,107,107,.16); color: var(--red); }
-  #dmcall .dc-leave { width: auto; padding: 0 18px; border-radius: 21px; background: #e5484d; color: #fff; }
+  #dmcall .dc-leave { width: auto; padding: 0 16px; display: inline-flex; align-items: center; gap: 6px; border-radius: 21px; background: #e5484d; color: #fff; font-weight: 900; font-size: 12.5px; }
   #dmcall .dc-leave:hover { background: #f05a5f; }
-  #dmcall .dc-full { position: absolute; right: 10px; top: 10px; width: 30px; height: 30px; border-radius: 9px; background: rgba(255,255,255,.06); color: var(--muted); display: grid; place-items: center; z-index: 1; }
-  #dmcall .dc-full .ic { width: 15px; height: 15px; }
-  @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) { #dmcall { margin: 8px 10px 0; padding: 12px 10px 10px; } #dmcall .dc-p { width: 70px; } #dmcall .dc-p .av { width: 48px; height: 48px; font-size: 19px; } #dmcall .dc-acts { gap: 6px; } #dmcall .dc-b { width: 40px; height: 40px; } }
+  #dmcall .dc-leave .ic { width: 16px; height: 16px; }
+  /* Kapalıyken ince şerit */
+  #dmcall .dc-bar { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; border: 1px solid rgba(255,138,76,.30); background: linear-gradient(120deg, rgba(242,101,47,.16), rgba(242,101,47,.04) 55%), #221914; }
+  #dmcall .dc-stack { display: flex; align-items: center; padding-left: 4px; flex-shrink: 0; }
+  #dmcall .dc-stack > span { margin-left: -9px; }
+  #dmcall .dc-stack > span:first-child { margin-left: 0; }
+  #dmcall .dc-stack .av { width: 32px; height: 32px; font-size: 12px; border: 2px solid #221914; border-radius: 50%; display: grid; place-items: center; }
+  #dmcall .dc-stack .speaking .av { box-shadow: 0 0 0 2px var(--green); }
+  #dmcall .dc-grpav { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg,#F2652F,#c9481b); color: #fff; border: 2px solid #221914; }
+  #dmcall .dc-grpav .ic { width: 16px; height: 16px; }
+  #dmcall .dc-more2 { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #2e231d; color: var(--muted); font-size: 11px; font-weight: 900; border: 2px solid #221914; }
+  #dmcall .dc-bt { flex: 1; min-width: 0; }
+  #dmcall .dc-bt b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #dmcall .dc-bt small { display: flex; align-items: center; gap: 5px; margin-top: 1px; color: var(--green); font-size: 11.5px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  #dmcall .dc-bt small i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: cbp 1.6s infinite; flex-shrink: 0; }
+  #dmcall .dc-bar.wait .dc-bt small { color: var(--muted); }
+  #dmcall .dc-bar.wait .dc-bt small i { background: var(--muted); animation: none; }
+  #dmcall .dc-bwave { display: flex; align-items: center; gap: 3px; height: 24px; flex-shrink: 0; }
+  @keyframes dcw { 0%, 100% { transform: scaleY(.45); } 50% { transform: scaleY(1.4); } }
+  #dmcall .dc-bwave i { width: 3px; height: 14px; border-radius: 2px; background: var(--accent); opacity: .75; animation: dcw 1.3s infinite ease-in-out; }
+  #dmcall .dc-bwave i:nth-child(2) { height: 9px; animation-delay: .12s; } #dmcall .dc-bwave i:nth-child(3) { height: 19px; animation-delay: .24s; } #dmcall .dc-bwave i:nth-child(4) { height: 11px; animation-delay: .36s; } #dmcall .dc-bwave i:nth-child(5) { height: 17px; animation-delay: .48s; } #dmcall .dc-bwave i:nth-child(6) { height: 10px; animation-delay: .6s; } #dmcall .dc-bwave i:nth-child(7) { height: 15px; animation-delay: .72s; }
+  #dmcall .dc-bacts { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  #dmcall .dc-bb { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.07); color: var(--ink); }
+  #dmcall .dc-bb:hover { background: rgba(255,255,255,.14); }
+  #dmcall .dc-bb .ic { width: 16px; height: 16px; }
+  #dmcall .dc-bb.on { background: var(--accent); color: #1a0f0a; }
+  #dmcall .dc-bb.off { background: rgba(255,107,107,.16); color: var(--red); }
+  #dmcall .dc-hang { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #e5484d; color: #fff; }
+  #dmcall .dc-hang .ic { width: 17px; height: 17px; }
+  #dmcall .dc-expand { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: rgba(255,255,255,.05); color: var(--muted); }
+  #dmcall .dc-expand .ic { width: 14px; height: 14px; }
+  @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) { #dmcall { margin: 8px 10px 0; } #dmcall .dc-stage { padding: 8px 10px 10px; } #dmcall .dc-p { width: 70px; } #dmcall .dc-p .av { width: 48px; height: 48px; font-size: 19px; } #dmcall .dc-mb { right: 6px; bottom: 21px; } #dmcall .dc-acts { gap: 6px; } #dmcall .dc-b { width: 40px; height: 40px; } #dmcall .dc-bwave { display: none; } }
+  @media (max-width: 460px) { #dmcall .dc-hide-sm { display: none; } #dmcall .dc-stack .av, #dmcall .dc-more2, #dmcall .dc-grpav { width: 28px; height: 28px; font-size: 11px; } #dmcall .dc-bar { gap: 8px; } }
   /* Kenar şeritte süren aramalar */
   .srv.rcall { position: relative; padding: 0; border: none; background: none; overflow: visible; animation: popIn .25s var(--ease-out); }
   .srv.rcall .av { width: 46px; height: 46px; font-size: 17px; border-radius: 50%; }
@@ -3018,12 +3080,14 @@ const ICON = {
   hourglass: '<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9"/>',
   up: '<path d="m6 15 6-6 6 6"/>',
   eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path d="M3 3l18 18"/><path d="M10.6 6.2A9.7 9.7 0 0 1 12 6c6.4 0 10 6 10 6a17.2 17.2 0 0 1-3.3 4M6.4 6.4A16.8 16.8 0 0 0 2 12s3.6 6 10 6c1.5 0 2.9-.3 4.1-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
   at: '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>',
   down: '<path d="m6 9 6 6 6-6"/>',
   forum: '<path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1v2l-3-2h-4a2 2 0 0 1-2-2"/>',
   stage: '<path d="M4 20h16"/><path d="M6 20v-4h12v4"/><rect x="9" y="3" width="6" height="9" rx="3"/><path d="M12 12v4"/>',
   grip: '<path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3.2" stroke-linecap="round"/>',
   eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path d="M3 3l18 18"/><path d="M10.6 6.2A9.7 9.7 0 0 1 12 6c6.4 0 10 6 10 6a17.2 17.2 0 0 1-3.3 4M6.4 6.4A16.8 16.8 0 0 0 2 12s3.6 6 10 6c1.5 0 2.9-.3 4.1-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
   expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   live: '<circle cx="12" cy="12" r="2.5"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/>',
   window: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M6.5 6.5h.01M9 6.5h.01"/>',
@@ -3032,6 +3096,8 @@ const ICON = {
   sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/>',
   usersPlus: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>',
   arrowDown: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+  arrowOut: '<path d="M7 17 17 7M8 7h9v9"/>',
+  arrowIn: '<path d="M17 7 7 17M16 17H7V8"/>',
   bellOff: '<path d="M6 16v-5a6 6 0 0 1 9.2-5.1M18 11v5l2 2H8M10 21h4M3 3l18 18"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
   idcopy: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h4M7 14h7M15 10h2"/>',
@@ -5467,15 +5533,34 @@ function msgHTML(m, prev) {
   if (m.kind === 'birthday') return day + `<div class="bday" data-id="${m.id}"><span class="big">${ic('cake')}</span><p>Bugün ${esc(m.text)} kankamızın doğum günü!</p><span class="hint">İyi ki doğdun ${esc(m.text)} 🎉 Kutlamayı unutmayın!</span></div>`;
   if (m.kind === 'daily') return day + `<div class="daily" data-id="${m.id}"><div class="kt">${ic('sun')}GÜNÜN SORUSU</div><p>${esc(m.text)}</p></div>`;
   if (m.kind === 'call') {
-    const c = m.call || {}, missed = c.state === 'missed', by = c.by ? dn(c.by) : '', dur = c.ms ? (c.ms < 60e3 ? `${Math.max(1, Math.round(c.ms / 1000))} sn` : vDur(c.ms)) : '',
-      me = c.by === S.me, live = !!S.calls?.[S.channel?.id], ongoing = myVoice === 'call:' + S.channel?.id;
-    const t = c.state === 'start' ? (me ? 'Aramayı sen başlattın' : `${esc(by || 'Biri')} arama başlattı`) : c.state === 'end' ? 'Görüşme bitti' : 'Cevapsız arama';
-    const sub = missed ? (me ? 'Karşı taraf açmadı' : `${esc(by || 'Biri')} seni aradı`) + (dur ? ` · ${dur}` : '')
-      : c.state === 'end' ? `${c.members?.length ? esc(c.members.join(', ')) + ' ile ' : ''}${dur} konuştunuz`
-        : 'Sesli arama';
-    const go = c.state === 'end' || missed ? `<button class="cl-go" data-callback="${esc(S.channel?.id || '')}">${ic('phoneCall')}${missed ? 'Geri ara' : 'Tekrar ara'}</button>`
-      : live && !ongoing ? `<button class="cl-go join" data-calljoin="${esc(S.channel?.id || '')}">${ic('phoneCall')}Katıl</button>` : '';
-    return day + `<div class="calllog ${missed ? 'missed' : c.state === 'end' ? 'done' : ''}" data-id="${m.id}"><span class="cl-ic">${ic(missed ? 'hangup' : 'phoneCall')}</span><span class="cl-t"><b>${t}</b><small>${sub} · ${hm(m.time)}</small></span>${go}</div>`;
+    const c = m.call || {}, st = c.state, ch = S.channel || {};
+    // Aynı aramanın "başladı" kartı, bitiş/cevapsız kaydı varsa gösterilmez: geçmişte tek satır kalır
+    if (st === 'start') {
+      const i = S.msgs.indexOf(m);
+      if (S.msgs.slice(i + 1).some(x => x.kind === 'call' && x.call?.by === c.by && (x.call?.state === 'end' || x.call?.state === 'missed'))) return day;
+    }
+    const group = !!ch.group, peer = ch.with || c.members?.[0] || '', by = c.by ? dn(c.by) : '', me = c.by === S.me,
+      dur = c.ms ? (c.ms < 60e3 ? `${Math.max(1, Math.round(c.ms / 1000))} sn` : vDur(c.ms)) : '',
+      live = !!S.calls?.[ch.id], ongoing = myVoice === 'call:' + ch.id;
+    let t, sub, cls = 'done', btn = '', icon = 'phoneCall';
+    if (st === 'start') {
+      t = me ? 'Aramayı sen başlattın' : `${esc(by || 'Biri')} arama başlattı`;
+      sub = live ? 'Devam ediyor' : 'Sesli arama';
+      if (live) cls = 'live';
+      if (live && !ongoing) btn = `<button class="cl-go join" data-calljoin="${esc(ch.id || '')}">${ic('phoneCall')}Katıl</button>`;
+    } else if (st === 'end') {
+      t = group ? 'Grup araması' : `${esc(peer || 'Karşı taraf')} ile arama`;
+      sub = `${dur ? `${dur} konuştunuz` : 'Görüşme bitti'}${group && c.members?.length ? ` · ${c.members.length + 1} kişi` : ''}`;
+      btn = `<button class="cl-go" data-callback="${esc(ch.id || '')}">${ic('phoneCall')}Tekrar ara</button>`;
+      icon = me ? 'arrowOut' : 'arrowIn';
+    } else {
+      t = me ? 'Cevapsız arama' : `${esc(by || 'Biri')} seni aradı`;
+      sub = `${me ? (group ? 'Kimse açmadı' : `${esc(peer || 'Karşı taraf')} açmadı`) : 'Cevapsız'}${dur ? ` · ${dur}` : ''}`;
+      cls = 'missed';
+      btn = `<button class="cl-go" data-callback="${esc(ch.id || '')}">${ic('phoneCall')}Geri ara</button>`;
+      icon = me ? 'arrowOut' : 'arrowIn';
+    }
+    return day + `<div class="calllog ${cls}" data-id="${m.id}" data-callstate="${esc(st || '')}" data-callby="${esc(c.by || '')}"><span class="cl-ic">${ic(icon)}</span><span class="cl-t"><b>${t}</b><small>${sub} · ${hm(m.time)}</small></span>${btn}</div>`;
   }
   if (m.kind === 'bot') {
     const T = { info: '#5aa9ff', ok: '#3fcf8e', warn: '#f6c445', danger: '#ef5a5a' }[m.bot?.tone] || '#5aa9ff', b = m.bot || {};
@@ -5644,6 +5729,10 @@ socket.on('message', ({ channelId, msg }) => {
   const box = $('#messages');
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
   box.insertAdjacentHTML('beforeend', msgHTML(msg, S.msgs[S.msgs.length - 2]));
+  if (msg.kind === 'call' && msg.call?.state !== 'start') {
+    box.querySelectorAll(`.calllog[data-callstate="start"][data-callby="${CSS.escape(msg.call?.by || '')}"]`).forEach(x => x.remove());
+    if (ringing?.chatId === channelId) stopRing();
+  }
   box.querySelector(`.row[data-id="${msg.id}"]`)?.classList.add('new');
   if (atBottom || msg.author === S.me || msg.ephemeral) box.scrollTop = box.scrollHeight;
   else if (msg.author) showJumpNew();
@@ -6711,8 +6800,7 @@ function tickVoiceTimes() {
   const now = Date.now();
   document.querySelectorAll('.vtm[data-vt]').forEach(e => { const t = voiceSince[e.dataset.vt]; e.textContent = t ? vDur(now - t) : ''; });
   const v = $('#vtime'); if (v) { v.textContent = myVoice && myVoiceAt ? vDur(now - myVoiceAt) : ''; v.title = myVoice ? 'Bu sesli odada geçirdiğin süre' : ''; }
-  const dct = $('#dc-tm');
-  if (dct) { const who = (S.calls?.[S.channel?.id] || []).filter(n => n !== S.me); dct.textContent = who.length && myVoiceAt ? vDur(now - myVoiceAt) : 'Karşı taraf bekleniyor…'; }
+  const dct = $('#dc-tm'); if (dct) dct.textContent = myVoiceAt ? vDur(now - myVoiceAt) : '0:00';
 }
 setInterval(tickVoiceTimes, 1000);
 let myVoice = null, localStream = null, muted = false, videoStream = null, videoKind = null, pttDown = false;
@@ -6859,8 +6947,16 @@ function closePeer(sid) {
   watchers.delete(sid); if (watching === sid) watching = null; if (focusSid === sid) focusSid = null;
   document.getElementById('a-' + sid)?.remove(); document.getElementById('as-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
-socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
-function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; myVoiceAt = 0; if (deaf) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
+socket.on('voiceLeft', sid => {
+  closePeer(sid); playSound('leave');
+  // Birebir aramada karşı taraf kapatınca görüşme de biter; grup aramasında kalanlar devam eder
+  if (myVoice?.startsWith('call:dm:') && !Object.keys(peers).length) {
+    const d = S.dms.find(x => 'call:' + x.id === myVoice);
+    toast(`${d?.with ? dn(d.with) : 'Karşı taraf'} aramadan ayrıldı`);
+    leaveVoice(false); renderStage();
+  }
+});
+function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; myVoiceAt = 0; dmCallMin = false; dmCallSig = ''; dmCallEver = false; if (deaf) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
@@ -7137,7 +7233,7 @@ let stageStats = null, pipClosed = null, focusSid = null;
 // Sesli oda görünümü: kutucukları ekranı dolduracak en büyük boyuta yerleştir (Discord gibi)
 function layoutStage() {
   const st = $('#stage'); if (!vview() || !st) return;
-  const tiles = [...st.querySelectorAll('.tile')], gap = 12, top = 64, pad = 16;
+  const tiles = [...st.querySelectorAll('.tile')].filter(t => !t.classList.contains('memoff')), gap = 12, top = 64, pad = 16;
   const W = st.clientWidth - pad * 2, H = st.clientHeight - top - pad;
   if (!tiles.length || W <= 0 || H <= 0) return;
   const size = (el, w, h) => { el.style.width = Math.floor(w) + 'px'; el.style.height = Math.floor(h) + 'px'; };
@@ -7177,10 +7273,70 @@ function setVView(on) {
   on = !!on && !!myVoice;
   document.body.classList.toggle('vview', on);
   if (on) document.body.classList.remove('drawer');
-  if (!on) { const st = $('#stage'); st.style.paddingTop = ''; st.querySelectorAll('.tile').forEach(t => t.style.width = t.style.height = ''); }
+  if (!on) { const st = $('#stage'); st.style.paddingTop = ''; st.querySelectorAll('.tile').forEach(t => { t.style.width = t.style.height = ''; if (t._z) zReset(t); }); }
   renderStage(); renderDMCall();
 }
 const vview = () => document.body.classList.contains('vview');
+// Yayında tekerlekle yakınlaştırma + üyeleri gizleme
+let hideMem = store.get('kanka-vmems') === '1';
+const ZMAX = 4;
+const zv = el => el._z || (el._z = { k: 1, x: 0, y: 0 });
+function zClamp(el) {
+  const z = zv(el), r = el.getBoundingClientRect();
+  const mx = Math.max(0, (z.k - 1) * r.width / 2), my = Math.max(0, (z.k - 1) * r.height / 2);
+  z.x = Math.max(-mx, Math.min(mx, z.x)); z.y = Math.max(-my, Math.min(my, z.y));
+}
+function zChip() {
+  const st = $('#stage'), chip = $('#zoomchip'); if (!st || !chip) return;
+  const ks = [...st.querySelectorAll('.tile.zoomed')].map(t => zv(t).k);
+  chip.hidden = !ks.length;
+  if (ks.length) chip.querySelector('b').textContent = Math.max(...ks).toFixed(1).replace('.0', '') + '×';
+}
+function zApply(el) {
+  const v = el.querySelector('video'); if (!v) return;
+  const z = zv(el), on = z.k > 1;
+  v.style.transform = on ? `translate(${z.x.toFixed(1)}px, ${z.y.toFixed(1)}px) scale(${z.k.toFixed(3)})${v.classList.contains('mirror') ? ' scaleX(-1)' : ''}` : '';
+  el.classList.toggle('zoomed', on);
+  zChip();
+}
+function zReset(el) { const z = zv(el); z.k = 1; z.x = z.y = 0; zApply(el); }
+function zoomAt(el, e) {
+  const v = el.querySelector('video'); if (!v?.srcObject) return;
+  const z = zv(el), r = el.getBoundingClientRect();
+  const k2 = Math.min(ZMAX, Math.max(1, z.k * Math.exp(-e.deltaY * 0.0016)));
+  if (Math.abs(k2 - z.k) < 0.004) return;
+  const f = k2 / z.k, cx = e.clientX - (r.left + r.width / 2), cy = e.clientY - (r.top + r.height / 2);
+  z.x = cx - (cx - z.x) * f; z.y = cy - (cy - z.y) * f; z.k = k2;
+  if (k2 === 1) z.x = z.y = 0; else zClamp(el);
+  zApply(el);
+}
+$('#stage').addEventListener('wheel', e => {
+  if (!vview() || e.ctrlKey) return; // ctrl+tekerlek sayfa yakınlaştırmasıdır, karışma
+  const el = e.target.closest('.tile'), v = el?.querySelector('video');
+  if (!v?.srcObject) return;
+  e.preventDefault(); zoomAt(el, e);
+}, { passive: false });
+let zap = null;
+$('#stage').addEventListener('pointerdown', e => {
+  const el = e.target.closest('.tile.zoomed'); if (!el || e.button !== 0) return;
+  const z = zv(el);
+  zap = { el, x: e.clientX, y: e.clientY, x0: z.x, y0: z.y, moved: false };
+  try { el.setPointerCapture(e.pointerId); } catch {}
+});
+$('#stage').addEventListener('pointermove', e => {
+  if (!zap) return;
+  const dx = e.clientX - zap.x, dy = e.clientY - zap.y;
+  if (Math.abs(dx) + Math.abs(dy) > 3) zap.moved = true;
+  if (!zap.moved) return;
+  const z = zv(zap.el); z.x = zap.x0 + dx; z.y = zap.y0 + dy;
+  zClamp(zap.el); zApply(zap.el); e.preventDefault();
+});
+const zapEnd = () => {
+  if (!zap) return;
+  const el = zap.el, moved = zap.moved; zap = null;
+  if (moved) el._ztap = performance.now();
+};
+$('#stage').addEventListener('pointerup', zapEnd); $('#stage').addEventListener('pointercancel', zapEnd);
 function pipSource() {
   if (watching && peers[watching] && peerVideo[watching]) return { key: 'w' + watching, stream: peerVideo[watching], name: peerNames[watching], live: true };
   for (const sid of Object.keys(peers)) if (peerMedia[sid]?.cam && peerVideo[sid] && !uNoVid.has(peerNames[sid])) return { key: 'c' + sid, stream: peerVideo[sid], name: peerNames[sid] };
@@ -7227,15 +7383,25 @@ function renderStage() {
   renderPip();
   let bar = st.querySelector('.vv-bar');
   if (!bar) { bar = document.createElement('div'); bar.className = 'vv-bar'; st.prepend(bar); }
-  bar.innerHTML = `<b>${ic('volume')}${esc($('#vname')?.textContent || 'Sesli oda')}</b><button class="vv-chat">${ic('chat')} Oda sohbeti</button><button class="vv-back">Geri dön</button>`;
+  bar.innerHTML = `<b>${ic('volume')}${esc($('#vname')?.textContent || 'Sesli oda')}</b><button class="vv-mem" title="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}" aria-label="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}">${ic(hideMem ? 'eye' : 'eyeOff')} ${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}</button><button class="vv-chat" title="Oda sohbeti" aria-label="Oda sohbeti">${ic('chat')} Oda sohbeti</button><button class="vv-back" title="Geri dön" aria-label="Geri dön">${ic('x')} Geri dön</button>`;
   bar.querySelector('.vv-chat').onclick = openVoiceChat;
   bar.querySelector('.vv-back').onclick = () => setVView(false);
+  bar.querySelector('.vv-mem').onclick = () => { hideMem = !hideMem; store.set('kanka-vmems', hideMem ? '1' : null); renderStage(); };
   const tiles = [{ sid: 'me', name: S.me, stream: videoStream, kind: videoKind }, ...Object.keys(peers).map(sid => {
     const m = peerMedia[sid] || {}, kind = m.screen ? 'screen' : m.cam ? 'cam' : null;
     const show = kind === 'cam' ? !uNoVid.has(peerNames[sid]) : kind === 'screen' ? watching === sid : false;
     return { sid, name: peerNames[sid] || '...', stream: show ? peerVideo[sid] : null, kind, m };
   })];
   st.classList.toggle('video', tiles.some(t => t.stream || t.kind === 'screen'));
+  const hasVid = st.classList.contains('video');
+  { const mb = bar.querySelector('.vv-mem'); mb.hidden = !hasVid; }
+  let chip = st.querySelector('#zoomchip');
+  if (!chip) {
+    chip = document.createElement('div'); chip.id = 'zoomchip'; chip.hidden = true;
+    chip.innerHTML = `<b>1.6×</b><small>kaydırmak için sürükle</small><button type="button" title="Yakınlaştırmayı sıfırla" aria-label="Yakınlaştırmayı sıfırla">${ic('x')}</button>`;
+    st.appendChild(chip);
+    chip.querySelector('button').onclick = () => { const t = st.querySelector('.tile.zoomed'); if (t) zReset(t); };
+  }
   if (focusSid && !tiles.some(t => t.sid === focusSid && (t.stream || t.kind === 'screen'))) focusSid = null;
   st.classList.toggle('focus', !!focusSid);
   const keep = new Set();
@@ -7245,9 +7411,13 @@ function renderStage() {
     if (!el) {
       el = document.createElement('div'); el.className = 'tile'; el.dataset.sid = t.sid;
       el.innerHTML = `<video autoplay playsinline muted></video><div class="tav"></div><div class="tbadge"></div><div class="live-ov" hidden></div><div class="tname"></div><div class="tctl"></div>${t.sid !== 'me' ? '<input class="tvol" type="range" min="0" max="1" step="0.05" title="Ses seviyesi" aria-label="Ses seviyesi">' : ''}`;
-      el.ondblclick = () => el.querySelector('video').srcObject && (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.());
+      el.ondblclick = () => {
+        if (el._z?.k > 1) return zReset(el);
+        el.querySelector('video').srcObject && (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.());
+      };
       el.onclick = e => {
         if (e.target.closest('button, input') || !vview()) return;
+        if (el._z?.k > 1 || performance.now() - (el._ztap || 0) < 300) return; // yakınlaştırılmış görüntüde tıklama odak değiştirmez
         const sid = el.dataset.sid;
         if (focusSid === sid) focusSid = null;                                        // büyükse ızgaraya dön
         else if (sid !== 'me' && peerMedia[sid]?.screen && watching !== sid) return watchStream(sid);
@@ -7266,8 +7436,9 @@ function renderStage() {
     el.classList.toggle('screen', live);
     el.classList.toggle('focus', focus);
     el.classList.toggle('has-video', !!t.stream);
+    el.classList.toggle('memoff', hideMem && hasVid && !(t.stream || live));
     const v = el.querySelector('video');
-    if (v.srcObject !== (t.stream || null)) v.srcObject = t.stream || null;
+    if (v.srcObject !== (t.stream || null)) { v.srcObject = t.stream || null; if (el._z) zReset(el); }
     v.classList.toggle('mirror', t.sid === 'me' && t.kind === 'cam');
     el.querySelector('.tav').innerHTML = av(t.name);
     el.querySelector('.tname').textContent = t.sid === 'me' ? t.name + ' (sen)' : t.name;
@@ -7292,6 +7463,7 @@ function renderStage() {
   }
   st.querySelectorAll('.tile').forEach(el => { if (!keep.has(el.dataset.sid)) el.remove(); });
   layoutStage();
+  zChip();
   // Yayıncıya izleyicilere gerçekte ne gittiğini göster: çözünürlük, FPS ve neden düştüğü
   if (videoKind === 'screen' && !sendStats) sendStats = setInterval(async () => {
     const f = st.querySelector('.tile[data-sid="me"] .sendq'); if (!f) return;
@@ -7320,34 +7492,51 @@ function renderStage() {
 // ---- Süren özel aramalar (DM/grup): listede yeşil telefon, sohbette "Katıl" şeridi, ana sayfada kart ----
 S.calls = {};
 // DM/grup aramasında "kim kiminle konuşuyor": sohbetin üstünde Kanka'ya özgü arama sahnesi
-let dmCallSig = '';
-const dcBtn = (k, i, t) => `<button class="dc-b" data-dc="${k}" title="${t}" aria-label="${t}">${ic(i)}</button>`;
+let dmCallSig = '', dmCallMin = false, dmCallEver = false;
+const dcBtn = (k, i, t, cls = 'dc-b') => `<button class="${cls}" data-dc="${k}" title="${t}" aria-label="${t}">${ic(i)}</button>`;
 function dcSync(el) {
   const q = k => el.querySelector(`[data-dc="${k}"]`), m = q('mute'), c = q('cam'), s = q('scr'), d = q('deaf');
   if (m) { m.innerHTML = ic(muted ? 'micoff' : 'mic'); m.classList.toggle('off', muted); m.title = m.ariaLabel = muted ? 'Mikrofonun kapalı · aç' : 'Mikrofonu kapat'; }
   if (c) c.classList.toggle('on', videoKind === 'cam');
   if (s) s.classList.toggle('on', videoKind === 'screen');
   if (d) { d.innerHTML = ic(deaf ? 'headsetoff' : 'headset'); d.classList.toggle('off', deaf); }
+  el.classList.toggle('muted', muted);
 }
 function renderDMCall() {
   const ch = S.channel, el = $('#dmcall');
   const on = ch && S.view === 'dm' && myVoice === 'call:' + ch.id && !vview();
   if (!on) { if (el) { el.remove(); dmCallSig = ''; } return; }
-  const who = (S.calls?.[ch.id] || []).filter(n => n !== S.me);
-  const sig = ch.id + '|' + who.join('|');
+  const who = (S.calls?.[ch.id] || []).filter(n => n !== S.me), group = !!ch.group, waiting = !who.length;
+  if (who.length) dmCallEver = true;
+  const mini = (waiting && !dmCallEver) || dmCallMin;
+  const sig = ch.id + '|' + who.join('|') + (mini ? '|min' : '|full');
   if (el && dmCallSig === sig) { dcSync(el); return; }
   el?.remove(); dmCallSig = sig;
-  const group = !!ch.group, others = group ? who : [ch.with].filter(Boolean), extra = others.length > 2 ? others.length - 2 : 0;
   const box = document.createElement('section'); box.id = 'dmcall'; box.setAttribute('aria-label', 'Arama');
-  box.innerHTML = `<button class="dc-full" data-dc="full" title="Sahneye geç" aria-label="Sahneye geç">${ic('expand')}</button>
-    <span class="dc-waves" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-    <div class="dc-avs">${[{ n: S.me, me: 1 }, ...others.map(n => ({ n }))].slice(0, 3).map(p => `<div class="dc-p ${p.me ? 'me' : ''}" data-vu="${esc(p.n)}">${av(p.n)}<small>${p.me ? 'Sen' : esc(dn(p.n))}</small></div>`).join('')}${extra ? `<span class="dc-more">+${extra}</span>` : ''}</div>
-    <div class="dc-meta"><b>${group ? `${esc(groupName(ch))} · grup araması` : `${esc(ch.with || '')} ile aramadasın`}</b><small id="dc-tm">${who.length ? vDur(Date.now() - myVoiceAt) : 'Karşı taraf bekleniyor…'}</small></div>
-    <div class="dc-acts">${dcBtn('mute', 'mic', 'Mikrofon')}${dcBtn('cam', 'video', 'Kamera')}${dcBtn('scr', 'screen', 'Ekran paylaş')}${dcBtn('deaf', 'headset', 'Hoparlörü kapat')}<button class="dc-b dc-leave" data-dc="leave" title="Aramayı bitir" aria-label="Aramayı bitir">${ic('hangup')}</button></div>`;
+  const title = group ? groupName(ch) : (ch.with || 'Karşı taraf'), tm = myVoiceAt ? vDur(Date.now() - myVoiceAt) : '0:00';
+  if (mini) {
+    const faces = who.length ? who : (group ? [] : [ch.with].filter(Boolean)), extra = faces.length > 3 ? faces.length - 3 : 0;
+    box.innerHTML = `<div class="dc-bar${waiting ? ' wait' : ''}">
+      <div class="dc-stack">${faces.slice(0, 3).map(n => `<span data-vu="${esc(n)}">${av(n)}</span>`).join('')}${extra ? `<span class="dc-more2">+${extra}</span>` : ''}${group && !faces.length ? `<span class="dc-grpav">${ic('users')}</span>` : ''}</div>
+      <div class="dc-bt"><b>${waiting ? `${esc(title)} aranıyor…` : `${esc(title)} ile aramadasın`}</b><small><i></i>${waiting ? 'Cevap bekleniyor' : 'Bağlandı'} · <span id="dc-tm">${tm}</span></small></div>
+      <div class="dc-bwave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="dc-bacts">${dcBtn('mute', muted ? 'micoff' : 'mic', 'Mikrofon', 'dc-bb')}${dcBtn('cam', 'video', 'Kamera', 'dc-bb dc-hide-sm')}${dcBtn('leave', 'hangup', 'Aramayı bitir', 'dc-hang')}${waiting ? '' : `<button class="dc-expand" data-dc="max" title="Paneli büyüt" aria-label="Paneli büyüt">${ic('up')}</button>`}</div>
+    </div>`;
+  } else {
+    const others = group ? who : [ch.with].filter(Boolean), extra = others.length > 2 ? others.length - 2 : 0;
+    box.innerHTML = `<div class="dc-stage">
+      <div class="dc-top"><span class="dc-live"><i></i>Sesli arama · <span id="dc-tm">${tm}</span></span>
+        <div class="dc-tools"><button class="dc-tool" data-dc="full" title="Sahneye geç" aria-label="Sahneye geç">${ic('expand')}Sahne</button><button class="dc-tool icon" data-dc="min" title="Paneli küçült" aria-label="Paneli küçült">${ic('down')}</button></div></div>
+      <div class="dc-avs">${[{ n: S.me, me: 1 }, ...others.map(n => ({ n }))].slice(0, 3).map(p => `<div class="dc-p ${p.me ? 'me' : ''}" data-vu="${esc(p.n)}">${av(p.n)}${p.me ? `<span class="dc-mb">${ic('micoff')}</span>` : ''}<small>${p.me ? 'Sen' : esc(dn(p.n))}</small></div>`).join('')}${extra ? `<span class="dc-more">+${extra}</span>` : ''}</div>
+      <div class="dc-acts">${dcBtn('mute', muted ? 'micoff' : 'mic', 'Mikrofon')}${dcBtn('cam', 'video', 'Kamera')}${dcBtn('scr', 'screen', 'Ekran paylaş')}${dcBtn('deaf', 'headset', 'Hoparlörü kapat')}<button class="dc-b dc-leave" data-dc="leave" title="Aramayı bitir" aria-label="Aramayı bitir">${ic('hangup')}<span>Ayrıl</span></button></div>
+    </div>`;
+  }
   $('#messages').before(box);
   box.querySelectorAll('[data-dc]').forEach(b => b.onclick = e => {
     e.stopPropagation(); const k = b.dataset.dc;
     if (k === 'full') setVView(true);
+    else if (k === 'min') { dmCallMin = true; dmCallSig = ''; renderDMCall(); return; }
+    else if (k === 'max') { dmCallMin = false; dmCallSig = ''; renderDMCall(); return; }
     else if (k === 'mute') $('#mute').click();
     else if (k === 'cam') $('#vcam').click();
     else if (k === 'scr') $('#vscreen').click();
@@ -7357,12 +7546,25 @@ function renderDMCall() {
   });
   dcSync(box);
 }
+function syncCallLogs() {
+  const ch = S.channel; if (!ch || S.view !== 'dm') return;
+  const starts = document.querySelectorAll('#messages .calllog[data-callstate="start"]');
+  const el = starts[starts.length - 1]; if (!el) return;
+  const live = !!S.calls?.[ch.id], here = myVoice === 'call:' + ch.id;
+  el.classList.toggle('live', live);
+  const sm = el.querySelector('.cl-t small'), tm = (sm?.textContent.split(' · ')[1]) || '';
+  if (sm) sm.textContent = (live ? 'Devam ediyor' : 'Sesli arama') + (tm ? ' · ' + tm : '');
+  const b = el.querySelector('[data-calljoin]');
+  if (live && !here && !b) el.insertAdjacentHTML('beforeend', `<button class="cl-go join" data-calljoin="${esc(ch.id)}">${ic('phoneCall')}Katıl</button>`);
+  else if ((!live || here) && b) b.remove();
+}
 function renderCallBar() {
   $('#callbar')?.remove();
   const ch = S.channel;
   if (!ch || !/^(dm|g):/.test(ch.id) || S.view !== 'dm') { renderDMCall(); return; }
   const who = S.calls[ch.id] || [], here = myVoice === 'call:' + ch.id;
   renderDMCall();
+  syncCallLogs();
   if (!who.length || here) return;
   const bar = document.createElement('div'); bar.id = 'callbar';
   bar.innerHTML = `<span class="cb-pulse">${ic('phoneCall')}</span><span class="cb-avs">${who.slice(0, 4).map(n => av(n)).join('')}</span><span class="cb-t"><b>Arama sürüyor</b><small>${who.slice(0, 3).map(n => esc(dn(n))).join(', ')}${who.length > 3 ? ` ve ${who.length - 3} kişi` : ''} konuşuyor</small></span><button class="primary" id="cb-join">${ic('phoneCall')}Katıl</button>`;

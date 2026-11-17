@@ -2371,7 +2371,8 @@ io.on('connection', socket => {
   socket.on('logout', token => { delete db.sessions[token]; save(); });
 
   // ----- Kanallar -----
-  socket.on('join', (chId, cb) => {
+  socket.on('join', (chId, cb = () => {}) => {
+    if (typeof cb !== 'function') cb = () => {};
     if (!canAccess(me, chId)) return cb({ error: 'Bu odaya erişimin yok' });
     if (cur) socket.leave(cur);
     cur = chId; socket.join(chId);
