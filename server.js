@@ -1347,6 +1347,28 @@ try {
 } catch (e) { console.warn('Web Push kapalı:', e.message); webpush = null; }
 // Hesapta saklanan bildirim tercihleri (her cihazda aynı): notif=false hepsi kapalı; muted=susturulan sunucular; ch={odaId:'all'|'mentions'|'none'}
 const prefsOf = u => u?.prefs || {};
+const EMO_KEY_RE = /^(?:[a-z0-9]{1,32}\/[a-z0-9_]{2,24}|[^\s/<>"'&]{1,40})$/u;
+function saneEmojiPrefs(e) {
+  const out = { fav: [], use: {} };
+  if (!e || typeof e !== 'object') return out;
+  if (Array.isArray(e.fav)) {
+    const seen = new Set();
+    for (const k of e.fav) {
+      if (typeof k !== 'string' || k.length > 40 || !EMO_KEY_RE.test(k) || seen.has(k)) continue;
+      seen.add(k); out.fav.push(k);
+      if (out.fav.length >= 48) break;
+    }
+  }
+  if (e.use && typeof e.use === 'object') {
+    const ks = Object.keys(e.use).filter(k => k.length <= 40 && EMO_KEY_RE.test(k)).slice(0, 200);
+    ks.sort((a, b) => (+e.use[b]?.n || 0) - (+e.use[a]?.n || 0));
+    for (const k of ks.slice(0, 64)) {
+      const n = Math.floor(+e.use[k]?.n); if (!(n > 0)) continue;
+      out.use[k] = { n: Math.min(9999, n), t: Math.min(Date.now(), Math.max(0, +e.use[k]?.t || 0)) };
+    }
+  }
+  return out;
+}
 function pushAllowed(u, n) {
   const pr = prefsOf(u); if (pr.notif === false) return false;
   const chId = n.channelId || n.ch;
@@ -2219,11 +2241,11 @@ io.on('connection', socket => {
       const ids = a => (Array.isArray(a) ? a : []).filter(x => typeof x === 'string' && x.length < 40).slice(0, 200);
       const mu = {}; for (const [k, v] of Object.entries(p.muteUntil || {}).slice(0, 200)) if (typeof k === 'string' && k.length < 40 && +v > Date.now()) mu[k] = +v;
       u.prefs = { notif: p.notif !== false, muted: ids(p.muted), ch, order: p.order ? ids(p.order) : u.prefs?.order || [], muteUntil: mu,
-        read: u.prefs?.read || {}, at: Date.now() };
+        read: u.prefs?.read || {}, emoji: p.emoji === undefined ? (u.prefs?.emoji || { fav: [], use: {} }) : saneEmojiPrefs(p.emoji), at: Date.now() };
       save();
-      for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('prefs', { notif: u.prefs.notif, muted: u.prefs.muted, ch, order: u.prefs.order, muteUntil: mu });
+      for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('prefs', { notif: u.prefs.notif, muted: u.prefs.muted, ch, order: u.prefs.order, muteUntil: mu, emoji: u.prefs.emoji });
     }
-    cb(u.prefs ? { notif: u.prefs.notif, muted: u.prefs.muted, ch: u.prefs.ch, order: u.prefs.order || [], muteUntil: u.prefs.muteUntil || {}, read: u.prefs.read || {}, at: u.prefs.at } : null);
+    cb(u.prefs ? { notif: u.prefs.notif, muted: u.prefs.muted, ch: u.prefs.ch, order: u.prefs.order || [], muteUntil: u.prefs.muteUntil || {}, read: u.prefs.read || {}, emoji: u.prefs.emoji || { fav: [], use: {} }, at: u.prefs.at } : null);
   });
   socket.on('read', id => { // okundu bilgisi her cihazda aynı olsun
     const u = db.users[me]; if (!u || typeof id !== 'string' || id.length > 80) return;
@@ -2497,9 +2519,15 @@ io.on('connection', socket => {
 
   socket.on('react', ({ msgId, emoji } = {}) => {
     if (!canAccess(me, cur)) return;
-    const msg = findMsg(cur, msgId); emoji = clean(emoji, 8);
-    if (!msg || !emoji) return;
-    { const f = findChannel(cur); if (f && !msg.reactions?.[emoji] && !chPerm(f.s, f.c, me, 'react')) return socket.emit('toast', 'Bu odada tepki ekleme iznin yok'); }
+    const msg = findMsg(cur, msgId); if (!msg) return;
+    const f = findChannel(cur);
+    const cm = /^:([a-z0-9_]{2,24}):$/.exec(typeof emoji === 'string' ? emoji : '');
+    if (cm) {
+      if (!f || !f.s?.emojis?.[cm[1]]) return; // başka sunucunun/silinmiş emojisiyle tepki verilmez
+      emoji = ':' + cm[1] + ':';
+    } else emoji = clean(emoji, 16);
+    if (!emoji) return;
+    { if (f && !msg.reactions?.[emoji] && !chPerm(f.s, f.c, me, 'react')) return socket.emit('toast', 'Bu odada tepki ekleme iznin yok'); }
     msg.reactions ||= {};
     const arr = (msg.reactions[emoji] ||= []);
     const i = arr.indexOf(me);

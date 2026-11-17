@@ -306,6 +306,7 @@
   .reacts button { display: flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 13px; font-weight: 800; color: var(--muted); }
   .reacts button.on { border-color: var(--accent); color: var(--accent-2); background: var(--accent-soft); }
   .reacts button:hover { border-color: var(--accent-2); }
+  .reacts .cemoji { width: 17px; height: 17px; vertical-align: -3px; margin: 0 !important; }
   .row:hover .bubble, .row.hl .bubble { filter: brightness(1.08); }
   .row.hl { background: rgba(255,179,71,.06); border-radius: 12px; }
 
@@ -320,6 +321,7 @@
   .pop.emo { display: flex; gap: 2px; }
   .pop.emo button { width: 36px; height: 36px; border-radius: 10px; font-size: 20px; transition: transform .1s; }
   .pop.emo button:hover { background: var(--hover); transform: scale(1.15); }
+  .pop.emo img { width: 24px; height: 24px; object-fit: contain; }
   .pop.more button { display: flex; align-items: center; gap: 10px; width: 170px; padding: 9px 12px; border-radius: 9px; font-weight: 700; text-align: left; }
   .pop.more button:hover { background: var(--hover); }
   .pop.more .danger { color: var(--red); }
@@ -501,6 +503,8 @@
   .spoiler.shown { background: rgba(0,0,0,.3); color: inherit; }
   .cemoji { width: 22px; height: 22px; vertical-align: -5px; object-fit: contain; display: inline !important; margin: 0 1px !important; max-width: none !important; cursor: default !important; }
   .bubble.jumbo .cemoji { width: 44px; height: 44px; }
+  .uemoji { font-size: 1.35em; line-height: 1; vertical-align: -.1em; }
+  .bubble.jumbo .uemoji { font-size: 1em; }
   .bubble.jumbo { font-size: 38px; line-height: 1.15; background: transparent !important; padding: 2px 4px; }
   #emo-btn, #mic-btn { width: 40px; height: 40px; border-radius: 12px; font-size: 20px; flex-shrink: 0; color: var(--muted); }
   #emo-btn:hover, #mic-btn:hover { background: var(--hover); }
@@ -509,16 +513,41 @@
   #recbar.on { display: flex; } #recbar .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff6b6b; animation: pulse 1s infinite; }
   #recbar button { margin-left: auto; padding: 6px 12px; border-radius: 10px; background: var(--hover); color: var(--ink); font-size: 13px; }
   #compose.recording #input { display: none; }
-  #emojipanel { display: none; position: absolute; bottom: 58px; right: 50px; width: 340px; height: 360px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 6; flex-direction: column; overflow: hidden; animation: popIn .18s var(--ease-out); transform-origin: bottom right; }
+  #emojipanel { display: none; position: absolute; bottom: 58px; right: 50px; width: 372px; height: 452px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 6; flex-direction: column; overflow: hidden; animation: popIn .18s var(--ease-out); transform-origin: bottom right; }
   #emojipanel.on { display: flex; }
-  .ep-tabs { display: flex; gap: 2px; padding: 6px; border-bottom: 1px solid var(--line); }
-  .ep-tabs button { flex: 1; padding: 6px 0; border-radius: 9px; font-size: 18px; filter: grayscale(.7); opacity: .7; }
+  .ep-search { padding: 10px 10px 2px; flex: 0 0 auto; }
+  .ep-search input { width: 100%; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: rgba(0,0,0,.22); color: var(--ink); padding: 0 12px; font-size: 13.5px; font-weight: 600; outline: none; }
+  .ep-search input::placeholder { color: var(--muted); font-weight: 600; }
+  .ep-search input:focus { border-color: var(--accent-2); }
+  .ep-tabs { display: flex; gap: 2px; padding: 6px 8px; flex: 0 0 auto; }
+  .ep-tabs button { flex: 1; padding: 5px 0; border-radius: 9px; font-size: 19px; line-height: 1; filter: grayscale(.7); opacity: .7; }
   .ep-tabs button.on { background: var(--hover); filter: none; opacity: 1; }
+  .ep-tabs .ic { width: 18px; height: 18px; vertical-align: 1px; }
   .ep-grid { flex: 1; overflow-y: auto; padding: 8px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; align-content: start; }
   .ep-grid button { aspect-ratio: 1; border-radius: 9px; font-size: 22px; display: flex; align-items: center; justify-content: center; }
   .ep-grid button:hover { background: var(--hover); transform: scale(1.15); }
   .ep-grid img { width: 28px; height: 28px; object-fit: contain; }
   .ep-grid .empty-e { grid-column: 1 / -1; color: var(--muted); text-align: center; padding: 30px 10px; font-size: 14px; }
+  #ep-grid { display: block; padding: 2px 8px 10px; user-select: none; -webkit-user-select: none; }
+  #ep-grid img { -webkit-touch-callout: none; -webkit-user-drag: none; }
+  .ep-sec { margin-top: 6px; }
+  .ep-h { display: flex; align-items: center; gap: 6px; padding: 6px 7px; border-radius: 8px; font-size: 11px; font-weight: 900; letter-spacing: .4px; color: var(--muted); text-transform: uppercase; cursor: pointer; user-select: none; }
+  .ep-h:hover { background: var(--hover); color: var(--ink); }
+  .ep-h .ic { width: 14px; height: 14px; }
+  .ep-h .ep-n { opacity: .7; font-weight: 800; }
+  .ep-h .ep-caret { margin-left: auto; opacity: .7; transform: rotate(-90deg); transition: transform .15s; }
+  .ep-h .ep-caret.open { transform: none; }
+  .ep-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; }
+  .ep-row button { position: relative; aspect-ratio: 1; border-radius: 10px; font-size: 27px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+  .ep-row button:hover, .ep-row button:focus-visible { background: var(--hover); transform: scale(1.12); }
+  .ep-row button img { width: 31px; height: 31px; object-fit: contain; }
+  .ep-row button.fav { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .ep-star { position: absolute; top: 0; right: 0; width: 17px; height: 17px; padding: 2px; border-radius: 7px; background: var(--card); color: var(--muted); opacity: 0; transition: opacity .1s; display: flex; }
+  .ep-star .ic { width: 13px; height: 13px; }
+  .ep-row button:hover .ep-star, .ep-row button.fav .ep-star { opacity: 1; }
+  .ep-row button.fav .ep-star { color: var(--accent-2); }
+  .ep-star:hover { color: var(--accent) !important; transform: scale(1.15); }
+  .ep-empty { padding: 30px 12px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 700; }
   .vmsg { display: flex; align-items: center; gap: 10px; min-width: 230px; }
   .vmsg .play { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.18); font-size: 14px; flex-shrink: 0; }
   .row:not(.mine) .vmsg .play { background: var(--accent); color: #fff; }
@@ -2281,7 +2310,7 @@
   #messages .bubble .mention { background: rgba(255,179,71,.16); color: var(--accent-2); }
   #messages .bubble img { margin: 6px 0 2px; max-width: min(440px, 100%); max-height: 340px; width: auto; border-radius: 12px; }
   #messages .bubble.only-img { padding: 0; } #messages .bubble.only-img img { margin: 4px 0 2px; }
-  #messages .bubble.jumbo { padding: 0; }
+  #messages .bubble.jumbo { padding: 0; font-size: 38px; line-height: 1.15; background: transparent !important; }
   #messages .bubble .yt { display: block; max-width: 400px; margin-top: 6px; }
   #messages .edtag { font-size: 11px; color: var(--muted); margin-left: 6px; font-weight: 600; }
   #messages .row .kcard, #messages .row .mtch, #messages .row .vmsg { align-self: flex-start; }
@@ -2623,7 +2652,7 @@
     /* kayıt çubuğu sığsın */
     #compose.recording #emo-btn, #compose.recording #plus { display: none; } #recbar { min-width: 0; white-space: nowrap; overflow: hidden; font-size: 14px; } #recbar #rec-cancel { flex-shrink: 0; }
     /* emoji paneli tam genişlik */
-    #emojipanel { position: fixed !important; left: 10px !important; right: 10px !important; width: auto !important; bottom: calc(84px + env(safe-area-inset-bottom)) !important; height: min(48vh, 380px) !important; z-index: 30; box-shadow: 0 -10px 40px rgba(0,0,0,.45); }
+    #emojipanel { position: fixed !important; left: 10px !important; right: 10px !important; width: auto !important; bottom: calc(84px + env(safe-area-inset-bottom)) !important; height: min(56vh, 440px) !important; z-index: 30; box-shadow: 0 -10px 40px rgba(0,0,0,.45); }
     /* ayar kaydet çubuğu: telefonda sadece düğmeler */
     .st-save > span { display: none !important; } .st-save { justify-content: stretch !important; } .st-save .primary { flex: 1; }
     /* hoş geldin: kabul düğmesi hep görünür */
@@ -2715,7 +2744,7 @@
       <div id="recbar"><span class="dot"></span><span id="rectime">0:00</span> kaydediliyor... <button type="button" id="rec-cancel">Vazgeç</button></div>
       <button type="button" id="emo-btn" title="Emoji" aria-label="Emoji seç"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/></svg></button>
       <button type="button" id="mic-btn" title="Sesli mesaj" aria-label="Sesli mesaj kaydet"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-      <div id="emojipanel"><div class="ep-tabs" id="ep-tabs"></div><div class="ep-grid" id="ep-grid"></div></div>
+      <div id="emojipanel"><div class="ep-search"><input id="ep-q" type="text" inputmode="search" placeholder="Mükemmel emojiyi bul" autocomplete="off" spellcheck="false" aria-label="Emoji ara"></div><div class="ep-tabs" id="ep-tabs"></div><div class="ep-grid" id="ep-grid"></div></div>
       <button id="send" type="submit" title="Gönder" aria-label="Gönder"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 20 4l-5 16-3-7z"/><path d="m12 13 8-9"/></svg></button>
     </form>
     <input type="file" id="file" multiple hidden>
@@ -2935,6 +2964,12 @@ const PUB = /sslip\.io$|^\d+\.\d+\.\d+\.\d+$/.test(location.hostname) ? 'https:/
 const ownHost = h => h === location.host || h === 'kankahq.com' || h === 'www.kankahq.com';
 const ytId = u => (/(?:youtu\.be\/|[?&]v=|shorts\/|embed\/)([\w-]{11})/.exec(u) || [])[1];
 const serverEmojis = () => (S.view === 'server' && S.server?.emojis) || {};
+const EMOJI_TOKEN = /^:([a-z0-9_]{2,24}):$/;
+const EMOJI_RUN = /(?:\p{Regional_Indicator}{2}|[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0F|[\u{1F3FB}-\u{1F3FF}])?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|[\u{1F3FB}-\u{1F3FF}])?)*)+/gu;
+function reactionHTML(key, id, us) {
+  const m = EMOJI_TOKEN.exec(key), url = m && serverEmojis()[m[1]];
+  return `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${id}" data-e="${esc(key)}" title="${esc(us.join(', '))}">${url ? `<img class="cemoji" src="${esc(url)}" alt="${esc(key)}">` : esc(key)}<span>${us.length}</span></button>`;
+}
 function fmt(t) {
   const codes = [];
   let h = esc(t)
@@ -2952,6 +2987,7 @@ function fmt(t) {
     .replace(/\|\|([^|\n]+)\|\|/g, '<span class="spoiler" title="Görmek için tıkla">$1</span>');
   const em = serverEmojis();
   h = h.replace(/:([a-z0-9_]{2,24}):/g, (m, n) => em[n] ? `<img class="cemoji" src="${esc(em[n])}" alt=":${n}:" title=":${n}:">` : m);
+  h = h.replace(EMOJI_RUN, m => `<span class="uemoji">${m}</span>`);
   return h.replace(/\u0000(\d+)\u0000/g, (_, i) => codes[i]);
 }
 const isJumbo = t => { const x = t.replace(/:[a-z0-9_]{2,24}:/g, m => serverEmojis()[m.slice(1, -1)] ? '' : m).replace(/\s/g, ''); return !!t.trim() && t.length < 40 && (/^(\p{Extended_Pictographic}|‍|️|\p{Emoji_Modifier})*$/u.test(x)); };
@@ -3165,7 +3201,8 @@ function onAuth(res) {
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
-  if (res.prefs?.at) applyServerPrefs(res.prefs); else socket.emit('prefs', prefsNow()); // sunucuda yoksa bu cihazın ayarlarını yükle
+  if (res.prefs?.at) { applyServerPrefs(res.prefs); if (!res.prefs.emoji && (eFav.length || Object.keys(eUse).length)) syncPrefs(); } // emoji favorileri eski hesaba ilk kez taşınır
+  else socket.emit('prefs', prefsNow()); // sunucuda yoksa bu cihazın ayarlarını yükle
   initReadState(res); S.calls = res.calls || {};
   pushSync(); setTimeout(pushNudge, 4000); setTimeout(() => pullBackup(), 15000);
   socket.emit('vis', document.visibilityState === 'visible');
@@ -4843,8 +4880,54 @@ const readSent = {};
 const chCnt = {}; // son baktığından beri gelen mesaj sayısı (oda listesinde beyaz nokta)
 const markRead = id => { delete chCnt[id]; delete dmCnt[id]; const had = mentionsAll().some(x => x.channelId === id && x.t > (lastRead[id] || 0)); lastRead[id] = Date.now(); if (had) setTimeout(() => { renderRail(); if (S.view === 'server') renderSide(); }, 0); store.set('kanka-read', JSON.stringify(lastRead)); clearTimeout(readSent[id]); readSent[id] = setTimeout(() => { delete readSent[id]; socket.emit('read', id); }, 700); };
 socket.on('readSync', ({ id }) => { lastRead[id] = Math.max(lastRead[id] || 0, Date.now()); delete chCnt[id]; delete dmCnt[id]; store.set('kanka-read', JSON.stringify(lastRead)); S.unread.delete(id); { if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; for (const sv of S.servers) if (!sv.channels.some(c => S.unread.has(c.id))) S.unreadServers.delete(sv.id); renderRail(); if (S.view === 'server') renderSide(); else if (S.view === 'dm') renderDMSide?.(); refreshHome(); } });
+// ---- Emoji favorileri / sık kullanılan: hesapta senkron, cihazda yedek ----
+let eFav = [];
+let eUse = {};
+try { const f = JSON.parse(store.get('kanka-emofav') || '[]'); if (Array.isArray(f)) eFav = f.filter(x => typeof x === 'string').slice(0, 48); } catch {}
+try { const u = JSON.parse(store.get('kanka-emouse') || '{}'); if (u && typeof u === 'object') eUse = u; } catch {}
+const saveEmojiPrefs = () => { store.set('kanka-emofav', JSON.stringify(eFav)); store.set('kanka-emouse', JSON.stringify(eUse)); };
+function applyEmojiPrefs(e) {
+  if (!e) return;
+  if (Array.isArray(e.fav)) eFav = e.fav.filter(x => typeof x === 'string').slice(0, 48);
+  if (e.use && typeof e.use === 'object') { const n = {}; for (const [k, v] of Object.entries(e.use).slice(0, 64)) if (typeof k === 'string' && v) n[k] = { n: +v.n || 0, t: +v.t || 0 }; eUse = n; }
+  saveEmojiPrefs();
+  if ($('#emojipanel')?.classList.contains('on')) renderEmojiPanel();
+}
+function resolveEmojiKey(key) {
+  key = String(key);
+  const i = key.indexOf('/');
+  if (i > 0) {
+    const sid = key.slice(0, i), name = key.slice(i + 1);
+    const url = S.view === 'server' && S.server?.id === sid ? S.server.emojis?.[name] : null;
+    return url ? { name, url } : null;
+  }
+  return { e: key };
+}
+function emojiTitle(key) {
+  const r = resolveEmojiKey(key);
+  if (r?.url) return `:${r.name}: — ${S.server?.name || 'Sunucu'} sunucusundan`;
+  return String(key);
+}
+const usageKey = e => { const m = EMOJI_TOKEN.exec(String(e || '')); return m && S.view === 'server' && S.server ? `${S.server.id}/${m[1]}` : String(e || ''); };
+function bumpEmoji(key) {
+  if (!key) return;
+  const cur = eUse[key];
+  eUse[key] = { n: Math.min(9999, ((cur?.n | 0) || 0) + 1), t: Date.now() };
+  const ks = Object.keys(eUse);
+  if (ks.length > 64) ks.sort((a, b) => (eUse[a].n - eUse[b].n) || (eUse[a].t - eUse[b].t)).slice(0, ks.length - 64).forEach(k => delete eUse[k]);
+  store.set('kanka-emouse', JSON.stringify(eUse));
+  syncPrefs();
+}
+function countEmojiUsage(text) {
+  if (!text || typeof text !== 'string') return;
+  if (S.view === 'server' && S.server) for (const m of text.matchAll(/:([a-z0-9_]{2,24}):/g)) if (S.server.emojis?.[m[1]]) bumpEmoji(`${S.server.id}/${m[1]}`);
+  const seen = new Set(); EMOJI_RUN.lastIndex = 0;
+  for (const m of text.matchAll(EMOJI_RUN)) seen.add(m[0]);
+  seen.forEach(e => bumpEmoji(e));
+}
+const freqKeys = () => Object.entries(eUse).filter(([, v]) => v?.n > 0).map(([k, v]) => [k, v.n / (1 + Math.max(0, Date.now() - (v.t || 0)) / 1209600e3)]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
 // Bildirim tercihleri hesapta: bir cihazda değişince hepsinde geçerli, telefon bildirimi de uyar
-const prefsNow = () => ({ notif: notifOn(), muted: [...mutedServers], ch: Object.fromEntries(Object.entries(chNotif()).filter(([, v]) => v === 'all' || v === 'none')), order: srvOrder(), muteUntil: muteUntil() });
+const prefsNow = () => ({ notif: notifOn(), muted: [...mutedServers], ch: Object.fromEntries(Object.entries(chNotif()).filter(([, v]) => v === 'all' || v === 'none')), order: srvOrder(), muteUntil: muteUntil(), emoji: { fav: eFav, use: eUse } });
 let prefsT = null;
 const syncPrefs = () => { clearTimeout(prefsT); prefsT = setTimeout(() => socket.emit('prefs', prefsNow()), 300); };
 function applyServerPrefs(p) {
@@ -4854,6 +4937,7 @@ function applyServerPrefs(p) {
   store.set('kanka-chnotif', JSON.stringify(p.ch || {}));
   if (Array.isArray(p.order)) store.set('kanka-srvorder', JSON.stringify(p.order));
   if (p.muteUntil) store.set('kanka-muteuntil', JSON.stringify(p.muteUntil));
+  if (p.emoji) applyEmojiPrefs(p.emoji);
 }
 socket.on('prefs', p => { applyServerPrefs(p); renderRail(); if (S.view === 'server') renderSide(); });
 function initReadState(res) {
@@ -5019,8 +5103,7 @@ function msgHTML(m, prev) {
   if (m.kind === 'daily') return day + `<div class="daily" data-id="${m.id}"><div class="kt">${ic('sun')}GÜNÜN SORUSU</div><p>${esc(m.text)}</p></div>`;
   if (m.kind === 'bot') {
     const T = { info: '#5aa9ff', ok: '#3fcf8e', warn: '#f6c445', danger: '#ef5a5a' }[m.bot?.tone] || '#5aa9ff', b = m.bot || {};
-    const rb = Object.entries(m.reactions || {}).map(([e, us]) =>
-      `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}" title="${esc(us.join(', '))}">${e}<span>${us.length}</span></button>`).join('');
+    const rb = Object.entries(m.reactions || {}).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
     const bt = m.ephemeral ? '' : `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
     return day + `<div class="row botrow" data-id="${m.id}"><div class="av botav"><img src="/icon-192.png" alt=""></div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname" style="color:var(--accent)">Kanka Bot</span><span class="botbadge">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
       <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<p>${fmt(b.text)}</p>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
@@ -5066,8 +5149,7 @@ function msgHTML(m, prev) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
     body += `<div class="thr" data-thread="${m.id}"><span class="avs">${who.map(n => av(n)).join('')}</span>${ic('thread')} ${m.thread.length} yanıt · son ${hm(m.thread.at(-1).time)}</div>`;
   }
-  const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) =>
-    `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}" title="${esc(us.join(', '))}">${e}<span>${us.length}</span></button>`).join('');
+  const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'own' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}<span class="gtime">${hm(m.time)}</span>
     <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
@@ -5131,9 +5213,9 @@ $('#messages').onclick = e => {
   const t = e.target.closest('button, img[data-view]');
   if (!t) return;
   const find = id => S.msgs.find(m => m.id === id);
-  if (t.dataset.react) socket.emit('react', { msgId: t.dataset.react, emoji: t.dataset.e });
-  else if (t.dataset.emo) openPop(t, 'emo', EMOJIS.map(e => `<button data-e="${e}" aria-label="${e} tepkisi">${e}</button>`).join(''),
-    b => socket.emit('react', { msgId: t.dataset.emo, emoji: b.dataset.e }));
+  if (t.dataset.react) { socket.emit('react', { msgId: t.dataset.react, emoji: t.dataset.e }); bumpEmoji(usageKey(t.dataset.e)); }
+  else if (t.dataset.emo) openPop(t, 'emo', quickReacts().map(k => { const r = resolveEmojiKey(k), e = r?.url ? `:${r.name}:` : (r?.e || ''); return `<button data-e="${esc(e)}" data-k="${esc(k)}" aria-label="${esc(emojiTitle(k))} tepkisi" title="${esc(emojiTitle(k))}">${emojiFace(k)}</button>`; }).join(''),
+    b => { socket.emit('react', { msgId: t.dataset.emo, emoji: b.dataset.e }); bumpEmoji(b.dataset.k || usageKey(b.dataset.e)); });
   else if (t.dataset.reply) startReply(find(t.dataset.reply));
   else if (t.dataset.more) {
     const m = find(t.dataset.more);
@@ -5204,7 +5286,7 @@ socket.on('playlist', ({ channelId, playlist }) => { if (channelId === S.channel
 // ================= Yazma alanı =================
 function send(payload) {
   if (S.replyTo) payload.replyTo = S.replyTo.id;
-  socket.emit('message', payload, r => { if (r?.needRules) return showWelcome(S.servers.find(x => x.id === r.needRules)); if (r?.error) return toast(r.error); cancelReply(); slowAfterSend(); setTimeout(() => tip('msg', '#compose', 'Mesajın gitti! 🎉', 'Bir mesajın üstüne gelip tepki verebilir ya da yanıtlayabilirsin. @ yazarak birini etiketle.', 'top'), 700); });
+  socket.emit('message', payload, r => { if (r?.needRules) return showWelcome(S.servers.find(x => x.id === r.needRules)); if (r?.error) return toast(r.error); if (payload.kind === 'text' && payload.text) countEmojiUsage(payload.text); cancelReply(); slowAfterSend(); setTimeout(() => tip('msg', '#compose', 'Mesajın gitti! 🎉', 'Bir mesajın üstüne gelip tepki verebilir ya da yanıtlayabilirsin. @ yazarak birini etiketle.', 'top'), 700); });
 }
 $('#compose').onsubmit = e => {
   e.preventDefault();
@@ -6841,25 +6923,197 @@ const EMO = {
   '⚽': '⚽ 🏀 🏈 ⚾ 🎾 🏐 🏉 🎱 🏓 🏸 🥊 🥋 ⛳ 🎣 🛹 ⛸️ 🎿 🏋️ 🚴 🏊 🧗 🎮 🕹️ 🎲 ♟️ 🎯 🎳 🎰 🧩 🎨 🎬 🎤 🎧 🎼 🎹 🥁 🎷 🎺 🎸 🎻 🚗 🏎️ 🚓 🚑 🚒 ✈️ 🚀 🛸 🚁 ⛵ 🏠 🏰 🗽 🗼 🎡 🎢 🏖️ 🏕️ 💻 📱 ⌚ 📷 💡 📚 💰 💎 🔑 🔒 🧸 🎀',
   '🇹🇷': '🇹🇷 🏳️‍🌈 🏁 🚩 ✅ ❌ ❓ ❗ ‼️ ⁉️ 💤 🆗 🆒 🆕 🆓 🔝 🔜 ♻️ ⚠️ 🚫 ⛔ 📌 📍 🔔 🔕 🎵 🎶 ➕ ➖ ✖️ ➗ 💲 ©️ ®️ ™️ 🔴 🟠 🟡 🟢 🔵 🟣 ⚫ ⚪ 🟤',
 };
-let epTab = '😀';
+// Arama için Türkçe + İngilizce anahtar kelimeler (her satır: kelimeler -> emojiler)
+const EMO_SEARCH = {
+  'gülmek gülümseme mutlu sevinç smile happy laugh': '😀 😃 😄 😁 😆 😅 🤣 😂 🙂 🙃 😉 😊 😇 🥰 😍 🤩 😘 😋 😛 😜 🤪 😝 🤗 🤭 🤫 🥳 🤠 😏 😒 🙄 😬 🤥 😌 😐 😑 😶',
+  'beğeni begeni like onay thumbs': '👍 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 🤙',
+  'beğenmeme begenmeme dislike olumsuz': '👎',
+  'el selam merhaba wave hello': '👋 🫡 🙋 🙌 👏 👐 🤲 🤝 🙏 ✍️ 🫶',
+  'parmak işaret point': '👈 👉 👆 👇 ☝️ ✋ 🤚 🖐️ 🖖',
+  'kas güç güçlü strong muscle': '💪 🦾 🦵',
+  'göz bakmak görmek eye': '👀 👁️',
+  'dil ağız mouth': '👅 👄',
+  'beyin akıl brain': '🧠',
+  'erime eriyen melting': '🫠',
+  'sarılma kucak hug': '🫂',
+  'bebek çocuk insan kişi people': '👶 🧒 👦 👧 🧑 👱 👨 🧔 👩 🧓 👴 👵',
+  'dans etmek dans': '💃 🕺',
+  'koşmak yürümek': '🏃 🚶',
+  'kaldırmak selam vermek': '🙋 🙆 🙅 🤷 🤦',
+  'kalp aşk sevgi love heart': '❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟',
+  'yıldız parıltı star sparkle': '✨ ⭐ 🌟 💫',
+  'ateş fire sıcak hot': '🔥 🥵',
+  'soğuk üşümek cold': '🥶 ❄️',
+  'patlama boom': '💥 💢',
+  'yüzde yüz': '💯',
+  'su damla ter': '💦 💨 🕳️ 🌊',
+  'konuşma mesaj sohbet chat': '💬 💭',
+  'uyku uyumak yorgun': '💤 😴 🥱 😪 🤤',
+  'parti kutlama tebrik': '🎉 🎊 🎈 🎁',
+  'kupa ödül birinci ikinci üçüncü': '🏆 🥇 🥈 🥉 🏅 🎖️',
+  'tatlı dondurma pasta': '🍦 🍰 🎂 🧁 🍫 🍬 🍭 🍩 🍪 🍿',
+  'meyve': '🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🍒 🍑 🥭 🍍 🥥 🥝',
+  'sebze': '🍅 🥑 🌽 🌶️ 🥕 🧄 🥔',
+  'ekmek fırın gıda': '🥐 🍞 🧀 🥚 🍳 🥓 🥩 🍗 🍖',
+  'hamburger pizza yemek fast food': '🌭 🍔 🍟 🍕 🥪 🌮 🌯 🥙 🧆 🍝 🍜 🍲 🍣 🍱 🥟',
+  'içecek kahve çay bira': '☕ 🍵 🧃 🥤 🧋 🍺 🍻',
+  'hayvan kedi köpek': '🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊',
+  'kuş tavuk penguen': '🐔 🐧 🐦 🐤 🦆 🦅 🦉 🦇',
+  'kurt domuz at unicorn': '🐺 🐗 🐴 🦄',
+  'böcek arı kelebek': '🐝 🐛 🦋 🐌 🐞',
+  'deniz balık': '🐢 🐍 🦖 🐙 🦑 🦀 🐠 🐬 🐳 🦈 🐊',
+  'bitki doğa ağaç çiçek': '🌵 🌲 🌴 🌱 🍀 🍁 🌸 🌹 🌻',
+  'gökyüzü hava gece gündüz': '🌙 ☀️ ⛅ 🌈 ⚡',
+  'spor futbol basketbol': '⚽ 🏀 🏈 ⚾ 🎾 🏐 🏉',
+  'bilardo bowling dart': '🎱 🎳 🎯',
+  'tenis raket': '🏓 🏸',
+  'dövüş boks karate': '🥊 🥋',
+  'golf balık tutmak kaykay': '⛳ 🎣 🛹',
+  'kayak buz pateni ağırlık bisiklet yüzme tırmanma': '⛸️ 🎿 🏋️ 🚴 🏊 🧗',
+  'oyun game': '🎮 🕹️ 🎲 ♟️ 🎰 🧩',
+  'sanat resim müzik': '🎨 🎬 🎤 🎧 🎼 🎹 🥁 🎷 🎺 🎸 🎻',
+  'araba araç ulaşım': '🚗 🏎️ 🚓 🚑 🚒 ✈️ 🚀 🛸 🚁 ⛵',
+  'bina ev yer': '🏠 🏰 🗽 🗼 🎡 🎢 🏖️ 🏕️',
+  'teknoloji bilgisayar telefon': '💻 📱 ⌚ 📷 💡 📚',
+  'para zenginlik': '💰 💎 🔑 🔒 🧸 🎀 🤑',
+  'bayrak türkiye gökkuşağı': '🇹🇷 🏳️‍🌈 🏁 🚩',
+  'onay tik': '✅',
+  'soru ünlem': '❓ ❗ ‼️ ⁉️',
+  'yeni ücretsiz': '🆕 🆓 🆒 🆗',
+  'yukarı üst': '🔝 🔜',
+  'geri dönüşüm uyarı': '♻️ ⚠️',
+  'yasak yok giriş': '🚫 ⛔ ❌',
+  'iğne pin konum': '📌 📍',
+  'zil bildirim': '🔔 🔕',
+  'müzik nota': '🎵 🎶',
+  'matematik toplama çıkarma çarpma bölme': '➕ ➖ ✖️ ➗',
+  'dolar para işareti': '💲',
+  'telif marka': '©️ ®️ ™️',
+  'renk daire': '🔴 🟠 🟡 🟢 🔵 🟣 ⚫ ⚪ 🟤',
+  'düşünmek sorgulamak': '🤔 🤨 🧐 🤓 😎 🥸',
+  'sessiz susmak konuşmamak': '🤐 🤫 🤭 😶',
+  'üzgün ağlamak gözyaşı üzüntü': '🥺 😢 😭 😞 😔 😟 🙁 😦 😧 😨 😰 😥 😓 😩 😫 😪 😌',
+  'şaşkın şok': '😮 😯 😲 😳 😱 😵 🤯',
+  'kızgın öfke sinir': '😡 😠 🤬 😤 😖 😣',
+  'hasta sağlık maske': '😷 🤒 🤕 🤢 🤮 🥴',
+  'şeytan kötü korku': '😈 👿 👻 👽 🤖 💀 ☠️ 💩 🤡',
+  'sevimli tatlı': '😏 😒 🙄 😬 😮‍💨 🤥 😕',
+};
+const EMO_ALL = (() => { const s = new Set(), o = []; for (const v of Object.values(EMO)) for (const e of v.split(' ')) if (e && !s.has(e)) { s.add(e); o.push(e); } return o; })();
+const trNorm = s => String(s).toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ç/g, 'c').replace(/ö/g, 'o').replace(/ü/g, 'u');
+const EMO_IDX = Object.entries(EMO_SEARCH).map(([k, v]) => [trNorm(k).split(/\s+/).filter(Boolean), v.split(' ')]);
+let epTab = '😀', epQ = '';
+const epColl = new Set(JSON.parse(store.get('kanka-epcoll') || '[]'));
+function emojiFace(key) {
+  const r = resolveEmojiKey(key);
+  if (!r) return '';
+  return r.url ? `<img src="${esc(r.url)}" alt="${esc(key)}">` : r.e;
+}
+function quickReacts() {
+  const out = [], seen = new Set();
+  const add = k => { if (!k || seen.has(k) || !resolveEmojiKey(k)) return; seen.add(k); out.push(k); };
+  eFav.forEach(add);
+  freqKeys().forEach(add);
+  EMOJIS.forEach(add);
+  return out.slice(0, 8);
+}
+function emojiSearch(q) {
+  const qq = trNorm(q).trim(), raw = q.trim();
+  if (!qq) return [];
+  const out = [], seen = new Set();
+  const add = k => { if (k && !seen.has(k)) { seen.add(k); out.push(k); } };
+  EMO_ALL.filter(e => e === raw).forEach(add);
+  for (const [keys, val] of EMO_IDX) if (keys.some(k => k === qq || k.startsWith(qq) || (k.length >= 3 && qq.startsWith(k)))) val.forEach(add);
+  if (S.view === 'server' && S.server?.emojis) for (const n of Object.keys(S.server.emojis)) if (n.includes(qq) || n.includes(raw.replace(/^:/, ''))) add(`${S.server.id}/${n}`);
+  return out;
+}
+function toggleEmojiFav(key) {
+  const i = eFav.indexOf(key);
+  if (i >= 0) { eFav.splice(i, 1); toast('Favorilerden çıkarıldı'); }
+  else {
+    if (!resolveEmojiKey(key)) return;
+    if (eFav.length >= 48) return toast('En fazla 48 favori ekleyebilirsin');
+    eFav.unshift(key); toast('Favorilere eklendi');
+  }
+  saveEmojiPrefs(); syncPrefs(); renderEmojiPanel();
+}
+function epBtn(key) {
+  const r = resolveEmojiKey(key); if (!r) return '';
+  const fav = eFav.includes(key);
+  return `<button type="button" class="ep-e${fav ? ' fav' : ''}" data-ins="${esc(key)}" title="${esc(emojiTitle(key))}" aria-label="${esc(emojiTitle(key))}">${r.url ? `<img src="${esc(r.url)}" alt="${esc(key)}" loading="lazy">` : r.e}<span class="ep-star" data-favk="${esc(key)}" title="${fav ? 'Favorilerden çıkar' : 'Favorilere ekle'}">${ic('star')}</span></button>`;
+}
+function epSec(id, title, icon, keys, noCollapse) {
+  const collapsed = !noCollapse && epColl.has(id);
+  const head = `<div class="ep-h" ${noCollapse ? '' : `data-epsec="${id}"`}>${icon ? ic(icon) : ''}<span>${esc(title)}</span><span class="ep-n">${keys.length}</span>${noCollapse ? '' : `<span class="ep-caret ${collapsed ? '' : 'open'}">${ic('chevron')}</span>`}</div>`;
+  return `<section class="ep-sec">${head}${collapsed ? '' : `<div class="ep-row">${keys.map(epBtn).join('')}</div>`}</section>`;
+}
 function renderEmojiPanel() {
+  if (!$('#emojipanel')) return;
   const em = (S.view === 'server' && S.server?.emojis) || {};
   const tabs = [...Object.keys(EMO), ...(Object.keys(em).length ? ['⭐'] : [])];
   if (!tabs.includes(epTab)) epTab = '😀';
-  $('#ep-tabs').innerHTML = tabs.map(t => `<button type="button" class="${t === epTab ? 'on' : ''}" data-t="${t}" title="${t === '⭐' ? 'Sunucu emojileri' : ''}">${t === '⭐' ? ic('star') : t}</button>`).join('');
-  $('#ep-grid').innerHTML = epTab === '⭐'
-    ? Object.entries(em).map(([n, u]) => `<button type="button" data-ins=":${n}: " title=":${n}:"><img src="${esc(u)}" alt=":${n}:"></button>`).join('')
-    : EMO[epTab].split(' ').map(e => `<button type="button" data-ins="${e}">${e}</button>`).join('');
+  $('#ep-tabs').innerHTML = tabs.map(t => `<button type="button" class="${t === epTab ? 'on' : ''}" data-t="${t}" title="${t === '⭐' ? 'Sunucu emojileri: ' + esc(S.server?.name || '') : ''}">${t === '⭐' ? ic('star') : t}</button>`).join('');
+  let h = '';
+  if (epQ) {
+    const res = emojiSearch(epQ);
+    h = res.length ? epSec('res', 'Sonuçlar', 'search', res, true) : `<div class="ep-empty">"${esc(epQ)}" için sonuç bulunamadı</div>`;
+  } else {
+    const fav = eFav.filter(k => resolveEmojiKey(k));
+    if (fav.length) h += epSec('fav', 'Favoriler', 'star', fav);
+    const freq = freqKeys().filter(k => !eFav.includes(k) && resolveEmojiKey(k)).slice(0, 16);
+    if (freq.length) h += epSec('freq', 'Sık kullanılan', 'clock', freq);
+    if (epTab === '⭐') h += epSec('srv', `${S.server?.name || 'Sunucu'} emojileri`, 'star', Object.keys(em).map(n => `${S.server.id}/${n}`));
+    else h += epSec('cat', 'Emojiler', null, EMO[epTab].split(' '));
+  }
+  $('#ep-grid').innerHTML = h;
 }
-$('#emo-btn').onclick = e => { e.stopPropagation(); const p = $('#emojipanel'); p.classList.toggle('on'); if (p.classList.contains('on')) renderEmojiPanel(); };
-$('#ep-tabs').onclick = e => { const b = e.target.closest('button'); if (b) { epTab = b.dataset.t; renderEmojiPanel(); } };
-$('#ep-grid').onclick = e => {
-  const b = e.target.closest('button[data-ins]'); if (!b) return;
-  const inp = $('#input'), p = inp.selectionStart ?? inp.value.length;
-  inp.value = inp.value.slice(0, p) + b.dataset.ins + inp.value.slice(inp.selectionEnd ?? p);
-  inp.focus(); inp.setSelectionRange(p + b.dataset.ins.length, p + b.dataset.ins.length);
+function emojiInsert(key) {
+  const r = resolveEmojiKey(key); if (!r) return;
+  const inp = $('#input'); if (!inp) return;
+  const ins = r.url ? `:${r.name}: ` : r.e;
+  const p = inp.selectionStart ?? inp.value.length;
+  inp.value = inp.value.slice(0, p) + ins + inp.value.slice(inp.selectionEnd ?? p);
+  inp.focus(); inp.setSelectionRange(p + ins.length, p + ins.length);
+  growInput();
+}
+const closeEmojiPanel = () => $('#emojipanel')?.classList.remove('on');
+function openEmojiPanel() {
+  const p = $('#emojipanel'); if (!p) return;
+  epQ = ''; $('#ep-q').value = ''; renderEmojiPanel(); p.classList.add('on');
+  setTimeout(() => $('#ep-q')?.focus(), 30);
+}
+$('#emo-btn').onclick = e => { e.stopPropagation(); $('#emojipanel').classList.contains('on') ? closeEmojiPanel() : openEmojiPanel(); };
+$('#ep-q').oninput = e => { epQ = e.target.value; renderEmojiPanel(); };
+$('#ep-q').onkeydown = e => {
+  if (e.key === 'Enter') { const b = $('#ep-grid .ep-row button[data-ins]'); if (b) { e.preventDefault(); emojiInsert(b.dataset.ins); } }
+  else if (e.key === 'ArrowDown') { e.preventDefault(); $('#ep-grid .ep-row button[data-ins]')?.focus(); }
 };
-document.addEventListener('click', e => { if (!e.target.closest('#emojipanel, #emo-btn')) $('#emojipanel').classList.remove('on'); });
+$('#emojipanel').addEventListener('keydown', e => { if (e.key === 'Escape') { closeEmojiPanel(); $('#input')?.focus(); } });
+$('#ep-tabs').onclick = e => { const b = e.target.closest('button'); if (b) { epTab = b.dataset.t; renderEmojiPanel(); } };
+let epHold = null, epHeld = false;
+$('#ep-grid').addEventListener('pointerdown', e => {
+  const b = e.target.closest('button[data-ins]'); if (!b || e.pointerType === 'mouse') return;
+  epHeld = false;
+  epHold = setTimeout(() => { epHeld = true; toggleEmojiFav(b.dataset.ins); buzz(15); }, 450);
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(t => $('#ep-grid').addEventListener(t, () => clearTimeout(epHold)));
+$('#ep-grid').onclick = e => {
+  const h = e.target.closest('[data-epsec]');
+  if (h) { const id = h.dataset.epsec; epColl.has(id) ? epColl.delete(id) : epColl.add(id); store.set('kanka-epcoll', JSON.stringify([...epColl])); renderEmojiPanel(); return; }
+  if (epHeld) { epHeld = false; return; }
+  const fav = e.target.closest('[data-favk]');
+  if (fav) { e.stopPropagation(); toggleEmojiFav(fav.dataset.favk); return; }
+  const b = e.target.closest('button[data-ins]'); if (b) emojiInsert(b.dataset.ins);
+};
+$('#ep-grid').addEventListener('keydown', e => {
+  const b = e.target.closest('button[data-ins]');
+  if (!b || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+  e.preventDefault();
+  const btns = [...$('#ep-grid').querySelectorAll('button[data-ins]')], i = btns.indexOf(b);
+  const j = i + (e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowDown' ? 8 : -8);
+  btns[Math.max(0, Math.min(btns.length - 1, j))]?.focus();
+});
+document.addEventListener('click', e => { if (!e.target.closest('#emojipanel, #emo-btn')) closeEmojiPanel(); });
 
 // ================= Sesli mesaj =================
 let rec = null, recChunks = [], recStart = 0, recTimer = null, recCancel = false;
