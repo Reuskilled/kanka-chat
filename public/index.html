@@ -2738,6 +2738,18 @@
   #dmcall .dc-leave { width: auto; padding: 0 16px; display: inline-flex; align-items: center; gap: 6px; border-radius: 21px; background: #e5484d; color: #fff; font-weight: 900; font-size: 12.5px; }
   #dmcall .dc-leave:hover { background: #f05a5f; }
   #dmcall .dc-leave .ic { width: 16px; height: 16px; }
+  #dmcall .dc-vidwrap { position: relative; display: none; margin-top: 8px; border-radius: 12px; overflow: hidden; background: #000; border: 1px solid rgba(255,255,255,.08); cursor: zoom-in; }
+  #dmcall .dc-stage.hasvid .dc-vidwrap { display: block; }
+  #dmcall .dc-stage.hasvid .dc-avs { display: none; }
+  #dmcall .dc-vidwrap video { display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 34vh; object-fit: contain; background: #000; }
+  #dmcall .dc-vidwrap video.mirror { transform: scaleX(-1); }
+  #dmcall .dc-vl { position: absolute; left: 8px; bottom: 8px; display: flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 8px; background: rgba(0,0,0,.55); color: #fff; font-size: 11.5px; font-weight: 800; }
+  #dmcall .dc-vfs { position: absolute; right: 8px; top: 8px; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(0,0,0,.55); color: #fff; }
+  #dmcall .dc-vfs:hover { background: rgba(0,0,0,.75); }
+  #dmcall .dc-vfs .ic { width: 15px; height: 15px; }
+  @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
+    #dmcall .dc-vidwrap video { max-height: 30vh; }
+  }
   /* Kapalıyken ince şerit */
   #dmcall .dc-bar { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; border: 1px solid rgba(255,138,76,.30); background: linear-gradient(120deg, rgba(242,101,47,.16), rgba(242,101,47,.04) 55%), #221914; }
   #dmcall .dc-stack { display: flex; align-items: center; padding-left: 4px; flex-shrink: 0; }
@@ -7344,7 +7356,8 @@ function pipSource() {
   return null;
 }
 function renderPip() {
-  const src = myVoice && !vview() ? pipSource() : null;
+  const inCallCard = !!myVoice?.startsWith('call:') && S.view === 'dm' && myVoice === 'call:' + S.channel?.id && !vview();
+  const src = myVoice && !vview() && !inCallCard ? pipSource() : null;
   let p = $('#pip');
   if (!src || pipClosed === src.key) { p?.remove(); return; }
   if (!p) {
@@ -7464,6 +7477,7 @@ function renderStage() {
   st.querySelectorAll('.tile').forEach(el => { if (!keep.has(el.dataset.sid)) el.remove(); });
   layoutStage();
   zChip();
+  renderDMCall();
   // Yayıncıya izleyicilere gerçekte ne gittiğini göster: çözünürlük, FPS ve neden düştüğü
   if (videoKind === 'screen' && !sendStats) sendStats = setInterval(async () => {
     const f = st.querySelector('.tile[data-sid="me"] .sendq'); if (!f) return;
@@ -7501,8 +7515,19 @@ function dcSync(el) {
   if (s) s.classList.toggle('on', videoKind === 'screen');
   if (d) { d.innerHTML = ic(deaf ? 'headsetoff' : 'headset'); d.classList.toggle('off', deaf); }
   el.classList.toggle('muted', muted);
+  dcVideo(el);
+}
+function dcVideo(el) {
+  const wrap = el.querySelector('.dc-vidwrap'), stage = el.querySelector('.dc-stage'); if (!wrap || !stage) return;
+  const v = wrap.querySelector('video'), src = vview() ? null : pipSource();
+  stage.classList.toggle('hasvid', !!src);
+  if (!src) { if (v.srcObject) v.srcObject = null; return; }
+  if (v.srcObject !== src.stream) v.srcObject = src.stream;
+  v.classList.toggle('mirror', !!src.mine && videoKind === 'cam');
+  wrap.querySelector('.dc-vl').innerHTML = `${src.live ? '<span class="red">CANLI</span> ' : ''}${esc(src.name)}`;
 }
 function renderDMCall() {
+  renderPip();
   const ch = S.channel, el = $('#dmcall');
   const on = ch && S.view === 'dm' && myVoice === 'call:' + ch.id && !vview();
   if (!on) { if (el) { el.remove(); dmCallSig = ''; } return; }
@@ -7527,11 +7552,14 @@ function renderDMCall() {
     box.innerHTML = `<div class="dc-stage">
       <div class="dc-top"><span class="dc-live"><i></i>Sesli arama · <span id="dc-tm">${tm}</span></span>
         <div class="dc-tools"><button class="dc-tool" data-dc="full" title="Sahneye geç" aria-label="Sahneye geç">${ic('expand')}Sahne</button><button class="dc-tool icon" data-dc="min" title="Paneli küçült" aria-label="Paneli küçült">${ic('down')}</button></div></div>
+      <div class="dc-vidwrap"><video autoplay playsinline muted></video><span class="dc-vl"></span><button class="dc-vfs" title="Sahnede aç" aria-label="Sahnede aç">${ic('expand')}</button></div>
       <div class="dc-avs">${[{ n: S.me, me: 1 }, ...others.map(n => ({ n }))].slice(0, 3).map(p => `<div class="dc-p ${p.me ? 'me' : ''}" data-vu="${esc(p.n)}">${av(p.n)}${p.me ? `<span class="dc-mb">${ic('micoff')}</span>` : ''}<small>${p.me ? 'Sen' : esc(dn(p.n))}</small></div>`).join('')}${extra ? `<span class="dc-more">+${extra}</span>` : ''}</div>
       <div class="dc-acts">${dcBtn('mute', muted ? 'micoff' : 'mic', 'Mikrofon')}${dcBtn('cam', 'video', 'Kamera')}${dcBtn('scr', 'screen', 'Ekran paylaş')}${dcBtn('deaf', 'headset', 'Hoparlörü kapat')}<button class="dc-b dc-leave" data-dc="leave" title="Aramayı bitir" aria-label="Aramayı bitir">${ic('hangup')}<span>Ayrıl</span></button></div>
     </div>`;
   }
   $('#messages').before(box);
+  const vw = box.querySelector('.dc-vidwrap');
+  if (vw) vw.onclick = () => setVView(true);
   box.querySelectorAll('[data-dc]').forEach(b => b.onclick = e => {
     e.stopPropagation(); const k = b.dataset.dc;
     if (k === 'full') setVView(true);
