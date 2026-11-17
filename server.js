@@ -668,7 +668,8 @@ function chView(s, c, viewer, manager) {
     stage: c.type === 'stage' && stage.has(c.id) ? stageView(c.id) : undefined,
     canAttach: P('attach'), canReact: P('react'), canMention: P('mention'), canManage: P('manage'), canStream: P('stream'), canSpeak: P('speak'),
     private: everyoneDenied(ov, 'view'), ann: everyoneDenied(ov, 'send'), locked: voiceLike(c.type) && everyoneDenied(ov, 'connect'),
-    readonly: viewer ? !chPerm(s, c, viewer, 'send') : false, canConnect: viewer ? chPerm(s, c, viewer, 'connect') : true };
+    readonly: viewer ? !chPerm(s, c, viewer, 'send') : false, canConnect: viewer ? chPerm(s, c, viewer, 'connect') : true,
+    ticket: c.ticket ? { no: c.ticket.no, by: c.ticket.by, claimedBy: c.ticket.claimedBy || null, closed: !!c.ticket.closedAt } : undefined };
   if (manager) v.perms = c.perms || {};
   // Görme izni kısıtlı odada üye listesi sadece odayı görebilenleri göstersin
   if (c.allowUsers?.length || Object.values(ov).some(o => o && o.view !== undefined)) v.viewers = viewersOf(s, c);
@@ -995,7 +996,8 @@ const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s
   setup: viewer && s.owner === viewer ? setupOf(s) : null,
   afk: s.afk || null,
   tplUndo: viewer && s.owner === viewer && s.tplUndo && Date.now() - s.tplUndo.t < TPL_UNDO_MS ? { t: s.tplUndo.t, channels: s.tplUndo.added.channels.length, categories: s.tplUndo.added.categories.length, roles: s.tplUndo.added.roles.length } : null,
-  bot: viewer && can(s, viewer, 'manageServer') ? botCfg(s) : { added: !!s.bot?.added, mod: { on: botOn(s, 'mod') }, welcome: { on: botOn(s, 'welcome') } },
+  bot: viewer && can(s, viewer, 'manageServer') ? botCfg(s) : { added: !!s.bot?.added, mod: { on: botOn(s, 'mod') }, welcome: { on: botOn(s, 'welcome') }, ticket: { on: botOn(s, 'ticket'), askReason: s.bot?.ticket?.askReason !== false } },
+  myTicketStaff: viewer ? isTicketStaff(s, viewer) : false,
   welcome: s.welcome || null, accepted: !s.welcome?.enabled || !!s.accepted?.[viewer] || s.owner === viewer
 });
 const findChannel = chId => {
@@ -1108,6 +1110,7 @@ const BOT_NAME = 'Kanka Bot';
 const BOT_MODS = {
   mod: { on: false, antinuke: true, invites: true, links: false, spam: true, mentions: true, caps: false, words: '', logCh: null, warnLimit: 3 },
   welcome: { on: false, ch: null, text: '{üye} aramıza katıldı! 🎉 Kendini #tanışma odasında tanıt.', count: true, role: null, bye: false, byeText: '{üye} aramızdan ayrıldı. Yolun açık olsun 👋' },
+  ticket: { on: false, panelCh: null, role: null, askReason: true, panelText: 'Bir sorunun mu var? Talebini aç, yetkililer en kısa sürede ilgilenecek.', welcome: 'Merhaba {üye}! Talebini buraya yazabilirsin. Yetkililer en kısa sürede bakacak.', cooldownMin: 10, seq: 0 },
 };
 const WELCOME_TITLES = ['👋 Aramıza hoş geldin!', '🎉 Yeni kanka geldi!', '🦝 Bir kanka daha!', '🚀 Ekibe katıldı!', '✨ Selam, yeni yüz!'];
 const ordinalTr = n => n + '.';
@@ -1231,6 +1234,114 @@ function modLog(s, o) {
   const m = s.bot?.mod; if (!m?.on || !m.logCh) return;
   if (!s.channels.some(c => c.id === m.logCh && (c.type || 'text') === 'text')) return;
   botPost(m.logCh, o);
+}
+// ---------- Destek (ticket) ----------
+function isTicketStaff(s, n) {
+  if (!n) return false;
+  if (s.owner === n || can(s, n, 'manageChannels')) return true;
+  const r = s.bot?.ticket?.role;
+  return !!(r && (s.memberRoles?.[n] || []).includes(r));
+}
+function ticketStaff(s) {
+  const t = s.bot?.ticket || {}, out = new Set();
+  if (s.owner) out.add(s.owner);
+  const pool = s.public ? onlineNames() : membersOf(s);
+  for (const n of pool) if (can(s, n, 'manageChannels')) out.add(n);
+  if (t.role) for (const [n, rs] of Object.entries(s.memberRoles || {})) if ((rs || []).includes(t.role) && (s.public || s.members.includes(n))) out.add(n);
+  return [...out];
+}
+function ticketCats(s) {
+  s.categories ||= [];
+  let cat = s.categories.find(k => k.ticketCat);
+  if (!cat) { cat = { id: id(), name: 'Destek Talepleri', perms: { '@everyone': { view: false } }, ticketCat: true }; s.categories.push(cat); }
+  let arch = s.categories.find(k => k.ticketArchive);
+  if (!arch) { arch = { id: id(), name: 'Kapatılan Destekler', perms: { '@everyone': { view: false } }, ticketArchive: true }; s.categories.push(arch); }
+  return { cat, arch };
+}
+function ticketCardFields(c) {
+  const t = c.ticket, f = [['Açan', t.by]];
+  if (t.claimedBy) f.push(['Yetkili', t.claimedBy]);
+  f.push(['Durum', t.closedAt ? 'Kapatıldı' : t.claimedBy ? 'Üstlenildi' : 'Açık']);
+  return f;
+}
+function ticketCardUpdate(s, c) {
+  if (!c.ticket?.cardId) return;
+  const m = (db.messages[c.id] || []).find(x => x.id === c.ticket.cardId);
+  if (!m) return;
+  m.ticket = { no: c.ticket.no, by: c.ticket.by, claimedBy: c.ticket.claimedBy || null, closed: !!c.ticket.closedAt };
+  m.bot.fields = ticketCardFields(c);
+  m.bot.text = c.ticket.closedAt ? 'Talep kapatıldı. Yazışma yetkililer için arşivde duruyor.' : c.ticket.claimedBy ? `${c.ticket.claimedBy} bu taleple ilgileniyor.` : 'Yetkililer en kısa sürede ilgilenecek. Talebi kapatmak için aşağıdaki butona basabilirsin.';
+  save();
+  io.to(c.id).emit('update', { channelId: c.id, msg: m });
+}
+function openTicket(s, by, reason) {
+  const t = s.bot?.ticket;
+  if (!s.bot?.added || !t?.on) return { error: 'Destek modülü bu sunucuda açık değil' };
+  if (!(s.public || s.members.includes(by))) return { error: 'Önce sunucuya katıl' };
+  if (s.bans?.[by]) return { error: 'Sunucudan yasaklısın' };
+  const open = s.channels.find(c => c.ticket && !c.ticket.closedAt && c.ticket.by === by);
+  if (open) return { error: 'Zaten açık bir destek talebin var: #' + open.name, channelId: open.id };
+  const cool = Math.max(0, Math.min(1440, t.cooldownMin ?? 10));
+  const last = s.channels.filter(c => c.ticket && c.ticket.by === by && c.ticket.closedAt).sort((a, b) => b.ticket.closedAt - a.ticket.closedAt)[0];
+  if (cool && last && Date.now() - last.ticket.closedAt < cool * 60e3) return { error: `Yeni talep için ${Math.ceil((cool * 60e3 - (Date.now() - last.ticket.closedAt)) / 60e3)} dakika bekle` };
+  const rs = clean(reason, 200);
+  if (t.askReason && rs.length < 2) return { error: 'Talebinin konusunu kısaca yaz' };
+  t.seq ||= 0;
+  let name;
+  do { t.seq++; name = 'destek-' + String(t.seq).padStart(4, '0'); } while (s.channels.some(c => c.name === name));
+  const { cat } = ticketCats(s);
+  const perms = { '@everyone': { view: false, send: false }, ['u:' + by]: { view: true, send: true, attach: true, react: true } };
+  if (t.role) perms[t.role] = { view: true, send: true, attach: true, react: true };
+  const c = { id: id(), name, type: 'text', cat: cat.id, sync: false, perms, topic: `Destek talebi #${t.seq} · ${by}`, ticket: { no: t.seq, by, at: Date.now(), reason: rs, claimedBy: null, claimedAt: null, closedAt: null, closedBy: null } };
+  const lastIdx = s.channels.map(x => x.cat || null).lastIndexOf(cat.id);
+  if (lastIdx >= 0) s.channels.splice(lastIdx + 1, 0, c); else s.channels.push(c);
+  botPost(c.id, { title: 'Destek talebi açıldı', text: (t.welcome || 'Merhaba {üye}! Talebini buraya yazabilirsin.').replace(/\{üye\}/g, '@' + by).replace(/\{sunucu\}/g, s.name), tone: 'ok', fields: [['Açan', by], ...(rs ? [['Konu', rs]] : [])] });
+  const list = (db.messages[c.id] ||= []);
+  const card = { id: id(), kind: 'bot', time: Date.now() + 1, ticket: { no: t.seq, by, claimedBy: null, closed: false }, bot: { title: 'Destek durumu', text: 'Yetkililer en kısa sürede ilgilenecek. Talebi kapatmak için aşağıdaki butona basabilirsin.', tone: 'info', fields: ticketCardFields(c) }, reactions: {} };
+  list.push(card); if (list.length > 2000) list.shift();
+  c.ticket.cardId = card.id;
+  io.to(c.id).emit('message', { channelId: c.id, msg: card });
+  audit(s, by, 'Destek talebi açtı', '#' + name);
+  save(); pushServers(membersOf(s));
+  for (const n of ticketStaff(s)) if (n !== by) io.to('user:' + n).emit('toast', `Yeni destek talebi: #${name} · ${by}`);
+  return { ok: true, channelId: c.id, name };
+}
+function claimTicket(s, c, by) {
+  if (!c?.ticket) return { error: 'Destek talebi bulunamadı' };
+  if (!isTicketStaff(s, by)) return { error: 'Talepleri üstlenme yetkin yok' };
+  if (c.ticket.closedAt) return { error: 'Bu talep kapatıldı' };
+  if (c.ticket.claimedBy) return { error: 'Bu talebi zaten ' + c.ticket.claimedBy + ' üstlendi' };
+  c.ticket.claimedBy = by; c.ticket.claimedAt = Date.now();
+  botPost(c.id, { title: 'Talep üstlenildi', text: `${by} bu talebi üstlendi, artık o ilgilenecek.`, tone: 'ok' });
+  ticketCardUpdate(s, c);
+  audit(s, by, 'Destek talebini üstlendi', '#' + c.name);
+  save(); pushServers(membersOf(s));
+  return { ok: true };
+}
+function closeTicket(s, c, by) {
+  if (!c?.ticket) return { error: 'Destek talebi bulunamadı' };
+  if (!(c.ticket.by === by || isTicketStaff(s, by))) return { error: 'Bu talebi kapatma yetkin yok' };
+  if (c.ticket.closedAt) return { error: 'Bu talep zaten kapatıldı' };
+  c.ticket.closedAt = Date.now(); c.ticket.closedBy = by;
+  c.sync = false; c.perms ||= {};
+  delete c.perms['u:' + c.ticket.by];
+  c.perms['@everyone'] = { ...(c.perms['@everyone'] || {}), view: false, send: false };
+  const { arch } = ticketCats(s);
+  c.cat = arch.id;
+  s.channels = s.channels.filter(x => x !== c);
+  const idx = s.channels.map(x => x.cat || null).lastIndexOf(arch.id);
+  if (idx >= 0) s.channels.splice(idx + 1, 0, c); else s.channels.push(c);
+  const mins = Math.max(1, Math.round((Date.now() - c.ticket.at) / 60e3));
+  botPost(c.id, { title: 'Talep kapatıldı', text: `${by} talebi kapattı. Yazışma arşivde duruyor.`, tone: 'info', fields: [['Süre', dur(mins)], ['Açan', c.ticket.by]] });
+  ticketCardUpdate(s, c);
+  audit(s, by, 'Destek talebini kapattı', '#' + c.name);
+  save();
+  const panel = s.bot?.ticket?.panelCh && s.channels.find(x => x.id === s.bot.ticket.panelCh && (x.type || 'text') === 'text');
+  const goCh = (panel && seesChannel(s, panel, c.ticket.by) ? panel.id : null) || s.channels.find(x => (x.type || 'text') === 'text' && seesChannel(s, x, c.ticket.by))?.id || null;
+  io.to('user:' + c.ticket.by).emit('ticketClosed', { channelId: c.id, goCh });
+  io.to('user:' + c.ticket.by).emit('toast', `${s.name} sunucusundaki destek talebin kapatıldı`);
+  pushServers(membersOf(s));
+  return { ok: true, goCh };
 }
 // Anti-nuke: yetkili kısa sürede çok fazla yıkıcı işlem yaparsa yetkileri alınır
 const nukeMap = new Map();
@@ -2392,7 +2503,30 @@ io.on('connection', socket => {
     const target = () => { const n = (rest[0] || '').replace(/^@/, ''); return membersOf(s).find(x => x.toLocaleLowerCase('tr') === n.toLocaleLowerCase('tr')) || null; };
     const reason = k => clean(rest.slice(k).join(' '), 120);
     const modCmds = ['/uyar', '/uyarılar', '/uyarilar', '/uyarısil', '/uyarisil', '/sustur', '/temizle', '/kilitle', '/kilidiaç', '/kilidiac', '/aç', '/ac'];
-    if (cmd === '/yardım' || cmd === '/yardim' || cmd === '/komutlar') return W({ title: 'Kanka Bot komutları', tone: 'info', text: 'Herkes: /zar · /yazitura · /xox · /anket · /plan · /şarkı · /izle' + (!s.bot?.added ? '\n\nKanka Bot bu sunucuda ekli değil. Eklemek için: Sunucu ayarları → Kanka Bot.' : botOn(s, 'mod') ? '\n\nYetkililer:\n/uyar @isim sebep · uyarı ver\n/uyarılar @isim · uyarıları gör\n/uyarısil @isim · uyarıları sıfırla\n/sustur @isim 10 sebep · dakika olarak sustur\n/temizle 20 · son mesajları sil (en çok 100)\n/kilitle · odayı yazmaya kapat\n/kilidiaç · odayı yeniden aç' : '\n\nMod modülü kapalı. Sunucu ayarları → Kanka Bot\'tan açabilirsin.') });
+    if (cmd === '/yardım' || cmd === '/yardim' || cmd === '/komutlar') {
+      let txt = 'Herkes: /zar · /yazitura · /xox · /anket · /plan · /şarkı · /izle' + (s.bot?.ticket?.on ? ' · /destek' : '');
+      if (!s.bot?.added) txt += '\n\nKanka Bot bu sunucuda ekli değil. Eklemek için: Sunucu ayarları → Kanka Bot.';
+      else {
+        if (s.bot.ticket?.on) txt += '\n\nDestek:\n/destek konu · talebini aç\n/üstlen · açık talebi üstlen (yetkili)\n/kapat · talebi kapat';
+        txt += botOn(s, 'mod') ? '\n\nYetkililer:\n/uyar @isim sebep · uyarı ver\n/uyarılar @isim · uyarıları gör\n/uyarısil @isim · uyarıları sıfırla\n/sustur @isim 10 sebep · dakika olarak sustur\n/temizle 20 · son mesajları sil (en çok 100)\n/kilitle · odayı yazmaya kapat\n/kilidiaç · odayı yeniden aç' : '\n\nMod modülü kapalı. Sunucu ayarları → Kanka Bot\'tan açabilirsin.';
+      }
+      return W({ title: 'Kanka Bot komutları', tone: 'info', text: txt });
+    }
+    const ticketCmds = ['/destek', '/talep', '/ticket', '/üstlen', '/ustlen', '/kapat'];
+    if (ticketCmds.includes(cmd)) {
+      if (!s.bot?.added) return W({ title: 'Kanka Bot bu sunucuda yok', tone: 'warn', text: 'Bu komut için önce Kanka Bot\'u ekle: Sunucu ayarları → Kanka Bot → Botu ekle.' });
+      if (!s.bot.ticket?.on) return W({ title: 'Destek modülü kapalı', tone: 'warn', text: 'Sunucu ayarları → Kanka Bot → Destek modülünü aç.' });
+      if (cmd === '/destek' || cmd === '/talep' || cmd === '/ticket') {
+        const r = openTicket(s, me, rest.join(' '));
+        if (r.error) return W({ title: 'Talep açılamadı', tone: 'warn', text: r.error });
+        return W({ title: 'Destek talebin açıldı', tone: 'ok', text: `#${r.name} odasına geçebilirsin. Yetkililer en kısa sürede ilgilenecek.` });
+      }
+      const tc = s.channels.find(x => x.id === cur);
+      if (!tc?.ticket) return W({ title: 'Burada olmaz', tone: 'warn', text: 'Bu komut yalnızca bir destek odasında çalışır.' });
+      const r = cmd === '/kapat' ? closeTicket(s, tc, me) : claimTicket(s, tc, me);
+      if (r.error) return W({ title: 'Olmadı', tone: 'warn', text: r.error });
+      return W({ title: cmd === '/kapat' ? 'Talep kapatıldı' : 'Talep üstlenildi', tone: 'ok', text: cmd === '/kapat' ? 'Yazışma arşive taşındı.' : 'Artık bu taleple sen ilgileniyorsun.' });
+    }
     if (!modCmds.includes(cmd)) return false;
     if (!s.bot?.added) return W({ title: 'Kanka Bot bu sunucuda yok', tone: 'warn', text: 'Bu komut için önce Kanka Bot\'u ekle: Sunucu ayarları → Kanka Bot → Botu ekle.' });
     if (!botOn(s, 'mod')) return W({ title: 'Mod modülü kapalı', tone: 'warn', text: 'Bu komut için sunucu ayarları → Kanka Bot → Mod modülünü aç.' });
@@ -2502,13 +2636,43 @@ io.on('connection', socket => {
       else if (k === 'warnLimit') b[module][k] = Math.min(Math.max(parseInt(v) || 3, 2), 10);
       else if (k === 'logCh') b[module][k] = s.channels.some(c => c.id === v && (c.type || 'text') === 'text') ? v : null;
       else if (k === 'words') b[module][k] = clean(v, 500);
-      else if (k === 'ch') b[module][k] = s.channels.some(c => c.id === v && (c.type || 'text') === 'text') ? v : null;
-      else if (k === 'text' || k === 'byeText') b[module][k] = clean(v, 400);
+      else if (k === 'ch' || k === 'panelCh') b[module][k] = s.channels.some(c => c.id === v && (c.type || 'text') === 'text') ? v : null;
+      else if (k === 'text' || k === 'byeText' || k === 'panelText' || k === 'welcome') b[module][k] = clean(v, 400);
       else if (k === 'role') { const r = (s.customRoles || []).find(x => x.id === v && !x.bot); b[module][k] = r ? r.id : null; }
+      else if (k === 'cooldownMin') b[module][k] = Math.min(Math.max(parseInt(v) || 0, 0), 1440);
     }
-    if (was !== b[module].on) audit(s, me, b[module].on ? 'Kanka Bot modülünü açtı' : 'Kanka Bot modülünü kapattı', { mod: 'Mod', welcome: 'Karşılama' }[module] || module);
-    else audit(s, me, 'Kanka Bot ayarlarını değiştirdi', { mod: 'Mod', welcome: 'Karşılama' }[module] || module);
+    if (was !== b[module].on) audit(s, me, b[module].on ? 'Kanka Bot modülünü açtı' : 'Kanka Bot modülünü kapattı', { mod: 'Mod', welcome: 'Karşılama', ticket: 'Destek' }[module] || module);
+    else audit(s, me, 'Kanka Bot ayarlarını değiştirdi', { mod: 'Mod', welcome: 'Karşılama', ticket: 'Destek' }[module] || module);
     pushSrv(s); cb({ ok: true });
+  });
+  socket.on('ticketOpen', ({ serverId, reason } = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yapmalısın' });
+    const s = db.servers.find(x => x.id === serverId); if (!s) return cb({ error: 'Sunucu bulunamadı' });
+    const wait = limited('ticket|' + me, 3, 60e3); if (wait) return cb({ error: `Çok hızlı talep açıyorsun, ${wait} saniye bekle` });
+    cb(openTicket(s, me, reason));
+  });
+  socket.on('ticketClaim', ({ channelId } = {}, cb = () => {}) => {
+    const f = me && findChannel(channelId); if (!f) return cb({ error: 'Talep bulunamadı' });
+    if (!canAccess(me, channelId)) return cb({ error: 'Bu odaya erişimin yok' });
+    cb(claimTicket(f.s, f.c, me));
+  });
+  socket.on('ticketClose', ({ channelId } = {}, cb = () => {}) => {
+    const f = me && findChannel(channelId); if (!f) return cb({ error: 'Talep bulunamadı' });
+    if (!canAccess(me, channelId)) return cb({ error: 'Bu odaya erişimin yok' });
+    cb(closeTicket(f.s, f.c, me));
+  });
+  socket.on('ticketPanel', ({ serverId, chId } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Yetkin yok' });
+    const t = botCfg(s).ticket;
+    if (!s.bot?.added || !t.on) return cb({ error: 'Önce Destek modülünü aç' });
+    const c = s.channels.find(x => x.id === chId && (x.type || 'text') === 'text' && !x.news);
+    if (!c) return cb({ error: 'Geçerli bir yazılı oda seç' });
+    const msg = { id: id(), kind: 'bot', time: Date.now(), ticketPanel: true, bot: { title: 'Destek', text: t.panelText || 'Bir sorunun mu var? Talebini aç, yetkililer ilgilenecek.', tone: 'info', fields: [] }, reactions: {} };
+    const list = (db.messages[c.id] ||= []); list.push(msg); if (list.length > 2000) list.shift();
+    t.panelCh = c.id;
+    audit(s, me, 'Destek panelini gönderdi', '#' + c.name);
+    save(); io.to(c.id).emit('message', { channelId: c.id, msg }); pushServers(membersOf(s));
+    cb({ ok: true, channelId: c.id });
   });
 
   socket.on('upload', ({ data } = {}, cb) => {
@@ -3330,6 +3494,7 @@ io.on('connection', socket => {
     if (!me || !s || s.public) return cb({ error: 'Bu sunucudan ayrılamazsın' });
     if (s.owner === me && s.members.some(n => n !== me)) return cb({ error: 'Sunucunun sahibisin. Ayrılmadan önce Sunucu ayarları → Genel → Sahipliği devret, ya da sunucuyu sil.', owner: true });
     s.members = s.members.filter(n => n !== me);
+    for (const c of s.channels.filter(c => c.ticket && !c.ticket.closedAt && c.ticket.by === me)) closeTicket(s, c, me);
     botBye(s, me);
     voiceKick(s.channels.map(c => c.id), me, 'Sunucudan ayrıldın');
     if (s.owner === me) s.owner = s.members[0] || null;

@@ -394,6 +394,8 @@
   .kcard .sub { color: var(--muted); font-size: 13px; font-weight: 700; }
   .kcard .act { margin-top: 10px; width: 100%; padding: 9px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); font-weight: 800; }
   .kcard .act.on { background: var(--mine); color: #fff; }
+  .kcard .bf { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; font-weight: 700; }
+  .kcard .bf small { display: block; color: var(--muted); font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
   .going { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
   .going span { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--hover); font-weight: 700; }
   .opt { position: relative; display: block; width: 100%; text-align: left; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); overflow: hidden; font-weight: 700; }
@@ -4311,6 +4313,7 @@ document.addEventListener('click', e => { const a = e.target.closest('.chref[dat
 const KB_MODS = [
   ['mod', '🛡️', 'Mod', 'Anti-nuke, otomatik moderasyon, uyarı, susturma, mesaj temizleme ve oda kilidi.', '#f59e0b', '#ef4444'],
   ['welcome', '👋', 'Karşılama', 'Yeni gelen her üyeyi kartla karşılar, kaçıncı kanka olduğunu söyler, istersen otomatik rol verir.', '#ff8a4c', '#f472b6'],
+  ['ticket', '🎟️', 'Destek', 'Panelden tek tıkla talep açılsın. Her talep, sadece açan kişi ve yetkililerin görebileceği özel bir odada toplanır.', '#5aa9ff', '#6366f1'],
   ['match', '🏆', 'Maç Kartı', 'LoL, Valorant ve CS2 maçı bitince skor sohbete kendiliğinden düşer.', '#22c55e', '#0ea5e9']];
 const kbCard = (added, b = {}) => ([k, e, n, d, g1, g2]) => {
   const on = added && !!b[k]?.on;
@@ -4353,7 +4356,7 @@ function showBots() {
   $('#side-list').innerHTML = `<div class="room" data-dsv><div class="ico">${ic('compass')}</div>Sunucular</div><div class="room active"><div class="ico">${ic('shield')}</div>Botlar</div>`;
   $('#side-list').querySelector('[data-dsv]').onclick = showDiscover;
   $('#discover').innerHTML = `<div class="bots-hero"><img src="/icon-192.png" alt=""><div><h2>Kanka Bot<span class="botbadge">BOT</span></h2><p>Discord'da her iş için ayrı bot kurman gerekirdi. Kanka Bot tek başına yetiyor: sunucunu korur, kural bozanı uyarır, yeni gelenleri karşılar, maç sonuçlarını sohbete düşürür. Her gün yeni modül geliyor.</p>
-    <button class="primary" id="bots-add">${ic('plus')} Sunucuna ekle</button></div></div><div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş · Destek</p>`;
+    <button class="primary" id="bots-add">${ic('plus')} Sunucuna ekle</button></div></div><div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş</p>`;
   $('#bots-add').onclick = pickBotServer;
 }
 function pickBotServer() {
@@ -4400,13 +4403,13 @@ function showServerSettings(s, tab, focus) {
         main.innerHTML = `<div class="st-page"><h3>Kanka Bot</h3>
           <div class="kbhero"><img src="/icon-192.png" alt=""><div><h4>Kanka Bot<span class="botbadge">BOT</span></h4><p>Ayrı ayrı bot aramana gerek yok. Kanka Bot'u ekle, sunucunu korusun: anti-nuke, otomatik moderasyon, uyarı ve susturma komutları.</p>
           <button class="primary" id="kb-add">${ic('plus')} Botu sunucuya ekle</button></div></div>
-          <div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş · Destek</p></div>`;
+          <div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş</p></div>`;
         $('#kb-add').onclick = () => openBotAdd(s);
         return;
       }
       const tg = (k, t) => `<label class="switch">${t}<input type="checkbox" data-mk="${k}" ${m[k] ? 'checked' : ''}></label>`;
       main.innerHTML = `<div class="st-page"><h3>Kanka Bot</h3><p class="hint">Kanka Bot bu sunucuda üye. Modülleri buradan açıp kapatırsın. Komutları görmek için sohbete <b>/</b> yaz.</p>
-        <div class="botgrid">${KB_MODS.map(kbCard(true, b)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş · Destek</p>
+        <div class="botgrid">${KB_MODS.map(kbCard(true, b)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş</p>
         ${m.on ? `<div class="botset"><h4>🛡️ Mod ayarları</h4>
           <div class="st-field">${tg('antinuke', 'Anti-nuke (bir yetkili 1 dakikada 3\'ten fazla ban, atma, oda ya da rol silme yaparsa durdur ve yetkilerini al)')}
           ${tg('spam', 'Spam koruması (aynı mesajı tekrarlayan ya da çok hızlı yazan 5 dk susturulur)')}
@@ -4431,9 +4434,21 @@ function showServerSettings(s, tab, focus) {
           ${s.public ? '' : `<div class="st-field" id="bw-byef" style="${w.bye ? '' : 'display:none'}"><label>Ayrılma mesajı</label><input class="field" id="bw-byet" maxlength="400" value="${esc(w.byeText || '')}"></div>`}
           ${!s.public && roles.length ? '<p class="hint">Otomatik rol için Roller sekmesinde Kanka Bot rolü, verilecek rolün üstünde olmalı.</p>' : ''}
           <div class="st-field" style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" id="bw-save" style="width:auto;padding:11px 22px">Kaydet</button><button class="lrow" id="bw-test" style="margin:0">${ic('sparkle')}Deneme mesajı gönder</button></div></div>`; })() : ''}
+        ${b.ticket?.on ? (() => { const t = b.ticket, txt = s.channels.filter(c => (c.type || 'text') === 'text' && !c.news), roles = (s.customRoles || []).filter(r => !r.bot), openN = s.channels.filter(c => c.ticket && !c.ticket.closedAt).length;
+          return `<div class="botset"><h4>🎟️ Destek ayarları</h4>
+          <div class="st-field"><label>Destek paneli odası</label><select class="field" id="bt-ch"><option value="">Seçilmedi</option>${txt.map(c => `<option value="${c.id}" ${t.panelCh === c.id ? 'selected' : ''}>#${esc(c.name)}</option>`).join('')}</select>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center"><button class="primary" id="bt-post" style="width:auto;padding:10px 18px">${ic('ticket')} Paneli gönder</button><span class="hint" style="margin:0">Açık talep: ${openN}</span></div>
+            <p class="hint" style="margin-top:6px">Panel, üyelerin tek tıkla talep açtığı butonlu karttır. İstediğin odaya gönderebilirsin.</p></div>
+          <div class="st-field"><label>Yetkili rolü (opsiyonel)</label><select class="field" id="bt-role"><option value="">Sadece sunucu yöneticileri</option>${roles.map(r => `<option value="${r.id}" ${t.role === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select><p class="hint" style="margin-top:6px">Seçersen bu roldeki üyeler tüm talepleri görür, üstlenebilir ve kapatabilir.</p></div>
+          <label class="switch">Talep açarken konu sorulsun<input type="checkbox" id="bt-ask" ${t.askReason ? 'checked' : ''}></label>
+          <div class="st-field"><label>Panel metni</label><input class="field" id="bt-panel" maxlength="400" value="${esc(t.panelText || '')}"></div>
+          <div class="st-field"><label>Karşılama mesajı</label><input class="field" id="bt-welcome" maxlength="400" value="${esc(t.welcome || '')}"><p class="hint" style="margin-top:6px">{üye} ve {sunucu} kullanılabilir.</p></div>
+          <div class="st-field"><label>Kapattıktan sonra bekleme</label><select class="field" id="bt-cool" style="width:200px">${[[0, 'Yok'], [5, '5 dk'], [10, '10 dk'], [30, '30 dk'], [60, '1 saat']].map(([v, l]) => `<option value="${v}" ${(t.cooldownMin ?? 10) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+          <div class="st-field"><button class="primary" id="bt-save" style="width:auto;padding:11px 22px">Kaydet</button></div>
+          <h4>Komutlar</h4><div class="cmdlist">/destek konu · talep aç<br>/üstlen · talebi üstlen<br>/kapat · talebi kapat</div></div>`; })() : ''}
         <div class="st-field" style="margin-top:22px"><button class="lrow danger" id="kb-rm" style="margin:0;color:var(--red)">${ic('door')}Kanka Bot'u sunucudan at</button><p class="hint" style="margin-top:6px">Bot atılınca bütün modüller kapanır ve Kanka Bot rolü silinir.</p></div></div>`;
       const saveMod = (cfg, msg, module = 'mod') => socket.emit('botSave', { serverId: s.id, module, cfg }, done(msg));
-      const MODN = { mod: ['Mod', '🛡️'], welcome: ['Karşılama', '👋'] };
+      const MODN = { mod: ['Mod', '🛡️'], welcome: ['Karşılama', '👋'], ticket: ['Destek', '🎟️'] };
       main.querySelectorAll('[data-bot]').forEach(x => x.onclick = () => { const k = x.dataset.bot, on = !!b[k]?.on; saveMod({ on: !on }, on ? `${MODN[k][0]} modülü kapatıldı` : `${MODN[k][0]} modülü açıldı ${MODN[k][1]}`, k); });
       if ($('#bw-text')) {
         const prev = () => { const n = S.me, cnt = s.public ? (S.users?.length || s.members.length) : s.members.length + 1;
@@ -4444,6 +4459,10 @@ function showServerSettings(s, tab, focus) {
         if ($('#bw-bye')) $('#bw-bye').onchange = () => { $('#bw-byef').style.display = $('#bw-bye').checked ? '' : 'none'; };
         $('#bw-save').onclick = () => saveMod({ ch: $('#bw-ch').value || null, text: $('#bw-text').value, count: $('#bw-count').checked, ...($('#bw-role') ? { role: $('#bw-role').value || null, bye: $('#bw-bye').checked, byeText: $('#bw-byet').value } : {}) }, 'Karşılama ayarları kaydedildi', 'welcome');
         $('#bw-test').onclick = () => socket.emit('botWelcomeTest', { serverId: s.id }, r => r?.error ? toast(r.error) : toast(`Deneme mesajı #${r.ch} odasına gönderildi`));
+      }
+      if ($('#bt-save')) {
+        $('#bt-save').onclick = () => saveMod({ panelCh: $('#bt-ch').value || null, role: $('#bt-role').value || null, askReason: $('#bt-ask').checked, panelText: $('#bt-panel').value, welcome: $('#bt-welcome').value, cooldownMin: +$('#bt-cool').value }, 'Destek ayarları kaydedildi', 'ticket');
+        $('#bt-post').onclick = () => { const ch = $('#bt-ch').value; if (!ch) return toast('Önce panel odasını seç'); socket.emit('ticketPanel', { serverId: s.id, chId: ch }, r => { if (r?.error) return toast(r.error); toast(`Destek paneli #${s.channels.find(c => c.id === r.channelId)?.name || ''} odasına gönderildi`); againSoft(); }); };
       }
       main.querySelectorAll('[data-mk]').forEach(x => x.onchange = () => socket.emit('botSave', { serverId: s.id, module: 'mod', cfg: { [x.dataset.mk]: x.checked } }, r => r?.error ? toast(r.error) : toast('Kaydedildi')));
       if ($('#bm-save')) $('#bm-save').onclick = () => saveMod({ words: $('#bm-words').value, logCh: $('#bm-log').value || null, warnLimit: +$('#bm-warn').value }, 'Kaydedildi');
@@ -5391,6 +5410,16 @@ function msgHTML(m, prev) {
     const T = { info: '#5aa9ff', ok: '#3fcf8e', warn: '#f6c445', danger: '#ef5a5a' }[m.bot?.tone] || '#5aa9ff', b = m.bot || {};
     const rb = Object.entries(m.reactions || {}).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
     const bt = m.ephemeral ? '' : `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
+    if (m.ticketPanel || m.ticket) {
+      const t = m.ticket || {}, staff = !!S.server?.myTicketStaff, open = m.ticketPanel || !t.closed;
+      let acts = '';
+      if (open) {
+        if (m.ticketPanel) acts = `<button class="act" data-ticket-new="${m.id}">${ic('ticket')} Talep aç</button>`;
+        else acts = `${!t.claimedBy && staff ? `<button class="act" data-ticket-claim="${m.id}">${ic('usercheck')} Üstlen</button>` : ''}${(staff || t.by === S.me) ? `<button class="act" style="background:#ef5a5a1f;color:#ef5a5a" data-ticket-close="${m.id}">${ic('lock')} Kapat</button>` : ''}`;
+      }
+      return day + `<div class="row botrow" data-id="${m.id}"><div class="av botav"><img src="/icon-192.png" alt=""></div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname" style="color:var(--accent)">Kanka Bot</span><span class="botbadge">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
+        <div class="kcard"><div class="kt" style="color:${T}">${ic('ticket')}${m.ticketPanel ? 'Destek' : `Destek #${t.no}`}</div>${b.title ? `<h4>${esc(b.title)}</h4>` : ''}${b.text ? `<p class="sub" style="margin:4px 0 0;font-weight:600">${fmt(b.text)}</p>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}${acts ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${acts}</div>` : ''}</div>${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
+    }
     return day + `<div class="row botrow" data-id="${m.id}"><div class="av botav"><img src="/icon-192.png" alt=""></div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname" style="color:var(--accent)">Kanka Bot</span><span class="botbadge">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
       <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<p>${fmt(b.text)}</p>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
   }
@@ -5509,6 +5538,23 @@ $('#messages').onclick = e => {
   }
   else if (t.dataset.xox) socket.emit('xoxMove', { msgId: t.dataset.xox, i: +t.dataset.i });
   else if (t.dataset.plan) socket.emit('planToggle', t.dataset.plan);
+  else if (t.dataset.ticketNew) {
+    const open = reason => socket.emit('ticketOpen', { serverId: S.server.id, reason }, r => {
+      if (r?.error) return toast(r.error);
+      toast('Destek talebin açıldı 🎟️');
+      if (r.channelId) selectChannel(r.channelId);
+    });
+    if (!S.server?.bot?.ticket?.askReason) return open('');
+    modal(`<div class="rp-head">${ic('ticket')}<div><h3>Destek talebi</h3><p class="hint">Konunu kısaca yaz. Yetkililer seninle bu odada ilgilenecek.</p></div></div>
+      <label class="rp-lbl">Konu</label><input class="field" id="tk-reason" maxlength="120" placeholder="Örn: Rolüm görünmüyor" autocomplete="off">
+      <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="tk-go">Talep aç</button></div>`, 'rep');
+    $('#mx').onclick = () => closeModal();
+    $('#tk-go').onclick = () => { const v = $('#tk-reason').value.trim(); if (v.length < 2) return toast('Konuyu yaz'); closeModal(); open(v); };
+    $('#tk-reason').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#tk-go').click(); } };
+    $('#tk-reason').focus();
+  }
+  else if (t.dataset.ticketClaim) socket.emit('ticketClaim', { channelId: S.channel.id }, r => { if (r?.error) return toast(r.error); toast('Talebi üstlendin 🎟️'); });
+  else if (t.dataset.ticketClose) confirmBox('Talep kapatılsın mı? Oda "Kapatılan Destekler" altına taşınır.', () => socket.emit('ticketClose', { channelId: S.channel.id }, r => { if (r?.error) return toast(r.error); }));
   else if (t.dataset.poll) socket.emit('vote', { msgId: t.dataset.poll, index: +t.dataset.i });
   else if (t.dataset.view !== undefined) { $('#viewer img').src = t.src; $('#viewer').style.display = 'flex'; ovOpen('viewer', () => $('#viewer').style.display = 'none'); }
 };
@@ -5683,8 +5729,12 @@ const CMDS = [['/zar', 'Zar at, şansını dene', 'dice', '#f6c445', ['yüz say�
 const MOD_CMDS = [['/uyar', 'Üyeye uyarı ver, sınırda susturulur', 'flag', '#f6c445', ['@isim', 'sebep']], ['/sustur', 'Üyeyi belirli bir süre sustur', 'hourglass', '#ff8a4c', ['@isim', 'dakika', 'sebep']],
   ['/uyarılar', 'Üyenin uyarılarını gör', 'log', '#5aa9ff', ['@isim']], ['/uyarısil', 'Uyarıları sıfırla', 'refresh', '#6fd39b', ['@isim']], ['/temizle', 'Son mesajları topluca sil', 'trash', '#ff6b6b', ['sayı']],
   ['/kilitle', 'Odayı yazmaya kapat', 'lock', '#ef5a5a', []], ['/kilidiaç', 'Odayı yeniden aç', 'unlock', '#3fcf8e', []]];
-const cmdDef = c => [...CMDS, ...MOD_CMDS].find(x => x[0] === c);
+const TICKET_CMDS = [['/destek', 'Destek talebi aç, yetkililer ilgilensin', 'ticket', '#5aa9ff', ['konu']], ['/üstlen', 'Açık talebi üstlen (yetkili)', 'usercheck', '#3fcf8e', []], ['/kapat', 'Talebi kapat, arşive taşı', 'lock', '#ef5a5a', []]];
+const cmdDef = c => [...CMDS, ...(S.server?.bot?.ticket?.on ? TICKET_CMDS : []), ...MOD_CMDS].find(x => x[0] === c);
 const modCmdsOn = () => S.view === 'server' && S.server?.bot?.mod?.on && isMod(S.server, S.me);
+const ticketCmdsOn = () => S.view === 'server' && !!S.server?.bot?.ticket?.on;
+const inTicket = () => ticketCmdsOn() && !!S.channel?.ticket && !S.channel.ticket.closed;
+const cmdList = () => [...CMDS, ...(ticketCmdsOn() ? TICKET_CMDS.filter(c => c[0] === '/destek' || inTicket()) : []), ...(modCmdsOn() ? MOD_CMDS : [])];
 let suggQ = '';
 function hideSuggest() { const was = sugg.length && !suggCmd; sugg = []; suggCmd = false; suggCh = false; $('#suggest').style.display = 'none'; $('#suggest').classList.remove('cmd'); if (was) cmdHint(); }
 function cmdRow(n, i) {
@@ -5695,11 +5745,11 @@ function renderSuggest() {
   if (!sugg.length && !suggCmd) return hideSuggest();
   $('#suggest').classList.toggle('cmd', suggCmd);
   if (suggCmd) {
-    const fun = sugg.filter(n => CMDS.some(c => c[0] === n)), mod = sugg.filter(n => MOD_CMDS.some(c => c[0] === n));
+    const fun = sugg.filter(n => CMDS.some(c => c[0] === n)), tck = sugg.filter(n => TICKET_CMDS.some(c => c[0] === n)), mod = sugg.filter(n => MOD_CMDS.some(c => c[0] === n));
     let k = 0; const rows = arr => arr.map(n => cmdRow(n, k++)).join('');
-    const funH = fun.length ? `<div class="sg-g">${ic('sparkle')}Kanka komutları</div>${rows(fun)}` : '', modH = mod.length ? `<div class="sg-g"><img src="/icon-192.png" alt="">Kanka Bot · Moderasyon<span class="botbadge">BOT</span></div>${rows(mod)}` : '';
-    sugg = [...fun, ...mod];
-    $('#suggest').innerHTML = `<div class="sg-sc">${sugg.length ? funH + modH : `<div class="sg-none">"${esc(suggQ)}" diye bir komut yok</div>`}</div><div class="sg-f"><span><kbd>↑</kbd> <kbd>↓</kbd> gez</span><span><kbd>Tab</kbd> seç</span><span><kbd>Esc</kbd> kapat</span></div>`;
+    const funH = fun.length ? `<div class="sg-g">${ic('sparkle')}Kanka komutları</div>${rows(fun)}` : '', tckH = tck.length ? `<div class="sg-g"><img src="/icon-192.png" alt="">Kanka Bot · Destek<span class="botbadge">BOT</span></div>${rows(tck)}` : '', modH = mod.length ? `<div class="sg-g"><img src="/icon-192.png" alt="">Kanka Bot · Moderasyon<span class="botbadge">BOT</span></div>${rows(mod)}` : '';
+    sugg = [...fun, ...tck, ...mod];
+    $('#suggest').innerHTML = `<div class="sg-sc">${sugg.length ? funH + tckH + modH : `<div class="sg-none">"${esc(suggQ)}" diye bir komut yok</div>`}</div><div class="sg-f"><span><kbd>↑</kbd> <kbd>↓</kbd> gez</span><span><kbd>Tab</kbd> seç</span><span><kbd>Esc</kbd> kapat</span></div>`;
     $('#suggest').style.display = 'block';
     $('#suggest').querySelector('button.sel')?.scrollIntoView({ block: 'nearest' });
     $('#suggest').querySelectorAll('button[data-n]').forEach(b => { b.onclick = () => { suggI = +b.dataset.i; pickSuggestion(); }; b.onmousemove = () => { if (suggI !== +b.dataset.i) { suggI = +b.dataset.i; $('#suggest').querySelectorAll('button[data-n]').forEach(x => x.classList.toggle('sel', +x.dataset.i === suggI)); } }; });
@@ -5721,7 +5771,7 @@ function pickSuggestion() {
 }
 function cmdHint() {
   const el = $('#cmdhint'), v = $('#input').value, m = /^(\/\S+)\s([\s\S]*)$/u.exec(v), d = m && cmdDef(m[1].toLocaleLowerCase('tr'));
-  if (!d || !d[4]?.length || (d[0] && MOD_CMDS.some(c => c[0] === d[0]) && !modCmdsOn())) { el.style.display = 'none'; return; }
+  if (!d || !d[4]?.length || (d[0] && MOD_CMDS.some(c => c[0] === d[0]) && !modCmdsOn()) || (d[0] && TICKET_CMDS.some(c => c[0] === d[0]) && !ticketCmdsOn())) { el.style.display = 'none'; return; }
   const rest = m[2], parts = d[5] ? rest.split(d[5]) : rest.split(/\s+/), cur = Math.min(parts.length - 1, d[4].length - 1);
   el.innerHTML = `<b>${esc(d[0])}</b>${d[4].map((a, i) => `${i && d[5] ? '<small>|</small>' : ''}<span class="${i === cur ? 'on' : ''}">${esc(a)}</span>`).join('')}<small>${esc(d[1])}</small>`;
   el.style.display = sugg.length && !suggCmd ? 'none' : 'flex';
@@ -5732,7 +5782,7 @@ $('#input').addEventListener('input', () => {
   cmdHint();
   const cm = /^(\/[\p{L}]*)$/u.exec($('#input').value);
   if (cm) {
-    const list = [...CMDS, ...(modCmdsOn() ? MOD_CMDS : [])], q = cm[1].toLocaleLowerCase('tr'), w = q.slice(1);
+    const list = cmdList(), q = cm[1].toLocaleLowerCase('tr'), w = q.slice(1);
     suggQ = q; sugg = list.filter(c => c[0].startsWith(q)).map(c => c[0]);
     if (!sugg.length && w.length > 1) sugg = list.filter(c => c[1].toLocaleLowerCase('tr').includes(w)).map(c => c[0]);
     suggI = 0; suggCmd = true;
@@ -6315,6 +6365,14 @@ socket.on('voiceMoveTo', ({ ch, by }) => { if (!myVoice) return; toast(`${by ? e
 socket.on('voiceKicked', ({ ch, reason }) => {
   if (myVoice !== ch) return;
   leaveVoice(false); toast(reason || 'Ses odasından çıkarıldın');
+});
+socket.on('ticketClosed', ({ channelId, goCh }) => {
+  if (S.channel?.id !== channelId) return;
+  toast('Destek talebin kapatıldı ve arşive taşındı');
+  if (S.view !== 'server' || !S.server) return;
+  if (goCh && S.server.channels.some(c => c.id === goCh)) return selectChannel(goCh);
+  const first = S.server.channels.find(c => (c.type || 'text') === 'text' && !c.news);
+  first ? selectChannel(first.id) : showFriends();
 });
 socket.on('servers', list => {
   S.servers = list;
