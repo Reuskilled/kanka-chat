@@ -2668,6 +2668,53 @@
   #callbar .primary { width: auto; padding: 9px 18px; border-radius: 11px; background: #3fcf8e; color: #0b1a12; display: inline-flex; gap: 6px; align-items: center; font-weight: 900; } #callbar .primary .ic { width: 16px; height: 16px; }
   .room.incall::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #3fcf8e; margin-left: auto; box-shadow: 0 0 0 3px rgba(63,207,142,.25); animation: cbp 1.4s infinite; flex-shrink: 0; }
   @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) { #callbar { margin: 8px 10px 0; } #callbar .cb-avs { display: none; } }
+  /* Sohbette arama günlüğü */
+  .calllog { display: flex; align-items: center; gap: 10px; max-width: 470px; margin: 6px 0; padding: 10px 12px; border-radius: 14px; background: var(--hover); border: 1px solid var(--line); }
+  .calllog .cl-ic { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: rgba(63,207,142,.14); color: #3fcf8e; flex-shrink: 0; }
+  .calllog .cl-ic .ic { width: 17px; height: 17px; }
+  .calllog.missed .cl-ic { background: rgba(239,90,90,.14); color: #ef5a5a; }
+  .calllog.done .cl-ic { background: rgba(255,255,255,.06); color: var(--muted); }
+  .calllog .cl-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .calllog .cl-t b { font-size: 13.5px; }
+  .calllog .cl-t small { color: var(--muted); font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .calllog .cl-go { display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 9px; background: rgba(63,207,142,.14); color: #3fcf8e; font-weight: 900; font-size: 12px; flex-shrink: 0; }
+  .calllog .cl-go .ic { width: 14px; height: 14px; }
+  .calllog .cl-go:hover { background: #3fcf8e; color: #0b1a12; }
+  /* Sohbette süren arama: kim kiminle konuşuyor */
+  #dmcall { position: relative; margin: 10px 20px 0; padding: 14px 14px 12px; border-radius: 18px; overflow: hidden; background: radial-gradient(120% 160% at 50% -10%, rgba(242,101,47,.28), rgba(242,101,47,.04) 60%), linear-gradient(160deg, #231913, #1a1310); border: 1px solid #4a3426; }
+  #dmcall .dc-waves { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: flex-end; gap: 4px; height: 34px; opacity: .16; pointer-events: none; }
+  #dmcall .dc-waves i { width: 3px; height: 20px; border-radius: 2px; background: var(--accent); animation: dcw 1.8s infinite ease-in-out; }
+  #dmcall .dc-waves i:nth-child(2) { animation-delay: .18s; } #dmcall .dc-waves i:nth-child(3) { animation-delay: .36s; } #dmcall .dc-waves i:nth-child(4) { animation-delay: .54s; } #dmcall .dc-waves i:nth-child(5) { animation-delay: .72s; }
+  @keyframes dcw { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1.5); } }
+  #dmcall .dc-avs { position: relative; display: flex; align-items: flex-start; justify-content: center; gap: 16px; }
+  #dmcall .dc-p { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 82px; }
+  #dmcall .dc-p .av { width: 54px; height: 54px; font-size: 21px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(255,255,255,.07); animation: dcIn .3s var(--ease-out); }
+  #dmcall .dc-p.speaking .av { box-shadow: 0 0 0 3px var(--green), 0 0 18px rgba(111,211,155,.42); }
+  #dmcall .dc-p small { max-width: 82px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; font-weight: 800; color: var(--muted); }
+  #dmcall .dc-p.me small { color: var(--accent); }
+  #dmcall .dc-more { align-self: center; font-weight: 900; color: var(--muted); }
+  @keyframes dcIn { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  #dmcall .dc-meta { text-align: center; margin-top: 8px; }
+  #dmcall .dc-meta b { display: block; font-size: 14px; }
+  #dmcall .dc-meta small { display: block; margin-top: 2px; color: var(--green); font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums; }
+  #dmcall .dc-acts { position: relative; display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+  #dmcall .dc-b { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.07); color: var(--ink); flex-shrink: 0; }
+  #dmcall .dc-b:hover { background: rgba(255,255,255,.14); }
+  #dmcall .dc-b .ic { width: 18px; height: 18px; }
+  #dmcall .dc-b.on { background: var(--accent); color: #1a0f0a; }
+  #dmcall .dc-b.off { background: rgba(255,107,107,.16); color: var(--red); }
+  #dmcall .dc-leave { width: auto; padding: 0 18px; border-radius: 21px; background: #e5484d; color: #fff; }
+  #dmcall .dc-leave:hover { background: #f05a5f; }
+  #dmcall .dc-full { position: absolute; right: 10px; top: 10px; width: 30px; height: 30px; border-radius: 9px; background: rgba(255,255,255,.06); color: var(--muted); display: grid; place-items: center; z-index: 1; }
+  #dmcall .dc-full .ic { width: 15px; height: 15px; }
+  @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) { #dmcall { margin: 8px 10px 0; padding: 12px 10px 10px; } #dmcall .dc-p { width: 70px; } #dmcall .dc-p .av { width: 48px; height: 48px; font-size: 19px; } #dmcall .dc-acts { gap: 6px; } #dmcall .dc-b { width: 40px; height: 40px; } }
+  /* Kenar şeritte süren aramalar */
+  .srv.rcall { position: relative; padding: 0; border: none; background: none; overflow: visible; animation: popIn .25s var(--ease-out); }
+  .srv.rcall .av { width: 46px; height: 46px; font-size: 17px; border-radius: 50%; }
+  .srv.rcall .rcal-g { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #F2652F, #c9481b); color: #fff; display: grid; place-items: center; }
+  .srv.rcall .rphone { position: absolute; right: -5px; bottom: -5px; width: 16px; height: 16px; padding: 2px; border-radius: 50%; background: #3fcf8e; color: #07261a; display: grid; place-items: center; border: 3px solid var(--panel); box-sizing: content-box; z-index: 2; }
+  .srv.rcall .rphone .ic { width: 10px; height: 10px; stroke-width: 3; }
+  .srv.rcall.live .av, .srv.rcall.live .rcal-g { box-shadow: 0 0 0 3px rgba(63,207,142,.55), 0 0 14px rgba(63,207,142,.35); }
 
   /* ================= Telefon deneyimi ================= */
   .mention.bot { background: rgba(255,138,76,.18); color: var(--accent); }
@@ -3549,6 +3596,19 @@ function railDMs() {
     return `<button class="srv rdm" data-dmo="${esc(d.id)}" data-w="${esc(d.with || '')}" aria-label="${esc(name)}: okunmamış mesaj">${d.group ? `<span class="rdm-g">${ic('users')}</span>` : av(d.with)}<span class="mcnt">${n > 9 ? '9+' : n}</span></button>`; }).join('');
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-dmo]'); if (!b) return; delete dmCnt[b.dataset.dmo]; openChat(b.dataset.dmo, b.dataset.w || undefined); });
+// Ana sayfanın altında süren özel aramalar: kimle konuştuğunun pp'si, tıklayınca sohbeti aç
+function railCalls() {
+  const mine = myVoice?.startsWith('call:') ? myVoice.slice(5) : '';
+  const list = Object.entries(S.calls || {}).filter(([id, who]) => (id.startsWith('dm:') || id.startsWith('g:')) && who?.length)
+    .sort(([a], [b]) => (b === mine) - (a === mine)).slice(0, 3);
+  return list.map(([id, who]) => {
+    const d = (S.dms || []).find(x => x.id === id), group = id.startsWith('g:') || !!d?.group;
+    const other = group ? '' : (d?.with || id.slice(3).split('|').find(n => n !== S.me) || '');
+    const name = group ? (d ? groupName(d) : 'Grup araması') : other, live = id === mine;
+    return `<button class="srv rcall ${live ? 'live' : ''}" data-callchat="${esc(id)}" data-cw="${esc(other)}" title="${live ? 'Bu aramadasın' : `${esc(name)} aramasında`} · ${who.length} kişi" aria-label="${esc(name)} araması">${group ? `<span class="rcal-g">${ic('users')}</span>` : av(other)}<span class="rphone">${ic('phoneCall')}</span></button>`;
+  }).join('');
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-callchat]'); if (!b) return; openChat(b.dataset.callchat, b.dataset.cw || undefined); });
 const railVoiceN = s => new Set(s.channels.filter(c => voiceLike(c.type)).flatMap(c => S.voice?.[c.id] || [])).size;
 const railVoiceBadge = s => { const n = railVoiceN(s); return n ? `<span class="rvc">${ic('volume')}${n}</span>` : ''; };
 function updRailVoice() { $('#rail')?.querySelectorAll('.srv[data-id]').forEach(b => { const s = S.servers.find(x => x.id === b.dataset.id); if (!s) return; b.querySelector('.rvc')?.remove(); b.insertAdjacentHTML('beforeend', railVoiceBadge(s)); }); }
@@ -3557,7 +3617,7 @@ function renderRail() {
   window.kankaDesktop?.badge(unreadN);
   document.title = (unreadN ? `(${unreadN}) ` : '') + 'Kanka Chat';
   $('#rail').innerHTML =
-    `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button>${railDMs()}<div class="rsep"></div>` +
+    `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button>${railCalls()}${railDMs()}<div class="rsep"></div>` +
     orderedServers().map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''} ${mutedServers.has(s.id) ? 'smuted' : ''}" data-id="${s.id}" aria-label="${esc(s.name)}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) && !(S.view === 'server' && s.id === S.server?.id) ? '<span class="upill"></span>' : ''}${(() => { const n = mentCount(s); return n ? `<span class="mcnt">${n > 9 ? '9+' : n}</span>` : ''; })()}${railVoiceBadge(s)}</button>`).join('') +
     `<button class="srv dash" id="add-srv" title="Sunucu oluştur" aria-label="Sunucu oluştur">${ic('plus')}</button><button class="srv dash" id="join-srv" title="Davet koduyla katıl" aria-label="Davet koduyla katıl">${ic('link')}</button><button class="srv dash ${S.view === 'discover' ? 'active' : ''}" id="disc-srv" title="Sunucuları keşfet" aria-label="Sunucuları keşfet">${ic('rcompass')}</button>`;
   $('#disc-srv').onclick = () => showDiscover();
@@ -5406,6 +5466,17 @@ function msgHTML(m, prev) {
   if (m.kind === 'system') return day + `<div class="sys">${ic('star')}${esc(m.text.replace(/\s*\p{Extended_Pictographic}\ufe0f?/gu, ''))}</div>`;
   if (m.kind === 'birthday') return day + `<div class="bday" data-id="${m.id}"><span class="big">${ic('cake')}</span><p>Bugün ${esc(m.text)} kankamızın doğum günü!</p><span class="hint">İyi ki doğdun ${esc(m.text)} 🎉 Kutlamayı unutmayın!</span></div>`;
   if (m.kind === 'daily') return day + `<div class="daily" data-id="${m.id}"><div class="kt">${ic('sun')}GÜNÜN SORUSU</div><p>${esc(m.text)}</p></div>`;
+  if (m.kind === 'call') {
+    const c = m.call || {}, missed = c.state === 'missed', by = c.by ? dn(c.by) : '', dur = c.ms ? (c.ms < 60e3 ? `${Math.max(1, Math.round(c.ms / 1000))} sn` : vDur(c.ms)) : '',
+      me = c.by === S.me, live = !!S.calls?.[S.channel?.id], ongoing = myVoice === 'call:' + S.channel?.id;
+    const t = c.state === 'start' ? (me ? 'Aramayı sen başlattın' : `${esc(by || 'Biri')} arama başlattı`) : c.state === 'end' ? 'Görüşme bitti' : 'Cevapsız arama';
+    const sub = missed ? (me ? 'Karşı taraf açmadı' : `${esc(by || 'Biri')} seni aradı`) + (dur ? ` · ${dur}` : '')
+      : c.state === 'end' ? `${c.members?.length ? esc(c.members.join(', ')) + ' ile ' : ''}${dur} konuştunuz`
+        : 'Sesli arama';
+    const go = c.state === 'end' || missed ? `<button class="cl-go" data-callback="${esc(S.channel?.id || '')}">${ic('phoneCall')}${missed ? 'Geri ara' : 'Tekrar ara'}</button>`
+      : live && !ongoing ? `<button class="cl-go join" data-calljoin="${esc(S.channel?.id || '')}">${ic('phoneCall')}Katıl</button>` : '';
+    return day + `<div class="calllog ${missed ? 'missed' : c.state === 'end' ? 'done' : ''}" data-id="${m.id}"><span class="cl-ic">${ic(missed ? 'hangup' : 'phoneCall')}</span><span class="cl-t"><b>${t}</b><small>${sub} · ${hm(m.time)}</small></span>${go}</div>`;
+  }
   if (m.kind === 'bot') {
     const T = { info: '#5aa9ff', ok: '#3fcf8e', warn: '#f6c445', danger: '#ef5a5a' }[m.bot?.tone] || '#5aa9ff', b = m.bot || {};
     const rb = Object.entries(m.reactions || {}).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
@@ -5555,6 +5626,8 @@ $('#messages').onclick = e => {
   }
   else if (t.dataset.ticketClaim) socket.emit('ticketClaim', { channelId: S.channel.id }, r => { if (r?.error) return toast(r.error); toast('Talebi üstlendin 🎟️'); });
   else if (t.dataset.ticketClose) confirmBox('Talep kapatılsın mı? Oda "Kapatılan Destekler" altına taşınır.', () => socket.emit('ticketClose', { channelId: S.channel.id }, r => { if (r?.error) return toast(r.error); }));
+  else if (t.dataset.callback) { if (S.channel?.id === t.dataset.callback) startCall(false); }
+  else if (t.dataset.calljoin) joinVoice('call:' + t.dataset.calljoin);
   else if (t.dataset.poll) socket.emit('vote', { msgId: t.dataset.poll, index: +t.dataset.i });
   else if (t.dataset.view !== undefined) { $('#viewer img').src = t.src; $('#viewer').style.display = 'flex'; ovOpen('viewer', () => $('#viewer').style.display = 'none'); }
 };
@@ -6638,6 +6711,8 @@ function tickVoiceTimes() {
   const now = Date.now();
   document.querySelectorAll('.vtm[data-vt]').forEach(e => { const t = voiceSince[e.dataset.vt]; e.textContent = t ? vDur(now - t) : ''; });
   const v = $('#vtime'); if (v) { v.textContent = myVoice && myVoiceAt ? vDur(now - myVoiceAt) : ''; v.title = myVoice ? 'Bu sesli odada geçirdiğin süre' : ''; }
+  const dct = $('#dc-tm');
+  if (dct) { const who = (S.calls?.[S.channel?.id] || []).filter(n => n !== S.me); dct.textContent = who.length && myVoiceAt ? vDur(now - myVoiceAt) : 'Karşı taraf bekleniyor…'; }
 }
 setInterval(tickVoiceTimes, 1000);
 let myVoice = null, localStream = null, muted = false, videoStream = null, videoKind = null, pttDown = false;
@@ -6785,7 +6860,7 @@ function closePeer(sid) {
   document.getElementById('a-' + sid)?.remove(); document.getElementById('as-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
 socket.on('voiceLeft', sid => { closePeer(sid); playSound('leave'); });
-function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; myVoiceAt = 0; if (deaf) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(renderCallBar, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
+function cleanupVoice() { Object.keys(peers).forEach(closePeer); myVoice = null; myVoiceAt = 0; if (deaf) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
@@ -7092,6 +7167,7 @@ try { new ResizeObserver(() => layoutStage()).observe($('#stage')); } catch { wi
 document.addEventListener('click', e => { if (e.target.closest('#vb-chat')) openVoiceChat(); });
 function openVoiceChat() {
   if (!myVoice) return;
+  if (myVoice.startsWith('call:')) { setVView(false); openChat(myVoice.slice(5)); return; }
   const sv = S.servers.find(x => x.channels.some(c => c.id === myVoice)); if (!sv) return;
   setVView(false);
   if (S.server?.id !== sv.id) selectServer(sv.id);
@@ -7102,7 +7178,7 @@ function setVView(on) {
   document.body.classList.toggle('vview', on);
   if (on) document.body.classList.remove('drawer');
   if (!on) { const st = $('#stage'); st.style.paddingTop = ''; st.querySelectorAll('.tile').forEach(t => t.style.width = t.style.height = ''); }
-  renderStage();
+  renderStage(); renderDMCall();
 }
 const vview = () => document.body.classList.contains('vview');
 function pipSource() {
@@ -7243,17 +7319,57 @@ function renderStage() {
 }
 // ---- Süren özel aramalar (DM/grup): listede yeşil telefon, sohbette "Katıl" şeridi, ana sayfada kart ----
 S.calls = {};
+// DM/grup aramasında "kim kiminle konuşuyor": sohbetin üstünde Kanka'ya özgü arama sahnesi
+let dmCallSig = '';
+const dcBtn = (k, i, t) => `<button class="dc-b" data-dc="${k}" title="${t}" aria-label="${t}">${ic(i)}</button>`;
+function dcSync(el) {
+  const q = k => el.querySelector(`[data-dc="${k}"]`), m = q('mute'), c = q('cam'), s = q('scr'), d = q('deaf');
+  if (m) { m.innerHTML = ic(muted ? 'micoff' : 'mic'); m.classList.toggle('off', muted); m.title = m.ariaLabel = muted ? 'Mikrofonun kapalı · aç' : 'Mikrofonu kapat'; }
+  if (c) c.classList.toggle('on', videoKind === 'cam');
+  if (s) s.classList.toggle('on', videoKind === 'screen');
+  if (d) { d.innerHTML = ic(deaf ? 'headsetoff' : 'headset'); d.classList.toggle('off', deaf); }
+}
+function renderDMCall() {
+  const ch = S.channel, el = $('#dmcall');
+  const on = ch && S.view === 'dm' && myVoice === 'call:' + ch.id && !vview();
+  if (!on) { if (el) { el.remove(); dmCallSig = ''; } return; }
+  const who = (S.calls?.[ch.id] || []).filter(n => n !== S.me);
+  const sig = ch.id + '|' + who.join('|');
+  if (el && dmCallSig === sig) { dcSync(el); return; }
+  el?.remove(); dmCallSig = sig;
+  const group = !!ch.group, others = group ? who : [ch.with].filter(Boolean), extra = others.length > 2 ? others.length - 2 : 0;
+  const box = document.createElement('section'); box.id = 'dmcall'; box.setAttribute('aria-label', 'Arama');
+  box.innerHTML = `<button class="dc-full" data-dc="full" title="Sahneye geç" aria-label="Sahneye geç">${ic('expand')}</button>
+    <span class="dc-waves" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    <div class="dc-avs">${[{ n: S.me, me: 1 }, ...others.map(n => ({ n }))].slice(0, 3).map(p => `<div class="dc-p ${p.me ? 'me' : ''}" data-vu="${esc(p.n)}">${av(p.n)}<small>${p.me ? 'Sen' : esc(dn(p.n))}</small></div>`).join('')}${extra ? `<span class="dc-more">+${extra}</span>` : ''}</div>
+    <div class="dc-meta"><b>${group ? `${esc(groupName(ch))} · grup araması` : `${esc(ch.with || '')} ile aramadasın`}</b><small id="dc-tm">${who.length ? vDur(Date.now() - myVoiceAt) : 'Karşı taraf bekleniyor…'}</small></div>
+    <div class="dc-acts">${dcBtn('mute', 'mic', 'Mikrofon')}${dcBtn('cam', 'video', 'Kamera')}${dcBtn('scr', 'screen', 'Ekran paylaş')}${dcBtn('deaf', 'headset', 'Hoparlörü kapat')}<button class="dc-b dc-leave" data-dc="leave" title="Aramayı bitir" aria-label="Aramayı bitir">${ic('hangup')}</button></div>`;
+  $('#messages').before(box);
+  box.querySelectorAll('[data-dc]').forEach(b => b.onclick = e => {
+    e.stopPropagation(); const k = b.dataset.dc;
+    if (k === 'full') setVView(true);
+    else if (k === 'mute') $('#mute').click();
+    else if (k === 'cam') $('#vcam').click();
+    else if (k === 'scr') $('#vscreen').click();
+    else if (k === 'deaf') $('#deaf').click();
+    else if (k === 'leave') $('#vleave').click();
+    setTimeout(() => dcSync(box), 30);
+  });
+  dcSync(box);
+}
 function renderCallBar() {
   $('#callbar')?.remove();
-  const ch = S.channel; if (!ch || !/^(dm|g):/.test(ch.id) || S.view !== 'dm') return;
+  const ch = S.channel;
+  if (!ch || !/^(dm|g):/.test(ch.id) || S.view !== 'dm') { renderDMCall(); return; }
   const who = S.calls[ch.id] || [], here = myVoice === 'call:' + ch.id;
+  renderDMCall();
   if (!who.length || here) return;
   const bar = document.createElement('div'); bar.id = 'callbar';
   bar.innerHTML = `<span class="cb-pulse">${ic('phoneCall')}</span><span class="cb-avs">${who.slice(0, 4).map(n => av(n)).join('')}</span><span class="cb-t"><b>Arama sürüyor</b><small>${who.slice(0, 3).map(n => esc(dn(n))).join(', ')}${who.length > 3 ? ` ve ${who.length - 3} kişi` : ''} konuşuyor</small></span><button class="primary" id="cb-join">${ic('phoneCall')}Katıl</button>`;
   $('#messages').before(bar);
   $('#cb-join').onclick = () => joinVoice('call:' + ch.id);
 }
-socket.on('calls', c => { S.calls = c || {}; renderCallBar(); if (S.view === 'dm') renderDMSide(); refreshHome(); });
+socket.on('calls', c => { S.calls = c || {}; renderRail(); renderCallBar(); if (S.view === 'dm') renderDMSide(); refreshHome(); });
 socket.on('voiceState', v => { S.voice = v; updRailVoice(); if (S.view === 'server' && S.server) renderSide(); pushOverlay(); refreshHome(); refreshRoomCards(); renderCallBar(); });
 if (!navigator.mediaDevices?.getDisplayMedia) $('#vscreen').style.display = 'none';
 

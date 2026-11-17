@@ -1569,6 +1569,44 @@ function pushCalls() {
   for (const n of new Set(online.values())) io.to('user:' + n).emit('calls', callsFor(n));
 }
 const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceAge', voiceAges()); io.emit('voiceLive', liveState()); io.emit('voiceFlags', flagsState()); pushCalls(); };
+// Özel arama günlüğü: sohbete "arama başladı / bitti / cevapsız" yazar, 3 dakika yalnız kalana Kanka seslenir
+const callSess = new Map();
+const CALL_ALONE_MS = +process.env.CALL_ALONE_MS || 180e3;
+function callMsg(chId, call) {
+  const msg = { id: id(), kind: 'call', time: Date.now(), call, reactions: {} };
+  const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
+  save(); io.to(chId).emit('message', { channelId: chId, msg });
+  for (const n of chatMembers(chId)) io.to('user:' + n).emit('dms', dmsFor(n));
+  return msg;
+}
+function callSessOf(chId) {
+  let s = callSess.get(chId);
+  if (!s) { s = { by: null, start: Date.now(), rangAt: 0, max: 0, names: new Set(), aloneT: null }; callSess.set(chId, s); }
+  return s;
+}
+function callAloneWatch(chId) {
+  const s = callSess.get(chId); if (!s) return;
+  clearTimeout(s.aloneT); s.aloneT = null;
+  const room = voice.get('call:' + chId);
+  if (!room || room.size !== 1) return;
+  const [[, name]] = room;
+  s.aloneT = setTimeout(() => {
+    const r = voice.get('call:' + chId);
+    if (!r || r.size !== 1 || ![...r.values()].includes(name)) return;
+    io.to('user:' + name).emit('message', { channelId: chId, msg: { id: 'w' + id(), kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: 'Kanka fark etti', text: 'Üç dakikadır odada senden başka kimse yok kanka. Mikrofonu kapatsan da kimse fark etmez, benden söylemesi 🙂 Kapatmak istersen kapat gitsin; ben buradayım.', tone: 'warn' }, reactions: {} } });
+    io.to('user:' + name).emit('toast', '3 dakikadır tek başınasın kanka. Boş odaysa kapat gitsin.');
+  }, CALL_ALONE_MS);
+  s.aloneT.unref?.();
+}
+function callEnded(chId) {
+  const s = callSess.get(chId); if (!s) return;
+  clearTimeout(s.aloneT); callSess.delete(chId);
+  const ms = Date.now() - s.start;
+  if (s.max >= 2) return callMsg(chId, { state: 'end', by: s.by, ms, members: [...s.names].filter(n => n !== s.by).slice(0, 9) });
+  if (!s.rangAt) return;
+  callMsg(chId, { state: 'missed', by: s.by, ms: Math.max(1000, Date.now() - s.rangAt) });
+  for (const n of chatMembers(chId)) if (n !== s.by && !db.users[n]?.blocked?.includes(s.by)) sendPush(n, { title: 'Cevapsız arama', body: `${s.by} seni aradı`, tag: 'call-' + chId, ch: chId, from: s.by, dm: true });
+}
 function pushServers(names) {
   viewersCache.clear(); // izin değişmiş olabilir: listeyi baştan hesapla, aynı gönderimde tekrar kullan
   for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
@@ -2441,6 +2479,7 @@ io.on('connection', socket => {
   // ----- Özel arama (DM ve grup) -----
   socket.on('ring', ({ chId, video } = {}) => {
     if (!isPrivateChat(chId) || !canAccess(me, chId) || limited('ring|' + me, 6, 60e3)) return;
+    { const s = callSessOf(chId); s.rangAt = Date.now(); if (!s.by) s.by = me; }
     for (const n of chatMembers(chId)) if (n !== me && !db.users[n]?.blocked?.includes(me))
     { const title = chId.startsWith('g:') ? groupTitle(groupOf(chId)) : me;
       io.to('user:' + n).emit('ring', { from: me, chatId: chId, callId: 'call:' + chId, video: !!video, title });
@@ -3505,9 +3544,11 @@ io.on('connection', socket => {
   // ----- Sesli odalar (WebRTC sinyalleşme) -----
   function leaveVoice() {
     if (!myVoice) return;
-    const room = voice.get(myVoice);
-    if (room) { room.delete(socket.id); if (!room.size) voice.delete(myVoice); }
-    socket.to('v:' + myVoice).emit('voiceLeft', socket.id);
+    const left = myVoice;
+    const room = voice.get(left);
+    if (room) { room.delete(socket.id); if (!room.size) voice.delete(left); }
+    if (left.startsWith('call:')) { const c = left.slice(5); if (voice.get(left)) callAloneWatch(c); else callEnded(c); }
+    socket.to('v:' + left).emit('voiceLeft', socket.id);
     socket.leave('v:' + myVoice);
     voiceMedia.delete(socket.id); voiceFlags.delete(socket.id);
     { const st = stage.get(myVoice); if (st && ![...(voice.get(myVoice)?.values() || [])].includes(me)) { st.speakers.delete(me); st.hands.delete(me); io.to('v:' + myVoice).emit('stage', { ch: myVoice, ...stageView(myVoice) }); } }
@@ -3530,6 +3571,12 @@ io.on('connection', socket => {
     const room = voice.get(chId) || new Map();
     const peers = [...room].map(([sid, name]) => ({ sid, name }));
     room.set(socket.id, me); voice.set(chId, room);
+    if (isCall) {
+      const c = chId.slice(5), s = callSessOf(c);
+      if (!s.by) { s.by = me; callMsg(c, { state: 'start', by: me }); }
+      s.max = Math.max(s.max, room.size); s.names.add(me);
+      callAloneWatch(c);
+    }
     onbFlag(me, 'voice');
     socket.to('v:' + chId).emit('voiceJoined', { sid: socket.id, name: me });
     myVoice = chId; socket.join('v:' + chId);
