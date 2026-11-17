@@ -921,6 +921,18 @@
   body.vview #stage .tile { transition: none; }
   body.vview #stage.on { animation: none; }
   body.vview #messages, body.vview #typing, body.vview #replybar, body.vview #compose, body.vview #watch { display: none !important; }
+  /* Tam ekran yayında görüntü tüm alanı kaplasın; kontroller fareyle üzerine gelince görünsün */
+  body.vview.imm #head { display: none; }
+  #stage.immersive { padding: 0 !important; gap: 0 !important; }
+  #stage.immersive .tile { display: none; }
+  #stage.immersive .tile.focus { display: flex; position: absolute; inset: 0; width: 100% !important; height: 100% !important; border: 0; border-radius: 0; background: #000; }
+  #stage.immersive .tile.focus > video { object-fit: contain; }
+  #stage.immersive .vv-bar, #stage.immersive #zoomchip, body.imm #vdock { opacity: 0; pointer-events: none; transition: opacity .18s; }
+  #stage.immersive.immui .vv-bar, #stage.immersive.immui #zoomchip, body.imm.immui #vdock { opacity: 1; pointer-events: auto; }
+  #stage.immersive .tile.focus .tname, #stage.immersive .tile.focus .tbadge { opacity: 0; transition: opacity .18s; }
+  #stage.immersive .tile.focus .tbadge { top: 60px; left: 12px; }
+  #stage.immersive.immui .tile.focus .tname, #stage.immersive.immui .tile.focus .tbadge { opacity: 1; }
+  #stage.immersive:not(.immui) .tile .tctl, #stage.immersive:not(.immui) .tile .tvol { opacity: 0 !important; }
   .vv-bar { position: absolute; top: 12px; left: 16px; right: 16px; display: flex; align-items: center; gap: 10px; z-index: 4; }
   .vv-bar b { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 15px; } .vv-bar .ic { width: 18px; height: 18px; color: var(--green); }
   .vv-bar button { padding: 8px 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-weight: 800; font-size: 13px; }
@@ -7250,6 +7262,7 @@ let stageStats = null, pipClosed = null, focusSid = null;
 // Sesli oda görünümü: kutucukları ekranı dolduracak en büyük boyuta yerleştir (Discord gibi)
 function layoutStage() {
   const st = $('#stage'); if (!vview() || !st) return;
+  if (st.classList.contains('immersive')) return;
   const tiles = [...st.querySelectorAll('.tile')].filter(t => !t.classList.contains('memoff')), gap = 12, top = 64, pad = 16;
   const W = st.clientWidth - pad * 2, H = st.clientHeight - top - pad;
   if (!tiles.length || W <= 0 || H <= 0) return;
@@ -7276,6 +7289,34 @@ function layoutStage() {
   st.style.paddingTop = (top + Math.max(0, (H - usedH) / 2)) + 'px';
 }
 try { new ResizeObserver(() => layoutStage()).observe($('#stage')); } catch { window.addEventListener('resize', () => layoutStage()); }
+// Tam ekran yayında kontroller görüntünün üstünde; hareketsizlikte geri saklanır
+let immT = null, immTap = false;
+function immOn(on) {
+  const st = $('#stage'); if (!st) return;
+  st.classList.toggle('immersive', on); document.body.classList.toggle('imm', on);
+  if (on) immPoke();
+  else { clearTimeout(immT); st.classList.remove('immui'); document.body.classList.remove('immui'); }
+}
+function immPoke() {
+  const st = $('#stage');
+  if (!st?.classList.contains('immersive')) return;
+  st.classList.add('immui'); document.body.classList.add('immui');
+  clearTimeout(immT);
+  immT = setTimeout(() => { st.classList.remove('immui'); document.body.classList.remove('immui'); }, 2600);
+}
+function inImmZone(e) {
+  if (e.target?.closest?.('#vdock')) return true;
+  const st = $('#stage'); if (!st) return false;
+  const r = st.getBoundingClientRect();
+  return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+}
+document.addEventListener('pointermove', e => { if (document.body.classList.contains('imm') && inImmZone(e)) immPoke(); }, { passive: true });
+document.addEventListener('touchstart', e => {
+  if (!document.body.classList.contains('imm') || !inImmZone(e)) return;
+  if (!document.body.classList.contains('immui')) immTap = true; // ilk dokunuş sadece kontrolleri gösterir
+  immPoke();
+}, { passive: true });
+document.addEventListener('click', () => { if (immTap) setTimeout(() => { immTap = false; }, 400); }, true);
 // Sesli odanın kendi yazı sohbeti: seste konuşurken aynı odada yazış (link, resim, "şuna bak")
 document.addEventListener('click', e => { if (e.target.closest('#vb-chat')) openVoiceChat(); });
 function openVoiceChat() {
@@ -7290,7 +7331,7 @@ function setVView(on) {
   on = !!on && !!myVoice;
   document.body.classList.toggle('vview', on);
   if (on) document.body.classList.remove('drawer');
-  if (!on) { const st = $('#stage'); st.style.paddingTop = ''; st.querySelectorAll('.tile').forEach(t => { t.style.width = t.style.height = ''; if (t._z) zReset(t); }); }
+  if (!on) { const st = $('#stage'); st.style.paddingTop = ''; st.querySelectorAll('.tile').forEach(t => { t.style.width = t.style.height = ''; if (t._z) zReset(t); }); immOn(false); }
   renderStage(); renderDMCall();
 }
 const vview = () => document.body.classList.contains('vview');
@@ -7396,7 +7437,7 @@ function renderPip() {
 }
 function renderStage() {
   const st = $('#stage');
-  if (!myVoice) { st.classList.remove('on', 'focus'); st.innerHTML = ''; clearInterval(stageStats); stageStats = null; document.body.classList.remove('vview'); renderPip(); return; }
+  if (!myVoice) { st.classList.remove('on', 'focus'); st.innerHTML = ''; immOn(false); clearInterval(stageStats); stageStats = null; document.body.classList.remove('vview'); renderPip(); return; }
   st.classList.add('on');
   renderPip();
   let bar = st.querySelector('.vv-bar');
@@ -7435,6 +7476,7 @@ function renderStage() {
       };
       el.onclick = e => {
         if (e.target.closest('button, input') || !vview()) return;
+        if (immTap) { immTap = false; return; } // tam ekran yayında ilk dokunuş kontrolleri açar
         if (el._z?.k > 1 || performance.now() - (el._ztap || 0) < 300) return; // yakınlaştırılmış görüntüde tıklama odak değiştirmez
         const sid = el.dataset.sid;
         if (focusSid === sid) focusSid = null;                                        // büyükse ızgaraya dön
@@ -7480,6 +7522,7 @@ function renderStage() {
     const r = el.querySelector('.tvol'); if (r) r.value = vol[t.name] ?? 1;
   }
   st.querySelectorAll('.tile').forEach(el => { if (!keep.has(el.dataset.sid)) el.remove(); });
+  { const imm = vview() && !!tiles.find(t => t.sid === focusSid && t.kind === 'screen'); if (imm !== st.classList.contains('immersive')) immOn(imm); }
   layoutStage();
   zChip();
   renderDMCall();
