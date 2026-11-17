@@ -3440,12 +3440,12 @@ const TPL_UI = [
   ['oyun', 'Oyun ekibi', 'Duyurular, klipler, takım arıyorum, maç odaları, Kaptan ve Takım rolleri.', 'gamepad', '#ff4655'],
   ['okul', 'Okul / sınıf', 'Ödevler, sınav takvimi, soru-cevap, etüt odası, Öğretmen rolü.', 'book', '#2fd3c3'],
   ['topluluk', 'Topluluk', 'Kurallar, kendini tanıt, öneriler, mod odası ve hoş geldin ekranı.', 'sparkle', '#7c5cff'],
-  ['discord', "Discord'dan aktar", 'Discord şablon linkini yapıştır; odalar, kategoriler, roller ve izinler aynen kurulsun.', 'download', '#5865f2'],
+  ['discord', 'Şablon aktar', 'Şablon linkini yapıştır; odalar, kategoriler, roller ve izinler aynen kurulsun.', 'download', '#5865f2'],
 ];
 function showTemplates(pick = 'arkadas') {
   modal(`<h3>${ic('plus')}Sunucu oluştur</h3><p class="hint">Bir şablon seç; odalar, kategoriler ve roller hazır gelsin. Sonradan her şeyi değiştirebilirsin.</p>
     <div class="tp-grid">${TPL_UI.map(([k, t, d, i, c]) => `<button class="tp ${k === pick ? 'on' : ''}" data-tp="${k}"><span class="ti" style="background:${c}">${ic(i)}</span><span><b>${t}</b><small>${d}</small></span></button>`).join('')}</div>
-    <form id="tp-form">${pick === 'discord' ? `<input class="field" name="dc" maxlength="120" placeholder="Şablon linki (örn. discord.new/AbCd1234)" autocomplete="off" style="margin-top:10px"><div id="dt-prev"></div>` : ''}<input class="field" name="name" maxlength="40" placeholder="Sunucu adı (${pick === 'discord' ? 'şablondan gelir' : 'örn. ' + (pick === 'oyun' ? 'Valo Ekibi' : pick === 'okul' ? '11-B Sınıfı' : pick === 'topluluk' ? 'Anime Severler' : 'Kankalar')})" required autocomplete="off" style="margin-top:10px">
+    <form id="tp-form">${pick === 'discord' ? `<input class="field" name="dc" maxlength="120" placeholder="Şablon linki ya da kodu" autocomplete="off" style="margin-top:10px"><div id="dt-prev"></div>` : ''}<input class="field" name="name" maxlength="40" placeholder="Sunucu adı (${pick === 'discord' ? 'şablondan gelir' : 'örn. ' + (pick === 'oyun' ? 'Valo Ekibi' : pick === 'okul' ? '11-B Sınıfı' : pick === 'topluluk' ? 'Anime Severler' : 'Kankalar')})" required autocomplete="off" style="margin-top:10px">
     <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="primary">Oluştur</button></div></form>
     <div class="tp-alt"><button id="tp-join">${ic('link')}Davet koduyla katıl</button><button id="tp-disc">${ic('compass')}Sunucuları keşfet</button></div>`);
   $('#mx').onclick = closeModal;
@@ -3454,7 +3454,7 @@ function showTemplates(pick = 'arkadas') {
   $('#tp-disc').onclick = () => { closeModal(); showDiscover(); };
   $('#tp-form').onsubmit = e => {
     e.preventDefault(); const name = e.target.name.value.trim(); if (!name) return;
-    const dc = pick === 'discord' ? e.target.dc.value.trim() : undefined; if (pick === 'discord' && !dc) return toast('Discord şablon linkini yapıştır');
+    const dc = pick === 'discord' ? e.target.dc.value.trim() : undefined; if (pick === 'discord' && !dc) return toast('Şablon linkini yapıştır');
     const btn = e.target.querySelector('.primary'); btn.disabled = true;
     socket.emit('createServer', { name, template: pick, discord: dc }, s => { btn.disabled = false; if (s.error) return toast(s.error); closeModal(); if (!S.servers.find(x => x.id === s.id)) S.servers.push(s); selectServer(s.id); toast(`${s.name} hazır! Arkadaşlarını davet etmeyi unutma.`); });
   };
