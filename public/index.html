@@ -1412,6 +1412,9 @@
   .dnd-line::before { left: -4px; } .dnd-line::after { right: -4px; }
   .dnd-line.cat { height: 4px; background: var(--accent-2); }
   .dnd-into { background: rgba(255,138,76,.12) !important; border-radius: 10px; color: var(--accent) !important; }
+  .vghost { padding: 5px 10px; }
+  .vghost .vn { color: var(--ink); }
+  .vroom.dnd-into { box-shadow: inset 0 0 0 1px var(--accent); }
   .ctxm { width: 230px; }
   .ctxm button { justify-content: flex-start !important; }
   .ctxm button .ic { width: 16px; height: 16px; color: var(--muted); }
@@ -3671,6 +3674,7 @@ function renderSide() {
     ctxMenu(e.clientX, e.clientY, [{ t: 'Oda oluştur', icon: 'hash', act: () => showCreateChannel(s) }, { t: 'Kategori oluştur', icon: 'grid', act: () => showCreateCategory(s) }]);
   };
   if (manage) chDnD(sl, s, renderSide); else sl.onpointerdown = null;
+  if (!sl._vdnd) { sl._vdnd = 1; sl.addEventListener('pointerdown', voiceDnDStart); }
 }
 // ---- Ctrl+K: hızlı geçiş (oda, sunucu, kişi) ----
 function quickSwitch() {
@@ -7463,6 +7467,7 @@ function saveLayout(s, L, rerender) {
 let dndOn = false;
 function chDnD(root, s, rerender) {
   root.onpointerdown = e => {
+    if (e.target.closest('.vuser')) return; // sesli oda üyesi sürüklemesi ayrı ele alınır
     const el = e.target.closest('[data-drag]');
     if (!el || !root.contains(el) || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('button, input, select')) return;
     const kind = el.dataset.drag, id = el.dataset.id, sx = e.clientX, sy = e.clientY, touch = e.pointerType !== 'mouse';
@@ -7544,6 +7549,80 @@ function chDnD(root, s, rerender) {
     addEventListener('touchmove', blockTouch, { passive: false });
     if (touch) holdT = setTimeout(start, 380);
   };
+}
+
+// Sesli oda üyesini başka sesli odaya taşıma: fareyle sürükle, dokunmatikte basılı tut
+let vDndOn = false;
+const vRank = (s, n) => s.owner === n ? 1e9 : Math.max(s.roles?.[n] === 'mod' ? 500 : 0, ...((s.memberRoles?.[n] || []).map(rid => { const i = (s.customRoles || []).findIndex(r => r.id === rid); return i < 0 ? 0 : 1000 - i; })));
+function voiceDnDStart(e) {
+  if (vDndOn || dndOn || S.view !== 'server') return;
+  const sl = e.currentTarget, s = S.server;
+  const src = e.target.closest('.vuser[data-vu]');
+  if (!s || !src || !sl.contains(src) || e.target.closest('.livebadge, button') || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  if (!perm(s, 'voiceMove')) return;
+  const name = src.dataset.vu, from = src.dataset.ch;
+  if (!name || !from || name === S.me || name === s.owner) return;
+  if (!(s.owner === S.me || vRank(s, S.me) > vRank(s, name))) return;
+  const sx = e.clientX, sy = e.clientY, touch = e.pointerType !== 'mouse';
+  let started = false, ghost = null, target = null, last = e, holdT = null, raf = 0, offX = 0, offY = 0;
+  const chOf = id => s.channels.find(c => c.id === id);
+  const okTarget = ch => ch && voiceLike(ch.type) && ch.id !== from && ch.canConnect !== false && !(ch.limit && (S.voice?.[ch.id] || []).length >= ch.limit);
+  const start = () => {
+    if (document.body.classList.contains('gdrag')) return cleanup();
+    started = vDndOn = true;
+    const r = src.getBoundingClientRect(); offX = sx - r.left; offY = sy - r.top;
+    ghost = src.cloneNode(true); ghost.className += ' dnd-ghost vghost'; ghost.style.width = r.width + 'px';
+    document.body.appendChild(ghost);
+    src.classList.add('dnd-src');
+    document.body.classList.add('dnd'); navigator.vibrate?.(12);
+    move(last);
+  };
+  const pick = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    const id = el?.closest('.vuser[data-ch]')?.dataset.ch || el?.closest('.vroom[data-id]')?.dataset.id;
+    const ch = id && chOf(id);
+    if (!okTarget(ch)) return null;
+    return { ch, row: sl.querySelector(`.vroom[data-id="${id}"]`) };
+  };
+  const move = ev => {
+    last = ev;
+    if (!started) {
+      const d = Math.hypot(ev.clientX - sx, ev.clientY - sy);
+      if (touch) { if (d > 10) cleanup(); return; }
+      if (d < 6) return;
+      start(); return;
+    }
+    ghost.style.transform = `translate(${ev.clientX - offX}px, ${ev.clientY - offY}px) rotate(1.5deg)`;
+    target = pick(ev.clientX, ev.clientY);
+    sl.querySelectorAll('.dnd-into').forEach(x => x.classList.remove('dnd-into'));
+    target?.row?.classList.add('dnd-into');
+    const rr = sl.getBoundingClientRect();
+    cancelAnimationFrame(raf);
+    const sc = () => { const v = ev.clientY < rr.top + 40 ? -10 : ev.clientY > rr.bottom - 40 ? 10 : 0; if (v && started) { sl.scrollTop += v; raf = requestAnimationFrame(sc); } };
+    sc();
+  };
+  const blockTouch = ev => { if (started) ev.preventDefault(); };
+  const finish = () => {
+    if (started) {
+      const t = target;
+      const eat = ev => { ev.stopPropagation(); ev.preventDefault(); };
+      sl.addEventListener('click', eat, { capture: true, once: true }); setTimeout(() => sl.removeEventListener('click', eat, { capture: true }), 60);
+      if (t) socket.emit('voiceMod', { serverId: s.id, name, action: 'move', to: t.ch.id }, r => {
+        if (r?.error) return toast(r.error);
+        toast(`${dn(name)} → ${t.ch.name} taşındı`);
+      });
+    }
+    cleanup();
+  };
+  const cleanup = () => {
+    clearTimeout(holdT); cancelAnimationFrame(raf);
+    removeEventListener('pointermove', move); removeEventListener('pointerup', finish); removeEventListener('pointercancel', cleanup); removeEventListener('touchmove', blockTouch);
+    ghost?.remove(); sl.querySelectorAll('.dnd-src, .dnd-into').forEach(x => x.classList.remove('dnd-src', 'dnd-into'));
+    document.body.classList.remove('dnd'); setTimeout(() => { vDndOn = false; }, 0);
+  };
+  addEventListener('pointermove', move); addEventListener('pointerup', finish); addEventListener('pointercancel', cleanup);
+  addEventListener('touchmove', blockTouch, { passive: false });
+  if (touch) holdT = setTimeout(start, 380);
 }
 
 // --- Sağ tık menüsü ---
