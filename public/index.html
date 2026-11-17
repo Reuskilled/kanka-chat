@@ -608,6 +608,54 @@
   .emo-acts button:hover { background: var(--hover); color: var(--ink); }
   .emo-acts .red:hover { color: var(--red); }
   @media (max-width: 700px) { .emo-tr { grid-template-columns: 46px 1fr auto; padding: 7px 8px; } .emo-tr .emo-by { display: none; } .emo-tr.emo-th { display: none; } }
+  /* Emoji düzenleme */
+  #modal .box.emoedit { width: min(880px, 94vw); max-width: none; padding: 0; overflow: hidden; border-radius: 20px; display: flex; flex-direction: column; max-height: 92vh; }
+  .ee-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+  .ee-head h3 { font-size: 16px; margin: 0; flex: 1; text-align: center; }
+  .ee-head > button { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); flex: 0 0 auto; }
+  .ee-head > button:hover { background: var(--hover); color: var(--ink); }
+  .ee-head > button .ic { width: 17px; height: 17px; }
+  .ee-body { display: grid; grid-template-columns: minmax(0, 1fr) clamp(270px, 34%, 340px); min-height: 0; flex: 1; }
+  .ee-left { padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 14px; min-width: 0; overflow-y: auto; }
+  .ee-stage { position: relative; width: min(100%, 430px); aspect-ratio: 1; border-radius: 14px; overflow: hidden; touch-action: none; user-select: none; cursor: grab; border: 1px solid var(--line); background-color: rgba(0,0,0,.22); background-image: repeating-conic-gradient(rgba(255,255,255,.055) 0% 25%, transparent 0% 50%); background-size: 24px 24px; }
+  .ee-stage.drag { cursor: grabbing; }
+  .ee-stage.plain { background-image: none; }
+  .ee-stage img { position: absolute; left: 50%; top: 50%; transform-origin: center center; pointer-events: none; max-width: none; max-height: none; }
+  .ee-note { position: absolute; left: 0; right: 0; bottom: 9px; text-align: center; font-size: 11px; font-weight: 700; color: rgba(255,255,255,.75); text-shadow: 0 1px 4px #000; pointer-events: none; }
+  .ee-tools { display: flex; align-items: center; gap: 7px; width: min(100%, 430px); background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 6px 8px; }
+  .ee-tools > button { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); font-weight: 900; font-size: 16px; flex: 0 0 auto; }
+  .ee-tools > button:hover { background: var(--hover); color: var(--ink); }
+  .ee-tools > button .ic { width: 16px; height: 16px; }
+  .ee-tools > button.on { background: var(--hover); color: var(--accent-2); }
+  .ee-tools input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); height: 22px; }
+  .ee-zval { font-size: 11px; font-weight: 800; color: var(--muted); min-width: 38px; text-align: right; }
+  .ee-right { padding: 18px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+  .ee-right h4 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .ee-prevs { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 4px; }
+  .ee-chip { display: flex; align-items: center; gap: 5px; background: var(--card); border: 1px solid var(--line); border-radius: 9px; padding: 4px 8px; }
+  .ee-chip img { width: 19px; height: 19px; object-fit: contain; }
+  .ee-chip span { font-size: 12px; font-weight: 800; color: var(--muted); }
+  .ee-big { width: 78px; height: 78px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; }
+  .ee-big img { width: 58px; height: 58px; object-fit: contain; }
+  .ee-field label { display: block; font-size: 11px; font-weight: 800; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
+  .ee-namewrap { position: relative; }
+  .ee-namewrap input { width: 100%; padding: 11px 34px 11px 12px; }
+  .ee-namewrap button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: var(--muted); }
+  .ee-namewrap button:hover { background: var(--hover); color: var(--ink); }
+  .ee-namewrap button .ic { width: 13px; height: 13px; }
+  .ee-err { font-size: 11.5px; color: #ff8b8b; font-weight: 700; min-height: 15px; }
+  .ee-save { margin-top: auto; padding: 12px; border-radius: 12px; font-weight: 900; flex: 0 0 auto; }
+  .ee-save:disabled { opacity: .55; cursor: default; }
+  @media (max-width: 760px) {
+    #modal .box.emoedit { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: 100%; max-width: none; max-height: 92vh; border-radius: 24px 24px 0 0; }
+    #modal.open .box.emoedit { animation: sheetUp .3s var(--ease-out); }
+    .ee-body { grid-template-columns: 1fr; overflow-y: auto; }
+    .ee-left { padding: 12px 14px; gap: 10px; overflow: visible; }
+    .ee-stage { width: min(100%, 300px); }
+    .ee-right { border-left: none; border-top: 1px solid var(--line); padding: 14px; overflow: visible; }
+    .ee-right .ee-prevs { display: none; }
+    .ee-save { margin-top: 4px; }
+  }
   .vmsg { display: flex; align-items: center; gap: 10px; min-width: 230px; }
   .vmsg .play { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.18); font-size: 14px; flex-shrink: 0; }
   .row:not(.mine) .vmsg .play { background: var(--accent); color: #fff; }
@@ -4646,11 +4694,104 @@ function showServerSettings(s, tab, focus) {
       ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('on'); }));
       drop.addEventListener('dragleave', e => { if (!drop.contains(e.relatedTarget)) drop.classList.remove('on'); });
       drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('on'); if (e.dataTransfer?.files?.length) doUpload(e.dataTransfer.files); });
+      const emojiEditor = n => {
+        const src = s.emojis[n]; if (!src) return;
+        modal(`<div class="ee-head"><button type="button" id="ee-x" aria-label="Kapat">${ic('x')}</button><h3>Emoji Düzenle</h3><button type="button" id="ee-rs" title="Sıfırla" aria-label="Sıfırla">${ic('refresh')}</button></div>
+          <div class="ee-body">
+            <div class="ee-left">
+              <div class="ee-stage" id="ee-stage"><img id="ee-img" src="${esc(src)}" alt=""><span class="ee-note">Görseli yeniden konumlandırmak için sürükle</span></div>
+              <div class="ee-tools"><button type="button" id="ee-grid" title="Izgarayı göster / gizle" aria-label="Izgara">${ic('grid')}</button><span style="flex:1"></span><button type="button" id="ee-out" aria-label="Uzaklaştır">−</button><input type="range" id="ee-zoom" min="100" max="300" step="5" value="100" aria-label="Yakınlaştırma"><button type="button" id="ee-in" aria-label="Yakınlaştır">+</button><span class="ee-zval" id="ee-zval">100%</span></div>
+            </div>
+            <div class="ee-right">
+              <h4>Önizleme</h4>
+              <div class="ee-prevs"><div class="ee-chip"><img id="ee-p1" src="${esc(src)}" alt=""><span>6</span></div><div class="ee-big"><img id="ee-p2" src="${esc(src)}" alt=""></div></div>
+              <div class="ee-field"><label for="ee-name">Emoji Adı *</label><div class="ee-namewrap"><input class="field" id="ee-name" maxlength="24" value="${esc(n)}" autocomplete="off" spellcheck="false"><button type="button" id="ee-clear" aria-label="Adı temizle">${ic('x')}</button></div></div>
+              <div class="ee-err" id="ee-err"></div>
+              <button type="button" class="primary ee-save" id="ee-save">Tamamla</button>
+            </div>
+          </div>`, 'emoedit');
+        const stage = $('#ee-stage'), img = $('#ee-img'), zoomEl = $('#ee-zoom'), zval = $('#ee-zval');
+        const p1 = $('#ee-p1'), p2 = $('#ee-p2'), nameEl = $('#ee-name'), errEl = $('#ee-err'), saveBtn = $('#ee-save');
+        const nat = { w: 1, h: 1 };
+        let base = 1, zoom = 1, tx = 0, ty = 0, dirty = false, previewT = 0;
+        const apply = () => {
+          const S = stage.clientWidth; if (!S) return;
+          base = Math.max(S / nat.w, S / nat.h);
+          const f = base * zoom;
+          const mx = Math.max(0, (nat.w * f - S) / 2), my = Math.max(0, (nat.h * f - S) / 2);
+          tx = Math.min(mx, Math.max(-mx, tx)); ty = Math.min(my, Math.max(-my, ty));
+          img.style.width = nat.w * f + 'px'; img.style.height = nat.h * f + 'px';
+          img.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px))`;
+        };
+        const draw = size => {
+          const c = document.createElement('canvas'); c.width = c.height = size;
+          const S = stage.clientWidth, f = base * zoom, k = size / S;
+          c.getContext('2d').drawImage(img, ((S - nat.w * f) / 2 + tx) * k, ((S - nat.h * f) / 2 + ty) * k, nat.w * f * k, nat.h * f * k);
+          return c;
+        };
+        const preview = () => { try { const u = draw(160).toDataURL('image/png'); p1.src = p2.src = u; } catch {} };
+        const schedule = () => { clearTimeout(previewT); previewT = setTimeout(preview, 90); };
+        const init = () => { nat.w = img.naturalWidth || 1; nat.h = img.naturalHeight || 1; apply(); preview(); };
+        if (img.complete && img.naturalWidth) init(); else img.onload = init;
+        const onResize = () => { if (!document.body.contains(stage)) { removeEventListener('resize', onResize); return; } apply(); };
+        addEventListener('resize', onResize);
+        let drag = null;
+        stage.addEventListener('pointerdown', e => {
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          drag = { x: e.clientX, y: e.clientY, tx, ty };
+          try { stage.setPointerCapture(e.pointerId); } catch {}
+          stage.classList.add('drag');
+        });
+        stage.addEventListener('pointermove', e => {
+          if (!drag) return;
+          tx = drag.tx + (e.clientX - drag.x); ty = drag.ty + (e.clientY - drag.y);
+          apply(); dirty = true;
+        });
+        const endDrag = e => { if (!drag) return; drag = null; stage.classList.remove('drag'); try { stage.releasePointerCapture(e.pointerId); } catch {} schedule(); };
+        stage.addEventListener('pointerup', endDrag);
+        stage.addEventListener('pointercancel', endDrag);
+        const setZoom = z => {
+          zoom = Math.min(3, Math.max(1, Math.round(z * 100) / 100));
+          zoomEl.value = Math.round(zoom * 100); zval.textContent = Math.round(zoom * 100) + '%';
+          apply(); dirty = true; schedule();
+        };
+        zoomEl.oninput = () => setZoom(zoomEl.value / 100);
+        $('#ee-in').onclick = () => setZoom(zoom + .1);
+        $('#ee-out').onclick = () => setZoom(zoom - .1);
+        $('#ee-rs').onclick = () => { tx = ty = 0; setZoom(1); dirty = false; };
+        $('#ee-grid').onclick = e => { stage.classList.toggle('plain'); e.currentTarget.classList.toggle('on'); };
+        const checkName = () => {
+          const v = nameEl.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24);
+          if (v !== nameEl.value) nameEl.value = v;
+          saveBtn.disabled = v.length < 2;
+          errEl.textContent = v.length < 2 ? 'Ad en az 2 karakter olmalı (a-z, 0-9, _)' : '';
+          return v;
+        };
+        nameEl.oninput = checkName;
+        $('#ee-clear').onclick = () => { nameEl.value = ''; checkName(); nameEl.focus(); };
+        checkName();
+        $('#ee-x').onclick = () => showServerSettings(s, 'emoji');
+        saveBtn.onclick = async () => {
+          const to = checkName(); if (to.length < 2) return nameEl.focus();
+          if (dirty && !img.naturalWidth) return toast('Görsel yükleniyor, biraz bekle');
+          saveBtn.disabled = true; const label = saveBtn.textContent; saveBtn.textContent = 'Kaydediliyor…';
+          try {
+            let url;
+            if (dirty) {
+              const data = draw(160).toDataURL('image/png');
+              url = await new Promise((res, rej) => socket.emit('upload', { data }, r => r?.error ? rej(new Error(r.error)) : res(r.url)));
+            }
+            const r = await new Promise(res => socket.emit('editEmoji', { serverId: s.id, name: n, to, ...(url ? { url } : {}) }, res));
+            if (r?.error) throw new Error(r.error);
+            toast('Emoji güncellendi'); showServerSettings(s, 'emoji');
+          } catch (err) {
+            saveBtn.disabled = false; saveBtn.textContent = label;
+            errEl.textContent = err?.message || 'Kaydedilemedi, tekrar dene';
+          }
+        };
+      };
       main.querySelectorAll('[data-eiemo]').forEach(im => { const go = () => emojiInfo(`${s.id}/${im.dataset.eiemo}`, im); im.onclick = go; im.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }; });
-      main.querySelectorAll('[data-edemo]').forEach(b => b.onclick = () => { const n = b.dataset.edemo;
-        form('Emoji adını değiştir', `:${n}: emojisine yeni bir ad ver. Harf, sayı ve alt çizgi kullanabilirsin.`, [{ k: 'name', p: 'örn. kanka', v: n }], v =>
-          socket.emit('renameEmoji', { serverId: s.id, name: n, to: v.name }, r => { if (r.error) return toast(r.error); toast(`:${n}: → :${r.name}:`); showServerSettings(s, 'emoji'); }));
-      });
+      main.querySelectorAll('[data-edemo]').forEach(b => b.onclick = () => emojiEditor(b.dataset.edemo));
       main.querySelectorAll('[data-rmemo]').forEach(b => b.onclick = () => confirmBox(`:${b.dataset.rmemo}: emojisi silinsin mi? Sohbetteki eski kullanımların görünmez olur.`, () =>
         socket.emit('removeEmoji', { serverId: s.id, name: b.dataset.rmemo }, r => { if (r?.error) return toast(r.error); showServerSettings(s, 'emoji'); })));
     },

@@ -3055,15 +3055,18 @@ io.on('connection', socket => {
     audit(s, me, 'Emoji ekledi', ':' + name + ':');
     save(); pushServers(membersOf(s)); cb({ ok: true });
   });
-  socket.on('renameEmoji', ({ serverId, name, to } = {}, cb = () => {}) => {
+  socket.on('editEmoji', ({ serverId, name, to, url } = {}, cb = () => {}) => {
     const s = adminServer(serverId, false) || permServer(serverId, 'manageEmojis'); if (!s || !s.emojis?.[name]) return cb({ error: 'Yetkin yok' });
     to = clean(to, 24).toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (to.length < 2) return cb({ error: 'Emoji adı en az 2 karakter olmalı (a-z, 0-9, _)' });
     if (to !== name && s.emojis[to]) return cb({ error: 'Bu adda bir emoji zaten var' });
+    if (url && !UPLOAD_RE.test(url)) return cb({ error: 'Geçersiz resim' });
     if (to !== name) {
-      s.emojis[to] = s.emojis[name]; delete s.emojis[name];
+      s.emojis[to] = url || s.emojis[name]; delete s.emojis[name];
       if (s.emojiMeta?.[name]) { s.emojiMeta[to] = s.emojiMeta[name]; delete s.emojiMeta[name]; }
-      audit(s, me, 'Emoji adını değiştirdi', ':' + name + ': → :' + to + ':');
+    } else if (url) s.emojis[to] = url;
+    if (to !== name || url) {
+      audit(s, me, 'Emoji düzenledi', ':' + name + ':' + (to !== name ? ' → :' + to + ':' : '') + (url ? ' (görsel güncellendi)' : ''));
       save(); pushServers(membersOf(s));
     }
     cb({ ok: true, name: to });
