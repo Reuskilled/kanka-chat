@@ -1620,6 +1620,7 @@ function postMessage(me, chId, p = {}) {
   if (p.scheduled) msg.scheduled = true;
   { const f0 = findChannel(chId); if (f0?.c?.type === 'forum' && p.title) msg.title = clean(p.title, 100); }
   if (p.xfrom && typeof p.xfrom === 'object') msg.xfrom = { server: clean(p.xfrom.server, 40), channel: clean(p.xfrom.channel, 30), icon: clean(p.xfrom.icon, 4), iconImg: UPLOAD_RE.test(p.xfrom.iconImg || '') ? p.xfrom.iconImg : null };
+  if (p.fwd && typeof p.fwd === 'object') msg.fwd = { author: clean(p.fwd.author, 40) || null };
 
   if (kind === 'text') {
     msg.text = clean(p.text, 2000);
@@ -1668,7 +1669,7 @@ function postMessage(me, chId, p = {}) {
   { const lu = msg.kind === 'text' && /https?:\/\/[^\s<>"']+/i.exec(msg.text || '')?.[0]?.replace(/[).,!?;:]+$/, '');
     if (lu && !/(youtube\.com|youtu\.be)\//i.test(lu) && !/\/davet\/|[?&]davet=/i.test(lu)) linkPreview(lu).then(pv => { if (pv && findMsg(chId, msg.id)) { msg.preview = pv; save(); io.to(chId).emit('update', { channelId: chId, msg }); } }); }
   // Takip edilebilir duyuru odası: takipçi odalara kopyala
-  { const f1 = p.xfrom ? null : findChannel(chId);
+  { const f1 = p.xfrom || p.fwd ? null : findChannel(chId);
     if (f1?.c.news && f1.c.followers?.length) setTimeout(() => {
       f1.c.followers = f1.c.followers.filter(fw => { const d = findChannel(fw.c); return d && d.s.id === fw.s; });
       for (const fw of f1.c.followers) postMessage(me, fw.c, { kind: 'text', text: msg.text, image: msg.image, xfrom: { server: f1.s.name, channel: f1.c.name, icon: f1.s.icon, iconImg: f1.s.iconImg } });
@@ -2535,6 +2536,45 @@ io.on('connection', socket => {
       const ch0 = cur, who = me;
       setTimeout(() => botPost(ch0, { title: `Selam ${who}! 👋`, text: 'Ben Kanka Bot. Komutlarımı görmek için /yardım yaz' + (botOn(srv, 'mod') ? '. Bu sunucuda moderasyon bende 🛡️' : '.'), tone: 'info' }), 700);
     }
+  });
+  // ----- Mesaj iletme (kaynak odadan hedef odaya içerik kopyalanır) -----
+  socket.on('forward', (p = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yapmalısın' });
+    const { from, msgId, to } = p;
+    if (!from || !msgId || !to) return cb({ error: 'Eksik bilgi' });
+    if (!canAccess(me, from) || !canAccess(me, to)) return cb({ error: 'Bu odaya erişimin yok' });
+    if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı gönderiyorsun, biraz yavaşla 🙂' });
+    const src = findMsg(from, msgId);
+    if (!src || src.ephemeral) return cb({ error: 'Mesaj bulunamadı' });
+    if (!['text', 'bot', 'plan', 'poll', 'song'].includes(src.kind || 'text')) return cb({ error: 'Bu mesaj iletilemez' });
+    const text = src.text || (src.kind === 'bot' ? [src.bot?.title, src.bot?.text].filter(Boolean).join('\n')
+      : src.kind === 'plan' ? `Plan: ${src.plan.title}${src.plan.when ? ' · ' + src.plan.when : ''}`
+      : src.kind === 'poll' ? `Anket: ${src.poll.question}`
+      : src.kind === 'song' ? `Şarkı: ${src.song.title}` : '');
+    if (!text && !src.image && !src.audio) return cb({ error: 'Bu mesaj iletilemez' });
+    if (to.startsWith('dm:')) {
+      const other = dmPeers(to).find(n => n !== me) || me, u = db.users[me], o = db.users[other];
+      if (u?.blocked?.includes(other)) return cb({ error: 'Bu kişiyi engelledin. İletmek için engeli kaldır.' });
+      if (o?.blocked?.includes(me)) return cb({ error: 'Bu kişi sana mesaj alımını kapattı.' });
+    }
+    const tFind = serverOf(to) ? findChannel(to) : null;
+    if (tFind) {
+      const { s, c } = tFind;
+      if (s.welcome?.enabled && s.owner !== me && !s.accepted?.[me]) return cb({ error: 'Önce sunucu kurallarını kabul etmelisin' });
+      if (timedOut(s, me)) return cb({ error: 'Susturuldun, şu an mesaj iletemezsin.' });
+      if (!chPerm(s, c, me, 'send')) return cb({ error: 'Bu odaya yazma iznin yok' });
+      if ((src.image || src.audio) && !chPerm(s, c, me, 'attach')) return cb({ error: 'Bu odada resim ve ses gönderemezsin' });
+      if (c.type === 'forum') return cb({ error: 'Forum gönderileri iletilemez' });
+      const slowSec = (c.slow || s.slow || 0);
+      if (slowSec && !isMod(s, me) && !chPerm(s, c, me, 'manage')) {
+        const last = slowMap.get(to + '|' + me) || 0, wait = slowSec * 1000 - (Date.now() - last);
+        if (wait > 0) return cb({ error: `Yavaş mod açık: ${Math.ceil(wait / 1000)} saniye bekle` });
+        slowMap.set(to + '|' + me, Date.now());
+      }
+      const am = automod(s, to, me, text); if (am) return cb({ error: am });
+    }
+    const res = postMessage(me, to, { kind: 'text', text, image: src.image, audio: src.audio, duration: src.duration, fwd: { author: src.author || (src.kind === 'bot' ? 'Kanka Bot' : null) } });
+    cb(res?.error ? res : { ok: true });
   });
   // ----- Kanka Bot komutları (/uyar, /sustur, /temizle, /kilitle ...) -----
   function botCommand(s, text) {

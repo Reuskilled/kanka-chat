@@ -857,6 +857,57 @@
   .umenu input[type=range] { width: 100%; accent-color: var(--accent); }
   .umenu .sub { display: none; padding-left: 8px; } .umenu .sub.open { display: block; }
   .umenu .arr .ic { width: 14px; height: 14px; transform: rotate(-90deg); transition: transform .15s; } .umenu .arr.open .ic { transform: none; }
+  /* ---------- Mesaja sağ tık menüsü ---------- */
+  .mctx { position: fixed; z-index: 91; width: 252px; max-height: calc(100vh - 16px); overflow-y: auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 18px 50px rgba(0,0,0,.55); animation: popIn .14s var(--ease-out); }
+  .mctx .mc-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 8px; text-align: left; font-weight: 700; font-size: 13.5px; color: var(--ink); }
+  .mctx .mc-row:hover { background: var(--accent); color: #1a120c; }
+  .mctx .mc-row .ic { width: 17px; height: 17px; color: var(--muted); flex: none; }
+  .mctx .mc-row:hover .ic { color: #1a120c; }
+  .mctx .mc-row small { margin-left: auto; color: var(--muted); font-size: 11.5px; font-weight: 800; }
+  .mctx .mc-row:hover small { color: #3a2a1c; }
+  .mctx .mc-row.danger, .mctx .mc-row.danger .ic { color: var(--red); }
+  .mctx .mc-row.danger:hover { background: var(--red); color: #fff; }
+  .mctx .mc-row.danger:hover .ic { color: #fff; }
+  .mctx .mc-sep { height: 1px; background: var(--line); margin: 4px 6px; }
+  .mctx .mc-re { display: flex; gap: 2px; padding: 3px; margin-bottom: 4px; background: var(--hover); border-radius: 10px; }
+  .mctx .mc-re button { flex: 1; aspect-ratio: 1; min-width: 0; border-radius: 8px; font-size: 17px; line-height: 1; display: grid; place-items: center; transition: transform .1s; }
+  .mctx .mc-re button:hover { background: var(--card); transform: scale(1.14); }
+  .mctx .mc-re button .ic { width: 18px; height: 18px; color: var(--muted); }
+  .mctx.epick { width: 304px; }
+  .mctx .mc-emos { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; }
+  .mctx .mc-emos button { aspect-ratio: 1; border-radius: 8px; font-size: 20px; line-height: 1; display: grid; place-items: center; transition: transform .1s; }
+  .mctx .mc-emos button:hover { background: var(--hover); transform: scale(1.15); }
+  .mctx .mc-emos img { width: 22px; height: 22px; object-fit: contain; }
+  /* iletilen mesaj etiketi */
+  .fwd-tag { display: inline-flex; align-items: center; gap: 5px; margin: 3px 0 4px; font-size: 11.5px; font-weight: 800; color: var(--accent-2); }
+  .fwd-tag .ic { width: 13px; height: 13px; }
+  /* tepkiler penceresi */
+  #modal .box.rx { width: min(560px, 94vw); }
+  .rxp { display: grid; grid-template-columns: 150px 1fr; gap: 12px; min-height: 220px; max-height: 56vh; }
+  .rx-tabs { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; border-right: 1px solid var(--line); padding-right: 8px; }
+  .rx-tab { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 9px; border-radius: 9px; font-weight: 800; font-size: 14px; text-align: left; flex: none; }
+  .rx-tab .e { width: 20px; height: 20px; line-height: 20px; font-size: 18px; text-align: center; flex: none; }
+  .rx-tab img { width: 20px; height: 20px; object-fit: contain; }
+  .rx-tab b { margin-left: auto; color: var(--muted); font-size: 12px; }
+  .rx-tab.on { background: var(--hover); } .rx-tab.on b { color: var(--ink); }
+  .rx-users { overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+  .rx-u { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; }
+  .rx-u:hover { background: var(--hover); }
+  .rx-u .av { width: 30px; height: 30px; font-size: 12px; border: none; flex: none; }
+  .rx-u b { display: block; font-size: 13.5px; line-height: 1.25; }
+  .rx-u small { color: var(--muted); font-size: 11.5px; font-weight: 700; }
+  /* ilet hedef seçimi */
+  #modal .box.fwd { width: min(480px, 94vw); }
+  .fw-list { max-height: 46vh; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; margin-top: 6px; overscroll-behavior: contain; }
+  .fw-g { font-size: 11px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 10px 10px 4px; }
+  .fw-it { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 10px; text-align: left; }
+  .fw-it:hover { background: var(--hover); }
+  .fw-it .av { width: 28px; height: 28px; font-size: 12px; border: none; flex: none; }
+  .fw-it > .ic { width: 18px; height: 18px; color: var(--muted); flex: none; }
+  .fw-it b { display: block; font-size: 13.5px; line-height: 1.25; }
+  .fw-it small { color: var(--muted); font-size: 11.5px; font-weight: 700; }
+  @media (max-width: 520px) { .rxp { grid-template-columns: 108px 1fr; } }
+  @media (hover: none) { .mctx .mc-re button:hover, .mctx .mc-emos button:hover { transform: none; } }
   .unote { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 4px; }
 
   .hinv { margin-left: auto; margin-right: 6px; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--accent); }
@@ -3075,6 +3126,7 @@ const ICON = {
   users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 4 6"/>',
   chat: '<path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>',
   reply: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v4"/>',
+  forward: '<path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0-6 6v4"/>',
   thread: '<path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4V6a2 2 0 0 1 0-2z"/><path d="M8 9h8M8 12.5h5"/>',
   copy: '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
   edit: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
@@ -4261,12 +4313,14 @@ function openMembers() { if (document.body.classList.contains('drawer')) documen
 function closeMembers() { if (!document.body.classList.contains('mdrawer')) return; document.body.classList.remove('mdrawer'); ovClosed('mdrawer'); }
 
 // --- Mesaj işlemleri (⋯ menüsü ve uzun basma menüsü aynı listeyi kullanır) ---
+const fwdable = m => !m.ephemeral && ['text', 'bot', 'plan', 'poll', 'song'].includes(m.kind || 'text') && !!(m.text || m.image || m.audio || m.bot?.text || m.bot?.title);
 function msgActs(m) {
   const mine = m.author === S.me, bot = m.kind === 'bot' || !m.author;
   const mod = S.view === 'server' && (isMod(S.server, S.me) || !!S.channel?.canManage);
   const canDel = (mine || mod) && !m.ephemeral, canPin = (S.view === 'dm' || mod) && !m.ephemeral && m.author;
   return [bot ? null : ['reply', 'reply', 'Yanıtla'], m.author || m.kind === 'bot' ? ['thread', 'thread', 'Konu başlat'] : null,
     m.text || m.bot?.text ? ['copy', 'copy', 'Metni kopyala'] : null,
+    fwdable(m) ? ['fwd', 'forward', 'İlet'] : null,
     canPin ? ['pin', 'pin', m.pinned ? 'Sabitlemeyi kaldır' : 'Sabitle'] : null,
     mine && m.kind === 'text' && m.text ? ['edit', 'edit', 'Düzenle'] : null,
     !mine && m.author ? ['report', 'flag', 'Şikayet et', 'danger'] : null,
@@ -4277,6 +4331,7 @@ function runMsgAct(m, a) {
   if (a === 'pin') socket.emit('pin', m.id);
   if (a === 'thread') openThread(m.id);
   if (a === 'copy') navigator.clipboard?.writeText(m.text || m.bot?.text || '').then(() => toast('Kopyalandı'));
+  if (a === 'fwd') openForward(m);
   if (a === 'edit') form('Mesajı düzenle', '', [{ k: 'text', p: 'Mesaj', v: m.text }], v => socket.emit('edit', { msgId: m.id, text: v.text }));
   if (a === 'del') confirmBox('Bu mesaj silinsin mi?', () => socket.emit('delete', m.id));
   if (a === 'report') showReport({ kind: 'msg', msg: m, chId: S.channel.id });
@@ -4314,6 +4369,123 @@ function closeMsgSheet(fromBack) {
   setTimeout(() => el.classList.remove('open'), 260);
   if (!fromBack) ovClosed('msheet');
 }
+// --- Mesaja sağ tık: Discord tarzı hızlı menü, tepki seçici, tepkiler ve iletme ---
+let mctxEl = null, mctxRow = null;
+function closeMsgCtx() {
+  mctxEl?.remove(); mctxEl = null;
+  if (mctxRow) { mctxRow.classList.remove('hl'); mctxRow = null; }
+}
+const ctxPlace = (el, x, y) => {
+  document.body.appendChild(el);
+  const w = el.offsetWidth, h = el.offsetHeight;
+  el.style.left = Math.max(8, Math.min(x, innerWidth - w - 8)) + 'px';
+  el.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + 'px';
+};
+function openReactGrid(m, x, y) {
+  closeMsgCtx();
+  const custom = S.view === 'server' && S.server?.emojis ? Object.keys(S.server.emojis).map(n => `:${n}:`) : [];
+  const all = [...new Set([...SHEET_EMO, ...custom])];
+  const el = document.createElement('div'); el.className = 'mctx epick'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Tepki seç');
+  el.innerHTML = `<div class="mc-emos">${all.map(k => { const r = resolveEmojiKey(k), e = r?.url ? `:${r.name}:` : (r?.e || k); return `<button data-e="${esc(e)}" data-k="${esc(k)}" aria-label="${esc(emojiTitle(k))} tepkisi" title="${esc(emojiTitle(k))}">${emojiFace(k) || esc(k)}</button>`; }).join('')}</div>`;
+  ctxPlace(el, x, y);
+  mctxEl = el;
+  el.onclick = ev => {
+    const b = ev.target.closest('button[data-e]'); if (!b) return;
+    socket.emit('react', { msgId: m.id, emoji: b.dataset.e });
+    bumpEmoji(b.dataset.k || usageKey(b.dataset.e));
+    closeMsgCtx();
+  };
+}
+function showReactions(m) {
+  const ent = Object.entries(m.reactions || {}).filter(([, us]) => us.length);
+  if (!ent.length) return toast('Bu mesajda henüz tepki yok');
+  const face = k => emojiFace(k) || esc(k);
+  let cur = ent[0][0];
+  modal(`<h3>Tepkiler</h3><p class="hint">${esc(m.kind === 'bot' ? 'Kanka Bot' : dn(m.author || ''))} tarafından gönderildi · ${hm(m.time)}</p>
+    <div class="rxp"><div class="rx-tabs" id="rx-tabs" role="tablist"></div><div class="rx-users" id="rx-us"></div></div>`, 'rx');
+  const draw = () => {
+    $('#rx-tabs').innerHTML = ent.map(([e, us]) => `<button class="rx-tab ${e === cur ? 'on' : ''}" data-e="${esc(e)}" role="tab" aria-selected="${e === cur}"><span class="e">${face(e)}</span><b>${us.length}</b></button>`).join('');
+    const us = (ent.find(([e]) => e === cur) || [])[1] || [];
+    $('#rx-us').innerHTML = us.map(n => `<div class="rx-u">${av(n)}<span><b>${esc(dn(n))}</b><small>@${esc(n)}</small></span></div>`).join('');
+  };
+  draw();
+  $('#rx-tabs').onclick = e => { const b = e.target.closest('[data-e]'); if (!b || b.dataset.e === cur) return; cur = b.dataset.e; draw(); };
+}
+const forwardText = m => m.text || (m.kind === 'bot' ? [m.bot?.title, m.bot?.text].filter(Boolean).join('\n')
+  : m.kind === 'plan' ? `Plan: ${m.plan.title}${m.plan.when ? ' · ' + m.plan.when : ''}`
+  : m.kind === 'poll' ? `Anket: ${m.poll.question}`
+  : m.kind === 'song' ? `Şarkı: ${m.song.title}` : '');
+function openForward(m) {
+  const rows = [], seen = new Set();
+  const add = (g, r) => { if (!seen.has(r.id) && r.id !== S.channel?.id) { seen.add(r.id); rows.push({ ...r, g }); } };
+  for (const d of S.dms || []) add('Sohbetler', d.group
+    ? { id: d.id, label: groupName(d), sub: `Grup · ${d.members?.length || 0} üye`, ic: 'users' }
+    : { id: d.id, label: dn(d.with), sub: 'Özel mesaj', av: d.with });
+  for (const sv of S.servers || []) for (const c of sv.channels || []) if ((c.type || 'text') === 'text') add(sv.name, { id: c.id, label: '#' + c.name, sub: '', ic: 'hash' });
+  const prev = forwardText(m) || (m.image ? 'Resim' : m.audio ? 'Ses mesajı' : '');
+  modal(`<h3>İlet</h3><p class="hint">${esc(prev.slice(0, 90))}${prev.length > 90 ? '…' : ''}</p>
+    <input class="field" id="fw-q" placeholder="Kanal veya kişi ara" autocomplete="off" aria-label="İletilecek yer ara">
+    <div class="fw-list" id="fw-list"></div>`, 'fwd');
+  const draw = () => {
+    const q = ($('#fw-q').value || '').toLocaleLowerCase('tr').trim();
+    const out = []; let last = '';
+    for (const r of rows) {
+      if (q && !(`${r.label} ${r.sub} ${r.g}`).toLocaleLowerCase('tr').includes(q)) continue;
+      if (r.g !== last) { out.push(`<div class="fw-g">${esc(r.g)}</div>`); last = r.g; }
+      out.push(`<button class="fw-it" data-to="${esc(r.id)}">${r.av ? av(r.av) : ic(r.ic)}<span><b>${esc(r.label)}</b>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</span></button>`);
+    }
+    $('#fw-list').innerHTML = out.join('') || '<p class="hint" style="padding:10px 8px">Sonuç yok</p>';
+  };
+  draw();
+  $('#fw-q').oninput = draw;
+  $('#fw-list').onclick = e => {
+    const b = e.target.closest('[data-to]'); if (!b) return;
+    socket.emit('forward', { from: S.channel.id, msgId: m.id, to: b.dataset.to }, r => {
+      if (r?.error) return toast(r.error);
+      closeModal(); toast('İletildi');
+    });
+  };
+  $('#fw-q').focus();
+}
+$('#messages').addEventListener('contextmenu', e => {
+  if (isTouch) return;
+  const row = e.target.closest('.row[data-id]'); if (!row) return;
+  const m = S.msgs.find(x => x.id === row.dataset.id); if (!m) return;
+  if (m.ephemeral || ['system', 'daily', 'birthday', 'call'].includes(m.kind)) return;
+  e.preventDefault();
+  closePop(); closeMsgCtx();
+  const acts = msgActs(m), has = a => acts.some(x => x[0] === a);
+  const item = (a, i, t, c = '') => `<button class="mc-row ${c}" data-mc="${a}" role="menuitem">${ic(i)}${t}</button>`;
+  const rxs = Object.entries(m.reactions || {}).filter(([, us]) => us.length);
+  const el = document.createElement('div'); el.className = 'mctx'; el.setAttribute('role', 'menu');
+  el.innerHTML = `<div class="mc-re">${QUICK_RE.map(k => `<button data-mre="${esc(k)}" aria-label="${esc(k)} tepkisi" title="${esc(k)}">${k}</button>`).join('')}<button data-mgrid aria-label="Diğer tepkiler" title="Diğer tepkiler">${ic('smile')}</button></div>`
+    + `<button class="mc-row" data-mgrid role="menuitem">${ic('smile')}Tepki Ekle</button>`
+    + (rxs.length ? `<button class="mc-row" data-mrx role="menuitem">${ic('eye')}Tepkileri Görüntüle<small>${rxs.reduce((a, [, us]) => a + us.length, 0)}</small></button>` : '')
+    + '<div class="mc-sep"></div>'
+    + (has('reply') ? item('reply', 'reply', 'Yanıtla') : '')
+    + (has('edit') ? item('edit', 'edit', 'Mesajı Düzenle') : '')
+    + (has('fwd') ? item('fwd', 'forward', 'İlet') : '')
+    + (has('thread') ? item('thread', 'thread', 'Konu başlat') : '')
+    + '<div class="mc-sep"></div>'
+    + (has('copy') ? item('copy', 'copy', 'Metni kopyala') : '')
+    + (has('pin') ? item('pin', 'pin', acts.find(x => x[0] === 'pin')[2]) : '')
+    + (has('report') ? item('report', 'flag', 'Şikayet et', 'danger') : '')
+    + (has('del') ? item('del', 'trash', 'Sil', 'danger') : '');
+  ctxPlace(el, e.clientX, e.clientY);
+  mctxEl = el; mctxRow = row; row.classList.add('hl');
+  el.onclick = ev => {
+    const q = ev.target.closest('[data-mre]');
+    if (q) { socket.emit('react', { msgId: m.id, emoji: q.dataset.mre }); bumpEmoji(usageKey(q.dataset.mre)); return closeMsgCtx(); }
+    if (ev.target.closest('[data-mgrid]')) { const r = el.getBoundingClientRect(); return openReactGrid(m, r.left, r.top); }
+    if (ev.target.closest('[data-mrx]')) { closeMsgCtx(); return showReactions(m); }
+    const b = ev.target.closest('[data-mc]'); if (!b) return;
+    closeMsgCtx(); runMsgAct(m, b.dataset.mc);
+  };
+});
+document.addEventListener('mousedown', e => { if (mctxEl && !mctxEl.contains(e.target)) closeMsgCtx(); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMsgCtx(); });
+$('#messages').addEventListener('scroll', closeMsgCtx);
+addEventListener('blur', closeMsgCtx);
 // --- Dokunma hareketleri: uzun basma, kaydırarak yanıtla, çekmeceleri parmakla açıp kapat ---
 (() => {
   if (!isTouch) return;
@@ -5668,7 +5840,7 @@ function msgHTML(m, prev) {
   const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'own' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}<span class="gtime">${hm(m.time)}</span>
-    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 let pop = null;
