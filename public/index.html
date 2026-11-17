@@ -921,6 +921,39 @@
   body.vview #stage .tile { transition: none; }
   body.vview #stage.on { animation: none; }
   body.vview #messages, body.vview #typing, body.vview #replybar, body.vview #compose, body.vview #watch { display: none !important; }
+  /* Tam ekran yayın: görüntü tüm alanı kaplar; kontroller fareyle üzerine gelince beliren katmanda */
+  body.vview.vfs #head, body.vview.vfs #members { display: none; }
+  #stage.vfs { padding: 0 !important; gap: 0 !important; }
+  #stage.vfs .tile { display: none; }
+  #stage.vfs .tile.focus { display: flex; position: absolute; inset: 0; width: 100% !important; height: 100% !important; border: 0; border-radius: 0; background: #000; }
+  #stage.vfs .tile.focus > video { width: 100%; height: 100%; object-fit: contain; }
+  #stage.vfs .vv-bar, #stage.vfs .tile.focus .tname, #stage.vfs .tile.focus .tctl { display: none; }
+  #stage.vfs .tile.focus .tbadge { top: 14px; left: 14px; opacity: 0; pointer-events: none; transition: opacity .16s; }
+  #stage.vfs.vfsui .tile.focus .tbadge { opacity: 1; }
+  #stage.vfs #zoomchip { opacity: 0; pointer-events: none; transition: opacity .16s; }
+  #stage.vfs.vfsui #zoomchip { opacity: 1; pointer-events: auto; }
+  .fs-ui { position: absolute; inset: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .16s; }
+  #stage.vfs.vfsui .fs-ui { opacity: 1; }
+  .fs-ui .fs-top { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: flex-end; gap: 8px; padding: 12px 14px 40px; background: linear-gradient(180deg, rgba(0,0,0,.45), transparent); }
+  .fs-ui button { pointer-events: none; width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; display: grid; place-items: center; background: rgba(20,13,10,.7); color: #fff; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  #stage.vfs.vfsui .fs-ui button { pointer-events: auto; }
+  .fs-ui button:hover { background: rgba(52,36,27,.92); }
+  .fs-ui button .ic { width: 19px; height: 19px; }
+  .fs-ui .fs-pill { position: absolute; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 999px; background: rgba(20,13,10,.76); border: 1px solid rgba(255,255,255,.1); box-shadow: 0 14px 36px rgba(0,0,0,.5); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .fs-ui .fs-pill button { width: 48px; height: 48px; }
+  .fs-ui .fs-pill button.off { background: #e5484d; border-color: #e5484d; }
+  .fs-ui .fs-pill button.on { background: var(--accent); border-color: var(--accent); color: #1a0f0a; }
+  .fs-ui .fs-pill button.leave { width: 60px; border-radius: 999px; background: #e5484d; border-color: #e5484d; }
+  .fs-ui .fs-pill .sep { width: 1px; height: 28px; background: rgba(255,255,255,.12); }
+  @media (max-width: 480px) {
+    .fs-ui .fs-top { padding: 10px 10px 32px; gap: 6px; }
+    .fs-ui button { width: 38px; height: 38px; }
+    .fs-ui button .ic { width: 17px; height: 17px; }
+    .fs-ui .fs-pill { gap: 6px; padding: 6px; }
+    .fs-ui .fs-pill button { width: 42px; height: 42px; }
+    .fs-ui .fs-pill button.leave { width: 50px; }
+    .fs-ui .fs-pill .sep { height: 24px; }
+  }
   .vv-bar { position: absolute; top: 12px; left: 16px; right: 16px; display: flex; align-items: center; gap: 10px; z-index: 4; }
   .vv-bar b { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 15px; } .vv-bar .ic { width: 18px; height: 18px; color: var(--green); }
   .vv-bar button { padding: 8px 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-weight: 800; font-size: 13px; }
@@ -7232,6 +7265,7 @@ function applyMute() {
   $('#mute').classList.toggle('off', muted);
   if (!muted && deaf) { deaf = false; applyDeaf(); } // mikrofonu açınca hoparlör de açılır
   if (myVoice) socket.emit('vflags', { m: muted || !canSpeakNow(), d: deaf });
+  fsSync();
   pushOverlay();
 }
 const typingTarget = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
@@ -7243,13 +7277,14 @@ $('#vleave').onclick = () => leaveVoice(false);
 const streamOk = () => vch()?.c.canStream === false ? (toast('Bu odada kamera ve ekran paylaşma iznin yok'), false) : true;
 $('#vcam').onclick = () => streamOk() && startVideo('cam');
 $('#vscreen').onclick = () => streamOk() && startVideo('screen');
-function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'cam'); $('#vscreen').classList.toggle('on', videoKind === 'screen'); }
+function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'cam'); $('#vscreen').classList.toggle('on', videoKind === 'screen'); fsSync(); }
 
 // --- Sahne (ses/görüntü kutucukları) ---
 let stageStats = null, pipClosed = null, focusSid = null;
 // Sesli oda görünümü: kutucukları ekranı dolduracak en büyük boyuta yerleştir (Discord gibi)
 function layoutStage() {
   const st = $('#stage'); if (!vview() || !st) return;
+  if (st.classList.contains('vfs')) return;
   const tiles = [...st.querySelectorAll('.tile')].filter(t => !t.classList.contains('memoff')), gap = 12, top = 64, pad = 16;
   const W = st.clientWidth - pad * 2, H = st.clientHeight - top - pad;
   if (!tiles.length || W <= 0 || H <= 0) return;
@@ -7276,6 +7311,30 @@ function layoutStage() {
   st.style.paddingTop = (top + Math.max(0, (H - usedH) / 2)) + 'px';
 }
 try { new ResizeObserver(() => layoutStage()).observe($('#stage')); } catch { window.addEventListener('resize', () => layoutStage()); }
+// Tam ekran yayın: görüntü tüm alanı kaplar, kontroller fareyle gelince belirir (Discord gibi)
+let fsT = null;
+function fsOn(on) {
+  const st = $('#stage'); if (!st) return;
+  st.classList.toggle('vfs', on); document.body.classList.toggle('vfs', on);
+  if (on) fsPoke();
+  else { clearTimeout(fsT); st.classList.remove('vfsui'); }
+}
+function fsPoke() {
+  const st = $('#stage');
+  if (!st?.classList.contains('vfs')) return;
+  st.classList.add('vfsui');
+  clearTimeout(fsT);
+  fsT = setTimeout(() => st.classList.remove('vfsui'), 2600);
+}
+document.addEventListener('pointermove', () => { if (document.body.classList.contains('vfs')) fsPoke(); }, { passive: true });
+document.addEventListener('touchstart', () => { if (document.body.classList.contains('vfs')) fsPoke(); }, { passive: true });
+function fsSync() {
+  const el = $('#stage .fs-ui'); if (!el) return;
+  const m = el.querySelector('[data-fs="mic"]');
+  if (m) { m.innerHTML = ic(muted ? 'micoff' : 'mic'); m.classList.toggle('off', muted); m.title = m.ariaLabel = muted ? 'Mikrofonu aç' : 'Mikrofonu kapat'; }
+  const c = el.querySelector('[data-fs="cam"]'); if (c) c.classList.toggle('on', videoKind === 'cam');
+  const s = el.querySelector('[data-fs="scr"]'); if (s) s.classList.toggle('on', videoKind === 'screen');
+}
 // Sesli odanın kendi yazı sohbeti: seste konuşurken aynı odada yazış (link, resim, "şuna bak")
 document.addEventListener('click', e => { if (e.target.closest('#vb-chat')) openVoiceChat(); });
 function openVoiceChat() {
@@ -7290,7 +7349,7 @@ function setVView(on) {
   on = !!on && !!myVoice;
   document.body.classList.toggle('vview', on);
   if (on) document.body.classList.remove('drawer');
-  if (!on) { const st = $('#stage'); st.style.paddingTop = ''; st.querySelectorAll('.tile').forEach(t => { t.style.width = t.style.height = ''; if (t._z) zReset(t); }); }
+  if (!on) { const st = $('#stage'); st.style.paddingTop = ''; st.querySelectorAll('.tile').forEach(t => { t.style.width = t.style.height = ''; if (t._z) zReset(t); }); fsOn(false); }
   renderStage(); renderDMCall();
 }
 const vview = () => document.body.classList.contains('vview');
@@ -7396,7 +7455,7 @@ function renderPip() {
 }
 function renderStage() {
   const st = $('#stage');
-  if (!myVoice) { st.classList.remove('on', 'focus'); st.innerHTML = ''; clearInterval(stageStats); stageStats = null; document.body.classList.remove('vview'); renderPip(); return; }
+  if (!myVoice) { st.classList.remove('on', 'focus'); st.innerHTML = ''; fsOn(false); clearInterval(stageStats); stageStats = null; document.body.classList.remove('vview'); renderPip(); return; }
   st.classList.add('on');
   renderPip();
   let bar = st.querySelector('.vv-bar');
@@ -7420,6 +7479,25 @@ function renderStage() {
     st.appendChild(chip);
     chip.querySelector('button').onclick = () => { const t = st.querySelector('.tile.zoomed'); if (t) zReset(t); };
   }
+  let fsu = st.querySelector('.fs-ui');
+  if (!fsu) {
+    fsu = document.createElement('div'); fsu.className = 'fs-ui';
+    fsu.innerHTML = `<div class="fs-top"><button data-fs="mem" title="Üyeleri göster" aria-label="Üyeleri göster">${ic('eye')}</button><button data-fs="chat" title="Oda sohbeti" aria-label="Oda sohbeti">${ic('chat')}</button><button data-fs="back" title="Geri dön" aria-label="Geri dön">${ic('x')}</button></div>
+      <div class="fs-pill"><button data-fs="mic" title="Mikrofon"></button><button data-fs="cam" title="Kamera" aria-label="Kamera">${ic('video')}</button><button data-fs="scr" title="Ekran paylaş" aria-label="Ekran paylaş">${ic('screen')}</button><span class="sep"></span><button data-fs="leave" class="leave" title="Aramadan ayrıl" aria-label="Aramadan ayrıl">${ic('hangup')}</button></div>`;
+    fsu.addEventListener('click', e => {
+      const b = e.target.closest('[data-fs]'); if (!b) return;
+      e.stopPropagation();
+      const k = b.dataset.fs;
+      if (k === 'mem') { focusSid = null; renderStage(); }
+      else if (k === 'chat') openVoiceChat();
+      else if (k === 'back') setVView(false);
+      else if (k === 'mic') $('#mute').click();
+      else if (k === 'cam') $('#vcam').click();
+      else if (k === 'scr') $('#vscreen').click();
+      else if (k === 'leave') $('#vleave').click();
+    });
+    st.appendChild(fsu);
+  }
   if (focusSid && !tiles.some(t => t.sid === focusSid && (t.stream || t.kind === 'screen'))) focusSid = null;
   st.classList.toggle('focus', !!focusSid);
   const keep = new Set();
@@ -7435,6 +7513,7 @@ function renderStage() {
       };
       el.onclick = e => {
         if (e.target.closest('button, input') || !vview()) return;
+        if (st.classList.contains('vfs')) { fsPoke(); return; } // tam ekranda tıklama odağı bozmaz, kontrolleri gösterir
         if (el._z?.k > 1 || performance.now() - (el._ztap || 0) < 300) return; // yakınlaştırılmış görüntüde tıklama odak değiştirmez
         const sid = el.dataset.sid;
         if (focusSid === sid) focusSid = null;                                        // büyükse ızgaraya dön
@@ -7480,6 +7559,8 @@ function renderStage() {
     const r = el.querySelector('.tvol'); if (r) r.value = vol[t.name] ?? 1;
   }
   st.querySelectorAll('.tile').forEach(el => { if (!keep.has(el.dataset.sid)) el.remove(); });
+  { const fs = vview() && !!tiles.find(t => t.sid === focusSid && t.kind === 'screen'); if (fs !== st.classList.contains('vfs')) fsOn(fs); }
+  fsSync();
   layoutStage();
   zChip();
   renderDMCall();
