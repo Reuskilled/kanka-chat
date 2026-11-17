@@ -847,7 +847,9 @@ function dcConvert(t) {
       if (Object.keys(x).length) out[m.kr.id] = x;
     }
     // Sunucu genelinde @everyone'a kapalı ama rolde açık olan yetki odada role izin olarak yazılır
-    for (const { kr, p, admin } of roleMap.values()) for (const k of baseOff) if (!admin && has(p, DC_CH_BITS[k]) && out[kr.id]?.[k] === undefined) (out[kr.id] ||= {})[k] = true;
+    // Odada bir rol bu yetkiyi yasaklıyorsa eklenmez: Kanka'da rol izni rol yasağını ezer, Discord'da ezmez
+    const roleDenied = new Set(Object.entries(out).filter(([t]) => t !== '@everyone').flatMap(([, x]) => Object.keys(x).filter(k => x[k] === false)));
+    for (const { kr, p, admin } of roleMap.values()) for (const k of baseOff) if (!admin && !roleDenied.has(k) && has(p, DC_CH_BITS[k]) && out[kr.id]?.[k] === undefined) (out[kr.id] ||= {})[k] = true;
     return out;
   };
   const canon = o => JSON.stringify(Object.keys(o).sort().map(t => [t, Object.keys(o[t]).sort().map(k => [k, o[t][k]])]));
