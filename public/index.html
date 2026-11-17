@@ -3505,7 +3505,7 @@ function openTplApply(s) {
   modal(`<h3>Şablon uygula</h3><p class="hint">Şablondaki kategori, oda ve roller bu sunucuya eklenir. Adı aynı olanlar yeniden açılmaz, izin ve ayarları güncellenir.</p>
     <input class="field" id="ta-link" maxlength="120" placeholder="Şablon linki ya da kodu" autocomplete="off" style="margin-top:10px"><div id="ta-prev"></div>
     <div class="rowb"><button id="mx">Vazgeç</button><button class="primary" id="ta-go" style="width:auto;padding:11px 22px" disabled>Uygula</button></div>`);
-  $('#mx').onclick = () => showServerSettings(s, 'general');
+  $('#mx').onclick = () => showServerSettings(s, 'template');
   let last = '', ok = '', tm;
   const load = () => {
     const inp = $('#ta-link'); if (!inp) return;
@@ -3521,8 +3521,8 @@ function openTplApply(s) {
   };
   $('#ta-link').oninput = () => { clearTimeout(tm); tm = setTimeout(load, 500); };
   $('#ta-link').onblur = load;
-  $('#ta-go').onclick = () => { const v = ok; if (!v) return; confirmBox('Şablon bu sunucuya uygulansın mı? 24 saat içinde Sunucu ayarları → Genel\'den geri alabilirsin.', () => socket.emit('tplApply', { serverId: s.id, link: v }, r => {
-    if (r.error) return toast(r.error); toast('Şablon uygulandı. 24 saat içinde geri alabilirsin.'); setTimeout(() => showServerSettings(s, 'general'), 300);
+  $('#ta-go').onclick = () => { const v = ok; if (!v) return; confirmBox('Şablon bu sunucuya uygulansın mı? 24 saat içinde Sunucu ayarları → Şablon\'dan geri alabilirsin.', () => socket.emit('tplApply', { serverId: s.id, link: v }, r => {
+    if (r.error) return toast(r.error); toast('Şablon uygulandı. 24 saat içinde geri alabilirsin.'); setTimeout(() => showServerSettings(s, 'template'), 300);
   })); };
   setTimeout(() => $('#ta-link')?.focus(), 30);
 }
@@ -4216,6 +4216,7 @@ function showServerSettings(s, tab, focus) {
   const P = p => perm(s, p), mod = isMod(s, S.me);
   const tabs = [['general', 'Genel', 'gear', P('manageServer')], ['roles', 'Roller', 'tag', P('manageRoles')], ['channels', 'Odalar', 'hash', mod], ['members', 'Üyeler', 'users', !s.public && (P('manageRoles') || P('kick') || P('ban') || P('timeout'))],
     ['bot', 'Kanka Bot', 'shield', P('manageServer')], ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
+    ['template', 'Şablon', 'file', s.owner === S.me && P('manageServer')],
     ['emoji', 'Emojiler', 'smile', mod || P('manageEmojis')], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod || P('viewAudit')]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
@@ -4301,9 +4302,6 @@ function showServerSettings(s, tab, focus) {
         <label class="switch">AFK odası (hareketsiz kalanlar taşınır)<select class="field" id="sv-afk" style="width:170px;margin:0"><option value="">Kapalı</option>${s.channels.filter(c => c.type === 'voice').map(c => `<option value="${c.id}" ${s.afk?.ch === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
         <label class="switch">AFK süresi<select class="field" id="sv-afkm" style="width:120px;margin:0">${[1, 5, 10, 15, 30, 60].map(v => `<option value="${v}" ${(s.afk?.min || 10) === v ? 'selected' : ''}>${v} dk</option>`).join('')}</select></label></div>
         ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${PUB}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}
-        ${s.owner === S.me ? `<div class="st-sec">Şablon</div>
-          <div class="acc-tpl"><span><b>Şablon uygula</b>Bir sunucu şablonunun kategori, oda, rol ve izinlerini bu sunucuya ekler. Hiçbir şey silinmez, mesajlar ve üyelerin rolleri korunur.</span><button class="btns2" id="sv-tpl">Şablon uygula</button></div>
-          ${s.tplUndo ? `<div class="acc-tpl"><span><b>Şablonu geri al</b>Şablonla eklenen ${s.tplUndo.channels} oda, ${s.tplUndo.categories} kategori ve ${s.tplUndo.roles} rol kaldırılır, güncellenenlerin eski hali geri gelir. ${new Date(s.tplUndo.t + 864e5).toLocaleString('tr', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} saatine kadar.</span><button class="btns2" id="sv-tplu">Geri al</button></div>` : ''}` : ''}
         ${!s.public && s.owner === S.me ? `<div class="st-sec danger" style="margin-top:22px">Tehlikeli bölge</div>
           <div class="acc-danger"><span><b>Sahipliği devret</b>Sunucuyu başka bir üyeye verirsin. Sen yönetici olarak kalmazsın, istersen yeni sahip sana rol verir.</span><button class="btns2" id="sv-xfer">Devret</button></div>
           <div class="acc-danger" style="margin-top:8px"><span><b>Sunucuyu sil</b>Sunucu herkesten kaldırılır ve 7 gün boyunca çöp kutusunda durur. Bu sürede Ayarlar → Hesap'tan geri getirebilirsin, sonra kalıcı silinir.</span><button class="danger-btn btns2" id="sv-del">Sunucuyu sil</button></div>` : ''}</div>`;
@@ -4331,10 +4329,6 @@ function showServerSettings(s, tab, focus) {
           if (r.error) return toast(r.error); ssOpen = null; closeModal(); toast('Sahiplik devredildi 👑');
         }));
       };
-      if ($('#sv-tpl')) $('#sv-tpl').onclick = () => openTplApply(s);
-      if ($('#sv-tplu')) $('#sv-tplu').onclick = () => confirmBox('Şablondan önceki düzene dönülsün mü? Şablonla eklenen oda, kategori ve roller kaldırılır, güncellenenlerin eski izin ve ayarları geri gelir. İçine mesaj yazılmış odalar silinmez.', () => socket.emit('tplUndo', { serverId: s.id }, r => {
-        if (r.error) return toast(r.error); toast(r.kept ? `Şablon geri alındı. İçine mesaj yazılmış ${r.kept} oda yerinde kaldı.` : 'Şablon geri alındı'); setTimeout(() => showServerSettings(s, 'general'), 300);
-      }));
       $('#sv-save').onclick = () => socket.emit('updateServer', { serverId: s.id, name: $('#sv-name').value, icon: $('#sv-icon').value }, done('Kaydedildi'));
       $('#sv-img').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, iconImg: url }, done()), 512);
       $('#sv-bn').onclick = () => readImage(url => socket.emit('updateServer', { serverId: s.id, banner: url }, done('Afiş güncellendi')));
@@ -4346,6 +4340,17 @@ function showServerSettings(s, tab, focus) {
       $('#sv-afk').onchange = afkSave; $('#sv-afkm').onchange = afkSave;
       $('#sv-slow').onchange = e => socket.emit('updateServer', { serverId: s.id, slow: +e.target.value }, r => r.error ? toast(r.error) : toast('Yavaş mod güncellendi'));
       if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(`${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
+    },
+    template: () => {
+      main.innerHTML = `<div class="st-page"><h3>Şablon</h3><p class="hint">Bir sunucunun kategori, oda, rol ve izin düzenini bu sunucuya taşırsın. Uygularken hiçbir şey silinmez; mesajlar ve üyelerin rolleri korunur.</p>
+        <div class="acc-tpl"><span><b>Şablon uygula</b>Discord şablon linkini ya da şablon kodunu yapıştır; kategori, oda, rol ve izinler bu sunucuya eklenir. Adı aynı olanlar yeniden açılmaz, izin ve ayarları şablondakiyle güncellenir.</span><button class="btns2" id="sv-tpl">Şablon uygula</button></div>
+        ${s.tplUndo ? `<div class="acc-tpl"><span><b>Son şablonu geri al</b>Şablonla eklenen ${s.tplUndo.channels} oda, ${s.tplUndo.categories} kategori ve ${s.tplUndo.roles} rol kaldırılır, güncellenenlerin eski hali geri gelir. ${new Date(s.tplUndo.t + 864e5).toLocaleString('tr', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} saatine kadar.</span><button class="btns2" id="sv-tplu">Geri al</button></div>` : ''}
+        <div class="st-sec">Nasıl çalışır?</div>
+        <p class="hint" style="margin:0">Şablon uygulanınca odalar ve roller sunucuya eklenir; aynı adlı olanların izin ve ayarları güncellenir. Uygulamadan sonra 24 saat içinde geri alabilirsin; içine mesaj yazılmış odalar silinmez.</p></div>`;
+      $('#sv-tpl').onclick = () => openTplApply(s);
+      if ($('#sv-tplu')) $('#sv-tplu').onclick = () => confirmBox('Şablondan önceki düzene dönülsün mü? Şablonla eklenen oda, kategori ve roller kaldırılır, güncellenenlerin eski izin ve ayarları geri gelir. İçine mesaj yazılmış odalar silinmez.', () => socket.emit('tplUndo', { serverId: s.id }, r => {
+        if (r.error) return toast(r.error); toast(r.kept ? `Şablon geri alındı. İçine mesaj yazılmış ${r.kept} oda yerinde kaldı.` : 'Şablon geri alındı'); setTimeout(() => showServerSettings(s, 'template'), 300);
+      }));
     },
     roles: () => {
       const roles = s.customRoles || [], edit = roles.find(r => r.id === ssOpen.focus) || (ssOpen.focus === 'new' ? { id: '', name: '', color: '#ffb347', perms: [], hoist: true, mentionable: true, icon: '' } : null);
