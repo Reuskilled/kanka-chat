@@ -3570,7 +3570,7 @@ io.on('connection', socket => {
     if (f?.c.limit && myVoice !== chId && (voice.get(chId)?.size || 0) >= f.c.limit && !can(f.s, me, 'manageChannels') && f.s.owner !== me) return cb({ error: `Oda dolu (${f.c.limit}/${f.c.limit})` });
     leaveVoice();
     const room = voice.get(chId) || new Map();
-    const peers = [...room].map(([sid, name]) => ({ sid, name }));
+    const peers = [...room].map(([sid, name]) => ({ sid, name, media: voiceMedia.get(sid) || null }));
     room.set(socket.id, me); voice.set(chId, room);
     if (isCall) {
       const c = chId.slice(5), s = callSessOf(c);

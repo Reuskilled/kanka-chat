@@ -6834,7 +6834,9 @@ async function joinVoiceNow(chId) {
       if (f && !canSpeakNow()) toast(f.c.type === 'stage' ? '🎧 Sahnede dinleyicisin. Konuşmak için ✋ el kaldır.' : '🎧 Bu odada sadece dinleyebilirsin'); }
     applyMute(); startSpeakDetect(); watchMic(); vqStart(); renderCallBar(); playSound('join');
     setTimeout(() => tip('voice', '#voicebar', 'Sesli odadasın 🎧', 'Buradan mikrofonunu kapatabilir, kamerayı açabilir, ekranını paylaşabilir ve gürültü engellemeyi yönetebilirsin.', 'right'), 900);
-    r.peers.forEach(p => { peerNames[p.sid] = p.name; makePeer(p.sid); }); pushOverlay();
+    r.peers.forEach(p => { peerNames[p.sid] = p.name; peerMedia[p.sid] = p.media || {}; makePeer(p.sid); });
+    if (myVoice.startsWith('call:') && videoKind !== 'screen') { const sid = Object.keys(peers).find(s => peerMedia[s]?.screen); if (sid) watchStream(sid); }
+    pushOverlay();
     const ch = S.servers.flatMap(s => s.channels.map(c => ({ ...c, s: s.name }))).find(c => c.id === chId);
     const pc = chId.startsWith('call:') ? S.dms.find(d => d.id === chId.slice(5)) || { with: chId.slice(8).split('|').find(n => n !== S.me) } : null;
     $('#vname').textContent = ch ? `${ch.s} › ${ch.name}` : pc ? `Arama · ${pc.group ? groupName(pc) : pc.with}` : '';
@@ -6949,8 +6951,11 @@ socket.on('media', ({ sid, name, cam, screen, streamId, viewers, q, audio }) => 
   const was = peerMedia[sid]?.screen;
   peerNames[sid] = name; peerMedia[sid] = { cam, screen, streamId, viewers, q, audio };
   if (!screen && watching === sid) watching = null;
-  if (screen && !was && autoWatch === name) { autoWatch = null; watchStream(sid); }
-  else if (screen && !was && watching !== sid) toast(`${esc(name)} yayın başlattı · izlemek için yanındaki CANLI rozetine tıkla`);
+  if (screen && !was) {
+    if (autoWatch === name) { autoWatch = null; watchStream(sid); }
+    else if (myVoice?.startsWith('call:')) { if (videoKind !== 'screen' && watching !== sid) watchStream(sid); }
+    else if (watching !== sid) toast(`${esc(name)} yayın başlattı · izlemek için yanındaki CANLI rozetine tıkla`);
+  }
   renderStage();
 });
 const svol = JSON.parse(store.get('kanka-svol') || '{}');
