@@ -3064,7 +3064,7 @@
         <button type="button" data-a="sched"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Mesajı zamanla</button>
       </div>
       <div id="suggest"></div><div id="cmdhint" aria-live="polite"></div>
-      <textarea id="input" rows="1" maxlength="2000" autocomplete="off" spellcheck="true"></textarea>
+      <textarea id="input" rows="1" autocomplete="off" spellcheck="true"></textarea>
       <div id="recbar"><span class="dot"></span><span id="rectime">0:00</span> kaydediliyor... <button type="button" id="rec-cancel">Vazgeç</button></div>
       <button type="button" id="emo-btn" title="Emoji" aria-label="Emoji seç"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/></svg></button>
       <button type="button" id="mic-btn" title="Sesli mesaj" aria-label="Sesli mesaj kaydet"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
@@ -6652,7 +6652,7 @@ function voicePop(n, anchor, chId) {
       ${same ? `<div class="vp-box"><label>${ic('volume')} Ses seviyesi <b id="vp-vv">${Math.round((vol[n] ?? 1) * 100)}%</b></label><input type="range" class="krange" id="vp-vol" min="0" max="1" step="0.05" value="${vol[n] ?? 1}">
         <button class="vp-tg ${uMuted.has(n) ? 'on' : ''}" id="vp-mute">${ic('micoff')}<span>${uMuted.has(n) ? 'Susturmayı kaldır' : 'Benim için sustur'}</span></button></div>` : ''}
       ${me && chId && myVoice === chId ? `<div class="vp-box"><button class="vp-tg ${muted ? 'on' : ''}" id="vp-self">${ic(muted ? 'mic' : 'micoff')}<span>${muted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}</span></button></div>` : ''}
-      ${!inVc && !me ? `<div class="vp-msg"><input id="vp-q" maxlength="2000" placeholder="@${esc(n)} kişisine mesaj gönder" autocomplete="off"><button id="vp-send" aria-label="Gönder">${ic('send')}</button></div>` : ''}
+      ${!inVc && !me ? `<div class="vp-msg"><input id="vp-q" placeholder="@${esc(n)} kişisine mesaj gönder" autocomplete="off"><button id="vp-send" aria-label="Gönder">${ic('send')}</button></div>` : ''}
       ${(live && myVoice === chId && !me) || me || inVc ? `<div class="vp-acts">${live && myVoice === chId && !me ? `<button class="btnp" id="vp-watch">${ic('screen')} Yayını izle</button>` : ''}
         ${me ? `<button class="btnp" id="vp-edit">${ic('edit')} Profili düzenle</button>` : inVc ? `<button class="btns2" id="vp-dm">${ic('chat')} Mesaj</button>` : ''}</div>` : ''}</div>`;
   document.body.appendChild(p);
@@ -9442,7 +9442,7 @@ function wireForum(box) {
 function newForumPost() {
   modal(`<div class="ccm"><div class="cc-head"><div class="cc-ico">${ic('forum')}</div><div><h3>Yeni gönderi</h3><p>#${esc(S.channel.name)}</p></div></div>
     <div class="mlabel">Başlık</div><div class="cname"><input id="fp-t" maxlength="100" placeholder="Ne hakkında konuşalım?"></div>
-    <div class="mlabel">İçerik</div><textarea class="fp-b" id="fp-b" maxlength="2000" rows="5" placeholder="Detayları yaz…"></textarea>
+    <div class="mlabel">İçerik</div><textarea class="fp-b" id="fp-b" rows="5" placeholder="Detayları yaz…"></textarea>
     <div class="mfoot"><span style="margin-right:auto"></span><button class="btns2" id="mx">Vazgeç</button><button class="btnp" id="fp-ok">${ic('send')} Paylaş</button></div></div>`, 'ccm');
   $('#mx').onclick = closeModal; setTimeout(() => $('#fp-t').focus(), 60);
   $('#fp-ok').onclick = () => { const title = $('#fp-t').value.trim(), text = $('#fp-b').value.trim();

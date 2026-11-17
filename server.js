@@ -554,6 +554,7 @@ setTimeout(() => backup(), 5000); setInterval(backup, 60 * 60e3);
 // ---------- Yardımcılar ----------
 const id = () => crypto.randomBytes(5).toString('hex');
 const clean = (s, max) => String(s ?? '').trim().slice(0, max);
+const cleanMsg = s => String(s ?? '').trim(); // mesaj metinleri: karakter sınırı yok
 const COLORS = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#ff9f43'];
 const NAME_RE = /^[\p{L}\p{N}_.-]{2,20}$/u;
 const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 32).toString('hex');
@@ -1625,7 +1626,7 @@ function postMessage(me, chId, p = {}) {
   if (p.fwd && typeof p.fwd === 'object') msg.fwd = { author: clean(p.fwd.author, 40) || null };
 
   if (kind === 'text') {
-    msg.text = clean(p.text, 2000);
+    msg.text = cleanMsg(p.text);
     if (p.image && UPLOAD_RE.test(p.image)) msg.image = p.image;
     if (Array.isArray(p.files)) { // yeni: bir mesajda en çok 10 dosya/resim (sadece kendi yüklediklerin)
       const fs_ = p.files.slice(0, 10).map(x => typeof x === 'string' && /^[a-f0-9]{24}$/.test(x) && db.files?.[x]).filter(f => f && f.owner === me);
@@ -2495,7 +2496,7 @@ io.on('connection', socket => {
   // Profil kartından hızlı DM
   socket.on('quickDM', ({ to, text } = {}, cb = () => {}) => {
     if (!me || !db.users[to] || to === me) return cb({ error: 'Kullanıcı bulunamadı' });
-    text = clean(text, 2000); if (!text) return cb({ error: 'Boş mesaj' });
+    text = cleanMsg(text); if (!text) return cb({ error: 'Boş mesaj' });
     if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun, biraz yavaşla 🙂' });
     if (db.users[me].blocked?.includes(to)) return cb({ error: 'Bu kişiyi engelledin. Mesaj göndermek için engeli kaldır.' });
     if (db.users[to].blocked?.includes(me)) return cb({ error: 'Bu kişi sana mesaj alımını kapattı.' });
@@ -2797,7 +2798,7 @@ io.on('connection', socket => {
 
   socket.on('edit', ({ msgId, text } = {}) => {
     if (!canAccess(me, cur)) return;
-    const msg = findMsg(cur, msgId); text = clean(text, 2000);
+    const msg = findMsg(cur, msgId); text = cleanMsg(text);
     if (!msg || msg.author !== me || msg.kind !== 'text' || !text) return;
     msg.text = text; msg.edited = true;
     update(cur, msg);
@@ -3339,7 +3340,7 @@ io.on('connection', socket => {
   socket.on('threadReply', ({ msgId, text } = {}, cb = () => {}) => {
     if (!canAccess(me, cur)) return cb({ error: 'Erişim yok' });
     if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun' });
-    const msg = findMsg(cur, msgId); text = clean(text, 1000);
+    const msg = findMsg(cur, msgId); text = cleanMsg(text);
     if (!msg || !text || msg.kind === 'system') return cb({ error: 'Gönderilemedi' });
     if (serverOf(cur)?.filter) text = filterText(text);
     (msg.thread ||= []).push({ id: id(), author: me, text, time: Date.now() });
@@ -3353,7 +3354,7 @@ io.on('connection', socket => {
   // ----- Zamanlanmış mesajlar -----
   socket.on('schedule', ({ text, at } = {}, cb = () => {}) => {
     if (!canAccess(me, cur)) return cb({ error: 'Erişim yok' });
-    text = clean(text, 2000); at = +at;
+    text = cleanMsg(text); at = +at;
     if (!text) return cb({ error: 'Mesaj boş olamaz' });
     if (!(at > Date.now() + 30e3) || at > Date.now() + 30 * 864e5) return cb({ error: 'Zaman en az 1 dakika sonra, en fazla 30 gün içinde olmalı' });
     db.scheduled ||= [];
