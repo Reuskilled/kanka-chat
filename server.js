@@ -778,6 +778,123 @@ const TEMPLATES = {
       channels: [['kendini-tanıt', 'Kendinden bahset'], ['genel', 'Ana sohbet'], ['öneriler', 'Fikirlerini paylaş']] } },
 };
 const CATS = ['Oyun', 'Sohbet', 'Müzik', 'Eğitim', 'Yazılım', 'Anime', 'Film ve dizi', 'Spor', 'Sanat', 'Diğer'];
+// ---------- Discord şablonundan sunucu kurma ----------
+// discord.new/KOD linkindeki şablonu Discord'un açık API'sinden okur; odalar, kategoriler, roller ve izinler Kanka modeline çevrilir
+const DC_PERM_BITS = { manageServer: 5n, manageRoles: 28n, manageChannels: 4n, manageEmojis: 30n, viewAudit: 7n, manageMessages: 13n, mentionEveryone: 17n, kick: 1n, ban: 2n, timeout: 40n, voiceMute: 22n, voiceMove: 24n };
+const DC_CH_BITS = { view: 10n, send: 11n, connect: 20n, attach: 15n, react: 6n, mention: 17n, manage: 13n, stream: 9n, speak: 21n };
+const DC_TYPES = { 0: 'text', 2: 'voice', 5: 'text', 13: 'stage', 15: 'forum' };
+const DC_TYPE_TR = { 14: 'rehber odası', 16: 'medya odası' };
+const SLOW_STEPS = [0, 5, 10, 15, 30, 60, 120, 300, 600, 900, 3600];
+const nearest = (list, x) => list.reduce((a, b) => Math.abs(b - x) < Math.abs(a - x) ? b : a);
+function dcCode(link) {
+  const s = String(link ?? '').trim();
+  const m = s.includes('/') ? s.match(/(?:discord\.new|discord(?:app)?\.com\/template)\/([A-Za-z0-9]{2,32})/i) : s.match(/^([A-Za-z0-9]{2,32})$/);
+  return m ? m[1] : null;
+}
+const dcCache = new Map();
+async function dcFetch(code) {
+  const hit = dcCache.get(code); if (hit && Date.now() - hit.t < 600e3) return hit.v;
+  let r;
+  try { r = await fetch('https://discord.com/api/v10/guilds/templates/' + encodeURIComponent(code), { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'KankaChat (https://kankahq.com, 1.0)' } }); }
+  catch { return { error: 'Discord\'a ulaşılamadı, biraz sonra tekrar dene' }; }
+  if (r.status === 404) return { error: 'Şablon bulunamadı. Linkin doğru olduğundan ve şablonun silinmediğinden emin ol.' };
+  if (r.status === 429) return { error: 'Discord şu an yoğun, bir dakika sonra tekrar dene' };
+  if (!r.ok) return { error: `Discord şablonu okunamadı (${r.status})` };
+  const d = await r.json().catch(() => null);
+  if (!d?.serialized_source_guild) return { error: 'Discord şablonu okunamadı' };
+  const v = { code, name: d.name || '', guild: d.serialized_source_guild };
+  dcCache.set(code, { t: Date.now(), v }); if (dcCache.size > 200) dcCache.delete(dcCache.keys().next().value);
+  return v;
+}
+function dcConvert(t) {
+  const g = t.guild || {}, skipped = [];
+  const big = v => { try { return BigInt(v || 0); } catch { return 0n; } };
+  const has = (p, b) => ((p >> b) & 1n) === 1n;
+  const allRoles = Array.isArray(g.roles) ? g.roles : [];
+  const everyone = allRoles.find(r => String(r.id) === '0') || allRoles.find(r => r.name === '@everyone');
+  const evP = big(everyone?.permissions);
+  // Discord şablonunda roller alttan üste sıralı; Kanka'da ilk rol en yüksek
+  const src = allRoles.filter(r => r !== everyone).reverse();
+  if (src.length > 30) skipped.push(`${src.length - 30} rol (en fazla 30 rol olabilir)`);
+  if (src.some(r => r.icon && !r.unicode_emoji)) skipped.push('rol resim simgeleri');
+  const roleMap = new Map();
+  const roles = src.slice(0, 30).map(r => {
+    const p = big(r.permissions), admin = has(p, 3n);
+    const color = r.color ? '#' + (Number(r.color) & 0xffffff).toString(16).padStart(6, '0') : '#99aab5';
+    const icon = r.unicode_emoji ? [...clean(r.unicode_emoji, 16)].slice(0, 2).join('') : null;
+    const kr = { id: id(), name: clean(r.name, 30) || 'rol', color, perms: PERMS.filter(k => admin || has(p, DC_PERM_BITS[k])), hoist: !!r.hoist, icon, mentionable: !!r.mentionable };
+    roleMap.set(String(r.id), { kr, p, admin });
+    return kr;
+  });
+  let memberOv = false;
+  const BASE_KEYS = ['view', 'send', 'connect', 'attach', 'react', 'stream', 'speak']; // Kanka'da varsayılanı "açık" olanlar
+  const conv = ows => {
+    const list = Array.isArray(ows) ? ows : [], out = {}, ev = {};
+    if (list.some(o => o.type === 1)) memberOv = true;
+    const evo = list.find(o => o.type === 0 && everyone && String(o.id) === String(everyone.id));
+    const baseOff = new Set();
+    for (const [k, b] of Object.entries(DC_CH_BITS)) {
+      const allow = evo && has(big(evo.allow), b), deny = evo && has(big(evo.deny), b);
+      if (allow) ev[k] = true;
+      else if (deny) ev[k] = false;
+      else if (BASE_KEYS.includes(k) && !has(evP, b) && !has(evP, 3n)) { ev[k] = false; baseOff.add(k); }
+      else if (!BASE_KEYS.includes(k) && (has(evP, b) || has(evP, 3n))) ev[k] = true; // @everyone'ın sunucu genelindeki @herkes / mesaj yönetimi yetkisi
+    }
+    if (Object.keys(ev).length) out['@everyone'] = ev;
+    for (const o of list) {
+      if (o.type !== 0) continue; const m = roleMap.get(String(o.id)); if (!m) continue;
+      const x = {}; for (const [k, b] of Object.entries(DC_CH_BITS)) { if (has(big(o.allow), b)) x[k] = true; else if (has(big(o.deny), b)) x[k] = false; }
+      if (Object.keys(x).length) out[m.kr.id] = x;
+    }
+    // Sunucu genelinde @everyone'a kapalı ama rolde açık olan yetki odada role izin olarak yazılır
+    // Odada bir rol bu yetkiyi yasaklıyorsa eklenmez: Kanka'da rol izni rol yasağını ezer, Discord'da ezmez
+    const roleDenied = new Set(Object.entries(out).filter(([t]) => t !== '@everyone').flatMap(([, x]) => Object.keys(x).filter(k => x[k] === false)));
+    for (const { kr, p, admin } of roleMap.values()) for (const k of baseOff) if (!admin && !roleDenied.has(k) && has(p, DC_CH_BITS[k]) && out[kr.id]?.[k] === undefined) (out[kr.id] ||= {})[k] = true;
+    return out;
+  };
+  const canon = o => JSON.stringify(Object.keys(o).sort().map(t => [t, Object.keys(o[t]).sort().map(k => [k, o[t][k]])]));
+  const chans = (Array.isArray(g.channels) ? g.channels : []).slice().sort((a, b) => (a.position || 0) - (b.position || 0) || (a.id || 0) - (b.id || 0));
+  const categories = [], catMap = new Map();
+  const srcCats = chans.filter(c => c.type === 4);
+  if (srcCats.length > 50) skipped.push(`${srcCats.length - 50} kategori (en fazla 50)`);
+  for (const c of srcCats.slice(0, 50)) { const k = { id: id(), name: clean(c.name, 30) || 'Kategori', perms: conv(c.permission_overwrites) }; categories.push(k); catMap.set(String(c.id), k); }
+  const items = [], unsupported = {}; let over = 0, nsfw = 0;
+  for (const c of chans) {
+    if (c.type === 4) continue;
+    const type = DC_TYPES[c.type];
+    if (!type) { const nm = DC_TYPE_TR[c.type] || 'desteklenmeyen oda'; unsupported[nm] = (unsupported[nm] || 0) + 1; continue; }
+    if (items.length >= 200) { over++; continue; }
+    if (c.nsfw) nsfw++;
+    let name = clean(c.name, 30); if (type === 'text' || type === 'forum') name = name.toLowerCase().replace(/\s+/g, '-');
+    if (!name) name = voiceLike(type) ? 'Sesli' : 'oda';
+    const k = c.parent_id != null ? catMap.get(String(c.parent_id)) || null : null;
+    const perms = conv(c.permission_overwrites), sync = !!k && canon(perms) === canon(k.perms);
+    const ch = { id: id(), name, type, perms: sync ? {} : perms, sync };
+    if (k) ch.cat = k.id;
+    const topic = clean(c.topic, 160); if (topic) ch.topic = topic; else if (type === 'stage') ch.topic = 'Sahne';
+    if (c.rate_limit_per_user) ch.slow = nearest(SLOW_STEPS, c.rate_limit_per_user);
+    if (voiceLike(type)) { if (c.user_limit) ch.limit = Math.min(99, c.user_limit); if ((c.bitrate || 0) > 64000) ch.bitrate = 'high'; }
+    if (c.type === 5) ch.news = true;
+    items.push({ ch, src: c, ci: k ? categories.indexOf(k) : -1 });
+  }
+  for (const [nm, n] of Object.entries(unsupported)) skipped.push(`${n} ${nm}`);
+  if (over) skipped.push(`${over} oda (en fazla 200 oda olabilir)`);
+  if (memberOv) skipped.push('kişiye özel oda izinleri');
+  if (nsfw) skipped.push(`${nsfw} odanın yaş sınırı (NSFW) işareti`);
+  // Discord düzeni: kategorisizler üstte; kategori içinde önce yazılı, sonra sesli odalar
+  items.sort((a, b) => a.ci - b.ci || (voiceLike(a.ch.type) ? 1 : 0) - (voiceLike(b.ch.type) ? 1 : 0) || (a.src.position || 0) - (b.src.position || 0) || (a.src.id || 0) - (b.src.id || 0));
+  const afkSrc = g.afk_channel_id != null && items.find(x => String(x.src.id) === String(g.afk_channel_id) && x.ch.type === 'voice');
+  const afk = afkSrc ? { ch: afkSrc.ch.id, min: nearest([1, 5, 10, 15, 30, 60], (g.afk_timeout || 600) / 60) } : null;
+  return { name: clean(t.name || g.name, 40), roles, categories, channels: items.map(x => x.ch), afk, skipped, lockChannels: !has(evP, 4n) && !has(evP, 3n) };
+}
+function dcPreview(c, code) {
+  const row = ch => ({ name: ch.name, type: ch.type, news: !!ch.news, private: ovOfPreview(c, ch) });
+  return { code, name: c.name, roles: c.roles.map(r => ({ name: r.name, color: r.color, icon: r.icon, admin: r.perms.length === PERMS.length })),
+    top: c.channels.filter(ch => !ch.cat).map(row),
+    categories: c.categories.map(k => ({ name: k.name, channels: c.channels.filter(ch => ch.cat === k.id).map(row) })),
+    counts: { channels: c.channels.length, categories: c.categories.length, roles: c.roles.length }, skipped: c.skipped };
+}
+const ovOfPreview = (c, ch) => { const k = ch.cat && c.categories.find(x => x.id === ch.cat); return (ch.sync && k ? k.perms : ch.perms)?.['@everyone']?.view === false; };
 
 // ---------- Sunucu rozetleri ----------
 // resmi: Kanka HQ · dogrulanmis/partner: site yöneticisi verir · topluluk: 15+ üye ve 7+ gün
@@ -2899,6 +3016,18 @@ io.on('connection', socket => {
       id: id(), name, icon: [...name][0].toUpperCase(), owner: me, members: [me], joinedAt: { [me]: Date.now() }, createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: newInviteCode(),
       channels: [], template: opts.template in TEMPLATES ? opts.template : 'bos'
     };
+    const finish = () => { db.servers.push(s); save(); pushServers([me]); cb(serverView(s, me)); };
+    if (opts.discord) {
+      const code = dcCode(opts.discord); if (!code) return cb({ error: 'Geçerli bir Discord şablon linki yaz (discord.new/...)' });
+      return dcFetch(code).then(t => {
+        if (t.error) return cb(t);
+        const c = dcConvert(t);
+        Object.assign(s, { customRoles: c.roles, categories: c.categories, channels: c.channels, template: 'discord', discordTemplate: code });
+        if (c.afk) s.afk = c.afk;
+        if (c.lockChannels) s.lockChannels = true;
+        finish();
+      }).catch(e => { console.error('Discord şablonu aktarılamadı', e); cb({ error: 'Şablon aktarılamadı, biraz sonra tekrar dene' }); });
+    }
     for (const r of tpl.roles || []) s.customRoles.push({ id: id(), ...r });
     for (const c of tpl.channels) {
       const ch = { id: id(), name: c.n, type: c.v ? 'voice' : 'text' };
@@ -2909,9 +3038,14 @@ io.on('connection', socket => {
     migrateCats(s);
     if (tpl.welcome) s.welcome = { enabled: true, message: tpl.welcome.message, rules: [...tpl.welcome.rules],
       channels: tpl.welcome.channels.map(([n, d]) => ({ id: s.channels.find(c => c.name === n)?.id, desc: d })).filter(x => x.id) };
-    db.servers.push(s); save();
-    pushServers([me]);
-    cb(serverView(s, me));
+    finish();
+  });
+  socket.on('discordTemplate', async (link, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' });
+    const code = dcCode(link); if (!code) return cb({ error: 'Geçerli bir Discord şablon linki yaz (discord.new/...)' });
+    if (limited('dctpl|' + me, 20, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle' });
+    try { const t = await dcFetch(code); cb(t.error ? t : dcPreview(dcConvert(t), code)); }
+    catch (e) { console.error('Discord şablonu okunamadı', e); cb({ error: 'Şablon okunamadı, biraz sonra tekrar dene' }); }
   });
 
   socket.on('createChannel', ({ serverId, name, type, cat, private: priv } = {}, cb = () => {}) => {

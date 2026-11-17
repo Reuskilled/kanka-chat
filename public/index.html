@@ -871,6 +871,15 @@
   .tp-alt { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
   .tp-alt button { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 12px; background: var(--hover); font-weight: 800; font-size: 13px; }
   .tp-alt .ic { width: 16px; height: 16px; }
+  .dt-box { margin-top: 10px; border-radius: 14px; background: var(--card); padding: 12px; }
+  .dt-head b { display: block; font-size: 15px; } .dt-head small { color: var(--muted); font-weight: 600; font-size: 12px; }
+  .dt-tree { max-height: 190px; overflow: auto; margin-top: 8px; }
+  .dt-cat { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); margin: 8px 0 2px; }
+  .dt-ch { display: flex; align-items: center; gap: 6px; padding: 3px 4px; font-size: 13.5px; font-weight: 600; } .dt-ch .ic { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; } .dt-ch span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dt-roles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .dt-role { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 99px; background: var(--hover); font-size: 12px; font-weight: 700; } .dt-role i { width: 9px; height: 9px; border-radius: 50%; }
+  .dt-skip { display: flex; gap: 6px; margin-top: 10px; color: var(--muted); font-size: 12px; font-weight: 600; line-height: 1.4; } .dt-skip .ic { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
+  .dt-wait, .dt-err { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--card); font-size: 13px; font-weight: 600; color: var(--muted); } .dt-err { color: #ff6b6b; } .dt-err .ic { width: 16px; height: 16px; flex-shrink: 0; }
   .rule-ed { display: flex; gap: 8px; margin-bottom: 6px; } .rule-ed input { flex: 1; margin: 0; } .rule-ed button { padding: 0 12px; border-radius: 10px; background: var(--hover); color: var(--red); font-weight: 900; }
   @media (max-width: 700px) { .tp-grid { grid-template-columns: 1fr; } }
 
@@ -3431,23 +3440,51 @@ const TPL_UI = [
   ['oyun', 'Oyun ekibi', 'Duyurular, klipler, takım arıyorum, maç odaları, Kaptan ve Takım rolleri.', 'gamepad', '#ff4655'],
   ['okul', 'Okul / sınıf', 'Ödevler, sınav takvimi, soru-cevap, etüt odası, Öğretmen rolü.', 'book', '#2fd3c3'],
   ['topluluk', 'Topluluk', 'Kurallar, kendini tanıt, öneriler, mod odası ve hoş geldin ekranı.', 'sparkle', '#7c5cff'],
+  ['discord', "Discord'dan aktar", 'Discord şablon linkini yapıştır; odalar, kategoriler, roller ve izinler aynen kurulsun.', 'download', '#5865f2'],
 ];
 function showTemplates(pick = 'arkadas') {
   modal(`<h3>${ic('plus')}Sunucu oluştur</h3><p class="hint">Bir şablon seç; odalar, kategoriler ve roller hazır gelsin. Sonradan her şeyi değiştirebilirsin.</p>
     <div class="tp-grid">${TPL_UI.map(([k, t, d, i, c]) => `<button class="tp ${k === pick ? 'on' : ''}" data-tp="${k}"><span class="ti" style="background:${c}">${ic(i)}</span><span><b>${t}</b><small>${d}</small></span></button>`).join('')}</div>
-    <form id="tp-form"><input class="field" name="name" maxlength="40" placeholder="Sunucu adı (örn. ${pick === 'oyun' ? 'Valo Ekibi' : pick === 'okul' ? '11-B Sınıfı' : pick === 'topluluk' ? 'Anime Severler' : 'Kankalar'})" required autocomplete="off" style="margin-top:10px">
+    <form id="tp-form">${pick === 'discord' ? `<input class="field" name="dc" maxlength="120" placeholder="Şablon linki (örn. discord.new/AbCd1234)" autocomplete="off" style="margin-top:10px"><div id="dt-prev"></div>` : ''}<input class="field" name="name" maxlength="40" placeholder="Sunucu adı (${pick === 'discord' ? 'şablondan gelir' : 'örn. ' + (pick === 'oyun' ? 'Valo Ekibi' : pick === 'okul' ? '11-B Sınıfı' : pick === 'topluluk' ? 'Anime Severler' : 'Kankalar')})" required autocomplete="off" style="margin-top:10px">
     <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="primary">Oluştur</button></div></form>
     <div class="tp-alt"><button id="tp-join">${ic('link')}Davet koduyla katıl</button><button id="tp-disc">${ic('compass')}Sunucuları keşfet</button></div>`);
   $('#mx').onclick = closeModal;
-  $('#modal-box').querySelectorAll('[data-tp]').forEach(b => b.onclick = () => { const v = $('#tp-form').name.value; showTemplates(b.dataset.tp); $('#tp-form').name.value = v; $('#tp-form').name.focus(); });
+  $('#modal-box').querySelectorAll('[data-tp]').forEach(b => b.onclick = () => { const v = $('#tp-form').name.value; showTemplates(b.dataset.tp); $('#tp-form').name.value = v; $('#tp-form')[b.dataset.tp === 'discord' ? 'dc' : 'name'].focus(); });
   $('#tp-join').onclick = () => form('Sunucuya katıl', 'Arkadaşının gönderdiği davet linkini ya da kodunu yapıştır.', [{ k: 'code', p: 'Davet linki ya da kodu' }], v => joinInvite(v.code));
   $('#tp-disc').onclick = () => { closeModal(); showDiscover(); };
   $('#tp-form').onsubmit = e => {
     e.preventDefault(); const name = e.target.name.value.trim(); if (!name) return;
-    socket.emit('createServer', { name, template: pick }, s => { if (s.error) return toast(s.error); closeModal(); if (!S.servers.find(x => x.id === s.id)) S.servers.push(s); selectServer(s.id); toast(`${s.name} hazır! Arkadaşlarını davet etmeyi unutma.`); });
+    const dc = pick === 'discord' ? e.target.dc.value.trim() : undefined; if (pick === 'discord' && !dc) return toast('Discord şablon linkini yapıştır');
+    const btn = e.target.querySelector('.primary'); btn.disabled = true;
+    socket.emit('createServer', { name, template: pick, discord: dc }, s => { btn.disabled = false; if (s.error) return toast(s.error); closeModal(); if (!S.servers.find(x => x.id === s.id)) S.servers.push(s); selectServer(s.id); toast(`${s.name} hazır! Arkadaşlarını davet etmeyi unutma.`); });
   };
-  setTimeout(() => $('#tp-form')?.name.focus(), 30);
+  if (pick === 'discord') {
+    const f = $('#tp-form'); let tm, last = '';
+    f.name.oninput = () => delete f.name.dataset.auto;
+    const load = () => {
+      const v = f.dc.value.trim();
+      if (!v) { last = ''; $('#dt-prev').innerHTML = ''; if (f.name.dataset.auto) { f.name.value = ''; delete f.name.dataset.auto; } return; }
+      if (v === last) return; last = v;
+      $('#dt-prev').innerHTML = '<div class="dt-wait">Şablon okunuyor…</div>';
+      socket.emit('discordTemplate', v, r => {
+        if (!$('#dt-prev') || f.dc.value.trim() !== v) return;
+        if (r.error) { last = ''; $('#dt-prev').innerHTML = `<div class="dt-err">${ic('alert')}${esc(r.error)}</div>`; return; }
+        if (!f.name.value.trim() || f.name.dataset.auto) { f.name.value = r.name; f.name.dataset.auto = 1; }
+        $('#dt-prev').innerHTML = dtPreview(r);
+      });
+    };
+    f.dc.oninput = () => { clearTimeout(tm); tm = setTimeout(load, 500); };
+    f.dc.onblur = load;
+  }
+  setTimeout(() => $('#tp-form')?.[pick === 'discord' ? 'dc' : 'name'].focus(), 30);
 }
+const dtPreview = r => {
+  const row = c => `<div class="dt-ch">${roomIcon(c)}<span>${esc(c.name)}</span>${c.private ? ic('lock') : ''}</div>`;
+  return `<div class="dt-box"><div class="dt-head"><b>${esc(r.name)}</b><small>${r.counts.categories} kategori · ${r.counts.channels} oda · ${r.counts.roles} rol</small></div>
+    <div class="dt-tree">${r.top.map(row).join('')}${r.categories.map(k => `<div class="dt-cat">${esc(k.name)}</div>${k.channels.map(row).join('')}`).join('')}</div>
+    ${r.roles.length ? `<div class="dt-roles">${r.roles.map(x => `<span class="dt-role"><i style="background:${esc(x.color)}"></i>${x.icon ? esc(x.icon) + ' ' : ''}${esc(x.name)}</span>`).join('')}</div>` : ''}
+    <div class="dt-skip">${ic('info')}<span>Aktarılmayacaklar: mesajlar, üyeler, emojiler, sunucu simgesi${r.skipped.length ? ', ' + r.skipped.map(esc).join(', ') : ''}.</span></div></div>`;
+};
 
 // ================= Keşfet =================
 let discCat = null, discQ = '';
