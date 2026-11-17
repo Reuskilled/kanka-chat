@@ -838,6 +838,7 @@ function dcConvert(t) {
       if (allow) ev[k] = true;
       else if (deny) ev[k] = false;
       else if (BASE_KEYS.includes(k) && !has(evP, b) && !has(evP, 3n)) { ev[k] = false; baseOff.add(k); }
+      else if (!BASE_KEYS.includes(k) && (has(evP, b) || has(evP, 3n))) ev[k] = true; // @everyone'ın sunucu genelindeki @herkes / mesaj yönetimi yetkisi
     }
     if (Object.keys(ev).length) out['@everyone'] = ev;
     for (const o of list) {
