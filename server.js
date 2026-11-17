@@ -1319,6 +1319,7 @@ function badgesOf(u) {
 // ---------- Çevrimiçi ve ses durumu ----------
 const online = new Map();            // socket.id -> kullanıcı adı
 const voice = new Map();             // kanal id -> Map(socket.id -> ad)
+const voicePass = new Map();         // socket.id -> { ch, until }: yetkili taşımasıyla kilitli odaya geçici giriş izni
 const onlineNames = () => [...new Set(online.values())];
 const idleSockets = new Set();
 // Telefondan bağlı oturumlar: kişinin bütün açık oturumları telefondaysa durum noktası telefon simgesi olur
@@ -2760,9 +2761,14 @@ io.on('connection', socket => {
       voiceKick([cur], name, `${me} seni sesli odadan çıkardı`); audit(s, me, 'Sesten çıkardı', name);
     } else if (action === 'move') {
       const c = s.channels.find(x => x.id === to && voiceLike(x.type)); if (!c || c.id === cur) return cb({ error: 'Geçersiz oda' });
-      if (!chPerm(s, c, name, 'connect')) return cb({ error: `${name} bu odaya bağlanamıyor` });
+      if (!seesChannel(s, c, name)) return cb({ error: `${name} bu odayı göremiyor` });
+      if (timedOut(s, name)) return cb({ error: `${name} susturulduğu için sesli odaya giremiyor` });
       if (c.limit && (voice.get(c.id)?.size || 0) >= c.limit) return cb({ error: `${c.name} dolu` });
-      for (const [sid, n] of voice.get(cur) || []) if (n === name) io.to(sid).emit('voiceMoveTo', { ch: c.id, by: me });
+      const pass = !chPerm(s, c, name, 'connect');
+      for (const [sid, n] of voice.get(cur) || []) if (n === name) {
+        if (pass) voicePass.set(sid, { ch: c.id, until: Date.now() + 60000 });
+        io.to(sid).emit('voiceMoveTo', { ch: c.id, by: me });
+      }
       audit(s, me, 'Sesli odaya taşıdı', `${name} → ${c.name}`);
     } else return cb({ error: 'Geçersiz işlem' });
     save(); cb({ ok: true });
@@ -3288,7 +3294,11 @@ io.on('connection', socket => {
     const f = isCall ? null : findChannel(chId);
     if (!me) return cb({ error: 'Erişim yok' });
     if (isCall ? !canAccess(me, chId.slice(5)) || !isPrivateChat(chId.slice(5)) : (!f || !voiceLike(f.c.type) || !(f.s.public || f.s.members.includes(me)) || f.s.bans?.[me] || !seesChannel(f.s, f.c, me))) return cb({ error: 'Erişim yok' });
-    if (f && !chPerm(f.s, f.c, me, 'connect')) return cb({ error: 'Bu sesli odaya bağlanma iznin yok' });
+    if (f && !chPerm(f.s, f.c, me, 'connect')) {
+      const pass = voicePass.get(socket.id);
+      if (!pass || pass.ch !== chId || pass.until < Date.now()) return cb({ error: 'Bu sesli odaya bağlanma iznin yok' });
+      voicePass.delete(socket.id);
+    }
     if (f && timedOut(f.s, me)) return cb({ error: 'Susturulduğun için sesli odalara giremezsin' });
     if (f?.c.limit && myVoice !== chId && (voice.get(chId)?.size || 0) >= f.c.limit && !can(f.s, me, 'manageChannels') && f.s.owner !== me) return cb({ error: `Oda dolu (${f.c.limit}/${f.c.limit})` });
     leaveVoice();
@@ -3314,7 +3324,7 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     leaveVoice();
-    online.delete(socket.id); idleSockets.delete(socket.id); visibleSockets.delete(socket.id); mobileSockets.delete(socket.id);
+    online.delete(socket.id); idleSockets.delete(socket.id); visibleSockets.delete(socket.id); mobileSockets.delete(socket.id); voicePass.delete(socket.id);
     pushPresence();
   });
 });

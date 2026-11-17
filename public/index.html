@@ -7566,7 +7566,7 @@ function voiceDnDStart(e) {
   const sx = e.clientX, sy = e.clientY, touch = e.pointerType !== 'mouse';
   let started = false, ghost = null, target = null, last = e, holdT = null, raf = 0, offX = 0, offY = 0;
   const chOf = id => s.channels.find(c => c.id === id);
-  const okTarget = ch => ch && voiceLike(ch.type) && ch.id !== from && ch.canConnect !== false && !(ch.limit && (S.voice?.[ch.id] || []).length >= ch.limit);
+  const okTarget = ch => ch && voiceLike(ch.type) && ch.id !== from && !(ch.limit && (S.voice?.[ch.id] || []).length >= ch.limit);
   const start = () => {
     if (document.body.classList.contains('gdrag')) return cleanup();
     started = vDndOn = true;
