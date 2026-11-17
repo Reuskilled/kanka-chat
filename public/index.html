@@ -515,8 +515,15 @@
   #compose.recording #input { display: none; }
   #emojipanel { display: none; position: absolute; bottom: 58px; right: 50px; width: 372px; height: 452px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 6; flex-direction: column; overflow: hidden; animation: popIn .18s var(--ease-out); transform-origin: bottom right; }
   #emojipanel.on { display: flex; }
-  .ep-search { padding: 10px 10px 2px; flex: 0 0 auto; }
-  .ep-search input { width: 100%; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: rgba(0,0,0,.22); color: var(--ink); padding: 0 12px; font-size: 13.5px; font-weight: 600; outline: none; }
+  .ep-search { padding: 10px 10px 2px; flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
+  .ep-search input { flex: 1; min-width: 0; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: rgba(0,0,0,.22); color: var(--ink); padding: 0 12px; font-size: 13.5px; font-weight: 600; outline: none; }
+  .ep-prev { width: 96px; height: 38px; flex: 0 0 auto; display: flex; align-items: center; gap: 7px; min-width: 0; opacity: 0; transition: opacity .12s; pointer-events: none; }
+  .ep-prev.on { opacity: 1; }
+  .ep-prev .pe { width: 34px; height: 34px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-size: 30px; line-height: 1; }
+  .ep-prev .pe img { width: 34px; height: 34px; object-fit: contain; }
+  .ep-prev .pt { min-width: 0; display: flex; flex-direction: column; gap: 1px; line-height: 1.2; }
+  .ep-prev .pn { font-size: 10.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+  .ep-prev .ps { font-size: 9px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
   .ep-search input::placeholder { color: var(--muted); font-weight: 600; }
   .ep-search input:focus { border-color: var(--accent-2); }
   .ep-tabs { display: flex; gap: 2px; padding: 6px 8px; flex: 0 0 auto; }
@@ -534,6 +541,8 @@
   .ep-h { display: flex; align-items: center; gap: 6px; padding: 6px 7px; border-radius: 8px; font-size: 11px; font-weight: 900; letter-spacing: .4px; color: var(--muted); text-transform: uppercase; cursor: pointer; user-select: none; }
   .ep-h:hover { background: var(--hover); color: var(--ink); }
   .ep-h .ic { width: 14px; height: 14px; }
+  .ep-svi { width: 16px; height: 16px; flex: 0 0 auto; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; background: var(--hover); color: var(--ink); overflow: hidden; }
+  .ep-svi img { width: 100%; height: 100%; object-fit: cover; }
   .ep-h .ep-n { opacity: .7; font-weight: 800; }
   .ep-h .ep-caret { margin-left: auto; opacity: .7; transform: rotate(-90deg); transition: transform .15s; }
   .ep-h .ep-caret.open { transform: none; }
@@ -2653,6 +2662,7 @@
     #compose.recording #emo-btn, #compose.recording #plus { display: none; } #recbar { min-width: 0; white-space: nowrap; overflow: hidden; font-size: 14px; } #recbar #rec-cancel { flex-shrink: 0; }
     /* emoji paneli tam genişlik */
     #emojipanel { position: fixed !important; left: 10px !important; right: 10px !important; width: auto !important; bottom: calc(84px + env(safe-area-inset-bottom)) !important; height: min(56vh, 440px) !important; z-index: 30; box-shadow: 0 -10px 40px rgba(0,0,0,.45); }
+    .ep-prev { display: none; }
     /* ayar kaydet çubuğu: telefonda sadece düğmeler */
     .st-save > span { display: none !important; } .st-save { justify-content: stretch !important; } .st-save .primary { flex: 1; }
     /* hoş geldin: kabul düğmesi hep görünür */
@@ -2744,7 +2754,7 @@
       <div id="recbar"><span class="dot"></span><span id="rectime">0:00</span> kaydediliyor... <button type="button" id="rec-cancel">Vazgeç</button></div>
       <button type="button" id="emo-btn" title="Emoji" aria-label="Emoji seç"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/></svg></button>
       <button type="button" id="mic-btn" title="Sesli mesaj" aria-label="Sesli mesaj kaydet"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-      <div id="emojipanel"><div class="ep-search"><input id="ep-q" type="text" inputmode="search" placeholder="Mükemmel emojiyi bul" autocomplete="off" spellcheck="false" aria-label="Emoji ara"></div><div class="ep-tabs" id="ep-tabs"></div><div class="ep-grid" id="ep-grid"></div></div>
+      <div id="emojipanel"><div class="ep-search"><input id="ep-q" type="text" inputmode="search" placeholder="Mükemmel emojiyi bul" autocomplete="off" spellcheck="false" aria-label="Emoji ara"><div class="ep-prev" id="ep-prev" aria-hidden="true"></div></div><div class="ep-tabs" id="ep-tabs"></div><div class="ep-grid" id="ep-grid"></div></div>
       <button id="send" type="submit" title="Gönder" aria-label="Gönder"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 20 4l-5 16-3-7z"/><path d="m12 13 8-9"/></svg></button>
     </form>
     <input type="file" id="file" multiple hidden>
@@ -7002,6 +7012,7 @@ const EMO_SEARCH = {
 const EMO_ALL = (() => { const s = new Set(), o = []; for (const v of Object.values(EMO)) for (const e of v.split(' ')) if (e && !s.has(e)) { s.add(e); o.push(e); } return o; })();
 const trNorm = s => String(s).toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ç/g, 'c').replace(/ö/g, 'o').replace(/ü/g, 'u');
 const EMO_IDX = Object.entries(EMO_SEARCH).map(([k, v]) => [trNorm(k).split(/\s+/).filter(Boolean), v.split(' ')]);
+const EMO_NAME = (() => { const m = new Map(); for (const [k, v] of Object.entries(EMO_SEARCH)) for (const e of v.split(' ')) if (e && !m.has(e)) m.set(e, k.split(' ')[0]); return m; })();
 let epTab = '😀', epQ = '';
 const epColl = new Set(JSON.parse(store.get('kanka-epcoll') || '[]'));
 function emojiFace(key) {
@@ -7037,14 +7048,23 @@ function toggleEmojiFav(key) {
   }
   saveEmojiPrefs(); syncPrefs(); renderEmojiPanel();
 }
+function emojiPreview(key) {
+  const box = $('#ep-prev'); if (!box) return;
+  const r = key && resolveEmojiKey(key);
+  if (!r) { box.classList.remove('on'); box.innerHTML = ''; return; }
+  const title = r.url ? r.name : (EMO_NAME.get(key) || key);
+  const src = r.url ? `${S.server?.name || 'Sunucu'} sunucusundan` : 'Emoji';
+  box.innerHTML = `<span class="pe">${r.url ? `<img src="${esc(r.url)}" alt="">` : r.e}</span><span class="pt"><span class="pn">${esc(title)}</span><span class="ps">${esc(src)}</span></span>`;
+  box.classList.add('on');
+}
 function epBtn(key) {
   const r = resolveEmojiKey(key); if (!r) return '';
   const fav = eFav.includes(key);
-  return `<button type="button" class="ep-e${fav ? ' fav' : ''}" data-ins="${esc(key)}" title="${esc(emojiTitle(key))}" aria-label="${esc(emojiTitle(key))}">${r.url ? `<img src="${esc(r.url)}" alt="${esc(key)}" loading="lazy">` : r.e}<span class="ep-star" data-favk="${esc(key)}" title="${fav ? 'Favorilerden çıkar' : 'Favorilere ekle'}">${ic('star')}</span></button>`;
+  return `<button type="button" class="ep-e${fav ? ' fav' : ''}" data-ins="${esc(key)}" aria-label="${esc(emojiTitle(key))}">${r.url ? `<img src="${esc(r.url)}" alt="${esc(key)}" loading="lazy">` : r.e}<span class="ep-star" data-favk="${esc(key)}" title="${fav ? 'Favorilerden çıkar' : 'Favorilere ekle'}">${ic('star')}</span></button>`;
 }
-function epSec(id, title, icon, keys, noCollapse) {
+function epSec(id, title, icon, keys, noCollapse, headIcon) {
   const collapsed = !noCollapse && epColl.has(id);
-  const head = `<div class="ep-h" ${noCollapse ? '' : `data-epsec="${id}"`}>${icon ? ic(icon) : ''}<span>${esc(title)}</span><span class="ep-n">${keys.length}</span>${noCollapse ? '' : `<span class="ep-caret ${collapsed ? '' : 'open'}">${ic('chevron')}</span>`}</div>`;
+  const head = `<div class="ep-h" ${noCollapse ? '' : `data-epsec="${id}"`}>${headIcon || (icon ? ic(icon) : '')}<span>${esc(title)}</span><span class="ep-n">${keys.length}</span>${noCollapse ? '' : `<span class="ep-caret ${collapsed ? '' : 'open'}">${ic('chevron')}</span>`}</div>`;
   return `<section class="ep-sec">${head}${collapsed ? '' : `<div class="ep-row">${keys.map(epBtn).join('')}</div>`}</section>`;
 }
 function renderEmojiPanel() {
@@ -7062,10 +7082,15 @@ function renderEmojiPanel() {
     if (fav.length) h += epSec('fav', 'Favoriler', 'star', fav);
     const freq = freqKeys().filter(k => !eFav.includes(k) && resolveEmojiKey(k)).slice(0, 16);
     if (freq.length) h += epSec('freq', 'Sık kullanılan', 'clock', freq);
-    if (epTab === '⭐') h += epSec('srv', `${S.server?.name || 'Sunucu'} emojileri`, 'star', Object.keys(em).map(n => `${S.server.id}/${n}`));
+    if (epTab === '⭐') {
+      const sv = S.server || {};
+      const ico = `<span class="ep-svi">${sv.iconImg ? `<img src="${esc(sv.iconImg)}" alt="">` : esc(sv.icon || '?')}</span>`;
+      h += epSec('srv', `${sv.name || 'Sunucu'} emojileri`, null, Object.keys(em).map(n => `${sv.id}/${n}`), false, ico);
+    }
     else h += epSec('cat', 'Emojiler', null, EMO[epTab].split(' '));
   }
   $('#ep-grid').innerHTML = h;
+  emojiPreview(null);
 }
 function emojiInsert(key) {
   const r = resolveEmojiKey(key); if (!r) return;
@@ -7091,6 +7116,20 @@ $('#ep-q').onkeydown = e => {
 $('#emojipanel').addEventListener('keydown', e => { if (e.key === 'Escape') { closeEmojiPanel(); $('#input')?.focus(); } });
 $('#ep-tabs').onclick = e => { const b = e.target.closest('button'); if (b) { epTab = b.dataset.t; renderEmojiPanel(); } };
 let epHold = null, epHeld = false;
+$('#ep-grid').addEventListener('pointerover', e => {
+  if (e.pointerType !== 'mouse') return;
+  const b = e.target.closest('button[data-ins]');
+  if (b) emojiPreview(b.dataset.ins);
+});
+$('#ep-grid').addEventListener('pointerleave', () => emojiPreview(null));
+$('#ep-grid').addEventListener('focusin', e => {
+  const b = e.target.closest('button[data-ins]');
+  if (b) emojiPreview(b.dataset.ins);
+});
+$('#ep-grid').addEventListener('focusout', e => {
+  const b = e.target.closest('button[data-ins]');
+  if (b && !b.contains(e.relatedTarget)) emojiPreview(null);
+});
 $('#ep-grid').addEventListener('pointerdown', e => {
   const b = e.target.closest('button[data-ins]'); if (!b || e.pointerType === 'mouse') return;
   epHeld = false;
