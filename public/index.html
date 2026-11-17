@@ -1403,7 +1403,7 @@
   #side-list .toplist { padding-top: 6px; }
   .side-empty { margin: 18px 12px; padding: 16px; border-radius: 14px; border: 1px dashed var(--line); color: var(--muted); text-align: center; font-size: 13.5px; display: grid; gap: 10px; }
   .side-empty button { justify-self: center; display: inline-flex; gap: 6px; align-items: center; padding: 8px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 800; }
-  body.dnd, body.dnd * { cursor: grabbing !important; }
+  body.dnd, body.dnd * { cursor: grabbing !important; user-select: none !important; -webkit-user-select: none !important; }
   body.dnd #side-list .room:hover { background: transparent; }
   .dnd-src { opacity: .3; }
   .dnd-ghost { position: fixed !important; left: 0; top: 0; z-index: 95; pointer-events: none; margin: 0 !important; background: var(--card) !important; border: 1px solid var(--accent) !important; border-radius: 12px; box-shadow: 0 14px 34px rgba(0,0,0,.5), 0 0 0 4px rgba(255,138,76,.15); opacity: .96; transition: none !important; }
@@ -1631,7 +1631,8 @@
   .cc-ico { font-size: 24px; }
   /* --- sesteki kişiler --- */
   .vusers { margin: 2px 8px 6px 30px; display: grid; gap: 1px; }
-  .vuser { display: flex; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 10px; font-size: 14px; font-weight: 700; color: #cbb8aa; cursor: pointer; transition: background .12s, color .12s; min-width: 0; }
+  .vuser { display: flex; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 10px; font-size: 14px; font-weight: 700; color: #cbb8aa; cursor: pointer; transition: background .12s, color .12s; min-width: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .vuser img { -webkit-user-drag: none; user-drag: none; }
   .vuser:hover { background: var(--hover); color: var(--ink); }
   .vuser .av { width: 28px; height: 28px; font-size: 12px; border-width: 2px; flex-shrink: 0; }
   .vuser .vn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -3934,9 +3935,10 @@ function closeMembers() { if (!document.body.classList.contains('mdrawer')) retu
 
 // --- Mesaj işlemleri (⋯ menüsü ve uzun basma menüsü aynı listeyi kullanır) ---
 function msgActs(m) {
-  const mine = m.author === S.me, mod = S.view === 'server' && isMod(S.server, S.me);
+  const mine = m.author === S.me, bot = m.kind === 'bot' || !m.author;
+  const mod = S.view === 'server' && (isMod(S.server, S.me) || !!S.channel?.canManage);
   const canDel = (mine || mod) && !m.ephemeral, canPin = (S.view === 'dm' || mod) && !m.ephemeral && m.author;
-  return [['reply', 'reply', 'Yanıtla'], m.author || m.kind === 'bot' ? ['thread', 'thread', 'Konu başlat'] : null,
+  return [bot ? null : ['reply', 'reply', 'Yanıtla'], m.author || m.kind === 'bot' ? ['thread', 'thread', 'Konu başlat'] : null,
     m.text || m.bot?.text ? ['copy', 'copy', 'Metni kopyala'] : null,
     canPin ? ['pin', 'pin', m.pinned ? 'Sabitlemeyi kaldır' : 'Sabitle'] : null,
     mine && m.kind === 'text' && m.text ? ['edit', 'edit', 'Düzenle'] : null,
@@ -5017,8 +5019,11 @@ function msgHTML(m, prev) {
   if (m.kind === 'daily') return day + `<div class="daily" data-id="${m.id}"><div class="kt">${ic('sun')}GÜNÜN SORUSU</div><p>${esc(m.text)}</p></div>`;
   if (m.kind === 'bot') {
     const T = { info: '#5aa9ff', ok: '#3fcf8e', warn: '#f6c445', danger: '#ef5a5a' }[m.bot?.tone] || '#5aa9ff', b = m.bot || {};
+    const rb = Object.entries(m.reactions || {}).map(([e, us]) =>
+      `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${m.id}" data-e="${e}" title="${esc(us.join(', '))}">${e}<span>${us.length}</span></button>`).join('');
+    const bt = m.ephemeral ? '' : `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
     return day + `<div class="row botrow" data-id="${m.id}"><div class="av botav"><img src="/icon-192.png" alt=""></div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname" style="color:var(--accent)">Kanka Bot</span><span class="botbadge">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
-      <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<p>${fmt(b.text)}</p>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}</div></div>`;
+      <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<p>${fmt(b.text)}</p>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
   }
   const mine = m.author === S.me && !m.xfrom;
   const cont = !newDay && prev && prev.kind !== 'system' && prev.author === m.author && m.time - prev.time < 5 * 60e3 && !m.replyTo;
@@ -7566,7 +7571,7 @@ function voiceDnDStart(e) {
   const sx = e.clientX, sy = e.clientY, touch = e.pointerType !== 'mouse';
   let started = false, ghost = null, target = null, last = e, holdT = null, raf = 0, offX = 0, offY = 0;
   const chOf = id => s.channels.find(c => c.id === id);
-  const okTarget = ch => ch && voiceLike(ch.type) && ch.id !== from && !(ch.limit && (S.voice?.[ch.id] || []).length >= ch.limit);
+  const okTarget = ch => ch && voiceLike(ch.type) && ch.id !== from && ch.canConnect !== false && !(ch.limit && (S.voice?.[ch.id] || []).length >= ch.limit);
   const start = () => {
     if (document.body.classList.contains('gdrag')) return cleanup();
     started = vDndOn = true;

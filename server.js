@@ -2761,6 +2761,7 @@ io.on('connection', socket => {
       voiceKick([cur], name, `${me} seni sesli odadan çıkardı`); audit(s, me, 'Sesten çıkardı', name);
     } else if (action === 'move') {
       const c = s.channels.find(x => x.id === to && voiceLike(x.type)); if (!c || c.id === cur) return cb({ error: 'Geçersiz oda' });
+      if (!chPerm(s, c, me, 'connect')) return cb({ error: 'Bu odaya giriş yetkin yok' });
       if (!seesChannel(s, c, name)) return cb({ error: `${name} bu odayı göremiyor` });
       if (timedOut(s, name)) return cb({ error: `${name} susturulduğu için sesli odaya giremiyor` });
       if (c.limit && (voice.get(c.id)?.size || 0) >= c.limit) return cb({ error: `${c.name} dolu` });
