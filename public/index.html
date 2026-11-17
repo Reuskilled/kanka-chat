@@ -6291,22 +6291,30 @@ function renderMembers() {
   const srv = S.view === 'server' ? S.server : null;
   const chNow = srv && S.channel && srv.channels.find(c => c.id === S.channel.id);
   if (chNow?.viewers) names = names.filter(n => chNow.viewers.includes(n)); // gizli oda: sadece görebilenler
-  const item = n => {
+  // Bot ayrı bir bölümde değil, atandığı rollerle birlikte üye listesinde gruplanır
+  if (srv?.bot?.added && !names.includes(BOT_NAME)) names = [...names, BOT_NAME];
+  const isOn = n => n === BOT_NAME ? true : S.online.has(n);
+  const item = (n, status) => {
+    if (n === BOT_NAME) {
+      const rc = roleColor(srv, BOT_NAME);
+      return `<div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="${rc ? 'color:' + rc : 'color:var(--accent)'}">Kanka Bot<span class="botbadge">BOT</span></span>${status ? `<span class="st">${esc(status)}</span>` : ''}</div></div>`;
+    }
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n);
     return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
-  const groups = [['Yönetici', n => roleOf(srv, n) === 'admin' && S.online.has(n)], ...hoist.map(r => [r.name, n => S.online.has(n) && topHoist(n) === r]),
-    ['Moderatörler', n => roleOf(srv, n) === 'mod' && !topHoist(n) && S.online.has(n)],
-    ['Çevrimiçi', n => roleOf(srv, n) === 'member' && !topHoist(n) && S.online.has(n)], ['Çevrimdışı', n => !S.online.has(n)]];
-  const onl = names.filter(n => S.online.has(n)).length;
+  const groups = [['Yönetici', n => roleOf(srv, n) === 'admin' && isOn(n)], ...hoist.map(r => [r.name, n => isOn(n) && topHoist(n) === r]),
+    ['Moderatörler', n => roleOf(srv, n) === 'mod' && !topHoist(n) && isOn(n)],
+    ['Çevrimiçi', n => roleOf(srv, n) === 'member' && !topHoist(n) && isOn(n)], ['Çevrimdışı', n => !isOn(n)]];
+  const onl = names.filter(isOn).length;
   const mb = $('#mem-btn'); mb.classList.toggle('show', !!(srv && S.channel) || !!S.channel?.group); mb.querySelector('.mb-n').textContent = onl ? (onl > 99 ? '99+' : onl) : '';
   const mdrH = `<div class="mdr-h"><span style="flex:1"><b>Üyeler</b><small>${S.channel ? (srv ? '#' + esc(S.channel.name) + ' · ' : '') : ''}${onl} çevrimiçi · ${names.length} kişi</small></span><button id="mdr-x" aria-label="Kapat">${ic('x')}</button></div>`;
   if (S.view === 'dm' && !S.channel) return homeSidePanel(item, mdrH);
-  $('#members').innerHTML = mdrH + (srv?.bot?.added ? `<div class="label" style="padding:14px 8px 6px">Botlar — 1</div><div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="${roleColor(srv, BOT_NAME) ? 'color:' + roleColor(srv, BOT_NAME) : 'color:var(--accent)'}">Kanka Bot<span class="botbadge">BOT</span></span><small>${[srv.bot.mod?.on && 'Moderasyon', srv.bot.welcome?.on && 'Karşılama'].filter(Boolean).join(' · ') || '/yardım yaz'}${rolesOf(srv, BOT_NAME).length ? ' · ' + rolesOf(srv, BOT_NAME).map(r => esc(r.name)).join(', ') : ''}</small></div></div>` : '') +
-    groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(item).join('') : ''; }).join('');
+  const botStatus = srv?.bot?.added ? [...[srv.bot.mod?.on && 'Moderasyon', srv.bot.welcome?.on && 'Karşılama'].filter(Boolean), ...rolesOf(srv, BOT_NAME).map(r => r.name)].join(' · ') || '/yardım yaz' : '';
+  $('#members').innerHTML = mdrH +
+    groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(n => item(n, botStatus)).join('') : ''; }).join('');
   $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
   $('#members').querySelector('.mem.botmem')?.addEventListener('click', e => { e.stopPropagation(); botProfile(); });
   $('#mdr-x').onclick = e => { e.stopPropagation(); closeMembers(); };
