@@ -331,7 +331,7 @@
   .botbadge { font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 6px; margin-left: 6px; background: var(--accent); color: #1a0f0a; letter-spacing: .4px; }
   .bembed { --tone: #5aa9ff; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--tone); border-radius: 12px; padding: 10px 14px; max-width: 480px; margin-top: 2px; }
   .bembed .bt { display: block; font-weight: 800; margin-bottom: 2px; }
-  .bembed p { white-space: pre-wrap; color: var(--ink); opacity: .92; font-size: 14px; line-height: 1.45; }
+  .bembed p, .bembed-txt { white-space: pre-wrap; color: var(--ink); opacity: .92; font-size: 14px; line-height: 1.45; }
   .bembed .bf { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; font-size: 13.5px; font-weight: 700; }
   .bembed .bf small { display: block; color: var(--muted); font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
   .row.botrow .eph { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 700; }
@@ -501,6 +501,14 @@
   .bubble code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: rgba(0,0,0,.3); padding: 1px 5px; border-radius: 5px; }
   .bubble pre { background: rgba(0,0,0,.35); border-radius: 10px; padding: 10px 12px; margin: 4px 0; overflow-x: auto; white-space: pre; }
   .bubble pre code { background: none; padding: 0; }
+  .md-p { margin: 0; }
+  .md-h { font-weight: 800; line-height: 1.3; margin: 8px 0 3px; }
+  .md-h1 { font-size: 1.45em; } .md-h2 { font-size: 1.28em; } .md-h3 { font-size: 1.12em; }
+  .md-h:first-child, .md-list:first-child { margin-top: 0; }
+  .md-list { margin: 3px 0; padding-left: 1.6em; }
+  .md-list li { margin: 2px 0; padding-left: 2px; }
+  .md-list li::marker { font-weight: 700; opacity: .65; }
+  .md-list:last-child { margin-bottom: 0; }
   .spoiler { background: #0d0a08; color: transparent; border-radius: 5px; padding: 0 4px; cursor: pointer; transition: color .2s, background .2s; }
   .spoiler.shown { background: rgba(0,0,0,.3); color: inherit; }
   .cemoji { width: 22px; height: 22px; vertical-align: -5px; object-fit: contain; display: inline !important; margin: 0 1px !important; max-width: none !important; cursor: default !important; }
@@ -670,7 +678,7 @@
   .thr .avs { display: flex; } .thr .avs .av { width: 18px; height: 18px; font-size: 9px; border: 2px solid var(--panel); margin-left: -5px; }
   .thread-box { max-height: 50vh; overflow-y: auto; margin: 10px 0; display: flex; flex-direction: column; gap: 10px; }
   .tmsg { display: flex; gap: 8px; } .tmsg .av { width: 28px; height: 28px; font-size: 12px; border: none; }
-  .tmsg b { font-size: 13px; } .tmsg small { color: var(--muted); font-size: 11px; margin-left: 4px; } .tmsg p { white-space: pre-wrap; word-break: break-word; }
+  .tmsg b { font-size: 13px; } .tmsg small { color: var(--muted); font-size: 11px; margin-left: 4px; } .tmsg p, .tmsg-txt { white-space: pre-wrap; word-break: break-word; }
   .sched-tag { font-size: 10.5px; opacity: .7; margin-left: 4px; }
   /* Sosyal */
   .ftabs { display: flex; gap: 6px; padding: 14px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; align-items: center; }
@@ -3296,7 +3304,7 @@ function reactionHTML(key, id, us) {
   const m = EMOJI_TOKEN.exec(key), url = m && serverEmojis()[m[1]];
   return `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${id}" data-e="${esc(key)}" title="${esc(us.join(', '))}">${url ? `<img class="cemoji" src="${esc(url)}" alt="${esc(key)}">` : esc(key)}<span>${us.length}</span></button>`;
 }
-function fmt(t) {
+function inlineFmt(t) {
   const codes = [];
   let h = esc(t)
     .replace(/```(?:\w+\n)?([\s\S]+?)```/g, (_, c) => `\u0000${codes.push(`<pre><code>${c.replace(/^\n/, '')}</code></pre>`) - 1}\u0000`)
@@ -3315,6 +3323,58 @@ function fmt(t) {
   h = h.replace(/:([a-z0-9_]{2,24}):/g, (m, n) => em[n] ? `<img class="cemoji" src="${esc(em[n])}" alt=":${n}:" title=":${n}:">` : m);
   h = h.replace(EMOJI_RUN, m => splitEmojiKey(m).map(e => `<span class="uemoji">${e}</span>`).join(''));
   return h.replace(/\u0000(\d+)\u0000/g, (_, i) => codes[i]);
+}
+// Blok düzeyi Markdown: başlık, madde/numaralı liste, kod bloğu ve paragraflar.
+// Girdi önce satırlara bölünür, her satır inlineFmt'ten geçtiği için HTML her zaman kaçırılmış olur.
+const MD_HEAD = /^ {0,3}(#{1,3})[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*$/;
+const MD_UL = /^[ \t]*[-*+][ \t]+(\S.*)$/;
+const MD_OL = /^[ \t]*(\d{1,3})[.)][ \t]+(\S.*)$/;
+const MD_FENCE = /^ {0,3}(```|~~~)/;
+function fmt(t) {
+  const src = String(t ?? '').replace(/\r\n?/g, '\n'), lines = src.split('\n');
+  // Blok sözdizimi yoksa çıktı eskisiyle birebir aynı kalır
+  if (!lines.some(l => MD_HEAD.test(l) || MD_UL.test(l) || MD_OL.test(l) || MD_FENCE.test(l))) return inlineFmt(src);
+  const out = [], para = [];
+  const flushP = () => {
+    while (para.length && !para[0].trim()) para.shift();
+    while (para.length && !para[para.length - 1].trim()) para.pop();
+    if (para.length) out.push(`<div class="md-p">${inlineFmt(para.join('\n'))}</div>`);
+    para.length = 0;
+  };
+  for (let i = 0; i < lines.length;) {
+    const ln = lines[i], fm = ln.match(MD_FENCE);
+    if (fm) {
+      const tok = fm[1];
+      // Aynı satırda kapanan ```kod``` satır içi biçimde kalır
+      if (ln.slice(fm[0].length).includes(tok)) { para.push(ln); i++; continue; }
+      flushP();
+      const body = []; let j = i + 1, closed = false;
+      for (; j < lines.length; j++) { if (lines[j].trim().startsWith(tok)) { closed = true; break; } body.push(lines[j]); }
+      out.push(`<pre><code>${esc(body.join('\n'))}</code></pre>`);
+      i = closed ? j + 1 : j;
+      continue;
+    }
+    const hm = ln.match(MD_HEAD);
+    if (hm) { flushP(); out.push(`<div class="md-h md-h${hm[1].length}" role="heading" aria-level="${hm[1].length}">${inlineFmt(hm[2])}</div>`); i++; continue; }
+    const ordered = MD_OL.test(ln);
+    if (ordered || MD_UL.test(ln)) {
+      flushP();
+      const items = []; let start = 1;
+      while (i < lines.length) {
+        const m = ordered ? lines[i].match(MD_OL) : lines[i].match(MD_UL);
+        if (!m) break;
+        if (ordered && !items.length) start = parseInt(m[1], 10);
+        items.push(ordered ? m[2] : m[1]);
+        i++;
+      }
+      const tag = ordered ? 'ol' : 'ul';
+      out.push(`<${tag} class="md-list"${ordered && start !== 1 ? ` start="${start}"` : ''}>${items.map(x => `<li>${inlineFmt(x)}</li>`).join('')}</${tag}>`);
+      continue;
+    }
+    para.push(ln); i++;
+  }
+  flushP();
+  return out.join('');
 }
 const isJumbo = t => { const x = t.replace(/:[a-z0-9_]{2,24}:/g, m => serverEmojis()[m.slice(1, -1)] ? '' : m).replace(/\s/g, ''); return !!t.trim() && t.length < 40 && (/^(\p{Extended_Pictographic}|‍|️|\p{Emoji_Modifier})*$/u.test(x)); };
 
@@ -5798,10 +5858,10 @@ function msgHTML(m, prev) {
         else acts = `${!t.claimedBy && staff ? `<button class="act" data-ticket-claim="${m.id}">${ic('usercheck')} Üstlen</button>` : ''}${(staff || t.by === S.me) ? `<button class="act" style="background:#ef5a5a1f;color:#ef5a5a" data-ticket-close="${m.id}">${ic('lock')} Kapat</button>` : ''}`;
       }
       return day + `<div class="row botrow" data-id="${m.id}"><div class="av botav"><img src="/icon-192.png" alt=""></div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname" style="color:var(--accent)">Kanka Bot</span><span class="botbadge">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
-        <div class="kcard"><div class="kt" style="color:${T}">${ic('ticket')}${m.ticketPanel ? 'Destek' : `Destek #${t.no}`}</div>${b.title ? `<h4>${esc(b.title)}</h4>` : ''}${b.text ? `<p class="sub" style="margin:4px 0 0;font-weight:600">${fmt(b.text)}</p>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}${acts ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${acts}</div>` : ''}</div>${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
+        <div class="kcard"><div class="kt" style="color:${T}">${ic('ticket')}${m.ticketPanel ? 'Destek' : `Destek #${t.no}`}</div>${b.title ? `<h4>${esc(b.title)}</h4>` : ''}${b.text ? `<div class="sub" style="margin:4px 0 0;font-weight:600">${fmt(b.text)}</div>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}${acts ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${acts}</div>` : ''}</div>${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
     }
     return day + `<div class="row botrow" data-id="${m.id}"><div class="av botav"><img src="/icon-192.png" alt=""></div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname" style="color:var(--accent)">Kanka Bot</span><span class="botbadge">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
-      <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<p>${fmt(b.text)}</p>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
+      <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<div class="bembed-txt">${fmt(b.text)}</div>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
   }
   const mine = m.author === S.me && !m.xfrom;
   const cont = !newDay && prev && prev.kind !== 'system' && prev.author === m.author && m.time - prev.time < 5 * 60e3 && !m.replyTo;
@@ -8256,7 +8316,7 @@ function openThread(id) {
 }
 function renderThread() {
   const m = S.msgs.find(x => x.id === openThreadId), box = $('#thr-box'); if (!m || !box) return;
-  box.innerHTML = (m.thread || []).map(t => `<div class="tmsg">${av(t.author)}<div><b style="color:${userColor(t.author)}">${esc(t.author)}</b><small>${hm(t.time)}</small><p>${fmt(t.text)}</p></div></div>`).join('') || '<p class="hint">Henüz yanıt yok. İlk yanıtı sen yaz!</p>';
+  box.innerHTML = (m.thread || []).map(t => `<div class="tmsg">${av(t.author)}<div><b style="color:${userColor(t.author)}">${esc(t.author)}</b><small>${hm(t.time)}</small><div class="tmsg-txt">${fmt(t.text)}</div></div></div>`).join('') || '<p class="hint">Henüz yanıt yok. İlk yanıtı sen yaz!</p>';
   box.scrollTop = box.scrollHeight;
 }
 
