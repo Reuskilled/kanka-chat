@@ -3462,7 +3462,9 @@ function showTemplates(pick = 'arkadas') {
     const f = $('#tp-form'); let tm, last = '';
     f.name.oninput = () => delete f.name.dataset.auto;
     const load = () => {
-      const v = f.dc.value.trim(); if (!v || v === last) return; last = v;
+      const v = f.dc.value.trim();
+      if (!v) { last = ''; $('#dt-prev').innerHTML = ''; if (f.name.dataset.auto) { f.name.value = ''; delete f.name.dataset.auto; } return; }
+      if (v === last) return; last = v;
       $('#dt-prev').innerHTML = '<div class="dt-wait">Şablon okunuyor…</div>';
       socket.emit('discordTemplate', v, r => {
         if (!$('#dt-prev') || f.dc.value.trim() !== v) return;
