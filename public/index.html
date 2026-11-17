@@ -517,9 +517,9 @@
   #emojipanel.on { display: flex; }
   .ep-search { padding: 10px 10px 2px; flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
   .ep-search input { flex: 1; min-width: 0; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: rgba(0,0,0,.22); color: var(--ink); padding: 0 12px; font-size: 13.5px; font-weight: 600; outline: none; }
-  .ep-prev { width: 96px; height: 38px; flex: 0 0 auto; display: flex; align-items: center; gap: 7px; min-width: 0; opacity: 0; transition: opacity .12s; pointer-events: none; }
+  .ep-prev { width: 96px; height: 38px; flex: 0 0 auto; display: flex; align-items: center; gap: 7px; min-width: 0; opacity: 0; transition: opacity .12s; pointer-events: none; overflow: hidden; }
   .ep-prev.on { opacity: 1; }
-  .ep-prev .pe { width: 34px; height: 34px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-size: 30px; line-height: 1; }
+  .ep-prev .pe { width: 34px; height: 34px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-size: 30px; line-height: 1; overflow: hidden; white-space: nowrap; }
   .ep-prev .pe img { width: 34px; height: 34px; object-fit: contain; }
   .ep-prev .pt { min-width: 0; display: flex; flex-direction: column; gap: 1px; line-height: 1.2; }
   .ep-prev .pn { font-size: 10.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
@@ -547,7 +547,7 @@
   .ep-h .ep-caret { margin-left: auto; opacity: .7; transform: rotate(-90deg); transition: transform .15s; }
   .ep-h .ep-caret.open { transform: none; }
   .ep-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; }
-  .ep-row button { position: relative; aspect-ratio: 1; border-radius: 10px; font-size: 27px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+  .ep-row button { position: relative; aspect-ratio: 1; border-radius: 10px; font-size: 27px; line-height: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .ep-row button:hover, .ep-row button:focus-visible { background: var(--hover); transform: scale(1.12); }
   .ep-row button img { width: 31px; height: 31px; object-fit: contain; }
   .ep-row button.fav { background: color-mix(in srgb, var(--accent) 14%, transparent); }
@@ -4895,12 +4895,39 @@ let eFav = [];
 let eUse = {};
 try { const f = JSON.parse(store.get('kanka-emofav') || '[]'); if (Array.isArray(f)) eFav = f.filter(x => typeof x === 'string').slice(0, 48); } catch {}
 try { const u = JSON.parse(store.get('kanka-emouse') || '{}'); if (u && typeof u === 'object') eUse = u; } catch {}
+const GRAPHEMER = (() => { try { return new Intl.Segmenter('tr', { granularity: 'grapheme' }); } catch { return null; } })();
+const splitEmojiKey = k => GRAPHEMER ? [...GRAPHEMER.segment(String(k))].map(x => x.segment) : [String(k)];
+// Eski sürüm art arda yazılan emojileri tek anahtar olarak kaydediyordu; tek tek ayır
+function normalizeEmojiPrefs(fav, use) {
+  const nf = [], seen = new Set();
+  for (const k of Array.isArray(fav) ? fav : []) {
+    if (typeof k !== 'string' || k.length > 40 || seen.has(k)) continue;
+    if (!k.includes('/') && splitEmojiKey(k).length !== 1) continue;
+    seen.add(k); nf.push(k);
+    if (nf.length >= 48) break;
+  }
+  const nu = {};
+  const put = (k, n, t) => { const c = nu[k]; nu[k] = { n: Math.min(9999, Math.max(c?.n || 0, n)), t: Math.max(c?.t || 0, t) }; };
+  for (const [k, v] of Object.entries(use && typeof use === 'object' ? use : {})) {
+    if (typeof k !== 'string' || k.length > 40 || !v) continue;
+    const n = Math.min(9999, Math.floor(+v.n) || 0); if (!n) continue;
+    const t = +v.t || 0;
+    if (k.includes('/')) put(k, n, t);
+    else for (const p of splitEmojiKey(k)) put(p, n, t);
+  }
+  const ks = Object.keys(nu);
+  if (ks.length > 64) ks.sort((a, b) => (nu[a].n - nu[b].n) || (nu[a].t - nu[b].t)).slice(0, ks.length - 64).forEach(k => delete nu[k]);
+  return { fav: nf, use: nu };
+}
+{ const n = normalizeEmojiPrefs(eFav, eUse); eFav = n.fav; eUse = n.use; }
 const saveEmojiPrefs = () => { store.set('kanka-emofav', JSON.stringify(eFav)); store.set('kanka-emouse', JSON.stringify(eUse)); };
 function applyEmojiPrefs(e) {
   if (!e) return;
-  if (Array.isArray(e.fav)) eFav = e.fav.filter(x => typeof x === 'string').slice(0, 48);
-  if (e.use && typeof e.use === 'object') { const n = {}; for (const [k, v] of Object.entries(e.use).slice(0, 64)) if (typeof k === 'string' && v) n[k] = { n: +v.n || 0, t: +v.t || 0 }; eUse = n; }
+  const n = normalizeEmojiPrefs(e.fav, e.use);
+  const changed = JSON.stringify(n.fav) !== JSON.stringify(eFav) || JSON.stringify(n.use) !== JSON.stringify(eUse);
+  eFav = n.fav; eUse = n.use;
   saveEmojiPrefs();
+  if (changed) syncPrefs(); // birleşik anahtar temizliği hesaba da yazılsın (tek sefer)
   if ($('#emojipanel')?.classList.contains('on')) renderEmojiPanel();
 }
 function resolveEmojiKey(key) {
@@ -4932,7 +4959,7 @@ function countEmojiUsage(text) {
   if (!text || typeof text !== 'string') return;
   if (S.view === 'server' && S.server) for (const m of text.matchAll(/:([a-z0-9_]{2,24}):/g)) if (S.server.emojis?.[m[1]]) bumpEmoji(`${S.server.id}/${m[1]}`);
   const seen = new Set(); EMOJI_RUN.lastIndex = 0;
-  for (const m of text.matchAll(EMOJI_RUN)) seen.add(m[0]);
+  for (const m of text.matchAll(EMOJI_RUN)) for (const p of splitEmojiKey(m[0])) seen.add(p);
   seen.forEach(e => bumpEmoji(e));
 }
 const freqKeys = () => Object.entries(eUse).filter(([, v]) => v?.n > 0).map(([k, v]) => [k, v.n / (1 + Math.max(0, Date.now() - (v.t || 0)) / 1209600e3)]).sort((a, b) => b[1] - a[1]).map(x => x[0]);

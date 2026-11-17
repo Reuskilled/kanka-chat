@@ -1348,6 +1348,9 @@ try {
 // Hesapta saklanan bildirim tercihleri (her cihazda aynı): notif=false hepsi kapalı; muted=susturulan sunucular; ch={odaId:'all'|'mentions'|'none'}
 const prefsOf = u => u?.prefs || {};
 const EMO_KEY_RE = /^(?:[a-z0-9]{1,32}\/[a-z0-9_]{2,24}|[^\s/<>"'&]{1,40})$/u;
+// İstemci bir ara art arda yazılan emojileri tek anahtar olarak gönderiyordu; tek tek ayır
+const EMO_SEG = (() => { try { return new Intl.Segmenter('tr', { granularity: 'grapheme' }); } catch { return null; } })();
+const emoSplit = k => EMO_SEG ? [...EMO_SEG.segment(k)].map(x => x.segment) : [k];
 function saneEmojiPrefs(e) {
   const out = { fav: [], use: {} };
   if (!e || typeof e !== 'object') return out;
@@ -1355,17 +1358,26 @@ function saneEmojiPrefs(e) {
     const seen = new Set();
     for (const k of e.fav) {
       if (typeof k !== 'string' || k.length > 40 || !EMO_KEY_RE.test(k) || seen.has(k)) continue;
+      if (!k.includes('/') && emoSplit(k).length !== 1) continue;
       seen.add(k); out.fav.push(k);
       if (out.fav.length >= 48) break;
     }
   }
   if (e.use && typeof e.use === 'object') {
-    const ks = Object.keys(e.use).filter(k => k.length <= 40 && EMO_KEY_RE.test(k)).slice(0, 200);
-    ks.sort((a, b) => (+e.use[b]?.n || 0) - (+e.use[a]?.n || 0));
-    for (const k of ks.slice(0, 64)) {
-      const n = Math.floor(+e.use[k]?.n); if (!(n > 0)) continue;
-      out.use[k] = { n: Math.min(9999, n), t: Math.min(Date.now(), Math.max(0, +e.use[k]?.t || 0)) };
+    const put = (k, n, t) => {
+      if (!k || k.length > 40 || !EMO_KEY_RE.test(k)) return;
+      const c = out.use[k];
+      out.use[k] = { n: Math.min(9999, Math.max(c?.n || 0, n)), t: Math.max(c?.t || 0, t) };
+    };
+    for (const [k, v] of Object.entries(e.use).slice(0, 200)) {
+      if (typeof k !== 'string' || !v) continue;
+      const n = Math.floor(+v.n); if (!(n > 0)) continue;
+      const t = Math.min(Date.now(), Math.max(0, +v.t || 0));
+      if (k.includes('/')) put(k, n, t);
+      else for (const p of emoSplit(k)) put(p, n, t);
     }
+    const ks = Object.keys(out.use);
+    if (ks.length > 64) ks.sort((a, b) => out.use[b].n - out.use[a].n).slice(64).forEach(k => delete out.use[k]);
   }
   return out;
 }
