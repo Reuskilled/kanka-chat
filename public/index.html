@@ -159,7 +159,7 @@
   .rl-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; font-size: 17px; background: color-mix(in srgb, var(--c) 18%, transparent); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); }
   .rl-ic i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); } .rl-ic.big { width: 48px; height: 48px; border-radius: 14px; font-size: 24px; } .rl-ic.big i { width: 16px; height: 16px; }
   .rl-t { flex: 1; min-width: 0; } .rl-t b { display: flex; align-items: center; gap: 6px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .rl-t small { color: var(--muted); font-weight: 700; font-size: 12px; }
-  .rl-ed-box { padding: 18px 18px 0; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
+  .rl-ed-box { padding: 18px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
   .box.settings .st-main .st-page.rl-page { max-width: 1080px; }
   .rl-row[hidden], .rl-perm[hidden], .rl-pg[hidden], .rl-none[hidden] { display: none !important; } .rl-side .rl-list { overflow-x: hidden; }
   /* Roller sayfası geniş çalışır: sağdaki sunucu önizlemesi küçülür, sadece kapat düğmesi kalır */
@@ -177,10 +177,13 @@
   .rl-main { min-width: 0; } .rl-head .rl-hn { flex: 1; min-width: 0; } .rl-head .rl-hn h4 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .rl-delb { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 13px; color: var(--muted); } .rl-delb:hover { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); } .rl-delb .ic { width: 15px; height: 15px; }
   .rl-back { display: none; align-items: center; gap: 4px; padding: 6px 10px 6px 4px; border-radius: 10px; font-weight: 800; font-size: 13px; color: var(--muted); } .rl-back .ic { width: 16px; height: 16px; transform: rotate(90deg); } .rl-back:hover { background: var(--hover); color: var(--ink); }
-  .rl-bar { position: sticky; bottom: 0; display: flex; align-items: center; gap: 8px; margin: 14px -18px 0; padding: 12px 18px; background: var(--card); border-top: 1px solid var(--line); border-radius: 0 0 18px 18px; } .rl-bar > span { flex: 1; font-weight: 700; font-size: 13.5px; color: var(--muted); }
-  .rl-bar button { width: auto; margin: 0; padding: 9px 16px; } .rl-bar > button:not(.primary) { border-radius: 10px; font-weight: 800; color: var(--ink); } .rl-bar > button:not(.primary):hover { background: var(--hover); }
-  .rl-bar:not(.on) > button:not(.primary) { display: none; } .rl-bar:not(.on) > span { visibility: hidden; } .rl-bar:not(.on) .primary { opacity: .55; }
-  .rl-bar.on { box-shadow: 0 -10px 30px rgba(0,0,0,.25); } .rl-bar.on > span { color: var(--ink); }
+  /* Kaydet çubuğu: değişiklik olunca düzenleyicinin altında ortalanmış yüzen çubuk olarak çıkar */
+  .rl-bar { position: sticky; bottom: 16px; z-index: 5; display: flex; align-items: center; gap: 10px; width: min(620px, 100%); margin: 16px auto 0; padding: 10px 10px 10px 18px; border-radius: 14px; background: #0f0b09; border: 1px solid var(--line); box-shadow: 0 14px 40px rgba(0,0,0,.5); }
+  .rl-bar > span { flex: 1; font-weight: 800; font-size: 14px; color: var(--ink); }
+  .rl-bar button { width: auto; margin: 0; padding: 9px 18px; } .rl-bar > button:not(.primary) { border-radius: 10px; font-weight: 800; color: var(--ink); } .rl-bar > button:not(.primary):hover { background: var(--hover); }
+  .rl-bar:not(.on) { display: none; } .rl-bar.on { animation: rlBar .25s var(--ease-out); }
+  @keyframes rlBar { from { opacity: 0; transform: translateY(14px); } }
+  .rl-ed-box { padding-bottom: 18px; }
   .rl-empty { display: grid; place-items: center; gap: 6px; text-align: center; padding: 70px 20px; border-radius: 18px; border: 1px dashed var(--line); color: var(--muted); } .rl-empty .ic { width: 34px; height: 34px; } .rl-empty b { color: var(--ink); font-size: 16px; }
   @media (max-width: 1100px) {
     .rl-split { grid-template-columns: 1fr; } .rl-side { position: static; max-height: none; }
@@ -5040,10 +5043,10 @@ function showServerSettings(s, tab, focus) {
       if ($('#rp-q')) $('#rp-q').oninput = e => { const v = e.target.value.toLocaleLowerCase('tr').trim(); f.querySelectorAll('.rl-pg').forEach(g => { let n = 0; g.querySelectorAll('.rl-perm').forEach(p => { const on = !v || p.textContent.toLocaleLowerCase('tr').includes(v); p.hidden = !on; n += on; }); g.hidden = !n; }); };
       f.querySelectorAll('[data-rtab]').forEach(b => b.onclick = () => { ssOpen.rtab = b.dataset.rtab; f.querySelectorAll('[data-rtab]').forEach(x => x.classList.toggle('on', x === b)); f.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== b.dataset.rtab); f.querySelector('.rowb .primary')?.toggleAttribute('hidden', b.dataset.rtab === 'members'); if (b.dataset.rtab === 'members') drawMembers(); });
       const prev = () => { const c = f.color.value; $('#r-prev-n').textContent = (f.name?.value || 'Yeni rol'); $('#r-prev-n').style.color = c; $('#r-prev-ic').style.setProperty('--c', c); $('#r-prev-ic').innerHTML = f.icon?.value ? esc(f.icon.value) : '<i></i>'; f.querySelectorAll('[data-sw]').forEach(x => x.classList.toggle('on', x.dataset.sw === c.toLowerCase())); };
-      f.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { f.color.value = b.dataset.sw; prev(); });
+      f.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { f.color.value = b.dataset.sw; prev(); dirty(); });
       f.color.oninput = prev; if (f.name) f.name.oninput = prev; if (f.icon) f.icon.oninput = prev;
       const PRE = { mod: ['manageMessages', 'kick', 'timeout', 'voiceMute', 'voiceMove', 'viewAudit', 'manageEmojis'], voice: ['voiceMute', 'voiceMove'], none: [] };
-      f.querySelectorAll('[data-preset]').forEach(b => b.onclick = () => f.querySelectorAll('[name=p]').forEach(x => { if (!x.disabled) x.checked = PRE[b.dataset.preset].includes(x.value); }));
+      f.querySelectorAll('[data-preset]').forEach(b => b.onclick = () => { f.querySelectorAll('[name=p]').forEach(x => { if (!x.disabled) x.checked = PRE[b.dataset.preset].includes(x.value); }); dirty(); });
       $('#r-cancel').onclick = () => { ssOpen.dirty = false; if (!edit.id) ssOpen.focus = undefined; page.roles(); };
       f.onsubmit = e => { e.preventDefault();
         socket.emit('roleSave', { serverId: s.id, role: { id: edit.id, name: f.name.value, color: f.color.value, icon: f.icon?.value || '', hoist: !!f.hoist?.checked, mentionable: !!f.mentionable?.checked, perms: [...f.querySelectorAll('[name=p]:checked')].map(x => x.value) } }, r => { if (r.error) return toast(r.error); ssOpen.dirty = false; toast(edit.id ? 'Rol kaydedildi' : 'Rol oluşturuldu'); if (!edit.id) { ssOpen.focus = r.id; ssOpen.rtab = 'members'; } again(); }); };
