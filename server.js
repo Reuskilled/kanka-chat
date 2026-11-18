@@ -354,6 +354,30 @@ function deliverMatch(u, m) {
   if (f) for (const n of membersOf(f.s)) if (n !== u.name) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
 }
 const autoSrc = new Map(); // kullanıcı -> (kaynak -> son bildirim)
+// ---- Webhook'lar: dışarıdan bir odaya mesaj gönderme (Discord webhook biçimiyle uyumlu) ----
+// POST /api/webhooks/:id/:token  { content, username?, avatar_url?, embeds?: [{ title, description, color, fields: [{ name, value }] }] }
+const whHits = new Map();
+app.post('/api/webhooks/:id/:token', (req, res) => {
+  const w = db.webhooks?.[req.params.id];
+  if (!w || !req.params.token || w.token.length !== String(req.params.token).length || !crypto.timingSafeEqual(Buffer.from(w.token), Buffer.from(String(req.params.token)))) return res.status(401).json({ error: 'Geçersiz webhook' });
+  const now = Date.now(), h = (whHits.get(w.id) || []).filter(t => now - t < 60e3);
+  if (h.length >= 30 || h.filter(t => now - t < 2000).length >= 5) { res.set('Retry-After', '2'); return res.status(429).json({ error: 'Çok hızlı. Dakikada en fazla 30, 2 saniyede 5 mesaj.' }); }
+  h.push(now); whHits.set(w.id, h);
+  const s = db.servers.find(x => x.id === w.serverId), c = s?.channels.find(x => x.id === w.channelId);
+  if (!s || !c || voiceLike(c.type)) return res.status(404).json({ error: 'Oda bulunamadı' });
+  const b = req.body || {}, e = Array.isArray(b.embeds) ? b.embeds[0] || {} : {};
+  const noPing = t => String(t || '').replace(/@(everyone|here|herkes)/gi, '@\u200b$1');
+  const text = noPing(clean(b.content ?? b.text, 2000)), title = clean(e.title, 120), desc = noPing(clean(e.description, 1800));
+  const fields = (Array.isArray(e.fields) ? e.fields : []).slice(0, 8).map(f => [clean(f?.name, 60), noPing(clean(f?.value, 300))]).filter(f => f[0] || f[1]);
+  if (!text && !title && !desc && !fields.length) return res.status(400).json({ error: 'Boş mesaj: content ya da embeds gerekli' });
+  const color = Number.isInteger(e.color) ? '#' + (e.color >>> 0 & 0xffffff).toString(16).padStart(6, '0') : /^#[0-9a-f]{6}$/i.test(e.color || '') ? e.color : null;
+  const av = /^https:\/\/\S{8,300}$/i.test(b.avatar_url || '') ? b.avatar_url : w.avatar || null;
+  const msg = { id: id(), kind: 'bot', time: now, wh: { id: w.id, name: clean(b.username, 32) || w.name, avatar: av }, bot: { title, text: [text, desc].filter(Boolean).join('\n\n'), plain: !title && !desc && !fields.length, tone: 'info', color, fields }, reactions: {} };
+  const list = (db.messages[c.id] ||= []); list.push(msg); if (list.length > 2000) list.shift();
+  w.uses = (w.uses || 0) + 1; w.lastAt = now; save();
+  io.to(c.id).emit('message', { channelId: c.id, msg });
+  res.status(req.query.wait === 'true' ? 200 : 204); req.query.wait === 'true' ? res.json({ id: msg.id }) : res.end();
+});
 app.post('/api/presence', express.json({ limit: '24kb' }), async (req, res) => {
   const { key, game, detail, music, rich } = req.body || {};
   const u = key && Object.values(db.users).find(x => x.presenceKey === key);
@@ -3192,6 +3216,30 @@ io.on('connection', socket => {
     if (db.servers.some(x => x !== s && x.vanity === slug)) return cb({ error: 'Bu link alınmış' });
     if (limited('vanity|' + me, 6, 3600e3)) return cb({ error: 'Biraz bekle' });
     s.vanity = slug; audit(s, me, 'Özel linki değiştirdi', slug); save(); cb({ ok: true, vanity: slug });
+  });
+  // Webhook yönetimi: sunucu ya da oda yönetme yetkisi gerekir
+  const whView = w => ({ id: w.id, name: w.name, avatar: w.avatar || null, channelId: w.channelId, by: w.by, createdAt: w.createdAt, uses: w.uses || 0, lastAt: w.lastAt || null, url: `${baseUrl()}/api/webhooks/${w.id}/${w.token}` });
+  const whSrv = serverId => { const s = db.servers.find(x => x.id === serverId); return s && !s.public && (s.owner === me || can(s, me, 'manageServer') || can(s, me, 'manageChannels')) ? s : null; };
+  socket.on('whList', ({ serverId } = {}, cb = () => {}) => { const s = whSrv(serverId); if (!s) return cb({ error: 'Yetkin yok' }); cb({ list: Object.values(db.webhooks || {}).filter(w => w.serverId === s.id).sort((a, b) => a.createdAt - b.createdAt).map(whView) }); });
+  socket.on('whCreate', ({ serverId, channelId, name } = {}, cb = () => {}) => {
+    const s = whSrv(serverId); if (!s) return cb({ error: 'Yetkin yok' });
+    const c = s.channels.find(x => x.id === channelId && !voiceLike(x.type)); if (!c) return cb({ error: 'Bir yazı odası seç' });
+    if (Object.values(db.webhooks || {}).filter(w => w.serverId === s.id).length >= 10) return cb({ error: 'Bir sunucuda en fazla 10 webhook olabilir' });
+    if (limited('wh|' + me, 10, 3600e3)) return cb({ error: 'Biraz bekle' });
+    const w = { id: crypto.randomBytes(6).toString('hex'), token: crypto.randomBytes(24).toString('base64url'), serverId: s.id, channelId: c.id, name: clean(name, 32) || 'Webhook', avatar: null, by: me, createdAt: Date.now(), uses: 0 };
+    (db.webhooks ||= {})[w.id] = w; audit(s, me, 'Webhook oluşturdu', `${w.name} → #${c.name}`); save(); cb({ ok: true, w: whView(w) });
+  });
+  socket.on('whEdit', ({ id: wid, name, avatar, channelId, reset } = {}, cb = () => {}) => {
+    const w = db.webhooks?.[wid], s = w && whSrv(w.serverId); if (!s) return cb({ error: 'Yetkin yok' });
+    if (name !== undefined) w.name = clean(name, 32) || w.name;
+    if (avatar !== undefined) w.avatar = avatar && UPLOAD_RE.test(avatar) ? avatar : null;
+    if (channelId !== undefined) { const c = s.channels.find(x => x.id === channelId && !voiceLike(x.type)); if (!c) return cb({ error: 'Bir yazı odası seç' }); w.channelId = c.id; }
+    if (reset) { w.token = crypto.randomBytes(24).toString('base64url'); audit(s, me, 'Webhook linkini yeniledi', w.name); }
+    save(); cb({ ok: true, w: whView(w) });
+  });
+  socket.on('whDelete', ({ id: wid } = {}, cb = () => {}) => {
+    const w = db.webhooks?.[wid], s = w && whSrv(w.serverId); if (!s) return cb({ error: 'Yetkin yok' });
+    delete db.webhooks[wid]; audit(s, me, 'Webhook sildi', w.name); save(); cb({ ok: true });
   });
   socket.on('adminSrvApps', (_ = {}, cb = () => {}) => {
     if (!siteMod(me)) return cb({ error: 'Yetkin yok' });

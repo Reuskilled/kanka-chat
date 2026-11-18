@@ -3219,6 +3219,19 @@ body.has-tb #embar{top:34px}
 body.has-tb.has-eb #app{height:calc(100vh - 74px);margin-top:74px}
 body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
 @media (max-width:760px){#embar{justify-content:flex-start;padding:0 44px 0 12px;font-size:12.5px;top:env(safe-area-inset-top)}#embar .eb-more{display:none}}
+
+/* Webhook'lar */
+.wh-top{display:flex;gap:8px;margin:6px 0 14px}.wh-top select{flex:1}
+.wh-card{display:flex;gap:14px;padding:14px;border:1px solid var(--line,#3a2e27);border-radius:16px;background:rgba(255,255,255,.02);margin-bottom:10px}
+.wh-av{width:52px;height:52px;flex:none;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:20px;background:linear-gradient(135deg,#5b7cff,#3a4fd8);color:#fff;overflow:hidden;border:0;cursor:pointer}.wh-av img{width:100%;height:100%;object-fit:cover}
+.wh-main{flex:1;min-width:0}.wh-row{display:flex;gap:8px}.wh-row .wh-name{flex:1.2}.wh-row select{flex:1}
+.wh-main>small{display:block;margin:7px 0 9px;font-size:12px;color:var(--muted)}
+.wh-acts{display:flex;flex-wrap:wrap;gap:6px}.wh-acts .btns2{padding:6px 10px;font-size:12.5px}.wh-del{color:#ff8a8d}
+.wh-empty{display:grid;place-items:center;gap:4px;padding:26px;border:1px dashed var(--line,#3a2e27);border-radius:16px;color:var(--muted);text-align:center}.wh-empty .ic{width:26px;height:26px}.wh-empty b{color:var(--ink)}
+.wh-code{background:#0c0908;border:1px solid #2b211c;border-radius:12px;padding:12px 14px;font-size:12.5px;color:#d9c4b2;white-space:pre-wrap;overflow-x:auto;margin:0}
+.whav{background:linear-gradient(135deg,#5b7cff,#3a4fd8)!important;color:#fff;display:grid;place-items:center;font-weight:900}.whav img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.whrow .wname{color:var(--ink)}
+@media (max-width:640px){.wh-row{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -5063,6 +5076,7 @@ function showServerSettings(s, tab, focus) {
     ['bot', 'Kanka Bot', 'shield', P('manageServer')], ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
     ['template', 'Şablon', 'file', s.owner === S.me && P('manageServer')],
     ['badges', 'Rozetler', 'check', s.owner === S.me && !s.public && s.id !== 's1'],
+    ['webhooks', 'Webhook\'lar', 'link', !s.public && (s.owner === S.me || P('manageServer') || P('manageChannels'))],
     ['emoji', 'Emojiler', 'smile', mod || P('manageEmojis')], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod || P('viewAudit')]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
@@ -5202,6 +5216,38 @@ function showServerSettings(s, tab, focus) {
       $('#sv-afk').onchange = afkSave; $('#sv-afkm').onchange = afkSave;
       $('#sv-slow').onchange = e => socket.emit('updateServer', { serverId: s.id, slow: +e.target.value }, r => r.error ? toast(r.error) : toast('Yavaş mod güncellendi'));
       if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(s.vanity ? `${PUB}/s/${s.vanity}` : `${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
+    },
+    webhooks: () => {
+      const tx = s.channels.filter(c => !['voice', 'stage'].includes(c.type));
+      main.innerHTML = `<div class="st-page"><h3>Webhook'lar</h3><p class="hint">Webhook, dışarıdan bir odaya mesaj göndermenin en kolay yolu: YouTube/Twitch bildirimi, oyun sunucusu durumu, GitHub, kendi yazdığın betikler… Bot yazmana gerek yok, linke bir istek atman yeter. Discord webhook biçimiyle uyumlu, oradaki betiklerin çoğu sadece linki değiştirince çalışır.</p>
+        <div class="wh-top"><select class="field" id="wh-ch" style="margin:0">${tx.map(c => `<option value="${c.id}">#${esc(c.name)}</option>`).join('')}</select><button class="primary" id="wh-new" style="width:auto;padding:10px 16px">${ic('plus')} Yeni webhook</button></div>
+        <div id="wh-list"><p class="hint">Yükleniyor…</p></div>
+        <div class="st-sec">Nasıl kullanılır?</div>
+        <pre class="wh-code">curl -X POST "WEBHOOK_LİNKİN" \\
+  -H "Content-Type: application/json" \\
+  -d '{"content": "Merhaba kankalar 👋"}'</pre>
+        <p class="hint" style="margin-top:8px">Başlıklı kart için: <code>{"embeds": [{"title": "Yayın başladı!", "description": "Gel izle", "color": 16747340}]}</code> · İstersen <code>username</code> ve <code>avatar_url</code> ile isim/resim değiştirebilirsin. Dakikada en fazla 30 mesaj. @herkes etiketleri çalışmaz.</p>
+        <p class="hint">⚠️ Linki kimseyle paylaşma: linki bilen herkes bu odaya mesaj atabilir. Sızdıysa "Linki yenile"ye bas, eskisi hemen geçersiz olur.</p></div>`;
+      const draw = list => { const L = $('#wh-list'); if (!L) return;
+        L.innerHTML = list.length ? list.map(w => `<div class="wh-card" data-wh="${w.id}"><button class="wh-av" data-wav="${w.id}" title="Resmi değiştir">${w.avatar ? `<img src="${esc(w.avatar)}" alt="">` : esc(w.name[0].toUpperCase())}</button>
+          <div class="wh-main"><div class="wh-row"><input class="field wh-name" value="${esc(w.name)}" maxlength="32" style="margin:0"><select class="field wh-chs" style="margin:0">${tx.map(c => `<option value="${c.id}" ${c.id === w.channelId ? 'selected' : ''}>#${esc(c.name)}</option>`).join('')}</select></div>
+          <small>${w.uses} mesaj${w.lastAt ? ' · son: ' + new Date(w.lastAt).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''} · oluşturan @${esc(w.by)}</small>
+          <div class="wh-acts"><button class="btns2" data-wcopy="${w.id}">${ic('copy')} Linki kopyala</button><button class="btns2" data-wtest="${w.id}">${ic('send')} Test</button><button class="btns2" data-wreset="${w.id}">Linki yenile</button><button class="btns2 wh-del" data-wdel="${w.id}">${ic('trash')} Sil</button></div></div></div>`).join('')
+          : `<div class="wh-empty">${ic('link')}<b>Henüz webhook yok</b><span>Bir oda seçip "Yeni webhook"a bas.</span></div>`;
+        const byId = id => list.find(x => x.id === id);
+        L.querySelectorAll('.wh-card').forEach(card => { const id = card.dataset.wh;
+          card.querySelector('.wh-name').onchange = e => socket.emit('whEdit', { id, name: e.target.value }, r => r.error ? toast(r.error) : toast('Kaydedildi'));
+          card.querySelector('.wh-chs').onchange = e => socket.emit('whEdit', { id, channelId: e.target.value }, r => r.error ? toast(r.error) : toast('Oda değişti'));
+        });
+        L.querySelectorAll('[data-wav]').forEach(b => b.onclick = () => readImage(url => socket.emit('whEdit', { id: b.dataset.wav, avatar: url }, r => r.error ? toast(r.error) : load()), 256));
+        L.querySelectorAll('[data-wcopy]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(byId(b.dataset.wcopy).url).then(() => toast('Link kopyalandı. Kimseyle paylaşma 🔒')));
+        L.querySelectorAll('[data-wtest]').forEach(b => b.onclick = () => fetch(byId(b.dataset.wtest).url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: 'webhook çalışıyor 🎉' }) }).then(r => toast(r.ok ? 'Test mesajı gönderildi' : 'Gönderilemedi (' + r.status + ')')));
+        L.querySelectorAll('[data-wreset]').forEach(b => b.onclick = () => confirmBox('Link yenilensin mi? Eski linki kullanan her şey çalışmayı bırakır.', () => socket.emit('whEdit', { id: b.dataset.wreset, reset: true }, r => { if (r.error) return toast(r.error); toast('Yeni link hazır'); load(); })));
+        L.querySelectorAll('[data-wdel]').forEach(b => b.onclick = () => confirmBox('Webhook silinsin mi? Link hemen çalışmayı bırakır.', () => socket.emit('whDelete', { id: b.dataset.wdel }, r => { if (r.error) return toast(r.error); load(); })));
+      };
+      const load = () => socket.emit('whList', { serverId: s.id }, r => r.error ? ($('#wh-list').innerHTML = `<p class="hint">${esc(r.error)}</p>`) : draw(r.list));
+      $('#wh-new').onclick = () => socket.emit('whCreate', { serverId: s.id, channelId: $('#wh-ch').value, name: 'Kanka Webhook' }, r => { if (r.error) return toast(r.error); toast('Webhook oluşturuldu'); load(); });
+      load();
     },
     badges: () => {
       main.innerHTML = `<div class="st-page"><h3>Rozetler ve Yıldız yolu</h3><p class="hint">Sunucun büyüdükçe rozet kazanır, her kademede yeni ayrıcalıklar açılır. Topluluk ve Yükselen kendiliğinden gelir, Yıldız'a başvurulur.</p><div id="sb-root"><p class="hint">Yükleniyor…</p></div></div>`;
@@ -6189,6 +6235,9 @@ function msgHTML(m, prev) {
       return day + `<div class="row botrow" data-id="${m.id}"><div class="av botav"><img src="/icon-192.png" alt=""></div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname" style="color:var(--accent)">Kanka Bot</span><span class="botbadge">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
         <div class="kcard"><div class="kt" style="color:${T}">${ic('ticket')}${m.ticketPanel ? 'Destek' : `Destek #${t.no}`}</div>${b.title ? `<h4>${esc(b.title)}</h4>` : ''}${b.text ? `<div class="sub" style="margin:4px 0 0;font-weight:600">${fmt(b.text)}</div>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}${acts ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${acts}</div>` : ''}</div>${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
     }
+    if (m.wh) { const w = m.wh, cl = b.color || T;
+      return day + `<div class="row botrow whrow" data-id="${m.id}"><div class="av botav whav">${w.avatar ? `<img src="${esc(w.avatar)}" alt="" referrerpolicy="no-referrer">` : `<span>${esc((w.name || '?')[0].toUpperCase())}</span>`}</div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname">${esc(w.name)}</span><span class="botbadge" title="Webhook ile gönderildi">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
+        ${b.plain ? `<div class="text">${fmt(b.text || '')}</div>` : `${b.text && !b.title ? '' : ''}<div class="bembed" style="--tone:${cl}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<div class="bembed-txt">${fmt(b.text)}</div>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>`}${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`; }
     return day + `<div class="row botrow" data-id="${m.id}"><div class="av botav"><img src="/icon-192.png" alt=""></div><span class="gtime">${hm(m.time)}</span><div class="col"><div class="who"><span class="wname" style="color:var(--accent)">Kanka Bot</span><span class="botbadge">BOT</span><span class="t">${whenTxt(m.time)}</span></div>
       <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<div class="bembed-txt">${fmt(b.text)}</div>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
   }
