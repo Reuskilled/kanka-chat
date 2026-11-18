@@ -4306,7 +4306,7 @@ document.addEventListener('contextmenu', e => {
   if (!el) return;
   const n = el.dataset.u || el.dataset.n || el.dataset.vu || el.closest('[data-au]')?.dataset.au;
   if (!n || !S.users[n]) return;
-  e.preventDefault(); userMenu(n, e.clientX, e.clientY);
+  e.preventDefault(); closeMsgCtx?.(); userMenu(n, e.clientX, e.clientY);
 });
 const inside = (e, sel) => e.target.isConnected ? !!e.target.closest(sel) : e.composedPath().some(n => n.matches?.(sel));
 document.addEventListener('click', e => { if (!inside(e, '.umenu')) closeUMenu(); });
@@ -4574,10 +4574,12 @@ function openForward(m) {
 $('#messages').addEventListener('contextmenu', e => {
   if (isTouch) return;
   const row = e.target.closest('.row[data-id]'); if (!row) return;
+  // isme, avatara ya da @etikete sağ tıklanınca sadece kullanıcı menüsü açılsın, mesaj menüsü değil
+  if (e.target.closest('.mention[data-u], .row[data-au] .who, .row[data-au] .av')) return;
   const m = S.msgs.find(x => x.id === row.dataset.id); if (!m) return;
   if (m.ephemeral || ['system', 'daily', 'birthday', 'call'].includes(m.kind)) return;
   e.preventDefault();
-  closePop(); closeMsgCtx();
+  closePop(); closeMsgCtx(); closeUMenu?.();
   const acts = msgActs(m), has = a => acts.some(x => x[0] === a);
   const item = (a, i, t, c = '') => `<button class="mc-row ${c}" data-mc="${a}" role="menuitem">${ic(i)}${t}</button>`;
   const rxs = Object.entries(m.reactions || {}).filter(([, us]) => us.length);
