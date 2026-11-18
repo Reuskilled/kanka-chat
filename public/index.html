@@ -113,7 +113,7 @@
   #app { display: flex; height: 100vh; padding: 16px; gap: 16px; overflow: hidden; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 24px; }
 
-  #rail { width: 76px; flex-shrink: 0; padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 10px; overflow-y: auto; }
+  #rail { width: 76px; flex-shrink: 0; padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 10px; overflow-y: auto; overflow-x: hidden; }
   .srv { width: 48px; height: 48px; border-radius: 50%; background: var(--card); border: 2px solid var(--line); font-weight: 800; font-size: 17px; transition: all .15s; position: relative; flex-shrink: 0; }
   .srv:hover { border-radius: 16px; border-color: var(--accent-2); }
   .srv.active { border-radius: 16px; background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -128,7 +128,7 @@
   .pill { padding: 6px 10px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 800; font-size: 12px; white-space: nowrap; }
   .label { font-size: 12px; font-weight: 800; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; padding: 14px 20px 6px; display: flex; justify-content: space-between; align-items: center; }
   .label button { width: 22px; height: 22px; border-radius: 7px; background: var(--accent-soft); color: var(--accent); font-weight: 800; line-height: 1; }
-  #side-list { flex: 1; overflow-y: auto; padding-bottom: 8px; }
+  #side-list { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 8px; }
   .room { display: flex; align-items: center; gap: 10px; margin: 1px 10px; padding: 8px 10px; border-radius: 14px; cursor: pointer; font-weight: 700; color: var(--muted); }
   .room .ico { width: 32px; height: 32px; border-radius: 10px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
   .room:hover { background: var(--hover); color: var(--ink); }
@@ -1423,6 +1423,8 @@
     #rail, #side { position: fixed; top: 0; bottom: 0; z-index: 15; border-radius: 0; transform: translateX(calc(-100% - 90px)); transition: transform .2s; }
     #rail { left: 0; } #side { left: 76px; width: min(280px, calc(100vw - 76px)); }
     body.drawer #rail, body.drawer #side { transform: none; }
+    #rail, #side, #side-list { touch-action: pan-y; overscroll-behavior-x: none; } #side { overflow-x: hidden; }
+    body.gdrag #rail, body.gdrag #side, body.gdrag #members { transition: none; }
     body.drawer::after { content: ''; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 14; }
     #head { padding: 10px 12px; gap: 8px; min-height: 60px; } #head h2 { font-size: 17px; }
     #head-actions .hbtn { width: 34px; height: 34px; }
@@ -4710,18 +4712,23 @@ addEventListener('blur', closeMsgCtx);
   const B = document.body, side = () => $('#side').getBoundingClientRect().right || 356, memW = () => $('#members').offsetWidth || 300;
   const setDrawerX = x => { for (const el of [$('#rail'), $('#side')]) el.style.transform = `translateX(${x}px)`; };
   const clearDrag = () => { B.classList.remove('gdrag'); for (const el of [$('#rail'), $('#side'), $('#members')]) el.style.transform = ''; };
+  let bound = null; // dokunmanın başladığı öğe: iOS hareketin geri kalanını hep ona gönderir, öğe silinse bile
+  const unbind = () => { if (!bound) return; bound.removeEventListener('touchmove', onMove); bound.removeEventListener('touchend', end); bound.removeEventListener('touchcancel', end); bound = null; };
   document.addEventListener('touchstart', e => {
+    // önceki dokunmanın bitişi kaybolduysa (yarıda kalmış çekmece), önce temizle
+    if (g || B.classList.contains('gdrag') || $('#rail').style.transform || $('#side').style.transform || $('#members').style.transform) reset();
     if (e.touches.length !== 1) return;
     const t = e.touches[0], tg = e.target;
     if (tg.closest('#msheet, #modal.open, input, textarea, select, .ftabs, .ptargets, .ax-games, #suggest, .xox, .hm-rooms, video, iframe')) return;
     g = { x0: t.clientX, y0: t.clientY, t0: Date.now(), dx: 0, dy: 0, mode: null, tg };
+    unbind(); bound = tg; tg.addEventListener('touchmove', onMove, { passive: false }); tg.addEventListener('touchend', end, { passive: true }); tg.addEventListener('touchcancel', end, { passive: true });
     g.row = !B.classList.contains('drawer') && !B.classList.contains('mdrawer') ? tg.closest('#messages .row[data-id]') : null;
     if (g.row && !tg.closest('button, a, .wave, video, .xox')) {
       g.row.classList.add('pressing');
       lp = setTimeout(() => { if (!g || g.mode) return; g.mode = 'lp'; g.row.classList.remove('pressing'); const m = S.msgs.find(x => x.id === g.row.dataset.id); if (m && !m.kind?.match?.(/^(system|daily|birthday)$/)) { buzz(15); openMsgSheet(m); } }, 430);
     }
   }, { passive: true });
-  document.addEventListener('touchmove', e => {
+  function onMove(e) {
     if (!g || g.mode === 'lp') return;
     // Oda sürükle-bırak başladıysa çekmece hareketi devre dışı (ikisi aynı anda çalışınca çekmece yarıda takılıyordu)
     if (B.classList.contains('dnd') || dndOn) { clearTimeout(lp); g.row?.classList.remove('pressing'); if (g.mode && g.mode !== 'scroll' && g.mode !== 'none') clearDrag(); g = null; return; }
@@ -4753,8 +4760,9 @@ addEventListener('blur', closeMsgCtx);
       ico.style.opacity = k; ico.style.transform = `scale(${.5 + .5 * k})`;
       if (k >= 1 && !ico.classList.contains('go')) { ico.classList.add('go'); buzz(8); } else if (k < 1) ico.classList.remove('go');
     }
-  }, { passive: false });
-  const end = () => {
+  }
+  function end() {
+    unbind();
     clearTimeout(lp); if (!g) return; g.row?.classList.remove('pressing');
     const fast = Math.abs(g.dx) / Math.max(1, Date.now() - g.t0) > .45;
     if (g.mode === 'reply') {
@@ -4772,15 +4780,14 @@ addEventListener('blur', closeMsgCtx);
       if (g.mode === 'closeM' && (g.dx > 60 || fast)) closeMembers();
     }
     B.classList.remove('gdrag'); g = null;
-  };
-  document.addEventListener('touchend', end, { passive: true }); document.addEventListener('touchcancel', end, { passive: true });
+  }
   document.addEventListener('contextmenu', e => { if (e.target.closest('#messages .row')) e.preventDefault(); });
   // Parmak kaydırırken ya da uzun basma işlemi sürerken telefonun kendi basılı tut menüsü açılmasın
   document.addEventListener('contextmenu', e => {
     if ((g && g.mode && g.mode !== 'none') || B.classList.contains('gdrag') || $('#msheet')?.classList.contains('open')) { e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
   // Uygulama arka plana giderse ya da dokunma yarıda kesilirse çekmeceler yarıda kalmasın
-  const reset = () => { clearTimeout(lp); if (g?.row) { g.row.classList.remove('pressing', 'swiping'); for (const el of g.row.querySelectorAll(':scope > .col, :scope > .av')) el.style.transform = ''; g.row.querySelector('.swr')?.remove(); } clearDrag(); g = null; };
+  function reset() { unbind(); clearTimeout(lp); if (g?.row) { g.row.classList.remove('pressing', 'swiping'); for (const el of g.row.querySelectorAll(':scope > .col, :scope > .av')) el.style.transform = ''; g.row.querySelector('.swr')?.remove(); } clearDrag(); g = null; }
   document.addEventListener('visibilitychange', () => { if (document.hidden) reset(); });
   addEventListener('blur', reset);
 })();
