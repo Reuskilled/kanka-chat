@@ -3205,6 +3205,16 @@
 .lvt h4{margin:0 0 3px;font-size:16px}.lvt p{margin:0;font-size:13px;color:var(--muted)}.lvt p b{color:var(--ink)}
 .lvgo{margin-top:8px;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:10px;border:0;background:var(--lc);color:#1a0f0a;font-weight:800;font-size:13px;cursor:pointer}.lvgo svg{width:14px;height:14px}
 .lvx{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(255,255,255,.06);color:var(--muted);display:grid;place-items:center;cursor:pointer}.lvx svg{width:12px;height:12px}
+
+/* E-posta eksik şeridi (üstte sabit, kapatılabilir) */
+#embar{position:fixed;top:0;left:0;right:0;height:40px;z-index:41;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 48px;background:linear-gradient(90deg,#3a2a12,#4a3412 50%,#3a2a12);border-bottom:1px solid rgba(246,196,69,.35);color:#ffe2a0;font-size:13.5px}
+#embar .eb-i{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:rgba(246,196,69,.18);color:#f6c445;flex:none}#embar .eb-i .ic{width:15px;height:15px}
+#embar .eb-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#embar b{color:#fff}
+#embar .eb-go{flex:none;height:28px;padding:0 12px;border-radius:9px;border:0;background:#f6c445;color:#2a1d00;font-weight:900;font-size:12.5px;cursor:pointer}#embar .eb-go:hover{filter:brightness(1.08)}
+#embar .eb-x{position:absolute;right:10px;top:7px;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:#ffe2a0;opacity:.75;background:none;border:0;cursor:pointer}#embar .eb-x:hover{opacity:1;background:rgba(255,255,255,.08)}#embar .eb-x .ic{width:15px;height:15px}
+body.has-eb #app{height:calc(100vh - 40px);height:calc(100dvh - 40px);margin-top:40px}
+body.has-eb #toasts,body.has-eb #updbar{top:52px}
+@media (max-width:760px){#embar{justify-content:flex-start;padding:0 44px 0 12px;font-size:12.5px;top:env(safe-area-inset-top)}#embar .eb-more{display:none}}
 </style>
 </head>
 <body>
@@ -3796,7 +3806,7 @@ function onAuth(res) {
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
   if ($('#a-pass')) $('#a-pass').value = '';
-  S.myEmail = res.myEmail || null; if (!S.myEmail) setTimeout(remindEmail, 6000); S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.staff = res.staff || null; if (res.warns?.length) setTimeout(() => showWarns(res.warns), 1200); S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
+  S.myEmail = res.myEmail || null; setTimeout(remindEmail, 1500); S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.staff = res.staff || null; if (res.warns?.length) setTimeout(() => showWarns(res.warns), 1200); S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
   renderMe(); renderModPill();
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
@@ -6663,10 +6673,14 @@ const lvTag = L => `<span class="lvl lv-${lvTier(L)[2]}" title="${lvTier(L)[1]} 
 // Seviye atlama anı: kutlama kartı, açılan çerçeveler, sıradaki hedef
 // E-postası olmayanlara hatırlatma: şifreyi unutunca hesabı kurtarmanın tek yolu (3 günde bir, kapatılabilir)
 function remindEmail() {
-  if (S.myEmail || !S.me) return; let last = 0; try { last = +store.get('kanka-emrem') || 0; } catch {}
-  if (Date.now() - last < 3 * 864e5) return;
-  try { store.set('kanka-emrem', String(Date.now())); } catch {}
-  toast(`<b>📧 Hesabına e-posta ekle</b><br>Şifreni unutursan hesabını kurtarmanın tek yolu bu. 10 saniye sürer.<br><small>Dokun ve ekle →</small>`, () => showSettings('account'), true);
+  document.getElementById('embar')?.remove(); document.body.classList.remove('has-eb');
+  if (S.myEmail || !S.me) return; let until = 0; try { until = +store.get('kanka-embar') || 0; } catch {}
+  if (Date.now() < until) return;
+  const bar = document.createElement('div'); bar.id = 'embar'; bar.setAttribute('role', 'alert');
+  bar.innerHTML = `<span class="eb-i">${ic('mail')}</span><span class="eb-t"><b>Hesabına e-posta ekle.</b> <span class="eb-more">Şifreni unutursan hesabını kurtarmanın tek yolu bu.</span></span><button class="eb-go">E-posta ekle</button><button class="eb-x" title="Kapat" aria-label="Kapat">${ic('x')}</button>`;
+  document.body.prepend(bar); document.body.classList.add('has-eb'); document.body.classList.remove('has-ab');
+  bar.querySelector('.eb-go').onclick = () => showSettings('account');
+  bar.querySelector('.eb-x').onclick = () => { try { store.set('kanka-embar', String(Date.now() + 3 * 864e5)); } catch {} bar.remove(); document.body.classList.remove('has-eb'); };
 }
 socket.on('levelUp', ({ level: L, from } = {}) => {
   if (!L) return; document.querySelector('.lvup')?.remove();
@@ -10223,7 +10237,7 @@ function wireAccount() {
   drawTfa(); drawTrash();
   $('#em-save').onclick = () => socket.emit('setEmail', { email: $('#em-new').value, password: $('#em-pw').value }, r => {
     if (r.error) return toast(r.error);
-    S.myEmail = r.email; toast('E-postan kaydedildi'); showSettings('account');
+    S.myEmail = r.email; toast('E-postan kaydedildi'); remindEmail(); showSettings('account');
   });
   socket.emit('myCodes', r => {
     const el = $('#acc-codes'); if (!el || r.error) return;
