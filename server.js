@@ -1434,16 +1434,18 @@ const BADGES = {
 };
 // Elle verilen rozetler (Kanka ekibi verir): u.awards = { avci: { by, time } }
 const AWARDS = ['avci'];
+// Katılım sırası: Claude ve bot hesapları sayılmaz; kayıt tarihi olmayan eski hesaplar en başta, kendi kayıt sıralarıyla
+const joinOrder = () => Object.values(db.users).filter(x => x.name !== 'Claude' && x.name !== BOT_NAME && !x.bot).map((x, i) => [x, i]).sort((a, b) => (a[0].createdAt || 0) - (b[0].createdAt || 0) || a[1] - b[1]).map(([x]) => x.name);
 // Beta Tester sıra numarası (1-300): kayıt sırası, gizlenmişse gönderilmez
 let betaOrderCache = { n: -1, list: [] };
 function betaNoOf(u) {
   if ((u.hideBadges || []).includes('beta')) return undefined;
   const cnt = Object.keys(db.users).length;
-  if (betaOrderCache.n !== cnt) betaOrderCache = { n: cnt, list: Object.values(db.users).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map(x => x.name) };
+  if (betaOrderCache.n !== cnt) betaOrderCache = { n: cnt, list: joinOrder() };
   const i = betaOrderCache.list.indexOf(u.name); return i >= 0 && i < 300 ? i + 1 : undefined;
 }
 function badgesOf(u) {
-  const order = Object.values(db.users).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map(x => x.name);
+  const order = joinOrder();
   const b = [];
   if (order.indexOf(u.name) < 100) b.push('erken');
   if (order.indexOf(u.name) < 300) b.push('beta');

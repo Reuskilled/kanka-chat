@@ -6670,7 +6670,7 @@ function medal(k, size = 28, locked = false) {
 // Üye listesinde ismin yanında gösterilecek tek rozet: en nadir olanı
 const topBadge = u => BADGE_ORDER.find(k => (u?.badges || []).includes(k));
 const betaNoTxt = n => n ? `#${String(n).padStart(3, '0')} / 300` : '';
-const badgeChips = (u, size = 26) => BADGE_ORDER.filter(k => (u?.badges || []).includes(k)).map(k => `<span class="mchip" data-badge="${k}" tabindex="0">${medal(k, size)}</span>`).join('');
+const badgeChips = (u, size = 26) => BADGE_ORDER.filter(k => (u?.badges || []).includes(k)).map(k => `<span class="mchip" data-badge="${k}" data-pn="${esc(u?.name || '')}" tabindex="0">${medal(k, size)}</span>`).join('');
 function badgeGrid(n, u, prog) {
   const me = n === S.me, have = new Set(u.badges || []), list = me ? [...BADGE_ORDER.filter(k => have.has(k)), ...BADGE_ORDER.filter(k => !have.has(k))] : BADGE_ORDER.filter(k => have.has(k));
   if (!list.length) return '';
@@ -6684,7 +6684,7 @@ function showBadgeTip(el) {
   const k = el.dataset.badge, d = BADGE_DEF[k], info = S.badgeInfo?.[k]; if (!d || !info || el.closest('.mcard')) return;
   hideBadgeTip();
   const t = document.createElement('div'); t.className = 'btip'; t.style.cssText = `--rc:${RARITY[d.r][1]}`;
-  const bn = k === 'beta' && S.users[el.closest('[data-pn]')?.dataset.pn || profileOpen]?.betaNo;
+  const pn = el.closest('[data-pn]')?.dataset.pn, bn = k === 'beta' && pn && S.users[pn]?.betaNo; // numara hep rozetin sahibinden gelsin
   t.innerHTML = `${medal(k, 46)}<div><b>${esc(info[1])}</b><span class="rar">${RARITY[d.r][0]}${d.limited ? ' · Sınırlı' : ''}</span>${bn ? `<em class="bno">${betaNoTxt(bn)}</em>` : ''}<small>${esc(info[2])}</small></div>`;
   document.body.appendChild(t);
   const r = el.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight;
