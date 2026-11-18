@@ -3039,6 +3039,52 @@ io.on('connection', socket => {
     console.log(`[rozet] ${me} -> ${name}: ${badge} ${on ? 'verdi' : 'aldı'}`);
     cb({ ok: true, on: !!on });
   });
+  // ---- Sunucu rozeti başvurusu (Doğrulanmış / Kanka Partner): sunucu sahibi başvurur, Kanka yönetimi karar verir ----
+  const SB_REQ = { partner: { members: 50, days: 14 }, dogrulanmis: { members: 0, days: 0 } };
+  const sbInfo = s => { const ms = membersOf(s).length, days = Math.floor((Date.now() - (s.createdAt || Date.now())) / 864e5); return { members: ms, days }; };
+  socket.on('srvBadgeApp', ({ serverId } = {}, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId); if (!s || s.owner !== me) return cb({ error: 'Rozete sadece sunucu sahibi başvurabilir' });
+    const A = (db.srvApps ||= {})[serverId] ||= {};
+    A.code ||= 'kanka-' + crypto.randomBytes(3).toString('hex'); save();
+    const view = t => A[t] ? { status: A[t].status, at: A[t].at, link: A[t].link, about: A[t].about, note: A[t].status === 'rejected' ? A[t].note || '' : '' } : null;
+    cb({ code: A.code, info: sbInfo(s), req: SB_REQ, has: { dogrulanmis: !!s.badges?.dogrulanmis, partner: !!s.badges?.partner }, apps: { dogrulanmis: view('dogrulanmis'), partner: view('partner') } });
+  });
+  socket.on('srvBadgeApply', ({ serverId, type, link, about } = {}, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId); if (!s || s.owner !== me) return cb({ error: 'Rozete sadece sunucu sahibi başvurabilir' });
+    if (!SB_REQ[type]) return cb({ error: 'Geçersiz' });
+    if (s.badges?.[type]) return cb({ error: 'Sunucunda bu rozet zaten var' });
+    if (limited('sb|' + me, 4, 3600e3)) return cb({ error: 'Biraz bekleyip tekrar dene' });
+    const A = (db.srvApps ||= {})[serverId] ||= {}; if (A[type]?.status === 'pending') return cb({ error: 'Başvurun zaten değerlendiriliyor' });
+    const i = sbInfo(s), r = SB_REQ[type];
+    if (i.members < r.members || i.days < r.days) return cb({ error: `Bu rozet için en az ${r.members} üye ve ${r.days} günlük sunucu gerekiyor` });
+    const t = (v, n) => String(v || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
+    link = t(link, 200); about = t(about, 500);
+    if (type === 'dogrulanmis' && !/^https?:\/\/\S+$/i.test(link)) return cb({ error: 'Resmi hesabının bağlantısını gir (https:// ile)' });
+    if (link && !/^https?:\/\/\S+$/i.test(link)) return cb({ error: 'Bağlantı https:// ile başlamalı' });
+    if (about.length < 20) return cb({ error: 'Biraz daha anlat (en az 20 karakter)' });
+    A[type] = { status: 'pending', at: Date.now(), by: me, link, about, members: i.members, days: i.days };
+    save();
+    for (const n of Object.keys(db.users)) if (staffRank(n)) io.to('user:' + n).emit('toast', `🏷️ Yeni sunucu rozeti başvurusu: ${s.name}`);
+    cb({ ok: true });
+  });
+  socket.on('adminSrvApps', (_ = {}, cb = () => {}) => {
+    if (!siteMod(me)) return cb({ error: 'Yetkin yok' });
+    const list = [];
+    for (const [sid, A] of Object.entries(db.srvApps || {})) { const s = db.servers.find(x => x.id === sid); if (!s) continue;
+      for (const type of ['dogrulanmis', 'partner']) if (A[type]) list.push({ serverId: sid, name: s.name, owner: s.owner, iconImg: s.iconImg || null, icon: s.icon || null, code: A.code, type, ...A[type], now: sbInfo(s) }); }
+    list.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || b.at - a.at);
+    cb({ list, canDecide: siteAdmin(me) });
+  });
+  socket.on('adminSrvDecide', ({ serverId, type, status, note } = {}, cb = () => {}) => {
+    if (!siteAdmin(me)) return cb({ error: 'Rozet kararını sadece Kanka yönetimi verebilir' });
+    const s = db.servers.find(x => x.id === serverId), a = db.srvApps?.[serverId]?.[type];
+    if (!s || !a || !['accepted', 'rejected'].includes(status)) return cb({ error: 'Geçersiz' });
+    a.status = status; a.decidedBy = me; a.decidedAt = Date.now(); a.note = String(note || '').slice(0, 300);
+    const label = type === 'partner' ? 'Kanka Partner' : 'Doğrulanmış';
+    if (status === 'accepted') { s.badges ||= {}; s.badges[type] = { by: me, time: Date.now() }; audit(s, me, 'Rozet verdi', label); pushServers(membersOf(s)); for (const n of membersOf(s)) io.to('user:' + n).emit('toast', `🎉 ${s.name} artık ${label} bir sunucu`); }
+    else io.to('user:' + s.owner).emit('toast', `${s.name} için ${label} başvurusu bu sefer olmadı${a.note ? ': ' + a.note : ''}. Sunucu ayarları › Rozetler'den tekrar başvurabilirsin`);
+    save(); console.log(`[rozet-başvuru] ${me} -> ${s.name}: ${type} ${status}`); cb({ ok: true });
+  });
   socket.on('serverBadge', ({ serverId, badge, on } = {}, cb = () => {}) => {
     if (!siteAdmin(me)) return cb({ error: 'Rozetleri sadece Kanka Chat yönetimi verebilir' });
     const s = db.servers.find(x => x.id === serverId);

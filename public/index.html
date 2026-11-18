@@ -566,6 +566,14 @@
   .ep-prev .ps { font-size: 9px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
   .ep-search input::placeholder { color: var(--muted); font-weight: 600; }
   .ep-search input:focus { border-color: var(--accent-2); }
+  .bc-how { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; } .bc-how b { display: flex; align-items: center; gap: 6px; color: var(--ink); font-size: 13px; } .bc-how b .ic { width: 15px; height: 15px; }
+  .bc-apply { justify-self: start; display: flex; align-items: center; gap: 4px; padding: 7px 12px; border-radius: 10px; background: var(--accent); color: #1a0f08; font-weight: 800; font-size: 13px; margin-top: 4px; } .bc-apply .ic { width: 14px; height: 14px; transform: rotate(-90deg); }
+  .sb-card { padding: 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); margin-bottom: 12px; } .sb-card.focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .sb-h { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; } .sb-h b { display: block; font-size: 16px; } .sb-h small { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .sb-req { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 6px; } .sb-req li { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: var(--muted); } .sb-req li .ic { width: 16px; height: 16px; color: var(--red); } .sb-req li.ok { color: var(--ink); } .sb-req li.ok .ic { color: #4cc38a; } .sb-req small { font-weight: 600; color: var(--muted); }
+  .sb-st { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; font-weight: 800; font-size: 13.5px; background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--c); margin-bottom: 10px; } .sb-st .ic { width: 16px; height: 16px; }
+  .sb-code { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--bg); border: 1px dashed var(--line); } .sb-code span { color: var(--muted); font-weight: 700; font-size: 13px; } .sb-code b { flex: 1; font-family: ui-monospace, monospace; font-size: 16px; color: var(--accent); } .sb-code button { width: auto; margin: 0; padding: 6px 12px; }
+  .sb-form { display: grid; gap: 8px; } .sb-form .field { margin: 0; }
   .dv-hero { display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: 16px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, var(--card)), var(--card)); border: 1px solid var(--line); margin-bottom: 12px; }
   .dv-hi { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--accent); color: #1a0f08; flex-shrink: 0; } .dv-hi .ic { width: 24px; height: 24px; }
   .dv-hero b { display: block; font-size: 16px; } .dv-hero span { color: var(--muted); font-size: 13.5px; font-weight: 600; }
@@ -3274,14 +3282,28 @@ const SRV_BADGES = {
 };
 const badgeSvg = (id, size = 18) => { const b = SRV_BADGES[id]; return b ? `<svg class="sbadge" width="${size}" height="${size}" viewBox="0 0 24 24" style="color:${b.fg}" aria-hidden="true"><path d="${BADGE_SHAPE}" fill="${b.c}"/>${b.icon}</svg>` : ''; };
 const badgeRow = (s, size = 18) => (s?.badges || []).map(b => `<button type="button" class="sbadge-btn" data-sbadge="${b.id}" data-srv="${esc(s.id || '')}" title="${SRV_BADGES[b.id]?.t || ''}" aria-label="${SRV_BADGES[b.id]?.t || ''} rozeti">${badgeSvg(b.id, size)}</button>`).join('');
+const SB_HOW = {
+  dogrulanmis: 'Bir yayıncı, içerik üreticisi, takım ya da marka isen sunucunun gerçekten sana ait olduğunu kanıtlarsın. Sunucu sahibi Sunucu ayarları › Rozetler\'den başvurur, resmi hesabının açıklamasına verilen kodu ekler.',
+  partner: 'Aktif ve iyi yönetilen topluluklara verilir. En az 50 üye ve 14 günlük sunucu gerekir, kuralları olan ve düzenli konuşulan sunucular öne çıkar. Sunucu sahibi Sunucu ayarları › Rozetler\'den başvurur.',
+  topluluk: 'Başvuru gerekmez: sunucun 15 üyeye ulaşıp bir haftayı geçince kendiliğinden gelir.',
+  resmi: 'Sadece Kanka Chat\'in kendi sunucusu Kanka HQ\'da bulunur.',
+};
+function openBadgeApply(id) {
+  const mine = S.servers.filter(x => x.owner === S.me && !x.public && x.id !== 's1');
+  if (!mine.length) return toast('Rozete başvurmak için önce kendi sunucunu kurmalısın');
+  const s = (S.server && mine.find(x => x.id === S.server.id)) || mine[0];
+  showServerSettings(s, 'badges'); ssOpen.sbFocus = id;
+}
 function showBadgeCard(el, srv, id) {
   document.querySelector('.bcard')?.remove();
   const b = SRV_BADGES[id], info = (srv?.badges || []).find(x => x.id === id) || {};
   const card = document.createElement('div'); card.className = 'bcard'; card.setAttribute('role', 'dialog');
   card.innerHTML = `<div class="bc-top">${badgeSvg(id, 46)}<div><b>${b.t}</b><small>${esc(srv?.name || '')}</small></div></div><p>${b.d}</p>` +
     (info.since && id !== 'topluluk' ? `<div class="bc-meta">${ic('clock')}${new Date(info.since).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}${id === 'resmi' ? ' tarihinden beri' : ' tarihinde verildi'}</div>` : '') +
-    (srv?.siteAdmin && (id === 'dogrulanmis' || id === 'partner') ? `<button class="bc-adm" data-rm="${id}">Rozeti kaldır</button>` : '');
+    (srv?.siteAdmin && (id === 'dogrulanmis' || id === 'partner') ? `<button class="bc-adm" data-rm="${id}">Rozeti kaldır</button>` : '') +
+    (SB_HOW[id] ? `<div class="bc-how"><b>${ic('info')}Bu rozeti nasıl alırım?</b><span>${SB_HOW[id]}</span>${id !== 'resmi' && id !== 'topluluk' ? `<button class="bc-apply" data-apply="${id}">Sunucum için başvur ${ic('chevron')}</button>` : ''}</div>` : '');
   document.body.appendChild(card);
+  const ap = card.querySelector('[data-apply]'); if (ap) ap.onclick = () => { card.remove(); openBadgeApply(id); };
   const r = el.getBoundingClientRect(), w = card.offsetWidth;
   card.style.left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8)) + 'px';
   card.style.top = (r.bottom + 8 + card.offsetHeight > innerHeight ? r.top - card.offsetHeight - 8 : r.bottom + 8) + 'px';
@@ -4870,6 +4892,7 @@ function showServerSettings(s, tab, focus) {
   const tabs = [['general', 'Genel', 'gear', P('manageServer')], ['roles', 'Roller', 'tag', P('manageRoles')], ['channels', 'Odalar', 'hash', mod], ['members', 'Üyeler', 'users', !s.public && (P('manageRoles') || P('kick') || P('ban') || P('timeout'))],
     ['bot', 'Kanka Bot', 'shield', P('manageServer')], ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
     ['template', 'Şablon', 'file', s.owner === S.me && P('manageServer')],
+    ['badges', 'Rozetler', 'check', s.owner === S.me && !s.public && s.id !== 's1'],
     ['emoji', 'Emojiler', 'smile', mod || P('manageEmojis')], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod || P('viewAudit')]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
@@ -5009,6 +5032,31 @@ function showServerSettings(s, tab, focus) {
       $('#sv-afk').onchange = afkSave; $('#sv-afkm').onchange = afkSave;
       $('#sv-slow').onchange = e => socket.emit('updateServer', { serverId: s.id, slow: +e.target.value }, r => r.error ? toast(r.error) : toast('Yavaş mod güncellendi'));
       if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(`${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
+    },
+    badges: () => {
+      main.innerHTML = `<div class="st-page"><h3>Rozetler</h3><p class="hint">Rozetler sunucunun adının yanında görünür, üyelere güven verir. Doğrulanmış ve Kanka Partner rozetlerini Kanka Chat yönetimi verir.</p><div id="sb-root"><p class="hint">Yükleniyor…</p></div></div>`;
+      socket.emit('srvBadgeApp', { serverId: s.id }, r => {
+        const root = $('#sb-root'); if (!root) return; if (r.error) { root.innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
+        const ST = { pending: ['Değerlendiriliyor', '#f6c445'], accepted: ['Verildi', '#4cc38a'], rejected: ['Olmadı', '#e5484d'] };
+        const reqRow = (ok, t) => `<li class="${ok ? 'ok' : ''}">${ic(ok ? 'check' : 'x')}${t}</li>`;
+        const card = (id) => { const b = SRV_BADGES[id], a = r.apps[id], q = r.req[id], has = r.has[id];
+          const okM = r.info.members >= q.members, okD = r.info.days >= q.days, can = okM && okD;
+          let body;
+          if (has) body = `<div class="sb-st" style="--c:#4cc38a">${ic('check')} Sunucunda bu rozet var</div>`;
+          else if (a?.status === 'pending') body = `<div class="sb-st" style="--c:#f6c445">${ic('clock')} Başvurun değerlendiriliyor · ${new Date(a.at).toLocaleDateString('tr', { day: 'numeric', month: 'long' })}</div>`;
+          else body = `${a?.status === 'rejected' ? `<div class="sb-st" style="--c:#e5484d">${ic('x')} Önceki başvuru olmadı${a.note ? ': ' + esc(a.note) : ''}. Tekrar başvurabilirsin.</div>` : ''}
+            ${q.members || q.days ? `<ul class="sb-req">${reqRow(okM, `En az ${q.members} üye <small>(şu an ${r.info.members})</small>`)}${reqRow(okD, `En az ${q.days} günlük sunucu <small>(şu an ${r.info.days} gün)</small>`)}</ul>` : ''}
+            ${id === 'dogrulanmis' ? `<div class="sb-code"><span>Doğrulama kodun</span><b>${esc(r.code)}</b><button type="button" class="btns2" data-copy="${esc(r.code)}">${ic('copy')} Kopyala</button></div><p class="hint" style="margin:6px 0 10px">Bu kodu başvurduğun resmi hesabının (YouTube, Twitch, Instagram, TikTok, X…) açıklamasına geçici olarak ekle. Ekip kontrol edince kaldırabilirsin.</p>` : ''}
+            ${can ? `<form class="sb-form" data-sbf="${id}"><input class="field" name="link" maxlength="200" placeholder="${id === 'dogrulanmis' ? 'Resmi hesabının bağlantısı (zorunlu)' : 'Sosyal medya ya da web sitesi (isteğe bağlı)'}">
+              <textarea class="field" name="about" maxlength="500" rows="3" placeholder="${id === 'dogrulanmis' ? 'Kimsin, bu sunucu kime ait? Örn. 120 bin aboneli YouTube kanalımın resmi topluluk sunucusu' : 'Sunucun ne hakkında, neden partner olmalı? Etkinlikler, kurallar, moderasyon…'}"></textarea>
+              <button class="primary" style="width:auto;padding:10px 18px">${ic('send')} Başvur</button></form>` : `<p class="hint" style="margin:0">Şartları karşılayınca buradan başvurabilirsin.</p>`}`;
+          return `<div class="sb-card ${ssOpen.sbFocus === id ? 'focus' : ''}" id="sb-${id}"><div class="sb-h">${badgeSvg(id, 40)}<div><b>${b.t}</b><small>${SB_HOW[id]}</small></div></div>${body}</div>`; };
+        root.innerHTML = `<div class="sb-card"><div class="sb-h">${badgeSvg('topluluk', 40)}<div><b>${SRV_BADGES.topluluk.t}</b><small>${SB_HOW.topluluk}</small></div></div>${(s.badges || []).some(x => x.id === 'topluluk') ? `<div class="sb-st" style="--c:#4cc38a">${ic('check')} Sunucunda bu rozet var</div>` : `<ul class="sb-req">${reqRow(r.info.members >= 15, `En az 15 üye <small>(şu an ${r.info.members})</small>`)}${reqRow(r.info.days >= 7, `En az 7 günlük sunucu <small>(şu an ${r.info.days} gün)</small>`)}</ul>`}</div>` + card('dogrulanmis') + card('partner');
+        root.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(b.dataset.copy).then(() => toast('Kopyalandı')));
+        root.querySelectorAll('[data-sbf]').forEach(f => f.onsubmit = e => { e.preventDefault(); const bt = f.querySelector('button'); bt.disabled = true;
+          socket.emit('srvBadgeApply', { serverId: s.id, type: f.dataset.sbf, link: f.link.value, about: f.about.value }, x => { bt.disabled = false; if (x.error) return toast(x.error); toast('Başvurun alındı! Sonuç çıkınca haber vereceğiz', null, false, { type: 'ok' }); page.badges(); }); });
+        if (ssOpen.sbFocus) { $('#sb-' + ssOpen.sbFocus)?.scrollIntoView({ block: 'center' }); ssOpen.sbFocus = null; }
+      });
     },
     template: () => {
       main.innerHTML = `<div class="st-page"><h3>Şablon</h3><p class="hint">Bir sunucunun kategori, oda, rol ve izin düzenini bu sunucuya taşırsın. Uygularken hiçbir şey silinmez; mesajlar ve üyelerin rolleri korunur.</p>
@@ -9804,6 +9852,20 @@ function devPage(root) {
         b.disabled = false; if (x.error) return toast(x.error); toast('Başvurun alındı! Sonuç çıkınca haber vereceğiz', null, false, { type: 'ok' }); devPage(root); }); };
   });
 }
+function admSrvApps(B) {
+  socket.emit('adminSrvApps', {}, r => {
+    if (r.error) { B.innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
+    const ST = { pending: ['Bekliyor', '#f6c445'], accepted: ['Verildi', '#4cc38a'], rejected: ['Olmadı', '#e5484d'] };
+    B.innerHTML = `<div class="adm-box"><b>${r.list.length} başvuru · ${r.list.filter(a => a.status === 'pending').length} bekliyor</b><p class="hint" style="margin:4px 0 0">Doğrulanmış: bağlantıdaki resmi hesabın açıklamasında doğrulama kodu var mı bak. Partner: sunucuya girip aktifliğine ve kurallarına bak.</p></div>` +
+      (r.list.length ? r.list.map(a => { const [st, c] = ST[a.status]; return `<div class="dv-app" style="--c:${c}"><div class="dv-ah">${badgeSvg(a.type, 34)}<div style="flex:1;min-width:0"><b>${esc(a.name)} · ${SRV_BADGES[a.type].t}</b><small>sahibi @${esc(a.owner)} · ${new Date(a.at).toLocaleString('tr', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></div><span class="dv-st">${st}</span></div>
+        <div class="dv-kv"><span>Üye</span><b>${a.now.members}</b><span>Yaş</span><b>${a.now.days} gün</b>${a.type === 'dogrulanmis' ? `<span>Kod</span><b><code>${esc(a.code)}</code></b>` : ''}${a.link ? `<span>Bağlantı</span><b><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.link)}</a></b>` : ''}</div>
+        <p class="dv-idea">${esc(a.about)}</p>
+        ${r.canDecide && a.status === 'pending' ? `<div class="dv-act"><button class="primary" data-sd="accepted" data-sid="${a.serverId}" data-t="${a.type}">${ic('check')} Rozeti ver</button><button class="btns2" data-sd="rejected" data-sid="${a.serverId}" data-t="${a.type}">Reddet</button><button class="btns2" data-dm="${esc(a.owner)}">${ic('chat')} Sahibine yaz</button></div>` : a.decidedBy ? `<small class="hint">${esc(a.decidedBy)} karar verdi</small>` : !r.canDecide ? '<small class="hint">Karar Kurucu ve Yöneticilerde</small>' : ''}</div>`; }).join('') : '<p class="hint">Henüz başvuru yok.</p>');
+    B.querySelectorAll('[data-sd]').forEach(b => b.onclick = () => { const go = note => socket.emit('adminSrvDecide', { serverId: b.dataset.sid, type: b.dataset.t, status: b.dataset.sd, note }, x => x.error ? toast(x.error) : (toast(b.dataset.sd === 'accepted' ? 'Rozet verildi' : 'Başvuru reddedildi', null, false, { type: 'ok' }), admSrvApps(B)));
+      if (b.dataset.sd === 'accepted') return go(''); const note = prompt('Sahibine iletilecek kısa sebep (isteğe bağlı), örn. "Hesabın açıklamasında kodu bulamadık"'); if (note !== null) go(note); });
+    B.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { closeModal(); openDM?.(b.dataset.dm); });
+  });
+}
 function admDev(B) {
   socket.emit('adminDevApps', {}, r => {
     if (r.error) { B.innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
@@ -9823,7 +9885,7 @@ function admDev(B) {
 // ================= Kanka yönetimi (site yöneticisi) =================
 function adminPanel(el, sub = 'overview') {
   const R = S.staff, A = ['owner', 'admin'].includes(R);
-  const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['log', 'Kayıtlar', 'clock'],
+  const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['srvapps', 'Sunucu rozetleri', 'check'], ['log', 'Kayıtlar', 'clock'],
     ...(A ? [['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
   if (!subs.some(x => x[0] === sub)) sub = 'overview';
   el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
@@ -9833,6 +9895,7 @@ function adminPanel(el, sub = 'overview') {
   if (sub === 'overview') return admOverview(B, el);
   if (sub === 'team') return admTeam(B);
   if (sub === 'dev') return admDev(B);
+  if (sub === 'srvapps') return admSrvApps(B);
   if (sub === 'log') return admLog(B);
   if (sub === 'users') return admUsers(B);
   if (sub === 'reports') return reportsPanel(B, null);
