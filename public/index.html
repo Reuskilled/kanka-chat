@@ -73,6 +73,17 @@
   body.ui2 .room.unread .ico { background: rgba(255,106,44,.13); color: var(--accent); }
   body.ui2 .room.active { background: #2c221d; }
   body.ui2 .room.active .ico { background: var(--accent); color: #fff; }
+  /* Oda listesi: kaydırma çubuğu yer kaplamasın; üstüne gelince vurgu */
+  #side-list { scrollbar-width: none; }
+  #side-list::-webkit-scrollbar { display: none; width: 0; }
+  @media (hover: hover) {
+    body.ui2 #side-list .room { transition: background-color .15s, color .15s, transform .18s var(--ease, ease), box-shadow .15s; }
+    body.ui2 #side-list .room .ico { transition: background-color .15s, color .15s, transform .18s; }
+    body.ui2 #side-list .room:not(.active):hover { background: #2a201b; color: var(--ink); box-shadow: inset 0 0 0 1px rgba(255,138,76,.18); }
+    body.ui2 #side-list .room:not(.active):hover .ico { background: rgba(255,138,76,.16); color: #ffb38a; transform: scale(1.06); }
+    body.ui2 #side-list .room.active:hover { box-shadow: inset 0 0 0 1px rgba(255,138,76,.3); }
+    body.ui2 #side-list .room:active { transform: translateX(3px) scale(.985); }
+  }
   body.ui2.light .room.active { background: var(--hover); }
   /* Şu an canlı */
   body.ui2 #side .livenow { display: block; padding: 4px 10px 2px; }
