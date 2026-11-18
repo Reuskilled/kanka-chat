@@ -3077,6 +3077,51 @@
     .box.settings.mset .st-main .st-page > h3:first-child { display: none; }
   }
   @keyframes msIn { from { opacity: 0; transform: translateY(8px); } } @keyframes msPage { from { opacity: 0; transform: translateX(24px); } }
+
+/* Rozet detay kartı */
+#bpanel{position:fixed;z-index:10050;width:340px;max-width:calc(100vw - 24px);background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 14%,#1b1512) 0,#15100d 46%);border:1px solid color-mix(in srgb,var(--rc) 35%,#3a2e27);border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03) inset;color:var(--ink);padding:18px 20px 18px;text-align:center;animation:bpIn .18s cubic-bezier(.2,.9,.3,1.2);overflow:hidden}
+#bpanel.out{animation:bpOut .16s ease forwards}
+#bpanel.sheet{left:0!important;right:0;bottom:0;top:auto!important;width:100%;max-width:none;border-radius:22px 22px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom));animation:bpUp .24s cubic-bezier(.2,.9,.3,1);max-height:88vh;overflow-y:auto}
+#bpanel.sheet.out{animation:bpDown .18s ease forwards}
+#bpanel-bg{position:fixed;inset:0;z-index:10049;background:rgba(0,0,0,.5);animation:bpFade .2s}
+#bpanel-bg.out{opacity:0;transition:opacity .16s}
+@keyframes bpIn{from{opacity:0;transform:scale(.94)}}@keyframes bpOut{to{opacity:0;transform:scale(.96)}}
+@keyframes bpUp{from{transform:translateY(100%)}}@keyframes bpDown{to{transform:translateY(100%)}}@keyframes bpFade{from{opacity:0}}
+.bp-grab{width:40px;height:4px;border-radius:4px;background:#5a4a40;margin:-6px auto 6px}
+.bp-x{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:0;color:var(--muted);cursor:pointer;z-index:2}
+.bp-x:hover{background:rgba(255,255,255,.12);color:var(--ink)}.bp-x svg{width:16px;height:16px}
+.bp-hero{position:relative;height:132px;display:grid;place-items:center;margin:2px 0 6px}
+.bp-hero .medal{position:relative;z-index:1;filter:drop-shadow(0 8px 18px color-mix(in srgb,var(--rc) 45%,transparent))}
+.bp-glow{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--rc) 45%,transparent) 0,transparent 68%)}
+.bp-rays{position:absolute;width:230px;height:230px;border-radius:50%;opacity:0;background:repeating-conic-gradient(color-mix(in srgb,var(--rc) 30%,transparent) 0 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 66%);mask:radial-gradient(circle,#000 18%,transparent 66%)}
+#bpanel.r3 .bp-rays{opacity:.9;animation:bpSpin 18s linear infinite}
+#bpanel.lock .bp-rays,#bpanel.lock .bp-glow{opacity:.15;filter:grayscale(1)}
+@keyframes bpSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#bpanel.r3 .bp-rays{animation:none}}
+#bpanel h3{margin:4px 0 6px;font-size:21px;font-weight:800;letter-spacing:-.01em}
+.bp-rar{display:flex;gap:6px;justify-content:center;margin-bottom:10px}
+.bp-rar span{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--rc);background:color-mix(in srgb,var(--rc) 14%,transparent);border:1px solid color-mix(in srgb,var(--rc) 35%,transparent);padding:3px 9px;border-radius:99px}
+.bp-rar .lim{color:#ffd27a;background:rgba(255,210,122,.1);border-color:rgba(255,210,122,.35)}
+.bp-desc{margin:0 auto 14px;max-width:280px;color:var(--muted);font-size:14px;line-height:1.45}
+.bp-how{display:flex;gap:6px;align-items:flex-start;text-align:left;font-size:12.5px;color:var(--muted);background:rgba(255,255,255,.04);border-radius:10px;padding:8px 10px;margin:-4px 0 12px}.bp-how svg{width:14px;height:14px;flex:none;margin-top:1px}
+.bp-bar{height:8px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden}
+.bp-bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--c1),var(--c2));box-shadow:0 0 10px color-mix(in srgb,var(--c2) 60%,transparent)}
+.bp-prog{text-align:left;margin:0 0 14px}.bp-prog span{display:block;font-size:12.5px;color:var(--muted);margin-top:6px;font-weight:600}
+.bp-beta{text-align:left;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.bp-bt{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}.bp-bt b{font-size:20px;font-weight:900}.bp-bt span{font-size:11.5px;color:var(--muted);text-align:right}
+.bp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.bp-stats>div{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:9px 10px;text-align:left}
+.bp-stats small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;margin-bottom:2px}.bp-stats b{font-size:13.5px}
+.bp-who{display:flex;align-items:center;gap:10px;text-align:left;font-size:12.5px;color:var(--muted);padding:4px 2px 2px}
+.bp-avs{display:flex;flex:none}.bp-avs>span{cursor:pointer;margin-left:-8px;border-radius:50%;box-shadow:0 0 0 2px #15100d}.bp-avs>span:first-child{margin-left:0}
+.bp-avs .av{width:28px;height:28px;font-size:12px}.bp-avs .av::after{display:none}
+.bp-who b{color:var(--ink);font-weight:700}
+.bp-load{height:40px;border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.03),rgba(255,255,255,.07),rgba(255,255,255,.03));background-size:200% 100%;animation:bpSh 1s linear infinite;margin-bottom:10px}
+@keyframes bpSh{to{background-position:-200% 0}}
+.bp-acts{display:flex;gap:8px;margin-top:12px}
+.bp-acts button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--ink);font-weight:700;font-size:13.5px;cursor:pointer}
+.bp-acts button:hover{background:rgba(255,255,255,.1)}.bp-acts svg{width:15px;height:15px}
+[data-badge]{cursor:pointer}
 </style>
 </head>
 <body>
@@ -6681,7 +6726,7 @@ function badgeGrid(n, u, prog) {
 // Üstüne gelince detay kartı
 let btipT = null;
 function showBadgeTip(el) {
-  const k = el.dataset.badge, d = BADGE_DEF[k], info = S.badgeInfo?.[k]; if (!d || !info || el.closest('.mcard')) return;
+  const k = el.dataset.badge, d = BADGE_DEF[k], info = S.badgeInfo?.[k]; if (!d || !info || el.closest('.mcard') || $('#bpanel')) return;
   hideBadgeTip();
   const t = document.createElement('div'); t.className = 'btip'; t.style.cssText = `--rc:${RARITY[d.r][1]}`;
   const pn = el.closest('[data-pn]')?.dataset.pn, bn = k === 'beta' && pn && S.users[pn]?.betaNo; // numara hep rozetin sahibinden gelsin
@@ -6696,6 +6741,62 @@ document.addEventListener('pointerover', e => { const el = e.target.closest?.('[
 document.addEventListener('pointerout', e => { if (e.target.closest?.('[data-badge]')) { clearTimeout(btipT); hideBadgeTip(); } });
 document.addEventListener('focusin', e => { const el = e.target.closest?.('[data-badge]'); if (el) showBadgeTip(el); });
 document.addEventListener('focusout', hideBadgeTip);
+// Rozete tıklayınca büyük detay kartı (masaüstünde balon, telefonda alttan açılan sayfa)
+const BADGE_UNIT = { sohbet: 'mesaj', efsane: 'mesaj', seri7: 'gün', sosyal: 'arkadaş', xox: 'galibiyet', caylak: 'adım' };
+function closeBadgePanel() { const p = $('#bpanel'); if (!p) return; p.classList.add('out'); $('#bpanel-bg')?.classList.add('out'); setTimeout(() => { p.remove(); $('#bpanel-bg')?.remove(); }, 160); }
+function openBadgePanel(k, owner, anchor) {
+  const d = BADGE_DEF[k], info = S.badgeInfo?.[k]; if (!d || !info) return;
+  hideBadgeTip(); clearTimeout(btipT); $('#bpanel')?.remove(); $('#bpanel-bg')?.remove();
+  const ou = S.users[owner], got = (ou?.badges || []).includes(k), mine = owner === S.me, sheet = innerWidth < 700, rc = RARITY[d.r][1];
+  const pr = !got && mine ? window._bprog?.[k] : null;
+  const p = document.createElement('div'); p.id = 'bpanel'; p.className = `bpanel r${d.r} ${sheet ? 'sheet' : 'pop'} ${got ? '' : 'lock'}`; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', info[1]);
+  p.style.cssText = `--rc:${rc};--c1:${d.c[0]};--c2:${d.c[1]}`;
+  let prog = '';
+  if (pr && pr[1] > 1) { const u = BADGE_UNIT[k] || '', left = Math.max(0, pr[1] - pr[0]); prog = `<div class="bp-prog"><div class="bp-bar"><i style="width:${Math.min(100, Math.round(pr[0] / pr[1] * 100))}%"></i></div><span>${pr[0]} / ${pr[1]} ${u}${left ? ` · ${left} ${u} kaldı` : ''}</span></div>`; }
+  p.innerHTML = `${sheet ? '<div class="bp-grab"></div>' : ''}<button class="bp-x" aria-label="Kapat">${ic('x')}</button>
+    <div class="bp-hero"><div class="bp-rays"></div><div class="bp-glow"></div>${medal(k, 96, !got)}</div>
+    <h3>${esc(info[1])}</h3><div class="bp-rar"><span>${RARITY[d.r][0]}</span>${d.limited ? '<span class="lim">Sınırlı</span>' : ''}</div>
+    <p class="bp-desc">${esc(got ? info[2] : d.how)}</p>
+    ${!got && !mine ? `<p class="bp-how">${ic('info')} ${esc(d.how)}</p>` : ''}
+    ${prog}
+    <div class="bp-dyn"><div class="bp-load"></div></div>
+    <div class="bp-acts"><button class="bp-all">${ic('grid')} Tüm rozetler</button></div>`;
+  document.body.appendChild(p);
+  if (sheet) { const bg = document.createElement('div'); bg.id = 'bpanel-bg'; document.body.insertBefore(bg, p); bg.onclick = closeBadgePanel; }
+  const place = () => {
+    if (sheet || !anchor?.isConnected) { if (!sheet) { p.style.left = (innerWidth - p.offsetWidth) / 2 + 'px'; p.style.top = Math.max(12, (innerHeight - p.offsetHeight) / 2) + 'px'; } return; }
+    const r = anchor.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight;
+    let x = r.right + 12, y = r.top + r.height / 2 - h / 2;
+    if (x + w > innerWidth - 12) x = r.left - w - 12;
+    if (x < 12) { x = Math.max(12, Math.min(innerWidth - w - 12, r.left + r.width / 2 - w / 2)); y = r.bottom + 12 + h > innerHeight - 12 ? r.top - h - 12 : r.bottom + 12; }
+    p.style.left = x + 'px'; p.style.top = Math.max(12, Math.min(innerHeight - h - 12, y)) + 'px';
+  };
+  place();
+  p.querySelector('.bp-x').onclick = closeBadgePanel;
+  p.querySelector('.bp-all').onclick = () => { closeBadgePanel(); const go = () => $('#pf-badges-sec')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (profileOpen === owner && $('#pf-badges-sec')) go(); else { showProfile(owner); setTimeout(go, 250); } };
+  socket.emit('badgeStats', { badge: k, owner }, r => {
+    const box = p.querySelector('.bp-dyn'); if (!box || !p.isConnected) return;
+    if (!r || r.error) { box.innerHTML = ''; place(); return; }
+    const pct = r.total ? r.count / r.total * 100 : 0, pctT = pct === 0 ? '0' : pct < 1 ? '<1' : Math.round(pct);
+    const bn = k === 'beta' && got ? ou?.betaNo : null;
+    const date = got && r.earned ? new Date(r.earned).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    let h = '';
+    if (bn) h += `<div class="bp-beta"><div class="bp-bt"><b class="bno">${betaNoTxt(bn)}</b><span>${r.betaGiven >= 300 ? '300 rozetin hepsi dağıtıldı' : `${r.betaGiven} / 300 dağıtıldı`}</span></div><div class="bp-bar"><i style="width:${Math.round(bn / 300 * 100)}%"></i></div></div>`;
+    else if (k === 'beta') h += `<div class="bp-beta"><div class="bp-bt"><b>${Math.min(300, r.betaGiven || 0)} / 300</b><span>${r.betaGiven >= 300 ? '300 rozetin hepsi dağıtıldı' : 'rozet dağıtıldı'}</span></div><div class="bp-bar"><i style="width:${Math.round(Math.min(300, r.betaGiven || 0) / 3)}%"></i></div></div>`;
+    h += `<div class="bp-stats">${date ? `<div><small>Kazanıldı</small><b>${date}</b></div>` : ''}<div><small>Kimde var</small><b>${r.count ? `%${pctT} kullanıcıda` : 'Henüz kimsede yok'}</b></div></div>`;
+    if (r.sample?.length) { const more = r.count - r.sample.length - (got ? 1 : 0); h += `<div class="bp-who"><div class="bp-avs">${r.sample.map(n => `<span data-u="${esc(n)}" title="${esc(n)}">${av(n)}</span>`).join('')}</div><span>${r.sample.map(n => `<b>${esc(S.users[n]?.displayName || n)}</b>`).slice(0, 2).join(', ')}${more > 0 ? ` ve ${more} kişide daha var` : ''}</span></div>`; }
+    box.innerHTML = h;
+    box.querySelectorAll('[data-u]').forEach(x => x.onclick = () => { closeBadgePanel(); showProfile(x.dataset.u); });
+    place();
+  });
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest?.('[data-badge]');
+  if (el && BADGE_DEF[el.dataset.badge]) { e.preventDefault(); e.stopPropagation(); const owner = el.closest('[data-pn]')?.dataset.pn || profileOpen || S.me; if ($('#bpanel')?.dataset.k === el.dataset.badge + owner) return closeBadgePanel(); openBadgePanel(el.dataset.badge, owner, el); $('#bpanel') && ($('#bpanel').dataset.k = el.dataset.badge + owner); return; }
+  if ($('#bpanel') && !e.target.closest?.('#bpanel')) closeBadgePanel();
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#bpanel')) { e.stopPropagation(); closeBadgePanel(); } }, true);
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('[data-badge]')) { e.preventDefault(); e.target.click(); } });
 
 // ================= Profil 2.0 =================
 const dn = n => uNicks[n] || S.users[n]?.displayName || n;

@@ -1437,7 +1437,7 @@ const AWARDS = ['avci'];
 // Katılım sırası: Claude ve bot hesapları sayılmaz; kayıt tarihi olmayan eski hesaplar en başta, kendi kayıt sıralarıyla
 const joinOrder = () => Object.values(db.users).filter(x => x.name !== 'Claude' && x.name !== BOT_NAME && !x.bot).map((x, i) => [x, i]).sort((a, b) => (a[0].createdAt || 0) - (b[0].createdAt || 0) || a[1] - b[1]).map(([x]) => x.name);
 // Beta Tester sıra numarası (1-300): kayıt sırası, gizlenmişse gönderilmez
-let betaOrderCache = { n: -1, list: [] };
+let betaOrderCache = { n: -1, list: [] }, badgeStatsCache = null;
 function betaNoOf(u) {
   if ((u.hideBadges || []).includes('beta')) return undefined;
   const cnt = Object.keys(db.users).length;
@@ -1460,6 +1460,7 @@ function badgesOf(u) {
   if (staffRank(u.name)) b.unshift('ekip');
   for (const k of AWARDS) if (u.awards?.[k]) b.push(k);
   if (u.devBeta) b.push('dev');
+  if (db.users[u.name] === u) { const first = !u.badgeAt; u.badgeAt ||= {}; let ch = first; for (const k of b) if (!(k in u.badgeAt)) { u.badgeAt[k] = first ? 0 : Date.now(); ch = true; } if (ch) save(); } // ilk geçişte eski rozetlerin tarihi bilinmiyor (0)
   return b;
 }
 // Profilde görünen rozetler: kişinin gizlediklerini çıkar
@@ -2964,6 +2965,22 @@ io.on('connection', socket => {
     const m = u.msgs || u.xp || 0;
     cb({ sohbet: [Math.min(m, 100), 100], efsane: [Math.min(m, 1000), 1000], xox: [Math.min(u.xoxWins || 0, 3), 3], seri7: [Math.min(u.streak?.best || 0, 7), 7],
       sosyal: [Math.min((u.friends || []).length, 5), 5], gece: [u.night ? 1 : 0, 1], kurucu: [db.servers.some(s => s.owner === me && !s.public) ? 1 : 0, 1], caylak: [u.onb?.rewarded ? 1 : 0, 1], erken: [badgesOf(u).includes('erken') ? 1 : 0, 1] });
+  });
+  // Rozet paneli: kaç kişide var, kimlerde var (önce arkadaşlar), ne zaman kazanıldı
+  socket.on('badgeStats', ({ badge, owner } = {}, cb = () => {}) => {
+    if (!me || !BADGES[badge]) return cb({ error: 'Geçersiz' });
+    const now = Date.now();
+    if (!badgeStatsCache || now - badgeStatsCache.t > 60e3) {
+      const holders = {}, users = Object.values(db.users).filter(x => x.name !== 'Claude' && x.name !== BOT_NAME && !x.bot);
+      for (const x of users) for (const k of shownBadges(x)) (holders[k] ||= []).push(x.name);
+      badgeStatsCache = { t: now, holders, total: users.length };
+    }
+    const list = badgeStatsCache.holders[badge] || [], fr = new Set(db.users[me]?.friends || []);
+    const sample = [...list.filter(n => fr.has(n) && n !== owner), ...list.filter(n => !fr.has(n) && n !== owner && n !== me).sort((a, b) => (db.users[b].lastSeen || 0) - (db.users[a].lastSeen || 0))].slice(0, 3);
+    const o = db.users[owner]; let earned = null;
+    if (o) earned = o.awards?.[badge]?.time || (badge === 'dev' ? db.devApps?.[owner]?.decidedAt : null) || (['beta', 'erken'].includes(badge) ? o.createdAt : null) || o.badgeAt?.[badge] || null;
+    const by = o?.awards?.[badge]?.by || (badge === 'dev' ? db.devApps?.[owner]?.by : null) || null;
+    cb({ count: list.length, total: badgeStatsCache.total, sample, earned, by, betaGiven: badge === 'beta' ? Math.min(300, badgeStatsCache.total) : undefined });
   });
   socket.on('mutuals', (n, cb = () => {}) => {
     const o = db.users[n]; if (!me || !o) return cb({ servers: [], friends: [] });
