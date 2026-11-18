@@ -3656,7 +3656,7 @@ $('#settings').onclick = () => showSettings();
 // Masaüstü uygulamasında ayarlar içinde bir şey değişince pencere tümüyle yeniden çizilsin
 if (window.kankaDesktop) {
   document.documentElement.classList.add('kdesk');
-  const repaint = () => requestAnimationFrame(() => { const m = $('#modal'); if (!m) return; m.style.transform = 'translateZ(0)'; requestAnimationFrame(() => { m.style.transform = ''; }); });
+  const repaint = () => requestAnimationFrame(() => { const m = $('#modal'); if (!m) return; m.style.transform = 'translateZ(0)'; requestAnimationFrame(() => { m.style.transform = ''; window.kankaDesktop.repaint?.(); setTimeout(() => window.kankaDesktop.repaint?.(), 350); }); });
   ['click', 'change'].forEach(ev => document.addEventListener(ev, e => { if (e.target.closest?.('#modal')) repaint(); }, true));
 }
 const PALETTE = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#ff9f43', '#e5484d', '#8b6b5a'];

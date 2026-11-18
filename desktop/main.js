@@ -121,6 +121,8 @@ function createWindow() {
   });
 }
 
+// Windows'ta bazı ekran kartlarında pencerenin bir kısmı çizilmeden kalabiliyor: sayfa isteyince tüm pencereyi yeniden çiz
+ipcMain.on('kanka:repaint', () => { try { if (win && !win.isDestroyed()) win.webContents.invalidate(); } catch {} });
 // Uygulama içi yayın seçicisi: pencere ve ekranları küçük resimleriyle listeler
 let pendingPick = null;
 ipcMain.handle('kanka:sources', async () => {
