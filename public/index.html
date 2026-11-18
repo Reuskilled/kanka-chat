@@ -3196,6 +3196,21 @@
 .lc-btn{width:100%;height:40px;border-radius:12px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font-weight:800;font-size:14px;cursor:pointer}.lc-btn svg{width:17px;height:17px}
 .lc-go{background:linear-gradient(120deg,#ff8a4c,#ff5a2e);color:#fff;box-shadow:0 8px 22px rgba(255,90,46,.3)}.lc-go:hover{filter:brightness(1.08)}
 .lc-acts{display:flex;gap:8px}.lc-self{background:rgba(255,255,255,.06);color:var(--muted);cursor:default;flex:1}.lc-stop{background:rgba(242,63,67,.14);color:#ff8a8d;width:auto;padding:0 14px}
+
+/* Seviye kademeleri */
+.lvl.lv-b{background:rgba(205,127,50,.16);color:#e0a26a}
+.lvl.lv-s{background:rgba(200,210,225,.16);color:#d6dee9}
+.lvl.lv-g{background:linear-gradient(120deg,rgba(255,207,92,.22),rgba(255,160,40,.18));color:#ffd36b}
+.lvl.lv-d{background:linear-gradient(120deg,rgba(124,240,255,.22),rgba(155,123,255,.25));color:#bff6ff;box-shadow:0 0 0 1px rgba(160,220,255,.25) inset}
+/* Seviye atlama kartı */
+.lvup{--lc:#e0a26a;position:fixed;left:50%;bottom:28px;z-index:10070;transform:translate(-50%,30px) scale(.94);opacity:0;transition:transform .35s cubic-bezier(.2,.9,.3,1.25),opacity .25s;display:flex;align-items:center;gap:16px;min-width:300px;max-width:min(440px,calc(100vw - 24px));background:linear-gradient(120deg,color-mix(in srgb,var(--lc) 16%,#1b1411),#1b1411 70%);border:1px solid color-mix(in srgb,var(--lc) 45%,#3a2c25);border-radius:20px;padding:14px 18px 14px 14px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 40px color-mix(in srgb,var(--lc) 20%,transparent)}
+.lvup.in{transform:translate(-50%,0) scale(1);opacity:1}
+.lvup.lv-s{--lc:#d6dee9}.lvup.lv-g{--lc:#ffcf5c}.lvup.lv-d{--lc:#9fe9ff}
+.lvn{width:72px;height:72px;flex:none;border-radius:20px;display:grid;place-items:center;align-content:center;background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--lc) 40%,transparent),transparent 70%),#120d0b;border:2px solid var(--lc)}
+.lvn small{font-size:9.5px;font-weight:900;letter-spacing:.12em;color:var(--lc)}.lvn b{font-size:30px;font-weight:900;line-height:1;color:#fff}
+.lvt h4{margin:0 0 3px;font-size:16px}.lvt p{margin:0;font-size:13px;color:var(--muted)}.lvt p b{color:var(--ink)}
+.lvgo{margin-top:8px;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:10px;border:0;background:var(--lc);color:#1a0f0a;font-weight:800;font-size:13px;cursor:pointer}.lvgo svg{width:14px;height:14px}
+.lvx{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(255,255,255,.06);color:var(--muted);display:grid;place-items:center;cursor:pointer}.lvx svg{width:12px;height:12px}
 </style>
 </head>
 <body>
@@ -6171,7 +6186,7 @@ function msgHTML(m, prev) {
   }
   const mine = m.author === S.me && !m.xfrom;
   const cont = !newDay && prev && prev.kind !== 'system' && prev.author === m.author && m.time - prev.time < 5 * 60e3 && !m.replyTo;
-  const lvl = S.users[m.author] ? `<span class="lvl">Sv ${S.users[m.author].level}</span>` : '';
+  const lvl = S.users[m.author] ? lvTag(S.users[m.author].level) : '';
   const stamp = `<span class="stamp">${m.scheduled ? ic('clock') + ' ' : ''}${hm(m.time)}${m.edited ? ' · düzenlendi' : ''}</span>`;
   let body;
   if (m.kind === 'plan') {
@@ -6607,7 +6622,7 @@ function renderMembers() {
     }
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n);
-    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u ? `<span class="lvl">Sv ${u.level}</span>` : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u ? lvTag(u.level) : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
@@ -6639,7 +6654,7 @@ function homeSidePanel(item, mdrH) {
     <div class="hp-h">🏆 Kanka HQ sıralaması</div>
     <div class="hp-tabs"><button class="${lbTab === 'lvl' ? 'on' : ''}" data-lb="lvl">⭐ Seviye</button><button class="${lbTab === 'stk' ? 'on' : ''}" data-lb="stk">🔥 Seri</button></div>
     ${!t ? '<div class="hp-load">Yükleniyor…</div>' : list.length ? list.map((x, i) => `<div class="hp-lr ${x.name === S.me ? 'me' : ''} ${i < 3 ? 'top' : ''}" data-n="${esc(x.name)}"><span class="rk">${medal(i)}</span>${av(x.name, S.online.has(x.name))}<span class="t"><b>${esc(dn(x.name))}</b><small>${sub(x)}</small></span>${val(x)}</div>`).join('') + mine : '<div class="hp-load">Henüz serisi olan yok. Her gün bir mesaj at, ilk sen ol!</div>'}
-    <p class="hp-tip">${lbTab === 'lvl' ? 'Mesaj atarak, seste kalarak ve etkinliklere katılarak XP kazanırsın.' : 'Seri, her gün en az bir mesaj atınca büyür. Bir gün atlarsan sıfırlanır.'}</p></div>`;
+    <p class="hp-tip">${lbTab === 'lvl' ? 'Sohbet ederek (dakikada bir 3-6 XP), seste arkadaşlarınla kalarak (dakikada 2 XP) ve her gün gelerek XP kazanırsın. Spam XP getirmez.' : 'Seri, her gün en az bir mesaj atınca büyür. Bir gün atlarsan sıfırlanır.'}</p></div>`;
   $('#members').querySelectorAll('.hp-lr[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
   $('#members').querySelectorAll('[data-lb]').forEach(b => b.onclick = e => { e.stopPropagation(); lbTab = b.dataset.lb; renderMembers(); });
   $('#mdr-x')?.addEventListener('click', e => { e.stopPropagation(); closeMembers(); });
@@ -6647,6 +6662,27 @@ function homeSidePanel(item, mdrH) {
 // Bu odada yazan kişiler üye listesinde "yazıyor" olarak görünür
 function memTyping() { $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.classList.toggle('typing', typers.has(m.dataset.n) && m.dataset.n !== S.me)); }
 const lvlFloor = L => 5 * (L - 1) ** 2;
+// Seviye kademeleri: rozet rengi seviyeyle değişir
+const LV_TIERS = [[1, 'Bronz', 'b'], [10, 'Gümüş', 's'], [25, 'Altın', 'g'], [50, 'Elmas', 'd']];
+const lvTier = L => [...LV_TIERS].reverse().find(t => (L || 1) >= t[0]);
+const lvTag = L => `<span class="lvl lv-${lvTier(L)[2]}" title="${lvTier(L)[1]} kademe · Seviye ${L}">Sv ${L}</span>`;
+// Seviye atlama anı: kutlama kartı, açılan çerçeveler, sıradaki hedef
+socket.on('levelUp', ({ level: L, from } = {}) => {
+  if (!L) return; document.querySelector('.lvup')?.remove();
+  const t = lvTier(L), newTier = lvTier(from || L - 1)[0] !== t[0];
+  const opened = FRAMES.filter(f => f[2] > (from || L - 1) && f[2] <= L), next = FRAMES.filter(f => f[2] > L).sort((a, b) => a[2] - b[2])[0];
+  const nextTier = LV_TIERS.find(x => x[0] > L);
+  const el = document.createElement('div'); el.className = `lvup lv-${t[2]}`; el.setAttribute('role', 'status');
+  el.innerHTML = `<button class="lvx" aria-label="Kapat">${ic('x')}</button><div class="lvn"><small>SEVİYE</small><b>${L}</b></div>
+    <div class="lvt"><h4>${newTier ? `${t[1]} kademeye çıktın! ✨` : 'Seviye atladın! 🎉'}</h4>
+      ${opened.length ? `<p>Yeni çerçeve açıldı: <b>${opened.map(f => f[1]).join(', ')}</b></p>` : next ? `<p>Sıradaki ödül: Seviye ${next[2]}'de <b>${next[1]}</b> çerçevesi</p>` : nextTier ? `<p>Sıradaki kademe: Seviye ${nextTier[0]} · ${nextTier[1]}</p>` : '<p>Efsanesin kanka.</p>'}
+      ${opened.length ? `<button class="lvgo">${ic('sparkle')}Çerçeveyi dene</button>` : ''}</div>`;
+  document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('in'));
+  try { confetti(el); playSound('reward'); } catch {}
+  const close = () => { el.classList.remove('in'); setTimeout(() => el.remove(), 300); };
+  el.querySelector('.lvx').onclick = close; setTimeout(close, 9000);
+  el.querySelector('.lvgo')?.addEventListener('click', () => { close(); showSettings('profile'); });
+});
 function xpBar(u) {
   const lo = lvlFloor(u.level), hi = lvlFloor(u.level + 1), pct = Math.round((u.xp - lo) / (hi - lo) * 100);
   return `<div class="xpbar"><i data-w="${pct}"></i></div><div class="xpinfo"><span>Seviye ${u.level}</span><span>${u.xp} / ${hi} XP</span><span>Seviye ${u.level + 1}</span></div>`;

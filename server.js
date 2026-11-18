@@ -578,6 +578,16 @@ const COLORS = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a'
 const NAME_RE = /^[\p{L}\p{N}_.-]{2,20}$/u;
 const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 32).toString('hex');
 const level = xp => Math.floor(Math.sqrt((xp || 0) / 5)) + 1;
+// ---- Adil XP ----
+// Mesaj: dakikada en fazla bir kez 3-6 XP (hızlı yazmak/spam avantaj değil); çok kısa ya da aynı mesaj XP vermez.
+// Ses: odada en az 2 kişi varken dakikada 2 XP (mikrofon kapalıysa 1), sağırlaştırılmış/AFK değilse; günde en fazla 240 XP.
+// XP her yerden addXp ile verilir: seviye atlanınca kişiye kutlama gider.
+function addXp(name, n, why) {
+  const u = db.users[name]; if (!u || !(n > 0)) return 0;
+  const b = level(u.xp); u.xp = (u.xp || 0) + n; const a = level(u.xp);
+  if (a > b) setTimeout(() => io.to('user:' + name).emit('levelUp', { level: a, from: b, why: why || null }), 300);
+  return a - b;
+}
 // Profil: çerçeveler (seviyeyle açılır) ve sosyal bağlantılar
 const FRAMES = { halka: 2, gokkusagi: 5, ates: 10, neon: 15, altin: 25, kurucu: 0 };
 const SOCIALS = ['instagram', 'tiktok', 'youtube', 'x', 'twitch', 'steam', 'spotify'];
@@ -1118,7 +1128,7 @@ function onbSteps(u) {
 function onbAward(name) {
   const u = db.users[name]; if (!u) return; const ob = onbOf(u); if (ob.rewarded) return;
   const st = onbSteps(u); if (!Object.values(st).every(Boolean)) return;
-  ob.rewarded = true; u.xp = (u.xp || 0) + 100; save();
+  ob.rewarded = true; addXp(u.name, 100, 'rehber'); save();
   io.to('user:' + name).emit('onbReward', {}); io.emit('users', allUsers());
 }
 setTimeout(() => { for (const n of Object.keys(db.users)) onbAward(n); }, 5000); // eski hesaplar da hak ettiyse alsın
@@ -1615,7 +1625,12 @@ setInterval(() => {
   if (!who.size) return;
   const d = dayKeyTR(), cut = dayKeyTR(Date.now() - 21 * 864e5);
   for (const n of who) { const u = db.users[n]; if (!u) continue; const v = (u.vmin ||= {}); v[d] = (v[d] || 0) + 1; for (const k of Object.keys(v)) if (k < cut) delete v[k]; }
-  save();
+  for (const [ch, m] of voice) { // sesli XP
+    if (m.size < 2) continue; const f = ch.startsWith('call:') ? null : findChannel(ch); if (f && (f.s.afk?.ch || f.s.afk) === ch) continue;
+    for (const [sid, n] of m) { const u = db.users[n], fl = voiceFlags.get(sid) || {}; if (!u || fl.d) continue;
+      const vx = u.vxp?.d === d ? u.vxp : (u.vxp = { d, n: 0 }); if (vx.n >= 240) continue;
+      const g = fl.m ? 1 : 2; vx.n += g; addXp(n, g, 'ses'); } }
+  save(); if (who.size) io.emit('users', allUsers());
 }, 60e3);
 const voiceStart = new Map();
 function voiceAges() {
@@ -1766,7 +1781,11 @@ function postMessage(me, chId, p = {}) {
 
   // Seviye
   const before = level(u.xp);
-  u.xp = (u.xp || 0) + 1;
+  { const now = Date.now(), txt = String(msg.text || '').trim().toLocaleLowerCase('tr'), rich = !!(msg.image || msg.files?.length || msg.audio || msg.poll || msg.song || msg.plan);
+    const real = rich || txt.replace(/\s+/g, '').length >= 3, fresh = !txt || txt !== u.xpLast;
+    const srvCh = !chId.startsWith('dm:') && !chId.startsWith('g:'), f0 = srvCh ? findChannel(chId) : null, crowd = !srvCh || (f0 && membersOf(f0.s).length >= 3);
+    if (real && fresh && crowd && now - (u.xpAt || 0) >= 60e3) { u.xpAt = now; addXp(me, 3 + Math.floor(Math.random() * 4), 'mesaj'); }
+    if (txt) u.xpLast = txt.slice(0, 200); }
   u.msgs = (u.msgs || 0) + 1;
   const hr = new Date().getHours(); if (hr >= 0 && hr < 5) u.night = true;
   save();
@@ -2003,7 +2022,7 @@ io.on('connection', socket => {
       const count = u.streak?.last === y ? (u.streak.count || 0) + 1 : 1;
       const bonus = 5 + Math.min(count, 10) * 2;
       u.streak = { last: t, count, best: Math.max(count, u.streak?.best || 0) };
-      u.xp = (u.xp || 0) + bonus;
+      addXp(name, bonus, 'seri');
       reward = { count, bonus };
       setTimeout(() => io.emit('users', allUsers()), 100);
     }
@@ -2034,7 +2053,7 @@ io.on('connection', socket => {
     if (gate.code) {
       const c = db.codes[gate.code]; c.usedBy = name; c.usedAt = Date.now(); db.users[name].invitedBy = c.by;
       const inv = db.users[c.by];
-      if (inv) { inv.xp = (inv.xp || 0) + 50; io.to('user:' + c.by).emit('toast', `🎉 ${name} senin davet kodunla Kanka'ya katıldı! +50 XP`); }
+      if (inv) { addXp(c.by, 50, 'davet'); io.to('user:' + c.by).emit('toast', `🎉 ${name} senin davet kodunla Kanka'ya katıldı! +50 XP`); }
     }
     db.waitlist.forEach(x => { if (x.email === email) x.joined = name; });
     ensureOwners(); save();
@@ -2130,7 +2149,7 @@ io.on('connection', socket => {
     const ob = onbOf(u);
     if (ob.rewarded) return cb({ ok: true, already: true, onb: ob });
     if (!Object.values(onbSteps(u)).every(Boolean)) return cb({ error: 'Adımlar henüz bitmedi' });
-    ob.rewarded = true; u.xp = (u.xp || 0) + 100; save();
+    ob.rewarded = true; addXp(u.name, 100, 'rehber'); save();
     io.emit('users', allUsers()); cb({ ok: true, xp: 100, onb: ob });
   });
   socket.on('setupSet', ({ serverId, k } = {}, cb = () => {}) => {
