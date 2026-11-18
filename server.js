@@ -113,6 +113,22 @@ app.get('/api/davet/:code', (req, res) => {
   res.json({ name: s.name, icon: s.icon, iconImg: s.iconImg || null, badges: srvBadges(s), description: s.description || '', banner: s.banner || null, bannerColor: s.bannerColor || null, members: mem.length, online: mem.filter(n => on.has(n)).length });
 });
 // Reklam ölçümü: kayıt olan kişinin ilk geldiği kaynak (utm / Google reklam tıklaması / yönlendiren site)
+// GIF'in tekrar sayısını sonsuz yap. NETSCAPE2.0 eki varsa sayıyı 0'a çeker, yoksa ekler.
+// (Ek yoksa ya da sayı 1-2 gibiyse tarayıcı GIF'i birkaç kez oynatıp son karede durdurur.)
+function gifLoopForever(buf) {
+  try {
+    if (buf.length < 13 || buf.toString('latin1', 0, 3) !== 'GIF') return buf;
+    const i = buf.indexOf('NETSCAPE2.0', 0, 'latin1');
+    if (i > 0 && buf[i + 11] === 3 && buf[i + 12] === 1) { const out = Buffer.from(buf); out[i + 13] = 0; out[i + 14] = 0; return out; }
+    if (i > 0) return buf;
+    const packed = buf[10], gct = packed & 0x80 ? 3 * (1 << ((packed & 7) + 1)) : 0, at = 13 + gct;
+    if (at > buf.length) return buf;
+    const ext = Buffer.from([0x21, 0xff, 0x0b, ...Buffer.from('NETSCAPE2.0', 'latin1'), 0x03, 0x01, 0x00, 0x00, 0x00]);
+    return Buffer.concat([buf.subarray(0, at), ext, buf.subarray(at)]);
+  } catch { return buf; }
+}
+// Daha önce yüklenmiş GIF'leri de bir kere düzelt (açılışta, arka planda)
+setTimeout(() => { try { let n = 0; for (const f of fs.readdirSync(UPLOADS)) { if (!f.endsWith('.gif')) continue; const p = path.join(UPLOADS, f), b = fs.readFileSync(p), o = gifLoopForever(b); if (o !== b) { fs.writeFileSync(p, o); n++; } } if (n) console.log(`[gif] ${n} GIF sonsuz döngüye alındı`); } catch (e) { console.error('[gif]', e.message); } }, 5000);
 function cleanSrc(x) {
   if (!x || typeof x !== 'object') return null;
   const c = (v, n = 60) => typeof v === 'string' ? v.replace(/[^\p{L}\p{N} ._\-+/]/gu, '').trim().slice(0, n) || undefined : undefined;
@@ -2775,8 +2791,9 @@ io.on('connection', socket => {
       if (a) m = [a[0], { webm: 'webm', ogg: 'ogg', mp4: 'm4a', 'x-m4a': 'm4a' }[a[1]], a[2]];
     }
     if (!m) return cb({ error: 'Sadece resim ya da ses yükleyebilirsin' });
-    const buf = Buffer.from(m[2], 'base64');
+    let buf = Buffer.from(m[2], 'base64');
     if (buf.length > 5 * 1024 * 1024) return cb({ error: 'Resim en fazla 5 MB olabilir' });
+    if (m[1] === 'gif') buf = gifLoopForever(buf); // bazı GIF'ler birkaç kez oynayıp durur: hep dönsün
     const file = crypto.randomBytes(12).toString('hex') + '.' + (m[1] === 'jpeg' ? 'jpg' : m[1]);
     fs.writeFile(path.join(UPLOADS, file), buf, err => cb(err ? { error: 'Kaydedilemedi' } : { url: '/uploads/' + file }));
   });
