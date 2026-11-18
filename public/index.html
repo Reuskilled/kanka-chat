@@ -4502,7 +4502,11 @@ const shortPh = p => {
 const buzz = (ms = 10) => { try { navigator.vibrate?.(ms); } catch (e) {} };
 // --- Geri tuşu: açık katmanları sırayla kapatır (pencere, çekmece, menü, resim) ---
 var ovStack = [], popSkip = 0, atBase = false;
-const mobileNav = isTouch || innerWidth <= 1100;
+// iPhone/iPad Safari'de kenardan kaydırma = tarayıcının geri/ileri hareketi. Geçmişe sahte kayıt eklersek
+// her kaydırmada Safari sayfayı geri/ileri alıyor, çekmece de art arda açılıp kapanıyordu. Orada geçmişe dokunmuyoruz
+// (ana ekrana eklenmiş uygulamada kenar hareketi yok, orada kalıyor).
+const iosSafari = (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !(navigator.standalone || matchMedia('(display-mode: standalone)').matches);
+const mobileNav = (isTouch || innerWidth <= 1100) && !iosSafari;
 function ovOpen(name, close) {
   if (!mobileNav || !ovStack || ovStack.at(-1)?.name === name) return;
   try { history.pushState({ kov: name }, ''); } catch (e) { return; }
@@ -4516,6 +4520,7 @@ function ovClosed(name) {
 }
 if (mobileNav) { history.replaceState({ kbase: 1 }, ''); history.pushState({ kapp: 1 }, ''); }
 addEventListener('popstate', () => {
+  if (!mobileNav) return;
   if (popSkip > 0) { popSkip--; return; }
   const o = ovStack.pop();
   if (o) { if (o.close() === false) { history.pushState({ kov: o.name }, ''); ovStack.push(o); } return; }
