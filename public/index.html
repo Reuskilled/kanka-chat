@@ -3151,6 +3151,30 @@
 .mail-health{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.mail-health>div{background:rgba(255,255,255,.04);border:1px solid var(--line,#3a2e27);border-radius:12px;padding:10px 12px}.mail-health small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}.mail-health b{font-size:15px}
 .mail-err{background:rgba(255,90,90,.08);border:1px solid rgba(255,90,90,.35);color:#ffb0b0;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px;word-break:break-word}
 .mail-log{display:flex;flex-direction:column;gap:4px;font-size:12.5px;margin-top:8px}.mail-log>div{display:grid;grid-template-columns:110px 60px 1fr 1.4fr;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.03)}.mail-log .bad{color:#ffb0b0}.mail-log .ok span:last-child{color:#7fe0a8}
+
+/* Partner yolu */
+.pt-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(120deg,rgba(124,92,255,.16),rgba(255,138,76,.1));border:1px solid rgba(124,92,255,.3);border-radius:18px;padding:16px 18px;margin-bottom:14px}
+.pt-hero small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:800}.pt-hero b{display:block;font-size:20px;font-weight:800;margin:2px 0}.pt-hero span{font-size:12.5px;color:var(--muted)}
+.pt-dots{display:flex;align-items:center;gap:4px}.pt-dots i{display:grid;opacity:.3;filter:grayscale(1)}.pt-dots i.on{opacity:1;filter:none}.pt-dots b{width:18px;height:2px;background:rgba(255,255,255,.15);border-radius:2px}
+.pt-path{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.pt-step{border:1px solid var(--line,#3a2e27);border-radius:18px;padding:14px 16px;background:rgba(255,255,255,.02)}
+.pt-step.next{border-color:color-mix(in srgb,var(--pc) 60%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--pc) 25%,transparent),0 10px 30px color-mix(in srgb,var(--pc) 12%,transparent);background:color-mix(in srgb,var(--pc) 6%,transparent)}
+.pt-step.done{opacity:.85}
+.pt-sh{display:flex;align-items:center;gap:12px}.pt-sh>div{flex:1}.pt-sh small{font-size:11px;color:var(--muted);font-weight:700}.pt-sh b{display:block;font-size:16px}
+.pt-tag{font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--muted)}.pt-step.done .pt-tag{background:rgba(76,195,138,.15);color:#6fe0a6}.pt-step.next .pt-tag{background:color-mix(in srgb,var(--pc) 22%,transparent);color:#fff}
+.pt-reqs{margin-top:12px;display:flex;flex-direction:column;gap:9px}
+.pt-rl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}.pt-rl span{display:flex;align-items:center;gap:5px;color:var(--muted)}.pt-rl svg{width:14px;height:14px;color:#6fe0a6}.pt-req.ok .pt-rl span{color:var(--ink)}
+.pt-bar{height:7px;border-radius:7px;background:rgba(255,255,255,.07);overflow:hidden}.pt-bar i{display:block;height:100%;border-radius:7px;background:var(--pc)}.pt-req.ok .pt-bar i{background:#4cc38a}
+.pt-note{font-size:12px;color:var(--muted);margin:4px 0 0}
+.pt-perks{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}.pt-perks li{display:flex;gap:8px;align-items:center;font-size:13px}.pt-perks svg{width:14px;height:14px;flex:none;color:var(--muted)}.pt-step.done .pt-perks svg{color:#6fe0a6}
+#pt-apply{margin-top:12px}
+.pt-van{margin-top:14px}.pt-van label{font-size:12px;color:var(--muted);font-weight:700}.pt-vrow{display:flex;align-items:center;gap:6px;margin-top:6px}.pt-vrow span{font-size:13px;color:var(--muted);white-space:nowrap}.pt-vrow .field{margin:0;flex:1;min-width:0}
+.yv-pt.yv-up{background:rgba(255,138,76,.18);color:#ffb38a}
+.yv-potw{position:relative;overflow:hidden;padding:0!important}
+.yv-potw .pw-bn{height:74px;background:var(--bn) center/cover,var(--bc,#2a1f1a)}
+.yv-potw .pw-in{padding:4px 14px 14px}.yv-potw .pw-in>small{position:absolute;top:10px;left:12px;display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);padding:4px 9px 4px 6px;border-radius:99px}
+.yv-potw .pw-row{display:flex;align-items:center;gap:10px;margin:8px 0 6px}.yv-potw .pw-row .yv-si{margin-top:-30px;border:3px solid var(--panel,#1c1512)}.yv-potw .pw-row small{text-transform:none;letter-spacing:0;color:var(--muted);font-weight:500;font-size:12px}
+.yv-potw p{font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.4}.yv-potw .primary{width:100%;padding:9px}
 </style>
 </head>
 <body>
@@ -3356,6 +3380,8 @@ const SRV_BADGES = {
     d: 'Bu sunucunun adını taşıdığı kişiye, ekibe ya da topluluğa gerçekten ait olduğu Kanka Chat yönetimi tarafından doğrulandı. Taklit sunuculara karşı güvence.' },
   partner: { t: 'Kanka Partner', c: '#7c5cff', fg: '#fff', icon: '<path d="M8.6 9.2a3 3 0 1 0 0 5.6c1.6 0 2.4-1.4 3.4-2.8s1.8-2.8 3.4-2.8a3 3 0 1 1 0 5.6c-1.6 0-2.4-1.4-3.4-2.8S10.2 9.2 8.6 9.2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
     d: 'Kanka Chat\'in öne çıkardığı, aktif ve iyi yönetilen topluluklardan biri. Partner sunucuları yönetim seçer.' },
+  yukselen: { t: 'Yükselen', c: '#ff8a4c', fg: '#fff', icon: '<path d="M12 6.2l4.6 5.2h-2.9v6.4h-3.4v-6.4H7.4z" fill="currentColor"/>',
+    d: 'Hızla büyüyen, her hafta düzenli konuşulan ve kuralları olan bir topluluk. Partner olmaya bir adım uzakta. Bu rozet kendiliğinden kazanılır.' },
   topluluk: { t: 'Topluluk', c: '#f4e6d8', fg: '#2b1a12', icon: '<circle cx="12" cy="12" r="5.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.4 12h11.2M12 6.4c1.7 1.6 2.4 3.6 2.4 5.6s-.7 4-2.4 5.6c-1.7-1.6-2.4-3.6-2.4-5.6s.7-4 2.4-5.6z" fill="none" stroke="currentColor" stroke-width="1.6"/>',
     d: 'En az 15 üyesi olan ve bir haftadan uzun süredir büyüyen bir topluluk. Bu rozet kendiliğinden kazanılır.' },
 };
@@ -3363,7 +3389,8 @@ const badgeSvg = (id, size = 18) => { const b = SRV_BADGES[id]; return b ? `<svg
 const badgeRow = (s, size = 18) => (s?.badges || []).map(b => `<button type="button" class="sbadge-btn" data-sbadge="${b.id}" data-srv="${esc(s.id || '')}" title="${SRV_BADGES[b.id]?.t || ''}" aria-label="${SRV_BADGES[b.id]?.t || ''} rozeti">${badgeSvg(b.id, size)}</button>`).join('');
 const SB_HOW = {
   dogrulanmis: 'Bir yayıncı, içerik üreticisi, takım ya da marka isen sunucunun gerçekten sana ait olduğunu kanıtlarsın. Sunucu sahibi Sunucu ayarları › Rozetler\'den başvurur, resmi hesabının açıklamasına verilen kodu ekler.',
-  partner: 'Aktif ve iyi yönetilen topluluklara verilir. En az 50 üye ve 14 günlük sunucu gerekir, kuralları olan ve düzenli konuşulan sunucular öne çıkar. Sunucu sahibi Sunucu ayarları › Rozetler\'den başvurur.',
+  partner: 'Kanka\'nın en iyi toplulukları. En az 100 üye, 21 günlük sunucu, haftada 30 aktif üye ve kurallar gerekir; ekip başvuruları tek tek inceler. Sunucu sahibi Sunucu ayarları › Rozetler\'den başvurur.',
+  yukselen: 'Başvuru gerekmez: 30 üye, 7 günlük sunucu, haftada 10 aktif üye ve kurallar olunca kendiliğinden gelir.',
   topluluk: 'Başvuru gerekmez: sunucun 15 üyeye ulaşıp bir haftayı geçince kendiliğinden gelir.',
   resmi: 'Sadece Kanka Chat\'in kendi sunucusu Kanka HQ\'da bulunur.',
 };
@@ -5084,7 +5111,7 @@ function showServerSettings(s, tab, focus) {
         <label class="switch">Yavaş mod (üyeler için mesaj arası bekleme)<select class="field" id="sv-slow" style="width:120px;margin:0">${[[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [30, '30 sn'], [60, '1 dk'], [300, '5 dk']].map(([v, t]) => `<option value="${v}" ${s.slow === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
         <label class="switch">AFK odası (hareketsiz kalanlar taşınır)<select class="field" id="sv-afk" style="width:170px;margin:0"><option value="">Kapalı</option>${s.channels.filter(c => c.type === 'voice').map(c => `<option value="${c.id}" ${s.afk?.ch === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
         <label class="switch">AFK süresi<select class="field" id="sv-afkm" style="width:120px;margin:0">${[1, 5, 10, 15, 30, 60].map(v => `<option value="${v}" ${(s.afk?.min || 10) === v ? 'selected' : ''}>${v} dk</option>`).join('')}</select></label></div>
-        ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${PUB}/davet/${esc(s.invite)}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}
+        ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${s.vanity ? `${PUB}/s/${esc(s.vanity)}` : `${PUB}/davet/${esc(s.invite)}`}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}
         ${!s.public && s.owner === S.me ? `<div class="st-sec danger" style="margin-top:22px">Tehlikeli bölge</div>
           <div class="acc-danger"><span><b>Sahipliği devret</b>Sunucuyu başka bir üyeye verirsin. Sen yönetici olarak kalmazsın, istersen yeni sahip sana rol verir.</span><button class="btns2" id="sv-xfer">Devret</button></div>
           <div class="acc-danger" style="margin-top:8px"><span><b>Sunucuyu sil</b>Sunucu herkesten kaldırılır ve 7 gün boyunca çöp kutusunda durur. Bu sürede Ayarlar → Hesap'tan geri getirebilirsin, sonra kalıcı silinir.</span><button class="danger-btn btns2" id="sv-del">Sunucuyu sil</button></div>` : ''}</div>`;
@@ -5122,27 +5149,42 @@ function showServerSettings(s, tab, focus) {
       const afkSave = () => socket.emit('updateServer', { serverId: s.id, afkCh: $('#sv-afk').value || null, afkMin: +$('#sv-afkm').value }, r => r.error ? toast(r.error) : toast($('#sv-afk').value ? 'AFK odası ayarlandı' : 'AFK kapatıldı'));
       $('#sv-afk').onchange = afkSave; $('#sv-afkm').onchange = afkSave;
       $('#sv-slow').onchange = e => socket.emit('updateServer', { serverId: s.id, slow: +e.target.value }, r => r.error ? toast(r.error) : toast('Yavaş mod güncellendi'));
-      if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(`${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
+      if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(s.vanity ? `${PUB}/s/${s.vanity}` : `${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
     },
     badges: () => {
-      main.innerHTML = `<div class="st-page"><h3>Rozetler</h3><p class="hint">Rozetler sunucunun adının yanında görünür, üyelere güven verir. Doğrulanmış ve Kanka Partner rozetlerini Kanka Chat yönetimi verir.</p><div id="sb-root"><p class="hint">Yükleniyor…</p></div></div>`;
+      main.innerHTML = `<div class="st-page"><h3>Rozetler ve Partner yolu</h3><p class="hint">Sunucun büyüdükçe rozet kazanır, her kademede yeni ayrıcalıklar açılır. Topluluk ve Yükselen kendiliğinden gelir, Kanka Partner'a başvurulur.</p><div id="sb-root"><p class="hint">Yükleniyor…</p></div></div>`;
       socket.emit('srvBadgeApp', { serverId: s.id }, r => {
         const root = $('#sb-root'); if (!root) return; if (r.error) { root.innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
         const ST = { pending: ['Değerlendiriliyor', '#f6c445'], accepted: ['Verildi', '#4cc38a'], rejected: ['Olmadı', '#e5484d'] };
         const reqRow = (ok, t) => `<li class="${ok ? 'ok' : ''}">${ic(ok ? 'check' : 'x')}${t}</li>`;
         const card = (id) => { const b = SRV_BADGES[id], a = r.apps[id], q = r.req[id], has = r.has[id];
-          const okM = r.info.members >= q.members, okD = r.info.days >= q.days, can = okM && okD;
+          const okM = r.info.members >= q.members, okD = r.info.days >= q.days, can = okM && okD && (!q.active || r.info.active >= q.active) && (!q.rules || r.info.rules);
           let body;
           if (has) body = `<div class="sb-st" style="--c:#4cc38a">${ic('check')} Sunucunda bu rozet var</div>`;
           else if (a?.status === 'pending') body = `<div class="sb-st" style="--c:#f6c445">${ic('clock')} Başvurun değerlendiriliyor · ${new Date(a.at).toLocaleDateString('tr', { day: 'numeric', month: 'long' })}</div>`;
           else body = `${a?.status === 'rejected' ? `<div class="sb-st" style="--c:#e5484d">${ic('x')} Önceki başvuru olmadı${a.note ? ': ' + esc(a.note) : ''}. Tekrar başvurabilirsin.</div>` : ''}
-            ${q.members || q.days ? `<ul class="sb-req">${reqRow(okM, `En az ${q.members} üye <small>(şu an ${r.info.members})</small>`)}${reqRow(okD, `En az ${q.days} günlük sunucu <small>(şu an ${r.info.days} gün)</small>`)}</ul>` : ''}
+            ${id !== 'partner' && (q.members || q.days) ? `<ul class="sb-req">${reqRow(okM, `En az ${q.members} üye <small>(şu an ${r.info.members})</small>`)}${reqRow(okD, `En az ${q.days} günlük sunucu <small>(şu an ${r.info.days} gün)</small>`)}</ul>` : ''}
             ${id === 'dogrulanmis' ? `<div class="sb-code"><span>Doğrulama kodun</span><b>${esc(r.code)}</b><button type="button" class="btns2" data-copy="${esc(r.code)}">${ic('copy')} Kopyala</button></div><p class="hint" style="margin:6px 0 10px">Bu kodu başvurduğun resmi hesabının (YouTube, Twitch, Instagram, TikTok, X…) açıklamasına geçici olarak ekle. Ekip kontrol edince kaldırabilirsin.</p>` : ''}
             ${can ? `<form class="sb-form" data-sbf="${id}"><input class="field" name="link" maxlength="200" placeholder="${id === 'dogrulanmis' ? 'Resmi hesabının bağlantısı (zorunlu)' : 'Sosyal medya ya da web sitesi (isteğe bağlı)'}">
               <textarea class="field" name="about" maxlength="500" rows="3" placeholder="${id === 'dogrulanmis' ? 'Kimsin, bu sunucu kime ait? Örn. 120 bin aboneli YouTube kanalımın resmi topluluk sunucusu' : 'Sunucun ne hakkında, neden partner olmalı? Etkinlikler, kurallar, moderasyon…'}"></textarea>
               <button class="primary" style="width:auto;padding:10px 18px">${ic('send')} Başvur</button></form>` : `<p class="hint" style="margin:0">Şartları karşılayınca buradan başvurabilirsin.</p>`}`;
           return `<div class="sb-card ${ssOpen.sbFocus === id ? 'focus' : ''}" id="sb-${id}"><div class="sb-h">${badgeSvg(id, 40)}<div><b>${b.t}</b><small>${SB_HOW[id]}</small></div></div>${body}</div>`; };
-        root.innerHTML = `<div class="sb-card"><div class="sb-h">${badgeSvg('topluluk', 40)}<div><b>${SRV_BADGES.topluluk.t}</b><small>${SB_HOW.topluluk}</small></div></div>${(s.badges || []).some(x => x.id === 'topluluk') ? `<div class="sb-st" style="--c:#4cc38a">${ic('check')} Sunucunda bu rozet var</div>` : `<ul class="sb-req">${reqRow(r.info.members >= 15, `En az 15 üye <small>(şu an ${r.info.members})</small>`)}${reqRow(r.info.days >= 7, `En az 7 günlük sunucu <small>(şu an ${r.info.days} gün)</small>`)}</ul>`}</div>` + card('dogrulanmis') + card('partner');
+        const T = r.tiers, st = r.info, order = ['topluluk', 'yukselen', 'partner'], cur = order.indexOf(r.tier);
+        const PERKS = { topluluk: ['Keşfet\'te listelenirken öne çıkar', 'Sunucu adının yanında Topluluk rozeti'],
+          yukselen: ['Keşfet\'te daha üstte + Yükselen rozeti', '100 özel emoji (normalde 50)', 'Partner başvurusuna bir adım'],
+          partner: ['Keşfet\'te en üstte, PARTNER etiketiyle', 'Yuva\'da "Haftanın partneri" vitrini', 'Özel davet linki: kankahq.com/s/isim', '200 özel emoji', 'Sahibine profilde Kanka Partner rozeti', 'Kanka HQ\'da partner rolü ve partner-salonu odası'] };
+        const bar = (v, max, label, unit) => { const ok = v >= max, pc = Math.min(100, Math.round(v / max * 100)); return `<div class="pt-req ${ok ? 'ok' : ''}"><div class="pt-rl"><span>${ok ? ic('check') : ''}${label}</span><b>${Math.min(v, max)} / ${max}${unit ? ' ' + unit : ''}</b></div><div class="pt-bar"><i style="width:${pc}%"></i></div></div>`; };
+        const reqs = id => { const q = T[id]; return bar(st.members, q.members, 'Üye', '') + bar(st.days, q.days, 'Sunucu yaşı', 'gün') + (q.active ? bar(st.active, q.active, 'Haftalık aktif üye', '') + `<p class="pt-note">Son 7 günde en az bir mesaj yazan farklı üyeler. Etkinlik yap, sohbeti canlı tut.</p>` : '') + (q.rules ? `<div class="pt-req ${st.rules ? 'ok' : ''}"><div class="pt-rl"><span>${st.rules ? ic('check') : ''}Kurallar</span><b>${st.rules ? 'var' : 'yok'}</b></div>${st.rules ? '' : `<p class="pt-note">Karşılama ekranına kural ekle ya da adında "kurallar" geçen bir oda aç.</p>`}</div>` : ''); };
+        const step = (id, i) => { const done = i <= cur, next = i === cur + 1, b = SRV_BADGES[id];
+          return `<div class="pt-step ${done ? 'done' : ''} ${next ? 'next' : ''}" style="--pc:${b.c}"><div class="pt-sh">${badgeSvg(id, 44)}<div><small>${i + 1}. kademe${id === 'partner' ? ' · başvuru' : ' · otomatik'}</small><b>${b.t}</b></div><span class="pt-tag">${done ? 'Kazanıldı' : next ? 'Sıradaki' : 'Kilitli'}</span></div>
+            ${!done ? `<div class="pt-reqs">${reqs(id)}</div>` : ''}<ul class="pt-perks">${PERKS[id].map(x => `<li>${ic(done ? 'check' : 'lock')}${x}</li>`).join('')}</ul>${id === 'partner' && !done ? '<div id="pt-apply"></div>' : ''}
+            ${id === 'partner' && done ? `<div class="pt-van"><label>Özel davet linkin</label><div class="pt-vrow"><span>kankahq.com/s/</span><input class="field" id="pt-slug" maxlength="24" value="${esc(r.vanity || '')}" placeholder="sunucuadi"><button class="primary" id="pt-vsave" style="width:auto;padding:10px 16px">Kaydet</button></div>${r.vanity ? `<button class="btns2" id="pt-vcopy" style="margin-top:8px">${ic('copy')} ${PUB.replace(/^https?:\/\//, '')}/s/${esc(r.vanity)} kopyala</button>` : ''}</div>` : ''}</div>`; };
+        const head = `<div class="pt-hero"><div><small>Şu anki kademe</small><b>${r.tier ? SRV_BADGES[r.tier].t : 'Henüz yok'}</b><span>Emoji: ${r.emoji.used} / ${r.emoji.max}</span></div><div class="pt-dots">${order.map((id, i) => `<i class="${i <= cur ? 'on' : ''}" style="--pc:${SRV_BADGES[id].c}">${badgeSvg(id, 28)}</i>`).join('<b></b>')}</div></div>`;
+        root.innerHTML = head + `<div class="pt-path">${order.map(step).join('')}</div><div class="st-sec">Diğer rozetler</div>` + card('dogrulanmis');
+        if ($('#pt-apply')) $('#pt-apply').innerHTML = card('partner').replace(/^<div class="sb-card[^>]*>[\s\S]*?<\/div><\/div>/, '').replace(/<\/div>$/, '');
+        if ($('#pt-vsave')) $('#pt-vsave').onclick = () => socket.emit('srvVanity', { serverId: s.id, slug: $('#pt-slug').value }, x => { if (x.error) return toast(x.error); toast(x.vanity ? 'Özel link hazır 🎉' : 'Özel link kaldırıldı', null, false, { type: 'ok' }); s.vanity = x.vanity; page.badges(); });
+        if ($('#pt-vcopy')) $('#pt-vcopy').onclick = () => navigator.clipboard?.writeText(`${PUB}/s/${r.vanity}`).then(() => toast('Link kopyalandı'));
+        if (false) root.innerHTML = `<div class="sb-card"><div class="sb-h">${badgeSvg('topluluk', 40)}<div><b>${SRV_BADGES.topluluk.t}</b><small>${SB_HOW.topluluk}</small></div></div>${(s.badges || []).some(x => x.id === 'topluluk') ? `<div class="sb-st" style="--c:#4cc38a">${ic('check')} Sunucunda bu rozet var</div>` : `<ul class="sb-req">${reqRow(r.info.members >= 15, `En az 15 üye <small>(şu an ${r.info.members})</small>`)}${reqRow(r.info.days >= 7, `En az 7 günlük sunucu <small>(şu an ${r.info.days} gün)</small>`)}</ul>`}</div>` + card('dogrulanmis') + card('partner');
         root.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(b.dataset.copy).then(() => toast('Kopyalandı')));
         root.querySelectorAll('[data-sbf]').forEach(f => f.onsubmit = e => { e.preventDefault(); const bt = f.querySelector('button'); bt.disabled = true;
           socket.emit('srvBadgeApply', { serverId: s.id, type: f.dataset.sbf, link: f.link.value, about: f.about.value }, x => { bt.disabled = false; if (x.error) return toast(x.error); toast('Başvurun alındı! Sonuç çıkınca haber vereceğiz', null, false, { type: 'ok' }); page.badges(); }); });
@@ -5625,7 +5667,10 @@ function yuvaHTML({ rooms, items, startSec, botSec }) {
   }
   const chips = [u.streak ? `🔥 ${u.streak} gün seri` : null, y && y.week.some(x => x) ? `⏱ Bu hafta seste ${hm2(y.week.reduce((a, x) => a + (x || 0), 0))}` : null, y?.rank ? `🏆 Kanka HQ'da ${y.rank}. sıradasın` : null].filter(Boolean);
   const sub = inVoice || playing ? [inVoice && `${inVoice} arkadaşın seste`, playing && `${playing} kişi oyunda`].filter(Boolean).join(', ') + '.' : fr.length ? 'Kankaların şu an sakin.' : 'Arkadaş ekleyince burada ne yaptıklarını görürsün.';
-  const disc = S.yuvaDisc?.length ? `<section class="yv-card"><h3>${ic('compass')}Keşfet'te yükselenler</h3>${S.yuvaDisc.map(d => `<button class="yv-srv" data-disc="${esc(d.id)}"><span class="yv-si" style="${d.iconImg ? '' : `background:${d.bannerColor || 'var(--accent)'}`}">${d.iconImg ? `<img src="${esc(d.iconImg)}" alt="">` : esc(d.icon || d.name[0])}</span><span class="yv-tx"><b>${esc(d.name)}${d.badges?.some(b => b.id === 'partner') ? ' <i class="yv-pt">PARTNER</i>' : ''}</b><small>${esc(d.category)} · ${d.members} üye${d.online ? ` · ${d.online} çevrimiçi` : ''}</small></span></button>`).join('')}<button class="yv-more" data-q="discover">Tümünü gör →</button></section>` : '';
+  const pw = S.yuva?.potw, potw = pw ? `<section class="yv-card yv-potw" style="${pw.banner ? `--bn:url('${esc(pw.banner)}')` : `--bn:none;--bc:${pw.bannerColor || '#7c5cff'}`}"><div class="pw-bn"></div><div class="pw-in"><small>${badgeSvg('partner', 16)} Haftanın partneri</small>
+    <div class="pw-row"><span class="yv-si" style="${pw.iconImg ? '' : `background:${pw.bannerColor || 'var(--accent)'}`}">${pw.iconImg ? `<img src="${esc(pw.iconImg)}" alt="">` : esc(pw.icon || pw.name[0])}</span><span class="yv-tx"><b>${esc(pw.name)}</b><small>${pw.members} üye${pw.online ? ` · ${pw.online} çevrimiçi` : ''}</small></span></div>
+    ${pw.description ? `<p>${esc(pw.description).slice(0, 140)}</p>` : ''}<button class="primary" id="pw-go">${pw.joined ? 'Sunucuya git' : 'Katıl'}</button></div></section>` : '';
+  const disc = S.yuvaDisc?.length ? `<section class="yv-card"><h3>${ic('compass')}Keşfet'te yükselenler</h3>${S.yuvaDisc.map(d => `<button class="yv-srv" data-disc="${esc(d.id)}"><span class="yv-si" style="${d.iconImg ? '' : `background:${d.bannerColor || 'var(--accent)'}`}">${d.iconImg ? `<img src="${esc(d.iconImg)}" alt="">` : esc(d.icon || d.name[0])}</span><span class="yv-tx"><b>${esc(d.name)}${d.badges?.some(b => b.id === 'partner') ? ' <i class="yv-pt">PARTNER</i>' : d.badges?.some(b => b.id === 'yukselen') ? ' <i class="yv-pt yv-up">YÜKSELEN</i>' : ''}</b><small>${esc(d.category)} · ${d.members} üye${d.online ? ` · ${d.online} çevrimiçi` : ''}</small></span></button>`).join('')}<button class="yv-more" data-q="discover">Tümünü gör →</button></section>` : '';
   return `<div class="hm yv">
     <section class="yv-hero"><div class="yv-me" style="background:${u.color || userColor(S.me)}">${u.avatar ? `<img src="${esc(u.avatar)}" alt="">` : initial(S.me)}</div><div class="yv-ht"><h2>${greet} ${esc(dn(S.me))} ${emo}</h2><p>${sub} Seviye ${u.level + 1}'e ${Math.max(0, hi - u.xp)} XP kaldı.</p>${chips.length ? `<div class="yv-chips">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : ''}</div>
       <div class="yv-ring" style="--p:${pct}"><div><b>Sv ${u.level}</b><small>Sv ${u.level + 1}'e %${pct}</small></div></div></section>
@@ -5635,7 +5680,7 @@ function yuvaHTML({ rooms, items, startSec, botSec }) {
         ${chart}</section>
       <div class="yv-col">
         <section class="yv-card"><h3>${ic('bell')}Seni bekleyenler${items.length ? `<em>${items.length}</em>` : ''}</h3>${items.length ? `<div class="hm-list">${items.join('')}</div>` : `<div class="yv-calm">${ic('check')}<span><b>Her şey okundu</b><small>Yeni mesaj, istek ya da etiket yok.</small></span></div>`}</section>
-        ${disc}
+        ${potw}${disc}
       </div>
     </div>
     ${botSec}${startSec}
@@ -5652,6 +5697,7 @@ function wireHome() {
   M.querySelectorAll('[data-addf]').forEach(b => b.onclick = () => socket.emit('friendRequest', b.dataset.addf, r => { if (r.error) return toast(r.error); toast(r.accepted ? 'Artık arkadaşsınız' : 'İstek gönderildi'); b.disabled = true; b.innerHTML = `${ic('check')}Gönderildi`; }));
   M.querySelectorAll('[data-hi]').forEach(b => b.onclick = () => { const n = b.dataset.hi; openDM(n); setTimeout(() => { const i = $('#input'); if (i && !i.value) { i.value = 'selam 👋'; i.focus(); i.dispatchEvent(new Event('input')); } }, 450); });
   M.querySelectorAll('[data-disc]').forEach(b => b.onclick = () => showDiscover());
+  if ($('#pw-go')) $('#pw-go').onclick = () => pw.joined ? selectServer(pw.id) : joinInviteNow(pw.invite);
   M.querySelectorAll('[data-q]').forEach(b => b.onclick = () => ({ invite: () => showInvite(hqServer()), create: () => showTemplates(), discover: () => showDiscover() })[b.dataset.q]());
 }
 const homeOpen = () => S.view === 'dm' && !S.channel && friendTab === 'home' && $('#messages .hm');
@@ -6709,6 +6755,7 @@ const BADGE_DEF = {
   efsane: { ic: 'crown', c: ['#fff1b8', '#d18a10'], r: 3, how: '1000 mesaj gönder' },
   avci: { ic: 'bug', c: ['#c8ff9a', '#2f8f2a'], r: 3, how: 'Kanka HQ\'da önemli bir hata bul, ekibe bildir', award: true },
   dev: { ic: 'code', c: ['#bfe3ff', '#3a6fd8'], r: 2, how: 'Ayarlar › Bot geliştirici sayfasından başvur', award: true },
+  partner: { ic: 'link', c: ['#c8b6ff', '#6a45e0'], r: 3, how: 'Sunucunu Kanka Partner yap: Sunucu ayarları › Rozetler' },
   beta: { ic: 'sparkle', c: ['#7cf0ff', '#6a4bff'], r: 3, how: 'Sadece Kanka\'ya katılan ilk 300 kişiye verildi', limited: 300 },
   ekip: { ic: 'shield', c: ['#8ec5ff', '#2f6fe0'], r: 3, how: 'Kanka Chat moderasyon ekibine katıl', award: true },
 };
@@ -6726,6 +6773,7 @@ const KB_SPRITE = `<svg width="0" height="0" style="position:absolute" aria-hidd
  <linearGradient id="kbg-kurucu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3d1"/><stop offset="1" stop-color="#c72a74"/></linearGradient>
  <linearGradient id="kbg-efsane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset="1" stop-color="#e09a12"/></linearGradient>
  <linearGradient id="kbg-avci" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4ff9a"/><stop offset="1" stop-color="#3a9d23"/></linearGradient>
+ <linearGradient id="kbg-partner" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9a6ff"/><stop offset="1" stop-color="#5a35d8"/></linearGradient>
  <linearGradient id="kbg-dev" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6aa8ff"/><stop offset="1" stop-color="#3a4fd8"/></linearGradient>
  <linearGradient id="kbg-gece" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8c8ff"/><stop offset="1" stop-color="#6a45d8"/></linearGradient>
  <linearGradient id="kbg-sohbet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd8ff"/><stop offset="1" stop-color="#2a8ae0"/></linearGradient>
@@ -6739,6 +6787,7 @@ const KB_SPRITE = `<svg width="0" height="0" style="position:absolute" aria-hidd
  <symbol id="kb-kurucu" viewBox="0 0 48 48"><path d="M8 44V16h6v5h5v-5h10v5h5v-5h6v28Z" fill="url(#kbg-kurucu)"/><path d="M8 16V8h5v4h4V8h5v4h4V8h5v4h4V8h5v8" fill="#ff8ab8"/><path d="M19 44V33a5 5 0 0 1 10 0v11Z" fill="#5a0f30"/></symbol>
  <symbol id="kb-efsane" viewBox="0 0 48 48"><path d="M5 15l9.5 8L24 8l9.5 15L43 15l-4 24H9Z" fill="url(#kbg-efsane)"/><rect x="9" y="38" width="30" height="6" rx="2" fill="#c27c0e"/><circle cx="24" cy="29" r="3.6" fill="#fff" opacity=".85"/><circle cx="5" cy="15" r="3" fill="#fff3c0"/><circle cx="43" cy="15" r="3" fill="#fff3c0"/><circle cx="24" cy="7" r="3" fill="#fff3c0"/></symbol>
  <symbol id="kb-avci" viewBox="0 0 48 48"><g stroke="#2f7a1e" stroke-width="3" stroke-linecap="round"><path d="M10 20l6 3M38 20l-6 3M8 30h8M40 30h-8M10 41l7-4M38 41l-7-4M18 9l3 4M30 9l-3 4"/></g><ellipse cx="24" cy="29" rx="11" ry="14" fill="url(#kbg-avci)"/><path d="M24 15v28" stroke="#2f7a1e" stroke-width="2.4"/><circle cx="24" cy="15" r="7" fill="#3a9d23"/><circle cx="19" cy="27" r="2.4" fill="#1d4d12"/><circle cx="29" cy="33" r="2.4" fill="#1d4d12"/><circle cx="20" cy="36" r="1.8" fill="#1d4d12"/></symbol>
+ <symbol id="kb-partner" viewBox="0 0 48 48"><path d="M24 2.5 43 13.5v21L24 45.5 5 34.5v-21Z" fill="url(#kbg-partner)"/><path d="M24 6.5 39.5 15.5v4L24 10.5 8.5 19.5v-4Z" fill="#fff" opacity=".2"/><path d="M16.2 19.6a4.4 4.4 0 1 0 0 8.8c2.4 0 3.6-2.2 5-4.4s2.6-4.4 5-4.4a4.4 4.4 0 1 1 0 8.8c-2.4 0-3.6-2.2-5-4.4s-2.6-4.4-5-4.4Z" transform="translate(1.2 0)" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></symbol>
  <symbol id="kb-dev" viewBox="0 0 48 48"><rect x="3" y="7" width="42" height="34" rx="10" fill="url(#kbg-dev)"/><path d="M17 17l-7 7 7 7M31 17l7 7-7 7M27 14l-6 20" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
  <symbol id="kb-gece" viewBox="0 0 48 48"><path d="M30 6a19 19 0 1 0 13 30A16 16 0 0 1 30 6Z" fill="url(#kbg-gece)"/><path d="M35 9l1.6 3.4L40 14l-3.4 1.6L35 19l-1.6-3.4L30 14l3.4-1.6Z" fill="#fff6c8"/></symbol>
  <symbol id="kb-sohbet" viewBox="0 0 48 48"><path d="M8 6h32a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H22l-11 9v-9H8a5 5 0 0 1-5-5V11a5 5 0 0 1 5-5Z" fill="url(#kbg-sohbet)"/><circle cx="15" cy="21" r="3" fill="#fff"/><circle cx="24" cy="21" r="3" fill="#fff"/><circle cx="33" cy="21" r="3" fill="#fff"/></symbol>
@@ -8954,7 +9003,7 @@ function tip(key, sel, title, text, place = 'top', tries = 0) {
 // --- Davet penceresi ---
 function showInvite(s) {
   if (!s?.invite) return toast('Bu sunucunun davet linki yok.');
-  const link = `${PUB}/davet/${s.invite}`, text = `${s.name} sunucusuna gel, Kanka'da takılıyoruz! 🦝`;
+  const link = s.vanity ? `${PUB}/s/${s.vanity}` : `${PUB}/davet/${s.invite}`, text = `${s.name} sunucusuna gel, Kanka'da takılıyoruz! 🦝`;
   const mark = () => socket.emit('onbMark', { k: 'invite', serverId: s.id }, () => {});
   const enc = encodeURIComponent, cnt = (s.members || []).length;
   const share = [

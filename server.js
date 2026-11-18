@@ -139,6 +139,8 @@ function cleanSrc(x) {
 const srcLabel = s => !s ? 'Doğrudan / bilinmiyor' : s.g || /google/i.test(s.s || '') && /cpc|ads|ppc|paid/i.test(s.m || 'cpc') ? `Google reklam${s.t ? ' · ' + s.t : s.c ? ' · ' + s.c : ''}` : s.s ? `${s.s}${s.c ? ' · ' + s.c : ''}${s.t ? ' · ' + s.t : ''}` : s.ref ? s.ref : s.lp ? 'Sayfa: ' + s.lp : 'Doğrudan / bilinmiyor';
 app.get('/discord-alternatifi', (req, res) => res.redirect(301, '/sesli-sohbet' + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '')));
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
+// Partner sunucuların özel linki: kankahq.com/s/isim
+app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && x.badges?.partner); res.redirect(s ? '/?davet=' + encodeURIComponent(s.invite) : '/'); });
 app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
 for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/sesli-sohbet', 'sesli-sohbet.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 // ---------- Beta kayıt sayfası (/beta) ----------
@@ -993,16 +995,50 @@ const canStaff = (n, act) => (STAFF_CAN[act] || []).includes(staffRank(n));
 const staffList = () => [...new Set([db.servers.find(x => x.id === 's1')?.owner, ...Object.keys(db.staff || {}), ...(db.siteAdmins || [])])].filter(n => n && db.users[n] && staffRank(n));
 function staffLog(by, action, target, detail) { (db.staffLog ||= []).unshift({ at: Date.now(), by, action, target: target || null, detail: String(detail || '').slice(0, 200) }); if (db.staffLog.length > 1500) db.staffLog.length = 1500; }
 const isBanned = u => { if (!u?.siteBan) return false; if (u.siteBan.until && u.siteBan.until < Date.now()) { delete u.siteBan; save(); return false; } return true; };
+setTimeout(() => { try { const ps = db.servers.find(x => x.badges?.partner); if (ps) partnerPerks(ps); } catch (e) { console.error('[partner]', e.message); } }, 4000); // mevcut partnerler için rol/oda
+// Partner sahiplerine Kanka HQ'da "Kanka Partner" rolü ve sadece onların gördüğü partner-salonu odası
+function partnerPerks(s) {
+  const hq = db.servers.find(x => x.id === 's1'); if (!hq || !s?.owner) return;
+  hq.customRoles ||= []; hq.memberRoles ||= {};
+  let role = hq.customRoles.find(r => r.id === db.partnerRoleId);
+  if (!role) { role = { id: id(), name: 'Kanka Partner', color: '#7c5cff', perms: [], hoist: true, icon: '🤝', mentionable: false }; hq.customRoles.push(role); db.partnerRoleId = role.id; }
+  if (!hq.channels.some(c => c.id === db.partnerChId)) {
+    const ch = { id: id(), name: 'partner-salonu', type: 'text', topic: 'Kanka Partner sunucu sahipleri ve Kanka ekibi. Fikirler, etkinlikler, iş birlikleri.', sync: false, perms: { '@everyone': { view: false }, [role.id]: { view: true } } };
+    const last = hq.channels.findLastIndex(c => c.type !== 'voice'); hq.channels.splice(last + 1, 0, ch); db.partnerChId = ch.id;
+    (db.messages[ch.id] ||= []).push({ id: id(), author: BOT_NAME, color: '#ff8a4c', time: Date.now(), kind: 'text', text: '🤝 partner salonuna hoş geldiniz! burası partner sunucu sahipleri ve kanka ekibi için. fikirlerinizi, etkinliklerinizi ve iş birliği tekliflerinizi buraya yazabilirsiniz.', reactions: {} });
+  }
+  const owners = new Set(db.servers.filter(x => x.badges?.partner).map(x => x.owner));
+  for (const n of Object.keys(db.users)) { const l = hq.memberRoles[n] || [], has = l.includes(role.id), want = owners.has(n);
+    if (want && !has) { hq.memberRoles[n] = [...l, role.id]; if (!hq.members.includes(n) && !hq.public) hq.members.push(n); }
+    else if (!want && has) { hq.memberRoles[n] = l.filter(x => x !== role.id); if (!hq.memberRoles[n].length) delete hq.memberRoles[n]; } }
+  save(); pushServers(membersOf(hq)); io.emit('users', allUsers()); // sahibin profil rozeti güncellensin
+}
+// ---- Partner yolu: Topluluk (otomatik) → Yükselen (otomatik) → Kanka Partner (başvuru, ekip karar verir) ----
+const PT = { topluluk: { members: 15, days: 7 }, yukselen: { members: 30, days: 7, active: 10, rules: true }, partner: { members: 100, days: 21, active: 30, rules: true } };
+const activeCache = new Map();
+// Son 7 günde sunucunun yazı odalarında en az bir mesaj yazan farklı üye sayısı (botlar sayılmaz), 5 dk önbellek
+function activeWeek(s) {
+  const c = activeCache.get(s.id); if (c && Date.now() - c.t < 300e3) return c.n;
+  const since = Date.now() - 7 * 864e5, who = new Set();
+  for (const ch of s.channels || []) { const l = db.messages[ch.id]; if (!l) continue;
+    for (let i = l.length - 1; i >= 0 && l[i].time > since; i--) { const a = l[i].author; if (a && a !== BOT_NAME && a !== 'Claude' && db.users[a] && !db.users[a].bot) who.add(a); } }
+  activeCache.set(s.id, { t: Date.now(), n: who.size }); return who.size;
+}
+const hasRules = s => !!(s.welcome?.rules?.length || (s.channels || []).some(c => /kural|rules/i.test(c.name)));
+const srvStats = s => ({ members: membersOf(s).length, days: Math.floor((Date.now() - (s.createdAt || Date.now())) / 864e5), active: activeWeek(s), rules: hasRules(s) });
+const meets = (st, r) => st.members >= r.members && st.days >= r.days && (!r.active || st.active >= r.active) && (!r.rules || st.rules);
+const emojiLimit = s => s.badges?.partner || s.id === 's1' ? 200 : srvBadges(s).some(b => b.id === 'yukselen') ? 100 : 50;
 function srvBadges(s) {
   const b = [];
   if (s.id === 's1') b.push({ id: 'resmi', since: s.createdAt || null });
   for (const id of ['dogrulanmis', 'partner']) if (s.badges?.[id]) b.push({ id, by: s.badges[id].by, since: s.badges[id].time });
   const age = Date.now() - (s.createdAt || 0);
   if (s.id !== 's1' && membersOf(s).length >= 15 && (!s.createdAt || age > 7 * 864e5)) b.push({ id: 'topluluk' });
+  if (s.id !== 's1' && !s.badges?.partner && membersOf(s).length >= PT.yukselen.members && meets(srvStats(s), PT.yukselen)) b.push({ id: 'yukselen' });
   return b;
 }
 const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
-  id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, public: s.public, roles: s.roles,
+  id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, vanity: s.badges?.partner ? s.vanity || null : null, public: s.public, roles: s.roles,
   emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, filter: !!s.filter, slow: s.slow || 0,
   channels: (viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels).map(c => chView(s, c, viewer, viewer && can(s, viewer, 'manageChannels'))),
   categories: (s.categories || []).filter(k => !viewer || can(s, viewer, 'manageChannels') || s.channels.some(c => c.cat === k.id && seesChannel(s, c, viewer)))
@@ -1431,6 +1467,7 @@ const BADGES = {
   ekip: ['🛡️', 'Kanka Ekibi', 'Kanka Chat moderasyon ekibinde'],
   avci: ['🐞', 'Hata Avcısı', 'Kanka HQ\'da önemli bir hatayı bulup ekibe bildirdi'],
   dev: ['🤖', 'Bot Geliştirici', 'Kanka bot sisteminin beta geliştiricisi'],
+  partner: ['🤝', 'Kanka Partner', 'Kanka Partner bir sunucunun sahibi'],
 };
 // Elle verilen rozetler (Kanka ekibi verir): u.awards = { avci: { by, time } }
 const AWARDS = ['avci'];
@@ -1455,6 +1492,7 @@ function badgesOf(u) {
   if ((u.xoxWins || 0) >= 3) b.push('xox');
   if ((u.streak?.best || 0) >= 7) b.push('seri7');
   if (db.servers.some(s => s.owner === u.name && !s.public)) b.push('kurucu');
+  if (db.servers.some(s => s.owner === u.name && s.badges?.partner)) b.push('partner');
   if ((u.friends || []).length >= 5) b.push('sosyal');
   if (u.onb?.rewarded) b.push('caylak');
   if (staffRank(u.name)) b.unshift('ekip');
@@ -3084,14 +3122,15 @@ io.on('connection', socket => {
     cb({ ok: true, on: !!on });
   });
   // ---- Sunucu rozeti başvurusu (Doğrulanmış / Kanka Partner): sunucu sahibi başvurur, Kanka yönetimi karar verir ----
-  const SB_REQ = { partner: { members: 50, days: 14 }, dogrulanmis: { members: 0, days: 0 } };
-  const sbInfo = s => { const ms = membersOf(s).length, days = Math.floor((Date.now() - (s.createdAt || Date.now())) / 864e5); return { members: ms, days }; };
+  const SB_REQ = { partner: PT.partner, dogrulanmis: { members: 0, days: 0 } };
+  const sbInfo = s => srvStats(s);
   socket.on('srvBadgeApp', ({ serverId } = {}, cb = () => {}) => {
     const s = db.servers.find(x => x.id === serverId); if (!s || s.owner !== me) return cb({ error: 'Rozete sadece sunucu sahibi başvurabilir' });
     const A = (db.srvApps ||= {})[serverId] ||= {};
     A.code ||= 'kanka-' + crypto.randomBytes(3).toString('hex'); save();
     const view = t => A[t] ? { status: A[t].status, at: A[t].at, link: A[t].link, about: A[t].about, note: A[t].status === 'rejected' ? A[t].note || '' : '' } : null;
-    cb({ code: A.code, info: sbInfo(s), req: SB_REQ, has: { dogrulanmis: !!s.badges?.dogrulanmis, partner: !!s.badges?.partner }, apps: { dogrulanmis: view('dogrulanmis'), partner: view('partner') } });
+    const tier = s.badges?.partner ? 'partner' : srvBadges(s).some(b => b.id === 'yukselen') ? 'yukselen' : srvBadges(s).some(b => b.id === 'topluluk') ? 'topluluk' : null;
+    cb({ code: A.code, info: sbInfo(s), req: SB_REQ, tiers: PT, tier, vanity: s.vanity || null, emoji: { used: Object.keys(s.emojis || {}).length, max: emojiLimit(s) }, has: { dogrulanmis: !!s.badges?.dogrulanmis, partner: !!s.badges?.partner }, apps: { dogrulanmis: view('dogrulanmis'), partner: view('partner') } });
   });
   socket.on('srvBadgeApply', ({ serverId, type, link, about } = {}, cb = () => {}) => {
     const s = db.servers.find(x => x.id === serverId); if (!s || s.owner !== me) return cb({ error: 'Rozete sadece sunucu sahibi başvurabilir' });
@@ -3100,7 +3139,7 @@ io.on('connection', socket => {
     if (limited('sb|' + me, 4, 3600e3)) return cb({ error: 'Biraz bekleyip tekrar dene' });
     const A = (db.srvApps ||= {})[serverId] ||= {}; if (A[type]?.status === 'pending') return cb({ error: 'Başvurun zaten değerlendiriliyor' });
     const i = sbInfo(s), r = SB_REQ[type];
-    if (i.members < r.members || i.days < r.days) return cb({ error: `Bu rozet için en az ${r.members} üye ve ${r.days} günlük sunucu gerekiyor` });
+    if (!meets(i, r)) return cb({ error: type === 'partner' ? `Partner için en az ${r.members} üye, ${r.days} günlük sunucu, haftada ${r.active} aktif üye ve kurallar gerekiyor` : `Bu rozet için en az ${r.members} üye ve ${r.days} günlük sunucu gerekiyor` });
     const t = (v, n) => String(v || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
     link = t(link, 200); about = t(about, 500);
     if (type === 'dogrulanmis' && !/^https?:\/\/\S+$/i.test(link)) return cb({ error: 'Resmi hesabının bağlantısını gir (https:// ile)' });
@@ -3110,6 +3149,17 @@ io.on('connection', socket => {
     save();
     for (const n of Object.keys(db.users)) if (staffRank(n)) io.to('user:' + n).emit('toast', `🏷️ Yeni sunucu rozeti başvurusu: ${s.name}`);
     cb({ ok: true });
+  });
+  socket.on('srvVanity', ({ serverId, slug } = {}, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId); if (!s || s.owner !== me) return cb({ error: 'Sadece sunucu sahibi değiştirebilir' });
+    if (!s.badges?.partner) return cb({ error: 'Özel link Kanka Partner sunuculara özel' });
+    slug = String(slug || '').toLowerCase().trim();
+    if (!slug) { delete s.vanity; save(); return cb({ ok: true, vanity: null }); }
+    if (!/^[a-z0-9](?:[a-z0-9-]{1,22}[a-z0-9])$/.test(slug)) return cb({ error: '3-24 karakter: küçük harf, rakam ve tire (başta/sonda tire olmaz)' });
+    if (['kanka', 'kankahq', 'admin', 'yonetim', 'destek', 'resmi', 'partner', 'api', 'davet', 'kod'].includes(slug)) return cb({ error: 'Bu isim ayrılmış' });
+    if (db.servers.some(x => x !== s && x.vanity === slug)) return cb({ error: 'Bu link alınmış' });
+    if (limited('vanity|' + me, 6, 3600e3)) return cb({ error: 'Biraz bekle' });
+    s.vanity = slug; audit(s, me, 'Özel linki değiştirdi', slug); save(); cb({ ok: true, vanity: slug });
   });
   socket.on('adminSrvApps', (_ = {}, cb = () => {}) => {
     if (!siteMod(me)) return cb({ error: 'Yetkin yok' });
@@ -3125,7 +3175,7 @@ io.on('connection', socket => {
     if (!s || !a || !['accepted', 'rejected'].includes(status)) return cb({ error: 'Geçersiz' });
     a.status = status; a.decidedBy = me; a.decidedAt = Date.now(); a.note = String(note || '').slice(0, 300);
     const label = type === 'partner' ? 'Kanka Partner' : 'Doğrulanmış';
-    if (status === 'accepted') { s.badges ||= {}; s.badges[type] = { by: me, time: Date.now() }; audit(s, me, 'Rozet verdi', label); pushServers(membersOf(s)); for (const n of membersOf(s)) io.to('user:' + n).emit('toast', `🎉 ${s.name} artık ${label} bir sunucu`); }
+    if (status === 'accepted') { s.badges ||= {}; s.badges[type] = { by: me, time: Date.now() }; audit(s, me, 'Rozet verdi', label); if (type === 'partner') partnerPerks(s); pushServers(membersOf(s)); for (const n of membersOf(s)) io.to('user:' + n).emit('toast', `🎉 ${s.name} artık ${label} bir sunucu`); }
     else io.to('user:' + s.owner).emit('toast', `${s.name} için ${label} başvurusu bu sefer olmadı${a.note ? ': ' + a.note : ''}. Sunucu ayarları › Rozetler'den tekrar başvurabilirsin`);
     save(); console.log(`[rozet-başvuru] ${me} -> ${s.name}: ${type} ${status}`); cb({ ok: true });
   });
@@ -3135,6 +3185,7 @@ io.on('connection', socket => {
     if (!s || !['dogrulanmis', 'partner'].includes(badge)) return cb({ error: 'Geçersiz' });
     s.badges ||= {};
     if (on) s.badges[badge] = { by: me, time: Date.now() }; else delete s.badges[badge];
+    if (badge === 'partner') partnerPerks(s);
     audit(s, me, on ? 'Rozet verdi' : 'Rozeti kaldırdı', badge === 'partner' ? 'Kanka Partner' : 'Doğrulanmış');
     save(); pushServers(membersOf(s));
     for (const n of membersOf(s)) if (on) io.to('user:' + n).emit('toast', `${s.name} artık ${badge === 'partner' ? 'Kanka Partner' : 'Doğrulanmış'} bir sunucu`);
@@ -3455,7 +3506,10 @@ io.on('connection', socket => {
     const last = [0, 1, 2, 3, 4, 5, 6].reduce((a, i) => a + (u.vmin?.[dayKeyTR(Date.now() - (dow + 7 - i) * 864e5)] || 0), 0);
     const hq = db.servers.find(x => x.id === 's1');
     let rank = null; if (hq) { const xp = u.xp || 0; rank = 1 + membersOf(hq).reduce((a, n) => a + ((db.users[n]?.xp || 0) > xp ? 1 : 0), 0); }
-    cb({ week, today: dow, last, rank });
+    const ps = db.servers.filter(x => x.badges?.partner && !x.bans?.[me]).sort((a, b) => a.id < b.id ? -1 : 1);
+    let potw = null; if (ps.length) { const x = ps[Math.floor(Date.now() / (7 * 864e5)) % ps.length], mem = membersOf(x), on = new Set(onlineNames());
+      potw = { id: x.id, name: x.name, icon: x.icon, iconImg: x.iconImg || null, banner: x.banner || null, bannerColor: x.bannerColor || null, description: x.description || '', members: mem.length, online: mem.filter(n => on.has(n)).length, invite: x.invite, joined: mem.includes(me) }; }
+    cb({ week, today: dow, last, rank, potw });
   });
   // Yuva sağ panel: Kanka HQ'da en yüksek seviye ve en uzun seri
   socket.on('hqTops', (cb = () => {}) => {
@@ -3480,7 +3534,7 @@ io.on('connection', socket => {
     if (name.length < 2) return cb({ error: 'Emoji adı en az 2 karakter olmalı (a-z, 0-9, _)' });
     if (!UPLOAD_RE.test(url || '')) return cb({ error: 'Geçersiz resim' });
     s.emojis ||= {};
-    if (Object.keys(s.emojis).length >= 50) return cb({ error: 'En fazla 50 özel emoji eklenebilir' });
+    if (Object.keys(s.emojis).length >= emojiLimit(s)) return cb({ error: emojiLimit(s) < 200 ? `En fazla ${emojiLimit(s)} özel emoji eklenebilir. Yükselen sunucular 100, Kanka Partner sunucular 200 emoji ekleyebilir.` : `En fazla ${emojiLimit(s)} özel emoji eklenebilir` });
     s.emojis[name] = url;
     s.emojiMeta ||= {}; s.emojiMeta[name] = { by: me, at: Date.now() };
     audit(s, me, 'Emoji ekledi', ':' + name + ':');
@@ -3692,7 +3746,7 @@ io.on('connection', socket => {
   socket.on('discover', ({ q, cat } = {}, cb = () => {}) => {
     if (!me) return cb([]);
     q = clean(q, 60).toLocaleLowerCase('tr');
-    const on = new Set(onlineNames()), W = { resmi: 40, partner: 30, dogrulanmis: 20, topluluk: 10 };
+    const on = new Set(onlineNames()), W = { resmi: 60, partner: 50, dogrulanmis: 20, yukselen: 20, topluluk: 10 };
     const list = db.servers.filter(s => (s.public || s.discoverable) && !s.bans?.[me])
       .filter(s => !cat || s.category === cat)
       .filter(s => !q || s.name.toLocaleLowerCase('tr').includes(q) || (s.description || '').toLocaleLowerCase('tr').includes(q))
