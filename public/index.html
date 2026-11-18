@@ -4737,6 +4737,7 @@ addEventListener('blur', closeMsgCtx);
       if (Math.abs(g.dx) < 10 && Math.abs(g.dy) < 10) return;
       clearTimeout(lp); g.row?.classList.remove('pressing');
       if (Math.abs(g.dy) > Math.abs(g.dx) * .9) { g.mode = 'scroll'; return; }
+      if (Math.abs(g.dx) < 16) { g.mode = null; return; } // kısa titremelerde çekmece oynamasın; net yatay hareket bekle
       const L = B.classList.contains('drawer'), M = B.classList.contains('mdrawer');
       if (L && g.dx < 0) g.mode = 'closeL';
       else if (M && g.dx > 0) g.mode = 'closeM';
@@ -4764,7 +4765,7 @@ addEventListener('blur', closeMsgCtx);
   function end() {
     unbind();
     clearTimeout(lp); if (!g) return; g.row?.classList.remove('pressing');
-    const fast = Math.abs(g.dx) / Math.max(1, Date.now() - g.t0) > .45;
+    const fast = Math.abs(g.dx) > 36 && Math.abs(g.dx) / Math.max(1, Date.now() - g.t0) > .45; // hızlı fiske ama gerçekten kaydırılmış olsun
     if (g.mode === 'reply') {
       const ok = g.dx > 64, row = g.row;
       row.classList.remove('swiping'); row.classList.add('swback');
