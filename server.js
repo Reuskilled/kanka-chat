@@ -583,7 +583,7 @@ const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (
 const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
 const HEX = /^#[0-9a-f]{6}$/i;
 const pubUser = u => ({ displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
-  birthday: u.birthday || null, music: u.music || null, activities: activitiesOf(u), badges: shownBadges(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
+  birthday: u.birthday || null, music: u.music || null, activities: activitiesOf(u), badges: shownBadges(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
 const allUsers = () => Object.values(db.users).map(pubUser);
@@ -1434,6 +1434,14 @@ const BADGES = {
 };
 // Elle verilen rozetler (Kanka ekibi verir): u.awards = { avci: { by, time } }
 const AWARDS = ['avci'];
+// Beta Tester sıra numarası (1-300): kayıt sırası, gizlenmişse gönderilmez
+let betaOrderCache = { n: -1, list: [] };
+function betaNoOf(u) {
+  if ((u.hideBadges || []).includes('beta')) return undefined;
+  const cnt = Object.keys(db.users).length;
+  if (betaOrderCache.n !== cnt) betaOrderCache = { n: cnt, list: Object.values(db.users).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map(x => x.name) };
+  const i = betaOrderCache.list.indexOf(u.name); return i >= 0 && i < 300 ? i + 1 : undefined;
+}
 function badgesOf(u) {
   const order = Object.values(db.users).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map(x => x.name);
   const b = [];
