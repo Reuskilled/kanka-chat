@@ -4247,7 +4247,8 @@ document.addEventListener('contextmenu', e => {
   if (!n || !S.users[n]) return;
   e.preventDefault(); userMenu(n, e.clientX, e.clientY);
 });
-document.addEventListener('click', e => { if (!e.target.closest('.umenu')) closeUMenu(); });
+const inside = (e, sel) => e.target.isConnected ? !!e.target.closest(sel) : e.composedPath().some(n => n.matches?.(sel));
+document.addEventListener('click', e => { if (!inside(e, '.umenu')) closeUMenu(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUMenu(); });
 window.addEventListener('blur', closeUMenu);
 
@@ -4305,7 +4306,7 @@ function toggleSrvMenu() {
       socket.emit('leaveServer', s.id, r => r.error ? toast(r.error) : (toast(`${s.name} sunucusundan ayrıldın`), selectServer(S.servers[0].id))));
   };
 }
-document.addEventListener('click', e => { if (!e.target.closest('#srvmenu, #side-head')) closeSrvMenu(); });
+document.addEventListener('click', e => { if (!inside(e, '#srvmenu, #side-head')) closeSrvMenu(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSrvMenu(); });
 function showServerInfo(s) {
   const members = s.members || [], on = members.filter(n => S.online.has(n)).length;
@@ -6095,7 +6096,7 @@ function cancelReply() { S.replyTo = null; $('#replybar').style.display = 'none'
 $('#reply-x').onclick = cancelReply;
 
 $('#plus').onclick = e => { e.stopPropagation(); const m = $('#menu'), open = m.style.display !== 'block'; m.style.display = open ? 'block' : 'none'; $('#plus').classList.toggle('open', open); };
-document.addEventListener('click', e => { if (!e.target.closest('#menu')) { $('#menu').style.display = 'none'; $('#plus').classList.remove('open'); } });
+document.addEventListener('click', e => { if (!inside(e, '#menu')) { $('#menu').style.display = 'none'; $('#plus').classList.remove('open'); } });
 $('#menu').onclick = e => {
   const a = e.target.closest('button')?.dataset.a; if (!a) return;
   $('#menu').style.display = 'none'; $('#plus').classList.remove('open');
@@ -6681,7 +6682,7 @@ function voicePop(n, anchor, chId) {
     if (matchMedia('(pointer: fine)').matches) setTimeout(() => $('#vp-q')?.focus(), 50);
   }
 }
-document.addEventListener('click', e => { if (!e.target.closest('.vpop, .vuser, #members .mem, .row[data-au] .wname, .row[data-au] > .av')) closeVPop(); });
+document.addEventListener('click', e => { if (!inside(e, '.vpop, .vuser, #members .mem, .row[data-au] .wname, .row[data-au] > .av')) closeVPop(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVPop(); });
 socket.on('voiceFlags', f => { S.vflags = f || {}; if (S.view === 'server' && S.server) renderSide(); pushOverlay(); });
 
@@ -6759,7 +6760,7 @@ socket.on('myStatus', ({ st, until, expired }) => {
   if (expired && was !== 'online') toast(`<b>${STATUS[was]?.[0] || 'Durum'}</b> süresi doldu, artık çevrimiçisin`, null, true);
 });
 socket.on('customStatus', ({ expired }) => { S.customUntil = null; if (expired) toast('Özel durumunun süresi doldu'); });
-document.addEventListener('click', e => { if (!e.target.closest('#statusmenu, #me-av')) $('#statusmenu')?.remove(); });
+document.addEventListener('click', e => { if (!inside(e, '#statusmenu, #me-av')) $('#statusmenu')?.remove(); });
 // Otomatik "Boşta": 10 dakika hareket yoksa
 // Masaüstünde Windows'un kendi sayacı kullanılır: oyunda klavye/fare kullanmak da hareket sayılır, ekran kilitlenince hemen boşta.
 // Sesli odadayken boşa düşülmez (konuşuyor olabilirsin). Durum sadece gerçekten değişince sunucuya gider.
@@ -8167,7 +8168,8 @@ $('#ep-grid').addEventListener('keydown', e => {
   const j = i + (e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowDown' ? 8 : -8);
   btns[Math.max(0, Math.min(btns.length - 1, j))]?.focus();
 });
-document.addEventListener('click', e => { if (!e.target.closest('#emojipanel, #emo-btn')) closeEmojiPanel(); });
+// tıklanan düğme yeniden çizimde silinse bile tıklamanın panelin içinden geldiğini composedPath bilir
+document.addEventListener('click', e => { if (!e.composedPath().some(n => n.id === 'emojipanel' || n.id === 'emo-btn')) closeEmojiPanel(); });
 
 // ================= Emoji bilgi kartı =================
 let epPrevKey = null;
