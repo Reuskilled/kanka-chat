@@ -3176,6 +3176,26 @@
 .yv-potw .pw-in{padding:4px 14px 14px}.yv-potw .pw-in>small{position:absolute;top:10px;left:12px;display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);padding:4px 9px 4px 6px;border-radius:99px}
 .yv-potw .pw-row{display:flex;align-items:center;gap:10px;margin:8px 0 6px}.yv-potw .pw-row .yv-si{margin-top:-30px;border:3px solid var(--panel,#1c1512)}.yv-potw .pw-row small{text-transform:none;letter-spacing:0;color:var(--muted);font-weight:500;font-size:12px}
 .yv-potw p{font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.4}.yv-potw .primary{width:100%;padding:9px}
+
+/* Yayın: odada CANLI satırı ve önizleme kartı */
+.vuser.islive{background:linear-gradient(90deg,rgba(242,63,67,.10),transparent 70%);border-radius:8px}
+.vuser.islive .vn{font-weight:700;color:var(--ink)}
+.livebadge i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;margin-right:4px;animation:lcPulse 1.4s ease-in-out infinite}
+@keyframes lcPulse{50%{opacity:.35}}
+#livecard{position:fixed;z-index:10060;width:320px;background:#1b1411;border:1px solid #3a2c25;border-radius:18px;padding:12px;box-shadow:0 24px 60px rgba(0,0,0,.55);animation:bpIn .16s cubic-bezier(.2,.9,.3,1.2);color:var(--ink)}
+#livecard.sheet{left:8px!important;right:8px;bottom:calc(10px + env(safe-area-inset-bottom));top:auto!important;width:auto}
+.lc-top{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:2px 2px 10px}
+.lc-red{display:inline-flex;align-items:center;gap:5px;background:#f23f43;color:#fff;font-size:11px;letter-spacing:.05em;padding:3px 9px;border-radius:7px}.lc-red i{width:6px;height:6px;border-radius:50%;background:#fff;animation:lcPulse 1.4s infinite}
+.lc-prev{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#0c0908;border:1px solid #2b211c}
+.lc-prev .lc-img{width:100%;height:100%;object-fit:cover;display:block}
+#livecard [hidden]{display:none!important}
+.lc-ph{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:8px;background:radial-gradient(circle at 50% 40%,#3a2418,#0c0908 70%)}.lc-ph .av{width:56px;height:56px;font-size:22px}.lc-ph small{font-size:11.5px;color:var(--muted)}
+.lc-time,.lc-q{position:absolute;bottom:8px;font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);padding:3px 8px;border-radius:7px;display:inline-flex;align-items:center;gap:4px}.lc-time{left:8px}.lc-q{right:8px}.lc-q svg{width:12px;height:12px}
+.lc-who{display:flex;align-items:center;gap:10px;margin:12px 2px}.lc-who .av{width:36px;height:36px;flex:none}.lc-who>div{flex:1;min-width:0}.lc-who b{display:block;font-size:14.5px}.lc-who small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-v{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:800;color:var(--muted)}.lc-v svg{width:15px;height:15px}
+.lc-btn{width:100%;height:40px;border-radius:12px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font-weight:800;font-size:14px;cursor:pointer}.lc-btn svg{width:17px;height:17px}
+.lc-go{background:linear-gradient(120deg,#ff8a4c,#ff5a2e);color:#fff;box-shadow:0 8px 22px rgba(255,90,46,.3)}.lc-go:hover{filter:brightness(1.08)}
+.lc-acts{display:flex;gap:8px}.lc-self{background:rgba(255,255,255,.06);color:var(--muted);cursor:default;flex:1}.lc-stop{background:rgba(242,63,67,.14);color:#ff8a8d;width:auto;padding:0 14px}
 </style>
 </head>
 <body>
@@ -4284,8 +4304,8 @@ function renderSide() {
   const tRow = c => { const mc = mentCountCh(c.id); return `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${isUn(c) || mc ? 'unread' : ''} ${mc ? 'has-ment' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${mc ? `<span class="mbadge">${mc > 9 ? '9+' : mc}</span>` : chBadge(c)}${notifMode(c.id) === 'none' ? `<button class="rmute" data-unmute="${c.id}" title="Sessizde · sesini açmak için tıkla" aria-label="Odanın sesini aç">${ic('belloff')}</button>` : ''}${!mc && isUn(c) && c.id !== S.channel?.id ? `<span class="udot" title="Son baktığından beri ${chCnt[c.id] ? chCnt[c.id] + ' yeni mesaj' : 'yeni mesaj var'}">${chCnt[c.id] > 1 ? (chCnt[c.id] > 99 ? '99+' : chCnt[c.id]) : ''}</span>` : ''}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` };
   const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${(S.voice[c.id] || []).length ? `<em class="vtm" data-vt="${c.id}" title="Sohbet bu kadar zamandır sürüyor">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em>` : ''}${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n);
-        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(dn(n))}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.d ? ic('headsetoff', 'vm') : fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle">CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
-  const vOrder = c => { const l = [...(S.voice[c.id] || [])]; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l; };
+        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''} ${(S.live?.[c.id] || []).includes(n) ? 'islive' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(dn(n))}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.d ? ic('headsetoff', 'vm') : fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle"><i></i>CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
+  const vOrder = c => { const l = [...(S.voice[c.id] || [])], lv = S.live?.[c.id] || [], rk = n => { const i = lv.indexOf(n); return i < 0 ? 1e3 : i; }; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l.map((n, i) => [n, i]).sort((a, b) => rk(a[0]) - rk(b[0]) || a[1] - b[1]).map(x => x[0]); }; // yayın açanlar odanın en üstünde
   const row = c => voiceLike(c.type) ? vRow(c) : tRow(c);
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
   const va = viewAs?.sid === s.id ? viewAs : null;
@@ -4312,7 +4332,12 @@ function renderSide() {
   });
   sl.querySelectorAll('.vuser[data-vu]').forEach(v => { v.onclick = e => { if (e.target.closest('[data-live]')) return; e.stopPropagation(); voicePop(v.dataset.vu, v, v.dataset.ch); }; v.onkeydown = e => { if (e.key === 'Enter') v.click(); }; });
   sl.querySelectorAll('[data-rset]').forEach(b => b.onclick = e => { e.stopPropagation(); showChSettings(s, 'ch', b.dataset.rset, 'general'); });
+  sl.querySelectorAll('.vuser.islive').forEach(v => { v.onpointerenter = e => { if (e.pointerType !== 'mouse') return; clearTimeout(liveHoverT); liveHoverT = setTimeout(() => openLiveCard(v.dataset.vu, v.dataset.ch, v), 380); }; v.onpointerleave = () => { clearTimeout(liveHoverT); liveHoverT = setTimeout(() => { if (!$('#livecard')?.matches(':hover')) closeLiveCard(); }, 220); }; });
   sl.querySelectorAll('[data-live]').forEach(b => b.onclick = e => {
+    e.stopPropagation(); const n = b.dataset.live;
+    if (matchMedia('(hover: none)').matches && !$('#livecard')) return openLiveCard(n, b.dataset.ch, b.closest('.vuser') || b); // dokunmatik: önce önizleme
+    closeLiveCard(); watchLive(n, b.dataset.ch); });
+  if (false) sl.querySelectorAll('[data-live]').forEach(b => b.onclick = e => {
     e.stopPropagation(); const n = b.dataset.live;
     if (myVoice === b.dataset.ch) { const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); setVView(true); }
     else { autoWatch = n; joinVoice(b.dataset.ch).then(ok => ok && setVView(true)); }
@@ -6999,6 +7024,53 @@ function showProfile(n, tab = 'about') {
 let vpopFor = null;
 const srvRoles = n => { const s = S.view === 'server' ? S.server : null; if (!s) return []; return (s.memberRoles?.[n] || []).map(id => (s.customRoles || []).find(r => r.id === id)).filter(Boolean); };
 const miniProfile = (n, anchor) => voicePop(n, anchor, null);
+// ---- Yayın önizleme kartı ("Şu an yayında"): küçük canlı kare, süre, kalite, izleyici, tek tuşla izle ----
+let liveHoverT = null, liveCardT = null;
+function watchLive(n, ch) {
+  if (myVoice === ch) { const sid = Object.keys(peers).find(k => peerNames[k] === n); if (sid) watchStream(sid); setVView(true); }
+  else { autoWatch = n; joinVoice(ch).then(ok => ok && setVView(true)); }
+}
+function closeLiveCard() { clearInterval(liveCardT); liveCardT = null; $('#livecard')?.remove(); }
+function openLiveCard(n, ch, anchor) {
+  if ($('#livecard')?.dataset.k === n + ch) return;
+  closeLiveCard(); closeVPop?.();
+  const mine = n === S.me, here = myVoice === ch, f = S.servers.flatMap(sv => sv.channels.map(c => ({ c, sv }))).find(x => x.c.id === ch);
+  const card = document.createElement('div'); card.id = 'livecard'; card.dataset.k = n + ch; card.setAttribute('role', 'dialog');
+  card.innerHTML = `<div class="lc-top"><span>Şu an yayında</span><b class="lc-red"><i></i>CANLI</b></div>
+    <div class="lc-prev"><div class="lc-ph">${av(n)}<small>Önizleme hazırlanıyor…</small></div><img class="lc-img" alt="" hidden><span class="lc-time" hidden></span><span class="lc-q" hidden></span></div>
+    <div class="lc-who">${av(n)}<div><b>${esc(dn(n))}</b><small>${f ? `${esc(f.sv.name)} › ${esc(f.c.name)}` : ''}</small></div><span class="lc-v" hidden>${ic('eye')}<em>0</em></span></div>
+    ${mine ? `<div class="lc-acts"><button class="lc-btn lc-self" disabled>${ic('live')}Yayındasın</button><button class="lc-btn lc-stop" id="lc-stop">${ic('x')}Durdur</button></div>`
+      : `<button class="lc-btn lc-go" id="lc-go">${ic('screen')}${here ? 'Yayını izle' : 'Katıl ve izle'}</button>`}`;
+  document.body.appendChild(card);
+  const r = anchor.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+  if (innerWidth < 640) { card.classList.add('sheet'); }
+  else { let x = r.right + 10, y = r.top - 8; if (x + w > innerWidth - 10) x = r.left - w - 10; y = Math.max(10, Math.min(innerHeight - h - 10, y)); card.style.left = x + 'px'; card.style.top = y + 'px'; }
+  card.onpointerleave = e => { if (e.pointerType === 'mouse') { clearTimeout(liveHoverT); liveHoverT = setTimeout(() => { if (!anchor.matches(':hover')) closeLiveCard(); }, 220); } };
+  card.onpointerenter = () => clearTimeout(liveHoverT);
+  if ($('#lc-go')) $('#lc-go').onclick = () => { closeLiveCard(); watchLive(n, ch); };
+  if ($('#lc-stop')) $('#lc-stop').onclick = () => { closeLiveCard(); stopVideo(); };
+  const fill = () => socket.emit('liveInfo', { name: n, ch }, x => {
+    if (!card.isConnected) return; if (!x) return closeLiveCard();
+    const img = card.querySelector('.lc-img'), qd = GO_Q[x.q];
+    if (x.thumb) { img.src = x.thumb; img.hidden = false; card.querySelector('.lc-ph').hidden = true; }
+    const t = card.querySelector('.lc-time'); if (x.since) { const m = Math.floor((Date.now() - x.since) / 60000); t.hidden = false; t.textContent = m < 1 ? 'yeni başladı' : m < 60 ? `${m} dk` : `${Math.floor(m / 60)} sa ${m % 60} dk`; }
+    const q = card.querySelector('.lc-q'); if (qd) { q.hidden = false; q.innerHTML = `${qd[4]} · ${qd[5].replace(/^1440p /, '')}${x.audio ? ' · ' + ic('volume') : ''}`; }
+    const v = card.querySelector('.lc-v'); v.hidden = false; v.querySelector('em').textContent = x.viewers;
+  });
+  fill(); liveCardT = setInterval(fill, 5000);
+}
+document.addEventListener('pointerdown', e => { if ($('#livecard') && !e.target.closest('#livecard, .livebadge')) closeLiveCard(); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLiveCard(); });
+// Yayıncı: önizleme için ~10 sn'de bir küçük kare (384×216 JPEG) gönder
+let thumbT = null;
+function thumbLoop(on) {
+  clearInterval(thumbT); thumbT = null; if (!on) return;
+  const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.srcObject = videoStream; v.play().catch(() => {});
+  const c = document.createElement('canvas'); c.width = 384; c.height = 216; const x = c.getContext('2d');
+  const snap = () => { if (videoKind !== 'screen' || !v.videoWidth) return; const ar = v.videoWidth / v.videoHeight, W = 384, H = 216; let dw = W, dh = W / ar; if (dh > H) { dh = H; dw = H * ar; }
+    x.fillStyle = '#000'; x.fillRect(0, 0, W, H); x.drawImage(v, (W - dw) / 2, (H - dh) / 2, dw, dh); try { socket.emit('liveThumb', c.toDataURL('image/jpeg', 0.72)); } catch {} };
+  setTimeout(snap, 1500); thumbT = setInterval(snap, 10000);
+}
 function closeVPop() { $('.vpop')?.remove(); vpopFor = null; }
 function voicePop(n, anchor, chId) {
   if (vpopFor === n) return closeVPop();
@@ -7854,13 +7926,13 @@ async function goLive(o, sourceId) {
   if (videoStream) stopVideo(true);
   videoStream = stream; videoKind = 'screen'; goCur = o; screenAudio = stream.getAudioTracks()[0] || null; watchers.clear();
   track.onended = () => { if (videoStream === stream) stopVideo(); };
-  feedAll(); sendMedia(); updateVoiceBtns(); renderStage();
+  feedAll(); sendMedia(); updateVoiceBtns(); renderStage(); thumbLoop(true);
   playSound('join');
   toast(`Yayındasın · ${GO_Q[o.q][4]} ${GO_Q[o.q][5]}${o.audio && !screenAudio ? '<br><small>Ses paylaşılamadı, sadece görüntü gidiyor.</small>' : ''}`);
 }
 function stopVideo(silent) {
   videoStream?.getTracks().forEach(t => t.stop());
-  videoStream = null; videoKind = null; screenAudio = null; goCur = null; watchers.clear();
+  videoStream = null; videoKind = null; screenAudio = null; goCur = null; watchers.clear(); thumbLoop(false); closeLiveCard();
   for (const pc of Object.values(peers)) { pc._vsender?.replaceTrack(null).catch(() => {}); pc._ssender?.replaceTrack(null).catch(() => {}); }
   if (!silent) sendMedia();
   updateVoiceBtns(); renderStage();
@@ -8236,6 +8308,7 @@ function renderStage() {
     const v = el.querySelector('video');
     if (v.srcObject !== (t.stream || null)) { v.srcObject = t.stream || null; if (el._z) zReset(el); }
     v.classList.toggle('mirror', t.sid === 'me' && t.kind === 'cam');
+    el.style.order = t.kind === 'screen' ? -2 : t.kind === 'cam' ? -1 : 0; // yayın açanlar sahnede de önde
     el.querySelector('.tav').innerHTML = av(t.name);
     el.querySelector('.tname').textContent = t.sid === 'me' ? t.name + ' (sen)' : t.name;
     const viewers = t.sid === 'me' ? watchers.size : t.m?.viewers || 0, q = GO_Q[t.sid === 'me' ? goCur?.q : t.m?.q];

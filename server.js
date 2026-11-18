@@ -1627,7 +1627,8 @@ function voiceAges() {
 const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.startsWith('call:')).map(([k, m]) => [k, [...new Set(m.values())]]));
 const pushPresence = () => io.emit('presence', presenceList());
 const voiceMedia = new Map();       // socket.id -> { cam, screen } (yayın rozetleri için)
-const liveState = () => { const o = {}; for (const [ch, m] of voice) { if (ch.startsWith('call:')) continue; const l = [...m].filter(([sid]) => voiceMedia.get(sid)?.screen).map(([, n]) => n); if (l.length) o[ch] = l; } return o; };
+const liveMeta = new Map();         // socket.id -> { since, q, viewers, audio, thumb, thumbAt } (yayın önizleme kartı)
+const liveState = () => { const o = {}; for (const [ch, m] of voice) { if (ch.startsWith('call:')) continue; const l = [...m].filter(([sid]) => voiceMedia.get(sid)?.screen).sort((a, b) => (liveMeta.get(a[0])?.since || 0) - (liveMeta.get(b[0])?.since || 0)).map(([, n]) => n); if (l.length) o[ch] = l; } return o; };
 // Odadakileri sesten çıkar (oda silindi, sunucudan atıldı vb.)
 const srvMuted = new Set(); // 'sunucuId|isim': yetkili tarafından seste susturulanlar
 function voiceKick(chIds, onlyName, reason) {
@@ -1636,7 +1637,7 @@ function voiceKick(chIds, onlyName, reason) {
     const room = voice.get(ch); if (!room) continue;
     for (const [sid, n] of [...room]) {
       if (onlyName && n !== onlyName) continue;
-      any = true; room.delete(sid); voiceMedia.delete(sid); voiceFlags.delete(sid);
+      any = true; room.delete(sid); voiceMedia.delete(sid); voiceFlags.delete(sid); liveMeta.delete(sid);
       io.to(sid).emit('voiceKicked', { ch, reason });
       io.sockets.sockets.get(sid)?.leave('v:' + ch);
       io.to('v:' + ch).emit('voiceLeft', sid);
@@ -3623,8 +3624,24 @@ io.on('connection', socket => {
     const was = voiceMedia.get(socket.id)?.screen, now = { cam: !!st?.cam, screen: !!st?.screen };
     { const f = findChannel(myVoice); if (f && (now.cam || now.screen) && !chPerm(f.s, f.c, me, 'stream')) { socket.emit('toast', 'Bu odada kamera ve ekran paylaşma iznin yok'); now.cam = now.screen = false; } }
     voiceMedia.set(socket.id, now);
+    if (now.screen) { const lm = liveMeta.get(socket.id) || { since: Date.now() }; Object.assign(lm, { q: clean(st?.q, 12), viewers: Math.min(+st?.viewers || 0, 99), audio: !!st?.audio }); liveMeta.set(socket.id, lm); }
+    else liveMeta.delete(socket.id);
     socket.to('v:' + myVoice).emit('media', { sid: socket.id, name: me, ...now, streamId: clean(st?.streamId, 80), viewers: Math.min(+st?.viewers || 0, 99), q: clean(st?.q, 12), audio: !!st?.audio });
     if (!!was !== now.screen) pushVoice(); else io.emit('voiceFlags', flagsState());
+  });
+  // Yayın önizlemesi: yayıncı ~10 sn'de bir küçük bir kare gönderir; odayı görebilenler üstüne gelince görür
+  socket.on('liveThumb', data => {
+    const lm = liveMeta.get(socket.id); if (!lm || !myVoice) return;
+    data = String(data || ''); if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(data) || data.length > 140e3) return;
+    if (Date.now() - (lm.thumbAt || 0) < 4000) return;
+    lm.thumb = data; lm.thumbAt = Date.now();
+  });
+  socket.on('liveInfo', ({ name, ch } = {}, cb = () => {}) => {
+    if (!me) return cb(null);
+    const f = findChannel(ch); if (!f || !chPerm(f.s, f.c, me, 'view')) return cb(null);
+    const room = voice.get(ch); if (!room) return cb(null);
+    for (const [sid, n] of room) if (n === name && voiceMedia.get(sid)?.screen) { const lm = liveMeta.get(sid) || {}; return cb({ since: lm.since || null, q: lm.q || null, viewers: lm.viewers || 0, audio: !!lm.audio, thumb: lm.thumb || null, thumbAt: lm.thumbAt || null }); }
+    cb(null);
   });
   // Yayın izleme: izleyici yayıncıya "izliyorum / bıraktım" der; yayıncı görüntüyü sadece izleyenlere gönderir
   socket.on('streamWatch', ({ to, on } = {}) => {
