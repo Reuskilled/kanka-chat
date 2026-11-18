@@ -3146,6 +3146,11 @@
 .bp-acts button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--ink);font-weight:700;font-size:13.5px;cursor:pointer}
 .bp-acts button:hover{background:rgba(255,255,255,.1)}.bp-acts svg{width:15px;height:15px}
 [data-badge]{cursor:pointer}
+
+.a-tips{text-align:left;margin:4px 0 16px;padding-left:18px;color:var(--muted);font-size:13.5px;line-height:1.5}.a-tips li{margin:5px 0}.a-tips b{color:var(--ink)}
+.mail-health{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.mail-health>div{background:rgba(255,255,255,.04);border:1px solid var(--line,#3a2e27);border-radius:12px;padding:10px 12px}.mail-health small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}.mail-health b{font-size:15px}
+.mail-err{background:rgba(255,90,90,.08);border:1px solid rgba(255,90,90,.35);color:#ffb0b0;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px;word-break:break-word}
+.mail-log{display:flex;flex-direction:column;gap:4px;font-size:12.5px;margin-top:8px}.mail-log>div{display:grid;grid-template-columns:110px 60px 1fr 1.4fr;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.03)}.mail-log .bad{color:#ffb0b0}.mail-log .ok span:last-child{color:#7fe0a8}
 </style>
 </head>
 <body>
@@ -3567,8 +3572,9 @@ function renderAuth(mode = authMode, keep) {
   else if (mode === 'forgot') h = `<h1>Şifreni mi unuttun?</h1><p>Kullanıcı adını ya da e-postanı yaz, sıfırlama linkini e-postana gönderelim.</p>
     ${afield('a-who', 'Kullanıcı adı ya da e-posta', 'mail', 'text', 'maxlength="190" autocomplete="username"')}
     <button class="primary" type="submit" id="a-btn">Link gönder</button><div id="auth-err"></div><button type="button" class="alink aback" data-m="login">← Girişe dön</button>`;
-  else if (mode === 'sent') h = `<div class="abig">${ic('mail')}</div><h1>E-postanı kontrol et</h1><p>Bu bilgilerle bir hesap varsa <b>1 saat</b> geçerli bir sıfırlama linki gönderdik. Gelen kutunda yoksa spam klasörüne de bak.</p>
-    <button type="button" class="primary" data-m="login">Girişe dön</button><button type="button" class="alink aback" data-m="forgot">Tekrar gönder</button>`;
+  else if (mode === 'sent') h = `<div class="abig">${ic('mail')}</div><h1>E-postanı kontrol et</h1><p>Bu bilgilerle bir hesap varsa <b>1 saat</b> geçerli bir sıfırlama linki gönderdik. Gelmesi 1-2 dakika sürebilir.</p>
+    <ul class="a-tips"><li>Gelen kutunda yoksa <b>Spam</b> ve <b>Promosyonlar</b> klasörüne bak.</li><li>Kayıt olurken yazdığın e-postaya gider. Hesabına e-posta eklemediysen link gönderemeyiz: <b>kankahq1@gmail.com</b> adresine kullanıcı adınla yaz.</li><li>Birden fazla istediysen hangi e-postadaki linke basarsan bas, çalışır.</li></ul>
+    <button type="button" class="primary" data-m="login">Girişe dön</button><button type="button" class="alink aback" id="a-resend" data-m="forgot">Tekrar gönder</button>`;
   else if (mode === 'reset') h = `<div class="abig">${ic('key')}</div><h1>Yeni şifre belirle</h1><p id="a-reset-who">Link kontrol ediliyor…</p>
     ${afield('a-pass', 'Yeni şifre (en az 6 karakter)', 'lock', 'password', 'autocomplete="new-password"')}
     ${afield('a-pass2', 'Yeni şifre tekrar', 'lock', 'password', 'autocomplete="new-password"')}
@@ -3623,7 +3629,7 @@ $('#auth-form').onsubmit = e => {
     busy(true); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true, src: firstSrc }, r => { busy(false); r.error ? authErr(r) : onAuth(r); });
   } else if (authMode === 'forgot') {
     if (!val('a-who')) return authErr({ error: 'Kullanıcı adını ya da e-postanı yaz.' });
-    busy(true); socket.emit('forgot', val('a-who'), r => { busy(false); r.error ? authErr(r) : renderAuth('sent'); });
+    busy(true); socket.emit('forgot', val('a-who'), r => { busy(false); if (r.error) return authErr(r); renderAuth('sent'); const rb = $('#a-resend'); if (rb) { let n = 60; rb.disabled = true; const tk = () => { if (!rb.isConnected) return; if (--n <= 0) { rb.disabled = false; rb.textContent = 'Tekrar gönder'; return; } rb.textContent = `Tekrar gönder (${n} sn)`; setTimeout(tk, 1000); }; tk(); } });
   } else if (authMode === 'reset') {
     const p1 = $('#a-pass').value, p2 = $('#a-pass2').value;
     if (p1.length < 6) return authErr({ error: 'Şifre en az 6 karakter olmalı.' });
@@ -10136,6 +10142,10 @@ function adminPanel(el, sub = 'overview') {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
     const c = r.cfg || {};
     B.innerHTML = `<div class="adm-box"><div class="mail-st ${r.ready ? 'ok' : r.failed ? 'bad' : ''}">${ic(r.ready ? 'check' : 'mail')}<b>${r.ready ? 'E-posta hazır' : r.failed ? 'E-posta çalışmıyor' : r.unverified ? 'Test edilmedi' : 'E-posta kurulmadı'}</b><span>${r.ready ? `${esc(c.user)} üzerinden gönderiliyor` : r.failed ? 'Gmail son denemede şifreyi kabul etmedi. Yeni uygulama şifresi oluşturup tekrar dene.' : r.unverified ? 'Bilgiler kayıtlı. Çalıştığından emin olmak için Test e-postası gönder.' : 'Şifre sıfırlama ve bekleme listesi davetleri için gerekli'}</span></div>
+      ${(() => { const h = r.health; if (!h) return ''; const ago = x => x ? new Date(x).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+        return `<div class="mail-health"><div><small>Son başarılı gönderim</small><b>${ago(h.lastOk)}</b></div><div><small>E-postası olmayan hesap</small><b>${h.noMail} / ${h.total}</b></div></div>
+        ${h.lastErr ? `<div class="mail-err"><b>Son hata (${ago(h.lastErrAt)}):</b> ${esc(h.lastErr)}</div>` : ''}
+        ${h.log?.length ? `<details class="adm-adv"><summary>Son gönderimler (${h.log.length})</summary><div class="mail-log">${h.log.map(x => `<div class="${x.ok ? 'ok' : 'bad'}"><span>${ago(x.at)}</span><span>${esc(x.kind)}</span><span>${esc(x.to)}</span><span>${x.ok ? 'gönderildi' : esc(x.err || 'hata')}</span></div>`).join('')}</div></details>` : ''}`; })()}
       <ol class="steps"><li><b>kankahq1@gmail.com</b> gibi bir Gmail hesabında <b>2 adımlı doğrulama</b>yı aç.</li><li><a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent)">myaccount.google.com/apppasswords</a> adresinde "Kanka" adıyla bir <b>uygulama şifresi</b> oluştur (16 harf).</li><li>Aşağıya yapıştır, kaydet ve test et. Gmail günde 500 e-posta gönderir, beta için fazlasıyla yeter.</li></ol>
       <div class="st-field st-2"><div><label>Gönderen Gmail adresi</label><input class="field" id="m-user" value="${esc(c.user || '')}" placeholder="kankahq1@gmail.com" style="margin:0"></div>
         <div><label>Uygulama şifresi</label><input class="field" id="m-pass" type="password" placeholder="${c.hasPass ? '•••• kayıtlı (değiştirmek için yaz)' : 'abcd efgh ijkl mnop'}" style="margin:0"></div></div>

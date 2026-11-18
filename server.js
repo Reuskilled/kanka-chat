@@ -1803,8 +1803,9 @@ function getMailer() {
   if (mailer) return mailer;
   try {
     const nm = require('nodemailer');
-    mailer = nm.createTransport(mailCfg.host ? { host: mailCfg.host, port: +mailCfg.port || 465, secure: (+mailCfg.port || 465) === 465, auth: { user: mailCfg.user, pass: mailCfg.pass } }
-      : { service: 'gmail', auth: { user: mailCfg.user, pass: mailCfg.pass } });
+    const tmo = { connectionTimeout: 15e3, greetingTimeout: 10e3, socketTimeout: 25e3 }; // takılırsa dakikalarca beklemesin, hatayı hemen görelim
+    mailer = nm.createTransport(mailCfg.host ? { host: mailCfg.host, port: +mailCfg.port || 465, secure: (+mailCfg.port || 465) === 465, auth: { user: mailCfg.user, pass: mailCfg.pass }, ...tmo }
+      : { service: 'gmail', auth: { user: mailCfg.user, pass: mailCfg.pass }, ...tmo });
   } catch (e) { console.error('E-posta modülü yüklenemedi:', e.message); return null; }
   return mailer;
 }
@@ -1815,14 +1816,26 @@ const mailHtml = (title, body, btn, url) => `<!doctype html><html><body style="m
 <div style="background:#231b17;border:1px solid #3a2e27;border-radius:20px;padding:28px"><h1 style="font-size:20px;margin:0 0 12px">${title}</h1><div style="font-size:15px;line-height:1.6;color:#d8c9bd">${body}</div>
 ${btn ? `<a href="${url}" style="display:inline-block;margin-top:22px;background:#ff8a4c;color:#1b130f;font-weight:800;text-decoration:none;padding:13px 22px;border-radius:12px">${btn}</a>` : ''}</div>
 <p style="font-size:12px;color:#8c7b6f;margin-top:18px">Bu e-postayı Kanka Chat gönderdi. Sen istemediysen görmezden gelebilirsin.</p></div></body></html>`;
-async function sendMail(to, subject, html, attachments) {
+// E-posta sağlığı: son başarı/hata yönetim panelinde görünür, bozulunca yöneticilere haber gider
+const mailHealth = { lastOk: 0, lastErr: '', lastErrAt: 0, warned: 0 };
+const maskMail = e => String(e || '').replace(/^(.{2}).*(@.*)$/, '$1•••$2');
+function mailLog(to, kind, ok, err) { db.mailLog ||= []; db.mailLog.push({ at: Date.now(), to: maskMail(to), kind, ok, err: err ? String(err).slice(0, 160) : undefined }); if (db.mailLog.length > 60) db.mailLog.splice(0, db.mailLog.length - 60); }
+const mailDown = () => mailHealth.lastErrAt > mailHealth.lastOk && Date.now() - mailHealth.lastErrAt < 20 * 60e3;
+async function sendMail(to, subject, html, attachments, kind = 'diğer') {
   const t = getMailer(); if (!t) return false;
-  try { await t.sendMail({ from: `"Kanka Chat" <${mailCfg.from || mailCfg.user}>`, to, subject, html, ...(attachments ? { attachments } : {}) }); return true; }
-  catch (e) { console.error('E-posta gönderilemedi:', e.message); return false; }
+  try { await t.sendMail({ from: `"Kanka Chat" <${mailCfg.from || mailCfg.user}>`, to, subject, html, ...(attachments ? { attachments } : {}) }); mailHealth.lastOk = Date.now(); mailLog(to, kind, true); save(); return true; }
+  catch (e) {
+    console.error('E-posta gönderilemedi:', e.message); mailHealth.lastErr = e.message; mailHealth.lastErrAt = Date.now(); mailLog(to, kind, false, e.message); save();
+    if (/535|BadCredentials|Invalid login|Username and Password not accepted/i.test(e.message) && mailCfg) { mailCfg.ok = false; try { fs.writeFileSync(MAIL_FILE, JSON.stringify(mailCfg)); } catch {} }
+    if (Date.now() - mailHealth.warned > 30 * 60e3) { mailHealth.warned = Date.now(); secLog('eposta-hatasi', 'sistem', e.message.slice(0, 120)); for (const n of siteAdmins()) io.to('user:' + n).emit('toast', '⚠️ E-posta gönderilemiyor (şifre sıfırlama çalışmıyor). Yönetim → E-posta\'ya bak.'); }
+    return false;
+  }
 }
 const findUserBy = who => { who = clean(who, 190).toLowerCase(); return who && Object.values(db.users).find(u => u.name.toLowerCase() === who || (u.email && u.email === who)); };
 function resetToken(name, hours) {
-  for (const [t, r] of Object.entries(db.resets)) if (r.name === name || r.exp < Date.now()) delete db.resets[t];
+  for (const [t, r] of Object.entries(db.resets)) if (r.exp < Date.now()) delete db.resets[t];
+  const mine = Object.entries(db.resets).filter(([, r]) => r.name === name).sort((a, b) => a[1].exp - b[1].exp);
+  while (mine.length >= 3) delete db.resets[mine.shift()[0]]; // en fazla 3 geçerli link: son gelen e-postalardan hangisine basılırsa çalışsın
   const t = crypto.randomBytes(24).toString('hex'); db.resets[t] = { name, exp: Date.now() + hours * 3600e3 }; save();
   return t;
 }
@@ -1999,12 +2012,14 @@ io.on('connection', socket => {
   });
   socket.on('forgot', async (who, cb = () => {}) => {
     if (limited('forgot|' + ip, 5, 900e3)) return cb({ error: 'Çok fazla istek. 15 dakika sonra tekrar dene.' });
-    if (!getMailer()) return cb({ error: 'E-posta sistemi henüz kurulmadı. kankahq1@gmail.com adresine yaz, elle yardım edelim.' });
+    const DOWN = { error: 'Şu an e-posta gönderemiyoruz, kusura bakma. kankahq1@gmail.com adresine kullanıcı adınla yaz, hemen elle yardım edelim.' };
+    if (!getMailer() || mailCfg?.ok === false) return cb(DOWN);
     const u = findUserBy(who);
-    if (u?.email && !u.siteBan && !limited('forgotU|' + u.name, 3, 3600e3)) {
+    if (u?.email && !u.siteBan && !limited('forgotU|' + u.name, 5, 3600e3)) {
       const t = resetToken(u.name, 1);
-      sendMail(u.email, 'Kanka Chat şifre sıfırlama', mailHtml('Şifreni sıfırla', `Selam <b>${u.name}</b>, şifreni sıfırlamak için bir istek aldık. Link <b>1 saat</b> geçerli.`, 'Yeni şifre belirle', `${baseUrl()}/?sifirla=${t}`));
-    }
+      const ok = await sendMail(u.email, 'Kanka Chat şifre sıfırlama', mailHtml('Şifreni sıfırla', `Selam <b>${u.name}</b>, şifreni sıfırlamak için bir istek aldık. Link <b>1 saat</b> geçerli.<br><br>Buton çalışmazsa bu adresi tarayıcına yapıştır:<br><span style="word-break:break-all;color:#ffb38a">${baseUrl()}/?sifirla=${t}</span>`, 'Yeni şifre belirle', `${baseUrl()}/?sifirla=${t}`), null, 'şifre');
+      if (!ok) return cb(DOWN); // gönderim sunucu genelinde bozuksa herkese aynı cevap gider, hesap varlığı belli olmaz
+    } else if (mailDown()) return cb(DOWN);
     cb({ ok: true }); // hesabın var olup olmadığını belli etme
   });
   socket.on('checkReset', (token, cb = () => {}) => {
@@ -2334,7 +2349,9 @@ io.on('connection', socket => {
         cb(ok ? { ok: true, to } : { error: 'Gönderilemedi, sunucu kayıtlarına bak' });
       })();
     }
-    cb({ ok: true, cfg: mailCfg ? { user: mailCfg.user, host: mailCfg.host || '', port: mailCfg.port || 465, url: mailCfg.url || baseUrl(), hasPass: !!mailCfg.pass } : { url: baseUrl() }, ready: !!getMailer() && mailCfg?.ok === true, unverified: !!getMailer() && mailCfg?.ok !== true, failed: mailCfg?.ok === false });
+    const noMail = Object.values(db.users).filter(u => !u.email && !u.bot && u.name !== 'Claude' && u.name !== BOT_NAME).length;
+    const health = { lastOk: mailHealth.lastOk, lastErr: mailHealth.lastErrAt > mailHealth.lastOk ? mailHealth.lastErr : '', lastErrAt: mailHealth.lastErrAt, noMail, total: Object.keys(db.users).length, log: (db.mailLog || []).slice(-15).reverse() };
+    cb({ ok: true, health, cfg: mailCfg ? { user: mailCfg.user, host: mailCfg.host || '', port: mailCfg.port || 465, url: mailCfg.url || baseUrl(), hasPass: !!mailCfg.pass } : { url: baseUrl() }, ready: !!getMailer() && mailCfg?.ok === true, unverified: !!getMailer() && mailCfg?.ok !== true, failed: mailCfg?.ok === false });
   });
   // ---- Yönetim paneli: kullanıcılar, ekip, istatistik, kayıtlar ----
   const SM = cb => { if (siteMod(me)) return true; cb({ error: 'Sadece Kanka ekibi' }); return false; };
