@@ -3103,6 +3103,7 @@
 
 const socket = io();
 const ICON = {
+  bug: '<path d="M8 6.5a4 4 0 0 1 8 0"/><rect x="7" y="7" width="10" height="12" rx="5"/><path d="M12 11v8M4 10l3 1.5M20 10l-3 1.5M3.5 15H7M20.5 15H17M5 20l2.5-2M19 20l-2.5-2M9.5 4 8 2.5M14.5 4 16 2.5"/>',
   logo: '<path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><path d="M9 9.5v1M15 9.5v1M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   pin: '<path d="M12 17v5"/><path d="M9 3h6l-1 6 4 4H6l4-4z"/>',
@@ -6465,7 +6466,7 @@ socket.on('activity', ({ name, activities }) => {
   if (profileOpen === name && $('#modal').classList.contains('open') && $('#modal-box').classList.contains('pcard')) showProfile(name);
   if (S.view === 'dm' && !S.channel) showFriends();
 });
-const BADGE_IC = { ekip: ['shield', '#5aa9ff'], erken: ['sprout', '#6fd39b'], gece: ['moon', '#b9a3ff'], sohbet: ['chat', '#7ec8ff'], efsane: ['crown', '#ffcf5c'], xox: ['grid', '#ff8a4c'], seri7: ['fire', '#ffb347'], kurucu: ['shield', '#ff9fc0'], sosyal: ['users', '#2fd3c3'] };
+const BADGE_IC = { avci: ['bug', '#7ed957'], ekip: ['shield', '#5aa9ff'], erken: ['sprout', '#6fd39b'], gece: ['moon', '#b9a3ff'], sohbet: ['chat', '#7ec8ff'], efsane: ['crown', '#ffcf5c'], xox: ['grid', '#ff8a4c'], seri7: ['fire', '#ffb347'], kurucu: ['shield', '#ff9fc0'], sosyal: ['users', '#2fd3c3'] };
 function friendBtn(n) {
   const sc = S.social;
   if (sc.blocked.includes(n)) return '';
@@ -6486,6 +6487,7 @@ const BADGE_DEF = {
   seri7: { ic: 'fire', c: ['#ffe08a', '#ff4d2e'], r: 2, how: '7 gün üst üste giriş yap' },
   erken: { ic: 'sprout', c: ['#9ff0c2', '#16794a'], r: 3, how: 'Kanka\'ya ilk katılan 100 kişiden biri ol' },
   efsane: { ic: 'crown', c: ['#fff1b8', '#d18a10'], r: 3, how: '1000 mesaj gönder' },
+  avci: { ic: 'bug', c: ['#c8ff9a', '#2f8f2a'], r: 3, how: 'Kanka HQ\'da önemli bir hata bul, ekibe bildir', award: true },
 };
 const BADGE_ORDER = Object.keys(BADGE_DEF).sort((a, b) => BADGE_DEF[b].r - BADGE_DEF[a].r);
 const SHAPES = [
@@ -6613,6 +6615,8 @@ function showProfile(n, tab = 'about') {
     e.stopPropagation(); const b = e.currentTarget.getBoundingClientRect(), blocked = S.social.blocked.includes(n), items = [];
     items.push({ t: uNotes[n] ? 'Notu düzenle' : 'Not ekle', icon: 'edit', act: () => form('Not', `${esc(n)} hakkında sadece senin göreceğin bir not.`, [{ k: 'note', p: 'Not', v: uNotes[n] || '' }], v => { v.note.trim() ? uNotes[n] = v.note.trim() : delete uNotes[n]; saveU(); showProfile(n, tab); }) });
     items.push({ t: 'Kullanıcı adını kopyala', icon: 'copy', act: () => navigator.clipboard?.writeText(n).then(() => toast('Kopyalandı')) });
+    if (S.staff) { const hasA = (u?.badges || []).includes('avci');
+      items.push({ t: hasA ? 'Hata Avcısı rozetini al' : 'Hata Avcısı rozeti ver', icon: 'bug', act: () => (hasA ? (f => confirmBox(`${n} kullanıcısının Hata Avcısı rozeti geri alınsın mı?`, f)) : (f => f()))(() => socket.emit('userAward', { name: n, badge: 'avci', on: !hasA }, x => x.error ? toast(x.error) : (toast(!hasA ? `🐞 ${n} artık Hata Avcısı` : 'Rozet geri alındı', null, false, { type: 'ok' }), setTimeout(() => showProfile(n, tab), 250)))) }); }
     if (srv && !srv.public && n !== srv.owner && !isAdmin(srv, n)) {
       const mod = [];
       if (perm(srv, 'manageRoles')) mod.push({ t: 'Rolleri düzenle', icon: 'tag', act: () => showServerSettings(srv, 'members', n) });

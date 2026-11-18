@@ -1413,7 +1413,10 @@ const BADGES = {
   caylak: ['🐣', 'Çaylak', 'Başlangıç rehberini bitirdi'],
   beta: ['🧪', 'Beta Tester', 'Kanka betasındaki ilk 300 kişiden biri'],
   ekip: ['🛡️', 'Kanka Ekibi', 'Kanka Chat moderasyon ekibinde'],
+  avci: ['🐞', 'Hata Avcısı', 'Kanka HQ\'da önemli bir hatayı bulup ekibe bildirdi'],
 };
+// Elle verilen rozetler (Kanka ekibi verir): u.awards = { avci: { by, time } }
+const AWARDS = ['avci'];
 function badgesOf(u) {
   const order = Object.values(db.users).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map(x => x.name);
   const b = [];
@@ -1428,6 +1431,7 @@ function badgesOf(u) {
   if ((u.friends || []).length >= 5) b.push('sosyal');
   if (u.onb?.rewarded) b.push('caylak');
   if (staffRank(u.name)) b.unshift('ekip');
+  for (const k of AWARDS) if (u.awards?.[k]) b.push(k);
   return b;
 }
 
@@ -2954,6 +2958,22 @@ io.on('connection', socket => {
   };
   // Rol verilebilecek hedefler: üyeler ve sunucuya eklenmiş bot
   const roleTarget = (s, name) => membersOf(s).includes(name) || (name === BOT_NAME && !!s.bot?.added);
+  // Kanka ekibi kullanıcıya elle rozet verir/geri alır (ör. Hata Avcısı)
+  socket.on('userAward', ({ name, badge, on } = {}, cb = () => {}) => {
+    if (!siteMod(me)) return cb({ error: 'Bu rozeti sadece Kanka ekibi verebilir' });
+    const u = db.users[name];
+    if (!u || !AWARDS.includes(badge)) return cb({ error: 'Geçersiz' });
+    u.awards ||= {};
+    const had = !!u.awards[badge];
+    if (on) u.awards[badge] = u.awards[badge] || { by: me, time: Date.now() }; else delete u.awards[badge];
+    save(); io.emit('users', allUsers());
+    if (on && !had) {
+      io.to('user:' + name).emit('toast', `${BADGES[badge][0]} Yeni rozet: ${BADGES[badge][1]}! ${me} verdi. Teşekkürler kanka`);
+      io.to('user:' + name).emit('badgeEarned', { badge, by: me });
+    }
+    console.log(`[rozet] ${me} -> ${name}: ${badge} ${on ? 'verdi' : 'aldı'}`);
+    cb({ ok: true, on: !!on });
+  });
   socket.on('serverBadge', ({ serverId, badge, on } = {}, cb = () => {}) => {
     if (!siteAdmin(me)) return cb({ error: 'Rozetleri sadece Kanka Chat yönetimi verebilir' });
     const s = db.servers.find(x => x.id === serverId);
