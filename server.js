@@ -567,7 +567,7 @@ const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (
 const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
 const HEX = /^#[0-9a-f]{6}$/i;
 const pubUser = u => ({ displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
-  birthday: u.birthday || null, music: u.music || null, activities: activitiesOf(u), badges: badgesOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
+  birthday: u.birthday || null, music: u.music || null, activities: activitiesOf(u), badges: shownBadges(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
 const allUsers = () => Object.values(db.users).map(pubUser);
@@ -1434,6 +1434,8 @@ function badgesOf(u) {
   for (const k of AWARDS) if (u.awards?.[k]) b.push(k);
   return b;
 }
+// Profilde görünen rozetler: kişinin gizlediklerini çıkar
+const shownBadges = u => { const h = new Set(u.hideBadges || []); return badgesOf(u).filter(k => !h.has(k)); };
 
 // ---------- Çevrimiçi ve ses durumu ----------
 const online = new Map();            // socket.id -> kullanıcı adı
@@ -2958,6 +2960,14 @@ io.on('connection', socket => {
   };
   // Rol verilebilecek hedefler: üyeler ve sunucuya eklenmiş bot
   const roleTarget = (s, name) => membersOf(s).includes(name) || (name === BOT_NAME && !!s.bot?.added);
+  // Kendi rozetlerin: kazandıkların ve gizlediklerin; görünürlüğü değiştir
+  socket.on('myBadges', (_ = {}, cb = () => {}) => { const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' }); cb({ all: badgesOf(u), hidden: u.hideBadges || [], awards: AWARDS, staff: !!staffRank(me) }); });
+  socket.on('hideBadges', ({ hidden } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u || !Array.isArray(hidden)) return cb({ error: 'Geçersiz' });
+    const mine = new Set(badgesOf(u)); u.hideBadges = [...new Set(hidden.filter(k => typeof k === 'string' && k in BADGES && mine.has(k)))];
+    if (!u.hideBadges.length) delete u.hideBadges;
+    save(); io.emit('users', allUsers()); cb({ ok: true });
+  });
   // Kanka ekibi kullanıcıya elle rozet verir/geri alır (ör. Hata Avcısı)
   socket.on('userAward', ({ name, badge, on } = {}, cb = () => {}) => {
     if (!siteMod(me)) return cb({ error: 'Bu rozeti sadece Kanka ekibi verebilir' });
@@ -2968,7 +2978,7 @@ io.on('connection', socket => {
     if (on) u.awards[badge] = u.awards[badge] || { by: me, time: Date.now() }; else delete u.awards[badge];
     save(); io.emit('users', allUsers());
     if (on && !had) {
-      io.to('user:' + name).emit('toast', `${BADGES[badge][0]} Yeni rozet: ${BADGES[badge][1]}! ${me} verdi. Teşekkürler kanka`);
+      io.to('user:' + name).emit('toast', `🎉 Yeni rozet ${BADGES[badge][0]} ${BADGES[badge][1]}! Teşekkürler kanka`);
       io.to('user:' + name).emit('badgeEarned', { badge, by: me });
     }
     console.log(`[rozet] ${me} -> ${name}: ${badge} ${on ? 'verdi' : 'aldı'}`);
