@@ -48,6 +48,17 @@
   body.ui2 #rail { width: 76px; gap: 10px; }
   body.ui2 .srv { width: 52px; height: 52px; border-radius: 17px; border: none; background: var(--card); }
   body.ui2 .srv:hover { border-radius: 15px; }
+  /* Sunucu çubuğu: kaydırma çubuğu yer kaplayıp simgeleri sağa itmesin (kaydırma tekerlek/parmakla çalışır) */
+  #rail { scrollbar-width: none; overflow-x: hidden; }
+  #rail::-webkit-scrollbar { display: none; width: 0; }
+  @media (hover: hover) {
+    body.ui2 .srv:hover { transform: translateY(-2px) scale(1.06); box-shadow: 0 8px 20px rgba(0,0,0,.4), 0 0 0 2px rgba(255,138,76,.55); }
+    body.ui2 .srv:not(:has(img)):not(.home):hover { background: #3a2b23; color: #ffb38a; }
+    body.ui2 .srv.dash:hover { border-color: rgba(255,138,76,.7); background: rgba(255,138,76,.1); box-shadow: 0 8px 20px rgba(0,0,0,.35); }
+    body.ui2 .srv:has(img):hover img { filter: brightness(1.12) saturate(1.1); }
+    body.ui2 .srv img { transition: filter .2s; }
+    body.ui2 .srv:active { transform: translateY(0) scale(.96); }
+  }
   body.ui2 .srv.active { border-radius: 17px; background: var(--card); color: var(--ink); }
   body.ui2 .srv.home { box-shadow: 0 6px 18px rgba(255,106,44,.35); }
   body.ui2 .srv.home.active { background: #F2652F; color: #fff; }
