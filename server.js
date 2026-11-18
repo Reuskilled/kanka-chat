@@ -1430,6 +1430,7 @@ const BADGES = {
   beta: ['🧪', 'Beta Tester', 'Kanka betasındaki ilk 300 kişiden biri'],
   ekip: ['🛡️', 'Kanka Ekibi', 'Kanka Chat moderasyon ekibinde'],
   avci: ['🐞', 'Hata Avcısı', 'Kanka HQ\'da önemli bir hatayı bulup ekibe bildirdi'],
+  dev: ['🤖', 'Bot Geliştirici', 'Kanka bot sisteminin beta geliştiricisi'],
 };
 // Elle verilen rozetler (Kanka ekibi verir): u.awards = { avci: { by, time } }
 const AWARDS = ['avci'];
@@ -1448,6 +1449,7 @@ function badgesOf(u) {
   if (u.onb?.rewarded) b.push('caylak');
   if (staffRank(u.name)) b.unshift('ekip');
   for (const k of AWARDS) if (u.awards?.[k]) b.push(k);
+  if (u.devBeta) b.push('dev');
   return b;
 }
 // Profilde görünen rozetler: kişinin gizlediklerini çıkar
@@ -2985,6 +2987,42 @@ io.on('connection', socket => {
     if (!u.hideBadges.length) delete u.hideBadges;
     save(); io.emit('users', allUsers()); cb({ ok: true });
   });
+  // ---- Bot geliştirici beta başvuruları (özel: sadece başvuran ve Kanka ekibi görür) ----
+  const devApp = n => (db.devApps ||= {})[n];
+  socket.on('devApp', (_ = {}, cb = () => {}) => { if (!me) return cb({ error: 'Giriş yap' }); const a = devApp(me); cb({ app: a ? { ...a, note: undefined } : null, open: db.devBetaOpen !== false }); });
+  socket.on('devApply', (f = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' });
+    if (db.devBetaOpen === false) return cb({ error: 'Başvurular şu an kapalı' });
+    if (limited('dev|' + me, 3, 3600e3)) return cb({ error: 'Biraz bekleyip tekrar dene' });
+    const cur = devApp(me); if (cur && cur.status !== 'rejected') return cb({ error: cur.status === 'accepted' ? 'Başvurun zaten kabul edildi' : 'Başvurun zaten değerlendiriliyor' });
+    const t = (v, n) => String(v || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
+    const LANGS = ['JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'Go', 'Rust', 'PHP', 'Diğer'];
+    const app = { langs: (Array.isArray(f.langs) ? f.langs : []).filter(x => LANGS.includes(x)).slice(0, 5), exp: ['yok', 'az', 'cok'].includes(f.exp) ? f.exp : 'yok',
+      link: t(f.link, 200), idea: t(f.idea, 600), hours: ['1-3', '4-8', '8+'].includes(f.hours) ? f.hours : '1-3', contact: t(f.contact, 120), at: Date.now(), status: 'pending' };
+    if (!app.langs.length) return cb({ error: 'En az bir dil seç' });
+    if (app.idea.length < 20) return cb({ error: 'Bot fikrini biraz daha anlat (en az 20 karakter)' });
+    if (app.link && !/^https?:\/\/\S+$/i.test(app.link)) return cb({ error: 'Bağlantı http:// ya da https:// ile başlamalı' });
+    db.devApps[me] = app; save();
+    for (const n of Object.keys(db.users)) if (staffRank(n)) io.to('user:' + n).emit('toast', `🤖 Yeni bot geliştirici başvurusu: ${me}`);
+    cb({ ok: true });
+  });
+  socket.on('devAppWithdraw', (_ = {}, cb = () => {}) => { const a = me && devApp(me); if (!a || a.status !== 'pending') return cb({ error: 'Geri çekilecek başvuru yok' }); delete db.devApps[me]; save(); cb({ ok: true }); });
+  socket.on('adminDevApps', (_ = {}, cb = () => {}) => {
+    if (!siteMod(me)) return cb({ error: 'Yetkin yok' });
+    const list = Object.entries(db.devApps || {}).map(([n, a]) => ({ name: n, ...a, level: db.users[n]?.level || 1, joined: db.users[n]?.created })).sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || b.at - a.at);
+    cb({ list, open: db.devBetaOpen !== false });
+  });
+  socket.on('adminDevDecide', ({ name, status, note } = {}, cb = () => {}) => {
+    if (!siteMod(me)) return cb({ error: 'Yetkin yok' });
+    const a = devApp(name); if (!a || !['accepted', 'rejected', 'pending'].includes(status)) return cb({ error: 'Geçersiz' });
+    a.status = status; a.by = me; a.decidedAt = Date.now(); a.note = String(note || '').slice(0, 300);
+    const u = db.users[name]; if (u) { u.devBeta = status === 'accepted' || undefined; if (!u.devBeta) delete u.devBeta; }
+    save(); io.emit('users', allUsers());
+    if (status === 'accepted') io.to('user:' + name).emit('toast', '🎉 Bot geliştirici başvurun kabul edildi! Hoş geldin, ayrıntılar Ayarlar › Bot geliştirici sayfasında');
+    if (status === 'rejected') io.to('user:' + name).emit('toast', 'Bot geliştirici başvurun bu sefer olmadı. Teşekkürler, ilerde tekrar başvurabilirsin');
+    console.log(`[dev] ${me} -> ${name}: ${status}`); cb({ ok: true });
+  });
+  socket.on('adminDevOpen', ({ open } = {}, cb = () => {}) => { if (!siteMod(me)) return cb({ error: 'Yetkin yok' }); db.devBetaOpen = !!open; save(); cb({ ok: true }); });
   // Kanka ekibi kullanıcıya elle rozet verir/geri alır (ör. Hata Avcısı)
   socket.on('userAward', ({ name, badge, on } = {}, cb = () => {}) => {
     if (!siteMod(me)) return cb({ error: 'Bu rozeti sadece Kanka ekibi verebilir' });

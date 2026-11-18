@@ -566,6 +566,22 @@
   .ep-prev .ps { font-size: 9px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
   .ep-search input::placeholder { color: var(--muted); font-weight: 600; }
   .ep-search input:focus { border-color: var(--accent-2); }
+  .dv-hero { display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: 16px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, var(--card)), var(--card)); border: 1px solid var(--line); margin-bottom: 12px; }
+  .dv-hi { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--accent); color: #1a0f08; flex-shrink: 0; } .dv-hi .ic { width: 24px; height: 24px; }
+  .dv-hero b { display: block; font-size: 16px; } .dv-hero span { color: var(--muted); font-size: 13.5px; font-weight: 600; }
+  .dv-perks { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 18px; padding: 0; } .dv-perks li { display: flex; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 700; padding: 10px 12px; border-radius: 12px; background: var(--bg); } .dv-perks .ic { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+  .dv-chips { display: flex; flex-wrap: wrap; gap: 6px; } .st-field label.dv-chip, .st-field label.dv-opt { display: block; margin: 0; text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--ink); cursor: pointer; }
+  .dv-chip input, .dv-opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .dv-chip span { display: block; padding: 7px 13px; border-radius: 99px; background: var(--bg); border: 1px solid var(--line); font-weight: 800; } .dv-chip input:checked + span { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .dv-opts { display: grid; gap: 6px; } .dv-opts.row { grid-template-columns: repeat(3, 1fr); } .dv-opt span { display: block; padding: 10px 14px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); font-weight: 700; } .dv-opt input:checked + span { border-color: var(--accent); background: var(--accent-soft); }
+  .dv-chip input:focus-visible + span, .dv-opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dv-status { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 14px; background: color-mix(in srgb, var(--c) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); margin-bottom: 10px; } .dv-status > span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #111; } .dv-status b { display: block; } .dv-status small { color: var(--muted); font-weight: 600; }
+  .dv-app { padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--c); margin-top: 10px; } .dv-ah { display: flex; gap: 10px; align-items: center; } .dv-ah .av { width: 38px; height: 38px; } .dv-ah b { display: block; } .dv-ah small { color: var(--muted); font-size: 12px; font-weight: 600; }
+  .dv-st { font-size: 12px; font-weight: 900; padding: 4px 10px; border-radius: 99px; background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); }
+  .dv-kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 12px 0 8px; font-size: 13.5px; } .dv-kv span { color: var(--muted); font-weight: 700; } .dv-kv b { min-width: 0; overflow-wrap: anywhere; } .dv-kv a { color: var(--accent); }
+  .dv-idea { margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; background: var(--bg); white-space: pre-wrap; font-size: 14px; }
+  .dv-act { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; } .dv-act button { width: auto; margin: 0; padding: 8px 14px; }
+  @media (max-width: 700px) { .dv-perks { grid-template-columns: 1fr; } .dv-opts.row { grid-template-columns: 1fr; } }
   .bdg-vis { display: grid; gap: 8px; } .st-field label.switch.bv-row { justify-content: flex-start; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--bg); } .bv-row .bv-m { flex: none; display: grid; } .bv-t { flex: 1; min-width: 0; } .bv-t b { display: block; font-size: 14px; } .bv-t small { color: var(--muted); font-size: 12px; } .bv-e { font-size: 24px; } .bv-staff { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
   .ep-tabs { display: flex; gap: 2px; padding: 6px 8px; flex: 0 0 auto; }
   .ep-tabs button { flex: 1; padding: 5px 0; border-radius: 9px; font-size: 19px; line-height: 1; filter: grayscale(.7); opacity: .7; }
@@ -3154,6 +3170,7 @@ const ICON = {
   hangup: '<path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   send: '<path d="M4 12 20 4l-5 16-3-7z"/><path d="m12 13 8-9"/>',
+  code: '<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/>',
   smile: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/>',
   image: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/>',
@@ -3720,7 +3737,7 @@ function showSettings(tab) {
   const norm = (k, v) => JSON.stringify(k === 'socials' ? Object.fromEntries(Object.entries(v || {}).filter(([, x]) => x)) : v || (k in OBJ ? null : ''));
   const dirty = () => KEYS.some(k => norm(k, draft[k]) !== norm(k, u[k]));
   modal(`<nav class="st-nav"><h4>KULLANICI AYARLARI</h4>
-      <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button>${S.staff ? `<h4 style="margin-top:14px">KANKA EKİBİ</h4><button data-tab="admin">${ic('shield')}Yönetim paneli${S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>` : ''}
+      <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button><button data-tab="dev">${ic('code')}Bot geliştirici</button>${S.staff ? `<h4 style="margin-top:14px">KANKA EKİBİ</h4><button data-tab="admin">${ic('shield')}Yönetim paneli${S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>` : ''}
       <button class="out" id="st-out">${ic('logout')}Çıkış yap</button><div class="st-ver" id="st-ver">Kanka Chat</div><button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="st-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div><div class="mini-card" id="st-card"></div></aside>`, 'settings');
@@ -3756,6 +3773,7 @@ function showSettings(tab) {
       <div class="st-field"><div class="socin">${Object.entries(SOCIAL_META).map(([k, [nm, c]]) => `<label style="--c:${c}"><i></i><b>${nm}</b><input data-soc="${k}" maxlength="60" placeholder="kullanıcı adı" value="${esc(draft.socials?.[k] || '')}"></label>`).join('')}</div><p class="hint">Sadece kullanıcı adını yaz, linki biz oluştururuz.</p></div>
       <div class="st-save"><i class="sv-ic">${ic('info')}</i><span>${SAVE_TXT}</span><button class="sv-reset" id="st-reset">Sıfırla</button><button class="primary" id="st-saveb">Değişiklikleri kaydet<kbd>Ctrl S</kbd></button></div></div>`,
     account: () => accountPageHTML(u),
+    dev: () => `<div class="st-page"><h3>Bot geliştirici</h3><div id="dev-root"><p class="hint">Yükleniyor…</p></div></div>`,
     admin: () => '<div id="adm-root"></div>',
     act: () => actPageHTML(),
     look: () => `<div class="st-page"><h3>Görünüm</h3><p class="hint">Bu ayarlar sadece bu cihazda geçerli.</p>
@@ -3787,6 +3805,7 @@ function showSettings(tab) {
     $('#st-main').innerHTML = pages[t]();
     $('#modal-box').classList.toggle('st-wide', t === 'admin');
     if (t === 'account') wireAccount();
+    if (t === 'dev') devPage($('#dev-root'));
     if (t === 'admin') adminPanel($('#adm-root').parentElement);
     if (t === 'profile') {
       const avEl = () => { $('#st-av').style.background = draft.color; $('#st-av').innerHTML = draft.avatar ? `<img src="${esc(draft.avatar)}" alt="">` : initial(S.me); };
@@ -6550,6 +6569,7 @@ const BADGE_DEF = {
   erken: { ic: 'sprout', c: ['#9ff0c2', '#16794a'], r: 3, how: 'Kanka\'ya ilk katılan 100 kişiden biri ol' },
   efsane: { ic: 'crown', c: ['#fff1b8', '#d18a10'], r: 3, how: '1000 mesaj gönder' },
   avci: { ic: 'bug', c: ['#c8ff9a', '#2f8f2a'], r: 3, how: 'Kanka HQ\'da önemli bir hata bul, ekibe bildir', award: true },
+  dev: { ic: 'code', c: ['#bfe3ff', '#3a6fd8'], r: 2, how: 'Ayarlar › Bot geliştirici sayfasından başvur', award: true },
 };
 const BADGE_ORDER = Object.keys(BADGE_DEF).sort((a, b) => BADGE_DEF[b].r - BADGE_DEF[a].r);
 const SHAPES = [
@@ -9750,10 +9770,60 @@ function wireAccount() {
   };
 }
 
+// ================= Bot geliştirici beta başvurusu =================
+const DEV_LANGS = ['JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'Go', 'Rust', 'PHP', 'Diğer'];
+const DEV_EXP = { yok: 'Hiç bot yazmadım', az: 'Birkaç tane yazdım', cok: 'Çok yazdım, yayında botum var' };
+const DEV_ST = { pending: ['Değerlendiriliyor', '#f6c445', 'clock'], accepted: ['Kabul edildi', '#4cc38a', 'check'], rejected: ['Olmadı', '#e5484d', 'x'] };
+function devPage(root) {
+  socket.emit('devApp', {}, r => {
+    if (!root.isConnected) return;
+    if (r.error) { root.innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
+    const a = r.app;
+    const intro = `<div class="dv-hero"><div class="dv-hi">${ic('code')}</div><div><b>Kanka'ya bot sistemi geliyor</b><span>Kendi botunu yazmak isteyen geliştiricilerle ilk sürümü birlikte test ediyoruz. Başvurun sadece Kanka ekibine görünür.</span></div></div>
+      <ul class="dv-perks"><li>${ic('sparkle')}Bot sistemine herkesten önce erişim</li><li>${ic('chat')}Geliştiricilere özel kanal, doğrudan ekiple iletişim</li><li>${ic('bug')}Bulduğun hatalar için 🐞 Hata Avcısı rozeti</li><li>${ic('shield')}Profilinde 🤖 Bot Geliştirici rozeti</li></ul>`;
+    if (a && a.status !== 'rejected') {
+      const [st, c, i] = DEV_ST[a.status];
+      root.innerHTML = intro + `<div class="dv-status" style="--c:${c}"><span>${ic(i)}</span><div><b>${st}</b><small>${new Date(a.at).toLocaleDateString('tr', { day: 'numeric', month: 'long' })} tarihinde başvurdun · ${esc(a.langs.join(', '))}</small></div></div>
+        ${a.status === 'accepted' ? `<p class="hint">Hoş geldin! Bot sistemi açılınca bot oluşturma ve anahtar alma bu sayfada olacak. O zamana kadar duyurular ve dokümanlar Kanka HQ'daki geliştirici kanalında.</p>` : `<p class="hint">Ekip başvurunu inceliyor, sonuç çıkınca bildirim gelir.</p><button class="btns2" id="dv-wd">Başvuruyu geri çek</button>`}`;
+      $('#dv-wd') && ($('#dv-wd').onclick = () => confirmBox('Başvurun geri çekilsin mi?', () => socket.emit('devAppWithdraw', {}, x => x.error ? toast(x.error) : devPage(root))));
+      return;
+    }
+    if (!r.open) { root.innerHTML = intro + `<p class="hint">Başvurular şu an kapalı. Yeniden açılınca duyuracağız.</p>`; return; }
+    root.innerHTML = intro + (a?.status === 'rejected' ? `<p class="hint">Önceki başvurun bu sefer olmadı, istersen tekrar başvurabilirsin.</p>` : '') + `<form id="dv-f" class="dv-form">
+      <div class="st-field"><label>Hangi dillerde yazıyorsun?</label><div class="dv-chips">${DEV_LANGS.map(l => `<label class="dv-chip"><input type="checkbox" name="lang" value="${l}"><span>${l}</span></label>`).join('')}</div></div>
+      <div class="st-field"><label>Bot deneyimin</label><div class="dv-opts">${Object.entries(DEV_EXP).map(([k, t], i) => `<label class="dv-opt"><input type="radio" name="exp" value="${k}" ${i ? '' : 'checked'}><span>${t}</span></label>`).join('')}</div></div>
+      <div class="st-field"><label>Daha önce yaptığın bir iş <small style="text-transform:none;letter-spacing:0">(isteğe bağlı)</small></label><input class="field" name="link" maxlength="200" placeholder="GitHub, bot davet linki ya da proje sayfası"></div>
+      <div class="st-field"><label>Kanka'da nasıl bir bot yapmak istiyorsun?</label><textarea class="field" name="idea" maxlength="600" rows="4" placeholder="Örn. Valorant maç istatistiklerini gösteren, sunucuya rütbe rolü veren bir bot"></textarea><div class="st-count" id="dv-cnt">0/600</div></div>
+      <div class="st-field"><label>Haftada ne kadar zaman ayırabilirsin?</label><div class="dv-opts row">${[['1-3', '1-3 saat'], ['4-8', '4-8 saat'], ['8+', '8 saatten fazla']].map(([k, t], i) => `<label class="dv-opt"><input type="radio" name="hours" value="${k}" ${i ? '' : 'checked'}><span>${t}</span></label>`).join('')}</div></div>
+      <div class="st-field"><label>Sana nereden ulaşalım? <small style="text-transform:none;letter-spacing:0">(isteğe bağlı)</small></label><input class="field" name="contact" maxlength="120" placeholder="Kanka'dan özel mesaj yeterliyse boş bırak"></div>
+      <button class="primary" style="width:auto;padding:12px 22px">${ic('send')} Başvur</button></form>`;
+    const f = $('#dv-f');
+    f.idea.oninput = () => $('#dv-cnt').textContent = `${f.idea.value.length}/600`;
+    f.onsubmit = e => { e.preventDefault(); const b = f.querySelector('button.primary'); b.disabled = true;
+      socket.emit('devApply', { langs: [...f.querySelectorAll('[name=lang]:checked')].map(x => x.value), exp: f.exp.value, link: f.link.value, idea: f.idea.value, hours: f.hours.value, contact: f.contact.value }, x => {
+        b.disabled = false; if (x.error) return toast(x.error); toast('Başvurun alındı! Sonuç çıkınca haber vereceğiz', null, false, { type: 'ok' }); devPage(root); }); };
+  });
+}
+function admDev(B) {
+  socket.emit('adminDevApps', {}, r => {
+    if (r.error) { B.innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
+    const pend = r.list.filter(a => a.status === 'pending').length;
+    B.innerHTML = `<div class="adm-box"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><b style="flex:1">${r.list.length} başvuru · ${pend} bekliyor · ${r.list.filter(a => a.status === 'accepted').length} kabul</b>
+      <label class="switch" style="margin:0;gap:10px">Başvurular açık<input type="checkbox" id="dv-open" ${r.open ? 'checked' : ''}></label></div></div>
+      ${r.list.length ? r.list.map(a => { const [st, c] = DEV_ST[a.status]; return `<div class="dv-app" style="--c:${c}"><div class="dv-ah">${av(a.name, S.online.has(a.name))}<div style="flex:1;min-width:0"><b>${esc(dn(a.name))}</b><small>@${esc(a.name)} · Sv ${a.level} · ${new Date(a.at).toLocaleString('tr', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></div><span class="dv-st">${st}</span></div>
+        <div class="dv-kv"><span>Diller</span><b>${esc(a.langs.join(', '))}</b><span>Deneyim</span><b>${esc(DEV_EXP[a.exp])}</b><span>Zaman</span><b>${esc(a.hours)} saat/hafta</b>${a.link ? `<span>Proje</span><b><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.link)}</a></b>` : ''}${a.contact ? `<span>İletişim</span><b>${esc(a.contact)}</b>` : ''}</div>
+        <p class="dv-idea">${esc(a.idea)}</p>
+        <div class="dv-act">${a.status !== 'accepted' ? `<button class="primary" data-dd="accepted" data-n="${esc(a.name)}">${ic('check')} Kabul et</button>` : ''}${a.status !== 'rejected' ? `<button class="btns2" data-dd="rejected" data-n="${esc(a.name)}">Reddet</button>` : ''}${a.status !== 'pending' ? `<button class="btns2" data-dd="pending" data-n="${esc(a.name)}">Beklemeye al</button>` : ''}<button class="btns2" data-dm="${esc(a.name)}">${ic('chat')} Mesaj</button>${a.by ? `<small class="hint" style="margin:0 0 0 auto">${esc(a.by)} karar verdi</small>` : ''}</div></div>`; }).join('') : '<p class="hint">Henüz başvuru yok. Ayarlar › Bot geliştirici sayfasından başvurulabiliyor.</p>'}`;
+    $('#dv-open').onchange = e => socket.emit('adminDevOpen', { open: e.target.checked }, x => x.error ? toast(x.error) : toast(e.target.checked ? 'Başvurular açıldı' : 'Başvurular kapatıldı'));
+    B.querySelectorAll('[data-dd]').forEach(b => b.onclick = () => { const go = () => socket.emit('adminDevDecide', { name: b.dataset.n, status: b.dataset.dd }, x => x.error ? toast(x.error) : (toast(b.dataset.dd === 'accepted' ? `${b.dataset.n} kabul edildi, 🤖 rozeti verildi` : b.dataset.dd === 'rejected' ? 'Başvuru reddedildi' : 'Beklemeye alındı', null, false, { type: 'ok' }), admDev(B)));
+      b.dataset.dd === 'rejected' ? confirmBox(`${b.dataset.n} kullanıcısının başvurusu reddedilsin mi? Kendisine kibar bir bildirim gider.`, go) : go(); });
+    B.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { closeModal(); openDM?.(b.dataset.dm); });
+  });
+}
 // ================= Kanka yönetimi (site yöneticisi) =================
 function adminPanel(el, sub = 'overview') {
   const R = S.staff, A = ['owner', 'admin'].includes(R);
-  const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['log', 'Kayıtlar', 'clock'],
+  const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['log', 'Kayıtlar', 'clock'],
     ...(A ? [['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
   if (!subs.some(x => x[0] === sub)) sub = 'overview';
   el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
@@ -9762,6 +9832,7 @@ function adminPanel(el, sub = 'overview') {
   const B = el.querySelector('#adm-body');
   if (sub === 'overview') return admOverview(B, el);
   if (sub === 'team') return admTeam(B);
+  if (sub === 'dev') return admDev(B);
   if (sub === 'log') return admLog(B);
   if (sub === 'users') return admUsers(B);
   if (sub === 'reports') return reportsPanel(B, null);
