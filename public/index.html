@@ -1218,6 +1218,9 @@
   @keyframes msgInMine { from { opacity: 0; transform: translate(14px, 10px) scale(.97); } }
   .sys, .daily { animation: fadeUp .4s var(--ease-out) both; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } }
+  /* Windows masaüstü: ayarlarda bulanıklık ve kayma animasyonu GPU'da ekranın yarısının çizilmemesine yol açıyor */
+  html.kdesk #modal { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  html.kdesk #modal .st-page { animation: none; }
   .row.new .reacts button { animation: pop .3s var(--ease); }
   .reacts button.bump { animation: bump .35s var(--ease); }
   @keyframes bump { 40% { transform: scale(1.25); } }
@@ -3650,6 +3653,12 @@ function readImage(cb, max = 1920) {
 }
 async function isAnimWebp(f) { try { const b = new Uint8Array(await f.slice(0, 64).arrayBuffer()); return String.fromCharCode(...b.slice(12, 16)) === 'VP8X' && !!(b[20] & 2); } catch { return false; } }
 $('#settings').onclick = () => showSettings();
+// Masaüstü uygulamasında ayarlar içinde bir şey değişince pencere tümüyle yeniden çizilsin
+if (window.kankaDesktop) {
+  document.documentElement.classList.add('kdesk');
+  const repaint = () => requestAnimationFrame(() => { const m = $('#modal'); if (!m) return; m.style.transform = 'translateZ(0)'; requestAnimationFrame(() => { m.style.transform = ''; }); });
+  ['click', 'change'].forEach(ev => document.addEventListener(ev, e => { if (e.target.closest?.('#modal')) repaint(); }, true));
+}
 const PALETTE = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#ff9f43', '#e5484d', '#8b6b5a'];
 function showSettings(tab) {
   if (tab && !$('#modal').classList.contains('open')) msetDirect = true;
