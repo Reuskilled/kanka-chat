@@ -1,4 +1,5 @@
 // Kanka Chat sunucusu (v0.4)
+const MAX_ROLES = 250; // sunucu başına en fazla rol
 const express = require('express');
 const http = require('http');
 const fs = require('fs');
@@ -817,10 +818,10 @@ function dcConvert(t) {
   const evP = big(everyone?.permissions);
   // Discord şablonunda roller alttan üste sıralı; Kanka'da ilk rol en yüksek
   const src = allRoles.filter(r => r !== everyone).reverse();
-  if (src.length > 30) skipped.push(`${src.length - 30} rol (en fazla 30 rol olabilir)`);
+  if (src.length > MAX_ROLES) skipped.push(`${src.length - MAX_ROLES} rol (en fazla ${MAX_ROLES} rol olabilir)`);
   if (src.some(r => r.icon && !r.unicode_emoji)) skipped.push('rol resim simgeleri');
   const roleMap = new Map();
-  const roles = src.slice(0, 30).map(r => {
+  const roles = src.slice(0, MAX_ROLES).map(r => {
     const p = big(r.permissions), admin = has(p, 3n);
     const color = r.color ? '#' + (Number(r.color) & 0xffffff).toString(16).padStart(6, '0') : '#99aab5';
     const icon = r.unicode_emoji ? [...clean(r.unicode_emoji, 16)].slice(0, 2).join('') : null;
@@ -914,7 +915,7 @@ function dcMerge(s, c) {
   for (const r of c.roles) {
     const m = roles.find(x => !x.bot && !usedR.has(x) && tplKey(x.name) === tplKey(r.name));
     if (m) { usedR.add(m); rid[r.id] = m.id; Object.assign(m, { color: r.color, perms: r.perms, hoist: r.hoist, icon: r.icon, mentionable: r.mentionable }); put('update', 'roles', m); }
-    else if (roles.length >= 30) over.roles++;
+    else if (roles.length >= MAX_ROLES) over.roles++;
     else { roles.push(r); usedR.add(r); rid[r.id] = r.id; put('add', 'roles', r); }
   }
   // Şablonun izinleri sunucudaki rol kimliklerine çevrilir; şablonda geçmeyen rol ve kişilerin mevcut izinleri kalır
@@ -955,7 +956,7 @@ function dcMerge(s, c) {
   for (const k of cats) if (!usedK.has(k)) put('keep', 'categories', k);
   for (const ch of rest) put('keep', 'channels', ch);
   const skipped = [...c.skipped];
-  if (over.roles) skipped.push(`${over.roles} rol (sunucuda en fazla 30 rol olabilir)`);
+  if (over.roles) skipped.push(`${over.roles} rol (sunucuda en fazla ${MAX_ROLES} rol olabilir)`);
   if (over.categories) skipped.push(`${over.categories} kategori (en fazla 50)`);
   if (over.channels) skipped.push(`${over.channels} oda (en fazla 200 oda olabilir)`);
   const afk = c.afk && cid[c.afk.ch] ? { ch: cid[c.afk.ch], min: c.afk.min } : s.afk || null;
@@ -2996,7 +2997,7 @@ io.on('connection', socket => {
     if (r?.bot) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); r.color = color; pushSrv(s); return cb({ ok: true, id: r.id }); }
     const icon = [...clean(role.icon, 16)].slice(0, 2).join('') || null, mentionable = !!role.mentionable;
     if (r) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); Object.assign(r, { name, color, perms, hoist: !!role.hoist, icon, mentionable }); audit(s, me, 'Rolü düzenledi', name); }
-    else { if (s.customRoles.length >= 30) return cb({ error: 'En fazla 30 rol' }); r = { id: id(), name, color, perms, hoist: !!role.hoist, icon, mentionable }; s.customRoles.push(r); audit(s, me, 'Rol oluşturdu', name); }
+    else { if (s.customRoles.length >= MAX_ROLES) return cb({ error: `En fazla ${MAX_ROLES} rol` }); r = { id: id(), name, color, perms, hoist: !!role.hoist, icon, mentionable }; s.customRoles.push(r); audit(s, me, 'Rol oluşturdu', name); }
     pushSrv(s); cb({ ok: true, id: r.id });
   });
   const outranksRole = (s, r) => s.owner === me || rankOf(s, me) > 1000 - s.customRoles.indexOf(r);
