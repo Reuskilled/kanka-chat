@@ -1039,7 +1039,7 @@
   .tile .live-ov button { padding: 8px 16px; border-radius: 10px; background: #fff; color: #111; font-weight: 900; font-size: 13px; }
   .tile .tbadge { position: absolute; top: 6px; left: 6px; z-index: 3; display: flex; gap: 5px; }
   .tile .tbadge span { padding: 2px 7px; border-radius: 6px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 4px; }
-  .tile .tbadge .red { background: #f23f43; } .tile .tbadge .sendq.warn { background: rgba(240,178,50,.92); color: #1a0f0a; }
+  .tile .tbadge .red { background: #f23f43; } .tile .tbadge .sendq.warn, .tile .tbadge .fpsx.warn { background: rgba(240,178,50,.92); color: #1a0f0a; }
   .tile .tbadge .ic { width: 12px; height: 12px; }
   .tile .tctl { position: absolute; right: 6px; bottom: 6px; z-index: 3; display: flex; gap: 6px; align-items: center; opacity: 0; transition: opacity .15s; }
   .tile:hover .tctl, .tile.focus .tctl { opacity: 1; }
@@ -7587,6 +7587,29 @@ socket.on('voiceJoined', ({ sid, name }) => {
   sendMedia();
   renderStage();
 });
+// Yayın netliği: Chrome videoya ~300 kbps ile başlayıp yavaş yavaş artırıyor; ilk saniyeler (ve ağ dalgalanınca) kare kare oluyordu.
+// Karşı tarafın SDP'sine video kodlayıcıları için başlangıç/alt/üst bit hızı ekliyoruz (kbps). Sadece bizim göndereceğimiz videoyu etkiler.
+function boostSdp(desc) {
+  try {
+    if (!desc?.sdp || !/m=video/.test(desc.sdp)) return desc;
+    const [, , , kbps] = GO_Q[goCur?.q] || GO_Q['1080p30'];
+    const start = Math.min(2500, Math.round(kbps * 0.6)), min = 600, max = Math.max(kbps, 2500);
+    const parts = desc.sdp.split(/(?=\r?\nm=)/);
+    const out = parts.map(sec => {
+      if (!/^\r?\n?m=video/.test(sec)) return sec;
+      const pts = [...sec.matchAll(/a=rtpmap:(\d+) (H264|VP8|VP9|AV1)\//gi)].map(m => m[1]);
+      let t = sec;
+      for (const pt of pts) {
+        const add = `x-google-start-bitrate=${start};x-google-min-bitrate=${min};x-google-max-bitrate=${max}`;
+        const re = new RegExp(`a=fmtp:${pt} ([^\\r\\n]*)`);
+        if (re.test(t)) t = t.replace(re, (m, p) => /x-google-/.test(p) ? m : `a=fmtp:${pt} ${p};${add}`);
+        else t = t.replace(new RegExp(`(a=rtpmap:${pt} [^\\r\\n]*)`), `$1\r\na=fmtp:${pt} ${add}`);
+      }
+      return t;
+    });
+    return { type: desc.type, sdp: out.join('') };
+  } catch { return desc; }
+}
 socket.on('signal', async ({ from, data }) => {
   if (!myVoice || !localStream) return;
   const pc = peers[from] || makePeer(from);
@@ -7595,7 +7618,7 @@ socket.on('signal', async ({ from, data }) => {
       const collision = data.sdp.type === 'offer' && (pc._making || pc.signalingState !== 'stable');
       pc._ignore = !pc._polite && collision;
       if (pc._ignore) return;
-      await pc.setRemoteDescription(data.sdp);
+      await pc.setRemoteDescription(boostSdp(data.sdp));
       if (data.sdp.type === 'offer') { await pc.setLocalDescription(); socket.emit('signal', { to: from, data: { sdp: pc.localDescription } }); }
     } else if (data.ice) {
       try { await pc.addIceCandidate(data.ice); } catch (e) { if (!pc._ignore) console.warn(e); }
@@ -7693,6 +7716,43 @@ function feedPeer(sid) {
   if (pc._ssender) pc._ssender.replaceTrack(at).catch(() => {}); else if (at) pc._ssender = pc.addTrack(at, videoStream);
   if (vt) { preferHwCodec(pc); tuneSender(pc); }
 }
+// ---- Yayın kalitesi: istatistik ve uyarlama ----
+// Karşı tarafa giden videonun gerçek durumu (izleyici başına)
+async function sendInfo(pc) {
+  try {
+    const st = await pc.getStats(); let o = null, pair = null, remote = null, codecs = {}, rin = null;
+    st.forEach(r => { if (r.type === 'outbound-rtp' && r.kind === 'video' && r.bytesSent) o = r; if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') pair = r; if (r.type === 'codec') codecs[r.id] = r.mimeType; if (r.type === 'remote-inbound-rtp' && r.kind === 'video') rin = r; });
+    if (!o) return null;
+    st.forEach(r => { if (pair && r.id === pair.remoteCandidateId) remote = r; });
+    const prev = pc._sp || {}, now = performance.now(), dt = prev.t ? (now - prev.t) / 1000 : 0;
+    const mbps = dt ? (o.bytesSent - prev.b) * 8 / dt / 1e6 : 0;
+    const lostD = rin && prev.l != null ? Math.max(0, (rin.packetsLost || 0) - prev.l) : 0, sentD = prev.p != null ? Math.max(1, o.packetsSent - prev.p) : 1;
+    pc._sp = { t: now, b: o.bytesSent, l: rin?.packetsLost || 0, p: o.packetsSent };
+    return { h: o.frameHeight || 0, w: o.frameWidth || 0, fps: Math.round(o.framesPerSecond || 0), mbps, lim: o.qualityLimitationReason, impl: o.encoderImplementation, codec: (codecs[o.codecId] || '').replace('video/', '') || '?',
+      avail: pair?.availableOutgoingBitrate || 0, relay: remote?.candidateType === 'relay' || pair?.remoteCandidateId && remote?.candidateType === 'relay', loss: lostD / sentD * 100 };
+  } catch { return null; }
+}
+// Bant genişliği yetmeyince Chrome bloklu (kare kare) görüntü gönderiyor. Bunun yerine kullanılabilir yükleme hızına göre
+// çözünürlüğü / FPS'i kendimiz basamak basamak düşürüp yükseltiyoruz: daha küçük ama temiz görüntü, büyük ama bloklu görüntüden iyidir.
+function adaptSend(pc, x) {
+  if (videoKind !== 'screen' || !x.avail || !pc._vsender) return;
+  const [, , fps, kbps] = GO_Q[goCur?.q] || GO_Q['1080p30'], target = kbps * 1000;
+  const budget = Math.min(target, x.avail * 0.9) - (screenAudio ? 160e3 : 0);
+  const steps = goCur?.motion
+    ? [[1, fps], [1.5, fps], [1.5, Math.min(fps, 30)], [2, Math.min(fps, 30)], [3, 30], [4, 24]]            // oyun: önce çözünürlük, akıcılık korunur
+    : [[1, Math.min(fps, 30)], [1, 15], [1, 10], [1.5, 10], [2, 8]];                                         // metin/kod: netlik korunur, FPS düşer
+  // Her basamağın ihtiyacı, seçilen kalitenin bit hızına göre (piksel × FPS oranıyla): ilk basamak hedefin %75'iyle temiz görünür
+  const need = ([sc, f]) => target * 0.75 * (f / steps[0][1]) / (sc * sc);
+  let want = steps.findIndex(st => need(st) <= budget); if (want < 0) want = steps.length - 1;
+  const a = pc._ad ||= { i: 0, scale: 1, fps: steps[0][1], ok: 0, bad: 0, t0: Date.now() };
+  if (Date.now() - a.t0 < 8000) return; // başlangıçta hız ölçümü yükselirken erken düşürme
+  const atCap = x.avail >= target * 0.95;
+  if (want > a.i || x.loss > 6) { if (++a.bad >= 2) { a.i = Math.min(steps.length - 1, Math.max(want, a.i + (x.loss > 6 ? 1 : 0))); a.bad = 0; a.ok = 0; } } // 2 kötü ölçümde düş
+  else if (a.i > 0 && (atCap || budget >= need(steps[a.i - 1]) * 1.15) && x.loss < 2) { a.bad = 0; if (++a.ok >= 3) { a.i--; a.ok = 0; } } // 6 sn iyi giderse bir basamak çık
+  else { a.ok = 0; a.bad = 0; }
+  const [sc, f] = steps[a.i]; if (sc === a.scale && f === a.fps) return;
+  a.scale = sc; a.fps = f; tuneSender(pc);
+}
 // Yayında donanım kodlayıcısı olan H.264'ü öne al: VP8 yazılımla 1080p/60 kodlarken işlemci yetmiyor, Chrome da çözünürlüğü 360p'ye düşürüyordu
 function preferHwCodec(pc) {
   try {
@@ -7700,7 +7760,8 @@ function preferHwCodec(pc) {
     const all = RTCRtpSender.getCapabilities?.('video')?.codecs; if (!all) return;
     const h264 = all.filter(c => /h264/i.test(c.mimeType) && /packetization-mode=1/.test(c.sdpFmtpLine || ''));
     if (!h264.length) return;
-    h264.sort((a, b) => /42e01f/.test(b.sdpFmtpLine) - /42e01f/.test(a.sdpFmtpLine));
+    const rank = c => { const id = (c.sdpFmtpLine || '').match(/profile-level-id=([0-9a-f]{6})/i)?.[1]?.toLowerCase() || ''; return id.startsWith('64') ? 0 : id.startsWith('4d') ? 1 : id.startsWith('42e0') ? 2 : 3; };
+    h264.sort((a, b) => rank(a) - rank(b)); // high > main > baseline: aynı bit hızında daha az bloklanma
     tr.setCodecPreferences([...h264, ...all.filter(c => !h264.includes(c))]); tr._pref = true;
   } catch {}
 }
@@ -7709,7 +7770,7 @@ function tuneSender(pc, tries = 0) {
   const snd = pc._vsender; if (!snd?.track) return;
   const p = snd.getParameters();
   if (!p.encodings?.length) { if (tries < 12) setTimeout(() => tuneSender(pc, tries + 1), 500); return; }
-  if (videoKind === 'screen') { const [, , fps, kbps] = GO_Q[goCur?.q] || GO_Q['1080p30']; p.encodings[0].maxBitrate = kbps * 1000; p.encodings[0].maxFramerate = fps; p.degradationPreference = goCur?.motion ? 'balanced' : 'maintain-resolution'; }
+  if (videoKind === 'screen') { const [, , fps, kbps] = GO_Q[goCur?.q] || GO_Q['1080p30']; const a = pc._ad || { scale: 1, fps }; p.encodings[0].maxBitrate = kbps * 1000; p.encodings[0].maxFramerate = a.fps; p.encodings[0].scaleResolutionDownBy = a.scale; p.encodings[0].priority = p.encodings[0].networkPriority = 'high'; p.degradationPreference = goCur?.motion ? 'maintain-framerate' : 'maintain-resolution'; }
   else { p.encodings[0].maxBitrate = 1500e3; p.encodings[0].maxFramerate = 30; }
   snd.setParameters(p).catch(() => {});
 }
@@ -7808,6 +7869,7 @@ function watchStream(sid, on = true) {
   if (on && watching && watching !== sid && peers[watching]) socket.emit('streamWatch', { to: watching, on: false });
   if (on) { watching = sid; focusSid = sid; } else { if (watching === sid) watching = null; if (focusSid === sid) focusSid = null; }
   socket.emit('streamWatch', { to: sid, on });
+  if (on) [800, 2500, 6000].forEach(ms => setTimeout(() => watching === sid && smoothRecv(sid), ms));
   const a = document.getElementById('as-' + sid); if (a) a.muted = !on;
   renderStage();
 }
@@ -7903,6 +7965,21 @@ function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'ca
 
 // --- Sahne (ses/görüntü kutucukları) ---
 let stageStats = null, pipClosed = null, focusSid = null;
+async function recvInfo(pc) {
+  if (!pc) return null;
+  try {
+    const st = await pc.getStats(); let i = null, pair = null, remote = null, codecs = {};
+    st.forEach(r => { if (r.type === 'inbound-rtp' && r.kind === 'video' && r.bytesReceived) i = r; if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') pair = r; if (r.type === 'codec') codecs[r.id] = r.mimeType; });
+    if (!i) return null; st.forEach(r => { if (pair && r.id === pair.remoteCandidateId) remote = r; });
+    const p = pc._rp || {}, now = performance.now(), dt = p.t ? (now - p.t) / 1000 : 0;
+    const lostD = p.l != null ? Math.max(0, (i.packetsLost || 0) - p.l) : 0, recD = p.n != null ? Math.max(0, i.packetsReceived - p.n) : 0;
+    const out = { mbps: dt ? (i.bytesReceived - p.b) * 8 / dt / 1e6 : 0, loss: lostD + recD ? lostD / (lostD + recD) * 100 : 0, freeze: p.f != null && (i.freezeCount || 0) > p.f, freezes: i.freezeCount || 0, codec: (codecs[i.codecId] || '').replace('video/', '') || '?', relay: remote?.candidateType === 'relay' };
+    pc._rp = { t: now, b: i.bytesReceived, l: i.packetsLost || 0, n: i.packetsReceived, f: i.freezeCount || 0 };
+    return out;
+  } catch { return null; }
+}
+// İzlerken küçük bir oynatma tamponu: ağ dalgalanınca görüntü bozulmak / takılmak yerine akıcı kalsın (canlı sohbet değil, yayın)
+function smoothRecv(sid) { const pc = peers[sid]; if (!pc) return; for (const r of pc.getReceivers()) if (r.track?.kind === 'video') { try { r.jitterBufferTarget = 250; } catch {} try { r.playoutDelayHint = 0.25; } catch {} } }
 // Sesli oda görünümü: kutucukları ekranı dolduracak en büyük boyuta yerleştir (Discord gibi)
 function layoutStage() {
   const st = $('#stage'); if (!vview() || !st) return;
@@ -8188,26 +8265,30 @@ function renderStage() {
   renderDMCall();
   // Yayıncıya izleyicilere gerçekte ne gittiğini göster: çözünürlük, FPS ve neden düştüğü
   if (videoKind === 'screen' && !sendStats) sendStats = setInterval(async () => {
-    const f = st.querySelector('.tile[data-sid="me"] .sendq'); if (!f) return;
-    const pcs = [...watchers].map(w => peers[w]).filter(Boolean); if (!pcs.length) { f.hidden = true; return; }
+    const f = st.querySelector('.tile[data-sid="me"] .sendq');
+    const pcs = [...watchers].map(w => peers[w]).filter(Boolean); if (!pcs.length) { if (f) f.hidden = true; return; }
     let worst = null;
-    for (const pc of pcs) { try { (await pc.getStats()).forEach(r => { if (r.type === 'outbound-rtp' && r.kind === 'video' && r.frameHeight && (!worst || r.frameHeight < worst.frameHeight)) worst = r; }); } catch {} }
-    if (!worst) return;
-    const why = { cpu: 'işlemci yetmiyor', bandwidth: 'internet hızı yetmiyor' }[worst.qualityLimitationReason];
+    for (const pc of pcs) { const x = await sendInfo(pc); if (!x) continue; adaptSend(pc, x); if (!worst || x.h < worst.h || (x.h === worst.h && x.mbps < worst.mbps)) worst = x; }
+    if (!worst || !f) return;
+    const why = { cpu: 'işlemci yetmiyor', bandwidth: 'internet yükleme hızı yetmiyor' }[worst.lim] || (worst.loss > 3 ? 'bağlantıda kayıp var' : '');
     f.hidden = false; f.className = 'sendq' + (why ? ' warn' : '');
-    f.textContent = `Giden: ${worst.frameHeight}p · ${Math.round(worst.framesPerSecond || 0)} FPS${why ? ' · ' + why : ''}`;
-    f.title = `Kodlayıcı: ${worst.encoderImplementation || '?'}${why ? '\nKalite düşük çünkü ' + why + '. Yayın kalitesini düşürmek daha akıcı yapar.' : ''}`;
+    f.textContent = `Giden: ${worst.h}p · ${worst.fps} FPS · ${worst.mbps.toFixed(1)} Mbps${why ? ' · ' + why : ''}`;
+    f.title = `Kodlayıcı: ${worst.codec} (${worst.impl || '?'})\nBağlantı: ${worst.relay ? 'Kanka sunucusu üzerinden (aracı)' : 'doğrudan'}\nKullanılabilir yükleme: ${worst.avail ? (worst.avail / 1e6).toFixed(1) + ' Mbps' : '?'} · kayıp %${worst.loss.toFixed(1)}${why ? '\n\nKalite düşük çünkü ' + why + '. Kanka çözünürlüğü otomatik ayarlıyor; yine kötüyse Yayın ayarlarından 720p seç.' : ''}`;
   }, 2000);
   else if (videoKind !== 'screen' && sendStats) { clearInterval(sendStats); sendStats = null; }
   // İzlenen yayının gerçek çözünürlüğü ve FPS'i
   if (watching && !stageStats) {
     let last = 0, lt = performance.now();
-    stageStats = setInterval(() => {
+    stageStats = setInterval(async () => {
       const el = st.querySelector(`.tile[data-sid="${watching}"]`), v = el?.querySelector('video'), f = el?.querySelector('.fpsx');
       if (!v || !f || !v.videoWidth) return;
       const n = v.getVideoPlaybackQuality?.().totalVideoFrames || 0, now = performance.now();
       const fps = Math.round((n - last) * 1000 / (now - lt)); last = n; lt = now;
-      f.hidden = false; f.textContent = `${v.videoHeight}p · ${fps} FPS`;
+      const r = await recvInfo(peers[watching]);
+      const bad = r && (r.loss > 2 || r.freeze);
+      f.hidden = false; f.classList.toggle('warn', !!bad);
+      f.textContent = `${v.videoHeight}p · ${fps} FPS${r ? ` · ${r.mbps.toFixed(1)} Mbps` : ''}${bad ? ' · bağlantı zayıf' : ''}`;
+      if (r) f.title = `Kodek: ${r.codec}\nBağlantı: ${r.relay ? 'Kanka sunucusu üzerinden (aracı)' : 'doğrudan'}\nKayıp: %${r.loss.toFixed(1)} · takılma: ${r.freezes}\n${bad ? 'Görüntü bozuluyorsa ya senin indirme hızın ya da yayıncının yükleme hızı yetmiyor.' : ''}`;
     }, 1000);
   } else if (!watching && stageStats) { clearInterval(stageStats); stageStats = null; }
 }
