@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-53KT5KMD"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Kanka Chat</title>
@@ -3802,7 +3796,7 @@ function onAuth(res) {
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
   if ($('#a-pass')) $('#a-pass').value = '';
-  S.myEmail = res.myEmail || null; S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.staff = res.staff || null; if (res.warns?.length) setTimeout(() => showWarns(res.warns), 1200); S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
+  S.myEmail = res.myEmail || null; if (!S.myEmail) setTimeout(remindEmail, 6000); S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.staff = res.staff || null; if (res.warns?.length) setTimeout(() => showWarns(res.warns), 1200); S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
   renderMe(); renderModPill();
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
@@ -6667,6 +6661,13 @@ const LV_TIERS = [[1, 'Bronz', 'b'], [10, 'Gümüş', 's'], [25, 'Altın', 'g'],
 const lvTier = L => [...LV_TIERS].reverse().find(t => (L || 1) >= t[0]);
 const lvTag = L => `<span class="lvl lv-${lvTier(L)[2]}" title="${lvTier(L)[1]} kademe · Seviye ${L}">Sv ${L}</span>`;
 // Seviye atlama anı: kutlama kartı, açılan çerçeveler, sıradaki hedef
+// E-postası olmayanlara hatırlatma: şifreyi unutunca hesabı kurtarmanın tek yolu (3 günde bir, kapatılabilir)
+function remindEmail() {
+  if (S.myEmail || !S.me) return; let last = 0; try { last = +store.get('kanka-emrem') || 0; } catch {}
+  if (Date.now() - last < 3 * 864e5) return;
+  try { store.set('kanka-emrem', String(Date.now())); } catch {}
+  toast(`<b>📧 Hesabına e-posta ekle</b><br>Şifreni unutursan hesabını kurtarmanın tek yolu bu. 10 saniye sürer.<br><small>Dokun ve ekle →</small>`, () => showSettings('account'), true);
+}
 socket.on('levelUp', ({ level: L, from } = {}) => {
   if (!L) return; document.querySelector('.lvup')?.remove();
   const t = lvTier(L), newTier = lvTier(from || L - 1)[0] !== t[0];
