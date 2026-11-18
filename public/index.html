@@ -7575,27 +7575,40 @@ async function joinVoiceNow(chId) {
 }
 // ---- Ses bağlantı kalitesi ve otomatik toparlanma ----
 let vqT = null, vqPrev = {}, micRecovering = false;
+const vqHist = {}; // kişi başına son gecikme ölçümleri
 async function vqTick() {
   const el = $('#vq'); if (!el) return;
   if (!myVoice) { el.hidden = true; return; }
   const list = Object.entries(peers); el.hidden = false;
   if (!list.length) { el.className = 'vq good'; el.querySelector('em').textContent = ''; el.title = 'Odada şimdilik yalnızsın'; return; }
-  let rtt = 0, lost = 0, recv = 0, bad = 0;
+  let lost = 0, recv = 0, bad = 0; const per = [];
   for (const [sid, pc] of list) {
     if (['failed', 'disconnected'].includes(pc.connectionState)) bad++;
     try {
-      const st = await pc.getStats();
+      const st = await pc.getStats(); let rtt = null, pair = null, relay = false;
       st.forEach(r => {
-        if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded' && r.currentRoundTripTime != null) rtt = Math.max(rtt, r.currentRoundTripTime * 1000);
+        if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') { pair = r; if (r.currentRoundTripTime != null) rtt = r.currentRoundTripTime * 1000; }
+        if (r.type === 'remote-inbound-rtp' && r.kind === 'audio' && r.roundTripTime != null && rtt == null) rtt = r.roundTripTime * 1000;
         if (r.type === 'inbound-rtp' && r.kind === 'audio') { const k = sid + r.id, p = vqPrev[k] || { l: r.packetsLost || 0, n: r.packetsReceived || 0 }; lost += Math.max(0, (r.packetsLost || 0) - p.l); recv += Math.max(0, (r.packetsReceived || 0) - p.n); vqPrev[k] = { l: r.packetsLost || 0, n: r.packetsReceived || 0 }; }
       });
+      st.forEach(r => { if (pair && (r.id === pair.localCandidateId || r.id === pair.remoteCandidateId) && r.candidateType === 'relay') relay = true; });
+      if (rtt == null) continue;
+      const h = (vqHist[sid] ||= []); h.push(rtt); if (h.length > 5) h.shift();
+      const med = [...h].sort((x, y) => x - y)[Math.floor(h.length / 2)]; // tek seferlik sıçramaları yok say
+      per.push({ sid, name: peerNames[sid] || '?', ms: Math.round(med), relay });
+      // 15 sn boyunca sürekli çok yüksekse daha iyi bir yol aramayı dene (en fazla dakikada bir)
+      if (h.length >= 5 && h.every(x => x > 400) && Date.now() - (pc._ri || 0) > 60e3) { pc._ri = Date.now(); try { pc.restartIce(); } catch {} }
     } catch {}
   }
-  const loss = recv + lost ? lost / (recv + lost) * 100 : 0, ms = Math.round(rtt);
+  for (const k of Object.keys(vqHist)) if (!peers[k]) delete vqHist[k];
+  per.sort((a, b) => b.ms - a.ms);
+  const worst = per[0], ms = worst?.ms || 0;
+  const loss = recv + lost ? lost / (recv + lost) * 100 : 0;
   const lvl = bad ? 'bad' : ms > 250 || loss > 5 ? 'bad' : ms > 120 || loss > 2 ? 'mid' : 'good';
   el.className = 'vq ' + lvl;
   el.querySelector('em').textContent = bad ? 'yeniden bağlanıyor…' : ms ? ms + ' ms' : '';
-  el.title = bad ? 'Bağlantı koptu, kendiliğinden yeniden bağlanıyor' : `Gecikme ${ms || '?'} ms · paket kaybı %${loss.toFixed(1)}${lvl === 'good' ? ' · bağlantı iyi' : lvl === 'mid' ? ' · bağlantı orta' : ' · bağlantı zayıf'}`;
+  const why = worst && ms > 150 ? (worst.relay ? `\n${worst.name} ile bağlantı Kanka sunucusu üzerinden gidiyor (doğrudan bağlanılamadı), bu gecikmeyi artırır.` : videoKind === 'screen' && watchers.size ? '\nYayın açıkken yükleme hattın doluyor; gecikme artarsa yayın kalitesini düşür.' : `\nGecikme büyük ihtimalle ${worst.name} tarafının internetinden.`) : '';
+  el.title = bad ? 'Bağlantı koptu, kendiliğinden yeniden bağlanıyor' : `${per.map(p => `${p.name}: ${p.ms} ms${p.relay ? ' (sunucu üzerinden)' : ''}`).join('\n')}\nPaket kaybı %${loss.toFixed(1)}${lvl === 'good' ? ' · bağlantı iyi' : lvl === 'mid' ? ' · bağlantı orta' : ' · bağlantı zayıf'}${why}`;
 }
 function vqStart() { clearInterval(vqT); vqPrev = {}; vqT = setInterval(vqTick, 3000); vqTick(); }
 // Mikrofon çıkarılır ya da değişirse kendiliğinden yenisine geç
@@ -7618,7 +7631,7 @@ function makePeer(sid) {
   Object.assign(pc, { _polite: socket.id < sid, _making: false, _ignore: false });
   peers[sid] = pc;
   localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  setTimeout(() => { const br = vch()?.c.bitrate === 'high' ? 128000 : 64000; pc.getSenders().filter(x => x.track?.kind === 'audio' && x.track === localStream?.getAudioTracks()[0]).forEach(x => { try { const p = x.getParameters(); if (!p.encodings?.length) p.encodings = [{}]; p.encodings[0].maxBitrate = br; x.setParameters(p).catch(() => {}); } catch {} }); }, 1500);
+  setTimeout(() => { const br = vch()?.c.bitrate === 'high' ? 128000 : 64000; pc.getSenders().filter(x => x.track?.kind === 'audio' && x.track === localStream?.getAudioTracks()[0]).forEach(x => { try { const p = x.getParameters(); if (!p.encodings?.length) p.encodings = [{}]; p.encodings[0].maxBitrate = br; p.encodings[0].priority = p.encodings[0].networkPriority = 'high'; x.setParameters(p).catch(() => {}); } catch {} }); }, 1500);
   if (videoStream) setTimeout(() => feedPeer(sid));
   pc.onicecandidate = e => e.candidate && socket.emit('signal', { to: sid, data: { ice: e.candidate } });
   pc.onnegotiationneeded = async () => {
@@ -7842,8 +7855,8 @@ function tuneSender(pc, tries = 0) {
   const snd = pc._vsender; if (!snd?.track) return;
   const p = snd.getParameters();
   if (!p.encodings?.length) { if (tries < 12) setTimeout(() => tuneSender(pc, tries + 1), 500); return; }
-  if (videoKind === 'screen') { const [, , fps, kbps] = GO_Q[goCur?.q] || GO_Q['1080p30']; const a = pc._ad || { scale: 1, fps }; p.encodings[0].maxBitrate = kbps * 1000; p.encodings[0].maxFramerate = a.fps; p.encodings[0].scaleResolutionDownBy = a.scale; p.encodings[0].priority = p.encodings[0].networkPriority = 'high'; p.degradationPreference = goCur?.motion ? 'maintain-framerate' : 'maintain-resolution'; }
-  else { p.encodings[0].maxBitrate = 1500e3; p.encodings[0].maxFramerate = 30; }
+  if (videoKind === 'screen') { const [, , fps, kbps] = GO_Q[goCur?.q] || GO_Q['1080p30']; const a = pc._ad || { scale: 1, fps }; p.encodings[0].maxBitrate = kbps * 1000; p.encodings[0].maxFramerate = a.fps; p.encodings[0].scaleResolutionDownBy = a.scale; p.encodings[0].priority = p.encodings[0].networkPriority = 'low'; p.degradationPreference = goCur?.motion ? 'maintain-framerate' : 'maintain-resolution'; }
+  else { p.encodings[0].maxBitrate = 1500e3; p.encodings[0].maxFramerate = 30; p.encodings[0].priority = p.encodings[0].networkPriority = 'low'; }
   snd.setParameters(p).catch(() => {});
 }
 async function startVideo(kind) {
