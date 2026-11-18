@@ -3232,6 +3232,13 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
 .whav{background:linear-gradient(135deg,#5b7cff,#3a4fd8)!important;color:#fff;display:grid;place-items:center;font-weight:900}.whav img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .whrow .wname{color:var(--ink)}
 @media (max-width:640px){.wh-row{flex-direction:column}}
+
+/* Sunucu seviyeleri */
+.lv-sw{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--bg);cursor:pointer}.lv-sw input{width:18px;height:18px;flex:none;accent-color:var(--accent)}
+.lv-ann{display:flex;gap:8px}.lv-btns{display:flex;gap:8px;margin-top:14px;align-items:center}.lv-ann select{flex:1}
+.lv-rw{display:flex;align-items:center;gap:8px;margin-bottom:8px}.lv-rw>span{font-size:13px;color:var(--muted);flex:none}.lv-rw .lv-l{width:84px;flex:none}.lv-rw .lv-r{flex:1;min-width:0}
+.lv-x{width:34px;height:34px;flex:none;border-radius:10px;border:1px solid var(--line,#3a2e27);background:none;color:var(--muted);display:grid;place-items:center;cursor:pointer}.lv-x svg{width:14px;height:14px}
+.lb-row.lb-me{border-top:1px dashed var(--line,#3a2e27);margin-top:6px;padding-top:10px}.lb-n{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);font-size:12px}
 </style>
 </head>
 <body>
@@ -5076,6 +5083,7 @@ function showServerSettings(s, tab, focus) {
     ['bot', 'Kanka Bot', 'shield', P('manageServer')], ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
     ['template', 'Şablon', 'file', s.owner === S.me && P('manageServer')],
     ['badges', 'Rozetler', 'check', s.owner === S.me && !s.public && s.id !== 's1'],
+    ['levels', 'Seviyeler', 'trophy', !s.public && P('manageServer')],
     ['webhooks', 'Webhook\'lar', 'link', !s.public && (s.owner === S.me || P('manageServer') || P('manageChannels'))],
     ['emoji', 'Emojiler', 'smile', mod || P('manageEmojis')], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod || P('viewAudit')]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
@@ -5216,6 +5224,30 @@ function showServerSettings(s, tab, focus) {
       $('#sv-afk').onchange = afkSave; $('#sv-afkm').onchange = afkSave;
       $('#sv-slow').onchange = e => socket.emit('updateServer', { serverId: s.id, slow: +e.target.value }, r => r.error ? toast(r.error) : toast('Yavaş mod güncellendi'));
       if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(s.vanity ? `${PUB}/s/${s.vanity}` : `${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
+    },
+    levels: () => {
+      main.innerHTML = `<div class="st-page"><h3>Seviyeler</h3><p class="hint">Üyeler bu sunucuda sohbet ettikçe ve seste kaldıkça sunucuya özel seviye kazanır. Belli seviyelere rol ödülü koyarak aktif üyeleri öne çıkarabilirsin. Spam XP getirmez: mesaj XP'si dakikada birdir.</p><div id="lv-root"><p class="hint">Yükleniyor…</p></div></div>`;
+      socket.emit('levelsGet', { serverId: s.id }, r => {
+        const root = $('#lv-root'); if (!root) return; if (r.error) return root.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+        const c = r.cfg, roles = (s.customRoles || []).filter(x => !x.bot), tx = s.channels.filter(x => !['voice', 'stage'].includes(x.type));
+        const rowH = (rw = {}) => `<div class="lv-rw"><span>Seviye</span><input class="field lv-l" type="number" min="2" max="100" value="${rw.level || 5}" style="margin:0"><span>→</span><select class="field lv-r" style="margin:0">${roles.length ? roles.map(x => `<option value="${x.id}" ${x.id === rw.role ? 'selected' : ''}>${esc(x.name)}${x.perms?.length ? ' (yetkili)' : ''}</option>`).join('') : '<option value="">Önce bir rol oluştur</option>'}</select><button class="lv-x" title="Kaldır" aria-label="Kaldır">${ic('x')}</button></div>`;
+        root.innerHTML = `<label class="lv-sw"><span class="bv-t"><b>Sunucu seviyeleri açık</b><small>Kapalıyken bu sunucuda sunucu XP'si birikmez (Kanka geneli seviye yine işler)</small></span><input type="checkbox" id="lv-on" ${c.on ? 'checked' : ''}></label>
+          <div class="st-sec">Seviye atlama mesajı</div>
+          <div class="lv-ann"><select class="field" id="lv-ann" style="margin:0"><option value="same" ${c.announce === 'same' ? 'selected' : ''}>Mesajı attığı odada</option><option value="channel" ${c.announce === 'channel' ? 'selected' : ''}>Belirli bir odada</option><option value="off" ${c.announce === 'off' ? 'selected' : ''}>Gönderme</option></select>
+            <select class="field" id="lv-ch" style="margin:0" ${c.announce === 'channel' ? '' : 'hidden'}>${tx.map(x => `<option value="${x.id}" ${x.id === c.channel ? 'selected' : ''}>#${esc(x.name)}</option>`).join('')}</select></div>
+          <div class="st-sec">Rol ödülleri</div><p class="hint" style="margin-top:0">Üye bu seviyeye gelince rol kendiliğinden verilir. Yetkili roller ödül olamaz (seviye kasan biri yönetici olmasın).</p>
+          <div id="lv-rws">${c.rewards.map(rowH).join('')}</div>
+          <button class="btns2" id="lv-add" ${roles.length ? '' : 'disabled'}>${ic('plus')} Ödül ekle</button>
+          <label class="lv-sw" style="margin-top:12px"><span class="bv-t"><b>Eski ödül rollerini koru</b><small>Kapalıysa üye yeni ödül rolünü alınca bir öncekinden çıkar</small></span><input type="checkbox" id="lv-stack" ${c.stack ? 'checked' : ''}></label>
+          <div class="lv-btns"><button class="primary" id="lv-save" style="width:auto;padding:10px 18px">Kaydet</button><button class="btns2" id="lv-lb">${ic('trophy')} Sıralamayı gör</button></div>`;
+        const wire = () => root.querySelectorAll('.lv-x').forEach(b => b.onclick = () => b.closest('.lv-rw').remove());
+        wire();
+        $('#lv-ann').onchange = e => { $('#lv-ch').hidden = e.target.value !== 'channel'; };
+        $('#lv-add').onclick = () => { $('#lv-rws').insertAdjacentHTML('beforeend', rowH({ level: 5 * ($('#lv-rws').children.length + 1) })); wire(); };
+        $('#lv-lb').onclick = () => { closeModal?.(); showLeaderboard(); };
+        $('#lv-save').onclick = () => socket.emit('levelsSave', { serverId: s.id, cfg: { on: $('#lv-on').checked, announce: $('#lv-ann').value, channel: $('#lv-ch').value, stack: $('#lv-stack').checked,
+          rewards: [...root.querySelectorAll('.lv-rw')].map(x => ({ level: x.querySelector('.lv-l').value, role: x.querySelector('.lv-r').value })) } }, x => x.error ? toast(x.error) : toast('Seviye ayarları kaydedildi', null, false, { type: 'ok' }));
+      });
     },
     webhooks: () => {
       const tx = s.channels.filter(c => !['voice', 'stage'].includes(c.type));
@@ -5905,8 +5937,9 @@ function showLeaderboard() {
   const s = S.server;
   socket.emit('leaderboard', s.id, list => {
     const medal = i => i < 3 ? `<svg class="medal" viewBox="0 0 24 24" aria-label="${i + 1}. sıra"><path d="M8 2h3l1.5 5L14 2h3l-3 7h-4z" fill="${['#e5484d', '#4aa8ff', '#4cc38a'][i]}"/><circle cx="12" cy="15" r="7" fill="${['#ffcf5c', '#d5dbe3', '#d9915a'][i]}"/><text x="12" y="18.5" text-anchor="middle" font-size="9" font-weight="800" fill="#3b2a1e">${i + 1}</text></svg>` : i + 1;
-    modal(`<h3>${ic('trophy')}${esc(s.name)} liderlik tablosu</h3><p class="hint">En çok mesaj atan kankalar. Her gün girerek seri bonusu kazanabilirsin!</p>` +
-      list.map((u, i) => `<div class="lb-row" style="animation-delay:${i * .04}s"><span class="rk">${medal(i)}</span>${av(u.name, S.online.has(u.name))}<div class="info"><b>${esc(u.name)}</b><small>Seviye ${u.level}${u.streak ? ` · <span class="streak">🔥 ${u.streak}</span>` : ''}</small></div><b class="xp">${u.xp} XP</b></div>`).join('') +
+    const srv = list.some(u => u.srv);
+    modal(`<h3>${ic('trophy')}${esc(s.name)} liderlik tablosu</h3><p class="hint">${srv ? 'Bu sunucudaki seviyeler. Burada sohbet ederek (dakikada bir 3-6 XP) ve seste kalarak (dakikada 2 XP) yükselirsin.' : 'En çok mesaj atan kankalar. Her gün girerek seri bonusu kazanabilirsin!'}</p>` +
+      list.map((u, i) => `<div class="lb-row ${u.me ? 'lb-me' : ''}" style="animation-delay:${i * .04}s"><span class="rk">${u.rank ? `<b class="lb-n">${u.rank}</b>` : medal(i)}</span>${av(u.name, S.online.has(u.name))}<div class="info"><b>${esc(u.name)}</b><small>Seviye ${u.level}${u.streak ? ` · <span class="streak">🔥 ${u.streak}</span>` : ''}</small></div><b class="xp">${u.xp} XP</b></div>`).join('') +
       `<div class="rowb"><button id="mx">Kapat</button></div>`);
     $('#mx').onclick = closeModal;
   });

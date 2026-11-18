@@ -606,11 +606,28 @@ const level = xp => Math.floor(Math.sqrt((xp || 0) / 5)) + 1;
 // Mesaj: dakikada en fazla bir kez 3-6 XP (hızlı yazmak/spam avantaj değil); çok kısa ya da aynı mesaj XP vermez.
 // Ses: odada en az 2 kişi varken dakikada 2 XP (mikrofon kapalıysa 1), sağırlaştırılmış/AFK değilse; günde en fazla 240 XP.
 // XP her yerden addXp ile verilir: seviye atlanınca kişiye kutlama gider.
-function addXp(name, n, why) {
+function addXp(name, n, why, srv, chId) {
   const u = db.users[name]; if (!u || !(n > 0)) return 0;
   const b = level(u.xp); u.xp = (u.xp || 0) + n; const a = level(u.xp);
   if (a > b) setTimeout(() => io.to('user:' + name).emit('levelUp', { level: a, from: b, why: why || null }), 300);
+  if (srv && !srv.public && srv.levels?.on !== false) srvXp(srv, name, n, chId);
   return a - b;
+}
+// ---- Sunucu seviyeleri: her sunucunun kendi XP'si, sıralaması ve rol ödülleri ----
+// s.levels = { on, announce: 'same' | 'channel' | 'off', channel, rewards: [{ level, role }], stack }
+function srvXp(s, name, n, chId) {
+  s.xp ||= {}; const b = level(s.xp[name]); s.xp[name] = (s.xp[name] || 0) + n; const a = level(s.xp[name]);
+  if (a <= b) return;
+  const cfg = s.levels || {}, rw = (cfg.rewards || []).filter(r => r.level <= a && s.customRoles?.some(x => x.id === r.role)).sort((x, y) => x.level - y.level);
+  let got = null;
+  if (rw.length) { s.memberRoles ||= {}; const l = new Set(s.memberRoles[name] || []), top = rw[rw.length - 1];
+    if (cfg.stack === false) for (const r of rw) if (r !== top) l.delete(r.role);
+    for (const r of cfg.stack === false ? [top] : rw) if (!l.has(r.role)) { l.add(r.role); if (r.level === a || r === top) got = s.customRoles.find(x => x.id === r.role); }
+    s.memberRoles[name] = [...l]; setTimeout(() => pushServers(membersOf(s)), 50); }
+  const mode = cfg.announce || 'same'; if (mode === 'off') return;
+  const to = mode === 'channel' && s.channels.some(c => c.id === cfg.channel) ? cfg.channel : chId;
+  if (!to || voiceLike(findChannel(to)?.c?.type)) return;
+  setTimeout(() => botPost(to, { title: `🎉 ${db.users[name]?.displayName || name} seviye ${a} oldu!`, text: got ? `Yeni rol kazandı: ${got.name}` : 'Sohbet etmeye devam, sıradaki seviye seni bekliyor.', tone: 'ok', fields: got ? [['Seviye', String(a)], ['Ödül', got.name]] : null }), 400);
 }
 // Profil: çerçeveler (seviyeyle açılır) ve sosyal bağlantılar
 const FRAMES = { halka: 2, gokkusagi: 5, ates: 10, neon: 15, altin: 25, kurucu: 0 };
@@ -1653,7 +1670,7 @@ setInterval(() => {
     if (m.size < 2) continue; const f = ch.startsWith('call:') ? null : findChannel(ch); if (f && (f.s.afk?.ch || f.s.afk) === ch) continue;
     for (const [sid, n] of m) { const u = db.users[n], fl = voiceFlags.get(sid) || {}; if (!u || fl.d) continue;
       const vx = u.vxp?.d === d ? u.vxp : (u.vxp = { d, n: 0 }); if (vx.n >= 240) continue;
-      const g = fl.m ? 1 : 2; vx.n += g; addXp(n, g, 'ses'); } }
+      const g = fl.m ? 1 : 2; vx.n += g; addXp(n, g, 'ses', f?.s || null, null); } }
   save(); if (who.size) io.emit('users', allUsers());
 }, 60e3);
 const voiceStart = new Map();
@@ -1808,7 +1825,7 @@ function postMessage(me, chId, p = {}) {
   { const now = Date.now(), txt = String(msg.text || '').trim().toLocaleLowerCase('tr'), rich = !!(msg.image || msg.files?.length || msg.audio || msg.poll || msg.song || msg.plan);
     const real = rich || txt.replace(/\s+/g, '').length >= 3, fresh = !txt || txt !== u.xpLast;
     const srvCh = !chId.startsWith('dm:') && !chId.startsWith('g:'), f0 = srvCh ? findChannel(chId) : null, crowd = !srvCh || (f0 && membersOf(f0.s).length >= 3);
-    if (real && fresh && crowd && now - (u.xpAt || 0) >= 60e3) { u.xpAt = now; addXp(me, 3 + Math.floor(Math.random() * 4), 'mesaj'); }
+    if (real && fresh && crowd && now - (u.xpAt || 0) >= 60e3) { u.xpAt = now; addXp(me, 3 + Math.floor(Math.random() * 4), 'mesaj', f0?.s || null, chId); }
     if (txt) u.xpLast = txt.slice(0, 200); }
   u.msgs = (u.msgs || 0) + 1;
   const hr = new Date().getHours(); if (hr >= 0 && hr < 5) u.night = true;
@@ -1816,12 +1833,7 @@ function postMessage(me, chId, p = {}) {
   io.to(chId).emit('message', { channelId: chId, msg });
   io.to('user:' + me).emit('users', allUsers());
 
-  if (level(u.xp) > before) {
-    const sys = { id: id(), kind: 'system', time: Date.now(), text: `${me} seviye ${level(u.xp)} oldu!`, reactions: {} };
-    list.push(sys);
-    io.to(chId).emit('message', { channelId: chId, msg: sys });
-    io.emit('users', allUsers());
-  }
+  if (level(u.xp) > before) io.emit('users', allUsers());
 
   // Bildirimler
   const where = chId.startsWith('dm:') ? 'özel mesaj' : chId.startsWith('g:') ? groupTitle(groupOf(chId)) : (() => { const f = findChannel(chId); return `${f.s.name} › ${f.c.name}`; })();
@@ -3220,6 +3232,16 @@ io.on('connection', socket => {
   // Webhook yönetimi: sunucu ya da oda yönetme yetkisi gerekir
   const whView = w => ({ id: w.id, name: w.name, avatar: w.avatar || null, channelId: w.channelId, by: w.by, createdAt: w.createdAt, uses: w.uses || 0, lastAt: w.lastAt || null, url: `${baseUrl()}/api/webhooks/${w.id}/${w.token}` });
   const whSrv = serverId => { const s = db.servers.find(x => x.id === serverId); return s && !s.public && (s.owner === me || can(s, me, 'manageServer') || can(s, me, 'manageChannels')) ? s : null; };
+  socket.on('levelsGet', ({ serverId } = {}, cb = () => {}) => { const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' }); cb({ cfg: { on: s.levels?.on !== false, announce: s.levels?.announce || 'same', channel: s.levels?.channel || null, rewards: s.levels?.rewards || [], stack: s.levels?.stack !== false } }); });
+  socket.on('levelsSave', ({ serverId, cfg } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s || s.public) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
+    const roles = new Set((s.customRoles || []).filter(r => !r.bot).map(r => r.id));
+    const rewards = (Array.isArray(cfg?.rewards) ? cfg.rewards : []).map(r => ({ level: Math.max(2, Math.min(100, parseInt(r.level) || 0)), role: String(r.role || '') })).filter(r => roles.has(r.role)).slice(0, 15);
+    // yetkili rol ödül olamaz: seviye kasan biri yönetici olmasın
+    const risky = rewards.find(r => (s.customRoles.find(x => x.id === r.role)?.perms || []).length); if (risky) return cb({ error: `"${s.customRoles.find(x => x.id === risky.role).name}" rolünde yetki var. Ödül rolleri yetkisiz olmalı.` });
+    s.levels = { on: cfg?.on !== false, announce: ['same', 'channel', 'off'].includes(cfg?.announce) ? cfg.announce : 'same', channel: s.channels.some(c => c.id === cfg?.channel && !voiceLike(c.type)) ? cfg.channel : null, rewards: rewards.sort((a, b) => a.level - b.level), stack: cfg?.stack !== false };
+    audit(s, me, 'Seviye ayarlarını değiştirdi'); save(); cb({ ok: true });
+  });
   socket.on('whList', ({ serverId } = {}, cb = () => {}) => { const s = whSrv(serverId); if (!s) return cb({ error: 'Yetkin yok' }); cb({ list: Object.values(db.webhooks || {}).filter(w => w.serverId === s.id).sort((a, b) => a.createdAt - b.createdAt).map(whView) }); });
   socket.on('whCreate', ({ serverId, channelId, name } = {}, cb = () => {}) => {
     const s = whSrv(serverId); if (!s) return cb({ error: 'Yetkin yok' });
@@ -3603,6 +3625,8 @@ io.on('connection', socket => {
   socket.on('leaderboard', (serverId, cb) => {
     const s = db.servers.find(x => x.id === serverId);
     if (!s || !(s.public || s.members.includes(me))) return cb([]);
+    if (!s.public && s.levels?.on !== false) { const X = s.xp || {}, all = membersOf(s).filter(n => db.users[n]).sort((a, b) => (X[b] || 0) - (X[a] || 0));
+      return cb(all.slice(0, 25).map(n => ({ name: n, xp: X[n] || 0, level: level(X[n]), streak: db.users[n].streak?.count || 0, srv: true })).concat(all.indexOf(me) >= 25 ? [{ name: me, xp: X[me] || 0, level: level(X[me]), rank: all.indexOf(me) + 1, srv: true, me: true }] : [])); }
     cb(membersOf(s).map(n => db.users[n]).filter(Boolean).sort((a, b) => (b.xp || 0) - (a.xp || 0)).slice(0, 25)
       .map(u => ({ name: u.name, xp: u.xp || 0, level: level(u.xp), streak: u.streak?.count || 0 })));
   });
