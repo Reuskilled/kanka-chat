@@ -1616,19 +1616,22 @@ setInterval(() => { // açık kalan bağlantılar da yeni günü saysın
 }, 5 * 60e3);
 // Bir kerelik onarım: yukarıdaki hata yüzünden kırılan serileri mesaj geçmişinden geri hesapla
 setTimeout(() => { try {
-  if (db.streakFix1) return;
+  if (db.streakFix2) return;
   const days = {};
+  // Günlük yedeklerdeki seri bilgisi: o gün "son gün" ve öncesinde kaç gün üst üste geldiği yazıyor
+  try { for (const f of fs.readdirSync(BACKUPS).filter(n => BACKUP_RE.test(n))) { const j = readDbFile(path.join(BACKUPS, f));
+    for (const [n, u] of Object.entries(j.users || {})) { const st = u.streak; if (!st?.last) continue; let c = new Date(st.last + 'T12:00:00Z');
+      for (let i = 0; i < Math.min(st.count || 1, 400); i++) { (days[n] ||= new Set()).add(c.toISOString().slice(0, 10)); c = new Date(+c - 864e5); } } } } catch (e) { console.error('seri yedek', e.message); }
   for (const list of Object.values(db.messages)) for (const m of list || []) if (m.author && m.time) (days[m.author] ||= new Set()).add(ymd(new Date(m.time)));
   const today = ymd(), yest = ymd(new Date(Date.now() - 864e5)); let fixed = 0;
   for (const u of Object.values(db.users)) {
-    const d = days[u.name]; if (!d) continue;
-    if (u.streak?.last) d.add(u.streak.last);
+    const d = days[u.name] ||= new Set(); if (u.streak?.last) { let c = new Date(u.streak.last + 'T12:00:00Z'); for (let i = 0; i < Math.min(u.streak.count || 1, 400); i++) { d.add(c.toISOString().slice(0, 10)); c = new Date(+c - 864e5); } }
     let start = d.has(today) ? today : d.has(yest) ? yest : null; if (!start) continue;
     let n = 0, cur = new Date(start + 'T12:00:00Z');
     while (d.has(cur.toISOString().slice(0, 10))) { n++; cur = new Date(+cur - 864e5); }
     if (n > (u.streak?.count || 0)) { u.streak = { last: start, count: n, best: Math.max(n, u.streak?.best || 0) }; fixed++; }
   }
-  db.streakFix1 = Date.now(); save(); if (fixed) { console.log(`Seri onarımı: ${fixed} kişinin serisi düzeltildi`); io.emit('users', allUsers()); }
+  db.streakFix2 = Date.now(); save(); if (fixed) { console.log(`Seri onarımı: ${fixed} kişinin serisi düzeltildi`); io.emit('users', allUsers()); }
 } catch (e) { console.error('seri onarımı', e); } }, 4000);
 const BADGES = {
   erken: ['🌱', 'Erken kanka', 'İlk 100 üyeden biri'],
@@ -2677,6 +2680,7 @@ io.on('connection', socket => {
     const deny = () => cb({ error: 'Bunun için yetkin yok' });
     if (action && u.name !== me && staffRank(u.name) === 'owner') return cb({ error: 'Kurucuya işlem yapılamaz' });
     if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); if (staffRank(u.name) && u.name !== me && staffRank(me) !== 'owner') return cb({ error: 'Ekipten birinin şifre linkini sadece kurucu oluşturabilir' }); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/?sifirla=${resetToken(u.name, 24)}` }); }
+    if (action === 'streak') { if (!canStaff(me, 'ban')) return deny(); const n = Math.min(Math.max(parseInt(days) || 0, 0), 3650); u.streak = { last: ymd(), count: n, best: Math.max(n, u.streak?.best || 0) }; staffLog(me, 'Seriyi düzeltti', u.name, n + ' gün'); save(); io.emit('users', allUsers()); }
     if (action === 'warn') { if (!canStaff(me, 'warn')) return deny(); if (u.name === me) return cb({ error: 'Kendini uyaramazsın' }); siteWarnUser(u.name, me, reason); }
     if (action === 'suspend') { if (!canStaff(me, 'suspend')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri askıya alınamaz' }); const d = [1, 3, 7, 30].includes(+days) ? +days : 1; siteBanUser(u.name, me, reason || 'Kural ihlali', Date.now() + d * 864e5); }
     if (action === 'ban') { if (!canStaff(me, 'ban')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri kapatılamaz' }); siteBanUser(u.name, me, reason); }
