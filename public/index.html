@@ -2757,6 +2757,12 @@
   #e2e-bar span { flex: 1; min-width: 0; font-size: 13px; color: var(--muted); }
   #e2e-bar b { display: block; color: var(--ink); font-size: 14px; }
   #e2e-bar button { flex: none; width: auto; margin: 0; padding: 9px 16px; border-radius: 10px; }
+  .e2e-intro { text-align: center; }
+  .e2e-intro .e2e-ico { width: 56px; height: 56px; margin: 4px auto 10px; display: grid; place-items: center; border-radius: 18px; background: var(--accent-soft); color: var(--accent); }
+  .e2e-intro .e2e-ico svg { width: 26px; height: 26px; }
+  .e2e-intro ul { text-align: left; margin: 12px 0 16px; padding-left: 18px; color: var(--muted); font-size: 14px; display: grid; gap: 6px; }
+  .e2e-intro ul svg { width: 13px; height: 13px; vertical-align: -1px; }
+  .e2e-intro .rowb { align-items: center; justify-content: space-between; }
   .e2e-fps { display: grid; gap: 6px; margin: 10px 0; }
   .e2e-fps div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--card); }
   .e2e-fps code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--muted); letter-spacing: .03em; }
@@ -6517,7 +6523,7 @@ const E2E = (() => {
     await fresh(pw); return true;
   }
   async function rewrap(pw) { if (priv && ready) await ask('e2eWrap', { wrapped: await sealPriv(priv, pw) }); }
-  async function wipe() { await idel('u:' + me); }
+  async function wipe() { await iop('readwrite', s => s.clear()); } // çıkışta bu cihazdaki tüm anahtarlar silinir
   // --- sohbet anahtarları
   function conv(chId, force) {
     if (!force && convs[chId]) return Promise.resolve(convs[chId]);
@@ -6538,7 +6544,7 @@ const E2E = (() => {
       if (pass) miss[key] = Date.now();
       const v = await conv(chId, pass === 1), ep = v?.eps.find(e => e.id === epId); if (!ep) continue;
       for (const [k, w] of Object.entries(ep.wraps)) { const mp = privFor(k), bp = v.keys[w.by]?.pub; if (!mp || !bp) continue;
-        try { return cks[key] = await ckImport(new Uint8Array(await C.decrypt({ name: 'AES-GCM', iv: unb64(w.iv) }, await kek(mp, bp, chId, epId), unb64(w.ct)))); } catch {} }
+        try { const ck = cks[key] = await ckImport(new Uint8Array(await C.decrypt({ name: 'AES-GCM', iv: unb64(w.iv) }, await kek(mp, bp, chId, epId), unb64(w.ct)))); iset('ck:' + key, ck.raw); return ck; } catch {} }
     }
     return null;
   }
@@ -6558,7 +6564,7 @@ const E2E = (() => {
       const raw = rnd(32), id = Array.from(rnd(12), x => 'abcdefghijklmnopqrstuvwxyz0123456789'[x % 36]).join(''), wraps = {};
       for (const m of v.members) wraps[m.kid] = await wrapFor(raw, chId, id, v.keys[m.kid].pub);
       const r = await ask('e2eEpoch', { chId, ep: { id, wraps } });
-      if (r.ok) { r.conv._t = Date.now(); convs[chId] = r.conv; cks[chId + '|' + id] = await ckImport(raw); return id; }
+      if (r.ok) { r.conv._t = Date.now(); convs[chId] = r.conv; cks[chId + '|' + id] = await ckImport(raw); iset('ck:' + chId + '|' + id, raw); return id; }
       if (!r.conv) return null; v = convs[chId] = Object.assign(r.conv, { _t: Date.now() });
     }
     return null;
@@ -6611,6 +6617,12 @@ const E2E = (() => {
     const list = msgs.filter(m => m?.enc);
     if (list.length && C) { await Promise.all(list.map(m => open(chId, m).catch(() => null))); list.forEach(apply); }
     for (const m of msgs) if (m?.replyTo?.enc) { const src = [...msgs, ...ctx].find(x => x.id === m.replyTo.id); m.replyTo.text = src?._e2e ? prevText(src) : '🔒 Şifreli mesaj'; }
+  }
+  const summary = x => (typeof x.t === 'string' && x.t.trim() ? x.t : x.g ? 'GIF gönderdi' : x.au ? '🎤 Ses mesajı' : Array.isArray(x.f) && x.f.length ? (x.f.every(f => /^image\//.test(f.m || '')) ? '📷 Resim' : '📎 Dosya') : 'Yeni mesaj').slice(0, 160);
+  async function peek(chId, e, from) { // bildirim önizlemesi: şifreli mesajı bu cihazda aç
+    if (!C || !e?.enc || !chId) return null; await bootP;
+    const d = await open(chId, { id: e.id, author: from, enc: e.enc, fc: e.fc }).catch(() => null);
+    return d && !d.bad ? summary(d.in) : null;
   }
   const inner = p => ({ a: S.me, t: p.text || '', ...(p.gif ? { g: p.gif } : {}), ...(p._ef ? { f: p._ef } : {}), ...(p._eau ? { au: p._eau, du: p.duration } : {}) });
   async function encFile(blob, name, type) {
@@ -6676,7 +6688,7 @@ const E2E = (() => {
       <p class="hint">Bir mesajı şikayet edersen, sadece o mesaj ve hemen yanındaki birkaç mesaj ekibe açılır. Mesajın gerçekten o kişiden geldiği mühürle doğrulanır.</p>
       <div class="e2e-fps">${v.members.map(m => `<div><b>${esc(m.n)}</b><code>${fp(m.kid)}</code></div>`).join('')}</div>
       <p class="hint" style="font-size:12px">Güvenlik kodları: arkadaşının ekranındaki kodlarla aynıysa aranızda kimse yok demektir. Biri şifresini sıfırlarsa kodu değişir.</p>
-      <div class="rowb"><button class="primary" type="button" id="mx">Tamam</button></div>`);
+      <div class="rowb"><button class="btnp" type="button" id="mx">Tamam</button></div>`);
     $('#mx').onclick = closeModal;
   }
   function unlockForm() {
@@ -6704,7 +6716,17 @@ const E2E = (() => {
     for (const k in miss) if (k.startsWith(chId + '|')) delete miss[k];
     prep(chId, S.msgs).then(rerender);
   }
-  function after() { const ch = S.channel?.id; if (ch) enter(ch); reshare(); setTimeout(background, 5000); }
+  function intro() { // bir kereye mahsus: kullanıcıya şifrelemeyi anlat
+    if (store.get('kanka-e2e-tanitim') || !ready) return;
+    if ($('#modal.open')) return setTimeout(intro, 8000);
+    store.set('kanka-e2e-tanitim', '1');
+    modal(`<div class="e2e-intro"><div class="e2e-ico">${ic('lock')}</div><h3>Özel mesajların artık uçtan uca şifreli</h3>
+      <p class="hint">DM'lerin ve grup sohbetlerindeki yazılar, GIF'ler, dosyalar ve ses kayıtları sadece sohbetteki kişilerin cihazlarında açılır. <b>Kanka ekibi dahil kimse okuyamaz.</b></p>
+      <ul><li>Şifreli sohbetin başlığında ${ic('lock')} simgesini görürsün.</li><li>Yeni cihazda giriş yapınca konuşmaların geri gelir; şifreni sıfırlasan da kaybolmaz.</li><li>Bir mesajı şikayet edersen, sadece o mesaj ve yanındakiler incelenmek üzere açılır.</li></ul>
+      <div class="rowb"><a class="alink" href="/gizlilik" target="_blank" rel="noopener">Gizlilik politikası</a><button class="btnp" type="button" id="mx">Anladım</button></div></div>`);
+    $('#mx').onclick = closeModal;
+  }
+  function after() { const ch = S.channel?.id; if (ch) enter(ch); reshare(); setTimeout(background, 5000); setTimeout(intro, 4000); }
   socket.on('e2eMigrated', ({ channelId }) => { // eski düz mesajlar şifrelendi: ekrandaki kopyaları da şifreli hâlleriyle yenile
     if (S.channel?.id !== channelId || roomLoading) return;
     socket.emit('join', channelId, async r => { if (!r?.messages || S.channel?.id !== channelId) return; await prep(channelId, r.messages).catch(() => {});
@@ -6713,7 +6735,7 @@ const E2E = (() => {
   socket.on('e2eNeed', () => setTimeout(reshare, 500 + Math.random() * 1500));
   socket.on('e2eConvUpd', chId => { delete convs[chId]; for (const k in miss) if (k.startsWith(chId + '|')) delete miss[k]; if (S.channel?.id === chId) conv(chId, true).then(() => { lockBadge(chId); refresh(chId); }); });
   return {
-    pend: pw => { pendPw = pw; }, boot, rewrap, wipe, enter, prep, seal, inner, live, edit, reveal, uploadEnc, conv,
+    pend: pw => { pendPw = pw; }, boot, peek, rewrap, wipe, enter, prep, seal, inner, live, edit, reveal, uploadEnc, conv,
     want: chId => C && on && live(chId), ready: () => ready, on: () => on,
   };
 })();
@@ -7890,15 +7912,29 @@ socket.on('chanActivity', ({ channelId, serverId }) => {
   if ((S.view !== 'server' || S.server?.id !== serverId) && !mutedServers.has(serverId)) S.unreadServers.add(serverId);
   renderRail(); if (S.view === 'server') renderSide(); refreshHome();
 });
-socket.on('notify', n => {
+// Bildirim izni varsa bilgisayarda Kanka içi kutu yerine sistemin kendi bildirimi (Windows'ta sağ altta) çıkar
+function sysNotify(title, n) {
+  if (isMobileDev || !('Notification' in window) || Notification.permission !== 'granted') return false;
+  if (document.visibilityState !== 'visible' && pushActive && !window.kankaDesktop) return true; // sekme arka plandaysa sunucunun gönderdiği bildirim zaten çıkıyor
+  const body = n.friend ? 'sana arkadaşlık isteği gönderdi' : String(n.text || '') + (n.dm || !n.where ? '' : '\n' + n.where);
+  const data = { ch: n.channelId || null, from: n.from || null, dm: !!n.dm, friend: !!n.friend }, u = S.users[n.from] || {};
+  const icon = /^(\/uploads\/|https:\/\/)/.test(u.avatar || '') ? u.avatar : '/icon-192.png', tag = data.ch || (n.friend ? 'friends' : 'kanka');
+  try {
+    if (window.kankaDesktop || !navigator.serviceWorker?.controller) { const x = new Notification(title, { body, icon, tag, renotify: true, silent: true }); x.onclick = () => { window.focus(); openFromNotif(data); x.close(); }; }
+    else navigator.serviceWorker.ready.then(r => r.showNotification(title, { body, icon, badge: '/icon-192.png', tag, renotify: true, silent: true, data })).catch(() => {});
+    return true;
+  } catch { return false; }
+}
+socket.on('notify', async n => {
   if (n.channelId === S.channel?.id && document.hasFocus()) return;
+  if (n.e) n.text = await E2E.peek(n.channelId, n.e, n.from) || n.text;
   if (n.mention && !n.dm && n.channelId) { rememberMention(n); refreshHome(); renderRail(); if (S.view === 'server') renderSide(); } else if (n.dm || n.friend) refreshHome();
   if (!n.dm && n.channelId && notifMode(n.channelId) === 'none') return;
   if (!notifOn() || isDnd()) { if (n.dm) { S.unread.add(n.channelId); dmCnt[n.channelId] = (dmCnt[n.channelId] || 0) + 1; if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); } return; }
   if (n.dm) { S.unread.add(n.channelId); dmCnt[n.channelId] = (dmCnt[n.channelId] || 0) + 1; if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); }
   playSound('mention');
   const title = n.friend ? `${n.from}` : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? `${n.from} sana yazdı` : `${n.from} seni etiketledi`;
-  toast(`<b>${esc(title)}</b><br>${esc(n.text)}<small>${esc(n.where)}</small>`, () => {
+  if (!sysNotify(title.replace(n.from, dn(n.from)), n)) toast(`<b>${esc(title)}</b><br>${esc(n.text)}<small>${esc(n.where)}</small>`, () => {
     if (n.friend) showFriends('pending');
     else if (n.dm) openChat(n.channelId, n.from);
     else { const s = S.servers.find(s => s.channels.some(c => c.id === n.channelId)); if (s) selectServer(s.id, n.channelId); }
@@ -7907,10 +7943,6 @@ socket.on('notify', n => {
   if (!document.hasFocus() && window.kankaDesktop?.overlayNotify) {
     const u = S.users[n.from] || {}, av = u.avatar ? (/^https:\/\//.test(u.avatar) ? u.avatar : location.origin.startsWith('https') ? location.origin + u.avatar : null) : null;
     window.kankaDesktop.overlayNotify({ t: n.friend ? `${dn(n.from)} arkadaşlık isteği gönderdi` : title.replace(n.from, dn(n.from)), x: n.friend ? '' : String(n.text || '').slice(0, 140), w: n.where || '', c: u.color || userColor(n.from), av, i: (dn(n.from) || '?')[0].toUpperCase() });
-  }
-  if (!document.hasFocus() && !pushActive && 'Notification' in window && Notification.permission === 'granted') {
-    const opt = { body: n.text, icon: '/icon-192.png', badge: '/icon-192.png', tag: n.channelId || 'kanka' };
-    navigator.serviceWorker?.ready ? navigator.serviceWorker.ready.then(r => r.showNotification(title, opt)).catch(() => new Notification(title, opt)) : new Notification(title, opt);
   }
 });
 
@@ -8407,7 +8439,7 @@ socket.on('ring', r => {
   card.innerHTML = `${r.chatId.startsWith('g:') ? `<div class="gav av" style="width:88px;height:88px;margin:0 auto 12px">${ic('users')}</div>` : av(r.from)}<h3>${esc(r.title)}</h3><p>${r.video ? 'Görüntülü' : 'Sesli'} arıyor…${r.chatId.startsWith('g:') ? ` · ${esc(r.from)}` : ''}</p>
     <div class="cbtns"><div><button class="dec" id="c-dec" aria-label="Reddet">${ic('hangup')}</button><small>Reddet</small></div><div><button class="acc" id="c-acc" aria-label="Kabul et">${ic(r.video ? 'video' : 'phoneCall')}</button><small>Kabul et</small></div></div>`;
   document.body.appendChild(card);
-  playSound('ring'); ringSound = setInterval(() => playSound('ring'), 1600);
+  if (!isDnd()) { playSound('ring'); ringSound = setInterval(() => playSound('ring'), 1600); } // rahatsız etmeyin: arama kartı görünür ama çalmaz
   ringTimer = setTimeout(stopRing, 32000);
   $('#c-dec').onclick = () => { socket.emit('callDecline', r.chatId); stopRing(); };
   $('#c-acc').onclick = () => {

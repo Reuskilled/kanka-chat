@@ -1897,7 +1897,8 @@ function notifyUser(name, n) {
   io.to('user:' + name).emit('notify', n);
   const title = n.friend ? n.from : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? n.from : `${n.from} seni etiketledi`;
   sendPush(name, { direct: !!n.mention, title, body: n.friend ? 'sana arkadaşlık isteği gönderdi' : String(n.text || '').slice(0, 160) + (n.dm ? '' : n.where ? `\n${n.where}` : ''),
-    tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend });
+    tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend,
+    e: n.e && n.e.enc.ct.length <= 2400 ? n.e : undefined }); // bildirim boyutu sınırlı: kısa şifreli mesaj telefonda çözülüp gösterilir
 }
 const presenceList = () => onlineNames().map(n => { const st = statusOf(n); return st && onMobile(n) ? [n, st, 'm'] : [n, st]; }).filter(x => x[1]);
 // Odadaki sohbet ne zamandır sürüyor: oda boşken doluya geçince başlar, tamamen boşalınca sıfırlanır
@@ -2082,11 +2083,11 @@ function postMessage(me, chId, p = {}) {
 
   // Bildirimler
   const where = chId.startsWith('dm:') ? 'özel mesaj' : chId.startsWith('g:') ? groupTitle(groupOf(chId)) : (() => { const f = findChannel(chId); return `${f.s.name} › ${f.c.name}`; })();
-  const preview = msg.enc ? '🔒 Şifreli mesaj' : (msg.text || msg.plan?.title || msg.poll?.question || msg.song?.title || (msg.game ? 'bir oyun başlattı' : msg.files?.length ? (msg.files.every(f => f.kind === 'image') ? 'resim gönderdi' : 'dosya gönderdi: ' + msg.files[0].name) : 'görsel gönderdi')).slice(0, 120);
+  const preview = msg.enc ? 'Yeni mesaj' : (msg.text || msg.plan?.title || msg.poll?.question || msg.song?.title || (msg.game ? 'bir oyun başlattı' : msg.files?.length ? (msg.files.every(f => f.kind === 'image') ? 'resim gönderdi' : 'dosya gönderdi: ' + msg.files[0].name) : 'görsel gönderdi')).slice(0, 120);
   if (isPrivateChat(chId)) {
     for (const n of chatMembers(chId)) {
       io.to('user:' + n).emit('dms', dmsFor(n));
-      if (n !== me) notifyUser(n, { from: me, text: preview, channelId: chId, where, dm: true });
+      if (n !== me) notifyUser(n, { from: me, text: preview, channelId: chId, where, dm: true, e: msg.enc ? { id: msg.id, enc: msg.enc, fc: msg.fc } : undefined }); // şifreliyse önizlemeyi alıcının cihazı açar
     }
   } else {
     const f = findChannel(chId);
@@ -2930,7 +2931,7 @@ io.on('connection', socket => {
     if (!me || !['online', 'idle', 'dnd', 'invisible'].includes(st)) return cb({ error: 'Geçersiz durum' });
     const u = db.users[me]; u.presence = st;
     const t = +until; u.presenceUntil = st !== 'online' && t > Date.now() && t < Date.now() + 31 * 864e5 ? t : null;
-    save(); pushPresence(); cb({ ok: true, until: u.presenceUntil });
+    save(); pushPresence(); io.to('user:' + me).emit('myStatus', { st, until: u.presenceUntil }); cb({ ok: true, until: u.presenceUntil }); // diğer cihazlar da bilsin (rahatsız etmeyin her yerde geçerli)
   });
   socket.on('setCustomStatus', ({ text, until } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
