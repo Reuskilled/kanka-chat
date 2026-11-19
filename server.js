@@ -643,13 +643,13 @@ const allUsers = () => Object.values(db.users).map(pubUser);
 
 const serversFor = name => db.servers.filter(s => (s.public || s.members.includes(name)) && !s.bans?.[name]);
 // ---------- Roller ve izinler ----------
-const PERMS = ['manageServer', 'manageRoles', 'manageChannels', 'manageEmojis', 'viewAudit', 'manageMessages', 'mentionEveryone', 'kick', 'ban', 'timeout', 'voiceMute', 'voiceMove'];
-const MOD_PERMS = ['manageChannels', 'manageEmojis', 'viewAudit', 'manageMessages', 'kick', 'timeout', 'mentionEveryone', 'voiceMute', 'voiceMove'];
+const PERMS = ['administrator', 'manageServer', 'manageRoles', 'manageChannels', 'manageEmojis', 'manageWebhooks', 'viewAudit', 'manageMessages', 'pinMessages', 'slowBypass', 'mentionEveryone', 'kick', 'ban', 'timeout', 'voiceMute', 'voiceMove'];
+const MOD_PERMS = ['manageChannels', 'manageEmojis', 'viewAudit', 'manageMessages', 'pinMessages', 'slowBypass', 'kick', 'timeout', 'mentionEveryone', 'voiceMute', 'voiceMove'];
 function permsOf(s, n) {
   if (s.owner === n) return new Set(PERMS);
   const p = new Set(s.roles?.[n] === 'mod' ? MOD_PERMS : []);
   for (const rid of s.memberRoles?.[n] || []) for (const x of s.customRoles.find(r => r.id === rid)?.perms || []) p.add(x);
-  return p;
+  return p.has('administrator') ? new Set(PERMS) : p; // Yönetici: her yetki + odalardaki tüm kısıtlamaları aşar
 }
 const can = (s, n, perm) => permsOf(s, n).has(perm);
 const rankOf = (s, n) => s.owner === n ? 1e9 : Math.max(s.roles?.[n] === 'mod' ? 500 : 0, ...(s.memberRoles?.[n] || []).map(rid => { const i = s.customRoles.findIndex(r => r.id === rid); return i < 0 ? 0 : 1000 - i; }));
@@ -658,7 +658,9 @@ const timedOut = (s, n) => (s.timeouts?.[n] || 0) > Date.now();
 // ---------- Kategoriler ve oda izinleri ----------
 // Her oda/kategori: perms = { '@everyone' | rolId: { view, send, connect } } (true izin, false yasak, yoksa devral)
 // Eşitlenmiş oda (sync) kategorisinin izinlerini kullanır.
-const CH_KEYS = ['view', 'send', 'connect', 'attach', 'react', 'mention', 'manage', 'stream', 'speak'];
+const CH_KEYS = ['view', 'send', 'history', 'connect', 'attach', 'embed', 'react', 'mention', 'apps', 'thread', 'manage', 'video', 'stream', 'speak'];
+// 'video' (kamera) eskiden 'stream' ile birlikteydi: bir katmanda video yazılmamışsa o katmandaki stream değeri geçerli
+const ovGet = (o, k) => o?.[k] !== undefined ? o[k] : k === 'video' ? o?.stream : undefined;
 const voiceLike = t => t === 'voice' || t === 'stage';
 const stage = new Map(); // sahne odası: chId -> { speakers: Set, hands: Set }
 const stageOf = ch => { if (!stage.has(ch)) stage.set(ch, { speakers: new Set(), hands: new Set() }); return stage.get(ch); };
@@ -669,11 +671,11 @@ function chPermWith(s, ov, n, key) {
   if (s.owner === n || can(s, n, 'manageChannels')) return true;
   if (key === 'send' && can(s, n, 'manageMessages')) return true;
   const def = k => k === 'manage' ? can(s, n, 'manageMessages') : k === 'mention' ? can(s, n, 'mentionEveryone') : true;
-  const val = k => { let v = def(k); const e = ov['@everyone']?.[k]; if (e !== undefined) v = e;
+  const val = k => { let v = def(k); const e = ovGet(ov['@everyone'], k); if (e !== undefined) v = e;
     const rs = s.memberRoles?.[n] || [];
-    if (rs.some(r => ov[r]?.[k] === false)) v = false;
-    if (rs.some(r => ov[r]?.[k] === true)) v = true;
-    const u = ov['u:' + n]?.[k]; if (u !== undefined) v = u;
+    if (rs.some(r => ovGet(ov[r], k) === false)) v = false;
+    if (rs.some(r => ovGet(ov[r], k) === true)) v = true;
+    const u = ovGet(ov['u:' + n], k); if (u !== undefined) v = u;
     return v; };
   if (!val('view')) return false;
   return key === 'view' ? true : val(key);
@@ -693,7 +695,7 @@ function cleanPerms(s, p) {
   }
   return out;
 }
-const PERM_TR = { view: 'görme', send: 'yazma', connect: 'bağlanma', attach: 'dosya', react: 'tepki', mention: '@herkes', manage: 'mesaj yönetimi', stream: 'yayın', speak: 'konuşma' };
+const PERM_TR = { view: 'görme', send: 'yazma', history: 'geçmişi okuma', connect: 'bağlanma', attach: 'dosya', embed: 'bağlantı ve GIF', react: 'tepki', mention: '@herkes', apps: 'anket ve oyun', thread: 'yanıt dizisi', manage: 'mesaj yönetimi', video: 'kamera', stream: 'ekran paylaşma', speak: 'konuşma' };
 function permDiff(s, a = {}, b = {}) {
   const nm = t => t === '@everyone' ? '@herkes' : t.startsWith('u:') ? t.slice(2) : (s.customRoles.find(r => r.id === t)?.name || '?');
   const out = [];
@@ -738,6 +740,7 @@ function chView(s, c, viewer, manager) {
     topic: c.topic || '', slow: c.slow || 0, limit: c.limit || 0, bitrate: c.bitrate || 'std', news: !!c.news, followers: (c.followers || []).length,
     stage: c.type === 'stage' && stage.has(c.id) ? stageView(c.id) : undefined,
     canAttach: P('attach'), canReact: P('react'), canMention: P('mention'), canManage: P('manage'), canStream: P('stream'), canSpeak: P('speak'),
+    canVideo: P('video'), canEmbed: P('embed'), canApps: P('apps'), canThread: P('thread'), canHistory: P('history'),
     private: everyoneDenied(ov, 'view'), ann: everyoneDenied(ov, 'send'), locked: voiceLike(c.type) && everyoneDenied(ov, 'connect'),
     readonly: viewer ? !chPerm(s, c, viewer, 'send') : false, canConnect: viewer ? chPerm(s, c, viewer, 'connect') : true,
     ticket: c.ticket ? { no: c.ticket.no, by: c.ticket.by, claimedBy: c.ticket.claimedBy || null, closed: !!c.ticket.closedAt } : undefined };
@@ -852,8 +855,8 @@ const TEMPLATES = {
 const CATS = ['Oyun', 'Sohbet', 'Müzik', 'Eğitim', 'Yazılım', 'Anime', 'Film ve dizi', 'Spor', 'Sanat', 'Diğer'];
 // ---------- Discord şablonundan sunucu kurma ----------
 // discord.new/KOD linkindeki şablonu Discord'un açık API'sinden okur; odalar, kategoriler, roller ve izinler Kanka modeline çevrilir
-const DC_PERM_BITS = { manageServer: 5n, manageRoles: 28n, manageChannels: 4n, manageEmojis: 30n, viewAudit: 7n, manageMessages: 13n, mentionEveryone: 17n, kick: 1n, ban: 2n, timeout: 40n, voiceMute: 22n, voiceMove: 24n };
-const DC_CH_BITS = { view: 10n, send: 11n, connect: 20n, attach: 15n, react: 6n, mention: 17n, manage: 13n, stream: 9n, speak: 21n };
+const DC_PERM_BITS = { administrator: 3n, manageWebhooks: 29n, pinMessages: 13n, slowBypass: 13n, manageServer: 5n, manageRoles: 28n, manageChannels: 4n, manageEmojis: 30n, viewAudit: 7n, manageMessages: 13n, mentionEveryone: 17n, kick: 1n, ban: 2n, timeout: 40n, voiceMute: 22n, voiceMove: 24n };
+const DC_CH_BITS = { view: 10n, send: 11n, history: 16n, connect: 20n, attach: 15n, embed: 14n, react: 6n, mention: 17n, apps: 39n, thread: 38n, manage: 13n, video: 9n, stream: 9n, speak: 21n };
 const DC_TYPES = { 0: 'text', 2: 'voice', 5: 'text', 13: 'stage', 15: 'forum' };
 const DC_TYPE_TR = { 14: 'rehber odası', 16: 'medya odası' };
 const SLOW_STEPS = [0, 5, 10, 15, 30, 60, 120, 300, 600, 900, 3600];
@@ -899,7 +902,7 @@ function dcConvert(t) {
     return kr;
   });
   let memberOv = false;
-  const BASE_KEYS = ['view', 'send', 'connect', 'attach', 'react', 'stream', 'speak']; // Kanka'da varsayılanı "açık" olanlar
+  const BASE_KEYS = ['view', 'send', 'history', 'connect', 'attach', 'embed', 'react', 'apps', 'thread', 'video', 'stream', 'speak']; // Kanka'da varsayılanı "açık" olanlar
   const conv = ows => {
     const list = Array.isArray(ows) ? ows : [], out = {}, ev = {};
     if (list.some(o => o.type === 1)) memberOv = true;
@@ -1813,7 +1816,8 @@ function postMessage(me, chId, p = {}) {
   if (list.length > 2000) list.shift();
   // Bağlantı önizlemesi (YouTube zaten kendi kartıyla gösteriliyor)
   { const lu = msg.kind === 'text' && /https?:\/\/[^\s<>"']+/i.exec(msg.text || '')?.[0]?.replace(/[).,!?;:]+$/, '');
-    if (lu && !/(youtube\.com|youtu\.be)\//i.test(lu) && !/\/davet\/|[?&]davet=/i.test(lu)) linkPreview(lu).then(pv => { if (pv && findMsg(chId, msg.id)) { msg.preview = pv; save(); io.to(chId).emit('update', { channelId: chId, msg }); } }); }
+    const fe = lu && !msg.bot && !msg.wh ? findChannel(chId) : null;
+    if (lu && !(fe && !chPerm(fe.s, fe.c, me, 'embed')) && !/(youtube\.com|youtu\.be)\//i.test(lu) && !/\/davet\/|[?&]davet=/i.test(lu)) linkPreview(lu).then(pv => { if (pv && findMsg(chId, msg.id)) { msg.preview = pv; save(); io.to(chId).emit('update', { channelId: chId, msg }); } }); }
   // Takip edilebilir duyuru odası: takipçi odalara kopyala
   { const f1 = p.xfrom || p.fwd ? null : findChannel(chId);
     if (f1?.c.news && f1.c.followers?.length) setTimeout(() => {
@@ -2619,7 +2623,8 @@ io.on('connection', socket => {
     if (cur) socket.leave(cur);
     cur = chId; socket.join(chId);
     const s = serverOf(chId); if (s) try { dailyQuestion(s); } catch (e) { console.error('dailyQuestion', e); } // hata olsa da oda açılsın
-    cb({ messages: (db.messages[chId] || []).slice(-150), playlist: db.playlists[chId] || [], watch: watch.get(chId) || null });
+    const fj = findChannel(chId), noHist = fj && !chPerm(fj.s, fj.c, me, 'history');
+    cb({ messages: noHist ? (db.messages[chId] || []).filter(m => m.pinned || m.author === me).slice(-30) : (db.messages[chId] || []).slice(-150), noHistory: noHist || undefined, playlist: db.playlists[chId] || [], watch: watch.get(chId) || null });
   });
 
   // ----- Durum -----
@@ -2677,6 +2682,7 @@ io.on('connection', socket => {
   // ----- Eski mesajlar -----
   socket.on('history', ({ before } = {}, cb = () => {}) => {
     if (!canAccess(me, cur)) return cb({ messages: [] });
+    { const f = findChannel(cur); if (f && !chPerm(f.s, f.c, me, 'history')) return cb({ messages: [], more: false }); }
     const list = db.messages[cur] || [], i = list.findIndex(m => m.id === before);
     if (i <= 0) return cb({ messages: [], more: false });
     cb({ messages: list.slice(Math.max(0, i - 100), i), more: i > 100 });
@@ -2762,10 +2768,12 @@ io.on('connection', socket => {
     if (srv && !chPerm(srv, findChannel(cur).c, me, 'send')) return cb({ error: 'Bu odaya yazma iznin yok' });
     const chObj = srv && findChannel(cur).c;
     if (srv && /@(everyone|herkes)\b/i.test(p.text || '') && !chPerm(srv, chObj, me, 'mention')) return cb({ error: '@herkes etiketleme iznin yok' });
-    if (srv && (p.image || p.audio) && !chPerm(srv, chObj, me, 'attach')) return cb({ error: 'Bu odada dosya ve resim gönderme iznin yok' });
+    if (srv && (p.image || p.audio || (Array.isArray(p.files) && p.files.length)) && !chPerm(srv, chObj, me, 'attach')) return cb({ error: 'Bu odada dosya ve resim gönderme iznin yok' });
+    if (srv && p.gif && !chPerm(srv, chObj, me, 'embed')) return cb({ error: 'Bu odada GIF gönderme iznin yok' });
+    if (srv && ['poll', 'plan', 'dice', 'coin', 'xox', 'song'].includes(p.kind) && !chPerm(srv, chObj, me, 'apps')) return cb({ error: 'Bu odada anket, plan ve oyun kullanma iznin yok' });
     if (srv && chObj.type === 'forum' && !p.thread && !clean(p.title, 100)) return cb({ error: 'Gönderi başlığı gerekli' });
     const slowSec = (chObj?.slow || srv?.slow || 0);
-    if (srv && slowSec && !isMod(srv, me) && !chPerm(srv, chObj, me, 'manage')) {
+    if (srv && slowSec && !isMod(srv, me) && !can(srv, me, 'slowBypass') && !chPerm(srv, chObj, me, 'manage')) {
       const key = cur + '|' + me, last = slowMap.get(key) || 0, wait = slowSec * 1000 - (Date.now() - last);
       if (wait > 0) return cb({ error: `Yavaş mod açık: ${Math.ceil(wait / 1000)} saniye bekle` });
       slowMap.set(key, Date.now());
@@ -2807,7 +2815,7 @@ io.on('connection', socket => {
       if ((src.image || src.audio) && !chPerm(s, c, me, 'attach')) return cb({ error: 'Bu odada resim ve ses gönderemezsin' });
       if (c.type === 'forum') return cb({ error: 'Forum gönderileri iletilemez' });
       const slowSec = (c.slow || s.slow || 0);
-      if (slowSec && !isMod(s, me) && !chPerm(s, c, me, 'manage')) {
+      if (slowSec && !isMod(s, me) && !can(s, me, 'slowBypass') && !chPerm(s, c, me, 'manage')) {
         const last = slowMap.get(to + '|' + me) || 0, wait = slowSec * 1000 - (Date.now() - last);
         if (wait > 0) return cb({ error: `Yavaş mod açık: ${Math.ceil(wait / 1000)} saniye bekle` });
         slowMap.set(to + '|' + me, Date.now());
@@ -3097,7 +3105,7 @@ io.on('connection', socket => {
   socket.on('pin', msgId => {
     if (!canAccess(me, cur)) return;
     const f = findChannel(cur);
-    if (f && !isMod(f.s, me) && !chPerm(f.s, f.c, me, 'manage')) return;
+    if (f && !isMod(f.s, me) && !can(f.s, me, 'pinMessages') && !chPerm(f.s, f.c, me, 'manage')) return socket.emit('toast', 'Bu odada mesaj sabitleme iznin yok');
     const msg = findMsg(cur, msgId);
     if (!msg) return;
     msg.pinned = !msg.pinned;
@@ -3114,6 +3122,7 @@ io.on('connection', socket => {
   // ----- Birlikte izle -----
   socket.on('watchSet', url => {
     if (!canAccess(me, cur)) return;
+    { const f = findChannel(cur); if (f && !chPerm(f.s, f.c, me, 'apps')) return socket.emit('toast', 'Bu odada birlikte izleme başlatma iznin yok'); }
     const m = /(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/.exec(String(url || '')) || /^([\w-]{11})$/.exec(String(url || '').trim());
     if (!m) return socket.emit('toast', 'Geçerli bir YouTube linki değil');
     const st = { videoId: m[1], playing: true, time: 0, at: Date.now(), by: me };
@@ -3311,7 +3320,7 @@ io.on('connection', socket => {
   });
   // Webhook yönetimi: sunucu ya da oda yönetme yetkisi gerekir
   const whView = w => ({ id: w.id, name: w.name, avatar: w.avatar || null, channelId: w.channelId, by: w.by, createdAt: w.createdAt, uses: w.uses || 0, lastAt: w.lastAt || null, url: `${baseUrl()}/api/webhooks/${w.id}/${w.token}` });
-  const whSrv = serverId => { const s = db.servers.find(x => x.id === serverId); return s && !s.public && (s.owner === me || can(s, me, 'manageServer') || can(s, me, 'manageChannels')) ? s : null; };
+  const whSrv = serverId => { const s = db.servers.find(x => x.id === serverId); return s && !s.public && (s.owner === me || can(s, me, 'manageWebhooks') || can(s, me, 'manageServer')) ? s : null; };
   socket.on('levelsGet', ({ serverId } = {}, cb = () => {}) => { const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' }); cb({ cfg: { on: s.levels?.on !== false, announce: s.levels?.announce || 'same', channel: s.levels?.channel || null, rewards: s.levels?.rewards || [], stack: s.levels?.stack !== false } }); });
   socket.on('levelsSave', ({ serverId, cfg } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageServer'); if (!s || s.public) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
@@ -3399,7 +3408,7 @@ io.on('connection', socket => {
   socket.on('roleSave', ({ serverId, role } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Rolleri yönetme yetkin yok' });
     const name = clean(role?.name, 30); if (!name) return cb({ error: 'Rol adı gerekli' });
-    const perms = (role.perms || []).filter(p => PERMS.includes(p) && (s.owner === me || can(s, me, p)));
+    const perms = (role.perms || []).filter(p => PERMS.includes(p) && (s.owner === me || can(s, me, p)) && (p !== 'administrator' || s.owner === me || (r0 => r0?.perms?.includes('administrator'))(s.customRoles.find(x => x.id === role.id))));
     const color = /^#[0-9a-f]{6}$/i.test(role.color) ? role.color : '#99aab5';
     let r = s.customRoles.find(x => x.id === role.id);
     if (r?.bot) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); r.color = color; pushSrv(s); return cb({ ok: true, id: r.id }); }
@@ -3756,6 +3765,7 @@ io.on('connection', socket => {
     if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun' });
     const msg = findMsg(cur, msgId); text = cleanMsg(text);
     if (!msg || !text || msg.kind === 'system') return cb({ error: 'Gönderilemedi' });
+    { const f = findChannel(cur); if (f && (!chPerm(f.s, f.c, me, 'send') && f.c.type !== 'forum' || !chPerm(f.s, f.c, me, 'thread'))) return cb({ error: 'Bu odada yanıt dizisine yazma iznin yok' }); if (f && timedOut(f.s, me)) return cb({ error: 'Susturuldun' }); }
     if (serverOf(cur)?.filter) text = filterText(text);
     (msg.thread ||= []).push({ id: id(), author: me, text, time: Date.now() });
     if (msg.thread.length > 300) msg.thread.shift();
@@ -3793,7 +3803,9 @@ io.on('connection', socket => {
   socket.on('media', st => {
     if (!myVoice) return;
     const was = voiceMedia.get(socket.id)?.screen, now = { cam: !!st?.cam, screen: !!st?.screen };
-    { const f = findChannel(myVoice); if (f && (now.cam || now.screen) && !chPerm(f.s, f.c, me, 'stream')) { socket.emit('toast', 'Bu odada kamera ve ekran paylaşma iznin yok'); now.cam = now.screen = false; } }
+    { const f = findChannel(myVoice);
+      if (f && now.cam && !chPerm(f.s, f.c, me, 'video')) { socket.emit('toast', 'Bu odada kamera açma iznin yok'); now.cam = false; }
+      if (f && now.screen && !chPerm(f.s, f.c, me, 'stream')) { socket.emit('toast', 'Bu odada ekran paylaşma iznin yok'); now.screen = false; } }
     voiceMedia.set(socket.id, now);
     if (now.screen) { const lm = liveMeta.get(socket.id) || { since: Date.now() }; Object.assign(lm, { q: clean(st?.q, 12), viewers: Math.min(+st?.viewers || 0, 99), audio: !!st?.audio }); liveMeta.set(socket.id, lm); }
     else liveMeta.delete(socket.id);

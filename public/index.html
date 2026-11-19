@@ -574,7 +574,8 @@
   #gif-btn { height: 40px; padding: 0 6px; border-radius: 12px; flex-shrink: 0; color: var(--muted); display: grid; place-items: center; }
   #gif-btn span { font-size: 11px; font-weight: 900; letter-spacing: .04em; border: 2px solid currentColor; border-radius: 6px; padding: 1px 4px; line-height: 1.2; }
   #gif-btn:hover, #gif-btn.on { background: var(--hover); color: var(--ink); }
-  #gif-btn[hidden] { display: none; }
+  #gif-btn[hidden], #gif-btn.noperm { display: none; }
+  .nohist { display: flex; gap: 10px; align-items: flex-start; margin: 10px 16px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px dashed var(--line); color: var(--muted); font-size: 13px; font-weight: 600; } .nohist .ic { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; } .nohist b { display: block; color: var(--ink); font-size: 13.5px; }
   #gifpanel { display: none; position: absolute; bottom: 58px; right: 50px; width: 420px; height: 470px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 6; flex-direction: column; overflow: hidden; animation: popIn .18s var(--ease-out); transform-origin: bottom right; }
   #gifpanel.on { display: flex; }
   .gp-search { margin: 10px 10px 6px; display: flex; align-items: center; gap: 8px; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: rgba(0,0,0,.22); padding: 0 12px; color: var(--muted); }
@@ -1813,7 +1814,16 @@
   .pt em { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; color: var(--muted); opacity: 0; }
   .pt:hover em { opacity: 1; } .pt em:hover { background: var(--red); color: #fff; } .pt em .ic { width: 12px; height: 12px; }
   .prows { display: grid; gap: 8px; }
-  .pr-h { font-size: 14px; color: var(--muted); padding: 2px 2px 4px; } .pr-h b { color: var(--ink); }
+  .pr-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--muted); padding: 2px 2px 4px; } .pr-h b { color: var(--ink); }
+  .pr-bulk { display: flex; gap: 4px; } .pr-bulk button { width: 30px; height: 26px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-weight: 900; display: grid; place-items: center; } .pr-bulk button .ic { width: 14px; height: 14px; } .pr-bulk button:hover { color: var(--ink); border-color: var(--accent-2); }
+  .pr-q { display: flex; align-items: center; gap: 8px; } .prows .pr-q { margin: 0 0 4px; }
+  .pr-sec { display: grid; gap: 8px; } .pr-sec h5 { margin: 8px 2px 0; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+  .pr-via { display: block; font-style: normal; color: var(--accent-2); font-weight: 700; margin-top: 2px; }
+  .pcheck { margin-top: 6px; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.025); display: grid; gap: 8px; }
+  .pc-h { display: flex; align-items: center; gap: 8px; font-size: 13.5px; } .pc-h .ic { width: 16px; height: 16px; color: var(--muted); }
+  .pc-why { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, #4cc38a 14%, transparent); color: #7fe0ae; font-weight: 700; font-size: 13px; margin-bottom: 6px; } .pc-why.no { background: color-mix(in srgb, #e5484d 14%, transparent); color: #ff8f92; } .pc-why .ic { width: 16px; height: 16px; flex: 0 0 auto; }
+  .pc-chips { display: flex; flex-wrap: wrap; gap: 6px; } .pc-chips span { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px 5px 7px; border-radius: 99px; font-size: 12.5px; font-weight: 700; background: var(--bg); border: 1px solid var(--line); }
+  .pc-chips span .ic { width: 13px; height: 13px; } .pc-chips .ok .ic { color: #4cc38a; } .pc-chips .no { color: var(--muted); } .pc-chips .no .ic { color: #e5484d; }
   .pr { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
   .pr-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.05); color: var(--muted); flex-shrink: 0; }
   .pr-ic .ic { width: 17px; height: 17px; }
@@ -3555,14 +3565,16 @@ const perm = (s, p) => !!s && (s.owner === S.me || !!s.myPerms?.includes(p));
 const BOT_NAME = 'Kanka Bot';
 const rolesOf = (s, n) => s ? (s.customRoles || []).filter(r => (s.memberRoles?.[n] || []).includes(r.id)) : [];
 const roleColor = (s, n) => rolesOf(s, n).find(r => r.color && r.color !== '#99aab5')?.color || null;
-const PERM_TXT = { manageServer: ['Sunucuyu yönet', 'Ad, simge, afiş, filtre, yavaş mod ve hoş geldin ekranını değiştirir'], manageRoles: ['Rolleri yönet', 'Kendinden düşük rolleri oluşturur, düzenler ve üyelere verir'],
+const PERM_TXT = { administrator: ['Yönetici', 'Her yetkiye sahip olur ve odalardaki tüm kısıtlamaları aşar. Sadece çok güvendiğin kişilere ver; bu yetkiyi sadece sunucu sahibi verebilir.'], manageWebhooks: ['Webhook\'ları yönet', 'Webhook oluşturur, düzenler, siler; dış servisleri odalara bağlar'],
+  pinMessages: ['Mesaj sabitle', 'Mesaj silme yetkisi olmadan her odada mesaj sabitleyip kaldırır'], slowBypass: ['Yavaş moddan etkilenme', 'Yavaş mod açık odalarda beklemeden yazar'],
+  manageServer: ['Sunucuyu yönet', 'Ad, simge, afiş, filtre, yavaş mod ve hoş geldin ekranını değiştirir'], manageRoles: ['Rolleri yönet', 'Kendinden düşük rolleri oluşturur, düzenler ve üyelere verir'],
   manageChannels: ['Odaları yönet', 'Oda ve kategori açar, siler, düzenler, izinlerini ayarlar'], manageEmojis: ['Emojileri yönet', 'Sunucuya özel emoji ekler ve siler'], viewAudit: ['Kayıtları görüntüle', 'Sunucuda kimin ne değiştirdiğini görür'],
   manageMessages: ['Mesajları yönet', 'Başkalarının mesajını siler, sabitler, salt okunur odalara yazar'], mentionEveryone: ['@herkes ve tüm rolleri etiketle', '@herkes kullanır, etiketlenemez rolleri de etiketler'],
   kick: ['Üye at', 'Üyeleri sunucudan çıkarır (geri gelebilirler)'], ban: ['Üye yasakla', 'Üyeleri kalıcı olarak yasaklar'], timeout: ['Sustur (yazı)', 'Üyeleri bir süre yazamaz ve seslere giremez yapar, uyarı verir'],
   voiceMute: ['Seste sustur', 'Sesli odadaki birinin mikrofonunu kapatır, o açamaz'], voiceMove: ['Seste taşı ve çıkar', 'Sesli odadakileri başka odaya taşır ya da bağlantısını keser'] };
-const PERM_GROUPS = [['Genel', 'gear', ['manageServer', 'manageRoles', 'manageChannels', 'manageEmojis', 'viewAudit']], ['Sohbet', 'chat', ['manageMessages', 'mentionEveryone']],
+const PERM_GROUPS = [['Genel', 'gear', ['administrator', 'manageServer', 'manageRoles', 'manageChannels', 'manageEmojis', 'manageWebhooks', 'viewAudit']], ['Sohbet', 'chat', ['manageMessages', 'pinMessages', 'slowBypass', 'mentionEveryone']],
   ['Üyeler', 'users', ['kick', 'ban', 'timeout']], ['Ses', 'volume', ['voiceMute', 'voiceMove']]];
-const PERM_DANGER = new Set(['manageServer', 'manageRoles', 'ban']);
+const PERM_DANGER = new Set(['administrator', 'manageServer', 'manageRoles', 'ban']);
 const roleIconOf = (s, n) => (s?.customRoles || []).find(r => r.icon && (s.memberRoles?.[n] || []).includes(r.id))?.icon || '';
 const TIMEOUTS = [[1, '1 dakika'], [5, '5 dakika'], [10, '10 dakika'], [60, '1 saat'], [1440, '1 gün'], [10080, '1 hafta']];
 const timedOutLeft = (s, n) => Math.max(0, (s?.timeouts?.[n] || 0) - Date.now());
@@ -5115,7 +5127,7 @@ function showServerSettings(s, tab, focus) {
     ['template', 'Şablon', 'file', s.owner === S.me && P('manageServer')],
     ['badges', 'Rozetler', 'check', s.owner === S.me && !s.public && s.id !== 's1'],
     ['levels', 'Seviyeler', 'trophy', !s.public && P('manageServer')],
-    ['webhooks', 'Webhook\'lar', 'link', !s.public && (s.owner === S.me || P('manageServer') || P('manageChannels'))],
+    ['webhooks', 'Webhook\'lar', 'link', !s.public && (s.owner === S.me || P('manageServer') || P('manageWebhooks'))],
     ['emoji', 'Emojiler', 'smile', mod || P('manageEmojis')], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod || P('viewAudit')]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
@@ -5390,7 +5402,7 @@ function showServerSettings(s, tab, focus) {
             <label class="chk"><input type="checkbox" name="hoist" ${edit.hoist ? 'checked' : ''}><span>Üye listesinde ayrı göster<small>Bu roldekiler sağdaki listede "${esc(edit.name || 'rol adı')}" başlığı altında toplanır</small></span></label>
             <label class="chk"><input type="checkbox" name="mentionable" ${edit.mentionable !== false ? 'checked' : ''}><span>Herkes bu rolü @etiketleyebilsin<small>Kapalıysa sadece "@herkes ve tüm rolleri etiketle" yetkisi olanlar etiketleyebilir</small></span></label>`}
           </div>
-          <div class="rl-pane" data-pane="perms" ${rtab === 'perms' ? '' : 'hidden'}>${edit.bot ? '' : `<span class="rl-q rl-pq">${ic('search')}<input id="rp-q" placeholder="Yetki ara (örn. sustur, oda, mesaj)" autocomplete="off"></span>`}${edit.bot ? '<p class="hint">Kanka Bot rolünün yetkileri bot modüllerinden gelir.</p>' : PERM_GROUPS.map(([g, gi, keys]) => `<div class="rl-pg"><h5>${ic(gi)}${g}</h5>${keys.map(k => `<label class="rl-perm ${PERM_DANGER.has(k) ? 'danger' : ''}"><span><b>${PERM_TXT[k][0]}</b><small>${PERM_TXT[k][1]}</small></span><input type="checkbox" name="p" value="${k}" ${edit.perms.includes(k) ? 'checked' : ''} ${P(k) ? '' : 'disabled title="Bu yetki sende yok, başkasına veremezsin"'}><i class="tg"></i></label>`).join('')}</div>`).join('')}
+          <div class="rl-pane" data-pane="perms" ${rtab === 'perms' ? '' : 'hidden'}>${edit.bot ? '' : `<span class="rl-q rl-pq">${ic('search')}<input id="rp-q" placeholder="Yetki ara (örn. sustur, oda, mesaj)" autocomplete="off"></span>`}${edit.bot ? '<p class="hint">Kanka Bot rolünün yetkileri bot modüllerinden gelir.</p>' : PERM_GROUPS.map(([g, gi, keys]) => `<div class="rl-pg"><h5>${ic(gi)}${g}</h5>${keys.map(k => `<label class="rl-perm ${PERM_DANGER.has(k) ? 'danger' : ''}"><span><b>${PERM_TXT[k][0]}</b><small>${PERM_TXT[k][1]}</small></span><input type="checkbox" name="p" value="${k}" ${edit.perms.includes(k) ? 'checked' : ''} ${k === 'administrator' && s.owner !== S.me ? 'disabled title="Yönetici yetkisini sadece sunucu sahibi verebilir"' : P(k) ? '' : 'disabled title="Bu yetki sende yok, başkasına veremezsin"'}><i class="tg"></i></label>`).join('')}</div>`).join('')}
             ${edit.bot ? '' : '<div class="rl-quick"><span>Hızlı seçim:</span><button type="button" data-preset="mod">Moderatör</button><button type="button" data-preset="voice">Ses yetkilisi</button><button type="button" data-preset="none">Hiçbiri</button></div>'}</div>
           <div class="rl-pane" data-pane="members" ${rtab === 'members' ? '' : 'hidden'}><input class="field" id="rm-q" placeholder="Üye ara…" style="margin:0 0 10px"><div class="rm-list" id="rm-list"></div></div>
           <div class="rl-bar ${edit.id ? '' : 'on'}" id="r-bar"><span>${edit.id ? 'Kaydedilmemiş değişikliklerin var' : 'Yeni rolü oluşturmak için kaydet'}</span><button type="button" id="r-cancel">${edit.id ? 'Sıfırla' : 'Vazgeç'}</button><button class="primary">${edit.id ? 'Kaydet' : 'Oluştur'}</button></div></form>` : `<div class="rl-empty">${ic('shield')}<b>Bir rol seç</b><span>Soldan bir rolü seç ya da "Yeni" ile rol oluştur.</span></div>`}</section></div></div>`;
@@ -5406,7 +5418,7 @@ function showServerSettings(s, tab, focus) {
       const dirty = () => { ssOpen.dirty = true; $('#r-bar').classList.add('on'); };
       f.addEventListener('input', e => { if (!e.target.closest('#rm-q, #rp-q')) dirty(); }); f.addEventListener('change', e => { if (!e.target.closest('#rm-q, #rp-q')) dirty(); });
       $('#r-back').onclick = () => { if (ssOpen.dirty && !confirm('Kaydedilmemiş değişiklikler silinsin mi?')) return; ssOpen.dirty = false; ssOpen.focus = null; page.roles(); };
-      if ($('#rp-q')) $('#rp-q').oninput = e => { const v = e.target.value.toLocaleLowerCase('tr').trim(); f.querySelectorAll('.rl-pg').forEach(g => { let n = 0; g.querySelectorAll('.rl-perm').forEach(p => { const on = !v || p.textContent.toLocaleLowerCase('tr').includes(v); p.hidden = !on; n += on; }); g.hidden = !n; }); };
+      if ($('#rp-q')) $('#rp-q').oninput = e => { const v = foldTr(e.target.value).trim(); f.querySelectorAll('.rl-pg').forEach(g => { let n = 0; g.querySelectorAll('.rl-perm').forEach(p => { const on = !v || foldTr(p.textContent).includes(v); p.hidden = !on; n += on; }); g.hidden = !n; }); };
       f.querySelectorAll('[data-rtab]').forEach(b => b.onclick = () => { ssOpen.rtab = b.dataset.rtab; f.querySelectorAll('[data-rtab]').forEach(x => x.classList.toggle('on', x === b)); f.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== b.dataset.rtab); f.querySelector('.rowb .primary')?.toggleAttribute('hidden', b.dataset.rtab === 'members'); if (b.dataset.rtab === 'members') drawMembers(); });
       const prev = () => { const c = f.color.value; $('#r-prev-n').textContent = (f.name?.value || 'Yeni rol'); $('#r-prev-n').style.color = c; $('#r-prev-ic').style.setProperty('--c', c); $('#r-prev-ic').innerHTML = f.icon?.value ? esc(f.icon.value) : '<i></i>'; f.querySelectorAll('[data-sw]').forEach(x => x.classList.toggle('on', x.dataset.sw === c.toLowerCase())); };
       f.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { f.color.value = b.dataset.sw; prev(); dirty(); });
@@ -6134,7 +6146,7 @@ function enterRoom(id, placeholder, hello) {
     if (draftFor !== id) return; // bu arada başka odaya geçildiyse eski cevabı yok say
     if (!r || r.error) { $('#messages').innerHTML = `<div class="loadmore">${esc(r?.error || 'Mesajlar yüklenemedi, sayfayı yenile')}</div>`; return r && toast(r.error); }
     S.msgs = r.messages; S.playlist = r.playlist;
-    histMore = r.messages.length >= 150;
+    histMore = !r.noHistory && r.messages.length >= 150; S.noHistory = !!r.noHistory;
     const lr = lastRead[id] || 0;
     newLineAt = lr ? S.msgs.find(m => m.time > lr && m.author && m.author !== S.me)?.id || null : null;
     setWatch(r.watch);
@@ -6169,6 +6181,7 @@ function renderMessages(toBottom) {
   const atBottom = toBottom || box.scrollHeight - box.scrollTop - box.clientHeight < 120;
   const quiet = !histMore && !S.msgs.some(m => m.author);
   let prev = null, html = histMore ? '<div class="loadmore" id="loadmore">Yukarı kaydırınca eski mesajlar yüklenir</div>' : quiet ? emptyHTML() : helloHTML;
+  if (S.noHistory && S.view === 'server') html += `<div class="nohist">${ic('clock')}<span><b>Bu odada eski mesajları göremezsin</b>Sadece sabitlenenler, kendi mesajların ve sen buradayken yazılanlar görünür.</span></div>`;
   for (const m of S.msgs) { if (m.id === newLineAt) html += '<div class="newline"><span>Yeni mesajlar</span></div>';
     // tek bir bozuk mesaj bütün odayı boş bırakmasın: o mesajı atla, gerisini göster
     try { html += msgHTML(m, prev); prev = m; } catch (e) { console.error('Mesaj çizilemedi', m?.id, e); } }
@@ -8214,9 +8227,9 @@ document.addEventListener('keyup', e => { if (e.code === 'KeyV' && pttDown) { pt
 window.addEventListener('blur', () => { if (pttDown) { pttDown = false; applyMute(); } });
 $('#mute').onclick = () => { if (!canSpeakNow()) return toast(srvMutedNow ? 'Bir yetkili seni seste susturdu, kaldırana kadar konuşamazsın' : vch()?.c.type === 'stage' ? 'Sahnede konuşmak için ✋ el kaldır' : 'Bu odada konuşma iznin yok'); muted = !muted; applyMute(); };
 $('#vleave').onclick = () => leaveVoice(false);
-const streamOk = () => vch()?.c.canStream === false ? (toast('Bu odada kamera ve ekran paylaşma iznin yok'), false) : true;
-$('#vcam').onclick = () => streamOk() && startVideo('cam');
-$('#vscreen').onclick = () => streamOk() && startVideo('screen');
+const streamOk = k => { const c = vch()?.c; if (k === 'cam' ? (c?.canVideo ?? c?.canStream) === false : c?.canStream === false) { toast(k === 'cam' ? 'Bu odada kamera açma iznin yok' : 'Bu odada ekran paylaşma iznin yok'); return false; } return true; };
+$('#vcam').onclick = () => streamOk('cam') && startVideo('cam');
+$('#vscreen').onclick = () => streamOk('screen') && startVideo('screen');
 function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'cam'); $('#vscreen').classList.toggle('on', videoKind === 'screen'); fsSync(); }
 
 // --- Sahne (ses/görüntü kutucukları) ---
@@ -9080,7 +9093,7 @@ function openThread(id) {
   const m = S.msgs.find(x => x.id === id); if (!m) return;
   modal(`<h3>${ic('thread')}${m.title ? esc(m.title) : 'Konu'}</h3><p class="hint"><b style="color:${userColor(m.author || '')}">${esc(m.author || 'Sistem')}</b>: ${esc((m.text || m.plan?.title || m.poll?.question || m.song?.title || 'görsel').slice(0, 140))}</p>
     <div class="thread-box" id="thr-box"></div>
-    <form id="thr-form" style="display:flex;gap:8px"><input class="field" id="thr-in" placeholder="Konuya yanıt yaz..." autocomplete="off" style="margin:0"><button class="primary" style="width:auto;padding:0 18px;margin:0" aria-label="Gönder">${ic('send')}</button></form>
+    ${S.view === 'server' && S.channel?.canThread === false ? '<p class="hint" style="margin:0">Bu odada yanıt dizilerine yazma iznin yok.</p>' : ''}<form id="thr-form" style="display:flex;gap:8px;${S.view === 'server' && S.channel?.canThread === false ? 'display:none' : ''}"><input class="field" id="thr-in" placeholder="Konuya yanıt yaz..." autocomplete="off" style="margin:0"><button class="primary" style="width:auto;padding:0 18px;margin:0" aria-label="Gönder">${ic('send')}</button></form>
     <div class="rowb"><button id="mx">Kapat</button></div>`);
   renderThread();
   $('#mx').onclick = () => { openThreadId = null; closeModal(); };
@@ -9979,12 +9992,20 @@ const PERM_ROWS = {
 function permFor(s, ov, n, key) {
   if (s.owner === n) return true;
   const rs = s.memberRoles?.[n] || [], rolePerms = new Set(rs.flatMap(r => s.customRoles.find(x => x.id === r)?.perms || []));
-  if (s.roles?.[n] === 'mod' || rolePerms.has('manageChannels')) return true;
+  if (s.roles?.[n] === 'mod' || rolePerms.has('manageChannels') || rolePerms.has('administrator')) return true;
   if (key === 'send' && rolePerms.has('manageMessages')) return true;
+  const g = (o, k) => o?.[k] !== undefined ? o[k] : k === 'video' ? o?.stream : undefined;
   const val = k => { let v = k === 'manage' ? rolePerms.has('manageMessages') : k === 'mention' ? rolePerms.has('mentionEveryone') : true;
-    if (ov['@everyone']?.[k] !== undefined) v = ov['@everyone'][k]; if (rs.some(r => ov[r]?.[k] === false)) v = false; if (rs.some(r => ov[r]?.[k] === true)) v = true;
-    if (ov['u:' + n]?.[k] !== undefined) v = ov['u:' + n][k]; return v; };
+    if (g(ov['@everyone'], k) !== undefined) v = g(ov['@everyone'], k); if (rs.some(r => g(ov[r], k) === false)) v = false; if (rs.some(r => g(ov[r], k) === true)) v = true;
+    if (g(ov['u:' + n], k) !== undefined) v = g(ov['u:' + n], k); return v; };
   if (!val('view')) return false; return key === 'view' || val(key);
+}
+const foldTr = t => String(t || '').toLocaleLowerCase('tr').replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function pcheckHTML(s, ov, n, keys) {
+  const rs = s.memberRoles?.[n] || [], rp = new Set(rs.flatMap(r => s.customRoles.find(x => x.id === r)?.perms || []));
+  const why = s.owner === n ? 'Sunucu sahibi, her şeye izinli' : rp.has('administrator') ? 'Yönetici yetkisi var, her şeye izinli' : rp.has('manageChannels') || s.roles?.[n] === 'mod' ? 'Odaları yönetebildiği için her şeye izinli' : '';
+  const sees = permFor(s, ov, n, 'view');
+  return `${why ? `<div class="pc-why">${ic('shield')}${why}</div>` : !sees ? `<div class="pc-why no">${ic('eye')}Bu odayı göremiyor, diğer izinlerin önemi yok</div>` : ''}<div class="pc-chips">${keys.map(k => { const ok = permFor(s, ov, n, k); return `<span class="${ok ? 'ok' : 'no'}">${ic(ok ? 'check' : 'x')}${PERM_ROWS[k][0]}</span>`; }).join('')}</div>`;
 }
 let chsOpen = null;
 function showChSettings(s, kind, id, tab = 'general', back) {
@@ -10034,11 +10055,16 @@ function showChSettings(s, kind, id, tab = 'general', back) {
         <div class="pgrid"><div class="ptargets"><div class="pt-h">Roller<div class="pt-add">${addable.length ? `<button id="pt-addb" title="Rol ekle">${ic('plus')}</button>` : ''}</div></div>
             ${targets.map(t => `<button class="pt ${t === st.target ? 'on' : ''}" data-tg="${t}"><i style="background:${tColor(t)}"></i><span>${esc(tName(t))}</span>${t !== '@everyone' ? `<em data-rm="${t}" title="Kaldır">${ic('x')}</em>` : ''}</button>`).join('')}
             ${roles.length ? '' : '<p class="hint" style="padding:8px 10px">Rol oluşturunca burada role özel izin verebilirsin.</p>'}</div>
-          <div class="prows"><div class="pr-h"><b>${esc(tName(st.target))}</b> için izinler</div>
-            ${keys.map(k => { const v = cur[k]; return `<div class="pr"><i class="pr-ic">${ic(PERM_ROWS[k][2])}</i><span><b>${PERM_ROWS[k][0]}</b><small>${PERM_ROWS[k][1]}</small></span>
-              <div class="tri" role="radiogroup"><button data-k="${k}" data-v="no" class="no ${v === false ? 'on' : ''}" title="Yasak">${ic('x')}</button><button data-k="${k}" data-v="inh" class="inh ${v === undefined ? 'on' : ''}" title="${st.target === '@everyone' ? 'Varsayılan (izinli)' : 'Devral'}">/</button><button data-k="${k}" data-v="yes" class="yes ${v === true ? 'on' : ''}" title="İzinli">${ic('check')}</button></div></div>`; }).join('')}
-            <div class="pinfo">${ic('users')}<span>Bu ayarlarla <b>${members.length}</b> üyeden <b>${viewN}</b> kişi bu ${isCat ? 'kategorideki eşitli odaları' : 'odayı'} görebilir. Sahip ve oda yöneticileri her zaman görür.</span></div></div></div></div>`,
+          <div class="prows"><div class="pr-h"><span><b>${esc(tName(st.target))}</b> için izinler</span><span class="pr-bulk"><button data-bulk="no" title="Hepsini yasakla">${ic('x')}</button><button data-bulk="inh" title="Hepsini ${st.target === '@everyone' ? 'varsayılana' : 'devrale'} çevir">/</button><button data-bulk="yes" title="Hepsine izin ver">${ic('check')}</button></span></div>
+            <span class="rl-q pr-q">${ic('search')}<input id="pr-q" placeholder="İzin ara (örn. gif, kamera, geçmiş)" value="${esc(st.pq || '')}" autocomplete="off"></span>
+            ${PERM_SECS.map(([sec, ks]) => { const list = ks.filter(k => keys.includes(k)); return list.length ? `<div class="pr-sec"><h5>${sec}</h5>${list.map(k => { const v = cur[k], via = k === 'video' && v === undefined && cur.stream !== undefined; return `<div class="pr" data-pk="${k}" data-txt="${esc(foldTr(PERM_ROWS[k][0] + ' ' + PERM_ROWS[k][1]))}"><i class="pr-ic">${ic(PERM_ROWS[k][2])}</i><span><b>${PERM_ROWS[k][0]}</b><small>${PERM_ROWS[k][1]}${via ? ` <em class="pr-via">Şu an "Ekran paylaş" ayarını izliyor.</em>` : ''}</small></span>
+              <div class="tri" role="radiogroup"><button data-k="${k}" data-v="no" class="no ${v === false ? 'on' : ''}" title="Yasak">${ic('x')}</button><button data-k="${k}" data-v="inh" class="inh ${v === undefined ? 'on' : ''}" title="${st.target === '@everyone' ? 'Varsayılan (izinli)' : 'Devral'}">/</button><button data-k="${k}" data-v="yes" class="yes ${v === true ? 'on' : ''}" title="İzinli">${ic('check')}</button></div></div>`; }).join('')}</div>` : ''; }).join('')}
+            <p class="hint pr-none" hidden>Bu adla izin yok.</p>
+            <div class="pinfo">${ic('users')}<span>Bu ayarlarla <b>${members.length}</b> üyeden <b>${viewN}</b> kişi bu ${isCat ? 'kategorideki eşitli odaları' : 'odayı'} görebilir. Sahip, Yönetici ve oda yöneticileri her zaman görür.</span></div>
+            <div class="pcheck"><div class="pc-h">${ic('search')}<b>Bir üyenin iznini kontrol et</b></div><select class="msel" id="pc-u"><option value="">Üye seç…</option>${members.filter(n => n !== 'Claude').slice(0, 400).map(n => `<option value="${esc(n)}" ${st.pcu === n ? 'selected' : ''}>${esc(dn(n))}</option>`).join('')}</select><div id="pc-out">${st.pcu ? pcheckHTML(s, st.perms, st.pcu, keys) : '<p class="hint" style="margin:6px 0 0">Kaydetmeden önce, bu ayarlarla o kişinin neler yapabileceğini gösterir.</p>'}</div></div></div></div></div>`,
     };
+    const keepSel = ['.st-main', '#cs-main', '.prows', '.ptargets'], keep = keepSel.map(q => $('#modal-box').classList.contains('chset') ? $('#modal-box ' + q)?.scrollTop || 0 : 0);
+    const focusQ = document.activeElement?.id === 'pr-q' ? $('#pr-q').selectionStart : null, tabChanged = st.lastTab !== tab; st.lastTab = tab;
     modal(`<nav class="st-nav"><h4>${isCat ? 'KATEGORİ' : { voice: 'SESLİ ODA', stage: 'SAHNE', forum: 'FORUM' }[obj.type] || 'YAZILI ODA'}</h4><div class="cs-title">${isCat ? ic('grid') : chIcon(obj)}<span>${title}</span></div>
         <button data-ctab="general" class="${tab === 'general' ? 'on' : ''}">${ic('gear')}Genel</button><button data-ctab="perms" class="${tab === 'perms' ? 'on' : ''}">${ic('shield')}İzinler</button>
         <button id="mx">${ic('x')}Kapat</button></nav>
@@ -10048,6 +10074,22 @@ function showChSettings(s, kind, id, tab = 'general', back) {
         <div class="cs-prev"><div class="cs-pc">${isCat ? `<div class="label cat-label">${ic('chevron')}${esc(st.name)}</div>${s.channels.filter(c => c.cat === obj.id).slice(0, 4).map(c => `<div class="room">${chIcon(c)}${esc(c.name)}</div>`).join('')}`
           : `<div class="room active">${chIcon(obj)}${esc(voiceLike(obj.type) ? st.name : st.name.toLocaleLowerCase('tr').replace(/\s+/g, '-'))}${st.perms['@everyone']?.view === false ? ic('lock', 'lockic') : st.perms['@everyone']?.send === false ? ic('megaphone', 'lockic') : ''}</div>`}</div>
           <div class="cs-stat"><b>${viewN}</b><span>/${members.length} üye görebilir</span></div></div></aside>`, 'settings chset');
+    keepSel.forEach((q, i) => { const el = $('#modal-box ' + q); if (el && !tabChanged) el.scrollTop = keep[i]; });
+    if (tabChanged) freshPage($('#modal-box .st-main'));
+    if ($('#pr-q')) {
+      const filt = () => { const v = foldTr($('#pr-q').value).trim(); st.pq = $('#pr-q').value; let n = 0;
+        $('#modal-box').querySelectorAll('.pr-sec').forEach(sec => { let m = 0; sec.querySelectorAll('.pr').forEach(r => { const on = !v || r.dataset.txt.includes(v); r.hidden = !on; m += on; }); sec.hidden = !m; n += m; });
+        $('#modal-box .pr-none').hidden = !!n || !v; };
+      $('#pr-q').oninput = filt; filt();
+      if (focusQ !== null) { $('#pr-q').focus(); $('#pr-q').setSelectionRange(focusQ, focusQ); }
+    }
+    $('#modal-box').querySelectorAll('[data-bulk]').forEach(b => b.onclick = () => {
+      const o = st.perms[st.target] ||= {}, vis = [...$('#modal-box').querySelectorAll('.pr[data-pk]')].filter(r => !r.hidden && !r.closest('.pr-sec')?.hidden).map(r => r.dataset.pk);
+      for (const k of vis) { if (b.dataset.bulk === 'yes' && (k === 'manage' || k === 'mention')) continue; if (b.dataset.bulk === 'inh') delete o[k]; else o[k] = b.dataset.bulk === 'yes'; }
+      if (!Object.keys(o).length && st.target === '@everyone') delete st.perms['@everyone'];
+      st.permsDirty = true; render();
+    });
+    if ($('#pc-u')) $('#pc-u').onchange = e => { st.pcu = e.target.value; $('#pc-out').innerHTML = st.pcu ? pcheckHTML(s, st.perms, st.pcu, keys) : ''; };
     const close = () => { const go = () => { chsOpen = null; closeModal(); back && setTimeout(back, 240); }; dirty() ? confirmBox('Kaydedilmemiş değişikliklerin silinecek. Kapatılsın mı?', go) : go(); };
     $('#mx').onclick = $('#st-x').onclick = () => saveGuard() || close();
     $('#modal-box').querySelectorAll('[data-ctab]').forEach(b => b.onclick = () => { tab = b.dataset.ctab; render(); });
@@ -10103,14 +10145,21 @@ function showChSettings(s, kind, id, tab = 'general', back) {
 const voiceLike = t => t === 'voice' || t === 'stage';
 const SLOW_OPTS = [[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [15, '15 sn'], [30, '30 sn'], [60, '1 dk'], [120, '2 dk'], [300, '5 dk'], [600, '10 dk'], [900, '15 dk'], [3600, '1 saat']];
 const slowTxt = v => (SLOW_OPTS.find(x => x[0] === v) || [0, v + ' sn'])[1];
-const KEYS_BY = { text: ['view', 'send', 'attach', 'react', 'mention', 'manage'], forum: ['view', 'send', 'attach', 'react', 'manage'], voice: ['view', 'connect', 'speak', 'stream'], stage: ['view', 'connect', 'manage'], cat: ['view', 'send', 'attach', 'react', 'mention', 'manage', 'connect', 'speak', 'stream'] };
+const KEYS_BY = { text: ['view', 'send', 'history', 'attach', 'embed', 'react', 'mention', 'apps', 'thread', 'manage'], forum: ['view', 'send', 'history', 'attach', 'embed', 'react', 'thread', 'manage'],
+  voice: ['view', 'connect', 'speak', 'video', 'stream'], stage: ['view', 'connect', 'video', 'stream', 'manage'], cat: ['view', 'send', 'history', 'attach', 'embed', 'react', 'mention', 'apps', 'thread', 'manage', 'connect', 'speak', 'video', 'stream'] };
+const PERM_SECS = [['Genel', ['view', 'manage']], ['Yazı', ['send', 'history', 'attach', 'embed', 'react', 'mention', 'apps', 'thread']], ['Ses', ['connect', 'speak', 'video', 'stream']]];
 Object.assign(PERM_ROWS, {
+  history: ['Mesaj geçmişini oku', 'Kapalıysa odaya girince eski mesajları göremezler, sadece o andan sonra yazılanları görürler.', 'clock'],
+  embed: ['Bağlantı önizlemesi ve GIF', 'Linklerin önizleme kartı çıkar ve GIF gönderebilirler.', 'link'],
+  apps: ['Anket, plan ve oyunlar', 'Anket, plan, zar, yazı tura, XOX, şarkı ve birlikte izle kullanabilirler.', 'grid'],
+  thread: ['Yanıt dizilerine yaz', 'Bir mesajın altında konu açıp yanıt yazabilirler.', 'thread'],
+  video: ['Kamera aç', 'Sesli odada kameralarını açabilirler.', 'video'],
   attach: ['Dosya ve resim gönder', 'Resim, ses kaydı ve dosya paylaşabilirler.', 'image'],
   react: ['Tepki ekle', 'Mesajlara yeni emoji tepkisi ekleyebilirler.', 'smile'],
   mention: ['@herkes etiketle', 'Tüm odayı tek mesajla bildirimle uyarabilirler.', 'at'],
   manage: ['Mesajları yönet', 'Başkalarının mesajlarını silebilir ve sabitleyebilirler. Sahnede: sahne moderatörü.', 'pin'],
   speak: ['Konuş', 'Kapalıysa odaya girebilir ama sadece dinleyebilirler.', 'mic'],
-  stream: ['Kamera ve ekran paylaş', 'Yayın açabilir, kamerasını açabilirler.', 'screen'],
+  stream: ['Ekran paylaş', 'Ekranlarını ya da bir pencereyi yayınlayabilirler.', 'screen'],
 });
 const chNotif = () => { try { return JSON.parse(store.get('kanka-chnotif') || '{}'); } catch { return {}; } };
 const setChNotif = (id, v) => { const o = chNotif(); v === 'mentions' ? delete o[id] : o[id] = v; store.set('kanka-chnotif', JSON.stringify(o)); syncPrefs(); };
@@ -10126,11 +10175,12 @@ function refreshPeerAudio() { for (const sid of Object.keys(peerNames)) { const 
 let viewAs = null; // { sid, roles: [], label }
 function permAs(s, ov, roles, key) {
   const rp = new Set(roles.flatMap(r => s.customRoles.find(x => x.id === r)?.perms || []));
-  if (rp.has('manageChannels')) return true;
+  if (rp.has('manageChannels') || rp.has('administrator')) return true;
   if (key === 'send' && rp.has('manageMessages')) return true;
+  const g = (o, k) => o?.[k] !== undefined ? o[k] : k === 'video' ? o?.stream : undefined;
   const val = k => { let v = k === 'manage' ? rp.has('manageMessages') : k === 'mention' ? rp.has('mentionEveryone') : true;
-    if (ov['@everyone']?.[k] !== undefined) v = ov['@everyone'][k];
-    if (roles.some(r => ov[r]?.[k] === false)) v = false; if (roles.some(r => ov[r]?.[k] === true)) v = true; return v; };
+    if (g(ov['@everyone'], k) !== undefined) v = g(ov['@everyone'], k);
+    if (roles.some(r => g(ov[r], k) === false)) v = false; if (roles.some(r => g(ov[r], k) === true)) v = true; return v; };
   if (!val('view')) return false; return key === 'view' || val(key);
 }
 const ovC = (s, c) => { const k = c.cat && catsOf(s).find(x => x.id === c.cat); return (c.sync && k ? k.perms : c.perms) || {}; };
@@ -10237,6 +10287,8 @@ function renderChanExtras() {
   const sec = S.channel.slow || S.server.slow || 0;
   if (sec && !S.channel.canManage) { const t = document.createElement('div'); t.id = 'slowtag'; t.innerHTML = `${ic('clock')} Yavaş mod: ${slowTxt(sec)}`; $('#compose').prepend(t); }
   document.querySelectorAll('#menu [data-a="image"], #menu [data-a="voice"]').forEach(b => b.style.display = S.channel.canAttach === false ? 'none' : '');
+  document.querySelectorAll('#menu [data-a="plan"], #menu [data-a="poll"], #menu [data-a="song"], #menu [data-a="watch"], #menu [data-a="dice"], #menu [data-a="coin"], #menu [data-a="xox"]').forEach(b => b.style.display = S.channel.canApps === false ? 'none' : '');
+  $('#gif-btn')?.classList.toggle('noperm', S.channel.canEmbed === false);
 }
 
 // --- Sunucu ayarları > Odalar: sürüklenebilir ağaç ---
