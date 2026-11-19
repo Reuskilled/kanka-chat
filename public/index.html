@@ -552,6 +552,8 @@
   #watch .bar button { padding: 5px 10px; border-radius: 8px; background: var(--hover); font-weight: 800; font-size: 12px; color: var(--ink); margin-left: 6px; }
   #yt-wrap { aspect-ratio: 16/9; max-height: 42vh; margin: 0 auto; }
   #yt-wrap iframe, #yt-wrap > div { width: 100%; height: 100%; }
+  #livecard .lc-ph > svg { width: 26px; height: 26px; color: var(--muted); }
+  #livecard .lc-go:disabled { opacity: .55; cursor: not-allowed; }
   .sq-jump { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 4px; font-size: 13px; color: var(--muted); }
   .sq-jump button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-size: 13px; cursor: pointer; }
   .sq-jump button:hover { border-color: var(--accent); } .sq-jump svg { width: 14px; height: 14px; }
@@ -7873,13 +7875,13 @@ function closeLiveCard() { clearInterval(liveCardT); liveCardT = null; $('#livec
 function openLiveCard(n, ch, anchor) {
   if ($('#livecard')?.dataset.k === n + ch) return;
   closeLiveCard(); closeVPop?.();
-  const mine = n === S.me, here = myVoice === ch, f = S.servers.flatMap(sv => sv.channels.map(c => ({ c, sv }))).find(x => x.c.id === ch);
+  const mine = n === S.me, here = myVoice === ch, f = S.servers.flatMap(sv => sv.channels.map(c => ({ c, sv }))).find(x => x.c.id === ch), locked = !here && !mine && f?.c.canConnect === false;
   const card = document.createElement('div'); card.id = 'livecard'; card.dataset.k = n + ch; card.setAttribute('role', 'dialog');
   card.innerHTML = `<div class="lc-top"><span>Şu an yayında</span><b class="lc-red"><i></i>CANLI</b></div>
-    <div class="lc-prev"><div class="lc-ph">${av(n)}<small>Önizleme hazırlanıyor…</small></div><img class="lc-img" alt="" hidden><span class="lc-time" hidden></span><span class="lc-q" hidden></span></div>
+    <div class="lc-prev"><div class="lc-ph">${locked ? `${ic('lock')}<small>Bu odaya girme iznin yok, yayın gizli</small>` : `${av(n)}<small>Önizleme hazırlanıyor…</small>`}</div><img class="lc-img" alt="" hidden><span class="lc-time" hidden></span><span class="lc-q" hidden></span></div>
     <div class="lc-who">${av(n)}<div><b>${esc(dn(n))}</b><small>${f ? `${esc(f.sv.name)} › ${esc(f.c.name)}` : ''}</small></div><span class="lc-v" hidden>${ic('eye')}<em>0</em></span></div>
     ${mine ? `<div class="lc-acts"><button class="lc-btn lc-self" disabled>${ic('live')}Yayındasın</button><button class="lc-btn lc-stop" id="lc-stop">${ic('x')}Durdur</button></div>`
-      : `<button class="lc-btn lc-go" id="lc-go">${ic('screen')}${here ? 'Yayını izle' : 'Katıl ve izle'}</button>`}`;
+      : locked ? `<button class="lc-btn lc-go" disabled>${ic('lock')}Girme iznin yok</button>` : `<button class="lc-btn lc-go" id="lc-go">${ic('screen')}${here ? 'Yayını izle' : 'Katıl ve izle'}</button>`}`;
   document.body.appendChild(card);
   const r = anchor.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
   if (innerWidth < 640) { card.classList.add('sheet'); }
@@ -7890,6 +7892,7 @@ function openLiveCard(n, ch, anchor) {
   if ($('#lc-stop')) $('#lc-stop').onclick = () => { closeLiveCard(); stopVideo(); };
   const fill = () => socket.emit('liveInfo', { name: n, ch }, x => {
     if (!card.isConnected) return; if (!x) return closeLiveCard();
+    if (x.locked) { const ph = card.querySelector('.lc-ph'); ph.innerHTML = `${ic('lock')}<small>Bu odaya girme iznin yok, yayın gizli</small>`; card.querySelector('.lc-img').hidden = true; const g = card.querySelector('#lc-go'); if (g) { g.disabled = true; g.id = ''; g.innerHTML = `${ic('lock')}Girme iznin yok`; } return; }
     const img = card.querySelector('.lc-img'), qd = GO_Q[x.q];
     if (x.thumb) { img.src = x.thumb; img.hidden = false; card.querySelector('.lc-ph').hidden = true; }
     const t = card.querySelector('.lc-time'); if (x.since) { const m = Math.floor((Date.now() - x.since) / 60000); t.hidden = false; t.textContent = m < 1 ? 'yeni başladı' : m < 60 ? `${m} dk` : `${Math.floor(m / 60)} sa ${m % 60} dk`; }

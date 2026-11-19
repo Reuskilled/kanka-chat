@@ -4355,7 +4355,8 @@ io.on('connection', socket => {
     if (!me) return cb(null);
     const f = findChannel(ch); if (!f || !chPerm(f.s, f.c, me, 'view')) return cb(null);
     const room = voice.get(ch); if (!room) return cb(null);
-    for (const [sid, n] of room) if (n === name && voiceMedia.get(sid)?.screen) { const lm = liveMeta.get(sid) || {}; return cb({ since: lm.since || null, q: lm.q || null, viewers: lm.viewers || 0, audio: !!lm.audio, thumb: lm.thumb || null, thumbAt: lm.thumbAt || null }); }
+    const allowed = myVoice === ch || chPerm(f.s, f.c, me, 'connect'); // odaya girme yetkisi olmayan yayının görüntüsünü göremez
+    for (const [sid, n] of room) if (n === name && voiceMedia.get(sid)?.screen) { const lm = liveMeta.get(sid) || {}; return cb(allowed ? { since: lm.since || null, q: lm.q || null, viewers: lm.viewers || 0, audio: !!lm.audio, thumb: lm.thumb || null, thumbAt: lm.thumbAt || null } : { locked: true, since: lm.since || null }); }
     cb(null);
   });
   // Yayın izleme: izleyici yayıncıya "izliyorum / bıraktım" der; yayıncı görüntüyü sadece izleyenlere gönderir
