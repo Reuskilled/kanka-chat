@@ -1776,7 +1776,8 @@ function postMessage(me, chId, p = {}) {
       if (ids.length) msg.files = ids.map(x => { const f = db.files[x]; return { id: x, name: f.name, size: f.size, kind: f.kind, url: `/dosya/${x}/${encodeURIComponent(f.name)}` }; });
     }
     if (p.audio && AUDIO_RE.test(p.audio)) { msg.audio = p.audio; msg.duration = Math.min(Math.max(+p.duration || 0, 0), 600); }
-    if (!msg.text && !msg.image && !msg.audio && !msg.files?.length) return ({ error: 'Boş mesaj' });
+    if (p.gif && typeof p.gif === 'object' && gifOk(p.gif.url)) msg.gif = { url: p.gif.url, prev: gifOk(p.gif.prev) ? p.gif.prev : p.gif.url, w: Math.min(Math.max(+p.gif.w || 0, 0), 2000), h: Math.min(Math.max(+p.gif.h || 0, 0), 2000), title: clean(p.gif.title, 80) };
+    if (!msg.text && !msg.image && !msg.audio && !msg.files?.length && !msg.gif) return ({ error: 'Boş mesaj' });
     const srv = serverOf(chId);
     if (srv?.filter && msg.text) msg.text = filterText(msg.text);
   } else if (kind === 'plan') {
@@ -1817,12 +1818,12 @@ function postMessage(me, chId, p = {}) {
   { const f1 = p.xfrom || p.fwd ? null : findChannel(chId);
     if (f1?.c.news && f1.c.followers?.length) setTimeout(() => {
       f1.c.followers = f1.c.followers.filter(fw => { const d = findChannel(fw.c); return d && d.s.id === fw.s; });
-      for (const fw of f1.c.followers) postMessage(me, fw.c, { kind: 'text', text: msg.text, image: msg.image, xfrom: { server: f1.s.name, channel: f1.c.name, icon: f1.s.icon, iconImg: f1.s.iconImg } });
+      for (const fw of f1.c.followers) postMessage(me, fw.c, { kind: 'text', text: msg.text, image: msg.image, gif: msg.gif, xfrom: { server: f1.s.name, channel: f1.c.name, icon: f1.s.icon, iconImg: f1.s.iconImg } });
     }, 0); }
 
   // Seviye
   const before = level(u.xp);
-  { const now = Date.now(), txt = String(msg.text || '').trim().toLocaleLowerCase('tr'), rich = !!(msg.image || msg.files?.length || msg.audio || msg.poll || msg.song || msg.plan);
+  { const now = Date.now(), txt = String(msg.text || '').trim().toLocaleLowerCase('tr'), rich = !!(msg.image || msg.gif || msg.files?.length || msg.audio || msg.poll || msg.song || msg.plan);
     const real = rich || txt.replace(/\s+/g, '').length >= 3, fresh = !txt || txt !== u.xpLast;
     const srvCh = !chId.startsWith('dm:') && !chId.startsWith('g:'), f0 = srvCh ? findChannel(chId) : null, crowd = !srvCh || (f0 && membersOf(f0.s).length >= 3);
     if (real && fresh && crowd && now - (u.xpAt || 0) >= 60e3) { u.xpAt = now; addXp(me, 3 + Math.floor(Math.random() * 4), 'mesaj', f0?.s || null, chId); }
@@ -1900,6 +1901,61 @@ function myCodes(name) {
 
 // ---------- E-posta (şifre sıfırlama, bekleme listesi davetleri) ----------
 const MAIL_FILE = path.join(DATA_DIR, 'mail.json');
+// ---- GIF (KLIPY ya da GIPHY; Tenor 30 Haziran 2026'da kapandı) ----
+const GIF_FILE = path.join(DATA_DIR, 'gif.json');
+let gifCfg = null; try { gifCfg = JSON.parse(fs.readFileSync(GIF_FILE, 'utf8')); } catch {}
+if (!gifCfg?.key && process.env.KLIPY_KEY) gifCfg = { provider: 'klipy', key: process.env.KLIPY_KEY };
+if (!gifCfg?.key && process.env.GIPHY_KEY) gifCfg = { provider: 'giphy', key: process.env.GIPHY_KEY };
+const gifHosts = new Set(gifCfg?.hosts || []);
+const gifCache = new Map();
+const gifReady = () => !!gifCfg?.key;
+const gifSaveCfg = () => { try { fs.writeFileSync(GIF_FILE, JSON.stringify({ ...gifCfg, hosts: [...gifHosts].slice(0, 40) })); } catch {} };
+function gifNorm(provider, j) {
+  const out = [];
+  if (provider === 'giphy') {
+    for (const g of j?.data || []) {
+      const im = g.images || {}, full = im.downsized_medium || im.original || im.downsized, prev = im.fixed_width || im.fixed_width_downsampled || full;
+      if (!full?.url) continue;
+      out.push({ id: 'g' + g.id, url: full.url, prev: prev.webp || prev.url, w: +full.width || 0, h: +full.height || 0, title: String(g.title || '').slice(0, 80) });
+    }
+    return { items: out, next: (j?.pagination?.offset || 0) + (j?.pagination?.count || 0) < (j?.pagination?.total_count || 0) };
+  }
+  const list = Array.isArray(j?.data?.data) ? j.data.data : Array.isArray(j?.data) ? j.data : [];
+  for (const g of list) {
+    const f = g.file || g.files; if (!f || g.type === 'ad') continue;
+    const pick = (...ks) => { for (const k of ks) { const [a, b] = k.split('.'); if (f[a]?.[b]?.url) return f[a][b]; } return null; };
+    const full = pick('md.gif', 'hd.gif', 'sm.gif'), prev = pick('sm.webp', 'sm.gif', 'xs.webp', 'xs.gif', 'md.webp') || full;
+    if (!full) continue;
+    out.push({ id: 'k' + (g.slug || g.id), url: full.url, prev: prev.url, w: +full.width || 0, h: +full.height || 0, title: String(g.title || '').slice(0, 80) });
+  }
+  return { items: out, next: !!(j?.data?.has_next ?? list.length >= 24) };
+}
+async function gifFetch(q, page = 1, who = '') {
+  if (!gifReady()) return { error: 'GIF henüz açılmadı' };
+  q = String(q || '').trim().slice(0, 60); page = Math.min(Math.max(+page || 1, 1), 10);
+  const key = gifCfg.provider + '|' + q.toLocaleLowerCase('tr') + '|' + page;
+  const hit = gifCache.get(key); if (hit && Date.now() - hit.at < (q ? 15 : 5) * 60e3) return hit.v;
+  let url;
+  if (gifCfg.provider === 'giphy') {
+    const u = new URL('https://api.giphy.com/v1/gifs/' + (q ? 'search' : 'trending'));
+    u.search = new URLSearchParams({ api_key: gifCfg.key, limit: '24', offset: String((page - 1) * 24), rating: 'pg-13', lang: 'tr', bundle: 'messaging_non_clips', ...(q ? { q } : {}) }); url = u;
+  } else {
+    const u = new URL(`https://api.klipy.com/api/v1/${encodeURIComponent(gifCfg.key)}/gifs/${q ? 'search' : 'trending'}`);
+    u.search = new URLSearchParams({ per_page: '24', page: String(page), locale: 'tr', content_filter: 'medium', customer_id: crypto.createHash('sha256').update('kanka:' + who).digest('hex').slice(0, 24), ...(q ? { q } : {}) }); url = u;
+  }
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000), headers: { Accept: 'application/json' } });
+    if (r.status === 401 || r.status === 403) return { error: 'GIF anahtarı geçersiz', bad: true };
+    if (!r.ok) return { error: 'GIF servisi şu an cevap vermiyor' };
+    const v = gifNorm(gifCfg.provider, await r.json());
+    let grew = false; for (const it of v.items) for (const x of [it.url, it.prev]) { try { const h = new URL(x).hostname; if (!gifHosts.has(h)) { gifHosts.add(h); grew = true; } } catch {} }
+    if (grew) gifSaveCfg();
+    gifCache.set(key, { at: Date.now(), v }); if (gifCache.size > 300) gifCache.delete(gifCache.keys().next().value);
+    return v;
+  } catch { return { error: 'GIF servisine ulaşılamadı' }; }
+}
+const gifOk = x => { try { const u = new URL(String(x || '')); return u.protocol === 'https:' && gifHosts.has(u.hostname) && x.length < 500; } catch { return false; } };
+
 let mailCfg = null; try { mailCfg = JSON.parse(fs.readFileSync(MAIL_FILE, 'utf8')); } catch {}
 if (!mailCfg && process.env.SMTP_USER) mailCfg = { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS, host: process.env.SMTP_HOST || '', url: process.env.PUBLIC_URL || '' };
 let mailer = null;
@@ -2068,7 +2124,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), voiceAge: voiceAges(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on
+      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, gif: gifReady()
     };
   }
 
@@ -2432,6 +2488,30 @@ io.on('connection', socket => {
     if (typeof mail === 'boolean') { db.backupCfg = { ...(db.backupCfg || {}), mail }; save(); }
     cb({ list: backupList().slice(0, 14), recovered: dbRecovered, log: db.backupLog || {}, mailOn: db.backupCfg?.mail !== false, mailReady: !!mailCfg?.ok });
   });
+  let gifHits = [];
+  socket.on('gifs', ({ q, page } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return;
+    const now = Date.now(); gifHits = gifHits.filter(t => now - t < 60e3);
+    if (gifHits.length >= 40) return cb({ error: 'Biraz yavaş, bir dakika sonra tekrar dene' });
+    gifHits.push(now);
+    gifFetch(q, page, me).then(cb);
+  });
+  socket.on('adminGif', ({ set, test } = {}, cb = () => {}) => {
+    if (!SA(cb)) return;
+    const done = r => cb(r.error ? { error: r.error } : { ok: true, provider: gifCfg?.provider, count: r.items.length, sample: r.items.slice(0, 4).map(x => x.prev) });
+    if (set?.off) { gifCfg = null; gifCache.clear(); try { fs.unlinkSync(GIF_FILE); } catch {} io.emit('gifOn', false); return cb({ ok: true, on: false }); }
+    if (set) {
+      const provider = set.provider === 'giphy' ? 'giphy' : 'klipy', key = String(set.key || '').trim().slice(0, 120) || (gifCfg?.provider === provider ? gifCfg.key : '');
+      if (!/^[\w-]{8,120}$/.test(key)) return cb({ error: 'Anahtar geçersiz görünüyor' });
+      const prev = gifCfg; gifCfg = { provider, key }; gifCache.clear();
+      return gifFetch('merhaba', 1, me).then(r => {
+        if (r.error && r.bad) { gifCfg = prev; return cb({ error: 'Servis bu anahtarı kabul etmedi, kopyalarken eksik kalmış olabilir' }); }
+        gifSaveCfg(); io.emit('gifOn', true); done(r);
+      });
+    }
+    if (test) return gifFetch('merhaba', 1, me).then(done);
+    cb({ ok: true, on: gifReady(), provider: gifCfg?.provider || 'klipy', hasKey: !!gifCfg?.key });
+  });
   socket.on('adminMail', ({ set, test } = {}, cb = () => {}) => {
     if (!SA(cb)) return;
     if (set) {
@@ -2734,7 +2814,7 @@ io.on('connection', socket => {
       }
       const am = automod(s, to, me, text); if (am) return cb({ error: am });
     }
-    const res = postMessage(me, to, { kind: 'text', text, image: src.image, audio: src.audio, duration: src.duration, fwd: { author: src.author || (src.kind === 'bot' ? 'Kanka Bot' : null) } });
+    const res = postMessage(me, to, { kind: 'text', text, image: src.image, gif: src.gif, audio: src.audio, duration: src.duration, fwd: { author: src.author || (src.kind === 'bot' ? 'Kanka Bot' : null) } });
     cb(res?.error ? res : { ok: true });
   });
   // ----- Kanka Bot komutları (/uyar, /sustur, /temizle, /kilitle ...) -----

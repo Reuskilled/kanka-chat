@@ -571,6 +571,32 @@
   #compose.recording #input { display: none; }
   #emojipanel { display: none; position: absolute; bottom: 58px; right: 50px; width: 372px; height: 452px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 6; flex-direction: column; overflow: hidden; animation: popIn .18s var(--ease-out); transform-origin: bottom right; }
   #emojipanel.on { display: flex; }
+  #gif-btn { height: 40px; padding: 0 6px; border-radius: 12px; flex-shrink: 0; color: var(--muted); display: grid; place-items: center; }
+  #gif-btn span { font-size: 11px; font-weight: 900; letter-spacing: .04em; border: 2px solid currentColor; border-radius: 6px; padding: 1px 4px; line-height: 1.2; }
+  #gif-btn:hover, #gif-btn.on { background: var(--hover); color: var(--ink); }
+  #gif-btn[hidden] { display: none; }
+  #gifpanel { display: none; position: absolute; bottom: 58px; right: 50px; width: 420px; height: 470px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 6; flex-direction: column; overflow: hidden; animation: popIn .18s var(--ease-out); transform-origin: bottom right; }
+  #gifpanel.on { display: flex; }
+  .gp-search { margin: 10px 10px 6px; display: flex; align-items: center; gap: 8px; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: rgba(0,0,0,.22); padding: 0 12px; color: var(--muted); }
+  .gp-search:focus-within { border-color: var(--accent-2); }
+  .gp-search .ic { width: 17px; height: 17px; flex: 0 0 auto; }
+  .gp-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: var(--ink); font-size: 13.5px; font-weight: 600; outline: none; }
+  .gp-chips { display: flex; gap: 6px; padding: 0 10px 8px; overflow-x: auto; scrollbar-width: none; flex: 0 0 auto; }
+  .gp-chips::-webkit-scrollbar { display: none; }
+  .gp-chips button { flex: 0 0 auto; padding: 5px 11px; border-radius: 99px; background: var(--bg); border: 1px solid var(--line); font-size: 12.5px; font-weight: 800; color: var(--muted); }
+  .gp-chips button:hover, .gp-chips button.on { color: var(--ink); border-color: var(--accent-2); }
+  .gp-grid { flex: 1; overflow-y: auto; padding: 0 10px 10px; display: flex; gap: 6px; align-items: flex-start; scrollbar-width: thin; contain: content; }
+  .gp-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .gp-grid button { display: block; width: 100%; padding: 0; border-radius: 10px; overflow: hidden; background: var(--bg); position: relative; flex: 0 0 auto; }
+  .gp-grid button img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .gp-grid button:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .gp-grid button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .gp-grid .gp-sk { aspect-ratio: 4/3; animation: gpSk 1.1s ease-in-out infinite alternate; }
+  @keyframes gpSk { from { opacity: .35 } to { opacity: .8 } }
+  .gp-msg { flex: 1; text-align: center; color: var(--muted); font-weight: 700; font-size: 13.5px; padding: 40px 16px; }
+  .gp-foot { flex: 0 0 auto; padding: 6px 12px; font-size: 10.5px; font-weight: 800; color: var(--muted); border-top: 1px solid var(--line); text-align: right; letter-spacing: .03em; }
+  .mgif { display: block; max-width: min(300px, 100%); height: auto; border-radius: 12px; margin: 4px 0 2px; background: rgba(255,255,255,.04); cursor: zoom-in; }
+  .bubble.only-img .mgif { margin: 0; }
   .ep-search { padding: 10px 10px 2px; flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
   .ep-search input { flex: 1; min-width: 0; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: rgba(0,0,0,.22); color: var(--ink); padding: 0 12px; font-size: 13.5px; font-weight: 600; outline: none; }
   .ep-prev { width: 96px; height: 38px; flex: 0 0 auto; display: flex; align-items: center; gap: 7px; min-width: 0; opacity: 0; transition: opacity .12s; pointer-events: none; overflow: hidden; }
@@ -3056,6 +3082,8 @@
     /* kayıt çubuğu sığsın */
     #compose.recording #emo-btn, #compose.recording #plus { display: none; } #recbar { min-width: 0; white-space: nowrap; overflow: hidden; font-size: 14px; } #recbar #rec-cancel { flex-shrink: 0; }
     /* emoji paneli tam genişlik */
+    #gifpanel { position: fixed !important; left: 10px !important; right: 10px !important; width: auto !important; bottom: calc(84px + env(safe-area-inset-bottom)) !important; height: min(60vh, 470px) !important; z-index: 30; box-shadow: 0 -10px 40px rgba(0,0,0,.45); }
+    #compose.recording #gif-btn { display: none; }
     #emojipanel { position: fixed !important; left: 10px !important; right: 10px !important; width: auto !important; bottom: calc(84px + env(safe-area-inset-bottom)) !important; height: min(56vh, 440px) !important; z-index: 30; box-shadow: 0 -10px 40px rgba(0,0,0,.45); }
     .ep-prev { display: none; }
     /* ayar kaydet çubuğu: telefonda sadece düğmeler */
@@ -3291,9 +3319,11 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
       <div id="suggest"></div><div id="cmdhint" aria-live="polite"></div>
       <textarea id="input" rows="1" autocomplete="off" spellcheck="true"></textarea>
       <div id="recbar"><span class="dot"></span><span id="rectime">0:00</span> kaydediliyor... <button type="button" id="rec-cancel">Vazgeç</button></div>
+      <button type="button" id="gif-btn" title="GIF" aria-label="GIF gönder" hidden><span>GIF</span></button>
       <button type="button" id="emo-btn" title="Emoji" aria-label="Emoji seç"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/></svg></button>
       <button type="button" id="mic-btn" title="Sesli mesaj" aria-label="Sesli mesaj kaydet"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <div id="emojipanel"><div class="ep-search"><input id="ep-q" type="text" inputmode="search" placeholder="Mükemmel emojiyi bul" autocomplete="off" spellcheck="false" aria-label="Emoji ara"><div class="ep-prev" id="ep-prev" aria-hidden="true"></div></div><div class="ep-tabs" id="ep-tabs"></div><div class="ep-grid" id="ep-grid"></div></div>
+      <div id="gifpanel" role="dialog" aria-label="GIF seç"><div class="gp-search"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="gp-q" type="text" inputmode="search" placeholder="GIF ara" autocomplete="off" spellcheck="false" aria-label="GIF ara"></div><div class="gp-chips" id="gp-chips"></div><div class="gp-grid" id="gp-grid"></div><div class="gp-foot" id="gp-foot"></div></div>
       <div id="einfo" role="dialog" aria-live="polite"></div>
       <button id="send" type="submit" title="Gönder" aria-label="Gönder"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 20 4l-5 16-3-7z"/><path d="m12 13 8-9"/></svg></button>
     </form>
@@ -3830,7 +3860,7 @@ function onAuth(res) {
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
   if ($('#a-pass')) $('#a-pass').value = '';
-  S.myEmail = res.myEmail || null; setTimeout(remindEmail, 1500); S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.staff = res.staff || null; if (res.warns?.length) setTimeout(() => showWarns(res.warns), 1200); S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta;
+  S.myEmail = res.myEmail || null; setTimeout(remindEmail, 1500); S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.staff = res.staff || null; if (res.warns?.length) setTimeout(() => showWarns(res.warns), 1200); S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta; setGifOn(res.gif);
   renderMe(); renderModPill();
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
   if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
@@ -4691,7 +4721,7 @@ const QUICK_RE = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 const SHEET_EMO = ['😀', '😁', '🤣', '😊', '😍', '🥰', '😘', '😎', '🤩', '🥳', '🤔', '🙄', '😴', '😭', '😡', '🤯', '🥶', '😱', '🤝', '🙏', '👏', '🙌', '💪', '👀', '💀', '🤡', '🎉', '💯', '✅', '❌', '⭐', '💔'];
 function openMsgSheet(m) {
   const el = $('#msheet'), p = el.querySelector('.ms-p'), my = e => (m.reactions?.[e] || []).includes(S.me);
-  const txt = m.text || m.bot?.title || m.plan?.title || m.poll?.question || m.song?.title || (m.files?.length ? m.files.length + ' dosya' : m.image ? 'Resim' : m.kind === 'match' ? 'Maç kartı' : '');
+  const txt = m.text || m.bot?.title || m.plan?.title || m.poll?.question || m.song?.title || (m.files?.length ? m.files.length + ' dosya' : m.image ? 'Resim' : m.gif ? 'GIF' : m.kind === 'match' ? 'Maç kartı' : '');
   const who = m.kind === 'bot' ? 'Kanka Bot' : dn(m.author || '');
   p.innerHTML = `<div class="ms-grip"></div><div class="ms-prev">${m.kind === 'bot' ? '<div class="av" style="background:#f2652f;overflow:hidden"><img src="/icon-192.png" alt="" style="width:100%;height:100%"></div>' : av(m.author || '')}<div style="min-width:0"><b>${esc(who)}</b> <small style="color:var(--muted);font-weight:700">${hm(m.time)}</small><p>${esc(txt)}</p></div></div>
     ${m.ephemeral ? '' : `<div class="ms-re">${QUICK_RE.map(e => `<button class="${my(e) ? 'on' : ''}" data-qe="${e}" aria-label="${e} tepkisi">${e}</button>`).join('')}<button class="more" data-qmore aria-label="Diğer tepkiler">${ic('smile')}</button></div>
@@ -4772,7 +4802,7 @@ function openForward(m) {
     ? { id: d.id, label: groupName(d), sub: `Grup · ${d.members?.length || 0} üye`, ic: 'users' }
     : { id: d.id, label: dn(d.with), sub: 'Özel mesaj', av: d.with });
   for (const sv of S.servers || []) for (const c of sv.channels || []) if ((c.type || 'text') === 'text') add(sv.name, { id: c.id, label: '#' + c.name, sub: '', ic: 'hash' });
-  const prev = forwardText(m) || (m.image ? 'Resim' : m.audio ? 'Ses mesajı' : '');
+  const prev = forwardText(m) || (m.image ? 'Resim' : m.gif ? 'GIF' : m.audio ? 'Ses mesajı' : '');
   modal(`<h3>İlet</h3><p class="hint">${esc(prev.slice(0, 90))}${prev.length > 90 ? '…' : ''}</p>
     <input class="field" id="fw-q" placeholder="Kanal veya kişi ara" autocomplete="off" aria-label="İletilecek yer ara">
     <div class="fw-list" id="fw-list"></div>`, 'fwd');
@@ -6311,9 +6341,9 @@ function msgHTML(m, prev) {
     body = `<div class="kcard"><div class="kt">${ic('music')}Çalma listesine eklendi</div><h4 style="word-break:break-all"><a href="${esc(m.song.url)}" target="_blank" rel="noopener">${esc(m.song.title)}</a></h4><div class="sub">${esc(m.song.by)} ekledi</div></div>`;
   } else {
     const fimgs = (m.files || []).filter(f => f.kind === 'image');
-    const onlyImg = (m.image || (m.files?.length && fimgs.length === m.files.length)) && !m.text && !m.replyTo;
+    const onlyImg = (m.image || m.gif || (m.files?.length && fimgs.length === m.files.length)) && !m.text && !m.replyTo;
     const jumbo = !m.image && !m.audio && m.text && isJumbo(m.text);
-    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${invCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !invCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
+    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.gif ? gifHTML(m.gif) : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${invCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !invCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
   }
   if (m.thread?.length) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
@@ -8800,12 +8830,67 @@ function emojiInsert(key) {
   growInput();
 }
 const closeEmojiPanel = () => $('#emojipanel')?.classList.remove('on');
+// ---- GIF seçici (sunucu üzerinden KLIPY/GIPHY; anahtar istemciye hiç gelmez) ----
+const gifHTML = g => {
+  const w = Math.min(+g.w || 300, 300), h = g.w && g.h ? Math.round(w * g.h / g.w) : 0;
+  return `<img class="mgif" src="${esc(g.url)}" alt="${esc(g.title || 'GIF')}" ${h ? `width="${w}" height="${h}"` : ''} loading="lazy" decoding="async" referrerpolicy="no-referrer" data-view>`;
+};
+let GIF_ON = false;
+function setGifOn(on) { GIF_ON = !!on; const b = $('#gif-btn'); if (b) b.hidden = !GIF_ON; if (!GIF_ON) closeGifPanel(); }
+socket.on('gifOn', setGifOn);
+const GP_TAGS = ['kahkaha', 'tamam', 'üzgün', 'şok', 'alkış', 'dans', 'kedi', 'günaydın', 'iyi geceler', 'teşekkürler', 'facepalm', 'sarıl'];
+const gp = { q: '', page: 1, next: false, busy: false, seq: 0, items: [] };
+function closeGifPanel() { $('#gifpanel')?.classList.remove('on'); $('#gif-btn')?.classList.remove('on'); }
+function openGifPanel() {
+  closeEmojiPanel();
+  const p = $('#gifpanel'); p.classList.add('on'); $('#gif-btn').classList.add('on');
+  $('#gp-chips').innerHTML = GP_TAGS.map(t => `<button type="button" data-t="${esc(t)}">${esc(t)}</button>`).join('');
+  if (!gp.items.length || gp.q !== $('#gp-q').value.trim()) gifLoad($('#gp-q').value.trim(), true);
+  if (!matchMedia('(pointer:coarse)').matches) setTimeout(() => $('#gp-q')?.focus(), 30);
+}
+function gifCell(it, i) {
+  const ar = it.w && it.h ? `style="aspect-ratio:${it.w}/${it.h}"` : '';
+  return `<button type="button" data-g="${i}" ${ar} title="${esc(it.title || 'GIF')}"><img src="${esc(it.prev)}" alt="${esc(it.title || 'GIF')}" loading="lazy" decoding="async" referrerpolicy="no-referrer"></button>`;
+}
+const gpSk = () => `<div class="gp-col">${'<button type="button" class="gp-sk" tabindex="-1" disabled></button>'.repeat(4)}</div>`.repeat(2);
+function gifLoad(q, reset) {
+  if (gp.busy && !reset) return;
+  const seq = ++gp.seq, grid = $('#gp-grid');
+  if (reset) { gp.q = q; gp.page = 1; gp.items = []; gp.hs = [0, 0]; grid.scrollTop = 0; grid.innerHTML = gpSk(); }
+  $('#gp-chips').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === gp.q));
+  gp.busy = true;
+  socket.emit('gifs', { q: gp.q, page: gp.page }, r => {
+    if (seq !== gp.seq) return; gp.busy = false;
+    if (r?.error) { if (reset) grid.innerHTML = `<div class="gp-msg">${esc(r.error)}</div>`; return; }
+    const start = gp.items.length; gp.items.push(...r.items); gp.next = r.next && r.items.length > 0;
+    if (reset) grid.innerHTML = gp.items.length ? '<div class="gp-col"></div><div class="gp-col"></div>' : `<div class="gp-msg">"${esc(gp.q)}" için GIF bulunamadı</div>`;
+    const cols = grid.querySelectorAll('.gp-col'), add = [[], []];
+    if (cols.length === 2) r.items.forEach((it, i) => { const k = gp.hs[0] <= gp.hs[1] ? 0 : 1; gp.hs[k] += it.w && it.h ? it.h / it.w : .75; add[k].push(gifCell(it, start + i)); });
+    cols.forEach((c, k) => c.insertAdjacentHTML('beforeend', add[k].join('')));
+    $('#gp-foot').textContent = gp.q ? `"${gp.q}" sonuçları` : 'Popüler GIF\'ler';
+  });
+}
+let gpT = 0;
+$('#gp-q').oninput = e => { clearTimeout(gpT); const v = e.target.value.trim(); gpT = setTimeout(() => gifLoad(v, true), 280); };
+$('#gp-q').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(gpT); gifLoad(e.target.value.trim(), true); } else if (e.key === 'ArrowDown') { e.preventDefault(); $('#gp-grid button[data-g]')?.focus(); } };
+$('#gp-chips').onclick = e => { const b = e.target.closest('button[data-t]'); if (!b) return; const t = gp.q === b.dataset.t ? '' : b.dataset.t; $('#gp-q').value = t; gifLoad(t, true); };
+$('#gp-grid').addEventListener('scroll', e => { const g = e.target; if (gp.next && !gp.busy && g.scrollHeight - g.scrollTop - g.clientHeight < 300 && gp.page < 10) { gp.page++; gifLoad(gp.q, false); } }, { passive: true });
+$('#gp-grid').onclick = e => {
+  const b = e.target.closest('button[data-g]'); if (!b) return;
+  const it = gp.items[+b.dataset.g]; if (!it || !S.channel) return;
+  const text = $('#input').value.trim();
+  send({ kind: 'text', text: '', gif: { url: it.url, prev: it.prev, w: it.w, h: it.h, title: it.title } });
+  closeGifPanel(); if (!text) $('#input').focus();
+};
+$('#gifpanel').addEventListener('keydown', e => { if (e.key === 'Escape') { closeGifPanel(); $('#input')?.focus(); } });
+$('#gif-btn').onclick = e => { e.stopPropagation(); $('#gifpanel').classList.contains('on') ? closeGifPanel() : openGifPanel(); };
+document.addEventListener('click', e => { if (!e.composedPath().some(n => n.id === 'gifpanel' || n.id === 'gif-btn')) closeGifPanel(); });
 function openEmojiPanel() {
   const p = $('#emojipanel'); if (!p) return;
   epQ = ''; $('#ep-q').value = ''; renderEmojiPanel(); p.classList.add('on');
   setTimeout(() => $('#ep-q')?.focus(), 30);
 }
-$('#emo-btn').onclick = e => { e.stopPropagation(); $('#emojipanel').classList.contains('on') ? closeEmojiPanel() : openEmojiPanel(); };
+$('#emo-btn').onclick = e => { e.stopPropagation(); closeGifPanel(); $('#emojipanel').classList.contains('on') ? closeEmojiPanel() : openEmojiPanel(); };
 $('#ep-q').oninput = e => { epQ = e.target.value; renderEmojiPanel(); };
 $('#ep-q').onkeydown = e => {
   if (e.key === 'Enter') { const b = $('#ep-grid .ep-row button[data-ins]'); if (b) { e.preventDefault(); emojiInsert(b.dataset.ins); } }
@@ -10425,7 +10510,7 @@ function admDev(B) {
 function adminPanel(el, sub = 'overview') {
   const R = S.staff, A = ['owner', 'admin'].includes(R);
   const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['srvapps', 'Sunucu rozetleri', 'check'], ['log', 'Kayıtlar', 'clock'],
-    ...(A ? [['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
+    ...(A ? [['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
   if (!subs.some(x => x[0] === sub)) sub = 'overview';
   el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
     <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;
@@ -10501,6 +10586,19 @@ function adminPanel(el, sub = 'overview') {
         setTimeout(re, manual.length ? 60000 : 1500);
       });
     });
+  });
+  if (sub === 'gif') return socket.emit('adminGif', {}, r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    B.innerHTML = `<div class="adm-box"><div class="mail-st ${r.on ? 'ok' : ''}">${ic(r.on ? 'check' : 'image')}<b>${r.on ? 'GIF açık' : 'GIF kapalı'}</b><span>${r.on ? `${r.provider === 'giphy' ? 'GIPHY' : 'KLIPY'} üzerinden arama yapılıyor. Anahtar sadece sunucuda durur.` : 'Anahtar girilene kadar sohbette GIF düğmesi görünmez.'}</span></div>
+      <ol class="steps"><li><a href="https://klipy.com/developers" target="_blank" rel="noopener" style="color:var(--accent)">klipy.com/developers</a> adresinde ücretsiz hesap aç (Tenor 2026'da kapandı, KLIPY onun yerini alan ücretsiz servis).</li><li>Panelde yeni bir uygulama oluştur, <b>API key</b>'i kopyala.</li><li>Aşağıya yapıştır ve kaydet. Kaydederken bir deneme araması yapılır.</li></ol>
+      <div class="dv-chips" style="margin:10px 0"><label class="dv-chip"><input type="radio" name="gpv" value="klipy" ${r.provider !== 'giphy' ? 'checked' : ''}><span>KLIPY (önerilen)</span></label><label class="dv-chip"><input type="radio" name="gpv" value="giphy" ${r.provider === 'giphy' ? 'checked' : ''}><span>GIPHY</span></label></div>
+      <div class="st-field"><label>API anahtarı</label><input class="field" id="g-key" type="password" autocomplete="off" placeholder="${r.hasKey ? '•••• kayıtlı (değiştirmek için yaz)' : 'anahtarı buraya yapıştır'}"></div>
+      <div id="g-res"></div>
+      <div class="rowb" style="justify-content:flex-start"><button class="primary" id="g-save" style="width:auto;padding:11px 20px">Kaydet ve dene</button>${r.on ? `<button class="btns2" id="g-test">${ic('search')} Tekrar dene</button><button class="btns2" id="g-off">Kapat</button>` : ''}</div></div>`;
+    const show = x => { $('#g-res').innerHTML = x.error ? `<div class="mail-err">${esc(x.error)}</div>` : `<div class="acc-warn ok">${ic('check')}<span><b>Çalışıyor, ${x.count} sonuç geldi</b><span style="display:flex;gap:6px;margin-top:6px">${(x.sample || []).map(u => `<img src="${esc(u)}" alt="" referrerpolicy="no-referrer" style="height:54px;border-radius:8px">`).join('')}</span></span></div>`; };
+    $('#g-save').onclick = () => { const b = $('#g-save'); b.classList.add('busy'); socket.emit('adminGif', { set: { provider: B.querySelector('[name=gpv]:checked')?.value, key: $('#g-key').value } }, x => { b.classList.remove('busy'); if (x.error && !x.count) { show(x); return; } toast('GIF açıldı'); adminPanel(el, 'gif'); setTimeout(() => show(x), 60); }); };
+    if ($('#g-test')) $('#g-test').onclick = () => socket.emit('adminGif', { test: true }, show);
+    if ($('#g-off')) $('#g-off').onclick = () => socket.emit('adminGif', { set: { off: true } }, () => { toast('GIF kapatıldı'); adminPanel(el, 'gif'); });
   });
   if (sub === 'mail') return socket.emit('adminMail', {}, r => {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
