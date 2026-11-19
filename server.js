@@ -3584,6 +3584,14 @@ io.on('connection', socket => {
     if (!outranksRole(s, s.customRoles[i]) || !outranksRole(s, s.customRoles[j])) return cb({ error: 'Senden yüksek rolleri taşıyamazsın' });
     [s.customRoles[i], s.customRoles[j]] = [s.customRoles[j], s.customRoles[i]]; pushSrv(s); cb({ ok: true });
   });
+  socket.on('roleOrder', ({ serverId, roleId, to } = {}, cb = () => {}) => { // sürükle-bırak: rolü listede istenen sıraya taşı
+    const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Yetkin yok' });
+    const i = s.customRoles.findIndex(x => x.id === roleId), j = Math.min(Math.max(parseInt(to) || 0, 0), s.customRoles.length - 1);
+    if (i < 0) return cb({ error: 'Rol bulunamadı' }); if (i === j) return cb({ ok: true });
+    for (let k = Math.min(i, j); k <= Math.max(i, j); k++) if (!outranksRole(s, s.customRoles[k])) return cb({ error: 'Rolü kendi rolünün üstüne ya da senden yüksek rollerin arasına taşıyamazsın' });
+    const [r] = s.customRoles.splice(i, 1); s.customRoles.splice(j, 0, r);
+    audit(s, me, 'Rol sırasını değiştirdi', `${r.name}: ${i + 1}. → ${j + 1}.`); pushSrv(s); cb({ ok: true });
+  });
   socket.on('roleHoist', ({ serverId, roleId, hoist } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageRoles'); if (!s) return cb({ error: 'Yetkin yok' });
     const r = s.customRoles.find(x => x.id === roleId); if (!r || r.bot || !outranksRole(s, r)) return cb({ error: 'Bu rolü düzenleyemezsin' });

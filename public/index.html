@@ -197,6 +197,10 @@
   .rl-bar { position: sticky; bottom: 16px; z-index: 5; display: flex; align-items: center; gap: 10px; width: min(620px, 100%); margin: 16px auto 0; padding: 10px 10px 10px 18px; border-radius: 14px; background: #0f0b09; border: 1px solid var(--line); box-shadow: 0 14px 40px rgba(0,0,0,.5); }
   .rl-bar > span { flex: 1; font-weight: 800; font-size: 14px; color: var(--ink); }
   .rl-bar button { width: auto; margin: 0; padding: 9px 18px; } .rl-bar > button:not(.primary) { border-radius: 10px; font-weight: 800; color: var(--ink); } .rl-bar > button:not(.primary):hover { background: var(--hover); }
+  .rd-ghost { position: fixed; z-index: 9999; pointer-events: none; opacity: .92; background: var(--card) !important; border: 1px solid var(--accent) !important; border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.45); }
+  .rd-line { position: fixed; z-index: 9999; height: 3px; border-radius: 3px; background: var(--accent); pointer-events: none; box-shadow: 0 0 8px var(--accent); }
+  .rd-src { opacity: .35; } .rl-side .rl-row[data-edit] { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .box.settings .st-main { transform: translateZ(0); } /* kaydırma alanı kendi katmanında: Windows'ta yapışkan kaydet çubuğunun altı siyah kalmasın */
   .rl-bar:not(.on) { display: none; } .rl-bar.on { animation: rlBar .25s var(--ease-out); }
   @keyframes rlBar { from { opacity: 0; transform: translateY(14px); } }
   .rl-ed-box { padding-bottom: 18px; }
@@ -5411,7 +5415,7 @@ function showServerSettings(s, tab, focus) {
       const rtab = edit ? (ssOpen.rtab && (edit.id || ssOpen.rtab !== 'members') ? ssOpen.rtab : 'look') : null;
       const cnt = r => Object.values(s.memberRoles || {}).filter(x => x.includes(r.id)).length;
       const SW = ['#ff8a4c', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#e5484d', '#99aab5', '#ffffff'];
-      main.innerHTML = `<div class="st-page rl-page"><h3>Roller <small class="rl-cnt">${roles.length}</small></h3><p class="hint">Üstteki rol daha güçlüdür, kendinden yüksek rolleri düzenleyemezsin. <b>Göz</b> simgesi rolü üye listesinde ayrı başlık altında gösterir.</p>
+      main.innerHTML = `<div class="st-page rl-page"><h3>Roller <small class="rl-cnt">${roles.length}</small></h3><p class="hint">Üstteki rol daha güçlüdür, kendinden yüksek rolleri düzenleyemezsin. <b>Göz</b> simgesi rolü üye listesinde ayrı başlık altında gösterir. Sırayı değiştirmek için rolü tutup sürükle (telefonda basılı tut).</p>
         <div class="rl-split ${edit ? 'has-ed' : ''}"><aside class="rl-side">
         <div class="rl-side-top"><span class="rl-q">${ic('search')}<input id="rl-q" placeholder="Rol ara" value="${esc(ssOpen.rq || '')}" autocomplete="off"></span><button class="primary" id="r-new" title="Rol oluştur">${ic('plus')}<span>Yeni</span></button></div>
         <div class="rl-list">${roles.map((r, i) => `<div class="rl-row ${edit?.id === r.id ? 'open' : ''}" data-edit="${r.id}" data-rn="${esc(r.name.toLocaleLowerCase('tr'))}"><span class="rl-ic" style="--c:${r.color}">${r.icon ? esc(r.icon) : '<i></i>'}</span>
@@ -5437,6 +5441,7 @@ function showServerSettings(s, tab, focus) {
       { const q = $('#rl-q'), filt = () => { ssOpen.rq = q.value; const v = q.value.toLocaleLowerCase('tr').trim(); let n = 0; main.querySelectorAll('.rl-list .rl-row').forEach(r => { const on = !v || r.dataset.rn.includes(v); r.hidden = !on; n += on; }); main.querySelector('.rl-none').hidden = !!n || !v; }; q.oninput = filt; filt(); }
       main.querySelector('.rl-row.open')?.scrollIntoView({ block: 'nearest' });
       main.querySelectorAll('[data-hoist]').forEach(b => b.onclick = () => { const r = roles.find(x => x.id === b.dataset.hoist); socket.emit('roleHoist', { serverId: s.id, roleId: r.id, hoist: !r.hoist }, done(r.hoist ? 'Rol artık listede ayrı gösterilmiyor' : 'Rol üye listesinde ayrı gösteriliyor')); });
+      rowDrag(main.querySelector('.rl-list'), '.rl-row[data-edit]', (id, to) => socket.emit('roleOrder', { serverId: s.id, roleId: id, to }, done('Rol sırası değişti')));
       main.querySelectorAll('[data-up],[data-down]').forEach(b => b.onclick = () => socket.emit('roleMove', { serverId: s.id, roleId: b.dataset.up || b.dataset.down, dir: b.dataset.up ? -1 : 1 }, done()));
       main.querySelectorAll('[data-del]').forEach(b => b.onclick = () => confirmBox(`"${roles.find(r => r.id === b.dataset.del).name}" rolü silinsin mi?`, () => socket.emit('roleDelete', { serverId: s.id, roleId: b.dataset.del }, r => { if (r.error) return toast(r.error); toast('Rol silindi'); showServerSettings(s, 'roles'); })));
       if (!$('#r-form')) return;
@@ -10080,6 +10085,41 @@ function pcheckHTML(s, ov, n, keys) {
   const why = s.owner === n ? 'Sunucu sahibi, her şeye izinli' : rp.has('administrator') ? 'Yönetici yetkisi var, her şeye izinli' : rp.has('manageChannels') || s.roles?.[n] === 'mod' ? 'Odaları yönetebildiği için her şeye izinli' : '';
   const sees = permFor(s, ov, n, 'view');
   return `${why ? `<div class="pc-why">${ic('shield')}${why}</div>` : !sees ? `<div class="pc-why no">${ic('eye')}Bu odayı göremiyor, diğer izinlerin önemi yok</div>` : ''}<div class="pc-chips">${keys.map(k => { const ok = permFor(s, ov, n, k); return `<span class="${ok ? 'ok' : 'no'}">${ic(ok ? 'check' : 'x')}${PERM_ROWS[k][0]}</span>`; }).join('')}</div>`;
+}
+// Listede sürükle-bırak sıralama. Fare: tutup çek. Dokunmatik: basılı tut (0,35 sn), sonra sürükle.
+function rowDrag(list, sel, onDrop) {
+  if (!list) return;
+  list.onpointerdown = e => {
+    const row = e.target.closest(sel); if (!row || e.target.closest('button, input, a') || e.button > 0) return;
+    const touch = e.pointerType !== 'mouse', x0 = e.clientX, y0 = e.clientY;
+    let on = false, timer = null, ghost = null, line = null, to = -1, rows = [];
+    const block = ev => { if (on) ev.preventDefault(); }; document.addEventListener('touchmove', block, { passive: false }); // sürüklerken sayfa kaymasın
+    const begin = () => {
+      on = true; rows = [...list.querySelectorAll(sel)].filter(r => !r.hidden);
+      const b = row.getBoundingClientRect();
+      ghost = row.cloneNode(true); ghost.className += ' rd-ghost'; Object.assign(ghost.style, { width: b.width + 'px', left: b.left + 'px', top: b.top + 'px' }); document.body.appendChild(ghost);
+      line = document.createElement('div'); line.className = 'rd-line'; document.body.appendChild(line);
+      row.classList.add('rd-src'); navigator.vibrate?.(15); move(e);
+    };
+    const move = ev => {
+      if (!on) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > (touch ? 10 : 5)) { if (touch) end(); else begin(); } return; }
+      ev.preventDefault(); ghost.style.transform = `translateY(${ev.clientY - y0}px)`;
+      let k = rows.findIndex(r => { const b = r.getBoundingClientRect(); return ev.clientY < b.top + b.height / 2; }); if (k < 0) k = rows.length;
+      const ref = rows[Math.min(k, rows.length - 1)].getBoundingClientRect(), lb = list.getBoundingClientRect();
+      Object.assign(line.style, { left: lb.left + 6 + 'px', width: lb.width - 12 + 'px', top: (k < rows.length ? ref.top : ref.bottom) - 1 + 'px' });
+      const from = rows.indexOf(row); to = k > from ? k - 1 : k;
+      const sc = list.closest('.rl-side .rl-list, .rl-list'); if (sc) { if (ev.clientY < lb.top + 30) sc.scrollTop -= 8; else if (ev.clientY > lb.bottom - 30) sc.scrollTop += 8; }
+    };
+    const end = () => {
+      clearTimeout(timer); removeEventListener('pointermove', move, { capture: true }); removeEventListener('pointerup', up, true); removeEventListener('pointercancel', end, true);
+      document.removeEventListener('touchmove', block); ghost?.remove(); line?.remove(); row.classList.remove('rd-src');
+    };
+    const up = () => { const was = on, from = rows.indexOf(row); end(); if (was && to >= 0 && to !== from) { row.dataset.dragged = 1; setTimeout(() => delete row.dataset.dragged, 50); const id = row.dataset.edit || row.dataset.id; const all = [...list.querySelectorAll(sel)]; onDrop(id, all.indexOf(rows[to])); } };
+    if (touch) timer = setTimeout(begin, 350);
+    addEventListener('pointermove', move, { capture: true, passive: false }); addEventListener('pointerup', up, true); addEventListener('pointercancel', end, true);
+  };
+  list.addEventListener('click', e => { if (e.target.closest('[data-dragged]')) { e.stopPropagation(); e.preventDefault(); } }, true);
+  list.addEventListener('contextmenu', e => { if (e.target.closest(sel) && matchMedia('(pointer: coarse)').matches) e.preventDefault(); });
 }
 let chsOpen = null;
 function showChSettings(s, kind, id, tab = 'general', back) {
