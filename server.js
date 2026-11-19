@@ -1164,6 +1164,44 @@ function partnerPerks() {
       else if (!want && has) { hq.memberRoles[n] = l.filter(x => x !== r.id); if (!hq.memberRoles[n].length) delete hq.memberRoles[n]; } } }
   save(); pushServers(membersOf(hq)); io.emit('users', allUsers()); // sahibin profil rozeti güncellensin
 }
+// ---- Kanka Bot'tan özel mesaj (sadece okunur bildirim kanalı) ----
+function botDm(name, o) {
+  if (!db.users[name]) return; const chId = dmId(BOT_NAME, name);
+  botPost(chId, o); io.to('user:' + name).emit('dms', dmsFor(name));
+  io.to('user:' + name).emit('toast', '🤖 Kanka Bot\'tan yeni mesajın var');
+}
+// ---- Bot geliştiriciler: kabul edilen → aday (HQ'da rol + oda); rozet → botu gerçekten kullanılınca ----
+const DEV_GOAL = { servers: 3, cmds: 50 };
+function devPerks() {
+  const hq = db.servers.find(x => x.id === 's1'); if (!hq) return;
+  hq.customRoles ||= []; hq.memberRoles ||= {};
+  let role = hq.customRoles.find(r => r.id === db.devRoleId);
+  if (!role) { role = { id: id(), name: 'Bot Geliştirici', color: '#5b8cff', perms: [], hoist: true, icon: '🛠️', mentionable: true }; hq.customRoles.push(role); db.devRoleId = role.id; }
+  if (!hq.channels.some(c => c.id === db.devChId)) {
+    const ch = { id: id(), name: 'bot-gelistirici', type: 'text', topic: 'Bot geliştirici adayları ve Kanka ekibi. Sorular, fikirler, hata bildirimleri, duyurular.', sync: false, perms: { '@everyone': { view: false }, [role.id]: { view: true } } };
+    const last = hq.channels.findLastIndex(c => c.type !== 'voice'); hq.channels.splice(last + 1, 0, ch); db.devChId = ch.id;
+    (db.messages[ch.id] ||= []).push({ id: id(), author: BOT_NAME, color: '#ff8a4c', time: Date.now(), kind: 'text', text: '🛠️ bot geliştirici odasına hoş geldiniz! bot sistemiyle ilgili duyurular, sorular ve fikirler burada. kanka ekibi de burada, takıldığınız yeri yazın.', reactions: {} });
+  }
+  for (const n of Object.keys(db.users)) { const u = db.users[n], want = !!(u.devBeta || u.devEarned), l = hq.memberRoles[n] || [], has = l.includes(role.id);
+    if (want && !hq.members.includes(n) && !hq.public) continue;
+    if (want && !has) hq.memberRoles[n] = [...l, role.id]; else if (!want && has) { hq.memberRoles[n] = l.filter(x => x !== role.id); if (!hq.memberRoles[n].length) delete hq.memberRoles[n]; } }
+  save(); pushServers(membersOf(hq));
+}
+// Bot API sayaçları (u.devStats) güncellenince çağrılır: şart tamamsa rozet + tebrik mesajı
+function devCheck(name) {
+  const u = db.users[name]; if (!u || !u.devBeta || u.devEarned) return;
+  const st = u.devStats || {}; if ((st.servers || 0) < DEV_GOAL.servers || (st.cmds || 0) < DEV_GOAL.cmds) return;
+  devAward(name, 'otomatik');
+}
+function devAward(name, by) {
+  const u = db.users[name]; if (!u) return; u.devEarned = true; (u.badgeAt ||= {}).dev = Date.now(); const a = db.devApps?.[name]; if (a) { a.earnedAt = Date.now(); a.earnedBy = by; }
+  save(); io.emit('users', allUsers()); devPerks();
+  botDm(name, { title: '🛠️ Bot Geliştirici rozeti senin!', tone: 'good', text: 'botun gerçekten kullanılıyor, eline sağlık! profilinde artık bot geliştirici rozeti var. kanka\'yı birlikte büyütüyoruz 🧡' });
+}
+setTimeout(() => { // bir kerelik: eski kuralla rozet alanlar rozetlerini korur
+  if (!db.devRule2) { for (const u of Object.values(db.users)) if (u.devBeta) u.devEarned = true; db.devRule2 = Date.now(); save(); }
+  devPerks();
+}, 5000);
 // ---- Partner yolu: Topluluk (otomatik) → Yükselen (otomatik) → Kanka Partner (başvuru, ekip karar verir) ----
 const PT = { topluluk: { members: 15, days: 7 }, yukselen: { members: 30, days: 7, active: 10, rules: true }, yildiz: { members: 100, days: 21, active: 30, rules: true } };
 const activeCache = new Map();
@@ -1217,7 +1255,7 @@ const isPrivateChat = chId => chId?.startsWith('dm:') || chId?.startsWith('g:');
 function canAccess(name, chId) {
   if (!name || !chId) return false;
   if (typeof chId !== 'string') return false;
-  if (chId.startsWith('dm:')) { const p = dmPeers(chId); return p.length === 2 && chId === dmId(p[0], p[1]) && p.includes(name) && p.every(n => Object.hasOwn(db.users, n)); }
+  if (chId.startsWith('dm:')) { const p = dmPeers(chId); return p.length === 2 && chId === dmId(p[0], p[1]) && p.includes(name) && p.every(n => Object.hasOwn(db.users, n) || n === BOT_NAME); }
   if (chId.startsWith('g:')) return !!groupOf(chId)?.members.includes(name);
   const f = findChannel(chId);
   return !!f && (f.c.type === 'text' || f.c.type === 'forum' || voiceLike(f.c.type)) && (f.s.public || f.s.members.includes(name)) && !f.s.bans?.[name] && seesChannel(f.s, f.c, name);
@@ -1731,7 +1769,7 @@ function badgesOf(u) {
   if (u.onb?.rewarded) b.push('caylak');
   if (staffRank(u.name)) b.unshift('ekip');
   for (const k of AWARDS) if (u.awards?.[k]) b.push(k);
-  if (u.devBeta) b.push('dev');
+  if (u.devEarned) b.push('dev'); // rozet: bot gerçekten kullanılınca (kabul edilmek yetmez)
   if (db.users[u.name] === u) { const first = !u.badgeAt; u.badgeAt ||= {}; let ch = first; for (const k of b) if (!(k in u.badgeAt)) { u.badgeAt[k] = first ? 0 : Date.now(); ch = true; } if (ch) save(); } // ilk geçişte eski rozetlerin tarihi bilinmiyor (0)
   return b;
 }
@@ -2978,6 +3016,7 @@ io.on('connection', socket => {
   socket.on('message', (p0 = {}, cb = () => {}) => {
     if (!me || !cur || !canAccess(me, cur)) return cb({ error: 'Önce bir odaya gir' });
     if (!p0 || typeof p0 !== 'object' || Array.isArray(p0)) return cb({ error: 'Geçersiz mesaj' });
+    if (cur.startsWith('dm:') && dmPeers(cur).includes(BOT_NAME)) return cb({ error: 'Kanka Bot\'a buradan cevap yazılamıyor. Sorun için Kanka HQ\'daki odalara yaz.' });
     const { xfrom, fwd, scheduled, ...p } = p0; // bu alanları sadece sunucu koyar (sahte "iletildi / şuradan" etiketi olmasın)
     if (typeof p.text === 'string' && p.text.length > MSG_MAX) return cb({ error: `Mesaj en fazla ${MSG_MAX} karakter olabilir` });
     if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun, biraz yavaşla 🙂' });
@@ -3491,18 +3530,26 @@ io.on('connection', socket => {
   socket.on('devAppWithdraw', (_ = {}, cb = () => {}) => { const a = me && devApp(me); if (!a || a.status !== 'pending') return cb({ error: 'Geri çekilecek başvuru yok' }); delete db.devApps[me]; save(); cb({ ok: true }); });
   socket.on('adminDevApps', (_ = {}, cb = () => {}) => {
     if (!siteMod(me)) return cb({ error: 'Yetkin yok' });
-    const list = Object.entries(db.devApps || {}).map(([n, a]) => ({ name: n, ...a, level: db.users[n]?.level || 1, joined: db.users[n]?.created })).sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || b.at - a.at);
-    cb({ list, open: db.devBetaOpen !== false });
+    const list = Object.entries(db.devApps || {}).map(([n, a]) => ({ name: n, ...a, level: level(db.users[n]?.xp || 0), joined: db.users[n]?.createdAt, earned: !!db.users[n]?.devEarned, stats: db.users[n]?.devStats || {}, seen: db.users[n]?.seen || null, inCh: (db.messages[db.devChId] || []).filter(m => m.author === n).length })).sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || b.at - a.at);
+    cb({ list, open: db.devBetaOpen !== false, goal: DEV_GOAL });
   });
   socket.on('adminDevDecide', ({ name, status, note } = {}, cb = () => {}) => {
     if (!siteMod(me)) return cb({ error: 'Yetkin yok' });
     const a = devApp(name); if (!a || !['accepted', 'rejected', 'pending'].includes(status)) return cb({ error: 'Geçersiz' });
     a.status = status; a.by = me; a.decidedAt = Date.now(); a.note = String(note || '').slice(0, 300);
     const u = db.users[name]; if (u) { u.devBeta = status === 'accepted' || undefined; if (!u.devBeta) delete u.devBeta; }
-    save(); io.emit('users', allUsers());
-    if (status === 'accepted') io.to('user:' + name).emit('toast', '🎉 Bot geliştirici başvurun kabul edildi! Hoş geldin, ayrıntılar Ayarlar › Bot geliştirici sayfasında');
-    if (status === 'rejected') io.to('user:' + name).emit('toast', 'Bot geliştirici başvurun bu sefer olmadı. Teşekkürler, ilerde tekrar başvurabilirsin');
+    save(); io.emit('users', allUsers()); devPerks();
+    const nt = a.note ? `\n\nekipten not: ${a.note}` : '';
+    if (status === 'accepted') botDm(name, { title: '🎉 bot geliştirici başvurun kabul edildi!', tone: 'good',
+      text: `hoş geldin! artık kanka'nın bot geliştirici adaylarındansın. kanka hq'da sana özel #bot-gelistirici odası açıldı, duyurular ve sorular orada.${nt}`,
+      fields: [['1. adım', 'kanka hq › #bot-gelistirici odasına uğra, kendini tanıt'], ['2. adım', 'bot sistemi açılınca ayarlar › bot geliştirici\'den botunu oluştur'], ['3. adım', 'botunu senin olmayan 3 sunucuya ekletip 50 komut kullanılsın'], ['ödül', '🛠️ bot geliştirici rozeti otomatik gelir']] });
+    if (status === 'rejected') botDm(name, { title: 'bot geliştirici başvurun', tone: 'info', text: `başvurun için teşekkürler! bu sefer olmadı ama kapı kapalı değil. birkaç hafta sonra fikrini biraz daha detaylandırıp tekrar başvurabilirsin.${nt}` });
     console.log(`[dev] ${me} -> ${name}: ${status}`); cb({ ok: true });
+  });
+  socket.on('adminDevBadge', ({ name, on } = {}, cb = () => {}) => {
+    if (!siteMod(me)) return cb({ error: 'Yetkin yok' }); const u = db.users[name]; if (!u) return cb({ error: 'Kullanıcı yok' });
+    if (on) devAward(name, me); else { delete u.devEarned; if (u.badgeAt) delete u.badgeAt.dev; save(); io.emit('users', allUsers()); devPerks(); }
+    staffLog(me, on ? 'Bot geliştirici rozeti verdi' : 'Bot geliştirici rozetini aldı', name); cb({ ok: true });
   });
   socket.on('adminDevOpen', ({ open } = {}, cb = () => {}) => { if (!siteMod(me)) return cb({ error: 'Yetkin yok' }); db.devBetaOpen = !!open; save(); cb({ ok: true }); });
   // Kanka ekibi kullanıcıya elle rozet verir/geri alır (ör. Hata Avcısı)

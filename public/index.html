@@ -606,6 +606,8 @@
   .an-t .ok { color: #4cc38a; } .an-t .no { color: #e5484d; } .an-t .ok .ic, .an-t .no .ic { width: 15px; height: 15px; } .an-t .mut, .an-root .mut { color: var(--muted); }
   .an-who { display: inline-flex; align-items: center; gap: 8px; } .an-who .av { width: 26px; height: 26px; } .an-ppl { max-height: 520px; overflow-y: auto; } .an-ppl thead th { position: sticky; top: 0; background: var(--card); z-index: 1; }
   .an-link { margin-top: 14px; padding: 12px; border-radius: 12px; border: 1px dashed var(--line); display: grid; gap: 6px; } .an-link > b { display: flex; align-items: center; gap: 6px; } .an-link > span { color: var(--muted); font-size: 13px; font-weight: 600; } .an-pre { font-weight: 800; color: var(--muted); white-space: nowrap; }
+  #compose.ro-bot { pointer-events: none; opacity: .5; }
+  .dv-prog { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; font-size: 12.5px; font-weight: 700; margin: 8px 0; } .dv-prog i { display: block; height: 8px; border-radius: 4px; background: rgba(255,255,255,.06); overflow: hidden; } .dv-prog i b { display: block; height: 100%; background: #5b8cff; border-radius: 4px; }
   .nohist { display: flex; gap: 10px; align-items: flex-start; margin: 10px 16px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px dashed var(--line); color: var(--muted); font-size: 13px; font-weight: 600; } .nohist .ic { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; } .nohist b { display: block; color: var(--ink); font-size: 13.5px; }
   #gifpanel { display: none; position: absolute; bottom: 58px; right: 50px; width: 420px; height: 470px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 6; flex-direction: column; overflow: hidden; animation: popIn .18s var(--ease-out); transform-origin: bottom right; }
   #gifpanel.on { display: flex; }
@@ -3584,7 +3586,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const hm = t => new Date(t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 const userColor = n => S.users[n]?.color || '#8a7362';
 const initial = n => esc([...String(n)][0]?.toUpperCase() || '?');
-const avInner = n => S.users[n]?.avatar ? `<img src="${esc(S.users[n].avatar)}" alt="">` : initial(n);
+const avInner = n => n === 'Kanka Bot' ? '<img src="/icon-192.png" alt="">' : S.users[n]?.avatar ? `<img src="${esc(S.users[n].avatar)}" alt="">` : initial(n);
 const stOf = n => n === S.me ? (S.myStatus === 'invisible' ? 'invisible' : (S.status?.get(n) || S.myStatus || 'online')) : (S.status?.get(n) || 'online');
 const isMob = n => S.online?.has(n) && S.dev?.get(n) === 'm';
 const stLabel = n => STATUS[stOf(n)][0] + (isMob(n) ? ' · telefonda' : '');
@@ -5958,6 +5960,10 @@ function openDMChannel(id, other) {
   S.channel = { id, with: other, dm: true };
   S.unread.delete(id); delete dmCnt[id]; if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false;
   renderRail(); // sol çubuktaki mesaj atan profili hemen kalksın
+  if (other === 'Kanka Bot') { setHeader(`${ic('chat')} Kanka Bot <span class="botbadge">BOT</span>`, 'Kanka bildirimleri', false);
+    enterRoom(id, 'Kanka Bot\'a cevap yazılamıyor', `<div class="hello"><div class="av" style="width:64px;height:64px;margin:0 auto 8px"><img src="/icon-192.png" alt=""></div><b>Kanka Bot</b>Kanka ekibinden gelen bildirimler burada. Bu sohbete cevap yazılamıyor.</div>`);
+    $('#compose')?.classList.add('ro-bot'); renderDMSide(); renderMembers(); return; }
+  $('#compose')?.classList.remove('ro-bot');
   setHeader(`${ic('chat')} ${esc(other)}`, S.online.has(other) ? stLabel(other) : 'Çevrimdışı', false);
   addCallButtons();
   enterRoom(id, `${other} kişisine mesaj yaz...`,
@@ -9702,6 +9708,7 @@ function emptyHTML() {
       ${$('#input').disabled ? '' : `<div class="echips">${QUICK.map(t => `<button class="echip" data-q="${esc(t)}">${esc(t)}</button>`).join('')}</div>`}
       ${S.server.invite ? `<div class="eacts"><button class="btns2" id="e-inv">${ic('userplus')} Arkadaşlarını davet et</button></div>` : ''}</div>`;
   }
+  if (S.view === 'dm' && S.channel?.with === 'Kanka Bot') return `<div class="empty"><div class="av" style="width:84px;height:84px;margin:0 auto 10px"><img src="/icon-192.png" alt=""></div><h3>Kanka Bot</h3><p>Kanka ekibinden gelen bildirimler burada. Bu sohbete cevap yazılamıyor.</p></div>`;
   if (S.view === 'dm' && S.channel?.dm && S.channel.with) {
     const o = S.channel.with;
     return `<div class="estate"><div class="eart"><div class="disc"></div><div class="av eav" style="background:${userColor(o)}">${avInner(o)}</div><span class="wv">👋</span></div>
@@ -10645,7 +10652,7 @@ function devPage(root) {
     if (a && a.status !== 'rejected') {
       const [st, c, i] = DEV_ST[a.status];
       root.innerHTML = intro + `<div class="dv-status" style="--c:${c}"><span>${ic(i)}</span><div><b>${st}</b><small>${new Date(a.at).toLocaleDateString('tr', { day: 'numeric', month: 'long' })} tarihinde başvurdun · ${esc(a.langs.join(', '))}</small></div></div>
-        ${a.status === 'accepted' ? `<p class="hint">Hoş geldin! Bot sistemi açılınca bot oluşturma ve anahtar alma bu sayfada olacak. O zamana kadar duyurular ve dokümanlar Kanka HQ'daki geliştirici kanalında.</p>` : `<p class="hint">Ekip başvurunu inceliyor, sonuç çıkınca bildirim gelir.</p><button class="btns2" id="dv-wd">Başvuruyu geri çek</button>`}`;
+        ${a.status === 'accepted' ? `<p class="hint">Hoş geldin! Bot sistemi açılınca bot oluşturma ve anahtar alma bu sayfada olacak. O zamana kadar duyurular ve sorular Kanka HQ'daki <b>#bot-gelistirici</b> odasında.</p><div class="acc-warn">${ic('info')}<span><b>🛠️ Bot Geliştirici rozeti nasıl alınır?</b>Botun senin olmayan en az 3 sunucuya eklenip toplam 50 komut kullanılınca rozet kendiliğinden gelir.</span></div>` : `<p class="hint">Ekip başvurunu inceliyor, sonuç çıkınca bildirim gelir.</p><button class="btns2" id="dv-wd">Başvuruyu geri çek</button>`}`;
       $('#dv-wd') && ($('#dv-wd').onclick = () => confirmBox('Başvurun geri çekilsin mi?', () => socket.emit('devAppWithdraw', {}, x => x.error ? toast(x.error) : devPage(root))));
       return;
     }
@@ -10688,9 +10695,14 @@ function admDev(B) {
       ${r.list.length ? r.list.map(a => { const [st, c] = DEV_ST[a.status]; return `<div class="dv-app" style="--c:${c}"><div class="dv-ah">${av(a.name, S.online.has(a.name))}<div style="flex:1;min-width:0"><b>${esc(dn(a.name))}</b><small>@${esc(a.name)} · Sv ${a.level} · ${new Date(a.at).toLocaleString('tr', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></div><span class="dv-st">${st}</span></div>
         <div class="dv-kv"><span>Diller</span><b>${esc(a.langs.join(', '))}</b><span>Deneyim</span><b>${esc(DEV_EXP[a.exp])}</b><span>Zaman</span><b>${esc(a.hours)} saat/hafta</b>${a.link ? `<span>Proje</span><b><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.link)}</a></b>` : ''}${a.contact ? `<span>İletişim</span><b>${esc(a.contact)}</b>` : ''}</div>
         <p class="dv-idea">${esc(a.idea)}</p>
-        <div class="dv-act">${a.status !== 'accepted' ? `<button class="primary" data-dd="accepted" data-n="${esc(a.name)}">${ic('check')} Kabul et</button>` : ''}${a.status !== 'rejected' ? `<button class="btns2" data-dd="rejected" data-n="${esc(a.name)}">Reddet</button>` : ''}${a.status !== 'pending' ? `<button class="btns2" data-dd="pending" data-n="${esc(a.name)}">Beklemeye al</button>` : ''}<button class="btns2" data-dm="${esc(a.name)}">${ic('chat')} Mesaj</button>${a.by ? `<small class="hint" style="margin:0 0 0 auto">${esc(a.by)} karar verdi</small>` : ''}</div></div>`; }).join('') : '<p class="hint">Henüz başvuru yok. Ayarlar › Bot geliştirici sayfasından başvurulabiliyor.</p>'}`;
+        ${a.status === 'accepted' ? `<div class="dv-prog"><span>${a.earned ? '🛠️ Rozet aldı' : 'Aday'}</span><span class="hint" style="margin:0">#bot-gelistirici'de ${a.inCh} mesaj · son görülme ${a.seen ? ago(a.seen) : '—'}</span><span></span>
+          <span>Sunucu</span><i><b style="width:${Math.min(100, (a.stats.servers || 0) / r.goal.servers * 100)}%"></b></i><span>${a.stats.servers || 0}/${r.goal.servers}</span>
+          <span>Komut</span><i><b style="width:${Math.min(100, (a.stats.cmds || 0) / r.goal.cmds * 100)}%"></b></i><span>${a.stats.cmds || 0}/${r.goal.cmds}</span></div>` : ''}
+        ${a.status === 'pending' ? `<input class="field dv-note" data-note="${esc(a.name)}" placeholder="Kişiye not (isteğe bağlı, Kanka Bot mesajında görünür)" maxlength="300" style="margin:6px 0">` : ''}
+        <div class="dv-act">${a.status !== 'accepted' ? `<button class="primary" data-dd="accepted" data-n="${esc(a.name)}">${ic('check')} Kabul et</button>` : ''}${a.status !== 'rejected' ? `<button class="btns2" data-dd="rejected" data-n="${esc(a.name)}">Reddet</button>` : ''}${a.status !== 'pending' ? `<button class="btns2" data-dd="pending" data-n="${esc(a.name)}">Beklemeye al</button>` : ''}${a.status === 'accepted' ? `<button class="btns2" data-db="${a.earned ? 0 : 1}" data-n="${esc(a.name)}">${a.earned ? 'Rozeti geri al' : '🛠️ Rozeti elle ver'}</button>` : ''}<button class="btns2" data-dm="${esc(a.name)}">${ic('chat')} Mesaj</button>${a.by ? `<small class="hint" style="margin:0 0 0 auto">${esc(a.by)} karar verdi</small>` : ''}</div></div>`; }).join('') : '<p class="hint">Henüz başvuru yok. Ayarlar › Bot geliştirici sayfasından başvurulabiliyor.</p>'}`;
     $('#dv-open').onchange = e => socket.emit('adminDevOpen', { open: e.target.checked }, x => x.error ? toast(x.error) : toast(e.target.checked ? 'Başvurular açıldı' : 'Başvurular kapatıldı'));
-    B.querySelectorAll('[data-dd]').forEach(b => b.onclick = () => { const go = () => socket.emit('adminDevDecide', { name: b.dataset.n, status: b.dataset.dd }, x => x.error ? toast(x.error) : (toast(b.dataset.dd === 'accepted' ? `${b.dataset.n} kabul edildi, 🤖 rozeti verildi` : b.dataset.dd === 'rejected' ? 'Başvuru reddedildi' : 'Beklemeye alındı', null, false, { type: 'ok' }), admDev(B)));
+    B.querySelectorAll('[data-db]').forEach(b => b.onclick = () => confirmBox(b.dataset.db === '1' ? `${b.dataset.n} kişisine bot geliştirici rozeti verilsin mi? Kanka Bot tebrik mesajı atar.` : `${b.dataset.n} kişisinin bot geliştirici rozeti geri alınsın mı?`, () => socket.emit('adminDevBadge', { name: b.dataset.n, on: b.dataset.db === '1' }, x => x.error ? toast(x.error) : (toast('Tamam'), admDev(B)))));
+    B.querySelectorAll('[data-dd]').forEach(b => b.onclick = () => { const go = () => socket.emit('adminDevDecide', { name: b.dataset.n, status: b.dataset.dd, note: B.querySelector(`[data-note="${CSS.escape(b.dataset.n)}"]`)?.value || '' }, x => x.error ? toast(x.error) : (toast(b.dataset.dd === 'accepted' ? `${b.dataset.n} kabul edildi, Kanka Bot DM attı` : b.dataset.dd === 'rejected' ? 'Başvuru reddedildi' : 'Beklemeye alındı', null, false, { type: 'ok' }), admDev(B)));
       b.dataset.dd === 'rejected' ? confirmBox(`${b.dataset.n} kullanıcısının başvurusu reddedilsin mi? Kendisine kibar bir bildirim gider.`, go) : go(); });
     B.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { closeModal(); openDM?.(b.dataset.dm); });
   });
