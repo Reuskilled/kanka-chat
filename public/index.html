@@ -3861,7 +3861,7 @@ const dobField = (pf = 'a') => { const y = new Date().getFullYear();
     <select id="${pf}-dd" aria-label="Gün"><option value="">Gün</option>${Array.from({ length: 31 }, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join('')}</select>
     <select id="${pf}-dm" aria-label="Ay"><option value="">Ay</option>${AYLAR.map((a, i) => `<option value="${String(i + 1).padStart(2, '0')}">${a}</option>`).join('')}</select>
     <select id="${pf}-dy" aria-label="Yıl"><option value="">Yıl</option>${Array.from({ length: 100 }, (_, i) => `<option>${y - i}</option>`).join('')}</select></div>`; };
-const YAS_KEY = 'kanka-yas', minorLocked = () => { const t = +store.get(YAS_KEY) || 0; return t && Date.now() - t < 30 * 864e5; };
+const YAS_KEY = 'kanka-yas2', minorLocked = () => { const t = +store.get(YAS_KEY) || 0; return t && Date.now() - t < 30 * 864e5; };
 function renderAuth(mode = authMode, keep) {
   if (mode === 'register' && minorLocked()) mode = 'minor';
   authMode = mode;
@@ -3883,11 +3883,11 @@ function renderAuth(mode = authMode, keep) {
       ${afield('a-mail', 'E-posta (şifreni unutursan diye)', 'mail', 'email', 'maxlength="190" autocomplete="email"')}
       ${afield('a-pass', 'Şifre (en az 6 karakter)', 'lock', 'password', 'autocomplete="new-password"')}
       ${dobField()}
-      <label class="acheck" id="af-a-terms"><input type="checkbox" id="a-terms"><span class="box2"></span><span><a href="/kosullar" target="_blank">Kullanım Şartları</a>'nı ve <a href="/gizlilik" target="_blank">Gizlilik Politikası / KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum. 18 yaşından büyüğüm.</span></label>
+      <label class="acheck" id="af-a-terms"><input type="checkbox" id="a-terms"><span class="box2"></span><span><a href="/kosullar" target="_blank">Kullanım Şartları</a>'nı ve <a href="/gizlilik" target="_blank">Gizlilik Politikası / KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum. En az 13 yaşında olduğumu beyan ediyorum.</span></label>
       <button class="primary" type="submit" id="a-btn">Hesabı oluştur</button><div id="auth-err"></div>
       ${needCode ? `<div class="await"><span>Kodun yok mu?</span><button type="button" class="alink" id="a-wait">Bekleme listesine katıl →</button></div>` : ''}`;
   }
-  else if (mode === 'minor') h = `<div class="abig">${ic('shield')}</div><h1>Şu an hesap açamazsın</h1><p>Kanka Chat <b>18 yaş ve üzeri</b> içindir. Girdiğin doğum tarihine göre henüz 18 yaşında değilsin, bu yüzden hesap oluşturulamadı.</p>
+  else if (mode === 'minor') h = `<div class="abig">${ic('shield')}</div><h1>Şu an hesap açamazsın</h1><p>Kanka Chat <b>13 yaş ve üzeri</b> içindir. Girdiğin doğum tarihine göre henüz 13 yaşında değilsin, bu yüzden hesap oluşturulamadı.</p>
     <ul class="a-tips"><li>Doğum tarihini yanlış girdiysen <b>kankahq1@gmail.com</b> adresine yaz, yardımcı olalım.</li><li>Zaten bir hesabın varsa giriş yapabilirsin.</li></ul>
     <button type="button" class="primary" data-m="login">Giriş ekranına dön</button>`;
   else if (mode === 'forgot') h = `<h1>Şifreni mi unuttun?</h1><p>Kullanıcı adını ya da e-postanı yaz, sıfırlama linkini e-postana gönderelim.</p>
@@ -5344,7 +5344,7 @@ function botProfile() {
   const s = S.server; if (!s) return;
   const mng = s.owner === S.me || s.myPerms?.includes('manageServer'), rs = rolesOf(s, BOT_NAME);
   modal(`<div class="kbtop"><img class="kbav" src="/icon-192.png" alt=""><h3>Kanka Bot<span class="botbadge">BOT</span></h3><p>Kanka'nın resmi botu · her zaman çevrimiçi</p></div>
-    <div class="pc-sec" style="margin-top:14px"><h5>Bu sunucuda açık modüller</h5><div class="badges">${s.bot?.mod?.on ? '<span>🛡️ Mod</span>' : ''}${s.bot?.welcome?.on ? '<span>👋 Karşılama</span>' : ''}<span>🏆 Maç Kartı</span></div></div>
+    <div class="pc-sec" style="margin-top:14px"><h5>Bu sunucuda açık modüller</h5><div class="badges">${s.bot?.mod?.on ? '<span>🛡️ Mod</span>' : ''}${s.bot?.welcome?.on ? '<span>👋 Karşılama</span>' : ''}${s.bot?.ticket?.on ? '<span>🎟️ Destek</span>' : ''}<span>🏆 Maç Kartı</span></div></div>
     <div class="pc-sec"><h5>Roller</h5>${rs.length ? `<div class="badges">${rs.map(r => `<span style="color:${r.color}">${ic('tag')}${esc(r.name)}</span>`).join('')}</div>` : '<p class="hint" style="margin:0">Henüz rol verilmemiş.</p>'}</div>
     <div class="pc-sec"><h5>Nasıl kullanılır?</h5><p class="hint">Sohbete <b>/</b> yazınca komutlar çıkar. <b>@Kanka Bot</b> yazarsan sana cevap verir.</p></div>
     <div class="rowb">${perm(s, 'manageRoles') ? '<button id="kb-roles">Rolleri düzenle</button>' : ''}${mng ? '<button id="kb-set">Ayarlar</button>' : ''}<button class="primary" id="mx" style="background:var(--accent);color:#1a0f0a;width:auto;padding:10px 20px">Kapat</button></div>`);
@@ -7516,7 +7516,7 @@ function renderMembers() {
   const mb = $('#mem-btn'); mb.classList.toggle('show', !!(srv && S.channel) || !!S.channel?.group); mb.querySelector('.mb-n').textContent = onl ? (onl > 99 ? '99+' : onl) : '';
   const mdrH = `<div class="mdr-h"><span style="flex:1"><b>Üyeler</b><small>${S.channel ? (srv ? '#' + esc(S.channel.name) + ' · ' : '') : ''}${onl} çevrimiçi · ${names.length} kişi</small></span><button id="mdr-x" aria-label="Kapat">${ic('x')}</button></div>`;
   if (S.view === 'dm' && !S.channel) return homeSidePanel(item, mdrH);
-  const botStatus = srv?.bot?.added ? [...[srv.bot.mod?.on && 'Moderasyon', srv.bot.welcome?.on && 'Karşılama'].filter(Boolean), ...rolesOf(srv, BOT_NAME).map(r => r.name)].join(' · ') || '/yardım yaz' : '';
+  const botStatus = srv?.bot?.added ? [...[srv.bot.mod?.on && 'Moderasyon', srv.bot.welcome?.on && 'Karşılama', srv.bot.ticket?.on && 'Destek'].filter(Boolean), ...rolesOf(srv, BOT_NAME).map(r => r.name)].join(' · ') || '/yardım yaz' : '';
   memSet(mdrH +
     groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(n => item(n, botStatus)).join('') : ''; }).join(''));
   $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
@@ -11325,9 +11325,9 @@ function showAgeGate(locked) {
   let g = $('#agegate'); if (!g) { g = document.createElement('div'); g.id = 'agegate'; g.setAttribute('role', 'dialog'); g.setAttribute('aria-modal', 'true'); document.body.appendChild(g); }
   const out = `<button type="button" class="alink" id="ag-out">Çıkış yap</button>`;
   g.innerHTML = locked
-    ? `<div class="ag-card"><div class="ag-ico no">${ic('shield')}</div><h2>Kanka Chat'i kullanamazsın</h2><p>Kanka Chat'i kullanabilmek için <b>en az 18 yaşında</b> olmalısın. Girdiğin doğum tarihine göre henüz 18 yaşında değilsin, bu yüzden hesabın kullanıma kapatıldı.</p>
+    ? `<div class="ag-card"><div class="ag-ico no">${ic('shield')}</div><h2>Kanka Chat'i kullanamazsın</h2><p>Kanka Chat'i kullanabilmek için <b>en az 13 yaşında</b> olmalısın. Girdiğin doğum tarihine göre henüz 13 yaşında değilsin, bu yüzden hesabın kullanıma kapatıldı.</p>
       <p class="ag-sm">Doğum tarihini yanlış girdiysen <b>kankahq1@gmail.com</b> adresine kullanıcı adınla yaz.</p>${out}</div>`
-    : `<form class="ag-card" id="ag-f"><div class="ag-ico">${ic('cake')}</div><h2>Doğum tarihini gir</h2><p>Kanka Chat artık <b>18 yaş ve üzeri</b> içindir. Devam etmek için bir kereliğine doğum tarihini girmen gerekiyor.</p>
+    : `<form class="ag-card" id="ag-f"><div class="ag-ico">${ic('cake')}</div><h2>Doğum tarihini gir</h2><p>Kanka Chat artık <b>13 yaş ve üzeri</b> içindir. Devam etmek için bir kereliğine doğum tarihini girmen gerekiyor.</p>
       ${dobField('ag')}<p class="ag-sm">Tam tarihin gizli kalır, kimse göremez. Profilinde sadece gün ve ay görünür, istersen kaldırabilirsin.</p>
       <div id="ag-err" role="alert"></div><button class="primary" type="submit" id="ag-ok">Devam et</button>${out}</form>`;
   $('#ag-out').onclick = logout;
@@ -11712,7 +11712,7 @@ function admUsers(B) {
         ${sCan('ban') && !team && !u.banned ? `<button id="u-ban" class="danger">${ic('lock')}Hesabı kapat</button>` : ''}
         ${sCan('reset') ? `<button id="u-link">${ic('key')}Şifre sıfırlama linki</button>` : ''}
       </div>
-      ${sCan('ban') ? `<div class="adm-inl" style="margin-top:8px"><label class="adm-lbl" style="margin:0">🎂 Yaş doğrulaması</label><span style="font-size:13px;color:${u.age === 'locked' ? 'var(--red)' : 'var(--muted)'}">${u.age === 'ok' ? 'Doğrulandı (18+)' : u.age === 'locked' ? '18 yaş altı girdi, hesap kilitli' : 'Henüz girmedi'}</span>${u.age === 'locked' ? '<button id="u-agereset">Kilidi kaldır, yeniden sorsun</button>' : ''}</div>` : ''}
+      ${sCan('ban') ? `<div class="adm-inl" style="margin-top:8px"><label class="adm-lbl" style="margin:0">🎂 Yaş doğrulaması</label><span style="font-size:13px;color:${u.age === 'locked' ? 'var(--red)' : 'var(--muted)'}">${u.age === 'ok' ? 'Doğrulandı (13+)' : u.age === 'locked' ? '13 yaş altı girdi, hesap kilitli' : 'Henüz girmedi'}</span>${u.age === 'locked' ? '<button id="u-agereset">Kilidi kaldır, yeniden sorsun</button>' : ''}</div>` : ''}
       ${sCan('ban') ? `<div class="adm-inl" style="margin-top:8px"><label class="adm-lbl" style="margin:0">🔥 Günlük seri</label><input class="field" id="u-stk" type="number" min="0" max="3650" value="${u.streak}" style="width:90px;margin:0"><button id="u-stks">Seriyi düzelt</button></div>` : ''}
       ${['owner', 'admin'].includes(S.staff) && !u.banned ? `<div class="adm-rankset"><label class="adm-lbl">Moderasyon ekibi rütbesi</label><div class="adm-inl"><select id="u-rank"><option value="">Ekipte değil</option>${S.staff === 'owner' ? `<option value="admin" ${u.rank === 'admin' ? 'selected' : ''}>Yönetici · her şey</option>` : ''}<option value="mod" ${u.rank === 'mod' ? 'selected' : ''}>Moderatör · uyarır, askıya alır</option><option value="destek" ${u.rank === 'destek' ? 'selected' : ''}>Destek · şikayetlere bakar, uyarır</option></select><button class="btns2" id="u-rset">Kaydet</button></div></div>` : ''}
       ${sCan('del') && !team ? `<details class="adm-del"><summary>${ic('trash')}Hesabı kalıcı olarak sil</summary><p class="hint">Mesajları, sunucu üyelikleri ve profili silinir. Geri alınamaz. Onay için kullanıcı adını aynen yaz.</p><div class="adm-inl"><input class="field" id="u-delc" placeholder="${esc(u.name)}"><button class="danger btns2" id="u-del">Sil</button></div></details>` : ''}`}

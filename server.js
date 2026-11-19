@@ -2287,7 +2287,7 @@ function renameUser(old, nw) {
   for (const n of peers) if (n !== nw) { io.to('user:' + n).emit('dms', dmsFor(n)); io.to('user:' + n).emit('social', social(n)); io.to('user:' + n).emit('userRenamed', { from: old, to: nw }); }
   return true;
 }
-// ---------- Yaş kontrolü (kayıtta doğum tarihi zorunlu, 18 yaş altı hesap açamaz) ----------
+// ---------- Yaş kontrolü (kayıtta doğum tarihi zorunlu, 13 yaş altı hesap açamaz) ----------
 const needAge = u => !!u && (!u.dob || !!u.ageLock);
 const AGE_FREE = new Set(['disconnect', 'auth', 'login', 'logout', 'setDob', 'vis', 'register', 'resetPw', 'forgot', 'checkReset', 'betaInfo', 'checkCode', 'waitlist']);
 function ageOf(dob) {
@@ -2298,6 +2298,8 @@ function ageOf(dob) {
   const age = ny - y - (nm < mo || (nm === mo && nd < d) ? 1 : 0);
   return age >= 0 && age < 130 ? age : null;
 }
+// 18+ kuralı döneminde kilitlenen hesaplar 13+ kuralında doğum tarihini yeniden girebilsin
+if (!db.ageRuleV2) { for (const u of Object.values(db.users)) if (u?.ageLock) delete u.ageLock; db.ageRuleV2 = 1; save(); }
 function resetToken(name, hours) {
   for (const [t, r] of Object.entries(db.resets)) if (r.exp < Date.now()) delete db.resets[t];
   const mine = Object.entries(db.resets).filter(([, r]) => r.name === name).sort((a, b) => a[1].exp - b[1].exp);
@@ -2415,7 +2417,7 @@ io.on('connection', socket => {
     socket.on = (ev, fn) => on(ev, (...args) => {
       if (args.some(a => typeof a !== 'function' && poisoned(a))) { const cb = args.findLast(a => typeof a === 'function'); cb?.({ error: 'Geçersiz istek' }); return; } // __proto__ kirletme girişimi
       if (args.length && typeof args[args.length - 1] !== 'function' && fn.length > args.length) args.push(() => {});
-      // Yaş doğrulaması: doğum tarihini girmemiş (ya da 18 yaş altı kilitli) hesap, tarihi girene kadar hiçbir şey yapamaz
+      // Yaş doğrulaması: doğum tarihini girmemiş (ya da 13 yaş altı kilitli) hesap, tarihi girene kadar hiçbir şey yapamaz
       if (me && needAge(db.users[me]) && !AGE_FREE.has(ev)) { const cb = args.findLast(a => typeof a === 'function'); cb?.({ error: 'Devam etmek için doğum tarihini gir', ageGate: true }); return; }
       try { const r = fn(...args); if (r && typeof r.catch === 'function') r.catch(e => logCrash('olay:' + ev, e)); }
       catch (e) { logCrash('olay:' + ev, e); }
@@ -2450,7 +2452,7 @@ io.on('connection', socket => {
     if (!NAME_RE.test(name)) return cb({ error: 'Kullanıcı adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin.' });
     const age = ageOf(dob);
     if (age === null) return cb({ error: 'Doğum tarihini seç.', field: 'dob' });
-    if (age < 18) return cb({ error: 'Kanka Chat\'te hesap açmak için 18 yaşında ya da daha büyük olmalısın.', field: 'dob', minor: true }); // doğum tarihi saklanmaz
+    if (age < 13) return cb({ error: 'Kanka Chat\'te hesap açmak için 13 yaşında ya da daha büyük olmalısın.', field: 'dob', minor: true }); // doğum tarihi saklanmaz
     if (password.length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
     if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz. Şifreni unutursan buraya link göndeririz.', field: 'email' });
     if (!terms) return cb({ error: 'Devam etmek için kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
@@ -3626,11 +3628,11 @@ io.on('connection', socket => {
   // Eski hesaplar için bir kereye mahsus doğum tarihi
   socket.on('setDob', (dob, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
-    if (u.ageLock) return cb({ error: 'Kanka Chat\'i kullanabilmek için en az 18 yaşında olmalısın.', locked: true });
+    if (u.ageLock) return cb({ error: 'Kanka Chat\'i kullanabilmek için en az 13 yaşında olmalısın.', locked: true });
     if (u.dob) return cb({ ok: true });
     if (limited('dob|' + me, 10, 3600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
     const age = ageOf(dob); if (age === null) return cb({ error: 'Geçerli bir doğum tarihi seç.' });
-    if (age < 18) { u.ageLock = { at: Date.now() }; save(); secLog('yas-kilidi', me, '18 yaş altı doğum tarihi girdi'); return cb({ error: 'Kanka Chat\'i kullanabilmek için en az 18 yaşında olmalısın.', locked: true }); } // tarih saklanmaz, sadece kilit
+    if (age < 13) { u.ageLock = { at: Date.now() }; save(); secLog('yas-kilidi', me, '13 yaş altı doğum tarihi girdi'); return cb({ error: 'Kanka Chat\'i kullanabilmek için en az 13 yaşında olmalısın.', locked: true }); } // tarih saklanmaz, sadece kilit
     u.dob = String(dob); if (!u.birthday) u.birthday = String(dob).slice(5); save();
     cb({ ok: true });
   });
