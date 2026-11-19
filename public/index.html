@@ -2236,6 +2236,18 @@
   .beta-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(255,138,76,.6); animation: bpulse 1.8s infinite; }
   @keyframes bpulse { 70% { box-shadow: 0 0 0 7px rgba(255,138,76,0); } 100% { box-shadow: 0 0 0 0 rgba(255,138,76,0); } }
   .afield { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); margin-bottom: 10px; transition: border-color .15s, box-shadow .15s; text-align: left; }
+  #agegate { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 20px; background: radial-gradient(ellipse at top, #2a1a12, var(--bg, #120c09) 70%); overflow-y: auto; }
+  #agegate .ag-card { width: 100%; max-width: 420px; padding: 30px 26px 22px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); text-align: center; box-shadow: 0 30px 80px #0008; }
+  #agegate .ag-ico { width: 64px; height: 64px; margin: 0 auto 14px; display: grid; place-items: center; border-radius: 20px; background: var(--accent-soft); color: var(--accent); }
+  #agegate .ag-ico.no { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red); }
+  #agegate .ag-ico svg { width: 30px; height: 30px; }
+  #agegate h2 { margin: 0 0 8px; font-size: 22px; }
+  #agegate p { margin: 0 0 16px; color: var(--muted); line-height: 1.5; font-size: 15px; }
+  #agegate p b { color: var(--ink); }
+  #agegate .ag-sm { font-size: 13px; margin: 6px 0 10px; }
+  #agegate #ag-err { min-height: 18px; color: var(--red); font-size: 13px; margin-bottom: 8px; }
+  #agegate .primary { width: 100%; }
+  #agegate .alink { display: block; margin: 14px auto 0; }
   .un-st { display: block; min-height: 16px; margin-top: 5px; font-size: 12px; color: var(--muted); }
   .un-st.ok { color: var(--green); } .un-st.no { color: var(--red); }
   .adob { gap: 6px; padding-right: 8px; }
@@ -3759,11 +3771,11 @@ if (authQ.sifirla) authMode = 'reset';
 const AUTH_IC = { user: 'user', mail: 'mail', lock: 'lock', code: 'ticket' };
 const afield = (id, ph, icn, type = 'text', extra = '') => `<label class="afield" id="af-${id}">${ic(AUTH_IC[icn] || icn)}<input id="${id}" type="${type}" placeholder="${ph}" ${extra}>${type === 'password' ? `<button type="button" class="peek" data-peek="${id}" aria-label="Şifreyi göster">${ic('eye')}</button>` : ''}</label>`;
 const AYLAR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-const dobField = () => { const y = new Date().getFullYear();
-  return `<div class="afield adob" id="af-a-dob">${ic('cake')}<span class="adob-l">Doğum tarihin</span>
-    <select id="a-dd" aria-label="Gün"><option value="">Gün</option>${Array.from({ length: 31 }, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join('')}</select>
-    <select id="a-dm" aria-label="Ay"><option value="">Ay</option>${AYLAR.map((a, i) => `<option value="${String(i + 1).padStart(2, '0')}">${a}</option>`).join('')}</select>
-    <select id="a-dy" aria-label="Yıl"><option value="">Yıl</option>${Array.from({ length: 100 }, (_, i) => `<option>${y - i}</option>`).join('')}</select></div>`; };
+const dobField = (pf = 'a') => { const y = new Date().getFullYear();
+  return `<div class="afield adob" id="af-${pf}-dob">${ic('cake')}<span class="adob-l">Doğum tarihin</span>
+    <select id="${pf}-dd" aria-label="Gün"><option value="">Gün</option>${Array.from({ length: 31 }, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join('')}</select>
+    <select id="${pf}-dm" aria-label="Ay"><option value="">Ay</option>${AYLAR.map((a, i) => `<option value="${String(i + 1).padStart(2, '0')}">${a}</option>`).join('')}</select>
+    <select id="${pf}-dy" aria-label="Yıl"><option value="">Yıl</option>${Array.from({ length: 100 }, (_, i) => `<option>${y - i}</option>`).join('')}</select></div>`; };
 const YAS_KEY = 'kanka-yas', minorLocked = () => { const t = +store.get(YAS_KEY) || 0; return t && Date.now() - t < 30 * 864e5; };
 function renderAuth(mode = authMode, keep) {
   if (mode === 'register' && minorLocked()) mode = 'minor';
@@ -3957,6 +3969,7 @@ function onAuth(res) {
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
   setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {}; setVoiceAge(res.voiceAge);
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
+  if (res.ageGate) return showAgeGate(res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
   if (res.ice?.length) ICE.iceServers = res.ice;
   S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me);
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
@@ -10987,6 +11000,30 @@ socket.on('siteBanned', reason => {
   setTimeout(() => authErr({ error: 'Hesabın Kanka Chat kurallarını ihlal ettiği için kapatıldı.' + (reason ? ' Sebep: ' + reason : '') }), 80);
 });
 
+// ================= Yaş doğrulaması: doğum tarihi girilene kadar kapanmayan ekran =================
+function showAgeGate(locked) {
+  $('#auth').style.display = 'none'; $('#app').style.display = 'none'; closeModal();
+  let g = $('#agegate'); if (!g) { g = document.createElement('div'); g.id = 'agegate'; g.setAttribute('role', 'dialog'); g.setAttribute('aria-modal', 'true'); document.body.appendChild(g); }
+  const out = `<button type="button" class="alink" id="ag-out">Çıkış yap</button>`;
+  g.innerHTML = locked
+    ? `<div class="ag-card"><div class="ag-ico no">${ic('shield')}</div><h2>Kanka Chat'i kullanamazsın</h2><p>Kanka Chat'i kullanabilmek için <b>en az 18 yaşında</b> olmalısın. Girdiğin doğum tarihine göre henüz 18 yaşında değilsin, bu yüzden hesabın kullanıma kapatıldı.</p>
+      <p class="ag-sm">Doğum tarihini yanlış girdiysen <b>kankahq1@gmail.com</b> adresine kullanıcı adınla yaz.</p>${out}</div>`
+    : `<form class="ag-card" id="ag-f"><div class="ag-ico">${ic('cake')}</div><h2>Doğum tarihini gir</h2><p>Kanka Chat artık <b>18 yaş ve üzeri</b> içindir. Devam etmek için bir kereliğine doğum tarihini girmen gerekiyor.</p>
+      ${dobField('ag')}<p class="ag-sm">Tam tarihin gizli kalır, kimse göremez. Profilinde sadece gün ve ay görünür, istersen kaldırabilirsin.</p>
+      <div id="ag-err" role="alert"></div><button class="primary" type="submit" id="ag-ok">Devam et</button>${out}</form>`;
+  $('#ag-out').onclick = logout;
+  const f = $('#ag-f'); if (!f) return;
+  f.onsubmit = e => { e.preventDefault(); const dob = `${$('#ag-dy').value}-${$('#ag-dm').value}-${$('#ag-dd').value}`;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) { $('#ag-err').textContent = 'Gün, ay ve yılı seç.'; return $('#af-ag-dob').classList.add('bad'); }
+    $('#ag-ok').disabled = true;
+    socket.emit('setDob', dob, r => { $('#ag-ok') && ($('#ag-ok').disabled = false);
+      if (r?.locked) return showAgeGate(true);
+      if (r?.error) { $('#ag-err').textContent = r.error; return; }
+      g.innerHTML = `<div class="ag-card"><div class="ag-ico">${ic('check')}</div><h2>Teşekkürler!</h2><p>Kanka açılıyor…</p></div>`; setTimeout(() => location.reload(), 700); }); };
+  g.querySelectorAll('select').forEach(x => x.onchange = () => { $('#af-ag-dob').classList.remove('bad'); $('#ag-err').textContent = ''; });
+}
+socket.on('ageGate', () => location.reload());
+
 // ================= Hesap sayfası =================
 function accountPageHTML(u) {
   return `<div class="st-page"><h3>Hesap</h3>
@@ -11356,6 +11393,7 @@ function admUsers(B) {
         ${sCan('ban') && !team && !u.banned ? `<button id="u-ban" class="danger">${ic('lock')}Hesabı kapat</button>` : ''}
         ${sCan('reset') ? `<button id="u-link">${ic('key')}Şifre sıfırlama linki</button>` : ''}
       </div>
+      ${sCan('ban') ? `<div class="adm-inl" style="margin-top:8px"><label class="adm-lbl" style="margin:0">🎂 Yaş doğrulaması</label><span style="font-size:13px;color:${u.age === 'locked' ? 'var(--red)' : 'var(--muted)'}">${u.age === 'ok' ? 'Doğrulandı (18+)' : u.age === 'locked' ? '18 yaş altı girdi, hesap kilitli' : 'Henüz girmedi'}</span>${u.age === 'locked' ? '<button id="u-agereset">Kilidi kaldır, yeniden sorsun</button>' : ''}</div>` : ''}
       ${sCan('ban') ? `<div class="adm-inl" style="margin-top:8px"><label class="adm-lbl" style="margin:0">🔥 Günlük seri</label><input class="field" id="u-stk" type="number" min="0" max="3650" value="${u.streak}" style="width:90px;margin:0"><button id="u-stks">Seriyi düzelt</button></div>` : ''}
       ${['owner', 'admin'].includes(S.staff) && !u.banned ? `<div class="adm-rankset"><label class="adm-lbl">Moderasyon ekibi rütbesi</label><div class="adm-inl"><select id="u-rank"><option value="">Ekipte değil</option>${S.staff === 'owner' ? `<option value="admin" ${u.rank === 'admin' ? 'selected' : ''}>Yönetici · her şey</option>` : ''}<option value="mod" ${u.rank === 'mod' ? 'selected' : ''}>Moderatör · uyarır, askıya alır</option><option value="destek" ${u.rank === 'destek' ? 'selected' : ''}>Destek · şikayetlere bakar, uyarır</option></select><button class="btns2" id="u-rset">Kaydet</button></div></div>` : ''}
       ${sCan('del') && !team ? `<details class="adm-del"><summary>${ic('trash')}Hesabı kalıcı olarak sil</summary><p class="hint">Mesajları, sunucu üyelikleri ve profili silinir. Geri alınamaz. Onay için kullanıcı adını aynen yaz.</p><div class="adm-inl"><input class="field" id="u-delc" placeholder="${esc(u.name)}"><button class="danger btns2" id="u-del">Sil</button></div></details>` : ''}`}
@@ -11366,6 +11404,7 @@ function admUsers(B) {
     $('#u-warn') && ($('#u-warn').onclick = () => { if (!why()) return out('Uyarı için bir sebep yaz. Kullanıcı bunu görecek.', false); act({ action: 'warn', reason: why() }, `<b>${esc(u.name)} uyarıldı.</b> Girişte ve şu an açıksa ekranında uyarıyı görecek.`); });
     $('#u-susp') && armBtn($('#u-susp'), 'Emin misin?', () => act({ action: 'suspend', days: $('#u-days').value, reason: why() || 'Kural ihlali' }, `<b>${esc(u.name)} ${$('#u-days')?.value || 1} gün askıya alındı.</b>`));
     $('#u-ban') && armBtn($('#u-ban'), 'Kapatılsın mı?', () => act({ action: 'ban', reason: why() || 'Kural ihlali' }, `<b>${esc(u.name)} hesabı kapatıldı.</b>`));
+    $('#u-agereset') && ($('#u-agereset').onclick = () => act({ action: 'ageReset' }, `<b>${esc(u.name)} için yaş kilidi kaldırıldı; tekrar doğum tarihi sorulacak.</b>`));
     $('#u-stks') && ($('#u-stks').onclick = () => act({ action: 'streak', days: +$('#u-stk').value }, `<b>${esc(u.name)} serisi ${+$('#u-stk').value} gün yapıldı.</b>`));
     $('#u-unban') && ($('#u-unban').onclick = () => act({ action: 'unban' }, `<b>${esc(u.name)} hesabı açıldı.</b>`));
     $('#u-link') && ($('#u-link').onclick = () => socket.emit('adminUser', { name: u.name, action: 'resetLink' }, x => { if (x.error) return out(esc(x.error), false); navigator.clipboard?.writeText(x.link); out(`<b>Link panoya kopyalandı (24 saat geçerli)</b><code>${esc(x.link)}</code>`); }));

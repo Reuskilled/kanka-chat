@@ -2288,6 +2288,8 @@ function renameUser(old, nw) {
   return true;
 }
 // ---------- Yaş kontrolü (kayıtta doğum tarihi zorunlu, 18 yaş altı hesap açamaz) ----------
+const needAge = u => !!u && (!u.dob || !!u.ageLock);
+const AGE_FREE = new Set(['disconnect', 'auth', 'login', 'logout', 'setDob', 'vis', 'register', 'resetPw', 'forgot', 'checkReset', 'betaInfo', 'checkCode', 'waitlist']);
 function ageOf(dob) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dob || '')); if (!m) return null;
   const [y, mo, d] = [+m[1], +m[2], +m[3]], dt = new Date(Date.UTC(y, mo - 1, d));
@@ -2413,6 +2415,8 @@ io.on('connection', socket => {
     socket.on = (ev, fn) => on(ev, (...args) => {
       if (args.some(a => typeof a !== 'function' && poisoned(a))) { const cb = args.findLast(a => typeof a === 'function'); cb?.({ error: 'Geçersiz istek' }); return; } // __proto__ kirletme girişimi
       if (args.length && typeof args[args.length - 1] !== 'function' && fn.length > args.length) args.push(() => {});
+      // Yaş doğrulaması: doğum tarihini girmemiş (ya da 18 yaş altı kilitli) hesap, tarihi girene kadar hiçbir şey yapamaz
+      if (me && needAge(db.users[me]) && !AGE_FREE.has(ev)) { const cb = args.findLast(a => typeof a === 'function'); cb?.({ error: 'Devam etmek için doğum tarihini gir', ageGate: true }); return; }
       try { const r = fn(...args); if (r && typeof r.catch === 'function') r.catch(e => logCrash('olay:' + ev, e)); }
       catch (e) { logCrash('olay:' + ev, e); }
     });
@@ -2437,7 +2441,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), voiceAge: voiceAges(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
+      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 
@@ -2864,7 +2868,7 @@ io.on('connection', socket => {
   const SM = cb => { if (siteMod(me)) return true; cb({ error: 'Sadece Kanka ekibi' }); return false; };
   const userCard = u => ({ name: u.name, email: canStaff(me, 'email') && u.email ? u.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2') : null, createdAt: u.createdAt, invitedBy: u.invitedBy || null,
     banned: isBanned(u) ? u.siteBan : null, reports: db.reports.filter(r => r.target === u.name).length, servers: serversFor(u.name).filter(s => !s.public).length,
-    level: level(u.xp), xp: u.xp || 0, msgs: u.msgs || 0, streak: u.streak?.count || 0, online: onlineNames().includes(u.name), rank: staffRank(u.name),
+    level: level(u.xp), xp: u.xp || 0, msgs: u.msgs || 0, streak: u.streak?.count || 0, age: u.ageLock ? 'locked' : u.dob ? 'ok' : 'none', online: onlineNames().includes(u.name), rank: staffRank(u.name),
     warns: (u.siteWarns || []).slice(-10).reverse().map(w => ({ at: w.at, by: w.by, reason: w.reason, seen: w.seen })) });
   socket.on('adminUser', ({ name, action, reason, days, confirm } = {}, cb = () => {}) => {
     if (!SM(cb)) return;
@@ -2872,6 +2876,7 @@ io.on('connection', socket => {
     const deny = () => cb({ error: 'Bunun için yetkin yok' });
     if (action && u.name !== me && staffRank(u.name) === 'owner') return cb({ error: 'Kurucuya işlem yapılamaz' });
     if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); if (staffRank(u.name) && u.name !== me && staffRank(me) !== 'owner') return cb({ error: 'Ekipten birinin şifre linkini sadece kurucu oluşturabilir' }); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/?sifirla=${resetToken(u.name, 24)}` }); }
+    if (action === 'ageReset') { if (!canStaff(me, 'ban')) return deny(); delete u.ageLock; delete u.dob; staffLog(me, 'Yaş kilidini kaldırdı', u.name); save(); io.to('user:' + u.name).emit('ageGate', { locked: false }); return cb({ ok: true, user: userCard(u) }); }
     if (action === 'streak') { if (!canStaff(me, 'ban')) return deny(); const n = Math.min(Math.max(parseInt(days) || 0, 0), 3650); u.streak = { last: ymd(), count: n, best: Math.max(n, u.streak?.best || 0) }; staffLog(me, 'Seriyi düzeltti', u.name, n + ' gün'); save(); io.emit('users', allUsers()); }
     if (action === 'warn') { if (!canStaff(me, 'warn')) return deny(); if (u.name === me) return cb({ error: 'Kendini uyaramazsın' }); siteWarnUser(u.name, me, reason); }
     if (action === 'suspend') { if (!canStaff(me, 'suspend')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri askıya alınamaz' }); const d = [1, 3, 7, 30].includes(+days) ? +days : 1; siteBanUser(u.name, me, reason || 'Kural ihlali', Date.now() + d * 864e5); }
@@ -3589,6 +3594,17 @@ io.on('connection', socket => {
     const servers = db.servers.filter(s => { const m = membersOf(s); return m.includes(me) && m.includes(n); }).sort((a, b) => (b.id === 's1') - (a.id === 's1')).map(s => ({ id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, joined: s.joinedAt?.[n] || null }));
     const mine = new Set(db.users[me].friends || []), friends = n === me ? [] : (o.friends || []).filter(x => mine.has(x));
     cb({ matches: (o.matches || []).slice(0, 8), servers: n === me ? [] : servers, friends, joined: Object.fromEntries(db.servers.filter(s => s.members.includes(n) && s.joinedAt?.[n]).map(s => [s.id, s.joinedAt[n]])) });
+  });
+  // Eski hesaplar için bir kereye mahsus doğum tarihi
+  socket.on('setDob', (dob, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (u.ageLock) return cb({ error: 'Kanka Chat\'i kullanabilmek için en az 18 yaşında olmalısın.', locked: true });
+    if (u.dob) return cb({ ok: true });
+    if (limited('dob|' + me, 10, 3600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+    const age = ageOf(dob); if (age === null) return cb({ error: 'Geçerli bir doğum tarihi seç.' });
+    if (age < 18) { u.ageLock = { at: Date.now() }; save(); secLog('yas-kilidi', me, '18 yaş altı doğum tarihi girdi'); return cb({ error: 'Kanka Chat\'i kullanabilmek için en az 18 yaşında olmalısın.', locked: true }); } // tarih saklanmaz, sadece kilit
+    u.dob = String(dob); if (!u.birthday) u.birthday = String(dob).slice(5); save();
+    cb({ ok: true });
   });
   socket.on('changeName', ({ name, password } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
