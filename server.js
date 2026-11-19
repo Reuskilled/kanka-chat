@@ -488,7 +488,7 @@ app.post('/api/presence', express.json({ limit: '24kb' }), async (req, res) => {
   const mm = ms ? { ...ms.music } : null;
   if (mm) {
     const dur = +ms.musicRaw.dur, pos = +ms.musicRaw.pos, same = prev.music?.title === mm.title && prev.music?.artist === mm.artist;
-    if (dur > 1000 && dur < 3600e3 && pos >= 0 && pos <= dur) { mm.dur = Math.round(dur); mm.start = now - Math.round(pos); if (same && prev.music.start && Math.abs(prev.music.start - mm.start) < 3000) mm.start = prev.music.start; }
+    if (dur > 1000 && dur < 3600e3 && pos >= 0 && pos <= dur) { mm.dur = Math.round(dur); mm.start = now - Math.round(pos); if (same && prev.music.start && Math.abs(prev.music.start - mm.start) < 8000) mm.start = prev.music.start; } // aynı şarkı: süre izleyicide kendiliğinden ilerler; sadece ileri/geri sarınca (8 sn+) yeniden gönderilir
     else mm.start = same ? prev.music.start : now;
     mm.art = same ? prev.music.art : null;
   }
