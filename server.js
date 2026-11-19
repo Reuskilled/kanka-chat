@@ -1229,6 +1229,7 @@ const BOT_NAME = 'Kanka Bot';
 const BOT_MODS = {
   mod: { on: false, antinuke: true, invites: true, links: false, spam: true, mentions: true, caps: false, words: '', logCh: null, warnLimit: 3 },
   welcome: { on: false, ch: null, text: '{üye} aramıza katıldı! 🎉 Kendini #tanışma odasında tanıt.', count: true, role: null, bye: false, byeText: '{üye} aramızdan ayrıldı. Yolun açık olsun 👋' },
+  autorole: { on: false, roles: [], when: 'join', delayMin: 10, pending: {} },
   ticket: { on: false, panelCh: null, role: null, askReason: true, panelText: 'Bir sorunun mu var? Talebini aç, yetkililer en kısa sürede ilgilenecek.', welcome: 'Merhaba {üye}! Talebini buraya yazabilirsin. Yetkililer en kısa sürede bakacak.', cooldownMin: 10, seq: 0 },
 };
 const WELCOME_TITLES = ['👋 Aramıza hoş geldin!', '🎉 Yeni kanka geldi!', '🦝 Bir kanka daha!', '🚀 Ekibe katıldı!', '✨ Selam, yeni yüz!'];
@@ -1241,25 +1242,49 @@ function welcomeChannel(s, w) {
 function welcomeFill(s, t, name, count) {
   return String(t || '').replace(/\{(üye|uye|kullanıcı)\}/gi, '@' + name).replace(/\{sunucu\}/gi, s.name).replace(/\{(sayı|sayi)\}/gi, String(count));
 }
-function botWelcome(s, name) {
+// ---- Oto-rol: yeni gelene (hemen / kuralları kabul edince / X dakika sonra) roller ver ----
+const autoRoleList = s => (s.bot?.autorole?.roles || []).map(id => (s.customRoles || []).find(r => r.id === id && !r.bot)).filter(Boolean);
+const botCanGive = (s, r) => { const br = botRole(s); return !br || s.customRoles.indexOf(r) > s.customRoles.indexOf(br); };
+function autoRoleGive(s, name, { log = true, push = true } = {}) {
+  if (!botOn(s, 'autorole') || s.public || name === BOT_NAME || !s.members.includes(name) || s.bans?.[name]) return [];
+  const gave = [], blocked = [];
+  s.memberRoles ||= {}; const l = (s.memberRoles[name] ||= []);
+  for (const r of autoRoleList(s)) {
+    if (l.includes(r.id)) continue;
+    if (r.perms?.length) { blocked.push(r.name + ' (yetkili rol)'); continue; }
+    if (!botCanGive(s, r)) { blocked.push(r.name); continue; }
+    l.push(r.id); gave.push(r.name);
+  }
+  if (blocked.length && log) modLog(s, { title: '🏷️ Oto-rol: bazı roller verilemedi', text: `${blocked.join(', ')} verilemedi. Roller sekmesinde Kanka Bot rolünü bu rollerin üstüne taşı; yetkisi olan roller otomatik verilmez.`, tone: 'warn' });
+  if (gave.length && push) { save(); pushServers(membersOf(s)); }
+  return gave;
+}
+// Katılınca çağrılır: hemen ver ya da sıraya koy. Karşılama kartında gösterilsin diye verilen rollerin adını döner.
+function autoRoleOnJoin(s, name) {
+  if (!botOn(s, 'autorole') || s.public) return [];
+  const a = s.bot.autorole, rulesGate = a.when === 'rules' && s.welcome?.enabled && s.owner !== name && !s.accepted?.[name];
+  if (a.when === 'delay' && a.delayMin > 0) { (a.pending ||= {})[name] = Date.now() + a.delayMin * 60e3; save(); return []; }
+  if (rulesGate) return [];
+  return autoRoleGive(s, name, { push: false });
+}
+setInterval(() => { // gecikmeli oto-rol
+  const now = Date.now();
+  for (const s of db.servers) { const p = s.bot?.autorole?.pending; if (!p) continue;
+    for (const [n, t] of Object.entries(p)) if (t <= now) { delete p[n]; if (botOn(s, 'autorole') && s.members.includes(n)) autoRoleGive(s, n); } }
+}, 30e3);
+for (const sv of db.servers || []) if (sv.bot?.welcome?.role) botCfg(sv); // karşılamadaki eski tek rolü oto-role taşı
+function botWelcome(s, name, arGave = []) {
   if (!botOn(s, 'welcome') || name === BOT_NAME) return;
   const w = s.bot.welcome, ch = welcomeChannel(s, w); if (!ch) return;
   const count = s.public ? userCount() : s.members.length;
   const u = db.users[name], fields = [];
   if (w.count) fields.push(['Üye', `${ordinalTr(count)} kanka`]);
   if (u && badgesOf(u).includes('beta')) fields.push(['Rozet', '🧪 Beta Tester']);
-  let gave = null;
-  const r = w.role && (s.customRoles || []).find(x => x.id === w.role && !x.bot);
-  if (r && !s.public) {
-    const br = botRole(s), ok = !br || s.customRoles.indexOf(r) > s.customRoles.indexOf(br);
-    if (ok) { s.memberRoles ||= {}; const l = (s.memberRoles[name] ||= []); if (!l.includes(r.id)) { l.push(r.id); gave = r.name; } }
-    else modLog(s, { title: '👋 Karşılama: rol verilemedi', text: `"${r.name}" rolü Kanka Bot'un rolünden yukarıda. Roller sekmesinde Kanka Bot rolünü onun üstüne taşı.`, tone: 'warn' });
-  }
+  const gave = arGave.join(', ') || null;
   if (gave) fields.push(['Rol', gave]);
   const txt = welcomeFill(s, w.text, name, count) || `@${name} aramıza katıldı!`;
   botPost(ch.id, { title: WELCOME_TITLES[count % WELCOME_TITLES.length], text: txt, tone: 'ok', fields });
   if (txt.includes('@' + name)) notifyUser(name, { from: BOT_NAME, text: txt, channelId: ch.id, where: `${s.name} · #${ch.name}`, mention: true });
-  if (gave) { save(); pushServers(membersOf(s)); }
 }
 // ---- Kanka HQ: sık sorulanlara Kanka Bot'tan hazır cevap ----
 // Sadece soru gibi duran mesajlara cevap verir; aynı konuyu bir odada 3 dk, aynı kişiye 30 dk içinde tekrar anlatmaz.
@@ -1311,6 +1336,7 @@ function botBye(s, name) {
 function botCfg(s) {
   s.bot ||= {};
   for (const [k, def] of Object.entries(BOT_MODS)) s.bot[k] = { ...def, ...(s.bot[k] || {}) };
+  if (s.bot.welcome.role) { if (!s.bot.autorole.roles.length) { s.bot.autorole.roles = [s.bot.welcome.role]; s.bot.autorole.on = !!s.bot.welcome.on; } s.bot.welcome.role = null; } // eski: karşılamanın içindeki tek rol
   return s.bot;
 }
 const botOn = (s, mod) => !!s?.bot?.added && !!s.bot[mod]?.on;
@@ -2970,10 +2996,21 @@ io.on('connection', socket => {
       else if (k === 'text' || k === 'byeText' || k === 'panelText' || k === 'welcome') b[module][k] = clean(v, 400);
       else if (k === 'role') { const r = (s.customRoles || []).find(x => x.id === v && !x.bot); b[module][k] = r ? r.id : null; }
       else if (k === 'cooldownMin') b[module][k] = Math.min(Math.max(parseInt(v) || 0, 0), 1440);
+      else if (k === 'roles') { const ok = (Array.isArray(v) ? v : []).filter(x => (s.customRoles || []).some(r => r.id === x && !r.bot)); const bad = ok.filter(x => s.customRoles.find(r => r.id === x).perms?.length); if (bad.length) return cb({ error: 'Yetkisi olan roller otomatik verilemez' }); b[module][k] = [...new Set(ok)].slice(0, 5); }
+      else if (k === 'when') b[module][k] = ['join', 'rules', 'delay'].includes(v) ? v : 'join';
+      else if (k === 'delayMin') b[module][k] = Math.min(Math.max(parseInt(v) || 10, 1), 1440);
+      else if (k === 'pending') {}
     }
-    if (was !== b[module].on) audit(s, me, b[module].on ? 'Kanka Bot modülünü açtı' : 'Kanka Bot modülünü kapattı', { mod: 'Mod', welcome: 'Karşılama', ticket: 'Destek' }[module] || module);
-    else audit(s, me, 'Kanka Bot ayarlarını değiştirdi', { mod: 'Mod', welcome: 'Karşılama', ticket: 'Destek' }[module] || module);
+    if (was !== b[module].on) audit(s, me, b[module].on ? 'Kanka Bot modülünü açtı' : 'Kanka Bot modülünü kapattı', { mod: 'Mod', welcome: 'Karşılama', ticket: 'Destek', autorole: 'Oto-rol' }[module] || module);
+    else audit(s, me, 'Kanka Bot ayarlarını değiştirdi', { mod: 'Mod', welcome: 'Karşılama', ticket: 'Destek', autorole: 'Oto-rol' }[module] || module);
     pushSrv(s); cb({ ok: true });
+  });
+  socket.on('autoRoleAll', ({ serverId } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageRoles'); if (!s || s.public) return cb({ error: 'Rolleri yönetme yetkin yok' });
+    if (!botOn(s, 'autorole') || !autoRoleList(s).length) return cb({ error: 'Önce oto-rolü açıp rol seç' });
+    if (limited('arAll|' + s.id, 2, 60e3)) return cb({ error: 'Biraz bekle' });
+    let n = 0; for (const m of s.members) if (m !== s.owner && m !== BOT_NAME && autoRoleGive(s, m, { log: false, push: false }).length) n++;
+    audit(s, me, 'Oto-rolü mevcut üyelere uyguladı', n + ' üye'); save(); pushServers(membersOf(s)); cb({ ok: true, n });
   });
   socket.on('ticketOpen', ({ serverId, reason } = {}, cb = () => {}) => {
     if (!me) return cb({ error: 'Giriş yapmalısın' });
@@ -3971,7 +4008,9 @@ io.on('connection', socket => {
   socket.on('acceptRules', (serverId, cb = () => {}) => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || !membersOf(s).includes(me)) return cb({ error: 'Geçersiz' });
-    (s.accepted ||= {})[me] = Date.now(); save(); pushServers([me]); cb({ ok: true });
+    (s.accepted ||= {})[me] = Date.now();
+    if (botOn(s, 'autorole') && s.bot.autorole.when === 'rules') autoRoleGive(s, me);
+    save(); pushServers([me]); cb({ ok: true });
   });
   socket.on('welcomeSave', ({ serverId, enabled, message, rules, channels } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
@@ -4018,7 +4057,7 @@ io.on('connection', socket => {
     inviteGuard('u:' + me, !!s); inviteGuard('ip:' + ip, !!s);
     if (!s) return cb({ error: 'Davet kodu geçersiz' });
     if (s.bans?.[me]) return cb({ error: 'Bu sunucudan yasaklandın' });
-    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); save(); pushServers(s.members); botWelcome(s, me); }
+    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); const ar = autoRoleOnJoin(s, me); save(); pushServers(s.members); botWelcome(s, me, ar); }
     cb(serverView(s, me));
   });
 

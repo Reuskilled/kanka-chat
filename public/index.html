@@ -575,6 +575,11 @@
   #gif-btn span { font-size: 11px; font-weight: 900; letter-spacing: .04em; border: 2px solid currentColor; border-radius: 6px; padding: 1px 4px; line-height: 1.2; }
   #gif-btn:hover, #gif-btn.on { background: var(--hover); color: var(--ink); }
   #gif-btn[hidden], #gif-btn.noperm { display: none; }
+  .ar-roles { display: flex; flex-wrap: wrap; gap: 6px; } .ar-r { position: relative; cursor: pointer; } .ar-r input { position: absolute; opacity: 0; pointer-events: none; }
+  .ar-r span { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 99px; background: var(--bg); border: 1px solid var(--line); font-weight: 800; font-size: 13.5px; } .ar-r span i { width: 10px; height: 10px; border-radius: 50%; }
+  .ar-r input:checked + span { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--bg)); } .ar-r.dis { opacity: .45; cursor: not-allowed; }
+  .ar-r input:focus-visible + span { outline: 2px solid var(--accent); }
+  .botset .dv-opt span b { display: block; font-size: 14px; } .botset .dv-opt span small { display: block; color: var(--muted); font-weight: 600; font-size: 12.5px; margin-top: 1px; }
   .nohist { display: flex; gap: 10px; align-items: flex-start; margin: 10px 16px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px dashed var(--line); color: var(--muted); font-size: 13px; font-weight: 600; } .nohist .ic { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; } .nohist b { display: block; color: var(--ink); font-size: 13.5px; }
   #gifpanel { display: none; position: absolute; bottom: 58px; right: 50px; width: 420px; height: 470px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 6; flex-direction: column; overflow: hidden; animation: popIn .18s var(--ease-out); transform-origin: bottom right; }
   #gifpanel.on { display: flex; }
@@ -5055,7 +5060,8 @@ document.addEventListener('click', e => { const a = e.target.closest('.chref[dat
 // ================= Kanka Bot =================
 const KB_MODS = [
   ['mod', '🛡️', 'Mod', 'Anti-nuke, otomatik moderasyon, uyarı, susturma, mesaj temizleme ve oda kilidi.', '#f59e0b', '#ef4444'],
-  ['welcome', '👋', 'Karşılama', 'Yeni gelen her üyeyi kartla karşılar, kaçıncı kanka olduğunu söyler, istersen otomatik rol verir.', '#ff8a4c', '#f472b6'],
+  ['welcome', '👋', 'Karşılama', 'Yeni gelen her üyeyi kartla karşılar, kaçıncı kanka olduğunu söyler.', '#ff8a4c', '#f472b6'],
+  ['autorole', '🏷️', 'Oto-rol', 'Yeni gelene kendiliğinden rol verir: hemen, kuralları kabul edince ya da birkaç dakika sonra.', '#a78bfa', '#ec4899'],
   ['ticket', '🎟️', 'Destek', 'Panelden tek tıkla talep açılsın. Her talep, sadece açan kişi ve yetkililerin görebileceği özel bir odada toplanır.', '#5aa9ff', '#6366f1'],
   ['match', '🏆', 'Maç Kartı', 'LoL, Valorant ve CS2 maçı bitince skor sohbete kendiliğinden düşer.', '#22c55e', '#0ea5e9']];
 const kbCard = (added, b = {}) => ([k, e, n, d, g1, g2]) => {
@@ -5180,11 +5186,24 @@ function showServerSettings(s, tab, focus) {
             <div class="wvars">${['{üye}', '{sunucu}', '{sayı}'].map(v => `<button type="button" class="wvar" data-wv="${v}">${v}</button>`).join('')}<span class="hint">Tıkla, mesaja eklensin</span></div></div>
           <div class="st-field"><label>Önizleme</label><div class="wprev" id="bw-prev"></div></div>
           <div class="st-field"><label class="switch">Kaçıncı üye olduğunu kartta göster<input type="checkbox" id="bw-count" ${w.count ? 'checked' : ''}></label>
-            ${s.public ? '' : `<label class="switch">Yeni gelene otomatik rol ver<select class="field" id="bw-role" style="width:190px;margin:0"><option value="">Verme</option>${roles.map(r => `<option value="${r.id}" ${w.role === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></label>`}
             ${s.public ? '' : `<label class="switch">Biri ayrılınca "görüşürüz" mesajı at<input type="checkbox" id="bw-bye" ${w.bye ? 'checked' : ''}></label>`}</div>
           ${s.public ? '' : `<div class="st-field" id="bw-byef" style="${w.bye ? '' : 'display:none'}"><label>Ayrılma mesajı</label><input class="field" id="bw-byet" maxlength="400" value="${esc(w.byeText || '')}"></div>`}
-          ${!s.public && roles.length ? '<p class="hint">Otomatik rol için Roller sekmesinde Kanka Bot rolü, verilecek rolün üstünde olmalı.</p>' : ''}
+          ${s.public ? '' : `<p class="hint">Yeni gelene rol vermek için <b>Oto-rol</b> modülünü aç. Verilen roller karşılama kartında da görünür.</p>`}
           <div class="st-field" style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" id="bw-save" style="width:auto;padding:11px 22px">Kaydet</button><button class="lrow" id="bw-test" style="margin:0">${ic('sparkle')}Deneme mesajı gönder</button></div></div>`; })() : ''}
+        ${b.autorole?.on && !s.public ? (() => { const a = b.autorole, roles = (s.customRoles || []).filter(r => !r.bot), br = (s.customRoles || []).findIndex(r => r.bot), sel = new Set(a.roles || []);
+          const below = r => br < 0 || s.customRoles.indexOf(r) > br, waiting = Object.keys(a.pending || {}).length;
+          return `<div class="botset"><h4>🏷️ Oto-rol ayarları</h4>
+          <div class="st-field"><label>Verilecek roller <small class="hint" style="text-transform:none;letter-spacing:0">(en fazla 5)</small></label>
+            ${roles.length ? `<div class="ar-roles">${roles.map(r => { const dis = r.perms?.length; return `<label class="ar-r ${dis ? 'dis' : ''}" title="${dis ? 'Yetkisi olan roller otomatik verilemez' : !below(r) ? 'Kanka Bot rolünün üstünde, önce botun rolünü yukarı taşı' : ''}"><input type="checkbox" value="${r.id}" ${sel.has(r.id) ? 'checked' : ''} ${dis ? 'disabled' : ''}><span><i style="background:${r.color}"></i>${esc(r.name)}${dis ? ' · yetkili' : !below(r) ? ' ⚠️' : ''}</span></label>`; }).join('')}</div>`
+              : '<p class="hint">Henüz rol yok. Önce Roller sekmesinden bir rol oluştur, örn. "Üye".</p>'}
+            ${roles.some(r => sel.has(r.id) && !below(r)) ? `<div class="acc-warn">${ic('info')}<span>⚠️ işaretli roller Kanka Bot rolünün üstünde. Roller sekmesinde <b>Kanka Bot</b> rolünü bu rollerin üstüne taşımazsan verilemez.</span></div>` : ''}</div>
+          <div class="st-field"><label>Ne zaman verilsin?</label><div class="dv-opts">
+            <label class="dv-opt"><input type="radio" name="ar-when" value="join" ${a.when === 'join' || !a.when ? 'checked' : ''}><span><b>Katılır katılmaz</b><small>En basit hâli</small></span></label>
+            <label class="dv-opt"><input type="radio" name="ar-when" value="rules" ${a.when === 'rules' ? 'checked' : ''}><span><b>Kuralları kabul edince</b><small>${s.welcome?.enabled ? 'Hoş geldin ekranındaki kuralları onaylayınca' : 'Hoş geldin ekranı kapalı, şu an katılınca verilir'}</small></span></label>
+            <label class="dv-opt"><input type="radio" name="ar-when" value="delay" ${a.when === 'delay' ? 'checked' : ''}><span><b>Biraz bekledikten sonra</b><small>Baskın yapan hesaplar hemen yazamasın</small></span></label></div>
+            <div id="ar-delayf" style="margin-top:8px;${a.when === 'delay' ? '' : 'display:none'}"><select class="field" id="ar-delay" style="width:200px;margin:0">${[1, 5, 10, 30, 60, 180, 1440].map(v => `<option value="${v}" ${(a.delayMin || 10) === v ? 'selected' : ''}>${v < 60 ? v + ' dakika' : v === 1440 ? '1 gün' : v / 60 + ' saat'} sonra</option>`).join('')}</select>${waiting ? `<span class="hint" style="margin-left:10px">${waiting} kişi sırada</span>` : ''}</div></div>
+          <div class="st-field" style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" id="ar-save" style="width:auto;padding:11px 22px">Kaydet</button><button class="lrow" id="ar-all" style="margin:0" ${sel.size ? '' : 'disabled'}>${ic('users')}Şu anki üyelere de ver</button></div>
+          <p class="hint">Sunucu sahibi ve yetkisi olan roller otomatik verilmez. Bir rol verilemezse sebebi Mod kayıt odasına düşer.</p></div>`; })() : ''}
         ${b.ticket?.on ? (() => { const t = b.ticket, txt = s.channels.filter(c => (c.type || 'text') === 'text' && !c.news), roles = (s.customRoles || []).filter(r => !r.bot), openN = s.channels.filter(c => c.ticket && !c.ticket.closedAt).length;
           return `<div class="botset"><h4>🎟️ Destek ayarları</h4>
           <div class="st-field"><label>Destek paneli odası</label><select class="field" id="bt-ch"><option value="">Seçilmedi</option>${txt.map(c => `<option value="${c.id}" ${t.panelCh === c.id ? 'selected' : ''}>#${esc(c.name)}</option>`).join('')}</select>
@@ -5199,7 +5218,7 @@ function showServerSettings(s, tab, focus) {
           <h4>Komutlar</h4><div class="cmdlist">/destek konu · talep aç<br>/üstlen · talebi üstlen<br>/kapat · talebi kapat</div></div>`; })() : ''}
         <div class="st-field" style="margin-top:22px"><button class="lrow danger" id="kb-rm" style="margin:0;color:var(--red)">${ic('door')}Kanka Bot'u sunucudan at</button><p class="hint" style="margin-top:6px">Bot atılınca bütün modüller kapanır ve Kanka Bot rolü silinir.</p></div></div>`;
       const saveMod = (cfg, msg, module = 'mod') => socket.emit('botSave', { serverId: s.id, module, cfg }, done(msg));
-      const MODN = { mod: ['Mod', '🛡️'], welcome: ['Karşılama', '👋'], ticket: ['Destek', '🎟️'] };
+      const MODN = { mod: ['Mod', '🛡️'], welcome: ['Karşılama', '👋'], ticket: ['Destek', '🎟️'], autorole: ['Oto-rol', '🏷️'] };
       main.querySelectorAll('[data-bot]').forEach(x => x.onclick = () => { const k = x.dataset.bot, on = !!b[k]?.on; saveMod({ on: !on }, on ? `${MODN[k][0]} modülü kapatıldı` : `${MODN[k][0]} modülü açıldı ${MODN[k][1]}`, k); });
       if ($('#bw-text')) {
         const prev = () => { const n = S.me, cnt = s.public ? (S.users?.length || s.members.length) : s.members.length + 1;
@@ -5208,8 +5227,14 @@ function showServerSettings(s, tab, focus) {
         $('#bw-text').oninput = prev; $('#bw-count').onchange = prev; prev();
         main.querySelectorAll('[data-wv]').forEach(x => x.onclick = () => { const ta = $('#bw-text'), p = ta.selectionStart ?? ta.value.length; ta.value = ta.value.slice(0, p) + x.dataset.wv + ta.value.slice(ta.selectionEnd ?? p); ta.focus(); prev(); });
         if ($('#bw-bye')) $('#bw-bye').onchange = () => { $('#bw-byef').style.display = $('#bw-bye').checked ? '' : 'none'; };
-        $('#bw-save').onclick = () => saveMod({ ch: $('#bw-ch').value || null, text: $('#bw-text').value, count: $('#bw-count').checked, ...($('#bw-role') ? { role: $('#bw-role').value || null, bye: $('#bw-bye').checked, byeText: $('#bw-byet').value } : {}) }, 'Karşılama ayarları kaydedildi', 'welcome');
+        $('#bw-save').onclick = () => saveMod({ ch: $('#bw-ch').value || null, text: $('#bw-text').value, count: $('#bw-count').checked, ...($('#bw-bye') ? { bye: $('#bw-bye').checked, byeText: $('#bw-byet').value } : {}) }, 'Karşılama ayarları kaydedildi', 'welcome');
         $('#bw-test').onclick = () => socket.emit('botWelcomeTest', { serverId: s.id }, r => r?.error ? toast(r.error) : toast(`Deneme mesajı #${r.ch} odasına gönderildi`));
+      }
+      if ($('#ar-save')) {
+        main.querySelectorAll('[name=ar-when]').forEach(x => x.onchange = () => { $('#ar-delayf').style.display = x.value === 'delay' && x.checked ? '' : 'none'; });
+        main.querySelectorAll('.ar-roles input').forEach(x => x.onchange = () => { const n = main.querySelectorAll('.ar-roles input:checked').length; if (n > 5) { x.checked = false; toast('En fazla 5 rol seçebilirsin'); } });
+        $('#ar-save').onclick = () => saveMod({ roles: [...main.querySelectorAll('.ar-roles input:checked')].map(x => x.value), when: main.querySelector('[name=ar-when]:checked')?.value || 'join', delayMin: +($('#ar-delay')?.value || 10) }, 'Oto-rol kaydedildi', 'autorole');
+        $('#ar-all').onclick = () => confirmBox('Seçili roller, sunucudaki herkese verilsin mi? (Zaten olanlar etkilenmez)', () => socket.emit('autoRoleAll', { serverId: s.id }, r => r?.error ? toast(r.error) : (toast(r.n ? `${r.n} üyeye rol verildi` : 'Herkeste zaten var'), again())));
       }
       if ($('#bt-save')) {
         $('#bt-save').onclick = () => saveMod({ panelCh: $('#bt-ch').value || null, role: $('#bt-role').value || null, askReason: $('#bt-ask').checked, panelText: $('#bt-panel').value, welcome: $('#bt-welcome').value, cooldownMin: +$('#bt-cool').value }, 'Destek ayarları kaydedildi', 'ticket');
