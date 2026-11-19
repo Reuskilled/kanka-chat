@@ -1164,6 +1164,37 @@ function partnerPerks() {
       else if (!want && has) { hq.memberRoles[n] = l.filter(x => x !== r.id); if (!hq.memberRoles[n].length) delete hq.memberRoles[n]; } } }
   save(); pushServers(membersOf(hq)); io.emit('users', allUsers()); // sahibin profil rozeti güncellensin
 }
+// ================= Uçtan uca şifreleme (DM ve grup DM) =================
+// Sunucu anahtarları hiç görmez: her hesabın ECDH (P-256) anahtar çifti cihazda üretilir; gizli anahtar kullanıcının
+// şifresiyle (PBKDF2) kilitlenip burada saklanır. Her sohbetin rastgele bir "sohbet anahtarı" (dönem/epoch) vardır,
+// üyelerin açık anahtarlarına sarılır (wraps). Mesajlar sadece bu anahtarla şifreli metin olarak tutulur.
+const B64 = /^[A-Za-z0-9+/=_-]+$/;
+const b64ok = (x, max) => typeof x === 'string' && x.length > 0 && x.length <= max && B64.test(x);
+const e2eChat = chId => isPrivateChat(chId) && !chatMembers(chId).some(n => n === 'Claude' || n === BOT_NAME);
+const e2eKid = pubB64 => crypto.createHash('sha256').update(Buffer.from(pubB64, 'base64')).digest('hex').slice(0, 16);
+const e2eCur = n => db.users[n]?.e2e || null;
+function e2ePubs(names) { const o = {}; for (const n of names) { const u = db.users[n]; if (!u) continue; if (u.e2e) o[u.e2e.kid] = { n, pub: u.e2e.pub }; for (const k of u.e2eOld || []) o[k.kid] = { n, pub: k.pub, old: true }; } return o; }
+function e2eConvView(chId) {
+  const c = db.e2e?.[chId], mem = chatMembers(chId);
+  return { chId, eligible: e2eChat(chId), members: mem.map(n => ({ n, kid: e2eCur(n)?.kid || null })), eps: c?.eps || [], keys: e2ePubs(mem) };
+}
+// Bu kişinin açabildiği ama başka bir üyenin güncel anahtarına henüz sarılmamış dönemler (yeniden paylaşım işi)
+function e2eTodo(me) {
+  const out = [], myKids = new Set([e2eCur(me)?.kid, ...(db.users[me]?.e2eOld || []).map(k => k.kid)].filter(Boolean));
+  for (const [chId, c] of Object.entries(db.e2e || {})) {
+    const mem = chatMembers(chId); if (!mem.includes(me)) continue;
+    for (const ep of c.eps) { if (![...myKids].some(k => ep.wraps[k])) continue;
+      for (const n of mem) { const k = e2eCur(n)?.kid; if (k && !ep.wraps[k]) out.push({ chId, ep: ep.id, kid: k }); } }
+    if (out.length > 400) break;
+  }
+  return out;
+}
+function e2eNudge(name) { // anahtarı değişen kişinin sohbet arkadaşlarına: "geçmişi ona yeniden paylaş"
+  const peers = new Set(); for (const chId of Object.keys(db.e2e || {})) { const mem = chatMembers(chId); if (mem.includes(name)) mem.forEach(n => peers.add(n)); }
+  for (const n of peers) io.to('user:' + n).emit('e2eNeed');
+}
+// Şikayet için mesaj mühürü: gönderen HMAC(fk, düz metin) taahhüdünü mesajla birlikte yollar; şikayet eden fk ve metni açınca doğrulanır
+const e2eFrankOk = (msg, plain, fk) => { try { return typeof plain === 'string' && plain.length <= 40000 && b64ok(fk, 64) && msg?.fc && crypto.createHmac('sha256', Buffer.from(fk, 'base64')).update(plain).digest('base64') === msg.fc; } catch { return false; } };
 // ---- Kanka Bot'tan özel mesaj (sadece okunur bildirim kanalı) ----
 function botDm(name, o) {
   if (!db.users[name]) return; const chId = dmId(BOT_NAME, name);
@@ -1978,7 +2009,8 @@ function postMessage(me, chId, p = {}) {
   if (p.xfrom && typeof p.xfrom === 'object') msg.xfrom = { server: clean(p.xfrom.server, 40), channel: clean(p.xfrom.channel, 30), icon: clean(p.xfrom.icon, 4), iconImg: UPLOAD_RE.test(p.xfrom.iconImg || '') ? p.xfrom.iconImg : null };
   if (p.fwd && typeof p.fwd === 'object') msg.fwd = { author: clean(p.fwd.author, 40) || null };
 
-  if (kind === 'text') {
+  if (kind === 'text' && p.enc) { msg.enc = p.enc; msg.fc = p.fc; }
+  else if (kind === 'text') {
     msg.text = cleanMsg(p.text);
     if (p.image && UPLOAD_RE.test(p.image)) msg.image = p.image;
     if (Array.isArray(p.files)) { // yeni: bir mesajda en çok 10 dosya/resim (sadece kendi yüklediklerin)
@@ -2016,7 +2048,7 @@ function postMessage(me, chId, p = {}) {
 
   if (p.replyTo) {
     const r = findMsg(chId, p.replyTo);
-    if (r) msg.replyTo = { id: r.id, author: r.author, text: (r.text || r.plan?.title || r.poll?.question || r.song?.title || 'görsel').slice(0, 100) };
+    if (r) msg.replyTo = { id: r.id, author: r.author, text: r.enc ? '' : (r.text || r.plan?.title || r.poll?.question || r.song?.title || 'görsel').slice(0, 100), enc: !!r.enc || undefined };
   }
 
   const list = (db.messages[chId] ||= []);
@@ -2036,7 +2068,7 @@ function postMessage(me, chId, p = {}) {
   // Seviye
   const before = level(u.xp);
   { const now = Date.now(), txt = String(msg.text || '').trim().toLocaleLowerCase('tr'), rich = !!(msg.image || msg.gif || msg.files?.length || msg.audio || msg.poll || msg.song || msg.plan);
-    const real = rich || txt.replace(/\s+/g, '').length >= 3, fresh = !txt || txt !== u.xpLast;
+    const real = rich || !!msg.enc || txt.replace(/\s+/g, '').length >= 3, fresh = !txt || txt !== u.xpLast;
     const srvCh = !chId.startsWith('dm:') && !chId.startsWith('g:'), f0 = srvCh ? findChannel(chId) : null, crowd = !srvCh || (f0 && membersOf(f0.s).length >= 3);
     if (real && fresh && crowd && now - (u.xpAt || 0) >= 60e3) { u.xpAt = now; addXp(me, 3 + Math.floor(Math.random() * 4), 'mesaj', f0?.s || null, chId); }
     if (txt) u.xpLast = txt.slice(0, 200); }
@@ -2050,7 +2082,7 @@ function postMessage(me, chId, p = {}) {
 
   // Bildirimler
   const where = chId.startsWith('dm:') ? 'özel mesaj' : chId.startsWith('g:') ? groupTitle(groupOf(chId)) : (() => { const f = findChannel(chId); return `${f.s.name} › ${f.c.name}`; })();
-  const preview = (msg.text || msg.plan?.title || msg.poll?.question || msg.song?.title || (msg.game ? 'bir oyun başlattı' : msg.files?.length ? (msg.files.every(f => f.kind === 'image') ? 'resim gönderdi' : 'dosya gönderdi: ' + msg.files[0].name) : 'görsel gönderdi')).slice(0, 120);
+  const preview = msg.enc ? '🔒 Şifreli mesaj' : (msg.text || msg.plan?.title || msg.poll?.question || msg.song?.title || (msg.game ? 'bir oyun başlattı' : msg.files?.length ? (msg.files.every(f => f.kind === 'image') ? 'resim gönderdi' : 'dosya gönderdi: ' + msg.files[0].name) : 'görsel gönderdi')).slice(0, 120);
   if (isPrivateChat(chId)) {
     for (const n of chatMembers(chId)) {
       io.to('user:' + n).emit('dms', dmsFor(n));
@@ -2346,7 +2378,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), voiceAge: voiceAges(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, gif: gifReady()
+      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 
@@ -2603,7 +2635,7 @@ io.on('connection', socket => {
   });
 
   // ---- Şikayetler ----
-  socket.on('report', ({ kind, msgId, chId, name, reason, note } = {}, cb = () => {}) => {
+  socket.on('report', ({ kind, msgId, chId, name, reason, note, open: openIn } = {}, cb = () => {}) => {
     if (!me) return cb({ error: 'Giriş yap' });
     if (!REPORT_REASONS[reason]) return cb({ error: 'Bir sebep seç' });
     if (limited('report|' + me, 15, 3600e3)) return cb({ error: 'Çok fazla şikayet gönderdin, biraz bekle' });
@@ -2614,7 +2646,10 @@ io.on('connection', socket => {
       if (!m) return cb({ error: 'Mesaj bulunamadı' });
       if (m.author === me) return cb({ error: 'Kendi mesajını şikayet edemezsin' });
       if (db.reports.some(x => x.by === me && x.msg?.id === msgId)) return cb({ ok: true, dup: true });
-      const f = findChannel(chId), snap = x => ({ id: x.id, author: x.author, text: (x.text || '').slice(0, 600), image: x.image || null, kind: x.kind, time: x.time });
+      // Şifreli mesaj: ekip sadece şikayet edenin açıp gönderdiği mesajları görür; her biri gönderenin mühürüyle doğrulanır
+      const open = {}; for (const o of Array.isArray(openIn) ? openIn.slice(0, 8) : []) { const x = findMsg(chId, o?.id); if (x?.enc && e2eFrankOk(x, o.plain, o.fk)) { try { const j = JSON.parse(o.plain); open[x.id] = { text: String(j.t || '').slice(0, 600) + (j.f?.length ? ` [${j.f.length} dosya]` : '') + (j.g ? ' [GIF]' : ''), ok: true }; } catch {} } }
+      if (m.enc && !open[m.id]) return cb({ error: 'Şifreli mesaj doğrulanamadı, sayfayı yenileyip tekrar dene' });
+      const f = findChannel(chId), snap = x => ({ id: x.id, author: x.author, text: x.enc ? (open[x.id]?.text ?? '🔒 şifreli (şikayet eden açmadı)') : (x.text || '').slice(0, 600), image: x.image || null, kind: x.kind, time: x.time, e2e: x.enc ? (open[x.id] ? 'dogrulandi' : 'kapali') : undefined });
       r = { kind: 'msg', target: m.author, chId, serverId: f && !f.s.public ? f.s.id : null, where: f ? `${f.s.name} · #${f.c.name}` : isPrivateChat(chId) ? (chId.startsWith('dm:') ? 'Özel mesaj' : 'Grup sohbeti') : '',
         msg: snap(m), context: list.slice(Math.max(0, i - 3), i).concat(list.slice(i + 1, i + 2)).map(snap) };
     } else if (kind === 'user') {
@@ -3018,8 +3053,13 @@ io.on('connection', socket => {
     if (!me || !cur || !canAccess(me, cur)) return cb({ error: 'Önce bir odaya gir' });
     if (!p0 || typeof p0 !== 'object' || Array.isArray(p0)) return cb({ error: 'Geçersiz mesaj' });
     if (cur.startsWith('dm:') && dmPeers(cur).includes(BOT_NAME)) return cb({ error: 'Kanka Bot\'a buradan cevap yazılamıyor. Sorun için Kanka HQ\'daki odalara yaz.' });
-    const { xfrom, fwd, scheduled, ...p } = p0; // bu alanları sadece sunucu koyar (sahte "iletildi / şuradan" etiketi olmasın)
+    let { xfrom, fwd, scheduled, ...p } = p0; // bu alanları sadece sunucu koyar (sahte "iletildi / şuradan" etiketi olmasın)
     if (typeof p.text === 'string' && p.text.length > MSG_MAX) return cb({ error: `Mesaj en fazla ${MSG_MAX} karakter olabilir` });
+    if (p.enc) { // uçtan uca şifreli mesaj: içerik sunucuya hiç açık gelmez
+      const c = db.e2e?.[cur];
+      if (!e2eChat(cur) || !c || !p.enc || !c.eps.some(x => x.id === p.enc.ep) || !b64ok(p.enc.iv, 24) || !b64ok(p.enc.ct, 60000) || !b64ok(p.fc, 64)) return cb({ error: 'Şifreli mesaj geçersiz, sayfayı yenile' });
+      p = { kind: 'text', enc: { ep: p.enc.ep, iv: p.enc.iv, ct: p.enc.ct }, fc: p.fc, replyTo: p.replyTo };
+    } else if (db.e2e?.[cur]?.eps?.length && e2eChat(cur) && (!p.kind || p.kind === 'text' || ['poll', 'plan', 'song'].includes(p.kind)) && chatMembers(cur).every(n => e2eCur(n))) return cb({ error: 'Bu sohbet uçtan uca şifreli, sayfayı yenileyip tekrar dene', e2e: true });
     if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun, biraz yavaşla 🙂' });
     if (cur.startsWith('dm:')) {
       const other = dmPeers(cur).find(n => n !== me) || me, u = db.users[me], o = db.users[other];
@@ -3060,6 +3100,7 @@ io.on('connection', socket => {
     if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı gönderiyorsun, biraz yavaşla 🙂' });
     const src = findMsg(from, msgId);
     if (!src || src.ephemeral) return cb({ error: 'Mesaj bulunamadı' });
+    if (src.enc) return cb({ error: 'Şifreli mesajlar iletilemez' });
     if (!['text', 'bot', 'plan', 'poll', 'song'].includes(src.kind || 'text')) return cb({ error: 'Bu mesaj iletilemez' });
     const text = src.text || (src.kind === 'bot' ? [src.bot?.title, src.bot?.text].filter(Boolean).join('\n')
       : src.kind === 'plan' ? `Plan: ${src.plan.title}${src.plan.when ? ' · ' + src.plan.when : ''}`
@@ -3327,10 +3368,13 @@ io.on('connection', socket => {
     update(cur, msg);
   });
 
-  socket.on('edit', ({ msgId, text } = {}) => {
+  socket.on('edit', ({ msgId, text, enc, fc } = {}) => {
     if (!canAccess(me, cur)) return;
+    if (enc) { const msg = findMsg(cur, msgId), c = db.e2e?.[cur]; // şifreli düzenleme
+      if (!msg || msg.author !== me || !msg.enc || !c?.eps.some(x => x.id === enc.ep) || !b64ok(enc.iv, 24) || !b64ok(enc.ct, 60000) || !b64ok(fc, 64)) return;
+      msg.enc = { ep: enc.ep, iv: enc.iv, ct: enc.ct }; msg.fc = fc; msg.edited = true; return update(cur, msg); }
     const msg = findMsg(cur, msgId); text = cleanMsg(text);
-    if (!msg || msg.author !== me || msg.kind !== 'text' || !text) return;
+    if (!msg || msg.author !== me || msg.kind !== 'text' || !text || msg.enc) return;
     msg.text = text; msg.edited = true;
     update(cur, msg);
   });
@@ -3551,6 +3595,64 @@ io.on('connection', socket => {
     if (!siteMod(me)) return cb({ error: 'Yetkin yok' }); const u = db.users[name]; if (!u) return cb({ error: 'Kullanıcı yok' });
     if (on) devAward(name, me); else { delete u.devEarned; if (u.badgeAt) delete u.badgeAt.dev; save(); io.emit('users', allUsers()); devPerks(); }
     staffLog(me, on ? 'Bot geliştirici rozeti verdi' : 'Bot geliştirici rozetini aldı', name); cb({ ok: true });
+  });
+  // ---------- Uçtan uca şifreleme ----------
+  socket.on('e2eMine', (_ = {}, cb = () => {}) => { if (!me) return cb({}); const u = db.users[me]; cb({ key: u.e2e || null, old: (u.e2eOld || []).map(k => k.kid), on: db.e2eOff !== true }); });
+  socket.on('e2eSetup', ({ pub, wrapped } = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' }); if (limited('e2es|' + me, 10, 3600e3)) return cb({ error: 'Biraz bekle' });
+    if (!b64ok(pub, 120) || Buffer.from(pub, 'base64').length !== 65) return cb({ error: 'Geçersiz anahtar' });
+    const w = wrapped && b64ok(wrapped.s, 40) && b64ok(wrapped.iv, 24) && b64ok(wrapped.ct, 400) ? { s: wrapped.s, iv: wrapped.iv, ct: wrapped.ct, it: Math.min(Math.max(+wrapped.it || 310000, 100000), 2000000) } : null;
+    const u = db.users[me], kid = e2eKid(pub);
+    if (u.e2e?.kid === kid) { if (w) u.e2e.wrapped = w; save(); return cb({ ok: true, kid }); } // aynı anahtar: sadece yedeği güncelle
+    if (u.e2e) { (u.e2eOld ||= []).push({ kid: u.e2e.kid, pub: u.e2e.pub, at: u.e2e.at }); if (u.e2eOld.length > 20) u.e2eOld.shift(); }
+    u.e2e = { kid, pub, wrapped: w, at: Date.now() }; save();
+    e2eNudge(me); cb({ ok: true, kid });
+  });
+  socket.on('e2eWrap', ({ wrapped } = {}, cb = () => {}) => { // şifre değişince gizli anahtarın yedeğini yeni şifreyle kilitle
+    if (!me || !db.users[me].e2e) return cb({ error: 'Anahtar yok' });
+    if (!(wrapped && b64ok(wrapped.s, 40) && b64ok(wrapped.iv, 24) && b64ok(wrapped.ct, 400))) return cb({ error: 'Geçersiz' });
+    db.users[me].e2e.wrapped = { s: wrapped.s, iv: wrapped.iv, ct: wrapped.ct, it: Math.min(Math.max(+wrapped.it || 310000, 100000), 2000000) }; save(); cb({ ok: true });
+  });
+  socket.on('e2eConv', (chId, cb = () => {}) => { if (!me || typeof chId !== 'string' || !isPrivateChat(chId) || !canAccess(me, chId)) return cb({ error: 'Yok' }); cb(e2eConvView(chId)); });
+  socket.on('e2eEpoch', ({ chId, ep } = {}, cb = () => {}) => {
+    if (!me || typeof chId !== 'string' || !e2eChat(chId) || !canAccess(me, chId)) return cb({ error: 'Bu sohbet şifrelenemez' });
+    if (limited('e2ee|' + me, 30, 3600e3)) return cb({ error: 'Biraz bekle' });
+    const mem = chatMembers(chId), kids = mem.map(n => e2eCur(n)?.kid);
+    if (kids.some(k => !k)) return cb({ error: 'Herkesin anahtarı yok', conv: e2eConvView(chId) });
+    const c = (db.e2e ||= {})[chId] ||= { eps: [] }, last = c.eps.at(-1);
+    if (last && mem.every(n => last.mem.includes(n)) && last.mem.every(n => mem.includes(n)) && last.wraps[e2eCur(me).kid] && Date.now() - last.at < 864e5 * 365) return cb({ error: 'exists', conv: e2eConvView(chId) }); // yarış: başkası zaten açtı
+    if (!ep || typeof ep.id !== 'string' || !/^[a-z0-9]{6,20}$/.test(ep.id) || c.eps.some(x => x.id === ep.id) || !ep.wraps || typeof ep.wraps !== 'object') return cb({ error: 'Geçersiz' });
+    const myKid = e2eCur(me).kid, wraps = {};
+    for (const k of kids) { const w = ep.wraps[k]; if (!w || w.by !== myKid || !b64ok(w.iv, 24) || !b64ok(w.ct, 120)) return cb({ error: 'Eksik anahtar paylaşımı', conv: e2eConvView(chId) }); wraps[k] = { by: myKid, iv: w.iv, ct: w.ct }; }
+    c.eps.push({ id: ep.id, at: Date.now(), by: me, mem: [...mem], wraps }); if (c.eps.length > 200) c.eps.shift();
+    save(); for (const n of mem) io.to('user:' + n).emit('e2eConvUpd', chId); cb({ ok: true, conv: e2eConvView(chId) });
+  });
+  socket.on('e2ePlainMine', (chId, cb = () => {}) => { // şifrelenmeyi bekleyen kendi eski mesajların (sadece yazı/GIF)
+    if (!me || typeof chId !== 'string' || !e2eChat(chId) || !canAccess(me, chId) || !db.e2e?.[chId]?.eps?.length) return cb({ items: [] });
+    cb({ items: (db.messages[chId] || []).filter(m => m.author === me && !m.enc && (m.kind || 'text') === 'text' && !m.image && !m.files?.length && !m.audio && (m.text || m.gif)).slice(-500).map(m => ({ id: m.id, t: m.text || '', g: m.gif || null })) });
+  });
+  socket.on('e2eTodo', (_ = {}, cb = () => {}) => { if (!me) return cb({ items: [] }); cb({ items: e2eTodo(me) }); });
+  socket.on('e2eShare', ({ items } = {}, cb = () => {}) => {
+    if (!me || !Array.isArray(items)) return cb({ error: 'Geçersiz' });
+    const myKids = new Set([e2eCur(me)?.kid, ...(db.users[me].e2eOld || []).map(k => k.kid)].filter(Boolean)); let n = 0; const touched = new Set();
+    for (const it of items.slice(0, 400)) {
+      const c = db.e2e?.[it?.chId]; if (!c || !chatMembers(it.chId).includes(me)) continue;
+      const ep = c.eps.find(x => x.id === it.ep); if (!ep || ep.wraps[it.kid] || it.by !== e2eCur(me)?.kid || ![...myKids].some(k => ep.wraps[k])) continue;
+      if (!chatMembers(it.chId).some(m => e2eCur(m)?.kid === it.kid) || !b64ok(it.iv, 24) || !b64ok(it.ct, 120)) continue;
+      ep.wraps[it.kid] = { by: it.by, iv: it.iv, ct: it.ct }; n++; touched.add(it.chId);
+    }
+    if (n) { save(); for (const chId of touched) for (const m of chatMembers(chId)) io.to('user:' + m).emit('e2eConvUpd', chId); }
+    cb({ ok: true, n });
+  });
+  socket.on('e2eMigrate', ({ chId, items } = {}, cb = () => {}) => { // kendi eski (şifresiz) mesajlarını şifreli hâliyle değiştir
+    if (!me || typeof chId !== 'string' || !e2eChat(chId) || !canAccess(me, chId) || !Array.isArray(items)) return cb({ error: 'Geçersiz' });
+    const c = db.e2e?.[chId], done = new Set(); let n = 0;
+    for (const it of items.slice(0, 200)) { const m = findMsg(chId, it?.id); if (!m || m.author !== me || m.enc || m.kind !== 'text' || m.image || m.files?.length || m.audio) continue;
+      if (!c?.eps.some(x => x.id === it.enc?.ep) || !b64ok(it.enc.iv, 24) || !b64ok(it.enc.ct, 60000) || !b64ok(it.fc, 64)) continue;
+      m.enc = { ep: it.enc.ep, iv: it.enc.iv, ct: it.enc.ct }; m.fc = it.fc; delete m.text; delete m.gif; delete m.preview; n++; done.add(m.id); }
+    if (n) { for (const x of (db.messages[chId] || [])) if (x.replyTo && done.has(x.replyTo.id)) { x.replyTo.text = ''; x.replyTo.enc = true; } // yanıt alıntılarında da açık metin kalmasın
+      save(); io.to(chId).emit('e2eMigrated', { channelId: chId }); }
+    cb({ ok: true, n });
   });
   socket.on('botInfo', (_ = {}, cb = () => {}) => {
     if (!me) return cb({});
@@ -4071,6 +4173,7 @@ io.on('connection', socket => {
     if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun' });
     const msg = findMsg(cur, msgId); text = cleanMsg(text);
     if (!msg || !text || msg.kind === 'system') return cb({ error: 'Gönderilemedi' });
+    if (db.e2e?.[cur]?.eps?.length) return cb({ error: 'Şifreli sohbette konu açılamıyor' });
     { const f = findChannel(cur); if (f && (!chPerm(f.s, f.c, me, 'send') && f.c.type !== 'forum' || !chPerm(f.s, f.c, me, 'thread'))) return cb({ error: 'Bu odada yanıt dizisine yazma iznin yok' }); if (f && timedOut(f.s, me)) return cb({ error: 'Susturuldun' }); }
     if (serverOf(cur)?.filter) text = filterText(text);
     (msg.thread ||= []).push({ id: id(), author: me, text, time: Date.now() });
@@ -4086,6 +4189,7 @@ io.on('connection', socket => {
     if (!canAccess(me, cur)) return cb({ error: 'Erişim yok' });
     text = cleanMsg(text); at = +at;
     if (!text) return cb({ error: 'Mesaj boş olamaz' });
+    if (db.e2e?.[cur]?.eps?.length) return cb({ error: 'Şifreli sohbette zamanlanmış mesaj yok (sunucu metni görmesin diye)' });
     if (!(at > Date.now() + 30e3) || at > Date.now() + 30 * 864e5) return cb({ error: 'Zaman en az 1 dakika sonra, en fazla 30 gün içinde olmalı' });
     db.scheduled ||= [];
     if (db.scheduled.filter(x => x.author === me).length >= 20) return cb({ error: 'En fazla 20 zamanlanmış mesajın olabilir' });

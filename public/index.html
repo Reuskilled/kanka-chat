@@ -2742,6 +2742,24 @@
   #messages .bubble .fimgs:not(.n1) img { aspect-ratio: 1; height: 100%; max-height: 220px; }
   .fvid { margin: 6px 0 2px; max-width: 440px; } .fvid video { display: block; width: 100%; max-height: 320px; border-radius: 12px; background: #000; }
   .fvid .fname { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12px; color: var(--muted); text-decoration: none; } .fvid .fname .ic { width: 13px; height: 13px; }
+  .e2e-ph { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-style: italic; }
+  .e2e-ph svg { width: 15px; height: 15px; flex: none; }
+  .e2e-ph.sm { font-size: 13px; margin: 2px 0; }
+  .e2e-img { display: grid; place-items: center; gap: 4px; min-height: 140px; min-width: 160px; border-radius: 12px; background: var(--card); color: var(--muted); }
+  .e2e-img svg { width: 22px; height: 22px; opacity: .7; }
+  .e2e-img small { font-size: 12px; }
+  .fcard.e2e-wait { cursor: default; opacity: .8; }
+  #title .e2e-lock { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-left: 6px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--green); cursor: pointer; vertical-align: middle; }
+  #title .e2e-lock:hover { background: var(--hover); }
+  #title .e2e-lock svg { width: 15px; height: 15px; }
+  #e2e-bar { display: flex; align-items: center; gap: 12px; margin: 0 16px 8px; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  #e2e-bar > svg { width: 18px; height: 18px; color: var(--accent); flex: none; }
+  #e2e-bar span { flex: 1; min-width: 0; font-size: 13px; color: var(--muted); }
+  #e2e-bar b { display: block; color: var(--ink); font-size: 14px; }
+  #e2e-bar button { flex: none; width: auto; margin: 0; padding: 9px 16px; border-radius: 10px; }
+  .e2e-fps { display: grid; gap: 6px; margin: 10px 0; }
+  .e2e-fps div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--card); }
+  .e2e-fps code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--muted); letter-spacing: .03em; }
   .fcard { display: flex; align-items: center; gap: 12px; max-width: 380px; margin: 6px 0 2px; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); text-decoration: none; color: var(--ink); transition: border-color .15s, background .15s; }
   .fcard:hover { border-color: var(--accent); background: rgba(255,138,76,.06); }
   .fc-ic { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; }
@@ -3801,13 +3819,13 @@ $('#auth-form').onsubmit = e => {
   if (authMode === 'login') {
     if (!val('a-name') || !$('#a-pass').value) return authErr({ error: 'Kullanıcı adı ve şifre gerekli.' });
     const creds = { name: val('a-name'), password: $('#a-pass').value };
-    const go = code => { busy(true); socket.emit('login', { ...creds, code }, r => { busy(false); if (r.needTfa) return tfaLogin(r.error, go); closeModal(); onAuth(r); }); };
+    const go = code => { busy(true); E2E.pend(creds.password); socket.emit('login', { ...creds, code }, r => { busy(false); if (r.needTfa) return tfaLogin(r.error, go); closeModal(); onAuth(r); }); };
     go();
   } else if (authMode === 'register') {
     if (!val('a-name') || !$('#a-pass').value) return authErr({ error: 'Kullanıcı adı ve şifre gerekli.' });
     if (!val('a-mail')) return authErr({ error: 'E-posta adresini yaz.', field: 'email' });
     if (!$('#a-terms').checked) return authErr({ error: 'Kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
-    busy(true); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true, src: firstSrc }, r => { busy(false); r.error ? authErr(r) : onAuth(r); });
+    busy(true); E2E.pend($('#a-pass').value); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true, src: firstSrc }, r => { busy(false); r.error ? authErr(r) : onAuth(r); });
   } else if (authMode === 'forgot') {
     if (!val('a-who')) return authErr({ error: 'Kullanıcı adını ya da e-postanı yaz.' });
     busy(true); socket.emit('forgot', val('a-who'), r => { busy(false); if (r.error) return authErr(r); renderAuth('sent'); const rb = $('#a-resend'); if (rb) { let n = 60; rb.disabled = true; const tk = () => { if (!rb.isConnected) return; if (--n <= 0) { rb.disabled = false; rb.textContent = 'Tekrar gönder'; return; } rb.textContent = `Tekrar gönder (${n} sn)`; setTimeout(tk, 1000); }; tk(); } });
@@ -3815,7 +3833,7 @@ $('#auth-form').onsubmit = e => {
     const p1 = $('#a-pass').value, p2 = $('#a-pass2').value;
     if (p1.length < 6) return authErr({ error: 'Şifre en az 6 karakter olmalı.' });
     if (p1 !== p2) return authErr({ error: 'Şifreler aynı değil.' });
-    busy(true); socket.emit('resetPw', { token: authQ.sifirla, password: p1 }, r => { busy(false); if (r.error) return authErr(r); history.replaceState(null, '', '/'); authQ.sifirla = null; toast('Şifren yenilendi, hoş geldin!'); onAuth(r); });
+    busy(true); E2E.pend(p1); socket.emit('resetPw', { token: authQ.sifirla, password: p1 }, r => { busy(false); if (r.error) return authErr(r); history.replaceState(null, '', '/'); authQ.sifirla = null; toast('Şifren yenilendi, hoş geldin!'); onAuth(r); });
   } else if (authMode === 'wait') {
     if (!val('a-wmail')) return authErr({ error: 'E-postanı yaz.' });
     busy(true); socket.emit('waitlist', { email: val('a-wmail'), ref: authQ.davet || null }, r => { busy(false); if (r.error) return authErr(r);
@@ -3913,6 +3931,7 @@ function onAuth(res) {
   setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {}; setVoiceAge(res.voiceAge);
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ice?.length) ICE.iceServers = res.ice;
+  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me);
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
@@ -3943,7 +3962,7 @@ socket.on('connect', () => {
   if (t) socket.emit('auth', t, onAuth); else if ($('#app').style.display === 'none') { showAuth(); hideBoot(); }
   if (myVoice) { const ch = myVoice; cleanupVoice(); joinVoice(ch); }
 });
-function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); location.reload(); }
+async function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); await Promise.race([E2E.wipe(), new Promise(r => setTimeout(r, 800))]); location.reload(); }
 // Resim seç ve yükle. Büyük fotoğraflar küçültülür, telefonun HEIC/AVIF/BMP gibi biçimleri tarayıcı açabiliyorsa WebP'ye çevrilir.
 // (Eskiden 4,5 MB üstü resimler bağlantı sınırına takılıp hiçbir hata göstermeden yüklenmiyordu.)
 function readImageFile(f, max = 1920) {
@@ -4123,10 +4142,11 @@ function showSettings(tab) {
         const bar = $('.st-save'); flashSaved(bar); Object.assign(u, JSON.parse(JSON.stringify(draft))); setTimeout(preview, 1400); toast('Profilin kaydedildi');
       });
     }
-    if (t === 'account') $('#p-pw').onclick = () => socket.emit('changePassword', { old: $('#p-old').value, next: $('#p-new').value }, r => {
+    if (t === 'account') $('#p-pw').onclick = () => { const nextPw = $('#p-new').value; socket.emit('changePassword', { old: $('#p-old').value, next: nextPw }, async r => {
       if (r.error) return toast(r.error);
+      await E2E.rewrap(nextPw).catch(() => {});
       if (r.token) { store.set('kanka-token', r.token); toast('Şifre değişti. Diğer cihazlardaki oturumlar kapatıldı.'); } else { toast('Şifre değişti, tekrar giriş yap'); setTimeout(() => { store.set('kanka-token', null); location.reload(); }, 1200); }
-    });
+    }); };
     if (t === 'notif' && $('#as-on')) {
       const A = window.kankaDesktop.autostart;
       if (!A) { $('#as-on').disabled = $('#as-hid').disabled = true; }
@@ -4750,26 +4770,27 @@ function openMembers() { if (document.body.classList.contains('drawer')) documen
 function closeMembers() { if (!document.body.classList.contains('mdrawer')) return; document.body.classList.remove('mdrawer'); ovClosed('mdrawer'); }
 
 // --- Mesaj işlemleri (⋯ menüsü ve uzun basma menüsü aynı listeyi kullanır) ---
-const fwdable = m => !m.ephemeral && ['text', 'bot', 'plan', 'poll', 'song'].includes(m.kind || 'text') && !!(m.text || m.image || m.audio || m.bot?.text || m.bot?.title);
+const fwdable = m => !m.ephemeral && !m.enc && ['text', 'bot', 'plan', 'poll', 'song'].includes(m.kind || 'text') && !!(m.text || m.image || m.audio || m.bot?.text || m.bot?.title);
 function msgActs(m) {
   const mine = m.author === S.me, bot = m.kind === 'bot' || !m.author;
   const mod = S.view === 'server' && (isMod(S.server, S.me) || !!S.channel?.canManage);
   const canDel = (mine || mod) && !m.ephemeral, canPin = (S.view === 'dm' || mod) && !m.ephemeral && m.author;
-  return [bot ? null : ['reply', 'reply', 'Yanıtla'], m.author || m.kind === 'bot' ? ['thread', 'thread', 'Konu başlat'] : null,
+  return [bot ? null : ['reply', 'reply', 'Yanıtla'], (m.author || m.kind === 'bot') && !m.enc ? ['thread', 'thread', 'Konu başlat'] : null,
     m.text || m.bot?.text ? ['copy', 'copy', 'Metni kopyala'] : null,
     fwdable(m) ? ['fwd', 'forward', 'İlet'] : null,
     canPin ? ['pin', 'pin', m.pinned ? 'Sabitlemeyi kaldır' : 'Sabitle'] : null,
-    mine && m.kind === 'text' && m.text ? ['edit', 'edit', 'Düzenle'] : null,
+    mine && (m.kind || 'text') === 'text' && m.text && (!m.enc || m._e2e) ? ['edit', 'edit', 'Düzenle'] : null,
     !mine && m.author ? ['report', 'flag', 'Şikayet et', 'danger'] : null,
     canDel ? ['del', 'trash', 'Sil', 'danger'] : null].filter(Boolean).filter(x => !m.ephemeral || x[0] === 'copy');
 }
+function editMsg(m, text) { if (m.enc) return E2E.edit(S.channel?.id, m, text); socket.emit('edit', { msgId: m.id, text }); }
 function runMsgAct(m, a) {
   if (a === 'reply') startReply(m);
   if (a === 'pin') socket.emit('pin', m.id);
   if (a === 'thread') openThread(m.id);
   if (a === 'copy') navigator.clipboard?.writeText(m.text || m.bot?.text || '').then(() => toast('Kopyalandı'));
   if (a === 'fwd') openForward(m);
-  if (a === 'edit') form('Mesajı düzenle', '', [{ k: 'text', p: 'Mesaj', v: m.text }], v => socket.emit('edit', { msgId: m.id, text: v.text }));
+  if (a === 'edit') form('Mesajı düzenle', '', [{ k: 'text', p: 'Mesaj', v: m.text }], v => editMsg(m, v.text));
   if (a === 'del') confirmBox('Bu mesaj silinsin mi?', () => socket.emit('delete', m.id));
   if (a === 'report') showReport({ kind: 'msg', msg: m, chId: S.channel.id });
 }
@@ -6212,11 +6233,14 @@ function enterRoom(id, placeholder, hello) {
   $('#input').dataset.ph = placeholder; $('#input').placeholder = shortPh(placeholder);
   $('#input').disabled = /^(Susturuldun|Bu oda salt okunur)/.test(placeholder);
   typers.clear(); renderTyping();
+  $('#e2e-bar')?.remove(); setTimeout(() => E2E.enter(id), 0); // şifreli sohbet: kilit simgesi, anahtar ve eski mesajların şifrelenmesi
   // yeni oda yüklenene kadar eski odanın mesajları/boş ekranı görünmesin
   S.msgs = []; histMore = false; roomLoading = id; $('#messages').innerHTML = '<div class="loadmore">Mesajlar yükleniyor…</div>';
-  socket.emit('join', id, r => {
+  socket.emit('join', id, async r => {
+    if (draftFor !== id) { if (roomLoading === id) roomLoading = null; return; } // bu arada başka odaya geçildiyse eski cevabı yok say
+    if (r?.messages?.some(m => m.enc)) await E2E.prep(id, r.messages).catch(() => {});
     if (roomLoading === id) roomLoading = null;
-    if (draftFor !== id) return; // bu arada başka odaya geçildiyse eski cevabı yok say
+    if (draftFor !== id) return;
     if (!r || r.error) { $('#messages').innerHTML = `<div class="loadmore">${esc(r?.error || 'Mesajlar yüklenemedi, sayfayı yenile')}</div>`; return r && toast(r.error); }
     S.msgs = r.messages; S.playlist = r.playlist;
     histMore = !r.noHistory && r.messages.length >= 150; S.noHistory = !!r.noHistory;
@@ -6330,8 +6354,9 @@ function previewHTML(p) {
 }
 function filesHTML(files) {
   const imgs = files.filter(f => f.kind === 'image'), rest = files.filter(f => f.kind !== 'image');
-  let h = imgs.length ? `<div class="fimgs n${Math.min(imgs.length, 4)}">${imgs.map(f => `<img src="${esc(f.url)}" alt="${esc(f.name)}" decoding="async" data-view>`).join('')}</div>` : '';
+  let h = imgs.length ? `<div class="fimgs n${Math.min(imgs.length, 4)}">${imgs.map(f => !f.url ? `<div class="e2e-img">${ic('lock')}</div>` : f.url === '#' ? `<div class="e2e-img bad">${ic('image')}<small>Açılamadı</small></div>` : `<img src="${esc(f.url)}" alt="${esc(f.name)}" decoding="async" data-view>`).join('')}</div>` : '';
   for (const f of rest) {
+    if (f.enc && (!f.url || f.url === '#')) { h += `<span class="fcard e2e-wait"><span class="fc-ic">${ic('lock')}</span><span class="fc-t"><b>${esc(f.name)}</b><small>${f.url ? 'Açılamadı' : 'Şifre çözülüyor…'}</small></span></span>`; continue; }
     if (f.kind === 'video') h += `<div class="fvid"><video src="${esc(f.url)}" controls preload="metadata" playsinline></video><a class="fname" href="${esc(f.url)}" download="${esc(f.name)}">${ic('download')}${esc(f.name)} · ${fmtSize(f.size)}</a></div>`;
     else h += `<a class="fcard" href="${esc(f.url)}" download="${esc(f.name)}" title="İndir"><span class="fc-ic">${ic('file')}<em>${esc(extOf(f.name) || 'DOSYA')}</em></span><span class="fc-t"><b>${esc(f.name)}</b><small>${fmtSize(f.size)}</small></span><span class="fc-d">${ic('download')}</span></a>`;
   }
@@ -6425,11 +6450,13 @@ function msgHTML(m, prev) {
     body = matchCardHTML(m);
   } else if (m.kind === 'song') {
     body = `<div class="kcard"><div class="kt">${ic('music')}Çalma listesine eklendi</div><h4 style="word-break:break-all"><a href="${esc(m.song.url)}" target="_blank" rel="noopener">${esc(m.song.title)}</a></h4><div class="sub">${esc(m.song.by)} ekledi</div></div>`;
+  } else if (m.enc && !m._e2e) {
+    body = `<div class="bubble e2e-ph">${ic('lock')}<span>${m._lock === 'bad' ? 'Bu şifreli mesaj doğrulanamadı' : m._lock === 'locked' ? 'Şifreli mesaj · görmek için kilidi aç' : 'Şifreli mesaj · anahtar bekleniyor'}</span></div>`;
   } else {
     const fimgs = (m.files || []).filter(f => f.kind === 'image');
     const onlyImg = (m.image || m.gif || (m.files?.length && fimgs.length === m.files.length)) && !m.text && !m.replyTo;
     const jumbo = !m.image && !m.audio && m.text && isJumbo(m.text);
-    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.gif ? gifHTML(m.gif) : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${invCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !invCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
+    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : m._auPend ? `<div class="e2e-ph sm">${ic('mic')}<span>Ses mesajı açılıyor…</span></div>` : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.gif ? gifHTML(m.gif) : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${invCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !invCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
   }
   if (m.thread?.length) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
@@ -6440,6 +6467,256 @@ function msgHTML(m, prev) {
   return day + `<div class="row ${mine ? 'own' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}<span class="gtime">${hm(m.time)}</span>
     <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
+
+// ================= Uçtan uca şifreleme (DM ve grup DM) =================
+// Anahtarlar sadece senin cihazında üretilir. Sunucu yalnızca açık anahtarları, şifrenle kilitlenmiş anahtar yedeğini
+// ve şifreli mesajları görür. Bir mesajı şikayet edersen o mesaj (ve yanındaki birkaç mesaj) mühürüyle birlikte ekibe açılır.
+const E2E = (() => {
+  const C = window.crypto?.subtle, te = new TextEncoder(), td = new TextDecoder();
+  const b64 = buf => { const a = buf instanceof Uint8Array ? buf : new Uint8Array(buf); let s = ''; for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); };
+  const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const rnd = n => crypto.getRandomValues(new Uint8Array(n));
+  const P256 = { name: 'ECDH', namedCurve: 'P-256' };
+  const ask = (ev, a) => new Promise(r => { const t = setTimeout(() => r({ error: 'zaman aşımı' }), 15000); socket.emit(ev, a, x => { clearTimeout(t); r(x || {}); }); });
+  let me = null, priv = null, kid = null, pubB = null, old = {}, ready = false, locked = false, pendPw = null, on = true, bootP = null;
+  const convs = {}, convP = {}, cks = {}, pubs = {}, miss = {}, files = {}, fileP = {}, migrated = new Set();
+  // --- cihazdaki anahtar deposu (IndexedDB; CryptoKey nesnesi olarak saklanır)
+  let dbp = null;
+  const idb = () => dbp ||= new Promise((res, rej) => { const r = indexedDB.open('kanka-e2e', 1); r.onupgradeneeded = () => r.result.createObjectStore('k'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const iop = (mode, fn) => idb().then(d => new Promise(res => { const t = d.transaction('k', mode), q = fn(t.objectStore('k')); t.oncomplete = () => res(q?.result); t.onerror = t.onabort = () => res(null); })).catch(() => null);
+  const iget = k => iop('readonly', s => s.get(k)), iset = (k, v) => iop('readwrite', s => s.put(v, k)), idel = k => iop('readwrite', s => s.delete(k));
+  // --- şifreyle kilitli anahtar yedeği (PBKDF2 + AES-GCM)
+  async function pwKey(pw, salt, it) { const base = await C.importKey('raw', te.encode(pw), 'PBKDF2', false, ['deriveKey']); return C.deriveKey({ name: 'PBKDF2', salt, iterations: it, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']); }
+  async function sealPriv(k, pw) { const s = rnd(16), iv = rnd(12), it = 310000; const ct = await C.encrypt({ name: 'AES-GCM', iv }, await pwKey(pw, s, it), await C.exportKey('pkcs8', k)); return { s: b64(s), iv: b64(iv), ct: b64(ct), it }; }
+  async function openPriv(w, pw) { try { const raw = await C.decrypt({ name: 'AES-GCM', iv: unb64(w.iv) }, await pwKey(pw, unb64(w.s), w.it || 310000), unb64(w.ct)); return await C.importKey('pkcs8', raw, P256, true, ['deriveBits']); } catch { return null; } }
+  const persist = () => iset('u:' + me, { kid, priv, pub: pubB, old });
+  async function adopt(k, p, id) { priv = k; pubB = p; kid = id; locked = false; ready = true; await persist(); after(); }
+  async function fresh(pw) {
+    const kp = await C.generateKey(P256, true, ['deriveBits']), p = b64(await C.exportKey('raw', kp.publicKey));
+    const r = await ask('e2eSetup', { pub: p, wrapped: pw ? await sealPriv(kp.privateKey, pw) : null });
+    if (!r.ok) throw new Error(r.error || 'anahtar kurulamadı');
+    if (kid && priv && kid !== r.kid) old[kid] = priv;
+    await adopt(kp.privateKey, p, r.kid);
+  }
+  function boot(name) { const pw = pendPw; pendPw = null; return bootP = (bootP || Promise.resolve()).then(() => boot_(name, pw)).catch(e => console.warn('e2e', e)); }
+  async function boot_(name, pw) {
+    if (!C || !name) return;
+    if (me !== name) { me = name; priv = kid = pubB = null; old = {}; ready = locked = false; for (const o of [convs, cks, miss]) for (const k in o) delete o[k]; migrated.clear(); }
+    if (ready && !pw) return after();
+    const mine = await ask('e2eMine'); if (mine.error) return; on = mine.on !== false; if (!on) return;
+    if (!priv) { const loc = await iget('u:' + me); if (loc) { old = loc.old || {}; if (loc.priv) { priv = loc.priv; kid = loc.kid; pubB = loc.pub; } } }
+    const srv = mine.key;
+    if (srv && priv && kid === srv.kid) { ready = true; locked = false; if (pw && !srv.wrapped) ask('e2eSetup', { pub: pubB, wrapped: await sealPriv(priv, pw) }); return after(); }
+    if (srv && pw && srv.wrapped) { const k = await openPriv(srv.wrapped, pw); if (k) { if (kid && priv && kid !== srv.kid) old[kid] = priv; return adopt(k, srv.pub, srv.kid); } }
+    if (srv && !pw) { if (kid && priv) { old[kid] = priv; priv = null; kid = null; persist(); } locked = true; ready = false; return after(); }
+    await fresh(pw); // hiç anahtar yok ya da şifre sıfırlanmış (eski yedek açılmıyor): yenisi üretilir, geçmiş sohbet arkadaşlarınca yeniden paylaşılır
+  }
+  async function unlock(pw) {
+    const mine = await ask('e2eMine'), srv = mine.key;
+    if (srv?.wrapped) { const k = await openPriv(srv.wrapped, pw); if (!k) return false; await adopt(k, srv.pub, srv.kid); return true; }
+    await fresh(pw); return true;
+  }
+  async function rewrap(pw) { if (priv && ready) await ask('e2eWrap', { wrapped: await sealPriv(priv, pw) }); }
+  async function wipe() { await idel('u:' + me); }
+  // --- sohbet anahtarları
+  function conv(chId, force) {
+    if (!force && convs[chId]) return Promise.resolve(convs[chId]);
+    return convP[chId] ||= ask('e2eConv', chId).then(v => { delete convP[chId]; if (v.error) return null; v._t = Date.now(); return convs[chId] = v; });
+  }
+  const pubKey = p => pubs[p] ||= C.importKey('raw', unb64(p), P256, false, []);
+  async function kek(myPriv, otherPub, chId, epId) {
+    const bits = await C.deriveBits({ name: 'ECDH', public: await pubKey(otherPub) }, myPriv, 256);
+    const h = await C.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
+    return C.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: te.encode(chId), info: te.encode('kanka-wrap-v1|' + epId) }, h, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  }
+  const privFor = k => (k === kid && priv) || old[k] || null;
+  const ckImport = async raw => ({ raw, key: await C.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']) });
+  async function ckGet(chId, epId) {
+    const key = chId + '|' + epId; if (cks[key]) return cks[key];
+    for (let pass = 0; pass < 2; pass++) {
+      if (pass && Date.now() - (miss[key] || 0) < 8000) break;
+      if (pass) miss[key] = Date.now();
+      const v = await conv(chId, pass === 1), ep = v?.eps.find(e => e.id === epId); if (!ep) continue;
+      for (const [k, w] of Object.entries(ep.wraps)) { const mp = privFor(k), bp = v.keys[w.by]?.pub; if (!mp || !bp) continue;
+        try { return cks[key] = await ckImport(new Uint8Array(await C.decrypt({ name: 'AES-GCM', iv: unb64(w.iv) }, await kek(mp, bp, chId, epId), unb64(w.ct)))); } catch {} }
+    }
+    return null;
+  }
+  async function wrapFor(raw, chId, epId, targetPub) { const iv = rnd(12); return { by: kid, iv: b64(iv), ct: b64(await C.encrypt({ name: 'AES-GCM', iv }, await kek(priv, targetPub, chId, epId), raw)) }; }
+  const sameSet = (a, b) => a.every(x => b.includes(x)) && b.every(x => a.includes(x));
+  async function fill(chId, ep, c, v) { // anahtarı yenilenmiş üyeye bu dönemi yeniden paylaş
+    const items = []; for (const m of v.members) if (m.kid && !ep.wraps[m.kid] && v.keys[m.kid]) items.push({ chId, ep: ep.id, kid: m.kid, ...await wrapFor(c.raw, chId, ep.id, v.keys[m.kid].pub) });
+    if (items.length) { const r = await ask('e2eShare', { items }); if (r.n) await conv(chId, true); }
+  }
+  async function epoch(chId) {
+    if (!ready) return null;
+    let v = await conv(chId, Date.now() - (convs[chId]?._t || 0) > 30000);
+    if (!v?.eligible || !v.members.length || v.members.some(m => !m.kid)) return null;
+    for (let tries = 0; tries < 2; tries++) {
+      const last = v.eps.at(-1), names = v.members.map(m => m.n);
+      if (last && sameSet(names, last.mem) && last.wraps[kid]) { const c = await ckGet(chId, last.id); if (c) { fill(chId, last, c, v).catch(() => {}); return last.id; } }
+      const raw = rnd(32), id = Array.from(rnd(12), x => 'abcdefghijklmnopqrstuvwxyz0123456789'[x % 36]).join(''), wraps = {};
+      for (const m of v.members) wraps[m.kid] = await wrapFor(raw, chId, id, v.keys[m.kid].pub);
+      const r = await ask('e2eEpoch', { chId, ep: { id, wraps } });
+      if (r.ok) { r.conv._t = Date.now(); convs[chId] = r.conv; cks[chId + '|' + id] = await ckImport(raw); return id; }
+      if (!r.conv) return null; v = convs[chId] = Object.assign(r.conv, { _t: Date.now() });
+    }
+    return null;
+  }
+  const live = chId => ready && /^(dm|g):/.test(chId || '') && !!convs[chId]?.eligible && convs[chId].members.every(m => m.kid);
+  // --- mesaj şifreleme / çözme
+  const hmac = async (fk, s) => b64(await C.sign('HMAC', await C.importKey('raw', fk, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']), te.encode(s)));
+  async function seal(chId, inner) {
+    const ep = await epoch(chId); if (!ep) return null; const c = await ckGet(chId, ep); if (!c) return null;
+    const pj = JSON.stringify(inner), fk = rnd(32), iv = rnd(12);
+    const ct = await C.encrypt({ name: 'AES-GCM', iv, additionalData: te.encode(chId) }, c.key, te.encode(JSON.stringify({ p: pj, fk: b64(fk) })));
+    return { enc: { ep, iv: b64(iv), ct: b64(ct) }, fc: await hmac(fk, pj) };
+  }
+  async function open(chId, m) {
+    if (m._d && m._d.ct === m.enc.ct) return m._d;
+    const c = await ckGet(chId, m.enc.ep); if (!c) return null;
+    try {
+      const o = JSON.parse(td.decode(await C.decrypt({ name: 'AES-GCM', iv: unb64(m.enc.iv), additionalData: te.encode(chId) }, c.key, unb64(m.enc.ct))));
+      const inn = JSON.parse(o.p), ok = typeof o.fk === 'string' && await hmac(unb64(o.fk), o.p) === m.fc && inn.a === m.author; // mühür ve yazar tutmalı
+      return m._d = ok ? { ct: m.enc.ct, pj: o.p, fk: o.fk, in: inn } : { ct: m.enc.ct, bad: true };
+    } catch { return m._d = { ct: m.enc.ct, bad: true }; }
+  }
+  const MEDIA = /^(image\/(png|jpeg|gif|webp)|video\/(mp4|webm|quicktime)|audio\/(mpeg|mp4|ogg|webm|wav|x-wav|aac|x-m4a|flac))$/;
+  const kindOf = mt => /^image\/(png|jpeg|gif|webp)$/.test(mt) ? 'image' : /^video\//.test(mt) ? 'video' : /^audio\//.test(mt) ? 'audio' : 'file';
+  const fileOk = f => f && /^[a-f0-9]{24}$/.test(f.i || '') && typeof f.k === 'string' && typeof f.iv === 'string';
+  let rrT = 0;
+  function rerender() { clearTimeout(rrT); rrT = setTimeout(() => { if (!S.channel) return; for (const m of S.msgs) if (m.enc && m._d) apply(m); const box = $('#messages'), atB = box.scrollHeight - box.scrollTop - box.clientHeight < 120, top = box.scrollTop; renderMessages(); box.scrollTop = atB ? box.scrollHeight : top; }, 80); }
+  function loadFile(f) {
+    return fileP[f.i] ||= (async () => {
+      const r = await fetch('/dosya/' + f.i); if (!r.ok) throw new Error('yok');
+      const key = await C.importKey('raw', unb64(f.k), 'AES-GCM', false, ['decrypt']);
+      const pt = await C.decrypt({ name: 'AES-GCM', iv: unb64(f.iv) }, key, await r.arrayBuffer());
+      // blob adresi bu sitenin kökenini taşır: tarayıcıda açılabilen tür sadece güvenli medya olabilir (HTML/SVG asla)
+      return files[f.i] = URL.createObjectURL(new Blob([pt], { type: MEDIA.test(f.m) ? f.m : 'application/octet-stream' }));
+    })().catch(() => (files[f.i] = '#')).finally(rerender);
+  }
+  const fileView = f => { if (!fileOk(f)) return null; const url = files[f.i]; if (!url) loadFile(f); return { kind: kindOf(String(f.m || '')), name: String(f.n || 'dosya').slice(0, 120), size: +f.s || 0, url: url || '', enc: true }; };
+  const safeGif = g => { try { const ok = x => { const u = new URL(String(x)); return u.protocol === 'https:' && (S.gifHosts || []).includes(u.hostname); }; return g && ok(g.url) ? { url: g.url, prev: ok(g.prev) ? g.prev : g.url, w: +g.w || 0, h: +g.h || 0, title: String(g.title || '').slice(0, 100) } : null; } catch { return null; } };
+  function apply(m) {
+    const d = m._d;
+    if (!d || d.bad) { m._e2e = false; m._lock = d?.bad ? 'bad' : locked && !Object.keys(old).length ? 'locked' : 'wait'; m.text = ''; return; }
+    const x = d.in; m._e2e = true; m._lock = null;
+    m.text = typeof x.t === 'string' ? x.t.slice(0, 4000) : '';
+    m.gif = safeGif(x.g);
+    m.files = Array.isArray(x.f) ? x.f.slice(0, 10).map(fileView).filter(Boolean) : null;
+    if (x.au) { const v = fileView(x.au); m.audio = v?.url && v.url !== '#' ? v.url : null; m._auPend = !m.audio; m.duration = Math.min(Math.max(+x.du || 0, 0), 600); }
+  }
+  const prevText = m => (m.text || (m.gif ? 'GIF' : m.files?.length ? m.files.length + ' dosya' : m._auPend || m.audio ? 'Ses mesajı' : '')).slice(0, 100);
+  async function prep(chId, msgs, ctx = []) {
+    const list = msgs.filter(m => m?.enc);
+    if (list.length && C) { await Promise.all(list.map(m => open(chId, m).catch(() => null))); list.forEach(apply); }
+    for (const m of msgs) if (m?.replyTo?.enc) { const src = [...msgs, ...ctx].find(x => x.id === m.replyTo.id); m.replyTo.text = src?._e2e ? prevText(src) : '🔒 Şifreli mesaj'; }
+  }
+  const inner = p => ({ a: S.me, t: p.text || '', ...(p.gif ? { g: p.gif } : {}), ...(p._ef ? { f: p._ef } : {}), ...(p._eau ? { au: p._eau, du: p.duration } : {}) });
+  async function encFile(blob, name, type) {
+    const k = rnd(32), iv = rnd(12), key = await C.importKey('raw', k, 'AES-GCM', false, ['encrypt']);
+    const ct = await C.encrypt({ name: 'AES-GCM', iv }, key, await blob.arrayBuffer());
+    return { blob: new Blob([ct], { type: 'application/octet-stream' }), meta: { n: String(name || 'dosya').slice(0, 120), m: String(type || '').slice(0, 80), s: blob.size, k: b64(k), iv: b64(iv) } };
+  }
+  async function uploadEnc(blob, name, type) {
+    const { blob: b, meta } = await encFile(blob, name, type);
+    const r = await fetch('/api/dosya', { method: 'POST', headers: { Authorization: 'Bearer ' + store.get('kanka-token'), 'Content-Type': 'application/octet-stream', 'X-File-Name': 'sifreli.bin', 'X-File-Type': 'application/octet-stream' }, body: b });
+    const j = await r.json().catch(() => ({})); if (!r.ok || !j.ok) throw new Error(j.error || 'Yüklenemedi');
+    return { ...meta, i: j.id };
+  }
+  async function edit(chId, m, text) {
+    if (!m._d?.in) return toast('Bu mesaj açılamadığı için düzenlenemiyor');
+    const s = await seal(chId, { ...m._d.in, t: text }); if (!s) return toast('Şifreli düzenleme yapılamadı, sayfayı yenile');
+    if (S.channel?.id !== chId) return; socket.emit('edit', { msgId: m.id, enc: s.enc, fc: s.fc });
+  }
+  // Şikayet: hedef mesaj ve hemen etrafındakiler (sunucunun ekibe göstereceği bağlam) mühürleriyle açılır
+  function reveal(msgId) {
+    const i = S.msgs.findIndex(m => m.id === msgId); if (i < 0) return [];
+    return S.msgs.slice(Math.max(0, i - 3), i + 2).filter(m => m.enc && m._d?.pj).map(m => ({ id: m.id, plain: m._d.pj, fk: m._d.fk }));
+  }
+  // --- yeniden paylaşım ve eski mesajların şifrelenmesi
+  let reBusy = false;
+  async function reshare() {
+    if (!ready || reBusy) return; reBusy = true;
+    try {
+      const { items = [] } = await ask('e2eTodo'); if (!items.length) return;
+      for (const k in convs) delete convs[k];
+      const out = [];
+      for (const it of items) { if (!convs[it.chId]) await conv(it.chId); const c = await ckGet(it.chId, it.ep), p = convs[it.chId]?.keys[it.kid]?.pub; if (c && p) out.push({ chId: it.chId, ep: it.ep, kid: it.kid, ...await wrapFor(c.raw, it.chId, it.ep, p) }); }
+      for (let i = 0; i < out.length; i += 200) await ask('e2eShare', { items: out.slice(i, i + 200) });
+    } catch (e) { console.warn('e2e paylaşım', e); } finally { reBusy = false; }
+  }
+  async function migrate(chId) {
+    if (!ready || migrated.has(chId)) return; migrated.add(chId);
+    const { items = [] } = await ask('e2ePlainMine', chId); if (!items.length) return;
+    const out = [];
+    for (const it of items) { const s = await seal(chId, { a: S.me, t: it.t || '', ...(it.g ? { g: it.g } : {}) }); if (!s) return; out.push({ id: it.id, ...s }); }
+    for (let i = 0; i < out.length; i += 100) await ask('e2eMigrate', { chId, items: out.slice(i, i + 100) });
+  }
+  let bgDone = false;
+  async function background() { // eski şifresiz sohbetleri arka planda kapat (sadece şifreleme zaten başlamış olanlar)
+    if (bgDone || !ready) return; bgDone = true;
+    for (const d of (S.dms || []).slice(0, 60)) { const v = await conv(d.id).catch(() => null); if (v?.eligible && v.eps.length && v.members.every(m => m.kid)) await migrate(d.id).catch(() => {}); await new Promise(r => setTimeout(r, 300)); }
+  }
+  // --- arayüz
+  function lockBadge(chId) {
+    if (S.channel?.id !== chId) return; const t = $('#title'); if (!t) return;
+    t.querySelector('.e2e-lock')?.remove();
+    if (live(chId)) { t.insertAdjacentHTML('beforeend', `<button type="button" class="e2e-lock" title="Uçtan uca şifreli" aria-label="Uçtan uca şifreli">${ic('lock')}</button>`); t.querySelector('.e2e-lock').onclick = () => info(chId); }
+    $('#e2e-bar')?.remove();
+    if (locked && /^(dm|g):/.test(chId) && convs[chId]?.eligible) {
+      $('#compose').insertAdjacentHTML('beforebegin', `<div id="e2e-bar">${ic('lock')}<span><b>Şifreli mesajların kilitli</b>Bu cihazda görmek için hesap şifreni bir kez gir.</span><button type="button" class="primary">Kilidi aç</button></div>`);
+      $('#e2e-bar button').onclick = unlockForm;
+    }
+  }
+  const fp = k => (k || '').toUpperCase().match(/.{1,4}/g)?.join(' ') || '—';
+  function info(chId) {
+    const v = convs[chId]; if (!v) return;
+    modal(`<h3>${ic('lock')}Uçtan uca şifreli</h3><p class="hint">Bu sohbetteki mesajlar, GIF'ler, dosyalar ve ses kayıtları sadece sohbetteki kişilerin cihazlarında açılır. Kanka ekibi dahil kimse okuyamaz.</p>
+      <p class="hint">Bir mesajı şikayet edersen, sadece o mesaj ve hemen yanındaki birkaç mesaj ekibe açılır. Mesajın gerçekten o kişiden geldiği mühürle doğrulanır.</p>
+      <div class="e2e-fps">${v.members.map(m => `<div><b>${esc(m.n)}</b><code>${fp(m.kid)}</code></div>`).join('')}</div>
+      <p class="hint" style="font-size:12px">Güvenlik kodları: arkadaşının ekranındaki kodlarla aynıysa aranızda kimse yok demektir. Biri şifresini sıfırlarsa kodu değişir.</p>
+      <div class="rowb"><button class="primary" type="button" id="mx">Tamam</button></div>`);
+    $('#mx').onclick = closeModal;
+  }
+  function unlockForm() {
+    modal(`<form id="e2e-uf"><h3>${ic('lock')}Şifreli mesajların kilidini aç</h3><p class="hint">Şifren cihazından çıkmaz; sadece bu cihazdaki anahtarını açmak için kullanılır.</p>
+      <input class="field" type="password" id="e2e-pw" placeholder="Hesap şifren" autocomplete="current-password" required>
+      <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="primary" type="submit">Kilidi aç</button></div></form>`);
+    $('#mx').onclick = closeModal; setTimeout(() => $('#e2e-pw')?.focus(), 50);
+    $('#e2e-uf').onsubmit = async e => { e.preventDefault(); const b = $('#e2e-uf .primary'); b.disabled = true;
+      const ok = await unlock($('#e2e-pw').value).catch(() => false); b.disabled = false;
+      if (!ok) return toast('Şifre yanlış', null, false, { type: 'err' }); closeModal(); toast('Şifreli mesajların açıldı'); };
+  }
+  async function enter(chId) {
+    if (!C || !on || !/^(dm|g):/.test(chId || '')) return;
+    await bootP; const v = await conv(chId, true); if (!v || S.channel?.id !== chId) return;
+    if (ready && v.eligible && v.members.every(m => m.kid)) { // ilk kez: şifreleme dönemini başlat; anahtarı yenilenmişsen yenisini açmak yerine geçmişin paylaşılmasını bekle
+      const last = v.eps.at(-1), names = v.members.map(m => m.n);
+      if (!last || !sameSet(names, last.mem)) await epoch(chId).catch(() => null);
+      if (convs[chId]?.eps.at(-1)?.wraps[kid]) migrate(chId).catch(() => {});
+    }
+    lockBadge(chId); refresh(chId);
+  }
+  function refresh(chId) {
+    if (S.channel?.id !== chId || !S.msgs?.some(m => m.enc && !m._e2e)) return;
+    for (const m of S.msgs) if (m.enc && !m._e2e && !m._d?.bad) delete m._d;
+    for (const k in miss) if (k.startsWith(chId + '|')) delete miss[k];
+    prep(chId, S.msgs).then(rerender);
+  }
+  function after() { const ch = S.channel?.id; if (ch) enter(ch); reshare(); setTimeout(background, 5000); }
+  socket.on('e2eMigrated', ({ channelId }) => { // eski düz mesajlar şifrelendi: ekrandaki kopyaları da şifreli hâlleriyle yenile
+    if (S.channel?.id !== channelId || roomLoading) return;
+    socket.emit('join', channelId, async r => { if (!r?.messages || S.channel?.id !== channelId) return; await prep(channelId, r.messages).catch(() => {});
+      const seen = new Set(r.messages.map(m => m.id)); S.msgs = [...S.msgs.filter(m => !seen.has(m.id) && m.time < (r.messages[0]?.time || 0)), ...r.messages]; rerender(); });
+  });
+  socket.on('e2eNeed', () => setTimeout(reshare, 500 + Math.random() * 1500));
+  socket.on('e2eConvUpd', chId => { delete convs[chId]; for (const k in miss) if (k.startsWith(chId + '|')) delete miss[k]; if (S.channel?.id === chId) conv(chId, true).then(() => { lockBadge(chId); refresh(chId); }); });
+  return {
+    pend: pw => { pendPw = pw; }, boot, rewrap, wipe, enter, prep, seal, inner, live, edit, reveal, uploadEnc, conv,
+    want: chId => C && on && live(chId), ready: () => ready, on: () => on,
+  };
+})();
 
 let pop = null;
 function closePop() { pop?.remove(); pop = null; document.querySelector('.row.hl')?.classList.remove('hl'); }
@@ -6460,7 +6737,8 @@ $('#messages').addEventListener('scroll', () => {
   if (!histMore || histBusy || box.scrollTop > 120 || !S.msgs.length || !S.channel) return;
   histBusy = true; const ch = S.channel.id;
   $('#loadmore') && ($('#loadmore').textContent = 'Eski mesajlar yükleniyor…');
-  socket.emit('history', { before: S.msgs[0].id }, r => {
+  socket.emit('history', { before: S.msgs[0].id }, async r => {
+    if (r?.messages?.some(m => m.enc)) await E2E.prep(ch, r.messages, S.msgs).catch(() => {});
     histBusy = false;
     if (S.channel?.id !== ch) return;
     histMore = r.more;
@@ -6534,7 +6812,9 @@ $('#messages').onclick = e => {
 };
 $('#viewer').onclick = () => { $('#viewer').style.display = 'none'; ovClosed('viewer'); };
 
-socket.on('message', ({ channelId, msg }) => {
+let msgQ = Promise.resolve();
+const viaE2E = fn => d => { msgQ = msgQ.then(() => d?.msg?.enc && d.channelId === S.channel?.id ? E2E.prep(d.channelId, [d.msg], S.msgs) : 0).catch(() => {}).then(() => fn(d)); };
+socket.on('message', viaE2E(({ channelId, msg }) => {
   if (channelId !== S.channel?.id) return;
   if (msg.author && msg.author !== S.me && !document.hasFocus() && !isDnd() && !(S.view === 'server' && mutedServers.has(S.server?.id))) playSound('msg');
   typers.delete(msg.author); renderTyping();
@@ -6552,7 +6832,7 @@ socket.on('message', ({ channelId, msg }) => {
   box.querySelector(`.row[data-id="${msg.id}"]`)?.classList.add('new');
   if (atBottom || msg.author === S.me || msg.ephemeral) box.scrollTop = box.scrollHeight;
   else if (msg.author) showJumpNew();
-});
+}));
 // Odaya girince: okunmamış mesaj varsa üstte "N yeni mesaj · saatten beri" şeridi
 function showUnreadBar(lr) {
   $('#unreadbar')?.remove();
@@ -6577,7 +6857,7 @@ function showJumpNew() {
   b.innerHTML = `${ic('arrowDown')} ${b.dataset.n} yeni mesaj`;
 }
 $('#messages').addEventListener('scroll', () => { const box = $('#messages'); if (box.scrollHeight - box.scrollTop - box.clientHeight < 60) { $('#jumpnew')?.remove(); $('#unreadbar')?.remove(); } }, { passive: true });
-socket.on('update', ({ channelId, msg }) => {
+socket.on('update', viaE2E(({ channelId, msg }) => {
   if (channelId !== S.channel?.id) return;
   const i = S.msgs.findIndex(m => m.id === msg.id);
   if (i >= 0) {
@@ -6586,7 +6866,7 @@ socket.on('update', ({ channelId, msg }) => {
     if (openThreadId === msg.id) renderThread();
     if (before !== JSON.stringify(msg.reactions || {})) document.querySelectorAll(`.row[data-id="${msg.id}"] .reacts button`).forEach(b => b.classList.add('bump'));
   }
-});
+}));
 socket.on('remove', ({ channelId, msgId }) => {
   if (channelId !== S.channel?.id) return;
   S.msgs = S.msgs.filter(m => m.id !== msgId); renderMessages();
@@ -6594,9 +6874,19 @@ socket.on('remove', ({ channelId, msgId }) => {
 socket.on('playlist', ({ channelId, playlist }) => { if (channelId === S.channel?.id) S.playlist = playlist; });
 
 // ================= Yazma alanı =================
-function send(payload) {
+function send(payload, retried) {
   if (S.replyTo) payload.replyTo = S.replyTo.id;
-  socket.emit('message', payload, r => { if (r?.needRules) return showWelcome(S.servers.find(x => x.id === r.needRules)); if (r?.error) return toast(r.error); if (payload.kind === 'text' && payload.text) countEmojiUsage(payload.text); cancelReply(); slowAfterSend(); setTimeout(() => tip('msg', '#compose', 'Mesajın gitti! 🎉', 'Bir mesajın üstüne gelip tepki verebilir ya da yanıtlayabilirsin. @ yazarak birini etiketle.', 'top'), 700); });
+  const chId = S.channel?.id;
+  if (E2E.want(chId) && (payload.kind || 'text') === 'text') return E2E.seal(chId, E2E.inner(payload)).then(sv => {
+    if (S.channel?.id !== chId) return toast('Mesaj gönderilemedi, sohbet değişti');
+    if (!sv) return toast('Şifreli mesaj hazırlanamadı, sayfayı yenileyip tekrar dene', null, false, { type: 'err' });
+    emitSend({ kind: 'text', enc: sv.enc, fc: sv.fc, replyTo: payload.replyTo }, payload);
+  }, e => toast('Şifreleme hatası: ' + e.message));
+  if (payload._ef || payload._eau) return toast('Şifreli sohbet hazır değil, sayfayı yenile');
+  emitSend(payload, payload, retried ? null : () => E2E.conv(chId, true).then(() => E2E.want(chId) && send(payload, true)));
+}
+function emitSend(wire, payload, onE2e) {
+  socket.emit('message', wire, r => { if (r?.e2e && onE2e) return onE2e(); if (r?.needRules) return showWelcome(S.servers.find(x => x.id === r.needRules)); if (r?.error) return toast(r.error); if ((payload.kind || 'text') === 'text' && payload.text) countEmojiUsage(payload.text); cancelReply(); slowAfterSend(); setTimeout(() => tip('msg', '#compose', 'Mesajın gitti! 🎉', 'Bir mesajın üstüne gelip tepki verebilir ya da yanıtlayabilirsin. @ yazarak birini etiketle.', 'top'), 700); });
 }
 $('#compose').onsubmit = e => {
   e.preventDefault();
@@ -6661,6 +6951,10 @@ function addFiles(list) {
   renderAttach(); $('#input').focus();
 }
 function uploadOne(a) {
+  if (E2E.want(S.channel?.id)) { // şifreli sohbette dosya cihazda şifrelenip öyle yüklenir; sunucu adını bile görmez
+    a.p = 0.5; E2E.uploadEnc(a.f, a.name, a.f.type).then(meta => { a.st = 'ok'; a.id = meta.i; a.e = { ...meta, m: a.img ? a.f.type : meta.m }; }, e => { a.st = 'err'; a.err = e.message || 'Yüklenemedi'; toast(`${a.name}: ${a.err}`, null, false, { type: 'err' }); }).finally(() => { renderAttach(); attWaiter?.(); });
+    return;
+  }
   const x = new XMLHttpRequest(); a.xhr = x;
   x.open('POST', '/api/dosya');
   x.setRequestHeader('Authorization', 'Bearer ' + store.get('kanka-token'));
@@ -6684,10 +6978,12 @@ function renderAttach() {
 let attWaiter = null;
 async function sendWithFiles(text) {
   if (att.some(a => a.st === 'up')) { toast('Dosyalar yüklenince gönderilecek…'); await new Promise(r => { attWaiter = () => { if (!att.some(a => a.st === 'up')) { attWaiter = null; r(); } }; }); }
-  const ids = att.filter(a => a.st === 'ok').map(a => a.id);
+  const ok = att.filter(a => a.st === 'ok'), ids = ok.map(a => a.id);
   if (!ids.length && !text) { clearAttach(); return; }
+  const encd = ok.length && ok.every(a => a.e);
+  if (ok.length && ok.some(a => a.e) !== ok.every(a => a.e)) { toast('Dosyaları yeniden ekle (şifreleme durumu değişti)'); clearAttach(); return; }
   clearAttach();
-  send({ kind: 'text', text, files: ids });
+  send(encd ? { kind: 'text', text, _ef: ok.map(a => a.e) } : { kind: 'text', text, files: ids });
 }
 $('#file').onchange = e => { const fl = [...e.target.files]; e.target.value = ''; if (fl.length) addFiles(fl); };
 function uploadImage(f) { addFiles([f]); }
@@ -6791,7 +7087,7 @@ $('#input').addEventListener('keydown', e => {
   // Boş kutuda ↑: son mesajını düzenle
   if (e.key === 'ArrowUp' && !sugg.length && !$('#input').value) {
     const m = [...S.msgs].reverse().find(x => x.author === S.me && x.kind === 'text' && x.text);
-    if (m) { e.preventDefault(); form('Mesajı düzenle', 'Enter ile kaydet, Esc ile vazgeç.', [{ k: 'text', p: 'Mesaj', v: m.text }], v => socket.emit('edit', { msgId: m.id, text: v.text })); }
+    if (m) { e.preventDefault(); form('Mesajı düzenle', 'Enter ile kaydet, Esc ile vazgeç.', [{ k: 'text', p: 'Mesaj', v: m.text }], v => editMsg(m, v.text)); }
     return;
   }
   if (!sugg.length) { if (e.key === 'Escape') { cancelReply(); hideSuggest(); $('#cmdhint').style.display = 'none'; } return; }
@@ -9205,6 +9501,7 @@ $('#mic-btn').onclick = async () => {
     if (recCancel || dur < 0.7) return;
     const blob = new Blob(recChunks, { type: recChunks[0]?.type || type || 'audio/webm' });
     if (blob.size > 5 * 1024 * 1024) return toast('Kayıt çok uzun (en fazla 5 MB)');
+    if (E2E.want(S.channel?.id)) return E2E.uploadEnc(blob, 'ses', blob.type.split(';')[0]).then(meta => send({ kind: 'text', text: '', _eau: meta, duration: Math.round(dur) }), e => toast(e.message));
     const r = new FileReader();
     r.onload = () => socket.emit('upload', { data: r.result }, res => res.error ? toast(res.error) : send({ kind: 'text', text: '', audio: res.url, duration: Math.round(dur) }));
     r.readAsDataURL(blob);
@@ -10521,12 +10818,13 @@ function showReport({ kind, msg, chId, name, serverId }) {
       <div class="rp-chosen ${reason === 'cocuk' ? 'urg' : ''}"><span>${r[1]}</span><button class="alink" id="rp-chg">Değiştir</button></div>
       <label class="rp-lbl">Eklemek istediğin bir şey var mı? <small>(isteğe bağlı)</small></label>
       <textarea class="field" id="rp-note" maxlength="500" rows="3" placeholder="Örn. birkaç gündür DM'den rahatsız ediyor"></textarea>
+      ${kind === 'msg' && msg?.enc ? `<div class="rp-info">${ic('lock')}<span>Bu sohbet uçtan uca şifreli. Şikayet edince <b>bu mesaj ve hemen yanındaki birkaç mesaj</b> incelenmek üzere ekibe açılır. Sohbetin geri kalanı şifreli kalır.</span></div>` : ''}
       <div class="rp-info">${ic('shield')}<span>Şikayetini ${who} görecek. Sunucu moderatörleri kimin şikayet ettiğini <b>görmez</b>.${reason === 'cocuk' ? ' Acil bir tehlike varsa <b>112</b>\'yi ara.' : ''}</span></div>
       <div class="rowb"><button id="rp-back">Geri</button><button class="primary danger-btn" id="rp-send">${ic('flag')}Şikayet et</button></div>`, 'rep');
     $('#rp-chg').onclick = $('#rp-back').onclick = step1;
     $('#rp-send').onclick = () => {
       $('#rp-send').classList.add('busy');
-      socket.emit('report', { kind, msgId: msg?.id, chId: kind === 'msg' ? chId : srv?.id, name, reason, note: $('#rp-note').value }, x => {
+      socket.emit('report', { kind, msgId: msg?.id, chId: kind === 'msg' ? chId : srv?.id, name, reason, note: $('#rp-note').value, open: kind === 'msg' && msg?.enc ? E2E.reveal(msg.id) : undefined }, x => {
         if (x.error) { $('#rp-send')?.classList.remove('busy'); return toast(x.error); }
         step3(x.dup);
       });
