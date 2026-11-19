@@ -150,6 +150,8 @@ app.get('/discord-alternatifi', (req, res) => res.redirect(301, '/sesli-sohbet' 
 app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
 // Partner sunucuların özel linki: kankahq.com/s/isim
 app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && isStar(x)); res.redirect(s ? '/?davet=' + encodeURIComponent(s.invite) : '/'); });
+// İzlenen kısa link: kankahq.com/r/youtube-rozet → kaynak "youtube", kampanya "rozet" (video açıklamalarına koymak için)
+app.get('/r/:tag', (req, res) => { const t = String(req.params.tag).toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 60); const [src, ...rest] = t.split('-'); res.redirect('/?utm_source=' + encodeURIComponent(src || 'link') + (rest.length ? '&utm_campaign=' + encodeURIComponent(rest.join('-')) : '') + '&utm_medium=kisalink'); });
 app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
 // İndirme güvenliği: sunulan kurulum dosyasının SHA-256'sı (VirusTotal raporu bu özetle açılır)
 let exeHash = { at: 0, mtime: 0, v: null };
@@ -1632,9 +1634,10 @@ const dur = mn => mn >= 1440 ? Math.round(mn / 1440) + ' gün' : mn >= 60 ? Math
 const ymd = (d = new Date()) => new Date(+d + 3 * 3600e3).toISOString().slice(0, 10);
 // Günlük seri: o gün Kanka'da bulunduysan sayılır. Eskiden sadece giriş yaparken bakılıyordu;
 // uygulama/sekme gece boyunca açık kalınca ertesi gün sayılmıyor, seri sıfırlanıyordu.
+function markActive(u, t = ymd()) { u.seen = Date.now(); const a = (u.act ||= []); if (a[a.length - 1] !== t) { a.push(t); if (a.length > 180) a.splice(0, a.length - 180); } }
 function touchStreak(name) {
   const u = db.users[name]; if (!u) return null;
-  const t = ymd(), y = ymd(new Date(Date.now() - 864e5));
+  const t = ymd(), y = ymd(new Date(Date.now() - 864e5)); markActive(u, t);
   if (u.streak?.last === t) return null;
   const count = u.streak?.last === y ? (u.streak.count || 0) + 1 : 1;
   const bonus = 5 + Math.min(count, 10) * 2;
@@ -1648,6 +1651,21 @@ setInterval(() => { // açık kalan bağlantılar da yeni günü saysın
   for (const n of new Set(online.values())) { const r = touchStreak(n); if (r) { any = true; io.to('user:' + n).emit('toast', `🔥 ${r.count} günlük seri! +${r.bonus} XP`); } }
   if (any) save();
 }, 5 * 60e3);
+// Analiz için bir kerelik geçmiş doldurma: hangi günler aktif, ilk mesaj zamanı (mesajlardan, ses kayıtlarından ve yedeklerden)
+setTimeout(() => { try {
+  if (db.anFill1) return;
+  const days = {}, first = {}, add = (n, d) => (days[n] ||= new Set()).add(d);
+  for (const list of Object.values(db.messages)) for (const m of list || []) if (m.author && m.time) { add(m.author, ymd(new Date(m.time))); if (!first[m.author] || m.time < first[m.author]) first[m.author] = m.time; }
+  try { for (const f of fs.readdirSync(BACKUPS).filter(n => BACKUP_RE.test(n))) { const j = readDbFile(path.join(BACKUPS, f)); for (const [n, u] of Object.entries(j.users || {})) if (u.streak?.last) add(n, u.streak.last); } } catch {}
+  for (const u of Object.values(db.users)) {
+    const d = days[u.name] ||= new Set(); if (u.createdAt) d.add(ymd(new Date(u.createdAt))); for (const k of Object.keys(u.vmin || {})) d.add(k); if (u.streak?.last) d.add(u.streak.last);
+    for (const x of u.act || []) d.add(x); u.act = [...d].sort().slice(-180);
+    if (first[u.name] && !u.firstMsgAt) u.firstMsgAt = first[u.name];
+    if (!u.firstVoiceAt && Object.keys(u.vmin || {}).length) u.firstVoiceAt = new Date(Object.keys(u.vmin).sort()[0] + 'T12:00:00Z').getTime();
+    if (!u.vtot && u.vmin) u.vtot = Object.values(u.vmin).reduce((a, b) => a + b, 0);
+  }
+  db.anFill1 = Date.now(); save();
+} catch (e) { console.error('analiz doldurma', e); } }, 6000);
 // Bir kerelik onarım: yukarıdaki hata yüzünden kırılan serileri mesaj geçmişinden geri hesapla
 setTimeout(() => { try {
   if (db.streakFix2) return;
@@ -1819,7 +1837,7 @@ setInterval(() => {
   const who = new Set(); for (const [, m] of voice) for (const n of m.values()) who.add(n);
   if (!who.size) return;
   const d = dayKeyTR(), cut = dayKeyTR(Date.now() - 21 * 864e5);
-  for (const n of who) { const u = db.users[n]; if (!u) continue; const v = (u.vmin ||= {}); v[d] = (v[d] || 0) + 1; for (const k of Object.keys(v)) if (k < cut) delete v[k]; }
+  for (const n of who) { const u = db.users[n]; if (!u) continue; u.firstVoiceAt ||= Date.now(); u.vtot = (u.vtot || 0) + 1; const v = (u.vmin ||= {}); v[d] = (v[d] || 0) + 1; for (const k of Object.keys(v)) if (k < cut) delete v[k]; }
   for (const [ch, m] of voice) { // sesli XP
     if (m.size < 2) continue; const f = ch.startsWith('call:') ? null : findChannel(ch); if (f && (f.s.afk?.ch || f.s.afk) === ch) continue;
     for (const [sid, n] of m) { const u = db.users[n], fl = voiceFlags.get(sid) || {}; if (!u || fl.d) continue;
@@ -1983,7 +2001,7 @@ function postMessage(me, chId, p = {}) {
     const srvCh = !chId.startsWith('dm:') && !chId.startsWith('g:'), f0 = srvCh ? findChannel(chId) : null, crowd = !srvCh || (f0 && membersOf(f0.s).length >= 3);
     if (real && fresh && crowd && now - (u.xpAt || 0) >= 60e3) { u.xpAt = now; addXp(me, 3 + Math.floor(Math.random() * 4), 'mesaj', f0?.s || null, chId); }
     if (txt) u.xpLast = txt.slice(0, 200); }
-  u.msgs = (u.msgs || 0) + 1;
+  u.msgs = (u.msgs || 0) + 1; u.firstMsgAt ||= Date.now();
   const hr = new Date().getHours(); if (hr >= 0 && hr < 5) u.night = true;
   save();
   io.to(chId).emit('message', { channelId: chId, msg });
@@ -2281,6 +2299,8 @@ io.on('connection', socket => {
     socket.join('user:' + name);
     online.set(socket.id, name); if (isMobileUA(socket.handshake.headers['user-agent'])) mobileSockets.add(socket.id);
     pushPresence();
+    { const ua = String(socket.handshake.headers['user-agent'] || ''), pf = /Electron\//.test(ua) ? 'app' : /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Android/.test(ua) ? 'android' : /Mobi/.test(ua) ? 'mob' : 'web';
+      const u0 = db.users[name]; if (u0) { (u0.plat ||= {})[pf] = (u0.plat[pf] || 0) + 1; u0.plat1 ||= pf; } }
     const reward = touchStreak(name);
     const token = sessNew(name); save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
@@ -2304,7 +2324,8 @@ io.on('connection', socket => {
     if (w) return cb({ error: `Bu bağlantıdan çok fazla hesap açıldı. ${Math.ceil(w / 60)} dakika sonra tekrar dene.` });
     const salt = crypto.randomBytes(16).toString('hex');
     db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} };
-    const sr = cleanSrc(src); if (sr) db.users[name].src = sr; // hangi reklamdan / kelimeden geldi (ilk ziyaret)
+    const sr = cleanSrc(src); if (sr) db.users[name].src = sr;
+    { const iv = clean(invite, 40).split(/[=/]/).pop(), sv = iv && db.servers.find(x => x.invite === iv); if (sv) db.users[name].via = { srv: sv.id, name: clean(sv.name, 40) }; else if (gate.code) db.users[name].via = { code: 1 }; } // hangi reklamdan / kelimeden geldi (ilk ziyaret)
     if (gate.code) {
       const c = db.codes[gate.code]; c.usedBy = name; c.usedAt = Date.now(); db.users[name].invitedBy = c.by;
       const inv = db.users[c.by];
@@ -2745,6 +2766,46 @@ io.on('connection', socket => {
         const m = new Map(); for (const u of us) { if ((u.createdAt || 0) < now - 30 * 864e5) continue; const k = srcLabel(u.src), r = m.get(k) || { k, n: 0, act: 0, ad: !!(u.src?.g || /google/i.test(u.src?.s || '')) };
           r.n++; if ((u.msgs || 0) > 0 || Object.keys(u.vmin || {}).length) r.act++; m.set(k, r); }
         return [...m.values()].sort((a, b) => b.n - a.n).slice(0, 15); })() });
+  });
+  socket.on('adminAnalytics', ({ days = 30, src: srcF = null } = {}, cb = () => {}) => {
+    if (!SA(cb)) return;
+    const N = [7, 30, 90, 365].includes(+days) ? +days : 30, now = Date.now(), today = ymd(), D = k => ymd(new Date(now - k * 864e5));
+    const dayOf = t => ymd(new Date(t)), addD = (d, k) => new Date(new Date(d + 'T12:00:00Z').getTime() + k * 864e5).toISOString().slice(0, 10);
+    const all = Object.values(db.users).filter(u => !u.bot && u.name !== 'Claude' && u.name !== BOT_NAME);
+    const S0 = u => { if (u.via?.srv) return { k: 'Sunucu daveti', d: u.via.name || '' }; if (u.src) { const l = srcLabel(u.src); return { k: l.split(' · ')[0], d: l.includes(' · ') ? l.split(' · ').slice(1).join(' · ') : '' }; } if (u.invitedBy || u.via?.code) return { k: 'Davet kodu', d: u.invitedBy || '' }; return { k: 'Doğrudan / bilinmiyor', d: '' }; };
+    const info = u => { const c = u.createdAt ? dayOf(u.createdAt) : null, act = new Set(u.act || []); const age = c ? Math.floor((new Date(today + 'T12:00:00Z') - new Date(c + 'T12:00:00Z')) / 864e5) : 0;
+      const later = [...act].filter(d => c && d > c), wk = k => [...act].some(d => d >= addD(c, k * 7) && d < addD(c, k * 7 + 7));
+      const srvs = db.servers.filter(x => !x.public && (x.owner === u.name || (x.members || []).includes(u.name))).length;
+      return { u, c, age, act, back1: c && act.has(addD(c, 1)), back7: later.some(d => d <= addD(c, 7)), days: act.size, wk, msg: !!(u.firstMsgAt || u.msgs > 0), voice: !!(u.firstVoiceAt || Object.keys(u.vmin || {}).length), srv: srvs > 0, srvs, src: S0(u) }; };
+    const cut = now - N * 864e5, recent = all.filter(u => (u.createdAt || 0) >= cut).map(info);
+    const R = srcF ? recent.filter(x => x.src.k === srcF) : recent;
+    const pct = (arr, f) => arr.length ? Math.round(arr.filter(f).length / arr.length * 100) : null;
+    const elig = k => R.filter(x => x.age >= k);
+    // Günlük seriler
+    const series = []; for (let i = Math.min(N, 90) - 1; i >= 0; i--) { const d = D(i); series.push({ d, reg: all.filter(u => u.createdAt && dayOf(u.createdAt) === d).length, act: all.filter(u => (u.act || []).includes(d)).length }); }
+    // Kaynak tablosu
+    const g = new Map(); for (const x of recent) { const r = g.get(x.src.k) || { k: x.src.k, n: 0, list: [] }; r.n++; r.list.push(x); g.set(x.src.k, r); }
+    const srcRows = [...g.values()].sort((a, b) => b.n - a.n).map(r => { const e1 = r.list.filter(x => x.age >= 1), e7 = r.list.filter(x => x.age >= 7);
+      const det = new Map(); for (const x of r.list) if (x.src.d) det.set(x.src.d, (det.get(x.src.d) || 0) + 1);
+      return { k: r.k, n: r.n, msg: pct(r.list, x => x.msg), voice: pct(r.list, x => x.voice), srv: pct(r.list, x => x.srv), back1: pct(e1, x => x.back1), back7: pct(e7, x => x.back7), d3: pct(r.list, x => x.days >= 3),
+        lvl: Math.round(r.list.reduce((a, x) => a + level(x.u.xp), 0) / r.list.length * 10) / 10, det: [...det].sort((a, b) => b[1] - a[1]).slice(0, 8) }; });
+    // Huni
+    const funnel = [['Kayıt oldu', R.length], ['İlk mesajı attı', R.filter(x => x.msg).length], ['Bir sunucuya katıldı', R.filter(x => x.srv).length], ['Sesliye girdi', R.filter(x => x.voice).length],
+      ['Ertesi gün geri geldi', elig(1).filter(x => x.back1).length, elig(1).length], ['3 farklı gün geldi', R.filter(x => x.days >= 3).length], ['7 farklı gün geldi', R.filter(x => x.days >= 7).length]];
+    // Haftalık kohortlar (son 8 hafta)
+    const cohorts = []; for (let w = 7; w >= 0; w--) { const a = now - (w + 1) * 7 * 864e5, b = now - w * 7 * 864e5, c = all.filter(u => u.createdAt >= a && u.createdAt < b).map(info);
+      if (!c.length) continue; cohorts.push({ from: a, n: c.length, w: [1, 2, 3, 4].map(k => { const e = c.filter(x => x.age >= k * 7); return e.length ? Math.round(e.filter(x => x.wk(k)).length / e.length * 100) : null; }) }); }
+    // Cihaz
+    const plat = {}; for (const x of R) { const p0 = x.u.plat1 || (x.u.plat ? Object.entries(x.u.plat).sort((a, b) => b[1] - a[1])[0][0] : 'bilinmiyor'); plat[p0] = (plat[p0] || 0) + 1; }
+    // Saat dağılımı (kayıt saati, Türkiye)
+    const hours = Array(24).fill(0); for (const x of R) hours[new Date(x.u.createdAt + 3 * 3600e3).getUTCHours()]++;
+    const people = [...R].sort((a, b) => b.u.createdAt - a.u.createdAt).slice(0, 150).map(x => ({ name: x.u.name, at: x.u.createdAt, src: x.src.k, det: x.src.d, plat: x.u.plat1 || null, days: x.days, back1: x.age >= 1 ? !!x.back1 : null,
+      msgs: x.u.msgs || 0, vmin: x.u.vtot || Object.values(x.u.vmin || {}).reduce((a, b) => a + b, 0), srvs: x.srvs, seen: x.u.seen || null, lvl: level(x.u.xp), on: onlineNames().includes(x.u.name), inv: x.u.invitedBy || null }));
+    const dau = all.filter(u => (u.act || []).includes(today)).length, wau = all.filter(u => (u.act || []).some(d => d >= D(6))).length, mau = all.filter(u => (u.act || []).some(d => d >= D(29))).length;
+    const prev = all.filter(u => (u.createdAt || 0) >= cut - N * 864e5 && (u.createdAt || 0) < cut).length;
+    cb({ ok: true, days: N, src: srcF, total: all.length, kpi: { reg: R.length, regPrev: srcF ? null : prev, dau, wau, mau, online: onlineNames().length,
+      back1: pct(elig(1), x => x.back1), back1n: elig(1).length, back7: pct(elig(7), x => x.back7), back7n: elig(7).length, d3: pct(R, x => x.days >= 3), msg: pct(R, x => x.msg), voice: pct(R, x => x.voice) },
+      series, srcRows, funnel, cohorts, plat, hours, people, beta: { cap: db.beta.cap || 300, used: Math.min(betaCount(), db.beta.cap || 300), on: !!db.beta.on } });
   });
   socket.on('staffList', (cb = () => {}) => {
     if (!SM(cb)) return;

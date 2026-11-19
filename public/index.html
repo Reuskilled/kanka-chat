@@ -585,6 +585,27 @@
   .ar-r input:focus-visible + span { outline: 2px solid var(--accent); }
   .botset .dv-opt span b { display: block; font-size: 14px; } .botset .dv-opt span small { display: block; color: var(--muted); font-weight: 600; font-size: 12.5px; margin-top: 1px; }
   .ab-safe { color: inherit; opacity: .75; font-size: 12.5px; font-weight: 700; text-decoration: underline; margin-right: 10px; white-space: nowrap; } .ab-safe:hover { opacity: 1; } @media (max-width: 640px) { .ab-safe { display: none; } }
+.an-root { position: relative; display: grid; gap: 14px; } .an-root .adm-box { margin: 0; }
+  .an-root, .an-root > * { min-width: 0; } .an-bar-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .an-bar-top > .hint { flex: 1 1 220px; min-width: 0; }
+  .an-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); flex-shrink: 0; } .an-seg button { padding: 6px 12px; border-radius: 9px; font-weight: 800; font-size: 13px; color: var(--muted); white-space: nowrap; } .an-seg button.on { background: var(--accent); color: #1a0f08; } .an-total { margin-left: auto; color: var(--muted); font-weight: 700; font-size: 13px; }
+  .an-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 6px 5px 12px; border-radius: 99px; background: var(--accent-soft); font-size: 13px; } .an-chip button { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; } .an-chip .ic { width: 13px; height: 13px; }
+  .an-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; } @media (max-width: 500px) { .an-kpis { grid-template-columns: 1fr 1fr; } .an-kpi b { font-size: 20px; } .an-total { margin-left: 0; } }
+  .an-kpi { padding: 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); display: grid; gap: 2px; } .an-kpi .ic { width: 18px; height: 18px; color: var(--muted); margin-bottom: 4px; }
+  .an-kpi b { font-size: 24px; letter-spacing: -.02em; color: var(--ink); } .an-kpi small { color: var(--muted); font-weight: 700; font-size: 12.5px; } .an-kpi em { font-style: normal; color: var(--muted); font-size: 11.5px; font-weight: 600; }
+  .an-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; } @media (max-width: 1000px) { .an-grid2 { grid-template-columns: 1fr; } }
+  .an-svg { width: 100%; height: auto; display: block; overflow: visible; } .an-fill { fill: var(--accent); } .an-grid { stroke: var(--line); stroke-width: 1; } .an-ax { fill: var(--muted); font-size: 15px; font-weight: 600; }
+  .an-svg [data-tip]:hover .an-fill { fill: color-mix(in srgb, var(--accent) 75%, #fff); }
+  .an-tip { position: absolute; z-index: 20; pointer-events: none; padding: 7px 10px; border-radius: 10px; background: #0f0b09; border: 1px solid var(--line); font-size: 12.5px; color: var(--ink); box-shadow: 0 8px 24px rgba(0,0,0,.4); max-width: 220px; } .an-tip[hidden] { display: none; }
+  .an-sm { font-weight: 600; opacity: .6; font-size: 12px; margin-left: 4px; }
+  .an-funnel { display: grid; gap: 8px; } .an-f { display: grid; grid-template-columns: 170px 1fr 50px 110px; gap: 10px; align-items: center; font-size: 13.5px; } .an-f span { font-weight: 700; } .an-f b { text-align: right; } .an-f em { font-style: normal; color: var(--muted); font-weight: 700; font-size: 12.5px; } .an-f em small { font-weight: 600; }
+  .an-ft { height: 12px; border-radius: 6px; background: rgba(255,255,255,.05); overflow: hidden; } .an-ft i { display: block; height: 100%; border-radius: 0 6px 6px 0; background: var(--accent); }
+  @media (max-width: 700px) { .an-f { grid-template-columns: 1fr 50px 70px; } .an-f .an-ft { grid-column: 1 / -1; order: 9; } }
+  .an-tw { overflow-x: auto; } .an-t { width: 100%; border-collapse: collapse; font-size: 13px; } .an-t th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 800; padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .an-t td { padding: 8px; border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent); vertical-align: middle; } .an-t .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; } .an-t td small { display: block; color: var(--muted); font-size: 11.5px; font-weight: 600; margin-top: 2px; }
+  .an-t tbody tr { cursor: pointer; } .an-t tbody tr:hover { background: var(--hover); } .an-src.on { box-shadow: inset 3px 0 0 var(--accent); background: var(--accent-soft); } .an-coh tbody tr { cursor: default; }
+  .an-t .ok { color: #4cc38a; } .an-t .no { color: #e5484d; } .an-t .ok .ic, .an-t .no .ic { width: 15px; height: 15px; } .an-t .mut, .an-root .mut { color: var(--muted); }
+  .an-who { display: inline-flex; align-items: center; gap: 8px; } .an-who .av { width: 26px; height: 26px; } .an-ppl { max-height: 520px; overflow-y: auto; } .an-ppl thead th { position: sticky; top: 0; background: var(--card); z-index: 1; }
+  .an-link { margin-top: 14px; padding: 12px; border-radius: 12px; border: 1px dashed var(--line); display: grid; gap: 6px; } .an-link > b { display: flex; align-items: center; gap: 6px; } .an-link > span { color: var(--muted); font-size: 13px; font-weight: 600; } .an-pre { font-weight: 800; color: var(--muted); white-space: nowrap; }
   .nohist { display: flex; gap: 10px; align-items: flex-start; margin: 10px 16px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px dashed var(--line); color: var(--muted); font-size: 13px; font-weight: 600; } .nohist .ic { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; } .nohist b { display: block; color: var(--ink); font-size: 13.5px; }
   #gifpanel { display: none; position: absolute; bottom: 58px; right: 50px; width: 420px; height: 470px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.5); z-index: 6; flex-direction: column; overflow: hidden; animation: popIn .18s var(--ease-out); transform-origin: bottom right; }
   #gifpanel.on { display: flex; }
@@ -3398,6 +3419,8 @@ const ICON = {
   code: '<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/>',
   smile: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/>',
   image: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
+  flame: '<path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z"/>',
+  filter: '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/>',
   poll: '<path d="M5 20V11M12 20V4M19 20v-6"/>',
   dice: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9h.01M15 15h.01M15 9h.01M9 15h.01M12 12h.01" stroke-width="3"/>',
@@ -10676,13 +10699,14 @@ function admDev(B) {
 function adminPanel(el, sub = 'overview') {
   const R = S.staff, A = ['owner', 'admin'].includes(R);
   const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['srvapps', 'Sunucu rozetleri', 'check'], ['log', 'Kayıtlar', 'clock'],
-    ...(A ? [['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
+    ...(A ? [['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
   if (!subs.some(x => x[0] === sub)) sub = 'overview';
   el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
     <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;
   el.querySelectorAll('#adm-seg [data-s]').forEach(b => b.onclick = () => adminPanel(el, b.dataset.s));
   const B = el.querySelector('#adm-body');
   if (sub === 'overview') return admOverview(B, el);
+  if (sub === 'analiz') return admAnalytics(B, el);
   if (sub === 'team') return admTeam(B);
   if (sub === 'dev') return admDev(B);
   if (sub === 'srvapps') return admSrvApps(B);
@@ -10792,6 +10816,78 @@ const STAFF_CLR = { owner: '#ff9a4d', admin: '#ffc04d', mod: '#5aa9ff', destek: 
 const STAFF_CAN_C = { warn: ['owner', 'admin', 'mod', 'destek'], suspend: ['owner', 'admin', 'mod'], ban: ['owner', 'admin'], del: ['owner', 'admin'], reset: ['owner', 'admin'] };
 const sCan = a => (STAFF_CAN_C[a] || []).includes(S.staff);
 const staffChip = r => r ? `<span class="adm-rk" style="--c:${STAFF_CLR[r]}">${ic('shield')}${STAFF_TR[r]}</span>` : '';
+// ================= Yönetim › Analiz: kim nereden geldi, kaldı mı =================
+let anState = { days: 30, src: null, sort: 'at', q: '' };
+const PLAT_TR = { app: 'Masaüstü uygulaması', web: 'Bilgisayar (tarayıcı)', android: 'Android', ios: 'iPhone', mob: 'Telefon', bilinmiyor: 'Bilinmiyor' };
+function anBars(series, key, label, fmtD) { // tek seri: lejant yok, başlık adlandırıyor
+  const W = 640, H = 170, pad = 34, n = series.length, max = Math.max(1, ...series.map(x => x[key])), bw = (W - pad) / n;
+  const tick = [0, Math.round(max / 2), max];
+  return `<svg class="an-svg" viewBox="0 0 ${W} ${H + 22}" role="img" aria-label="${esc(label)}">${tick.map(t => { const y = H - t / max * (H - 10); return `<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" class="an-grid"/><text x="${pad - 6}" y="${y + 5}" class="an-ax" text-anchor="end">${t}</text>`; }).join('')}
+    ${series.map((x, i) => { const h = x[key] / max * (H - 10), X = pad + i * bw + 1; return `<g class="an-bar" data-tip="${esc(fmtD(x.d))}: <b>${x[key]}</b> ${esc(label.toLocaleLowerCase('tr'))}"><rect x="${X}" y="0" width="${Math.max(1, bw - 2)}" height="${H}" fill="transparent"/>${h ? `<path d="M${X},${H} v${-Math.max(h - 3, 0)} q0,-3 3,-3 h${Math.max(bw - 8, 0)} q3,0 3,3 v${Math.max(h - 3, 0)} z" class="an-fill"/>` : ''}</g>`; }).join('')}
+    ${series.map((x, i) => i % Math.ceil(n / 6) === 0 ? `<text x="${pad + i * bw + bw / 2}" y="${H + 17}" class="an-ax" text-anchor="middle">${esc(fmtD(x.d, true))}</text>` : '').join('')}</svg>`;
+}
+function anTip(root) {
+  let tip = root.querySelector('.an-tip'); if (!tip) { tip = document.createElement('div'); tip.className = 'an-tip'; root.appendChild(tip); }
+  root.onpointermove = e => { const g = e.target.closest('[data-tip]'); if (!g) { tip.hidden = true; return; } tip.hidden = false; tip.innerHTML = g.dataset.tip; const r = root.getBoundingClientRect(); tip.style.left = Math.min(e.clientX - r.left + 12, r.width - 200) + 'px'; tip.style.top = e.clientY - r.top + 12 + 'px'; };
+  root.onpointerleave = () => tip.hidden = true;
+}
+function admAnalytics(B, el) {
+  B.innerHTML = '<p class="hint">Hesaplanıyor…</p>';
+  socket.emit('adminAnalytics', { days: anState.days, src: anState.src }, r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const k = r.kpi, P = v => v === null || v === undefined ? '—' : '%' + v;
+    const fd = (d, short) => new Date(d + 'T12:00:00Z').toLocaleDateString('tr-TR', short ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'long', weekday: 'short' });
+    const tint = v => v === null ? '' : `style="background:color-mix(in srgb, var(--accent) ${Math.round(v * .55)}%, transparent)"`;
+    const delta = k.regPrev !== null && k.regPrev !== undefined ? (k.regPrev ? Math.round((k.reg - k.regPrev) / k.regPrev * 100) : null) : null;
+    const tile = (v, t, sub, i) => `<div class="an-kpi">${ic(i)}<b>${v}</b><small>${t}</small>${sub ? `<em>${sub}</em>` : ''}</div>`;
+    const f0 = r.funnel[0][1] || 1;
+    const maxPl = Math.max(1, ...Object.values(r.plat)), maxH = Math.max(1, ...r.hours);
+    const sortP = { at: (a, b) => b.at - a.at, days: (a, b) => b.days - a.days, msgs: (a, b) => b.msgs - a.msgs, vmin: (a, b) => b.vmin - a.vmin, lvl: (a, b) => b.lvl - a.lvl };
+    const ppl = () => r.people.filter(p => !anState.q || foldTr(p.name + ' ' + p.src + ' ' + (p.det || '')).includes(foldTr(anState.q))).sort(sortP[anState.sort] || sortP.at);
+    const pRows = () => ppl().map(p => `<tr data-u="${esc(p.name)}"><td><span class="an-who">${av(p.name, p.on)}<b>${esc(p.name)}</b></span></td><td>${ago(p.at)}</td><td>${esc(p.src)}${p.det ? `<small>${esc(p.det)}</small>` : ''}</td><td>${esc(PLAT_TR[p.plat] || '—')}</td>
+      <td class="num">${p.days}</td><td class="num">${p.back1 === null ? '<span class="mut">yeni</span>' : p.back1 ? `<span class="ok">${ic('check')}</span>` : `<span class="no">${ic('x')}</span>`}</td><td class="num">${p.msgs}</td><td class="num">${p.vmin}</td><td class="num">${p.srvs}</td><td class="num">${p.lvl}</td><td>${p.on ? '<span class="ok">şimdi</span>' : p.seen ? ago(p.seen) : '—'}</td></tr>`).join('') || '<tr><td colspan="11" class="mut">Kimse yok</td></tr>';
+    B.innerHTML = `<div class="an-root">
+      <div class="an-bar-top"><div class="an-seg">${[[7, '7 gün'], [30, '30 gün'], [90, '90 gün'], [365, '1 yıl']].map(([v, t]) => `<button data-days="${v}" class="${anState.days === v ? 'on' : ''}">${t}</button>`).join('')}</div>
+        ${anState.src ? `<span class="an-chip">Kaynak: <b>${esc(anState.src)}</b><button id="an-clr" aria-label="Filtreyi kaldır">${ic('x')}</button></span>` : '<span class="hint" style="margin:0">Bir kaynağa tıklarsan her şey o kaynağa göre süzülür</span>'}
+        <span class="an-total">${r.total.toLocaleString('tr-TR')} toplam hesap · ${k.online} çevrimiçi</span></div>
+      <div class="an-kpis">
+        ${tile(k.reg, `yeni kayıt (${r.days} gün)`, delta === null ? '' : `${delta >= 0 ? '▲' : '▼'} %${Math.abs(delta)} önceki döneme göre`, 'userplus')}
+        ${tile(k.dau, 'bugün giren', `haftalık ${k.wau} · aylık ${k.mau}`, 'activity')}
+        ${tile(P(k.back1), 'ertesi gün geri geldi', `${k.back1n} kişiden`, 'refresh')}
+        ${tile(P(k.back7), 'ilk hafta içinde döndü', `${k.back7n} kişiden`, 'calendar')}
+        ${tile(P(k.d3), '3+ farklı gün geldi', '', 'flame')}
+        ${tile(P(k.msg), 'mesaj attı', '', 'chat')}
+        ${tile(P(k.voice), 'sesliye girdi', '', 'volume')}
+        ${tile(`${r.beta.used}/${r.beta.cap}`, 'beta rozeti dolu', r.beta.on ? 'kapalı beta açık' : 'kayıt herkese açık', 'ticket')}
+      </div>
+      <div class="an-grid2"><div class="adm-box an-chart"><h4>${ic('userplus')}Günlük yeni kayıt</h4>${anBars(r.series, 'reg', 'Yeni kayıt', fd)}</div>
+        <div class="adm-box an-chart"><h4>${ic('activity')}Günlük aktif kişi</h4>${anBars(r.series, 'act', 'Aktif kişi', fd)}</div></div>
+      <div class="adm-box"><h4>${ic('filter')}Huni <small class="an-sm">kayıt olanların yüzde kaçı her adıma geldi</small></h4><div class="an-funnel">${r.funnel.map(([t, n, base]) => { const pc = Math.round(n / (base || f0) * 100); return `<div class="an-f"><span>${t}</span><div class="an-ft"><i style="width:${Math.max(pc, 1)}%"></i></div><b>${n}</b><em>%${pc}${base && base !== f0 ? ` <small>(${base} kişiden)</small>` : ''}</em></div>`; }).join('')}</div></div>
+      <div class="adm-box"><h4>${ic('compass')}Nereden geldiler <small class="an-sm">son ${r.days} gün · satıra tıkla, her şey o kaynağa süzülsün</small></h4>
+        <div class="an-tw"><table class="an-t"><thead><tr><th>Kaynak</th><th class="num">Kayıt</th><th class="num">Mesaj</th><th class="num">Sesli</th><th class="num">Sunucu</th><th class="num">Ertesi gün</th><th class="num">İlk hafta</th><th class="num">3+ gün</th><th class="num">Ort. sv</th></tr></thead>
+        <tbody>${r.srcRows.map(x => `<tr class="an-src ${anState.src === x.k ? 'on' : ''}" data-src="${esc(x.k)}"><td><b>${esc(x.k)}</b>${x.det.length ? `<small>${x.det.map(([d, n]) => `${esc(d)} (${n})`).join(' · ')}</small>` : ''}</td><td class="num"><b>${x.n}</b></td>${['msg', 'voice', 'srv', 'back1', 'back7', 'd3'].map(f => `<td class="num" ${tint(x[f])}>${P(x[f])}</td>`).join('')}<td class="num">${x.lvl}</td></tr>`).join('') || '<tr><td colspan="9" class="mut">Bu dönemde kayıt yok</td></tr>'}</tbody></table></div>
+        <div class="an-link"><b>${ic('link')}İzlenen link oluştur</b><span>Video açıklamasına, TikTok profiline ya da reklama bu linki koy, gelenler bu tabloda ayrı satır olarak görünür.</span>
+          <div class="adm-inl"><span class="an-pre">kankahq.com/r/</span><input class="field" id="an-tag" placeholder="youtube-rozet" maxlength="50"><button class="btns2" id="an-cp">${ic('copy')}Kopyala</button></div><small class="mut">İlk kelime kaynak, gerisi kampanya olur: <b>youtube-rozet</b> → kaynak "youtube", kampanya "rozet"</small></div></div>
+      <div class="adm-box"><h4>${ic('calendar')}Haftalık gruplar <small class="an-sm">o hafta kayıt olanların yüzde kaçı sonraki haftalarda tekrar geldi</small></h4>
+        ${r.cohorts.length ? `<div class="an-tw"><table class="an-t an-coh"><thead><tr><th>Kayıt haftası</th><th class="num">Kişi</th><th class="num">1. hafta</th><th class="num">2. hafta</th><th class="num">3. hafta</th><th class="num">4. hafta</th></tr></thead><tbody>${r.cohorts.map(c => `<tr><td>${new Date(c.from).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} haftası</td><td class="num">${c.n}</td>${c.w.map(v => `<td class="num" ${tint(v)}>${v === null ? '<span class="mut">—</span>' : '%' + v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '<p class="hint">Henüz yeterli veri yok.</p>'}</div>
+      <div class="an-grid2"><div class="adm-box"><h4>${ic('screen')}Hangi cihazdan</h4><div class="an-funnel">${Object.entries(r.plat).sort((a, b) => b[1] - a[1]).map(([p, n]) => `<div class="an-f"><span>${esc(PLAT_TR[p] || p)}</span><div class="an-ft"><i style="width:${n / maxPl * 100}%"></i></div><b>${n}</b><em>%${Math.round(n / (k.reg || 1) * 100)}</em></div>`).join('') || '<p class="hint">Veri yok</p>'}</div><p class="hint" style="margin-top:8px">Cihaz bilgisi bugünden itibaren toplanıyor, eski kayıtlarda "Bilinmiyor" görünür.</p></div>
+        <div class="adm-box an-chart"><h4>${ic('clock')}Kayıt saatleri <small class="an-sm">Türkiye saati</small></h4><svg class="an-svg" viewBox="0 0 480 124" role="img" aria-label="Saatlere göre kayıt">${r.hours.map((n, h) => { const H = n / maxH * 92, X = h * 20 + 2; return `<g data-tip="${String(h).padStart(2, '0')}:00–${String(h + 1).padStart(2, '0')}:00: <b>${n}</b> kayıt"><rect x="${X}" y="0" width="16" height="100" fill="transparent"/>${n ? `<rect x="${X}" y="${100 - H}" width="16" height="${H}" rx="3" class="an-fill"/>` : ''}</g>${h % 3 === 0 ? `<text x="${X + 8}" y="114" class="an-ax" text-anchor="middle">${h}</text>` : ''}`; }).join('')}</svg></div></div>
+      <div class="adm-box"><h4>${ic('users')}Kayıt olanlar <small class="an-sm">son ${r.days} gün${r.people.length >= 150 ? ' · en yeni 150 kişi' : ''} · kişiye tıkla, kartı açılsın</small></h4>
+        <div class="adm-inl" style="margin-bottom:8px"><input class="field" id="an-q" placeholder="İsim ya da kaynak ara" value="${esc(anState.q)}" style="margin:0"><select class="field" id="an-sort" style="margin:0;width:auto">${[['at', 'En yeni'], ['days', 'En çok gün gelen'], ['msgs', 'En çok mesaj'], ['vmin', 'En çok seste'], ['lvl', 'En yüksek seviye']].map(([v, t]) => `<option value="${v}" ${anState.sort === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+        <div class="an-tw an-ppl"><table class="an-t"><thead><tr><th>Kişi</th><th>Kayıt</th><th>Kaynak</th><th>Cihaz</th><th class="num">Gün</th><th class="num">Ertesi gün</th><th class="num">Mesaj</th><th class="num">Ses dk</th><th class="num">Sunucu</th><th class="num">Sv</th><th>Son görülme</th></tr></thead><tbody id="an-pb">${pRows()}</tbody></table></div></div>
+      <div class="an-tip" hidden></div></div>`;
+    const re = () => admAnalytics(B, el);
+    B.querySelectorAll('[data-days]').forEach(b => b.onclick = () => { anState.days = +b.dataset.days; re(); });
+    B.querySelectorAll('.an-src').forEach(t => t.onclick = () => { anState.src = anState.src === t.dataset.src ? null : t.dataset.src; re(); });
+    if ($('#an-clr')) $('#an-clr').onclick = () => { anState.src = null; re(); };
+    const wireP = () => B.querySelectorAll('#an-pb [data-u]').forEach(x => x.onclick = () => { adminPanel(el, 'users'); setTimeout(() => { $('#u-q').value = x.dataset.u; $('#u-go').click(); }, 50); });
+    $('#an-q').oninput = e => { anState.q = e.target.value; $('#an-pb').innerHTML = pRows(); wireP(); };
+    $('#an-sort').onchange = e => { anState.sort = e.target.value; $('#an-pb').innerHTML = pRows(); wireP(); };
+    wireP();
+    $('#an-cp').onclick = () => { const t = ($('#an-tag').value || '').toLowerCase().replace(/[^a-z0-9_-]/g, ''); if (!t) return toast('Önce bir ad yaz, ör. youtube-rozet'); navigator.clipboard?.writeText(`${PUB}/r/${t}`).then(() => toast(`Kopyalandı: ${PUB.replace(/^https?:\/\//, '')}/r/${t}`)); };
+    anTip(B.querySelector('.an-root'));
+  });
+}
 function admOverview(B, el) {
   B.innerHTML = '<p class="hint">Yükleniyor…</p>';
   socket.emit('adminStats', r => {
