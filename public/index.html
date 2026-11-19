@@ -1404,7 +1404,7 @@
   .st-nav .out { margin-top: auto; color: var(--red); }
   .st-main { padding: 24px; overflow-y: auto; }
   .st-main h3 { font-size: 22px; margin-bottom: 4px; }
-  .st-page { animation: fadeUp .3s var(--ease-out); }
+  .st-page { animation: none; } .st-main[data-fresh] .st-page { animation: stFade .16s ease-out; } @keyframes stFade { from { opacity: .35; } }
   .st-field { margin-top: 16px; }
   .st-field label { display: block; font-size: 12px; font-weight: 800; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 6px; }
   .st-field .field { margin: 0; }
@@ -3901,7 +3901,7 @@ $('#settings').onclick = () => showSettings();
 // Masaüstü uygulamasında ayarlar içinde bir şey değişince pencere tümüyle yeniden çizilsin
 if (window.kankaDesktop) {
   document.documentElement.classList.add('kdesk');
-  const repaint = () => requestAnimationFrame(() => { const m = $('#modal'); if (!m) return; m.style.transform = 'translateZ(0)'; requestAnimationFrame(() => { m.style.transform = ''; window.kankaDesktop.repaint?.(); setTimeout(() => window.kankaDesktop.repaint?.(), 350); }); });
+  let rpT = null; const repaint = () => { clearTimeout(rpT); rpT = setTimeout(() => window.kankaDesktop.repaint?.(), 120); }; // tek, gecikmeli yeniden çizim (katman hilesi titretiyordu)
   ['click', 'change'].forEach(ev => document.addEventListener(ev, e => { if (e.target.closest?.('#modal')) repaint(); }, true));
 }
 const PALETTE = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#ff9f43', '#e5484d', '#8b6b5a'];
@@ -3998,6 +3998,7 @@ function showSettings(tab) {
   const open = t => {
     tab = t;
     document.querySelectorAll('.st-nav [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+    const changed = $('#st-main').dataset.tab !== t; $('#st-main').dataset.tab = t; if (changed) { $('#st-main').scrollTop = 0; freshPage($('#st-main')); }
     $('#st-main').innerHTML = pages[t]();
     $('#modal-box').classList.toggle('st-wide', t === 'admin');
     if (t === 'account') wireAccount();
@@ -5088,8 +5089,11 @@ function showServerSettings(s, tab, focus) {
     ['emoji', 'Emojiler', 'smile', mod || P('manageEmojis')], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod || P('viewAudit')]].filter(t => t[3]);
   if (!tabs.length) return toast('Bu sunucuda ayar yetkin yok');
   tab = tabs.some(t => t[0] === tab) ? tab : tabs[0][0];
-  ssOpen = { id: s.id, tab, focus };
-  modal(`<nav class="st-nav"><h4 data-t="${esc(s.name)}">${esc(s.name.toLocaleUpperCase('tr'))}</h4>${tabs.map(([k, t, i]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${ic(i)}${t}</button>`).join('')}
+  const reuse = ssOpen?.id === s.id && $('#modal').classList.contains('open') && !!$('#ss-main'); // aynı sunucuda sekme değişimi: kabuğu yeniden çizme (titreme olmasın)
+  const prevTab = ssOpen?.tab;
+  ssOpen = { ...(reuse ? ssOpen : {}), id: s.id, tab, focus };
+  if (reuse) { $('#modal-box').querySelectorAll('.st-nav [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === tab)); if (prevTab !== tab) { $('#ss-main').scrollTop = 0; freshPage($('#ss-main')); } }
+  else modal(`<nav class="st-nav"><h4 data-t="${esc(s.name)}">${esc(s.name.toLocaleUpperCase('tr'))}</h4>${tabs.map(([k, t, i]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${ic(i)}${t}</button>`).join('')}
       ${s.public ? '' : `<button class="out" id="ss-leave">${ic('door')}Sunucudan ayrıl</button>`}<button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="ss-main"></div>
     <aside class="st-prev"><div class="prev-head"><h4>SUNUCU</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div>
@@ -10696,6 +10700,7 @@ function wireOverlaySettings() {
 }
 
 function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); const was = $('#modal').classList.contains('open'), wasSet = was && $('#modal-box').classList.contains('settings'), wasKey = $('#modal-box').dataset.mkey; $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); if (!was) ovOpen('modal', () => { if (saveGuard()) return false; closeModalRaw(); }); msetEnhance(!wasSet || wasKey !== msetKey()); }
+function freshPage(el) { if (!el) return; el.setAttribute('data-fresh', ''); clearTimeout(el._fr); el._fr = setTimeout(() => el.removeAttribute('data-fresh'), 260); }
 function closeModalRaw() { $('#modal').classList.remove('open'); window.onMyActivity = null; }
 function closeModal() { const was = $('#modal').classList.contains('open'); closeModalRaw(); if (ovStack?.some(o => o.name === 'msetpage')) ovClosed('msetpage'); if (was) ovClosed('modal'); }
 $('#modal').onclick = e => { if (e.target.id === 'modal' && !saveGuard()) closeModal(); };
