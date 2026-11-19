@@ -1167,8 +1167,9 @@ function partnerPerks() {
 // ---- Kanka Bot'tan özel mesaj (sadece okunur bildirim kanalı) ----
 function botDm(name, o) {
   if (!db.users[name]) return; const chId = dmId(BOT_NAME, name);
-  botPost(chId, o); io.to('user:' + name).emit('dms', dmsFor(name));
-  io.to('user:' + name).emit('toast', '🤖 Kanka Bot\'tan yeni mesajın var');
+  const msg = botPost(chId, o); io.to('user:' + name).emit('dms', dmsFor(name));
+  io.to('user:' + name).emit('message', { channelId: chId, msg }); // DM odasına girmemiş olsa da gelsin (okunmadı noktası)
+  notifyUser(name, { from: BOT_NAME, text: o.title || 'Yeni mesaj', channelId: chId, dm: true }); // sesli bildirim + telefona/masaüstüne bildirim
 }
 // ---- Bot geliştiriciler: kabul edilen → aday (HQ'da rol + oda); rozet → botu gerçekten kullanılınca ----
 const DEV_GOAL = { servers: 3, cmds: 50 };
@@ -3550,6 +3551,12 @@ io.on('connection', socket => {
     if (!siteMod(me)) return cb({ error: 'Yetkin yok' }); const u = db.users[name]; if (!u) return cb({ error: 'Kullanıcı yok' });
     if (on) devAward(name, me); else { delete u.devEarned; if (u.badgeAt) delete u.badgeAt.dev; save(); io.emit('users', allUsers()); devPerks(); }
     staffLog(me, on ? 'Bot geliştirici rozeti verdi' : 'Bot geliştirici rozetini aldı', name); cb({ ok: true });
+  });
+  socket.on('botInfo', (_ = {}, cb = () => {}) => {
+    if (!me) return cb({});
+    const all = db.servers.filter(x => x.bot?.added && !x.public), mine = all.filter(x => x.members.includes(me) || x.owner === me);
+    const first = Math.min(...all.map(x => x.bot.addedAt || x.created || Date.now()), Date.now());
+    cb({ total: all.length + 1, mutual: [{ id: 's1', name: 'Kanka HQ' }, ...mine.map(x => ({ id: x.id, name: x.name, icon: x.icon, iconImg: x.iconImg }))].slice(0, 30), since: first });
   });
   socket.on('adminDevOpen', ({ open } = {}, cb = () => {}) => { if (!siteMod(me)) return cb({ error: 'Yetkin yok' }); db.devBetaOpen = !!open; save(); cb({ ok: true }); });
   // Kanka ekibi kullanıcıya elle rozet verir/geri alır (ör. Hata Avcısı)

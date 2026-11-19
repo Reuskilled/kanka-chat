@@ -606,6 +606,16 @@
   .an-t .ok { color: #4cc38a; } .an-t .no { color: #e5484d; } .an-t .ok .ic, .an-t .no .ic { width: 15px; height: 15px; } .an-t .mut, .an-root .mut { color: var(--muted); }
   .an-who { display: inline-flex; align-items: center; gap: 8px; } .an-who .av { width: 26px; height: 26px; } .an-ppl { max-height: 520px; overflow-y: auto; } .an-ppl thead th { position: sticky; top: 0; background: var(--card); z-index: 1; }
   .an-link { margin-top: 14px; padding: 12px; border-radius: 12px; border: 1px dashed var(--line); display: grid; gap: 6px; } .an-link > b { display: flex; align-items: center; gap: 6px; } .an-link > span { color: var(--muted); font-size: 13px; font-weight: 600; } .an-pre { font-weight: 800; color: var(--muted); white-space: nowrap; }
+.kbpop .kb-ban { position: relative; background: radial-gradient(circle at 20% 30%, #ffffff22 0 2px, transparent 3px) 0 0/22px 22px, linear-gradient(120deg, #ff9a52, #ff4d2e 55%, #8a2bff); }
+  .kb-bant { position: absolute; right: 14px; bottom: 10px; font-weight: 900; font-size: 22px; color: #fff; letter-spacing: -.02em; text-shadow: 0 2px 12px #0006; }
+  .kbpop .kb-avw .av { border: 6px solid var(--card); box-sizing: content-box; } .kbpop .kb-avw .av img { width: 100%; height: 100%; border-radius: 50%; }
+  .kb-vf { display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; vertical-align: 3px; } .kb-vf .ic { width: 11px; height: 11px; stroke-width: 3.2; }
+  .kb-add { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0 4px; padding: 10px; border-radius: 12px; background: var(--hover); border: 1px solid var(--line); font-weight: 800; font-size: 14px; } .kb-add:hover { background: var(--accent-soft); border-color: var(--accent); } .kb-add .ic { width: 16px; height: 16px; }
+  .kb-act { display: flex; align-items: center; gap: 10px; } .kb-act img { width: 40px; height: 40px; border-radius: 10px; } .kb-act b { display: block; font-size: 14px; } .kb-act small { color: var(--muted); font-size: 12px; font-weight: 600; }
+  .kb-cmds button { padding: 4px 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); font-weight: 800; font-size: 12.5px; font-family: ui-monospace, monospace; } .kb-cmds button:hover { border-color: var(--accent); color: var(--accent); }
+  .kb-mlist { display: grid; gap: 4px; margin: 8px 0; max-height: 180px; overflow-y: auto; } .kb-mlist button, .kb-pick button { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 10px; font-weight: 700; text-align: left; } .kb-mlist button:hover, .kb-pick button:hover { background: var(--hover); }
+  .kb-pick { display: grid; gap: 4px; margin: 12px 0; max-height: 320px; overflow-y: auto; }
+  .kb-foot { margin: 10px 0 0; font-size: 11.5px; color: var(--muted); font-weight: 600; text-align: center; }
   #compose.ro-bot { pointer-events: none; opacity: .5; }
   .dv-prog { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; font-size: 12.5px; font-weight: 700; margin: 8px 0; } .dv-prog i { display: block; height: 8px; border-radius: 4px; background: rgba(255,255,255,.06); overflow: hidden; } .dv-prog i b { display: block; height: 100%; background: #5b8cff; border-radius: 4px; }
   .nohist { display: flex; gap: 10px; align-items: flex-start; margin: 10px 16px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px dashed var(--line); color: var(--muted); font-size: 13px; font-weight: 600; } .nohist .ic { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; } .nohist b { display: block; color: var(--ink); font-size: 13.5px; }
@@ -6471,6 +6481,7 @@ $('#messages').addEventListener('click', e => {
 });
 $('#messages').onclick = e => {
   const sp = e.target.closest('.spoiler'); if (sp) return sp.classList.toggle('shown');
+  const bw = e.target.closest('.row.botrow:not(.whrow) .who .wname, .row.botrow:not(.whrow) > .botav'); if (bw) { e.stopPropagation(); return botPop(bw); }
   const who = e.target.closest('.row[data-au] .who .wname, .row[data-au] > .av');
   if (who) { e.stopPropagation(); return miniProfile(who.closest('[data-au]').dataset.au, who); }
   const th = e.target.closest('[data-thread]'); if (th) return openThread(th.dataset.thread);
@@ -6837,7 +6848,7 @@ function renderMembers() {
   $('#members').innerHTML = mdrH +
     groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(n => item(n, botStatus)).join('') : ''; }).join('');
   $('#members').querySelectorAll('.mem[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
-  $('#members').querySelector('.mem.botmem')?.addEventListener('click', e => { e.stopPropagation(); botProfile(); });
+  $('#members').querySelector('.mem.botmem')?.addEventListener('click', e => { e.stopPropagation(); botPop(e.currentTarget); });
   $('#mdr-x').onclick = e => { e.stopPropagation(); closeMembers(); };
   memTyping();
 }
@@ -7319,7 +7330,45 @@ function thumbLoop(on) {
   setTimeout(snap, 1500); thumbT = setInterval(snap, 10000);
 }
 function closeVPop() { $('.vpop')?.remove(); vpopFor = null; }
+// Kanka Bot profil kartı (üye listesi, mesajdaki bot adı/avatarı ya da @Kanka Bot'a tıklayınca)
+function botPop(anchor) {
+  if (vpopFor === BOT_NAME) return closeVPop();
+  closeVPop(); closeUMenu(); vpopFor = BOT_NAME;
+  const s = S.view === 'server' ? S.server : null, added = !!(s && (s.bot?.added || s.id === 's1')), b = s?.bot || {};
+  const mng = s && !s.public && (s.owner === S.me || s.myPerms?.includes('manageServer'));
+  const mods = added ? KB_MODS.filter(([k]) => k === 'match' || b[k]?.on) : [], rs = s ? rolesOf(s, BOT_NAME) : [];
+  const canAdd = myBotServers().filter(x => !x.bot?.added);
+  const p = document.createElement('div'); p.className = 'vpop kbpop'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Kanka Bot profili');
+  p.innerHTML = `<div class="vp-banner kb-ban"><span class="kb-bant">Kanka Bot</span></div>
+    <div class="vp-head"><div class="vp-avw kb-avw"><div class="av on-dot st-online" style="width:88px;height:88px"><img src="/icon-192.png" alt=""></div></div></div>
+    <div class="vp-in">
+      <div class="vp-name" style="cursor:default">Kanka Bot<span class="botbadge kb-vf" title="Kanka'nın resmi botu">${ic('check')}BOT</span></div>
+      <div class="vp-un"><span>@kanka-bot</span><i>•</i><span class="vp-st"><b style="background:#3fcf8e"></b>Her zaman çevrimiçi</span></div>
+      <button class="vp-mut" id="kb-mut">${ic('grid')}<span>Ortak sunucular yükleniyor…</span></button>
+      ${canAdd.length ? `<button class="kb-add" id="kb-add">${ic('plus')}Sunucuna ekle</button>` : ''}
+      <div class="vp-sec kb-now"><h5>İzliyor</h5><div class="kb-act"><img src="/icon-192.png" alt=""><span><b id="kb-tot">Kanka sunucuları</b><small>moderasyon · karşılama · oto-rol · destek</small></span></div></div>
+      <div class="vp-sec"><h5>Hakkında</h5><div class="vp-bio">Kanka'nın resmi botu. Sunucunu korur, yeni gelenleri karşılar, rol verir, destek talebi açar, maç skorlarını getirir. Sohbete <b>/</b> yaz, komutları gör.</div></div>
+      ${s && !s.public ? added ? `<div class="vp-sec"><h5>Bu sunucuda açık</h5><div class="vp-roles">${mods.map(([k, e, n]) => `<span>${e} ${n}</span>`).join('') || '<span class="hint" style="margin:0">Sadece komutlar</span>'}</div></div>` : `<div class="vp-sec"><h5>Bu sunucuda</h5><div class="vp-bio">Kanka Bot bu sunucuda yok.</div></div>` : ''}
+      ${rs.length ? `<div class="vp-sec"><h5>Roller</h5><div class="vp-roles">${rs.map(r => `<span><i style="background:${r.color}"></i>${esc(r.name)}</span>`).join('')}</div></div>` : ''}
+      <div class="vp-sec"><h5>Komutlar</h5><div class="vp-roles kb-cmds">${['/yardım', '/zar', '/yazitura', '/xox', '/anket'].map(c => `<button data-cmd="${c}">${c}</button>`).join('')}</div></div>
+      <div class="vp-acts">${mng && added ? `<button class="btns2" id="kb-set">${ic('gear')} Ayarlar</button>` : ''}${mng && !added && s.id !== 's1' ? `<button class="btnp" id="kb-here">${ic('plus')} Bu sunucuya ekle</button>` : ''}</div>
+      <p class="kb-foot">Kanka Bot'a DM atılamaz. Sorun olursa Kanka HQ'ya yaz.</p></div>`;
+  document.body.appendChild(p);
+  const r = anchor.getBoundingClientRect(), W = innerWidth, H = innerHeight, pw = p.offsetWidth, ph = p.offsetHeight;
+  if (W < 760) p.classList.add('sheet');
+  else { const left = r.right + 12 + pw > W - 10 ? r.left - pw - 12 : r.right + 12; p.style.left = Math.max(10, left) + 'px'; p.style.top = Math.max(10, Math.min(r.top + r.height / 2 - 70, H - ph - 10)) + 'px'; }
+  p.onclick = e => e.stopPropagation();
+  socket.emit('botInfo', {}, x => { if (vpopFor !== BOT_NAME || !x?.total) return;
+    $('#kb-mut').innerHTML = `${ic('grid')}<span>${x.mutual.length} ortak sunucu</span>`; $('#kb-tot').textContent = `${x.total.toLocaleString('tr-TR')} sunucu`;
+    $('#kb-mut').onclick = () => { $('#kb-mut').outerHTML = `<div class="kb-mlist">${x.mutual.map(m => `<button data-gs="${esc(m.id)}"><b class="vp-sic">${m.iconImg ? `<img src="${esc(m.iconImg)}" alt="">` : esc(m.icon || m.name[0])}</b>${esc(m.name)}</button>`).join('')}</div>`;
+      p.querySelectorAll('[data-gs]').forEach(g => g.onclick = () => { closeVPop(); selectServer(g.dataset.gs); }); }; });
+  if ($('#kb-add')) $('#kb-add').onclick = () => { closeVPop(); canAdd.length === 1 ? openBotAdd(canAdd[0]) : modal(`<h3>Kanka Bot'u hangi sunucuya ekleyelim?</h3><div class="kb-pick">${canAdd.map(x => `<button data-ps="${esc(x.id)}"><b class="vp-sic">${x.iconImg ? `<img src="${esc(x.iconImg)}" alt="">` : esc(x.icon || x.name[0])}</b>${esc(x.name)}</button>`).join('')}</div><div class="rowb"><button id="mx">Vazgeç</button></div>`); $('#mx').onclick = closeModal; document.querySelectorAll('[data-ps]').forEach(b2 => b2.onclick = () => openBotAdd(S.servers.find(x => x.id === b2.dataset.ps))); };
+  if ($('#kb-here')) $('#kb-here').onclick = () => { closeVPop(); openBotAdd(s); };
+  if ($('#kb-set')) $('#kb-set').onclick = () => { closeVPop(); showServerSettings(s, 'bot'); };
+  p.querySelectorAll('[data-cmd]').forEach(c => c.onclick = () => { closeVPop(); const i = $('#input'); if (i && !i.disabled) { i.value = c.dataset.cmd + ' '; i.focus(); i.dispatchEvent(new Event('input')); } });
+}
 function voicePop(n, anchor, chId) {
+  if (n === BOT_NAME && !chId) return botPop(anchor);
   if (vpopFor === n) return closeVPop();
   closeVPop(); closeUMenu(); vpopFor = n;
   const inVc = !!chId, online = S.online.has(n), myRoles = srvRoles(n);
