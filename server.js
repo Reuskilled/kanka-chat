@@ -3545,6 +3545,7 @@ io.on('connection', socket => {
   // ----- Birlikte izle -----
   socket.on('watchSet', url => {
     if (!canAccess(me, cur)) return;
+    if (!isPrivateChat(cur)) return socket.emit('toast', 'Birlikte izleme sadece özel mesajlarda ve gruplarda var');
     { const f = findChannel(cur); if (f && !chPerm(f.s, f.c, me, 'apps')) return socket.emit('toast', 'Bu odada birlikte izleme başlatma iznin yok'); }
     const m = /(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/.exec(String(url || '')) || /^([\w-]{11})$/.exec(String(url || '').trim());
     if (!m) return socket.emit('toast', 'Geçerli bir YouTube linki değil');
