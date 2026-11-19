@@ -1,0 +1,49 @@
+# Masaüstü uygulamasını Windows'ta derler ve "desktop-v<sürüm>" adıyla GitHub Release olarak yayınlar.
+# kankahq.com sunucusu yeni sürümü buradan kendisi indirip /indir klasörüne koyar.
+name: Masaüstü derleme
+on:
+  push:
+    branches: [main]
+    paths: ['desktop/package.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sürüm
+        id: v
+        shell: bash
+        run: echo "ver=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Bu sürüm zaten yayında mı?
+        id: chk
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "desktop-v${{ steps.v.outputs.ver }}" --repo "${{ github.repository }}" >/dev/null 2>&1; then echo "skip=1" >> "$GITHUB_OUTPUT"; fi
+      - name: Paketleri kur
+        if: steps.chk.outputs.skip != '1'
+        run: npm ci
+      - name: Derle
+        if: steps.chk.outputs.skip != '1'
+        run: npx electron-builder --win --x64 --publish never
+      - name: Yayınla
+        if: steps.chk.outputs.skip != '1'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist/squirrel-windows
+          ls -la
+          gh release create "desktop-v${{ steps.v.outputs.ver }}" --repo "${{ github.repository }}" \
+            --title "Kanka Chat Masaüstü ${{ steps.v.outputs.ver }}" --notes "Otomatik derleme" \
+            KankaChat-Kurulum.exe RELEASES *-full.nupkg

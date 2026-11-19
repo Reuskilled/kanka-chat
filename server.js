@@ -157,6 +157,40 @@ function exeInfo() {
   const f = path.join(__dirname, 'indir', 'KankaChat-Kurulum.exe');
   try { const st = fs.statSync(f); if (exeHash.mtime !== st.mtimeMs) exeHash = { mtime: st.mtimeMs, v: { sha256: crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'), size: st.size, date: st.mtime } }; return exeHash.v; } catch { return null; }
 }
+// Masaüstü sürümünü GitHub Release'ten kendiliğinden al (GitHub Actions derleyip "desktop-v<sürüm>" olarak yayınlıyor)
+const GH_REPO = process.env.GH_REPO || 'Reuskilled/kanka-chat', INDIR = path.join(__dirname, 'indir');
+let ghTok = process.env.GITHUB_TOKEN || ''; try { ghTok ||= JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'github.json'), 'utf8')).token || ''; } catch {}
+const deskState = { checking: false, last: null, err: null };
+async function deskSync() {
+  if (deskState.checking) return; deskState.checking = true;
+  try {
+    const H = { Accept: 'application/vnd.github+json', 'User-Agent': 'kanka-chat', ...(ghTok ? { Authorization: 'Bearer ' + ghTok } : {}) };
+    const r = await fetch(`https://api.github.com/repos/${GH_REPO}/releases?per_page=10`, { headers: H, signal: AbortSignal.timeout(15000) });
+    if (!r.ok) throw new Error('GitHub ' + r.status + (r.status === 404 ? ' (depo gizliyse DATA_DIR/github.json içine {"token":"..."} koy)' : ''));
+    const rel = (await r.json()).find(x => /^desktop-v\d+\.\d+\.\d+$/.test(x.tag_name) && !x.draft && !x.prerelease);
+    if (!rel) { deskState.last = Date.now(); return; }
+    const cur = (() => { try { return fs.readFileSync(path.join(INDIR, '.surum'), 'utf8').trim(); } catch { return ''; } })();
+    if (cur === rel.tag_name) { deskState.last = Date.now(); deskState.err = null; return; }
+    const want = rel.assets.filter(a => /^(KankaChat-Kurulum\.exe|RELEASES|[\w.-]+-full\.nupkg)$/.test(a.name));
+    if (!want.some(a => a.name === 'KankaChat-Kurulum.exe') || !want.some(a => a.name === 'RELEASES')) throw new Error(rel.tag_name + ': dosyalar eksik');
+    fs.mkdirSync(INDIR, { recursive: true });
+    for (const a of want) { // önce hepsini indir, sonra birden değiştir (yarım güncelleme olmasın)
+      const d = await fetch(ghTok ? a.url : a.browser_download_url, { headers: { ...H, Accept: 'application/octet-stream' }, signal: AbortSignal.timeout(15 * 60e3) });
+      if (!d.ok) throw new Error(a.name + ' indirilemedi: ' + d.status);
+      const buf = Buffer.from(await d.arrayBuffer()); if (buf.length !== a.size) throw new Error(a.name + ' boyutu tutmuyor');
+      fs.writeFileSync(path.join(INDIR, '.yeni-' + a.name), buf);
+    }
+    for (const a of want.filter(x => x.name !== 'RELEASES')) fs.renameSync(path.join(INDIR, '.yeni-' + a.name), path.join(INDIR, a.name));
+    fs.renameSync(path.join(INDIR, '.yeni-RELEASES'), path.join(INDIR, 'RELEASES')); // en son: güncelleyiciler yeni sürümü ancak her şey hazırken görsün
+    fs.writeFileSync(path.join(INDIR, '.surum'), rel.tag_name);
+    for (const f of fs.readdirSync(INDIR)) if (/\.nupkg$/.test(f) && !want.some(a => a.name === f)) try { fs.unlinkSync(path.join(INDIR, f)); } catch {} // RELEASES artık sadece yeni paketi gösteriyor
+    deskState.last = Date.now(); deskState.err = null;
+    console.log('Masaüstü sürümü güncellendi:', rel.tag_name);
+    for (const n of siteAdmins()) io.to('user:' + n).emit('toast', `💻 Masaüstü ${rel.tag_name.slice(9)} yayında, kullanıcılara güncelleme gidiyor`);
+  } catch (e) { deskState.err = String(e.message || e).slice(0, 200); console.error('Masaüstü sürüm kontrolü:', deskState.err); }
+  finally { deskState.checking = false; }
+}
+setTimeout(deskSync, 20e3); setInterval(deskSync, 10 * 60e3);
 app.get('/api/indir-bilgi', (req, res) => res.json(exeInfo() || {}));
 app.get('/guvenli', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guvenli.html')));
 for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/sesli-sohbet', 'sesli-sohbet.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
