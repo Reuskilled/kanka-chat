@@ -1594,7 +1594,42 @@ function automod(s, chId, me, text) {
   return null;
 }
 const dur = mn => mn >= 1440 ? Math.round(mn / 1440) + ' gün' : mn >= 60 ? Math.round(mn / 60) + ' saat' : mn + ' dk';
-const ymd = (d = new Date()) => d.toISOString().slice(0, 10);
+// Gün Türkiye saatine göre değişir (UTC+3; eskiden UTC'ydi, gece 03:00'te dönüyordu)
+const ymd = (d = new Date()) => new Date(+d + 3 * 3600e3).toISOString().slice(0, 10);
+// Günlük seri: o gün Kanka'da bulunduysan sayılır. Eskiden sadece giriş yaparken bakılıyordu;
+// uygulama/sekme gece boyunca açık kalınca ertesi gün sayılmıyor, seri sıfırlanıyordu.
+function touchStreak(name) {
+  const u = db.users[name]; if (!u) return null;
+  const t = ymd(), y = ymd(new Date(Date.now() - 864e5));
+  if (u.streak?.last === t) return null;
+  const count = u.streak?.last === y ? (u.streak.count || 0) + 1 : 1;
+  const bonus = 5 + Math.min(count, 10) * 2;
+  u.streak = { last: t, count, best: Math.max(count, u.streak?.best || 0) };
+  addXp(name, bonus, 'seri');
+  setTimeout(() => io.emit('users', allUsers()), 100);
+  return { count, bonus };
+}
+setInterval(() => { // açık kalan bağlantılar da yeni günü saysın
+  let any = false;
+  for (const n of new Set(online.values())) { const r = touchStreak(n); if (r) { any = true; io.to('user:' + n).emit('toast', `🔥 ${r.count} günlük seri! +${r.bonus} XP`); } }
+  if (any) save();
+}, 5 * 60e3);
+// Bir kerelik onarım: yukarıdaki hata yüzünden kırılan serileri mesaj geçmişinden geri hesapla
+setTimeout(() => { try {
+  if (db.streakFix1) return;
+  const days = {};
+  for (const list of Object.values(db.messages)) for (const m of list || []) if (m.author && m.time) (days[m.author] ||= new Set()).add(ymd(new Date(m.time)));
+  const today = ymd(), yest = ymd(new Date(Date.now() - 864e5)); let fixed = 0;
+  for (const u of Object.values(db.users)) {
+    const d = days[u.name]; if (!d) continue;
+    if (u.streak?.last) d.add(u.streak.last);
+    let start = d.has(today) ? today : d.has(yest) ? yest : null; if (!start) continue;
+    let n = 0, cur = new Date(start + 'T12:00:00Z');
+    while (d.has(cur.toISOString().slice(0, 10))) { n++; cur = new Date(+cur - 864e5); }
+    if (n > (u.streak?.count || 0)) { u.streak = { last: start, count: n, best: Math.max(n, u.streak?.best || 0) }; fixed++; }
+  }
+  db.streakFix1 = Date.now(); save(); if (fixed) { console.log(`Seri onarımı: ${fixed} kişinin serisi düzeltildi`); io.emit('users', allUsers()); }
+} catch (e) { console.error('seri onarımı', e); } }, 4000);
 const BADGES = {
   erken: ['🌱', 'Erken kanka', 'İlk 100 üyeden biri'],
   gece: ['🦉', 'Gece kuşu', 'Gece 00:00-05:00 arası mesaj attı'],
@@ -2209,16 +2244,7 @@ io.on('connection', socket => {
     socket.join('user:' + name);
     online.set(socket.id, name); if (isMobileUA(socket.handshake.headers['user-agent'])) mobileSockets.add(socket.id);
     pushPresence();
-    const u = db.users[name], t = ymd(), y = ymd(new Date(Date.now() - 864e5));
-    let reward = null;
-    if (u.streak?.last !== t) {
-      const count = u.streak?.last === y ? (u.streak.count || 0) + 1 : 1;
-      const bonus = 5 + Math.min(count, 10) * 2;
-      u.streak = { last: t, count, best: Math.max(count, u.streak?.best || 0) };
-      addXp(name, bonus, 'seri');
-      reward = { count, bonus };
-      setTimeout(() => io.emit('users', allUsers()), 100);
-    }
+    const reward = touchStreak(name);
     const token = sessNew(name); save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
