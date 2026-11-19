@@ -1,5 +1,5 @@
 // Kanka Chat service worker: uygulama kabuğunu önbellekte tutar, çevrimdışıyken de açılır
-const CACHE = 'kanka-v132';
+const CACHE = 'kanka-v133';
 const SHELL = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
@@ -26,7 +26,7 @@ async function e2ePeek(d) {
   try {
     const raw = await ckOf('ck:' + d.ch + '|' + d.e.enc.ep); if (!raw) return null;
     const te = new TextEncoder(), C = crypto.subtle, key = await C.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
-    const o = JSON.parse(new TextDecoder().decode(await C.decrypt({ name: 'AES-GCM', iv: b64d(d.e.enc.iv), additionalData: te.encode(d.ch) }, key, b64d(d.e.enc.ct))));
+    const o = JSON.parse(new TextDecoder().decode(await C.decrypt({ name: 'AES-GCM', iv: b64d(d.e.enc.iv), additionalData: te.encode(d.e.cid || d.ch) }, key, b64d(d.e.enc.ct))));
     const hk = await C.importKey('raw', b64d(o.fk), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
     const fc = btoa(String.fromCharCode(...new Uint8Array(await C.sign('HMAC', hk, te.encode(o.p))))), x = JSON.parse(o.p);
     if (fc !== d.e.fc || x.a !== d.from) return null;

@@ -2236,6 +2236,13 @@
   .beta-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(255,138,76,.6); animation: bpulse 1.8s infinite; }
   @keyframes bpulse { 70% { box-shadow: 0 0 0 7px rgba(255,138,76,0); } 100% { box-shadow: 0 0 0 0 rgba(255,138,76,0); } }
   .afield { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); margin-bottom: 10px; transition: border-color .15s, box-shadow .15s; text-align: left; }
+  .un-st { display: block; min-height: 16px; margin-top: 5px; font-size: 12px; color: var(--muted); }
+  .un-st.ok { color: var(--green); } .un-st.no { color: var(--red); }
+  .adob { gap: 6px; padding-right: 8px; }
+  .adob .adob-l { flex: 1; min-width: 0; font-size: 15px; color: var(--muted); white-space: nowrap; }
+  .adob select { flex: none; padding: 9px 6px; margin: 4px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
+  .adob select:focus { outline: none; border-color: var(--accent); }
+  @media (max-width: 420px) { .adob { flex-wrap: wrap; padding: 6px 12px 8px; } .adob .adob-l { flex-basis: calc(100% - 30px); padding-top: 6px; } .adob select { flex: 1; } }
   .afield > .ic { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
   .afield input { flex: 1; min-width: 0; padding: 13px 0; background: none; border: 0; outline: none; font-size: 15px; color: var(--text); }
   .afield:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255,138,76,.12); }
@@ -3751,9 +3758,17 @@ if (authQ.kod || authQ.davet || authQ.kayit) authMode = 'register';
 if (authQ.sifirla) authMode = 'reset';
 const AUTH_IC = { user: 'user', mail: 'mail', lock: 'lock', code: 'ticket' };
 const afield = (id, ph, icn, type = 'text', extra = '') => `<label class="afield" id="af-${id}">${ic(AUTH_IC[icn] || icn)}<input id="${id}" type="${type}" placeholder="${ph}" ${extra}>${type === 'password' ? `<button type="button" class="peek" data-peek="${id}" aria-label="Şifreyi göster">${ic('eye')}</button>` : ''}</label>`;
+const AYLAR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const dobField = () => { const y = new Date().getFullYear();
+  return `<div class="afield adob" id="af-a-dob">${ic('cake')}<span class="adob-l">Doğum tarihin</span>
+    <select id="a-dd" aria-label="Gün"><option value="">Gün</option>${Array.from({ length: 31 }, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join('')}</select>
+    <select id="a-dm" aria-label="Ay"><option value="">Ay</option>${AYLAR.map((a, i) => `<option value="${String(i + 1).padStart(2, '0')}">${a}</option>`).join('')}</select>
+    <select id="a-dy" aria-label="Yıl"><option value="">Yıl</option>${Array.from({ length: 100 }, (_, i) => `<option>${y - i}</option>`).join('')}</select></div>`; };
+const YAS_KEY = 'kanka-yas', minorLocked = () => { const t = +store.get(YAS_KEY) || 0; return t && Date.now() - t < 30 * 864e5; };
 function renderAuth(mode = authMode, keep) {
+  if (mode === 'register' && minorLocked()) mode = 'minor';
   authMode = mode;
-  const b = $('#auth-body'), v = keep ? Object.fromEntries([...b.querySelectorAll('input[id]')].map(i => [i.id, i.type === 'checkbox' ? i.checked : i.value])) : {};
+  const b = $('#auth-body'), v = keep ? Object.fromEntries([...b.querySelectorAll('input[id], select[id]')].map(i => [i.id, i.type === 'checkbox' ? i.checked : i.value])) : {};
   const beta = authBeta?.on, pill = beta ? `<div class="beta-pill"><i></i>Kapalı beta${authBeta.full ? ' · şu an dolu' : authBeta.left != null && authBeta.left < 1000 ? ` · ${authBeta.left} yer kaldı` : ''}</div>` : '';
   const tabs = `<div class="tabs"><button type="button" class="${mode === 'login' ? 'on' : ''}" data-m="login">Giriş yap</button><button type="button" class="${mode === 'register' ? 'on' : ''}" data-m="register">Kayıt ol</button></div>`;
   const legal = '<a href="/kosullar" target="_blank">Kullanım Şartları</a> · <a href="/gizlilik" target="_blank">Gizlilik ve KVKK</a>';
@@ -3770,10 +3785,14 @@ function renderAuth(mode = authMode, keep) {
       ${afield('a-name', 'Kullanıcı adı', 'user', 'text', 'maxlength="20" autocomplete="username"')}
       ${afield('a-mail', 'E-posta (şifreni unutursan diye)', 'mail', 'email', 'maxlength="190" autocomplete="email"')}
       ${afield('a-pass', 'Şifre (en az 6 karakter)', 'lock', 'password', 'autocomplete="new-password"')}
-      <label class="acheck" id="af-a-terms"><input type="checkbox" id="a-terms"><span class="box2"></span><span><a href="/kosullar" target="_blank">Kullanım Şartları</a>'nı ve <a href="/gizlilik" target="_blank">Gizlilik Politikası / KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum. 13 yaşından büyüğüm.</span></label>
+      ${dobField()}
+      <label class="acheck" id="af-a-terms"><input type="checkbox" id="a-terms"><span class="box2"></span><span><a href="/kosullar" target="_blank">Kullanım Şartları</a>'nı ve <a href="/gizlilik" target="_blank">Gizlilik Politikası / KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum. 18 yaşından büyüğüm.</span></label>
       <button class="primary" type="submit" id="a-btn">Hesabı oluştur</button><div id="auth-err"></div>
       ${needCode ? `<div class="await"><span>Kodun yok mu?</span><button type="button" class="alink" id="a-wait">Bekleme listesine katıl →</button></div>` : ''}`;
   }
+  else if (mode === 'minor') h = `<div class="abig">${ic('shield')}</div><h1>Şu an hesap açamazsın</h1><p>Kanka Chat <b>18 yaş ve üzeri</b> içindir. Girdiğin doğum tarihine göre henüz 18 yaşında değilsin, bu yüzden hesap oluşturulamadı.</p>
+    <ul class="a-tips"><li>Doğum tarihini yanlış girdiysen <b>kankahq1@gmail.com</b> adresine yaz, yardımcı olalım.</li><li>Zaten bir hesabın varsa giriş yapabilirsin.</li></ul>
+    <button type="button" class="primary" data-m="login">Giriş ekranına dön</button>`;
   else if (mode === 'forgot') h = `<h1>Şifreni mi unuttun?</h1><p>Kullanıcı adını ya da e-postanı yaz, sıfırlama linkini e-postana gönderelim.</p>
     ${afield('a-who', 'Kullanıcı adı ya da e-posta', 'mail', 'text', 'maxlength="190" autocomplete="username"')}
     <button class="primary" type="submit" id="a-btn">Link gönder</button><div id="auth-err"></div><button type="button" class="alink aback" data-m="login">← Girişe dön</button>`;
@@ -3809,12 +3828,12 @@ function renderAuth(mode = authMode, keep) {
   }
   if (mode === 'reset') socket.emit('checkReset', authQ.sifirla, r => { const w = $('#a-reset-who'); if (!w) return;
     if (r.ok) w.innerHTML = `<b>${esc(r.name)}</b> hesabı için yeni bir şifre seç.`; else { w.innerHTML = `<span style="color:var(--red)">${esc(r.error)}</span>`; $('#auth-body').querySelectorAll('.afield').forEach(x => x.remove()); const bt = $('#a-btn'); bt.type = 'button'; bt.textContent = 'Yeni link iste'; bt.onclick = () => { history.replaceState(null, '', '/'); authQ.sifirla = null; renderAuth('forgot'); }; } });
-  b.querySelectorAll('.afield input, #a-terms').forEach(i => i.addEventListener('input', () => i.closest('.afield, .acheck')?.classList.remove('bad')));
+  b.querySelectorAll('.afield input, .afield select, #a-terms').forEach(i => i.addEventListener('input', () => i.closest('.afield, .acheck')?.classList.remove('bad')));
 }
 function authErr(r) {
   $('#auth-err').textContent = r.error || '';
   document.querySelectorAll('#auth-body .bad').forEach(x => x.classList.remove('bad'));
-  const map = { email: 'af-a-mail', name: 'af-a-name', code: 'af-a-code', terms: 'af-a-terms' };
+  const map = { email: 'af-a-mail', name: 'af-a-name', code: 'af-a-code', terms: 'af-a-terms', dob: 'af-a-dob' };
   if (r.field && map[r.field]) $('#' + map[r.field])?.classList.add('bad');
   if (r.full) { authQ.full = true; }
 }
@@ -3830,8 +3849,10 @@ $('#auth-form').onsubmit = e => {
   } else if (authMode === 'register') {
     if (!val('a-name') || !$('#a-pass').value) return authErr({ error: 'Kullanıcı adı ve şifre gerekli.' });
     if (!val('a-mail')) return authErr({ error: 'E-posta adresini yaz.', field: 'email' });
+    const dob = `${$('#a-dy').value}-${$('#a-dm').value}-${$('#a-dd').value}`;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return authErr({ error: 'Doğum tarihini seç.', field: 'dob' });
     if (!$('#a-terms').checked) return authErr({ error: 'Kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
-    busy(true); E2E.pend($('#a-pass').value); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true, src: firstSrc }, r => { busy(false); r.error ? authErr(r) : onAuth(r); });
+    busy(true); E2E.pend($('#a-pass').value); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true, src: firstSrc, dob }, r => { busy(false); if (r.minor) { store.set(YAS_KEY, String(Date.now())); return renderAuth('minor'); } r.error ? authErr(r) : onAuth(r); });
   } else if (authMode === 'forgot') {
     if (!val('a-who')) return authErr({ error: 'Kullanıcı adını ya da e-postanı yaz.' });
     busy(true); socket.emit('forgot', val('a-who'), r => { busy(false); if (r.error) return authErr(r); renderAuth('sent'); const rb = $('#a-resend'); if (rb) { let n = 60; rb.disabled = true; const tk = () => { if (!rb.isConnected) return; if (--n <= 0) { rb.disabled = false; rb.textContent = 'Tekrar gönder'; return; } rb.textContent = `Tekrar gönder (${n} sn)`; setTimeout(tk, 1000); }; tk(); } });
@@ -6510,7 +6531,9 @@ const E2E = (() => {
     if (me !== name) { me = name; priv = kid = pubB = null; old = {}; ready = locked = false; for (const o of [convs, cks, miss]) for (const k in o) delete o[k]; migrated.clear(); }
     if (ready && !pw) return after();
     const mine = await ask('e2eMine'); if (mine.error) return; on = mine.on !== false; if (!on) return;
-    if (!priv) { const loc = await iget('u:' + me); if (loc) { old = loc.old || {}; if (loc.priv) { priv = loc.priv; kid = loc.kid; pubB = loc.pub; } } }
+    if (!priv) { let loc = await iget('u:' + me);
+      if (!loc && mine.key) { const all = await iop('readonly', s => s.getAll()) || []; loc = all.find(v => v?.kid === mine.key.kid) || null; } // kullanıcı adı değiştiyse anahtar eski adın altında
+      if (loc) { old = loc.old || {}; if (loc.priv) { priv = loc.priv; kid = loc.kid; pubB = loc.pub; } } }
     const srv = mine.key;
     if (srv && priv && kid === srv.kid) { ready = true; locked = false; if (pw && !srv.wrapped) ask('e2eSetup', { pub: pubB, wrapped: await sealPriv(priv, pw) }); return after(); }
     if (srv && pw && srv.wrapped) { const k = await openPriv(srv.wrapped, pw); if (k) { if (kid && priv && kid !== srv.kid) old[kid] = priv; return adopt(k, srv.pub, srv.kid); } }
@@ -6533,8 +6556,9 @@ const E2E = (() => {
   async function kek(myPriv, otherPub, chId, epId) {
     const bits = await C.deriveBits({ name: 'ECDH', public: await pubKey(otherPub) }, myPriv, 256);
     const h = await C.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
-    return C.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: te.encode(chId), info: te.encode('kanka-wrap-v1|' + epId) }, h, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    return C.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: te.encode(cid(chId)), info: te.encode('kanka-wrap-v1|' + epId) }, h, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   }
+  const cid = ch => convs[ch]?.cid || ch; // ad değişse de şifreleme sohbetin ilk kimliğine bağlı
   const privFor = k => (k === kid && priv) || old[k] || null;
   const ckImport = async raw => ({ raw, key: await C.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']) });
   async function ckGet(chId, epId) {
@@ -6575,15 +6599,15 @@ const E2E = (() => {
   async function seal(chId, inner) {
     const ep = await epoch(chId); if (!ep) return null; const c = await ckGet(chId, ep); if (!c) return null;
     const pj = JSON.stringify(inner), fk = rnd(32), iv = rnd(12);
-    const ct = await C.encrypt({ name: 'AES-GCM', iv, additionalData: te.encode(chId) }, c.key, te.encode(JSON.stringify({ p: pj, fk: b64(fk) })));
+    const ct = await C.encrypt({ name: 'AES-GCM', iv, additionalData: te.encode(cid(chId)) }, c.key, te.encode(JSON.stringify({ p: pj, fk: b64(fk) })));
     return { enc: { ep, iv: b64(iv), ct: b64(ct) }, fc: await hmac(fk, pj) };
   }
   async function open(chId, m) {
     if (m._d && m._d.ct === m.enc.ct) return m._d;
     const c = await ckGet(chId, m.enc.ep); if (!c) return null;
     try {
-      const o = JSON.parse(td.decode(await C.decrypt({ name: 'AES-GCM', iv: unb64(m.enc.iv), additionalData: te.encode(chId) }, c.key, unb64(m.enc.ct))));
-      const inn = JSON.parse(o.p), ok = typeof o.fk === 'string' && await hmac(unb64(o.fk), o.p) === m.fc && inn.a === m.author; // mühür ve yazar tutmalı
+      const o = JSON.parse(td.decode(await C.decrypt({ name: 'AES-GCM', iv: unb64(m.enc.iv), additionalData: te.encode(cid(chId)) }, c.key, unb64(m.enc.ct))));
+      const inn = JSON.parse(o.p), ok = typeof o.fk === 'string' && await hmac(unb64(o.fk), o.p) === m.fc && (inn.a === m.author || !!convs[chId]?.members.find(x => x.n === m.author)?.was?.includes(inn.a)); // mühür ve yazar tutmalı
       return m._d = ok ? { ct: m.enc.ct, pj: o.p, fk: o.fk, in: inn } : { ct: m.enc.ct, bad: true };
     } catch { return m._d = { ct: m.enc.ct, bad: true }; }
   }
@@ -10951,6 +10975,12 @@ socket.on('reportNew', r => {
   }, true);
 });
 socket.on('disconnect', why => { if (why === 'io server disconnect') setTimeout(() => socket.connect(), 900); });
+socket.on('renamed', ({ to }) => { // adın başka bir cihazdan değişti: yeni adla yeniden aç
+  toast(`Kullanıcı adın <b>${esc(to)}</b> olarak değişti. Sayfa yenileniyor…`, null, true); setTimeout(() => location.reload(), 1300);
+});
+socket.on('userRenamed', ({ from, to }) => { // konuştuğun biri adını değiştirdi: açık sohbet yeni kimliğe geçsin
+  if (S.channel?.dm && S.channel.with === from) openChat('dm:' + [S.me, to].sort().join('|'), to);
+});
 socket.on('siteBanned', reason => {
   store.set('kanka-token', null); cleanupVoice?.();
   $('#app').style.display = 'none'; closeModal(); showAuth();
@@ -10961,6 +10991,11 @@ socket.on('siteBanned', reason => {
 function accountPageHTML(u) {
   return `<div class="st-page"><h3>Hesap</h3>
     <div class="acc-id">${av(S.me)}<div><b>${esc(S.me)}</b><span>Katılım: ${since(u.createdAt)}</span></div></div>
+    <div class="st-sec">Kullanıcı adı</div>
+    <p class="hint" style="margin-top:0">Giriş yaparken ve @etiketlerde kullanılır. Görünen adın ayrıdır, onu Profil'den değiştirebilirsin. Kullanıcı adını <b style="color:var(--text)">haftada bir</b> değiştirebilirsin; eski adın 14 gün boyunca başkasına verilmez ve bu sürede eski adınla da giriş yapabilirsin.</p>
+    <div class="st-field st-2"><div><label>Yeni kullanıcı adı</label><input class="field" id="un-new" maxlength="20" value="${esc(S.me)}" autocomplete="off" spellcheck="false" style="margin:0"><small class="un-st" id="un-st"></small></div>
+      <div><label>Şifren (onay için)</label><input class="field" id="un-pw" type="password" autocomplete="current-password" style="margin:0"></div></div>
+    <div class="st-field"><button class="btns2" id="un-save" disabled>${ic('edit')} Kullanıcı adını değiştir</button></div>
     <div class="st-sec">E-posta</div>
     ${S.myEmail ? `<p class="hint" style="margin-top:0">Kayıtlı adres: <b style="color:var(--text)">${esc(S.myEmail)}</b>. Şifreni unutursan sıfırlama linki buraya gelir.</p>`
       : `<div class="acc-warn">${ic('mail')}<span><b>E-posta eklemedin</b>Şifreni unutursan hesabını kurtarmanın tek yolu bu. 10 saniye sürer.</span></div>`}
@@ -10985,6 +11020,18 @@ function accountPageHTML(u) {
 }
 function wireAccount() {
   drawTfa(); drawTrash();
+  { const inp = $('#un-new'), st = $('#un-st'), btn = $('#un-save'); let tm, ok = false;
+    const NAME_OK = /^[\p{L}\p{N}_.-]{2,20}$/u;
+    inp.oninput = () => { clearTimeout(tm); const v = inp.value.trim(); ok = false; btn.disabled = true; st.className = 'un-st';
+      if (v === S.me) return st.textContent = '';
+      if (!NAME_OK.test(v)) { st.className = 'un-st no'; return st.textContent = '2-20 karakter; harf, rakam, _ . - kullanabilirsin'; }
+      st.textContent = 'Bakılıyor…';
+      tm = setTimeout(() => socket.emit('nameFree', v, r => { if (inp.value.trim() !== v) return; ok = !!r.free; btn.disabled = !ok; st.className = 'un-st ' + (ok ? 'ok' : 'no'); st.textContent = ok ? `${v} kullanılabilir` : 'Bu ad alınmış'; }), 300); };
+    btn.onclick = () => { const v = inp.value.trim(); if (!ok) return; if (!$('#un-pw').value) return toast('Onay için şifreni yaz');
+      btn.disabled = true; socket.emit('changeName', { name: v, password: $('#un-pw').value }, r => { btn.disabled = false;
+        if (r.error) return toast(r.error, null, false, { type: 'err' });
+        toast(`Kullanıcı adın artık <b>${esc(r.name)}</b>. Sayfa yenileniyor…`, null, true); setTimeout(() => location.reload(), 1200); }); };
+  }
   $('#em-save').onclick = () => socket.emit('setEmail', { email: $('#em-new').value, password: $('#em-pw').value }, r => {
     if (r.error) return toast(r.error);
     S.myEmail = r.email; toast('E-postan kaydedildi'); remindEmail(); showSettings('account');

@@ -1176,7 +1176,7 @@ const e2eCur = n => db.users[n]?.e2e || null;
 function e2ePubs(names) { const o = {}; for (const n of names) { const u = db.users[n]; if (!u) continue; if (u.e2e) o[u.e2e.kid] = { n, pub: u.e2e.pub }; for (const k of u.e2eOld || []) o[k.kid] = { n, pub: k.pub, old: true }; } return o; }
 function e2eConvView(chId) {
   const c = db.e2e?.[chId], mem = chatMembers(chId);
-  return { chId, eligible: e2eChat(chId), members: mem.map(n => ({ n, kid: e2eCur(n)?.kid || null })), eps: c?.eps || [], keys: e2ePubs(mem) };
+  return { chId, cid: c?.cid || chId, eligible: e2eChat(chId), members: mem.map(n => ({ n, kid: e2eCur(n)?.kid || null, was: (db.users[n]?.oldNames || []).map(o => o.n) })), eps: c?.eps || [], keys: e2ePubs(mem) };
 }
 // Bu kişinin açabildiği ama başka bir üyenin güncel anahtarına henüz sarılmamış dönemler (yeniden paylaşım işi)
 function e2eTodo(me) {
@@ -2087,7 +2087,7 @@ function postMessage(me, chId, p = {}) {
   if (isPrivateChat(chId)) {
     for (const n of chatMembers(chId)) {
       io.to('user:' + n).emit('dms', dmsFor(n));
-      if (n !== me) notifyUser(n, { from: me, text: preview, channelId: chId, where, dm: true, e: msg.enc ? { id: msg.id, enc: msg.enc, fc: msg.fc } : undefined }); // şifreliyse önizlemeyi alıcının cihazı açar
+      if (n !== me) notifyUser(n, { from: me, text: preview, channelId: chId, where, dm: true, e: msg.enc ? { id: msg.id, enc: msg.enc, fc: msg.fc, cid: db.e2e?.[chId]?.cid || undefined } : undefined }); // şifreliyse önizlemeyi alıcının cihazı açar
     }
   } else {
     const f = findChannel(chId);
@@ -2237,7 +2237,65 @@ async function sendMail(to, subject, html, attachments, kind = 'diğer') {
     return false;
   }
 }
-const findUserBy = who => { who = clean(who, 190).toLowerCase(); return who && Object.values(db.users).find(u => u.name.toLowerCase() === who || (u.email && u.email === who)); };
+const findUserBy = who => { who = clean(who, 190).toLowerCase(); return who && (Object.values(db.users).find(u => u.name.toLowerCase() === who || (u.email && u.email === who)) || Object.values(db.users).find(u => (u.oldNames || []).some(o => o.n.toLowerCase() === who && Date.now() - o.at < NAME_HOLD))); }; // eski adla da giriş (ayrılma süresi içinde)
+// ---------- Kullanıcı adı değiştirme ----------
+const NAME_HOLD = 14 * 864e5, NAME_COOLDOWN = 7 * 864e5;
+const RESERVED_NAMES = ['kanka', 'kanka bot', 'kankabot', 'claude', 'admin', 'yonetim', 'yönetim', 'destek', 'sistem'];
+// Ad kullanılabilir mi? (başkasının adı, ayrılmış bir eski ad ya da sistem adı olamaz)
+function nameTaken(name, self) {
+  const k = name.toLowerCase();
+  if (RESERVED_NAMES.includes(k)) return true;
+  return Object.values(db.users).some(u => u.name !== self && (u.name.toLowerCase() === k || (u.oldNames || []).some(o => o.n.toLowerCase() === k && Date.now() - o.at < NAME_HOLD)));
+}
+// Ad, verinin her yerinde değişir: üyelikler, roller, mesaj yazarları, arkadaşlar, DM odaları (dm:a|b), oturumlar…
+// Mesaj metinleri, başlıklar gibi serbest yazılara dokunulmaz.
+const NAME_FIELDS = new Set(['author', 'by', 'owner', 'target', 'addedBy', 'from', 'to', 'with', 'n', 'x', 'o', 'usedBy', 'invitedBy', 'claimedBy', 'host', 'winner', 'user', 'who', 'mod', 'actor']);
+const NAME_SKIP = new Set(['text', 'title', 'bio', 'status', 'note', 'reason', 'question', 'desc', 'description', 'topic', 'hash', 'salt', 'email', 'enc', 'fc', 'url', 'emojis', 'emojiMeta', 'push', 'wrapped', 'pub', 'preview', 'cid', 'oldNames', 'secLog', 'backupLog', 'waitlist']);
+function renameUser(old, nw) {
+  const u = db.users[old]; if (!u || db.users[nw]) return false;
+  const fixDm = v => { const m = /^(call:)?dm:(.+)$/.exec(v); if (!m) return v; const p = m[2].split('|'); return p.includes(old) ? (m[1] || '') + dmId(...p.map(x => x === old ? nw : x)) : v; };
+  for (const [k, c] of Object.entries(db.e2e || {})) if (k.startsWith('dm:') && dmPeers(k).includes(old)) c.cid ||= k; // şifreleme, sohbetin ilk kimliğine bağlı kalır
+  delete db.users[old]; db.users[nw] = u; u.name = nw;
+  const seen = new Set();
+  const walk = x => {
+    if (!x || typeof x !== 'object' || seen.has(x)) return; seen.add(x);
+    if (Array.isArray(x)) { for (let i = 0; i < x.length; i++) { const v = x[i]; if (v === old) x[i] = nw; else if (typeof v === 'string') { if (v.includes('dm:')) x[i] = fixDm(v); } else walk(v); } return; }
+    for (const k of Object.keys(x)) {
+      if (NAME_SKIP.has(k)) continue;
+      const v = x[k];
+      if (v === old && NAME_FIELDS.has(k)) x[k] = nw;
+      else if (typeof v === 'string') { if (/^(call:)?dm:/.test(v)) x[k] = fixDm(v); }
+      else walk(v);
+      const nk = k === old ? nw : k === 'u:' + old ? 'u:' + nw : k === 'user:' + old ? 'user:' + nw : /^(call:)?dm:/.test(k) ? fixDm(k) : k;
+      if (nk !== k) { if (!Object.hasOwn(x, nk)) x[nk] = x[k]; delete x[k]; }
+    }
+  };
+  for (const [k, v] of Object.entries(db)) if (k !== 'sessions' && k !== 'sessAt') walk(v);
+  for (const [h, n] of Object.entries(db.sessions)) if (n === old) db.sessions[h] = nw;
+  for (const r of Object.values(db.resets || {})) if (r.name === old) r.name = nw;
+  for (const w of db.waitlist || []) if (w.name === old) w.name = nw;
+  (u.oldNames ||= []).push({ n: old, at: Date.now() }); if (u.oldNames.length > 10) u.oldNames.shift();
+  u.renamedAt = Date.now();
+  save();
+  // açık olan her yerde yeni adla yeniden bağlansın
+  io.to('user:' + old).emit('renamed', { from: old, to: nw });
+  setTimeout(() => io.in('user:' + old).disconnectSockets(true), 1500);
+  io.emit('users', allUsers()); io.emit('presence', presenceList());
+  for (const sv of db.servers) if (sv.members.includes(nw)) pushServers(sv.members);
+  const peers = new Set(); for (const k of Object.keys(db.messages)) if (k.startsWith('dm:') && dmPeers(k).includes(nw)) dmPeers(k).forEach(n => peers.add(n));
+  for (const g of Object.values(db.groups || {})) if (g.members.includes(nw)) g.members.forEach(n => peers.add(n));
+  for (const n of peers) if (n !== nw) { io.to('user:' + n).emit('dms', dmsFor(n)); io.to('user:' + n).emit('social', social(n)); io.to('user:' + n).emit('userRenamed', { from: old, to: nw }); }
+  return true;
+}
+// ---------- Yaş kontrolü (kayıtta doğum tarihi zorunlu, 18 yaş altı hesap açamaz) ----------
+function ageOf(dob) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dob || '')); if (!m) return null;
+  const [y, mo, d] = [+m[1], +m[2], +m[3]], dt = new Date(Date.UTC(y, mo - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d || y < 1900) return null;
+  const now = new Date(Date.now() + 3 * 3600e3), ny = now.getUTCFullYear(), nm = now.getUTCMonth() + 1, nd = now.getUTCDate();
+  const age = ny - y - (nm < mo || (nm === mo && nd < d) ? 1 : 0);
+  return age >= 0 && age < 130 ? age : null;
+}
 function resetToken(name, hours) {
   for (const [t, r] of Object.entries(db.resets)) if (r.exp < Date.now()) delete db.resets[t];
   const mine = Object.entries(db.resets).filter(([, r]) => r.name === name).sort((a, b) => a[1].exp - b[1].exp);
@@ -2383,13 +2441,16 @@ io.on('connection', socket => {
     };
   }
 
-  socket.on('register', ({ name, password, email, code, invite, terms, src } = {}, cb = () => {}) => {
+  socket.on('register', ({ name, password, email, code, invite, terms, src, dob } = {}, cb = () => {}) => {
     name = clean(name, 20); password = String(password ?? ''); email = clean(email, 190).toLowerCase();
     if (!NAME_RE.test(name)) return cb({ error: 'Kullanıcı adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin.' });
+    const age = ageOf(dob);
+    if (age === null) return cb({ error: 'Doğum tarihini seç.', field: 'dob' });
+    if (age < 18) return cb({ error: 'Kanka Chat\'te hesap açmak için 18 yaşında ya da daha büyük olmalısın.', field: 'dob', minor: true }); // doğum tarihi saklanmaz
     if (password.length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
     if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz. Şifreni unutursan buraya link göndeririz.', field: 'email' });
     if (!terms) return cb({ error: 'Devam etmek için kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
-    if (Object.keys(db.users).some(n => n.toLowerCase() === name.toLowerCase())) return cb({ error: 'Bu kullanıcı adı alınmış.', field: 'name' });
+    if (nameTaken(name)) return cb({ error: 'Bu kullanıcı adı alınmış.', field: 'name' });
     if (Object.values(db.users).some(u => u.email === email)) return cb({ error: 'Bu e-posta ile zaten bir hesap var. Şifreni unuttuysan giriş ekranından sıfırlayabilirsin.', field: 'email' });
     const gate = betaGate(code, invite); if (gate.error) return cb({ ...gate, field: 'code' });
     const w = limited('reg|' + ip, 5, 3600e3);
@@ -2397,6 +2458,7 @@ io.on('connection', socket => {
     const salt = crypto.randomBytes(16).toString('hex');
     db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} };
     const sr = cleanSrc(src); if (sr) db.users[name].src = sr;
+    db.users[name].dob = String(dob); db.users[name].birthday = String(dob).slice(5); // tam tarih gizli tutulur; profilde sadece gün-ay (istersen kaldırabilirsin)
     { const iv = clean(invite, 40).split(/[=/]/).pop(), sv = iv && db.servers.find(x => x.invite === iv); if (sv) db.users[name].via = { srv: sv.id, name: clean(sv.name, 40) }; else if (gate.code) db.users[name].via = { code: 1 }; } // hangi reklamdan / kelimeden geldi (ilk ziyaret)
     if (gate.code) {
       const c = db.codes[gate.code]; c.usedBy = name; c.usedAt = Date.now(); db.users[name].invitedBy = c.by;
@@ -3528,6 +3590,22 @@ io.on('connection', socket => {
     const mine = new Set(db.users[me].friends || []), friends = n === me ? [] : (o.friends || []).filter(x => mine.has(x));
     cb({ matches: (o.matches || []).slice(0, 8), servers: n === me ? [] : servers, friends, joined: Object.fromEntries(db.servers.filter(s => s.members.includes(n) && s.joinedAt?.[n]).map(s => [s.id, s.joinedAt[n]])) });
   });
+  socket.on('changeName', ({ name, password } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (limited('rename|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+    if (hashPw(String(password ?? ''), u.salt) !== u.hash) return cb({ error: 'Şifre yanlış', field: 'password' });
+    name = clean(name, 20);
+    if (!NAME_RE.test(name)) return cb({ error: 'Kullanıcı adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin.', field: 'name' });
+    if (name === me) return cb({ error: 'Bu zaten senin adın', field: 'name' });
+    const back = (u.oldNames || []).some(o => o.n === name); // kendi eski adına dönüş serbest
+    if (name.toLowerCase() !== me.toLowerCase() && nameTaken(name, me) && !back) return cb({ error: 'Bu kullanıcı adı alınmış', field: 'name' });
+    const wait = (u.renamedAt || 0) + NAME_COOLDOWN - Date.now();
+    if (wait > 0 && !siteAdmin(me)) return cb({ error: `Adını haftada bir değiştirebilirsin. ${Math.ceil(wait / 864e5)} gün sonra tekrar dene.` });
+    if (!renameUser(me, name)) return cb({ error: 'Değiştirilemedi' });
+    secLog('ad-degisti', me, `${me} → ${name}`);
+    cb({ ok: true, name });
+  });
+  socket.on('nameFree', (name, cb = () => {}) => { name = clean(name, 20); if (!me || limited('namefree|' + me, 60, 60e3)) return cb({}); cb({ ok: NAME_RE.test(name), free: NAME_RE.test(name) && (name.toLowerCase() === me.toLowerCase() || !nameTaken(name, me) || (db.users[me].oldNames || []).some(o => o.n === name)) }); });
   socket.on('changePassword', ({ old, next } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
     if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
