@@ -2126,7 +2126,7 @@ function newCode(by, note = '') {
 const normCode = c => String(c ?? '').trim().toUpperCase().replace(/\s+/g, '').replace(/^(KNK)?-?/, 'KNK-').slice(0, 10);
 const codeFree = c => !!db.codes[c] && !db.codes[c].usedBy;
 const betaFull = () => db.beta.on && userCount() >= (db.beta.cap || 300);
-const betaInfo = () => ({ authBg: db.authBg || null, on: !!db.beta.on, full: betaFull(), left: db.beta.on ? Math.max(0, (db.beta.cap || 300) - userCount()) : null, waiting: db.waitlist.filter(w => !w.invited).length });
+const betaInfo = () => ({ on: !!db.beta.on, full: betaFull(), left: db.beta.on ? Math.max(0, (db.beta.cap || 300) - userCount()) : null, waiting: db.waitlist.filter(w => !w.invited).length });
 // Kayıt kapısı: beta açıksa geçerli kod ya da özel bir sunucunun davet linki gerekir
 function betaGate(code, invite) {
   if (!db.beta.on) return { ok: true };
@@ -2821,20 +2821,6 @@ io.on('connection', socket => {
     if (gifHits.length >= 40) return cb({ error: 'Biraz yavaş, bir dakika sonra tekrar dene' });
     gifHits.push(now);
     gifFetch(q, page, me).then(cb);
-  });
-  // Giriş / kayıt ekranının arka planı (resim, GIF ya da video)
-  socket.on('adminAuthBg', ({ set } = {}, cb = () => {}) => {
-    if (!SA(cb)) return;
-    if (set === null) { delete db.authBg; save(); staffLog(me, 'Giriş ekranı arka planını kaldırdı'); return cb({ ok: true, bg: null }); }
-    if (set && typeof set === 'object') {
-      const pick = u => { const m = /^\/dosya\/([a-f0-9]{24})(\/[^?#\s]{0,200})?$/.exec(String(u || '')); const f = m && db.files?.[m[1]]; return f && ['image', 'video'].includes(f.kind) ? { url: `/dosya/${m[1]}/${encodeURIComponent(f.name)}`, kind: f.kind } : null; };
-      const main = pick(set.url); if (!main) return cb({ error: 'Önce bir resim ya da video yükle' });
-      const mob = set.mobile ? pick(set.mobile) : null;
-      const num = (v, a, b, d) => Math.min(Math.max(Number.isFinite(+v) ? +v : d, a), b);
-      db.authBg = { ...main, mobile: mob, dim: num(set.dim, 0, 90, 45), blur: num(set.blur, 0, 24, 0), pos: ['center', 'top', 'bottom'].includes(set.pos) ? set.pos : 'center', at: Date.now() };
-      save(); staffLog(me, 'Giriş ekranı arka planını değiştirdi');
-    }
-    cb({ ok: true, bg: db.authBg || null });
   });
   socket.on('adminGif', ({ set, test } = {}, cb = () => {}) => {
     if (!SA(cb)) return;

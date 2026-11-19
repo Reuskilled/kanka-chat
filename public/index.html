@@ -111,27 +111,16 @@
   /* ---------- Giriş ---------- */
   #auth { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
     background: radial-gradient(circle at 20% 20%, rgba(255,138,76,.18) 0, transparent 40%), radial-gradient(circle at 80% 80%, rgba(255,179,71,.12) 0, transparent 40%), var(--bg); }
-  .abg-prev { position: relative; height: 230px; margin: 12px 0 14px; border-radius: 14px; overflow: hidden; display: grid; place-items: center; border: 1px solid var(--line);
-    background: radial-gradient(circle at 20% 20%, rgba(255,138,76,.18) 0, transparent 40%), radial-gradient(circle at 80% 80%, rgba(255,179,71,.12) 0, transparent 40%), var(--bg); }
-  .abg-card { position: relative; z-index: 1; width: 150px; padding: 14px 12px; border-radius: 14px; background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(10px); border: 1px solid var(--line); display: grid; gap: 7px; justify-items: center; font-size: 12px; }
-  .abg-card i, #abg-full-prev i { display: block; width: 100%; height: 14px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); }
-  .abg-card i.btn, #abg-full-prev i.btn { background: var(--accent); border: 0; }
-  .abg-logo { width: 28px; height: 28px; border-radius: 9px; background: var(--accent); }
-  .abg-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px 16px; margin-bottom: 10px; }
-  .abg-row input[type=range] { width: 100%; accent-color: var(--accent); }
-  .abg-n { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  #abg-full-prev { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: var(--bg); cursor: pointer; }
-  #abg-full-prev .card { position: relative; z-index: 1; width: min(400px, calc(100% - 32px)); padding: 32px; border-radius: 28px; display: grid; gap: 10px; justify-items: center; text-align: center; background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(14px); border: 1px solid var(--line); }
-  #abg-full-prev .card .abg-logo { width: 56px; height: 56px; border-radius: 18px; }
-  #abg-full-prev .card h1 { margin: 4px 0 0; font-size: 26px; } #abg-full-prev .card p { margin: 0 0 6px; color: var(--muted); }
-  #abg-full-prev .card i { height: 46px; border-radius: 14px; } #abg-full-prev small { color: var(--muted); margin-top: 6px; }
-  .auth-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-  .auth-bg img, .auth-bg video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--ab-pos); filter: blur(var(--ab-blur)); transform: scale(calc(1 + (var(--ab-blur) / 1px) * .006)); }
-  .auth-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,6,4,calc(var(--ab-dim) * .8)), rgba(10,6,4,var(--ab-dim))); }
-  .auth-bg .ab-mob { display: none; }
-  @media (max-width: 640px) { .auth-bg .ab-desk { display: none; } .auth-bg .ab-mob { display: block; } }
-  #auth.has-bg { background: #0d0907; }
-  #auth.has-bg .card { position: relative; z-index: 1; background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  #auth.sky { background: radial-gradient(120% 90% at 85% 110%, #ff7a3d33 0, transparent 55%), radial-gradient(90% 70% at 10% -10%, #b45cff2b 0, transparent 60%), linear-gradient(160deg, #1a0d24 0%, #24102a 38%, #2c1424 64%, #3a1a1c 100%); }
+  #auth.sky .sky-cv { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  #auth.sky .sky-neb { position: fixed; overflow: hidden; inset: -20%; z-index: 0; pointer-events: none; }
+  #auth.sky .sky-neb i { position: absolute; border-radius: 50%; opacity: .55; animation: nebDrift 38s ease-in-out infinite alternate; }
+  #auth.sky .sky-neb i:nth-child(1) { width: 46vw; height: 46vw; left: 8%; top: 18%; background: radial-gradient(circle, #7a2fd066, transparent 70%); }
+  #auth.sky .sky-neb i:nth-child(2) { width: 52vw; height: 40vw; right: 4%; bottom: 8%; background: radial-gradient(circle, #ff7a3d55, transparent 70%); animation-duration: 46s; animation-delay: -12s; }
+  #auth.sky .sky-neb i:nth-child(3) { width: 34vw; height: 34vw; left: 46%; top: 4%; background: radial-gradient(circle, #ff4f8a3d, transparent 70%); animation-duration: 54s; animation-delay: -25s; }
+  @keyframes nebDrift { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(4vw, -3vh) scale(1.08); } 100% { transform: translate(-3vw, 2vh) scale(.95); } }
+  @media (prefers-reduced-motion: reduce) { #auth.sky .sky-neb i { animation: none; } }
+  #auth.sky .card { position: relative; z-index: 1; background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 30px 80px rgba(8,2,12,.6), 0 0 0 1px rgba(255,255,255,.04); }
   #auth .card { background: var(--panel); width: 400px; padding: 36px; border-radius: 28px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.45); border: 1px solid var(--line); }
   .logo { width: 76px; height: 76px; margin: 0 auto 14px; border-radius: 22px; background: #F2652F; color: #fff; display: flex; align-items: center; justify-content: center; }
   .logo .klogo { width: 56px; height: 56px; }
@@ -2275,7 +2264,7 @@
   .adob .adob-l { flex: 1; min-width: 0; font-size: 15px; color: var(--muted); white-space: nowrap; }
   .adob select { flex: none; padding: 9px 6px; margin: 4px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
   .adob select:focus { outline: none; border-color: var(--accent); }
-  @media (max-width: 420px) { .adob { flex-wrap: wrap; padding: 6px 12px 8px; } .adob .adob-l { flex-basis: calc(100% - 30px); padding-top: 6px; } .adob select { flex: 1; } }
+  .adob { flex-wrap: wrap; padding: 6px 12px 8px; } .adob .adob-l { flex-basis: calc(100% - 30px); padding-top: 6px; } .adob select { flex: 1; }
   .afield > .ic { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
   .afield input { flex: 1; min-width: 0; padding: 13px 0; background: none; border: 0; outline: none; font-size: 15px; color: var(--text); }
   .afield:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255,138,76,.12); }
@@ -3901,10 +3890,78 @@ $('#auth-form').onsubmit = e => {
       Object.assign(authQ, { pos: r.pos, total: r.total, wmail: val('a-wmail') }); renderAuth('waited'); });
   }
 };
+// ================= Giriş / kayıt ekranı: süzülen minik rakunlar (sadece tarayıcıda) =================
+// Kanka'nın kendi gece manzarası: sıcak mor-turuncu gökyüzü, tane tane süzülen rakun logoları ve yıldız kıvılcımları.
+const AuthSky = (() => {
+  const LOGO = c => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#000"/><path d="M18 46 L20 17 C20.4 12.6 24.6 10.8 28 13.4 L44 28 Z" fill="#fff"/><path d="M82 46 L80 17 C79.6 12.6 75.4 10.8 72 13.4 L56 28 Z" fill="#fff"/><path d="M50 25 C72 25 86 37 89 53 L95 61 L88.5 63.5 C86 78 70 87 50 87 C30 87 14 78 11.5 63.5 L5 61 L11 53 C14 37 28 25 50 25 Z" fill="#fff"/><path d="M50 31 L53.2 45 L46.8 45 Z" fill="#000"/><path d="M15 56 C21 46 36 44.5 46 52 L50 55 L54 52 C64 44.5 79 46 85 56 C81 66.5 67 70.5 57.5 64.5 L50 60.5 L42.5 64.5 C33 70.5 19 66.5 15 56 Z" fill="#000"/><circle cx="33.5" cy="56" r="5.2" fill="#fff"/><circle cx="66.5" cy="56" r="5.2" fill="#fff"/><path d="M44.5 70 L55.5 70 C55.5 74.2 52.4 77.2 50 77.2 C47.6 77.2 44.5 74.2 44.5 70 Z" fill="#000"/></mask></defs><rect width="100" height="100" fill="${c}" mask="url(#m)"/></svg>`;
+  const COLORS = ['#ff8a4c', '#ffb347', '#ff6f91', '#c08bff', '#ffd27a'];
+  let cv, ctx, W = 0, H = 0, dpr = 1, raf = 0, last = 0, sprites = [], coons = [], stars = [], mx = 0, my = 0, tx = 0, ty = 0, still = false, ready = false;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  // Her renk için bir kez çiz: yakın (büyük) rakunlar hafif bulanık, uzaktakiler net
+  function makeSprites() {
+    return Promise.all(COLORS.map(c => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(LOGO(c)); })))
+      .then(ims => { sprites = ims.filter(Boolean).map(im => [0, 2.5].map(bl => { const o = document.createElement('canvas'); o.width = o.height = 160; const g = o.getContext('2d'); if (bl) g.filter = `blur(${bl}px)`; g.drawImage(im, 16, 16, 128, 128); return o; })); });
+  }
+  function seed() {
+    const area = W * H, n = Math.round(Math.min(34, Math.max(12, area / 52000))), ns = Math.round(Math.min(140, area / 11000));
+    coons = Array.from({ length: n }, () => newCoon(true));
+    stars = Array.from({ length: ns }, () => ({ x: rnd(0, W), y: rnd(0, H), s: rnd(1, 2.6), k: Math.random() < .14 ? 'plus' : Math.random() < .5 ? 'sq' : 'dot', c: COLORS[Math.random() * COLORS.length | 0], p: rnd(0, 6.28), sp: rnd(.6, 1.8), z: rnd(.2, .6) }));
+  }
+  function newCoon(anyY) {
+    const z = Math.random() ** 1.6, size = 12 + z * 40; // z: 0 uzak, 1 yakın
+    return { x: rnd(-40, W + 40), y: anyY ? rnd(-40, H + 40) : H + 60, z, size, vy: -(6 + z * 16), sway: rnd(8, 26), sp: rnd(.15, .45), ph: rnd(0, 6.28), rot: rnd(-.25, .25), vr: rnd(-.08, .08), a: .22 + z * .5, sprite: sprites[Math.random() * sprites.length | 0], blur: z > .78 ? 1 : 0, tw: rnd(0, 6.28) };
+  }
+  function resize() { dpr = Math.min(devicePixelRatio || 1, 1.5); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); if (ready) seed(); }
+  function frame(t) {
+    raf = 0;
+    const host = cv?.parentElement; if (!host || host.style.display === 'none' || !host.isConnected) return; // giriş ekranı kapandı: dur
+    if (document.hidden) { raf = requestAnimationFrame(frame); return; }
+    const dt = Math.min((t - (last || t)) / 1000, .05); last = t;
+    tx += (mx - tx) * .04; ty += (my - ty) * .04;
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) { // kıvılcımlar: yerinde göz kırpar
+      s.p += dt * s.sp; const a = .25 + .55 * (.5 + .5 * Math.sin(s.p)), x = s.x + tx * s.z * 14, y = s.y + ty * s.z * 14;
+      ctx.globalAlpha = a; ctx.fillStyle = s.c;
+      if (s.k === 'plus') { const r = s.s * 3.2; ctx.fillRect(x - r, y - .6, r * 2, 1.2); ctx.fillRect(x - .6, y - r, 1.2, r * 2); ctx.globalAlpha = a * .9; ctx.fillRect(x - 1.2, y - 1.2, 2.4, 2.4); }
+      else if (s.k === 'sq') ctx.fillRect(x - s.s / 2, y - s.s / 2, s.s, s.s);
+      else { ctx.beginPath(); ctx.arc(x, y, s.s * .45, 0, 6.29); ctx.fill(); }
+    }
+    coons.sort((a, b) => a.z - b.z);
+    for (let i = 0; i < coons.length; i++) {
+      const c = coons[i];
+      if (!still) { c.y += c.vy * dt; c.ph += c.sp * dt; c.rot += c.vr * dt; c.tw += dt * 1.3; }
+      if (c.y < -70) { coons[i] = newCoon(false); continue; }
+      const x = c.x + Math.sin(c.ph) * c.sway + tx * (8 + c.z * 30), y = c.y + ty * (8 + c.z * 30), sz = c.size;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(c.ph * .8) * .22 + c.rot);
+      ctx.globalAlpha = c.a * (.85 + .15 * Math.sin(c.tw));
+      ctx.drawImage(c.sprite[c.blur], -sz * .625, -sz * .625, sz * 1.25, sz * 1.25);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+    if (!still) raf = requestAnimationFrame(frame);
+  }
+  function start() {
+    if (window.kankaDesktop) return; // masaüstü uygulamasında sade kalır
+    const host = $('#auth'); if (!host) return;
+    if (!cv) {
+      host.classList.add('sky');
+      host.insertAdjacentHTML('afterbegin', '<div class="sky-neb" aria-hidden="true"><i></i><i></i><i></i></div><canvas class="sky-cv" aria-hidden="true"></canvas>');
+      cv = host.querySelector('.sky-cv'); ctx = cv.getContext('2d');
+      still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      addEventListener('resize', () => { if (cv && host.style.display !== 'none') resize(); });
+      host.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { mx = e.clientX / W - .5; my = e.clientY / H - .5; } });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && !raf) { last = 0; raf = requestAnimationFrame(frame); } });
+      makeSprites().then(() => { ready = true; resize(); if (!raf) raf = requestAnimationFrame(frame); });
+      return;
+    }
+    if (ready && !raf) { resize(); last = 0; raf = requestAnimationFrame(frame); }
+  }
+  return { start };
+})();
 function showAuth() {
-  $('#auth').style.display = 'flex';
+  $('#auth').style.display = 'flex'; AuthSky.start();
   if (!$('#auth-body').innerHTML) renderAuth();
-  socket.emit('betaInfo', r => { authBeta = r; applyAuthBg(r?.authBg, $('#auth')); renderAuth(authMode, true); });
+  socket.emit('betaInfo', r => { authBeta = r; renderAuth(authMode, true); });
 }
 function hideBoot() { const b = $('#boot'); if (!b || b.classList.contains('out')) return; b.classList.add('out'); setTimeout(() => b.remove(), 400); }
 setTimeout(() => { const t = $('#boot-t'); if (t && $('#boot')) t.textContent = 'Sunucuya ulaşılamıyor, tekrar deneniyor…'; }, 7000);
@@ -11021,18 +11078,6 @@ socket.on('siteBanned', reason => {
   setTimeout(() => authErr({ error: 'Hesabın Kanka Chat kurallarını ihlal ettiği için kapatıldı.' + (reason ? ' Sebep: ' + reason : '') }), 80);
 });
 
-// ================= Giriş / kayıt ekranı arka planı (Yönetim › Giriş ekranı'ndan ayarlanır) =================
-function authBgHTML(bg) {
-  if (!bg?.url) return '';
-  const media = (u, k, cls) => k === 'video' ? `<video class="${cls}" src="${esc(u)}" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>` : `<img class="${cls}" src="${esc(u)}" alt="" aria-hidden="true" decoding="async">`;
-  return `<div class="auth-bg" style="--ab-dim:${(+bg.dim || 0) / 100};--ab-blur:${+bg.blur || 0}px;--ab-pos:center ${esc(bg.pos || 'center')}">${media(bg.url, bg.kind, bg.mobile ? 'ab-desk' : 'ab-all')}${bg.mobile ? media(bg.mobile.url, bg.mobile.kind, 'ab-mob') : ''}</div>`;
-}
-function applyAuthBg(bg, host) {
-  if (!host) return; host.querySelector(':scope > .auth-bg')?.remove();
-  host.classList.toggle('has-bg', !!bg?.url); if (!bg?.url) return;
-  host.insertAdjacentHTML('afterbegin', authBgHTML(bg));
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) host.querySelectorAll('.auth-bg video').forEach(v => { v.removeAttribute('autoplay'); v.pause(); });
-}
 // ================= Yaş doğrulaması: doğum tarihi girilene kadar kapanmayan ekran =================
 function showAgeGate(locked) {
   $('#auth').style.display = 'none'; $('#app').style.display = 'none'; closeModal();
@@ -11207,7 +11252,7 @@ function admDev(B) {
 function adminPanel(el, sub = 'overview') {
   const R = S.staff, A = ['owner', 'admin'].includes(R);
   const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['srvapps', 'Sunucu rozetleri', 'check'], ['log', 'Kayıtlar', 'clock'],
-    ...(A ? [['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['giris', 'Giriş ekranı', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
+    ...(A ? [['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
   if (!subs.some(x => x[0] === sub)) sub = 'overview';
   el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
     <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;
@@ -11284,44 +11329,6 @@ function adminPanel(el, sub = 'overview') {
         setTimeout(re, manual.length ? 60000 : 1500);
       });
     });
-  });
-  if (sub === 'giris') return socket.emit('adminAuthBg', {}, r => {
-    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
-    const cur = r.bg ? { ...r.bg } : { dim: 45, blur: 0, pos: 'center' };
-    B.innerHTML = `<div class="adm-box"><p class="hint" style="margin-top:0">Giriş ve kayıt ekranının arkasında görünür. Resim (PNG, JPG, WebP), GIF ya da kısa bir video (MP4, WebM) yükleyebilirsin; en fazla 25 MB. Ekranı kaplayacak şekilde kırpılır.
-      En iyi sonuç için yatay ve en az 1920×1080 bir görsel kullan; yazının okunması için karartma otomatik eklenir.</p>
-      <div class="abg-prev" id="abg-prev"><div class="abg-card"><div class="abg-logo"></div><b>Selam kanka!</b><i></i><i></i><i class="btn"></i></div></div>
-      <div class="abg-row"><div><label class="adm-lbl">Bilgisayar ve genel</label><div class="adm-inl"><button class="btns2" id="abg-up">${ic('image')} ${cur.url ? 'Değiştir' : 'Yükle'}</button><span class="abg-n" id="abg-n">${cur.url ? esc(decodeURIComponent(cur.url.split('/').pop())) : 'Yok, varsayılan arka plan'}</span></div></div>
-        <div><label class="adm-lbl">Telefon için ayrı (isteğe bağlı, dikey)</label><div class="adm-inl"><button class="btns2" id="abg-upm">${ic('image')} ${cur.mobile ? 'Değiştir' : 'Yükle'}</button><span class="abg-n" id="abg-nm">${cur.mobile ? esc(decodeURIComponent(cur.mobile.url.split('/').pop())) : 'Yok, aynısı kullanılır'}</span>${cur.mobile ? `<button class="alink" id="abg-rmm">Kaldır</button>` : ''}</div></div></div>
-      <div class="abg-row"><div><label class="adm-lbl">Karartma <b id="abg-dv">%${cur.dim}</b></label><input type="range" id="abg-dim" min="0" max="90" value="${cur.dim}"></div>
-        <div><label class="adm-lbl">Bulanıklık <b id="abg-bv">${cur.blur}px</b></label><input type="range" id="abg-blur" min="0" max="24" value="${cur.blur}"></div>
-        <div><label class="adm-lbl">Odak</label><select class="msel" id="abg-pos"><option value="center">Orta</option><option value="top">Üst</option><option value="bottom">Alt</option></select></div></div>
-      <input type="file" id="abg-file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" hidden>
-      <div class="rowb" style="justify-content:flex-start;margin-top:14px"><button class="btnp" id="abg-save">${ic('check')} Kaydet</button><button class="btns2" id="abg-full">${ic('eye')} Tam ekran önizle</button>${r.bg ? `<button class="btns2 danger" id="abg-del">${ic('trash')} Kaldır</button>` : ''}</div></div>`;
-    $('#abg-pos').value = cur.pos || 'center';
-    const prev = () => applyAuthBg(cur.url ? cur : null, $('#abg-prev'));
-    prev();
-    let target = 'url';
-    const upload = async f => {
-      if (f.size > 25 * 1024 * 1024) return toast('En fazla 25 MB', null, false, { type: 'err' });
-      const n = target === 'url' ? $('#abg-n') : $('#abg-nm'); n.textContent = 'Yükleniyor…';
-      const x = await fetch('/api/dosya', { method: 'POST', headers: { Authorization: 'Bearer ' + store.get('kanka-token'), 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(f.name), 'X-File-Type': f.type }, body: f }).then(y => y.json()).catch(() => ({}));
-      if (!x.ok || !['image', 'video'].includes(x.kind)) { n.textContent = 'Yüklenemedi'; return toast(x.error || 'Bu dosya resim ya da video değil', null, false, { type: 'err' }); }
-      if (target === 'url') { cur.url = x.url; cur.kind = x.kind; } else cur.mobile = { url: x.url, kind: x.kind };
-      n.textContent = f.name; prev();
-    };
-    $('#abg-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) upload(f); };
-    $('#abg-up').onclick = () => { target = 'url'; $('#abg-file').click(); };
-    $('#abg-upm').onclick = () => { target = 'mobile'; $('#abg-file').click(); };
-    if ($('#abg-rmm')) $('#abg-rmm').onclick = () => { cur.mobile = null; $('#abg-nm').textContent = 'Yok, aynısı kullanılır'; prev(); };
-    $('#abg-dim').oninput = e => { cur.dim = +e.target.value; $('#abg-dv').textContent = '%' + cur.dim; prev(); };
-    $('#abg-blur').oninput = e => { cur.blur = +e.target.value; $('#abg-bv').textContent = cur.blur + 'px'; prev(); };
-    $('#abg-pos').onchange = e => { cur.pos = e.target.value; prev(); };
-    $('#abg-full').onclick = () => { if (!cur.url) return toast('Önce bir görsel yükle');
-      const o = document.createElement('div'); o.id = 'abg-full-prev'; o.innerHTML = `<div class="card"><div class="abg-logo"></div><h1>Selam kanka!</h1><p>Hesabına gir ya da yeni hesap aç.</p><i></i><i></i><i class="btn"></i><small>Önizleme · kapatmak için tıkla</small></div>`;
-      document.body.appendChild(o); applyAuthBg(cur, o); o.onclick = () => o.remove(); };
-    $('#abg-save').onclick = () => { if (!cur.url) return toast('Önce bir görsel yükle'); socket.emit('adminAuthBg', { set: { url: cur.url, mobile: cur.mobile?.url || null, dim: cur.dim, blur: cur.blur, pos: cur.pos } }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Giriş ekranı arka planı kaydedildi'); adminPanel(el, 'giris'); }); };
-    if ($('#abg-del')) $('#abg-del').onclick = () => socket.emit('adminAuthBg', { set: null }, () => { toast('Varsayılan arka plana dönüldü'); adminPanel(el, 'giris'); });
   });
   if (sub === 'gif') return socket.emit('adminGif', {}, r => {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
