@@ -4086,7 +4086,7 @@ function showSettings(tab) {
     }
     if (t === 'account') $('#p-pw').onclick = () => socket.emit('changePassword', { old: $('#p-old').value, next: $('#p-new').value }, r => {
       if (r.error) return toast(r.error);
-      toast('Şifre değişti, tekrar giriş yap'); setTimeout(() => { store.set('kanka-token', null); location.reload(); }, 1200);
+      if (r.token) { store.set('kanka-token', r.token); toast('Şifre değişti. Diğer cihazlardaki oturumlar kapatıldı.'); } else { toast('Şifre değişti, tekrar giriş yap'); setTimeout(() => { store.set('kanka-token', null); location.reload(); }, 1200); }
     });
     if (t === 'notif' && $('#as-on')) {
       const A = window.kankaDesktop.autostart;

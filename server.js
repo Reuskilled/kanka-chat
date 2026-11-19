@@ -202,7 +202,7 @@ app.post('/api/beta', (req, res) => {
 });
 // ---------- Yedek indirme (sadece Kanka yönetimi; masaüstü uygulaması her gün bilgisayara çeker) ----------
 app.get('/api/yedek/:name', (req, res) => {
-  const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), who = tok && db.sessions[tok];
+  const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), who = sessGet(tok);
   if (!who || !siteAdmin(who)) return res.status(403).json({ error: 'Yetkin yok' });
   if (limited('yedek|' + who, 30, 3600e3)) return res.status(429).json({ error: 'Çok fazla istek' });
   let name = req.params.name;
@@ -218,13 +218,35 @@ const dns = require('dns').promises, net = require('net');
 const privIP = ip => net.isIPv6(ip) ? /^(::1|::|fc|fd|fe80|::ffff:(10\.|127\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.))/i.test(ip)
   : /^(0\.|10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|22[4-9]\.|2[3-5]\d\.)/.test(ip);
 const lpCache = new Map();
-async function safeFetch(url, hops = 0) {
-  const u = new URL(url); if (!/^https?:$/.test(u.protocol) || hops > 3) return null;
-  const addrs = await dns.lookup(u.hostname, { all: true }).catch(() => []);
-  if (!addrs.length || addrs.some(a => privIP(a.address))) return null;
-  const r = await fetch(u, { redirect: 'manual', signal: AbortSignal.timeout(5000), headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KankaChatBot/1.0; +bağlantı önizlemesi)', Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'tr,en;q=0.8' } });
-  if (r.status >= 300 && r.status < 400 && r.headers.get('location')) return safeFetch(new URL(r.headers.get('location'), u).href, hops + 1);
-  return r.ok ? r : null;
+// Özel/yerel ağ adreslerine istek atılmasın (SSRF). Kontrol bağlantı anında yapılır, DNS değişse bile atlatılamaz.
+const PRIV = new net.BlockList();
+for (const c of ['0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16', '172.16.0.0/12', '192.0.0.0/24', '192.168.0.0/16', '198.18.0.0/15', '224.0.0.0/3']) { const [a, b] = c.split('/'); PRIV.addSubnet(a, +b, 'ipv4'); }
+for (const c of ['::/127', 'fc00::/7', 'fe80::/10', '64:ff9b::/96', 'ff00::/8', '2001:db8::/32']) { const [a, b] = c.split('/'); PRIV.addSubnet(a, +b, 'ipv6'); }
+const privAddr = (a, fam) => { try { return PRIV.check(a, fam === 6 || net.isIPv6(a) ? 'ipv6' : 'ipv4'); } catch { return true; } };
+function safeLookup(host, opts, cb) {
+  if (typeof opts === 'function') { cb = opts; opts = {}; }
+  require('dns').lookup(host, { ...opts, all: true }, (err, list) => {
+    if (err) return cb(err);
+    if (!list.length || list.some(x => privAddr(x.address, x.family))) return cb(Object.assign(new Error('Özel ağ adresi'), { code: 'EPRIV' }));
+    opts.all ? cb(null, list) : cb(null, list[0].address, list[0].family);
+  });
+}
+function safeFetch(url, hops = 0) {
+  return new Promise(resolve => {
+    let u; try { u = new URL(url); } catch { return resolve(null); }
+    if (!/^https?:$/.test(u.protocol) || hops > 3 || (u.port && !['80', '443', '8080', '8443'].includes(u.port))) return resolve(null);
+    if (net.isIP(u.hostname.replace(/^\[|\]$/g, '')) && privAddr(u.hostname.replace(/^\[|\]$/g, ''))) return resolve(null);
+    const mod = u.protocol === 'https:' ? require('https') : require('http');
+    const req = mod.get(u, { lookup: safeLookup, timeout: 5000, headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KankaChatBot/1.0; +https://kankahq.com)', Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'tr,en;q=0.8' } }, res => {
+      const loc = res.headers.location;
+      if (res.statusCode >= 300 && res.statusCode < 400 && loc) { res.resume(); let nu; try { nu = new URL(loc, u).href; } catch { return resolve(null); } return resolve(safeFetch(nu, hops + 1)); }
+      if (res.statusCode < 200 || res.statusCode >= 300) { res.resume(); return resolve(null); }
+      resolve({ url: u.href, type: String(res.headers['content-type'] || ''),
+        head: max => new Promise(done => { let html = '', n = 0; const end = () => { res.destroy(); done(html); };
+          res.on('data', b => { n += b.length; html += b.toString('utf8'); if (n >= max || /<\/head>/i.test(html)) end(); }); res.on('end', () => done(html)); res.on('error', () => done(html)); setTimeout(end, 5000); }) });
+    });
+    req.on('timeout', () => req.destroy()); req.on('error', () => resolve(null));
+  });
 }
 const unent = t => String(t || '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&#x27;|&apos;/g, "'").replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(+n)).replace(/\s+/g, ' ').trim();
 async function linkPreview(url) {
@@ -232,10 +254,8 @@ async function linkPreview(url) {
   let out = null;
   try {
     const r = await safeFetch(url);
-    if (r && /text\/html|application\/xhtml/i.test(r.headers.get('content-type') || '')) {
-      const reader = r.body.getReader(); let html = '', n = 0;
-      while (n < 400e3) { const { done, value } = await reader.read(); if (done) break; n += value.length; html += Buffer.from(value).toString('utf8'); if (/<\/head>/i.test(html)) break; }
-      reader.cancel().catch(() => {});
+    if (r && /text\/html|application\/xhtml/i.test(r.type)) {
+      const html = await r.head(400e3);
       const meta = k => { const m = new RegExp(`<meta[^>]+(?:property|name)=["']${k}["'][^>]*>`, 'i').exec(html)?.[0]; return m && unent(/content=["']([^"']*)["']/i.exec(m)?.[1]); };
       const title = meta('og:title') || meta('twitter:title') || unent(/<title[^>]*>([^<]{1,300})<\/title>/i.exec(html)?.[1]);
       let image = meta('og:image') || meta('twitter:image'); try { image = image ? new URL(image, r.url || url).href : null; } catch { image = null; }
@@ -253,7 +273,7 @@ const BAD_EXT = /\.(exe|msi|bat|cmd|com|scr|ps1|vbs|vbe|js|jse|wsf|wsh|hta|cpl|j
 const fileKind = (mime, name) => /^image\/(png|jpeg|gif|webp)$/.test(mime) ? 'image' : /^video\/(mp4|webm|quicktime)$/.test(mime) || /\.(mp4|webm|mov)$/i.test(name) ? 'video' : /^audio\//.test(mime) ? 'audio' : 'file';
 const safeName = n => String(n || 'dosya').normalize('NFC').replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').replace(/^\.+/, '').slice(-120) || 'dosya';
 app.post('/api/dosya', express.raw({ type: () => true, limit: FILE_MAX + 1024 }), (req, res) => {
-  const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), me = tok && db.sessions[tok];
+  const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), me = sessGet(tok);
   if (!me || !db.users[me]) return res.status(401).json({ error: 'Giriş yapmalısın' });
   if (limited('dosya|' + me, 40, 60e3)) return res.status(429).json({ error: 'Çok fazla dosya yükledin, bir dakika bekle' });
   let name; try { name = safeName(decodeURIComponent(String(req.headers['x-file-name'] || 'dosya'))); } catch { name = 'dosya'; }
@@ -278,7 +298,8 @@ app.post('/api/dosya', express.raw({ type: () => true, limit: FILE_MAX + 1024 })
 app.get('/dosya/:id/:name?', (req, res) => {
   const f = /^[a-f0-9]{24}$/.test(req.params.id) && db.files?.[req.params.id];
   if (!f) return res.status(404).send('Dosya bulunamadı');
-  const inline = ['image', 'video', 'audio'].includes(f.kind);
+  // Tarayıcıda açılacak tür sadece gerçekten resim/video/ses olan güvenli türler olabilir (ör. ".mp4" adlı bir HTML dosyası sayfa gibi açılmasın)
+  const inline = ['image', 'video', 'audio'].includes(f.kind) && /^(image\/(png|jpeg|gif|webp)|video\/(mp4|webm|quicktime)|audio\/(mpeg|mp4|ogg|webm|wav|x-wav|aac|x-m4a|flac))$/.test(f.mime);
   res.set({ 'Content-Type': inline ? f.mime : 'application/octet-stream', 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, max-age=2592000',
     'Content-Security-Policy': "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox",
     'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(f.name)}` });
@@ -389,7 +410,7 @@ app.post('/api/webhooks/:id/:token', (req, res) => {
   if (!text && !title && !desc && !fields.length) return res.status(400).json({ error: 'Boş mesaj: content ya da embeds gerekli' });
   const color = Number.isInteger(e.color) ? '#' + (e.color >>> 0 & 0xffffff).toString(16).padStart(6, '0') : /^#[0-9a-f]{6}$/i.test(e.color || '') ? e.color : null;
   const av = /^https:\/\/\S{8,300}$/i.test(b.avatar_url || '') ? b.avatar_url : w.avatar || null;
-  const msg = { id: id(), kind: 'bot', time: now, wh: { id: w.id, name: clean(b.username, 32) || w.name, avatar: av }, bot: { title, text: [text, desc].filter(Boolean).join('\n\n'), plain: !title && !desc && !fields.length, tone: 'info', color, fields }, reactions: {} };
+  const msg = { id: id(), kind: 'bot', time: now, wh: { id: w.id, name: (n => n && !/kanka|yönetim|yonetim|admin|moderat|sistem/i.test(n) ? n : w.name)(clean(b.username, 32)), avatar: av }, bot: { title, text: [text, desc].filter(Boolean).join('\n\n'), plain: !title && !desc && !fields.length, tone: 'info', color, fields }, reactions: {} };
   const list = (db.messages[c.id] ||= []); list.push(msg); if (list.length > 2000) list.shift();
   w.uses = (w.uses || 0) + 1; w.lastAt = now; save();
   io.to(c.id).emit('message', { channelId: c.id, msg });
@@ -496,6 +517,17 @@ if (fs.existsSync(RESET_FLAG)) {
   console.log('Tüm veriler sıfırlandı.');
 }
 for (const k of ['users', 'sessions', 'messages', 'playlists']) db[k] ||= {};
+// Oturum ve şifre sıfırlama anahtarları veritabanında açık değil, özet (SHA-256) olarak saklanır:
+// yedek dosyası bir yere sızsa bile içindeki anahtarlarla kimsenin hesabına girilemez.
+const tokH = t => crypto.createHash('sha256').update(String(t)).digest('hex');
+const SESS_TTL = 90 * 864e5;
+if (!db.sessHashed) { const o = {}, r = {}; for (const [t, n] of Object.entries(db.sessions || {})) o[tokH(t)] = n; for (const [t, x] of Object.entries(db.resets || {})) r[tokH(t)] = x; db.sessions = o; if (db.resets) db.resets = r; db.sessHashed = true; }
+db.sessAt ||= {};
+const sessGet = t => { if (typeof t !== 'string' || t.length < 20 || t.length > 100) return null; const h = tokH(t); return Object.hasOwn(db.sessions, h) ? db.sessions[h] : null; };
+function sessNew(name) { const t = crypto.randomBytes(24).toString('hex'), h = tokH(t); db.sessions[h] = name; db.sessAt[h] = Date.now(); return t; }
+function sessDel(t) { if (typeof t !== 'string') return; const h = tokH(t); delete db.sessions[h]; delete db.sessAt[h]; }
+function sessDelUser(name) { for (const [h, n] of Object.entries(db.sessions)) if (n === name) { delete db.sessions[h]; delete db.sessAt[h]; } }
+setInterval(() => { const now = Date.now(); let n = 0; for (const h of Object.keys(db.sessions)) { const at = db.sessAt[h] ||= now; if (now - at > SESS_TTL) { delete db.sessions[h]; delete db.sessAt[h]; n++; } } for (const h of Object.keys(db.sessAt)) if (!db.sessions[h]) delete db.sessAt[h]; if (n) save(); }, 3600e3);
 db.servers ||= [];
 if (!db.servers.find(s => s.id === 's1')) {
   db.servers.unshift({ id: 's1', name: 'Kanka HQ', icon: 'K', channels: [{ id: 'c1', name: 'genel' }, { id: 'c2', name: 'duyurular' }, { id: 'c3', name: 'oyun' }] });
@@ -614,7 +646,8 @@ setTimeout(() => backup(), 5000); setInterval(backup, 60 * 60e3);
 // ---------- Yardımcılar ----------
 const id = () => crypto.randomBytes(5).toString('hex');
 const clean = (s, max) => String(s ?? '').trim().slice(0, max);
-const cleanMsg = s => String(s ?? '').trim(); // mesaj metinleri: karakter sınırı yok
+const MSG_MAX = 4000;
+const cleanMsg = s => String(s ?? '').trim().slice(0, MSG_MAX); // mesaj metinleri en çok 4000 karakter (çok büyük mesajla sunucuyu şişirmeyi engeller)
 const COLORS = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#ff9f43'];
 const NAME_RE = /^[\p{L}\p{N}_.-]{2,20}$/u;
 const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 32).toString('hex');
@@ -1145,7 +1178,8 @@ const chatMembers = chId => chId.startsWith('dm:') ? dmPeers(chId) : groupOf(chI
 const isPrivateChat = chId => chId?.startsWith('dm:') || chId?.startsWith('g:');
 function canAccess(name, chId) {
   if (!name || !chId) return false;
-  if (chId.startsWith('dm:')) return dmPeers(chId).includes(name);
+  if (typeof chId !== 'string') return false;
+  if (chId.startsWith('dm:')) { const p = dmPeers(chId); return p.length === 2 && chId === dmId(p[0], p[1]) && p.includes(name) && p.every(n => Object.hasOwn(db.users, n)); }
   if (chId.startsWith('g:')) return !!groupOf(chId)?.members.includes(name);
   const f = findChannel(chId);
   return !!f && (f.c.type === 'text' || f.c.type === 'forum' || voiceLike(f.c.type)) && (f.s.public || f.s.members.includes(name)) && !f.s.bans?.[name] && seesChannel(f.s, f.c, name);
@@ -2044,7 +2078,7 @@ function resetToken(name, hours) {
   for (const [t, r] of Object.entries(db.resets)) if (r.exp < Date.now()) delete db.resets[t];
   const mine = Object.entries(db.resets).filter(([, r]) => r.name === name).sort((a, b) => a[1].exp - b[1].exp);
   while (mine.length >= 3) delete db.resets[mine.shift()[0]]; // en fazla 3 geçerli link: son gelen e-postalardan hangisine basılırsa çalışsın
-  const t = crypto.randomBytes(24).toString('hex'); db.resets[t] = { name, exp: Date.now() + hours * 3600e3 }; save();
+  const t = crypto.randomBytes(24).toString('hex'); db.resets[tokH(t)] = { name, exp: Date.now() + hours * 3600e3 }; save();
   return t;
 }
 async function sendInviteMail(email, code) {
@@ -2074,7 +2108,7 @@ function siteBanUser(name, by, reason, until) {
   const u = db.users[name]; if (!u) return false;
   u.siteBan = { by, at: Date.now(), reason: clean(reason, 160), ...(until ? { until } : {}) };
   staffLog(by, until ? 'Askıya aldı' : 'Hesabı kapattı', name, (until ? `${Math.round((until - Date.now()) / 864e5)} gün · ` : '') + clean(reason, 160));
-  for (const [t, n] of Object.entries(db.sessions)) if (n === name) delete db.sessions[t];
+  sessDelUser(name); setTimeout(() => io.in('user:' + name).disconnectSockets(true), 300); // açık bağlantılar da kapansın
   for (const s of db.servers) voiceKick(s.channels.map(c => c.id), name, 'Hesabın kapatıldı');
   io.to('user:' + name).emit('siteBanned', u.siteBan.reason);
   setTimeout(() => io.in('user:' + name).disconnectSockets(true), 300);
@@ -2115,7 +2149,7 @@ function deleteUserData(name) {
   }
   for (const g of Object.values(db.groups || {})) g.members = g.members.filter(n => n !== name);
   for (const u of Object.values(db.users)) for (const f of ['friends', 'reqIn', 'reqOut', 'blocked']) if (Array.isArray(u[f])) u[f] = u[f].filter(n => n !== name);
-  for (const [t, n] of Object.entries(db.sessions)) if (n === name) delete db.sessions[t];
+  sessDelUser(name); setTimeout(() => io.in('user:' + name).disconnectSockets(true), 300);
   for (const [c, x] of Object.entries(db.codes)) if (x.by === name && !x.usedBy) delete db.codes[c];
   const em = db.users[name]?.email; if (em) db.waitlist = db.waitlist.filter(w => w.email !== em);
   delete db.users[name];
@@ -2145,7 +2179,11 @@ setInterval(() => {
 io.on('connection', socket => {
   { // Her olay dinleyicisini sarmala: geri çağırma (cb) unutulmuş ya da bozuk veri gelmişse hata yutulur, sunucu düşmez
     const on = socket.on.bind(socket);
+    const BADK = new Set(['__proto__', 'constructor', 'prototype']);
+    const poisoned = (v, d = 0) => { if (typeof v === 'string') return v.length <= 11 && BADK.has(v); if (!v || typeof v !== 'object' || d > 5) return false;
+      let n = 0; for (const k of Object.keys(v)) { if (BADK.has(k) || ++n > 400 || poisoned(v[k], d + 1)) return true; } return false; };
     socket.on = (ev, fn) => on(ev, (...args) => {
+      if (args.some(a => typeof a !== 'function' && poisoned(a))) { const cb = args.findLast(a => typeof a === 'function'); cb?.({ error: 'Geçersiz istek' }); return; } // __proto__ kirletme girişimi
       if (args.length && typeof args[args.length - 1] !== 'function' && fn.length > args.length) args.push(() => {});
       try { const r = fn(...args); if (r && typeof r.catch === 'function') r.catch(e => logCrash('olay:' + ev, e)); }
       catch (e) { logCrash('olay:' + ev, e); }
@@ -2173,8 +2211,7 @@ io.on('connection', socket => {
       reward = { count, bonus };
       setTimeout(() => io.emit('users', allUsers()), 100);
     }
-    const token = crypto.randomBytes(24).toString('hex');
-    db.sessions[token] = name; save();
+    const token = sessNew(name); save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), voiceAge: voiceAges(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
@@ -2239,17 +2276,17 @@ io.on('connection', socket => {
     cb({ ok: true }); // hesabın var olup olmadığını belli etme
   });
   socket.on('checkReset', (token, cb = () => {}) => {
-    const r = db.resets[String(token || '')];
+    const r = typeof token === 'string' && token.length <= 100 ? db.resets[tokH(token)] : null;
     cb(r && r.exp > Date.now() && db.users[r.name] ? { ok: true, name: r.name } : { error: 'Bu link geçersiz ya da süresi dolmuş. Yeni bir link iste.' });
   });
   socket.on('resetPw', ({ token, password } = {}, cb = () => {}) => {
     if (limited('reset|' + ip, 10, 900e3)) return cb({ error: 'Çok fazla deneme' });
-    const r = db.resets[String(token || '')], u = r && db.users[r.name];
+    const r = typeof token === 'string' && token.length <= 100 ? db.resets[tokH(token)] : null, u = r && db.users[r.name];
     if (!r || r.exp < Date.now() || !u) return cb({ error: 'Bu link geçersiz ya da süresi dolmuş. Yeni bir link iste.' });
     if (String(password ?? '').length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
     if (isBanned(u)) return cb({ error: banText(u) });
     u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(String(password), u.salt);
-    for (const [t, n] of Object.entries(db.sessions)) if (n === u.name) delete db.sessions[t];
+    sessDelUser(u.name); for (const s2 of io.sockets.adapter.rooms.get('user:' + u.name) || []) if (s2 !== socket.id) io.sockets.sockets.get(s2)?.disconnect(true); // eski cihazlar düşsün
     for (const [t, x] of Object.entries(db.resets)) if (x.name === u.name) delete db.resets[t];
     save(); cb(start(u.name));
   });
@@ -2273,9 +2310,9 @@ io.on('connection', socket => {
   });
 
   socket.on('auth', (token, cb) => {
-    const n = db.sessions[token];
+    const n = sessGet(token);
     if (!n || !db.users[n]) return cb({ error: 'Oturum bulunamadı' });
-    delete db.sessions[token];
+    sessDel(token);
     if (isBanned(db.users[n])) return cb({ error: banText(db.users[n]), banned: true });
     cb(start(n));
   });
@@ -2546,6 +2583,7 @@ io.on('connection', socket => {
   let gifHits = [];
   socket.on('gifs', ({ q, page } = {}, cb = () => {}) => {
     if (typeof cb !== 'function') return;
+    if (!me) return cb({ error: 'Giriş yapmalısın' });
     const now = Date.now(); gifHits = gifHits.filter(t => now - t < 60e3);
     if (gifHits.length >= 40) return cb({ error: 'Biraz yavaş, bir dakika sonra tekrar dene' });
     gifHits.push(now);
@@ -2665,7 +2703,7 @@ io.on('connection', socket => {
     const u = db.users[me]; if (!u || !['dismissed', 'done', 'seen'].includes(k)) return cb({ error: 'Geçersiz' });
     onbOf(u)[k] = true; save(); cb({ ok: true, onb: u.onb });
   });
-  socket.on('logout', token => { delete db.sessions[token]; save(); });
+  socket.on('logout', token => { sessDel(token); save(); });
 
   // ----- Kanallar -----
   socket.on('join', (chId, cb = () => {}) => {
@@ -2804,8 +2842,11 @@ io.on('connection', socket => {
   });
 
   // ----- Mesaj gönderme -----
-  socket.on('message', (p = {}, cb = () => {}) => {
+  socket.on('message', (p0 = {}, cb = () => {}) => {
     if (!me || !cur || !canAccess(me, cur)) return cb({ error: 'Önce bir odaya gir' });
+    if (!p0 || typeof p0 !== 'object' || Array.isArray(p0)) return cb({ error: 'Geçersiz mesaj' });
+    const { xfrom, fwd, scheduled, ...p } = p0; // bu alanları sadece sunucu koyar (sahte "iletildi / şuradan" etiketi olmasın)
+    if (typeof p.text === 'string' && p.text.length > MSG_MAX) return cb({ error: `Mesaj en fazla ${MSG_MAX} karakter olabilir` });
     if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun, biraz yavaşla 🙂' });
     if (cur.startsWith('dm:')) {
       const other = dmPeers(cur).find(n => n !== me) || me, u = db.users[me], o = db.users[other];
@@ -3267,8 +3308,8 @@ io.on('connection', socket => {
     if (hashPw(String(old ?? ''), u.salt) !== u.hash) return cb({ error: 'Mevcut şifre yanlış' });
     if (String(next ?? '').length < 6) return cb({ error: 'Yeni şifre en az 6 karakter olmalı' });
     u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(String(next), u.salt);
-    for (const [t, n] of Object.entries(db.sessions)) if (n === me) delete db.sessions[t];
-    save(); cb({ ok: true });
+    sessDelUser(me); for (const s2 of io.sockets.adapter.rooms.get('user:' + me) || []) if (s2 !== socket.id) io.sockets.sockets.get(s2)?.disconnect(true); // şifre değişince diğer cihazlardaki oturumlar kapansın
+    save(); cb({ ok: true, token: sessNew(me) });
   });
 
   // ----- Sunucu yönetimi -----
