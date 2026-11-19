@@ -111,6 +111,27 @@
   /* ---------- Giriş ---------- */
   #auth { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
     background: radial-gradient(circle at 20% 20%, rgba(255,138,76,.18) 0, transparent 40%), radial-gradient(circle at 80% 80%, rgba(255,179,71,.12) 0, transparent 40%), var(--bg); }
+  .abg-prev { position: relative; height: 230px; margin: 12px 0 14px; border-radius: 14px; overflow: hidden; display: grid; place-items: center; border: 1px solid var(--line);
+    background: radial-gradient(circle at 20% 20%, rgba(255,138,76,.18) 0, transparent 40%), radial-gradient(circle at 80% 80%, rgba(255,179,71,.12) 0, transparent 40%), var(--bg); }
+  .abg-card { position: relative; z-index: 1; width: 150px; padding: 14px 12px; border-radius: 14px; background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(10px); border: 1px solid var(--line); display: grid; gap: 7px; justify-items: center; font-size: 12px; }
+  .abg-card i, #abg-full-prev i { display: block; width: 100%; height: 14px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); }
+  .abg-card i.btn, #abg-full-prev i.btn { background: var(--accent); border: 0; }
+  .abg-logo { width: 28px; height: 28px; border-radius: 9px; background: var(--accent); }
+  .abg-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px 16px; margin-bottom: 10px; }
+  .abg-row input[type=range] { width: 100%; accent-color: var(--accent); }
+  .abg-n { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  #abg-full-prev { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: var(--bg); cursor: pointer; }
+  #abg-full-prev .card { position: relative; z-index: 1; width: min(400px, calc(100% - 32px)); padding: 32px; border-radius: 28px; display: grid; gap: 10px; justify-items: center; text-align: center; background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(14px); border: 1px solid var(--line); }
+  #abg-full-prev .card .abg-logo { width: 56px; height: 56px; border-radius: 18px; }
+  #abg-full-prev .card h1 { margin: 4px 0 0; font-size: 26px; } #abg-full-prev .card p { margin: 0 0 6px; color: var(--muted); }
+  #abg-full-prev .card i { height: 46px; border-radius: 14px; } #abg-full-prev small { color: var(--muted); margin-top: 6px; }
+  .auth-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .auth-bg img, .auth-bg video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--ab-pos); filter: blur(var(--ab-blur)); transform: scale(calc(1 + (var(--ab-blur) / 1px) * .006)); }
+  .auth-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,6,4,calc(var(--ab-dim) * .8)), rgba(10,6,4,var(--ab-dim))); }
+  .auth-bg .ab-mob { display: none; }
+  @media (max-width: 640px) { .auth-bg .ab-desk { display: none; } .auth-bg .ab-mob { display: block; } }
+  #auth.has-bg { background: #0d0907; }
+  #auth.has-bg .card { position: relative; z-index: 1; background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
   #auth .card { background: var(--panel); width: 400px; padding: 36px; border-radius: 28px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.45); border: 1px solid var(--line); }
   .logo { width: 76px; height: 76px; margin: 0 auto 14px; border-radius: 22px; background: #F2652F; color: #fff; display: flex; align-items: center; justify-content: center; }
   .logo .klogo { width: 56px; height: 56px; }
@@ -3883,7 +3904,7 @@ $('#auth-form').onsubmit = e => {
 function showAuth() {
   $('#auth').style.display = 'flex';
   if (!$('#auth-body').innerHTML) renderAuth();
-  socket.emit('betaInfo', r => { authBeta = r; renderAuth(authMode, true); });
+  socket.emit('betaInfo', r => { authBeta = r; applyAuthBg(r?.authBg, $('#auth')); renderAuth(authMode, true); });
 }
 function hideBoot() { const b = $('#boot'); if (!b || b.classList.contains('out')) return; b.classList.add('out'); setTimeout(() => b.remove(), 400); }
 setTimeout(() => { const t = $('#boot-t'); if (t && $('#boot')) t.textContent = 'Sunucuya ulaşılamıyor, tekrar deneniyor…'; }, 7000);
@@ -11000,6 +11021,18 @@ socket.on('siteBanned', reason => {
   setTimeout(() => authErr({ error: 'Hesabın Kanka Chat kurallarını ihlal ettiği için kapatıldı.' + (reason ? ' Sebep: ' + reason : '') }), 80);
 });
 
+// ================= Giriş / kayıt ekranı arka planı (Yönetim › Giriş ekranı'ndan ayarlanır) =================
+function authBgHTML(bg) {
+  if (!bg?.url) return '';
+  const media = (u, k, cls) => k === 'video' ? `<video class="${cls}" src="${esc(u)}" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>` : `<img class="${cls}" src="${esc(u)}" alt="" aria-hidden="true" decoding="async">`;
+  return `<div class="auth-bg" style="--ab-dim:${(+bg.dim || 0) / 100};--ab-blur:${+bg.blur || 0}px;--ab-pos:center ${esc(bg.pos || 'center')}">${media(bg.url, bg.kind, bg.mobile ? 'ab-desk' : 'ab-all')}${bg.mobile ? media(bg.mobile.url, bg.mobile.kind, 'ab-mob') : ''}</div>`;
+}
+function applyAuthBg(bg, host) {
+  if (!host) return; host.querySelector(':scope > .auth-bg')?.remove();
+  host.classList.toggle('has-bg', !!bg?.url); if (!bg?.url) return;
+  host.insertAdjacentHTML('afterbegin', authBgHTML(bg));
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) host.querySelectorAll('.auth-bg video').forEach(v => { v.removeAttribute('autoplay'); v.pause(); });
+}
 // ================= Yaş doğrulaması: doğum tarihi girilene kadar kapanmayan ekran =================
 function showAgeGate(locked) {
   $('#auth').style.display = 'none'; $('#app').style.display = 'none'; closeModal();
@@ -11174,7 +11207,7 @@ function admDev(B) {
 function adminPanel(el, sub = 'overview') {
   const R = S.staff, A = ['owner', 'admin'].includes(R);
   const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['srvapps', 'Sunucu rozetleri', 'check'], ['log', 'Kayıtlar', 'clock'],
-    ...(A ? [['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
+    ...(A ? [['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['giris', 'Giriş ekranı', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
   if (!subs.some(x => x[0] === sub)) sub = 'overview';
   el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
     <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;
@@ -11251,6 +11284,44 @@ function adminPanel(el, sub = 'overview') {
         setTimeout(re, manual.length ? 60000 : 1500);
       });
     });
+  });
+  if (sub === 'giris') return socket.emit('adminAuthBg', {}, r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const cur = r.bg ? { ...r.bg } : { dim: 45, blur: 0, pos: 'center' };
+    B.innerHTML = `<div class="adm-box"><p class="hint" style="margin-top:0">Giriş ve kayıt ekranının arkasında görünür. Resim (PNG, JPG, WebP), GIF ya da kısa bir video (MP4, WebM) yükleyebilirsin; en fazla 25 MB. Ekranı kaplayacak şekilde kırpılır.
+      En iyi sonuç için yatay ve en az 1920×1080 bir görsel kullan; yazının okunması için karartma otomatik eklenir.</p>
+      <div class="abg-prev" id="abg-prev"><div class="abg-card"><div class="abg-logo"></div><b>Selam kanka!</b><i></i><i></i><i class="btn"></i></div></div>
+      <div class="abg-row"><div><label class="adm-lbl">Bilgisayar ve genel</label><div class="adm-inl"><button class="btns2" id="abg-up">${ic('image')} ${cur.url ? 'Değiştir' : 'Yükle'}</button><span class="abg-n" id="abg-n">${cur.url ? esc(decodeURIComponent(cur.url.split('/').pop())) : 'Yok, varsayılan arka plan'}</span></div></div>
+        <div><label class="adm-lbl">Telefon için ayrı (isteğe bağlı, dikey)</label><div class="adm-inl"><button class="btns2" id="abg-upm">${ic('image')} ${cur.mobile ? 'Değiştir' : 'Yükle'}</button><span class="abg-n" id="abg-nm">${cur.mobile ? esc(decodeURIComponent(cur.mobile.url.split('/').pop())) : 'Yok, aynısı kullanılır'}</span>${cur.mobile ? `<button class="alink" id="abg-rmm">Kaldır</button>` : ''}</div></div></div>
+      <div class="abg-row"><div><label class="adm-lbl">Karartma <b id="abg-dv">%${cur.dim}</b></label><input type="range" id="abg-dim" min="0" max="90" value="${cur.dim}"></div>
+        <div><label class="adm-lbl">Bulanıklık <b id="abg-bv">${cur.blur}px</b></label><input type="range" id="abg-blur" min="0" max="24" value="${cur.blur}"></div>
+        <div><label class="adm-lbl">Odak</label><select class="msel" id="abg-pos"><option value="center">Orta</option><option value="top">Üst</option><option value="bottom">Alt</option></select></div></div>
+      <input type="file" id="abg-file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" hidden>
+      <div class="rowb" style="justify-content:flex-start;margin-top:14px"><button class="btnp" id="abg-save">${ic('check')} Kaydet</button><button class="btns2" id="abg-full">${ic('eye')} Tam ekran önizle</button>${r.bg ? `<button class="btns2 danger" id="abg-del">${ic('trash')} Kaldır</button>` : ''}</div></div>`;
+    $('#abg-pos').value = cur.pos || 'center';
+    const prev = () => applyAuthBg(cur.url ? cur : null, $('#abg-prev'));
+    prev();
+    let target = 'url';
+    const upload = async f => {
+      if (f.size > 25 * 1024 * 1024) return toast('En fazla 25 MB', null, false, { type: 'err' });
+      const n = target === 'url' ? $('#abg-n') : $('#abg-nm'); n.textContent = 'Yükleniyor…';
+      const x = await fetch('/api/dosya', { method: 'POST', headers: { Authorization: 'Bearer ' + store.get('kanka-token'), 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(f.name), 'X-File-Type': f.type }, body: f }).then(y => y.json()).catch(() => ({}));
+      if (!x.ok || !['image', 'video'].includes(x.kind)) { n.textContent = 'Yüklenemedi'; return toast(x.error || 'Bu dosya resim ya da video değil', null, false, { type: 'err' }); }
+      if (target === 'url') { cur.url = x.url; cur.kind = x.kind; } else cur.mobile = { url: x.url, kind: x.kind };
+      n.textContent = f.name; prev();
+    };
+    $('#abg-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) upload(f); };
+    $('#abg-up').onclick = () => { target = 'url'; $('#abg-file').click(); };
+    $('#abg-upm').onclick = () => { target = 'mobile'; $('#abg-file').click(); };
+    if ($('#abg-rmm')) $('#abg-rmm').onclick = () => { cur.mobile = null; $('#abg-nm').textContent = 'Yok, aynısı kullanılır'; prev(); };
+    $('#abg-dim').oninput = e => { cur.dim = +e.target.value; $('#abg-dv').textContent = '%' + cur.dim; prev(); };
+    $('#abg-blur').oninput = e => { cur.blur = +e.target.value; $('#abg-bv').textContent = cur.blur + 'px'; prev(); };
+    $('#abg-pos').onchange = e => { cur.pos = e.target.value; prev(); };
+    $('#abg-full').onclick = () => { if (!cur.url) return toast('Önce bir görsel yükle');
+      const o = document.createElement('div'); o.id = 'abg-full-prev'; o.innerHTML = `<div class="card"><div class="abg-logo"></div><h1>Selam kanka!</h1><p>Hesabına gir ya da yeni hesap aç.</p><i></i><i></i><i class="btn"></i><small>Önizleme · kapatmak için tıkla</small></div>`;
+      document.body.appendChild(o); applyAuthBg(cur, o); o.onclick = () => o.remove(); };
+    $('#abg-save').onclick = () => { if (!cur.url) return toast('Önce bir görsel yükle'); socket.emit('adminAuthBg', { set: { url: cur.url, mobile: cur.mobile?.url || null, dim: cur.dim, blur: cur.blur, pos: cur.pos } }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Giriş ekranı arka planı kaydedildi'); adminPanel(el, 'giris'); }); };
+    if ($('#abg-del')) $('#abg-del').onclick = () => socket.emit('adminAuthBg', { set: null }, () => { toast('Varsayılan arka plana dönüldü'); adminPanel(el, 'giris'); });
   });
   if (sub === 'gif') return socket.emit('adminGif', {}, r => {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
