@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanka Chat güvenli mi? · Windows uyarısı neden çıkıyor</title>
+<meta name="description" content="Kanka Chat Windows uygulaması virüs değil. SmartScreen uyarısının sebebi, VirusTotal raporu ve dosyanın SHA-256 özeti.">
+<link rel="stylesheet" href="/legal.css">
+<style>.hash{font-family:ui-monospace,Consolas,monospace;word-break:break-all;background:rgba(0,0,0,.25);padding:10px 12px;border-radius:10px;display:block;margin:8px 0}.btn{display:inline-block;padding:10px 16px;border-radius:12px;background:#ff8a4c;color:#1a0f08;font-weight:800;text-decoration:none;margin:6px 8px 0 0}.btn.alt{background:transparent;border:1px solid #5a4537;color:inherit}</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="brand" href="/"><i>🦝</i>Kanka Chat</a><nav><a href="/guvenli" class="on">Güvenli mi?</a><a href="/gizlilik">Gizlilik</a><a href="/">Uygulamaya dön</a></nav></div>
+  <div class="card">
+    <h1>Kanka Chat güvenli mi?</h1>
+    <div class="meta">Windows'ta "Windows bilgisayarınızı korudu" uyarısı neden çıkıyor?</div>
+    <div class="tldr"><b>Kısaca:</b>
+      <ul>
+        <li>Uygulama virüs değil. Kurulum dosyasını aşağıdaki linkten kendin taratabilirsin.</li>
+        <li>Uyarı çıkıyor çünkü Kanka yeni bir uygulama ve Windows onu henüz tanımıyor.</li>
+        <li>Hiçbir şey indirmek istemezsen Kanka'yı <a href="/">kankahq.com</a> üzerinden tarayıcıda da kullanabilirsin.</li>
+      </ul>
+    </div>
+    <h2>Uyarı neden çıkıyor?</h2>
+    <p>Windows SmartScreen, yeni ve az indirilmiş uygulamalarda "tanınmayan uygulama" uyarısı gösterir. Bunun sebebi uygulamanın zararlı olması değil, henüz yeterince kişi tarafından indirilmemiş olmasıdır. Kanka küçük bir ekip tarafından yapılıyor ve uygulama yeni. İndirme sayısı arttıkça bu uyarı kendiliğinden kalkacak.</p>
+    <p>Kurmak istersen uyarıda <b>Ek bilgi</b>'ye, sonra <b>Yine de çalıştır</b>'a bas.</p>
+    <h2>Kendin kontrol et</h2>
+    <p>Sitedeki kurulum dosyasının parmak izi (SHA-256), sunucu tarafından şu an hesaplanıyor:</p>
+    <code class="hash" id="h">yükleniyor…</code>
+    <p id="meta" class="meta"></p>
+    <a class="btn" id="vt" href="https://www.virustotal.com" target="_blank" rel="noopener">VirusTotal raporunu aç</a>
+    <a class="btn alt" href="/indir/KankaChat-Kurulum.exe" download>Uygulamayı indir</a>
+    <p style="margin-top:14px">VirusTotal, dosyayı 70'ten fazla antivirüs programıyla tarayan ücretsiz bir Google hizmetidir. İndirdiğin dosyayı oraya kendin de yükleyebilirsin; parmak izi yukarıdakiyle aynıysa aynı dosyadır.</p>
+    <h2>Uygulama ne yapıyor?</h2>
+    <ul>
+      <li>Kanka'nın sitesini kendi penceresinde açar; sohbet, sesli oda ve yayın sitedekiyle aynıdır.</li>
+      <li>Ek olarak oyun içi bildirimler, oyun katmanı ve "Oynuyor" durumu sunar. "Oynuyor" için sadece açık oyunun adına bakar.</li>
+      <li>Şifreni, dosyalarını ya da başka programların verilerini okumaz. Ayrıntılar <a href="/gizlilik">Gizlilik Politikası</a>'nda.</li>
+    </ul>
+  </div>
+</div>
+<script>
+fetch('/api/indir-bilgi').then(r => r.json()).then(d => {
+  if (!d.sha256) { document.getElementById('h').textContent = 'Kurulum dosyası şu an bulunamadı'; return; }
+  document.getElementById('h').textContent = d.sha256;
+  document.getElementById('vt').href = 'https://www.virustotal.com/gui/file/' + d.sha256;
+  document.getElementById('meta').textContent = 'Boyut: ' + (d.size / 1048576).toFixed(1) + ' MB · Güncelleme: ' + new Date(d.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+}).catch(() => {});
+</script>
+</body>
+</html>

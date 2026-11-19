@@ -142,6 +142,14 @@ app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURICompone
 // Partner sunucuların özel linki: kankahq.com/s/isim
 app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && isStar(x)); res.redirect(s ? '/?davet=' + encodeURIComponent(s.invite) : '/'); });
 app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
+// İndirme güvenliği: sunulan kurulum dosyasının SHA-256'sı (VirusTotal raporu bu özetle açılır)
+let exeHash = { at: 0, mtime: 0, v: null };
+function exeInfo() {
+  const f = path.join(__dirname, 'indir', 'KankaChat-Kurulum.exe');
+  try { const st = fs.statSync(f); if (exeHash.mtime !== st.mtimeMs) exeHash = { mtime: st.mtimeMs, v: { sha256: crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'), size: st.size, date: st.mtime } }; return exeHash.v; } catch { return null; }
+}
+app.get('/api/indir-bilgi', (req, res) => res.json(exeInfo() || {}));
+app.get('/guvenli', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guvenli.html')));
 for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/sesli-sohbet', 'sesli-sohbet.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 // ---------- Beta kayıt sayfası (/beta) ----------
 // Sayfadan gelen kayıt uygulamanın bekleme listesine (db.waitlist) girer. Kontenjan doluysa yedekte bekler;
