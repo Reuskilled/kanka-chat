@@ -3,6 +3,11 @@
 // Kurulum/kaldırma sırasında Squirrel kısayolları oluşturur ve hemen çıkar
 if (require('electron-squirrel-startup')) process.exit(0);
 const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell, dialog, Notification, autoUpdater, screen, globalShortcut, powerMonitor } = require('electron');
+// Köprü çağrıları sadece Kanka'nın kendi sayfasından gelirse çalışsın (başka bir sayfa/çerçeve bilgisayara erişemesin)
+{ const trusted = e => { try { const u = new URL(e.senderFrame?.url || ''); return u.origin === new URL(config.server).origin && e.senderFrame === e.sender.mainFrame; } catch { return false; } };
+  const h = ipcMain.handle.bind(ipcMain), o = ipcMain.on.bind(ipcMain);
+  ipcMain.handle = (ch, fn) => h(ch, (e, ...a) => trusted(e) ? fn(e, ...a) : null);
+  ipcMain.on = (ch, fn) => o(ch, (e, ...a) => { if (trusted(e)) fn(e, ...a); }); }
 const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -13,6 +18,8 @@ const DEFAULT_SERVER = 'https://kankahq.com';
 const OLD_SERVERS = ['https://185-208-172-60.sslip.io'];
 const CONFIG = () => path.join(app.getPath('userData'), 'ayarlar.json');
 let config = { server: DEFAULT_SERVER, presenceKey: null, startHidden: false };
+// Windows'ta pencere kısmen kapalıyken ayarlar ekranının bozuk çizilmesini önler
+app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
 try { Object.assign(config, JSON.parse(fs.readFileSync(CONFIG(), 'utf8'))); } catch {}
 // Eski sürümler yerel sunucuya bağlıydı: kullanıcı adresi kendisi seçmediyse yeni sunucuya geç
 if ((!config.serverChosen || OLD_SERVERS.includes(config.server)) && config.server !== DEFAULT_SERVER) { config.server = DEFAULT_SERVER; config.presenceKey = null; }
@@ -88,7 +95,7 @@ function createWindow() {
     backgroundColor: '#17110e', title: 'Kanka Chat', icon: ICON, show: false, autoHideMenuBar: true,
     // Windows'un açık renkli başlık çubuğu yerine temaya uyan koyu çubuk (butonlar Windows'un kendi butonları)
     titleBarStyle: 'hidden', titleBarOverlay: { color: config.tbColor || '#17110e', symbolColor: config.tbSymbol || '#b49c89', height: 34 },
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, spellcheck: false },
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, spellcheck: false },
   });
   win.removeMenu();
   win.loadURL(config.server).catch(() => showOffline());
@@ -97,7 +104,11 @@ function createWindow() {
   win.webContents.once('did-fail-load', () => setTimeout(finishSplash, 500));
   // Dış linkleri tarayıcıda aç
   win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: 'deny' }; });
-  win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith(config.server)) { e.preventDefault(); shell.openExternal(url); } });
+  // Sadece Kanka'nın kendi adresinde gezinilsin (ör. "kankahq.com.sahte-site.com" gibi benzer adresler engellenir)
+  const sameOrigin = url => { try { return new URL(url).origin === new URL(config.server).origin; } catch { return false; } };
+  const guard = (e, url) => { if (!sameOrigin(url)) { e.preventDefault(); if (/^https?:/i.test(url)) shell.openExternal(url); } };
+  win.webContents.on('will-navigate', guard);
+  win.webContents.on('will-redirect', guard);
   // Mikrofon, kamera, ekran paylaşımı ve bildirim izinleri
   win.webContents.session.setPermissionRequestHandler((wc, perm, cb) => cb(['media', 'notifications', 'clipboard-sanitized-write', 'fullscreen', 'display-capture'].includes(perm)));
   win.webContents.session.setDisplayMediaRequestHandler((req, cb) => {

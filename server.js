@@ -33,7 +33,7 @@ app.use((req, res, next) => {
   if (!req.path.startsWith('/dosya/')) res.set('Content-Security-Policy', "frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
   next();
 });
-app.use('/uploads', express.static(UPLOADS, { maxAge: '30d' }));
+app.use('/uploads', express.static(UPLOADS, { maxAge: '30d', setHeaders: res => res.set('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'; sandbox") }));
 app.use('/indir', express.static(path.join(__dirname, 'indir'), { setHeaders: res => res.set('Content-Disposition', 'attachment') }));
 app.use(express.json({ limit: '8kb' }));
 
@@ -418,8 +418,10 @@ app.post('/api/webhooks/:id/:token', (req, res) => {
 });
 app.post('/api/presence', express.json({ limit: '24kb' }), async (req, res) => {
   const { key, game, detail, music, rich } = req.body || {};
-  const u = key && Object.values(db.users).find(x => x.presenceKey === key);
-  if (!u) return res.status(401).json({ error: 'Anahtar geçersiz' });
+  const pip = 'presfail|' + reqIp(req);
+  if ((limits.get(pip) || []).filter(t => Date.now() - t < 600e3).length >= 30) return res.status(429).json({ error: 'Çok fazla hatalı deneme' });
+  const u = typeof key === 'string' && key.length >= 16 && Object.values(db.users).find(x => x.presenceKey === key);
+  if (!u) { limited(pip, 1e6, 600e3); return res.status(401).json({ error: 'Anahtar geçersiz' }); }
   if (Array.isArray(req.body.matches) && u.matchShare?.on !== false) {
     const seen = (u.matchKeys ||= []);
     for (const raw of req.body.matches.slice(0, 5)) {
@@ -2176,7 +2178,13 @@ setInterval(() => {
   for (const t of [...(db.trash || [])]) if (now - t.at > 7 * 864e5) { for (const c of t.server.channels || []) delete db.messages[c.id]; db.trash = db.trash.filter(x => x !== t); n++; }
   if (n) save();
 }, 3600e3);
+const ipConns = new Map();
 io.on('connection', socket => {
+  { // aynı IP'den aşırı bağlantı açılmasın (bir evde birkaç cihaz rahatça sığar)
+    const ipc = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']), n = (ipConns.get(ipc) || 0) + 1;
+    ipConns.set(ipc, n); socket.on('disconnect', () => { const k = (ipConns.get(ipc) || 1) - 1; k ? ipConns.set(ipc, k) : ipConns.delete(ipc); });
+    if (n > 120) { if (n === 121) secLog('baglanti-seli', 'ip:' + ipc, 'aynı IP\'den 120+ eşzamanlı bağlantı (mobil operatörler çok kişiyi tek IP\'den çıkarabilir)'); return socket.disconnect(true); }
+  }
   { // Her olay dinleyicisini sarmala: geri çağırma (cb) unutulmuş ya da bozuk veri gelmişse hata yutulur, sunucu düşmez
     const on = socket.on.bind(socket);
     const BADK = new Set(['__proto__', 'constructor', 'prototype']);
@@ -2642,7 +2650,7 @@ io.on('connection', socket => {
     const u = findUserBy(name); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
     const deny = () => cb({ error: 'Bunun için yetkin yok' });
     if (action && u.name !== me && staffRank(u.name) === 'owner') return cb({ error: 'Kurucuya işlem yapılamaz' });
-    if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/?sifirla=${resetToken(u.name, 24)}` }); }
+    if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); if (staffRank(u.name) && u.name !== me && staffRank(me) !== 'owner') return cb({ error: 'Ekipten birinin şifre linkini sadece kurucu oluşturabilir' }); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/?sifirla=${resetToken(u.name, 24)}` }); }
     if (action === 'warn') { if (!canStaff(me, 'warn')) return deny(); if (u.name === me) return cb({ error: 'Kendini uyaramazsın' }); siteWarnUser(u.name, me, reason); }
     if (action === 'suspend') { if (!canStaff(me, 'suspend')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri askıya alınamaz' }); const d = [1, 3, 7, 30].includes(+days) ? +days : 1; siteBanUser(u.name, me, reason || 'Kural ihlali', Date.now() + d * 864e5); }
     if (action === 'ban') { if (!canStaff(me, 'ban')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri kapatılamaz' }); siteBanUser(u.name, me, reason); }
@@ -3119,6 +3127,14 @@ io.on('connection', socket => {
     if (!m) return cb({ error: 'Sadece resim ya da ses yükleyebilirsin' });
     let buf = Buffer.from(m[2], 'base64');
     if (buf.length > 5 * 1024 * 1024) return cb({ error: 'Resim en fazla 5 MB olabilir' });
+    { // içerik gerçekten söylediği tür mü? (resim diye HTML/SVG yüklenmesin)
+      const h = buf.subarray(0, 12).toString('hex'), ok = { png: h.startsWith('89504e47'), jpeg: h.startsWith('ffd8ff'), gif: h.startsWith('47494638'), webp: h.startsWith('52494646') && buf.subarray(8, 12).toString() === 'WEBP',
+        webm: h.startsWith('1a45dfa3'), ogg: h.startsWith('4f676753'), m4a: buf.subarray(4, 8).toString() === 'ftyp' }[m[1]];
+      if (!ok) return cb({ error: 'Dosya bozuk ya da türü yanlış' });
+      const u = db.users[me], day = new Date().toISOString().slice(0, 10); if (u.upDay?.d !== day) u.upDay = { d: day, b: 0 };
+      if (u.upDay.b + buf.length > FILE_DAY) return cb({ error: 'Bugünkü yükleme sınırına ulaştın (300 MB). Yarın tekrar dene.' });
+      u.upDay.b += buf.length;
+    }
     if (m[1] === 'gif') buf = gifLoopForever(buf); // bazı GIF'ler birkaç kez oynayıp durur: hep dönsün
     const file = crypto.randomBytes(12).toString('hex') + '.' + (m[1] === 'jpeg' ? 'jpg' : m[1]);
     fs.writeFile(path.join(UPLOADS, file), buf, err => cb(err ? { error: 'Kaydedilemedi' } : { url: '/uploads/' + file }));
