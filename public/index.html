@@ -5718,6 +5718,9 @@ function showServerSettings(s, tab, focus) {
 $('#menu-btn').onclick = e => { e.stopPropagation(); document.body.classList.contains('drawer') ? closeDrawer() : openDrawer(); };
 $('#mem-btn').onclick = e => { e.stopPropagation(); document.body.classList.contains('mdrawer') ? closeMembers() : openMembers(); };
 document.addEventListener('click', e => {
+  // Çekmece içinde bir şeye basınca (ör. kategori başlığını aç/kapa) liste yeniden çizilir ve tıklanan öğe DOM'dan kopar;
+  // kopmuş öğenin "üstü" olmadığı için eskiden burası "dışarı tıklandı" sanıp çekmeceyi kapatıyordu (telefonda sohbetten atıyordu). Kopmuşsa dokunma.
+  if (!e.target.isConnected) return;
   if (document.body.classList.contains('drawer') && !e.target.closest('#rail, #side, #menu-btn, #modal, #msheet')) closeDrawer();
   if (document.body.classList.contains('mdrawer') && !e.target.closest('#members, #mem-btn, #modal, .umenu, .vpop, #msheet')) closeMembers();
 });
