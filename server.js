@@ -7,6 +7,15 @@ const path = require('path');
 const crypto = require('crypto');
 const { Server } = require('socket.io');
 
+// Güvenlik: tek bir hatalı istek bütün sunucuyu düşürmesin (hata kaydedilir, sunucu çalışmaya devam eder)
+const errSeen = new Map();
+function logCrash(where, e) {
+  const k = where + '|' + String(e?.message || e).slice(0, 120), n = (errSeen.get(k) || 0) + 1; errSeen.set(k, n);
+  if (errSeen.size > 500) errSeen.clear();
+  if (n <= 3 || n % 100 === 0) console.error(`[hata] ${where} (${n}. kez):`, e?.stack || e);
+}
+process.on('uncaughtException', e => logCrash('uncaught', e));
+process.on('unhandledRejection', e => logCrash('promise', e));
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { maxHttpBufferSize: 6e6 });
@@ -2134,6 +2143,14 @@ setInterval(() => {
   if (n) save();
 }, 3600e3);
 io.on('connection', socket => {
+  { // Her olay dinleyicisini sarmala: geri çağırma (cb) unutulmuş ya da bozuk veri gelmişse hata yutulur, sunucu düşmez
+    const on = socket.on.bind(socket);
+    socket.on = (ev, fn) => on(ev, (...args) => {
+      if (args.length && typeof args[args.length - 1] !== 'function' && fn.length > args.length) args.push(() => {});
+      try { const r = fn(...args); if (r && typeof r.catch === 'function') r.catch(e => logCrash('olay:' + ev, e)); }
+      catch (e) { logCrash('olay:' + ev, e); }
+    });
+  }
   // Tek bir bağlantıdan olağandışı yoğunlukta istek gelirse (betik/saldırı) bağlantıyı kes
   { let n = 0, t0 = Date.now();
     socket.onAny(() => { const now = Date.now(); if (now - t0 > 10e3) { n = 0; t0 = now; } if (++n === 400) { secLog('istek-seli', socket.data?.me || 'bağlantı', '10 saniyede 400+ istek, bağlantı kesildi'); socket.disconnect(true); } }); }
