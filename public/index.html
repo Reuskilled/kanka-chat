@@ -7592,7 +7592,10 @@ function showPlaylist_() {
 // --- Gürültü engelleme ---
 // gt: GTCRN yapay zekâ modeli (alkış, klavye, köpek, fan; önerilen), rnn: RNNoise (hafif, sadece sabit uğultu), std: tarayıcı, off: kapalı
 const NS_AI = { gt: ['/vendor/ns/gtcrn.js', ['/vendor/ns/gtcrn.wasm'], '@sapphi-red/web-noise-suppressor/gtcrn'], rnn: ['/vendor/ns/rnnoise.js', ['/vendor/ns/rnnoise_simd.wasm', '/vendor/ns/rnnoise.wasm'], '@sapphi-red/web-noise-suppressor/rnnoise'] };
-const nsMode = () => { const m = store.get('kanka-ns'); return NS_AI[m] || m === 'std' || m === 'off' ? m : 'gt'; };
+// Telefonda yapay zekâ modeli işlemciyi çok yorar; oyuna geçince ses bozuluyordu. Telefonda varsayılan: cihazın kendi gürültü engellemesi
+const isMobileDev = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform || ''));
+const nsDefault = () => isMobileDev ? 'std' : 'gt';
+const nsMode = () => { const m = store.get('kanka-ns'); return NS_AI[m] || m === 'std' || m === 'off' ? m : nsDefault(); };
 let nsCtx = null, nsWasm = {}, nsNode = null, nsNodes = {}, nsSrc = null, nsDest = null, nsGain = null, rawStream = null;
 const inGain = () => { const v = parseFloat(store.get('kanka-ingain')); return isNaN(v) ? 1 : v; }, ovol = () => { const v = parseFloat(store.get('kanka-outvol')); return isNaN(v) ? 1 : v; };
 async function loadNS(mode) {
@@ -7621,7 +7624,7 @@ async function getMic() {
   try { rawStream = await navigator.mediaDevices.getUserMedia({ audio: dev ? { ...base, deviceId: { exact: dev } } : base }); }
   catch (e) { if (!dev) throw e; store.set('kanka-mic', null); rawStream = await navigator.mediaDevices.getUserMedia({ audio: base }); }
   try {
-    nsCtx ||= new AudioContext({ sampleRate: 48000 }); if (nsCtx.state === 'suspended') await nsCtx.resume();
+    nsCtx ||= new AudioContext({ sampleRate: 48000 }); nsCtx.onstatechange ||= nsCtxState; if (nsCtx.state === 'suspended') await nsCtx.resume();
     if (nsCtx.state !== 'running') throw new Error('Ses motoru başlamadı: ' + nsCtx.state);
     nsSrc = nsCtx.createMediaStreamSource(rawStream); nsDest = nsCtx.createMediaStreamDestination();
     nsGain = nsCtx.createGain(); nsGain.gain.value = inGain(); nsSrc.connect(nsGain);
@@ -7650,8 +7653,47 @@ function stopMic() {
   for (const n of Object.values(nsNodes)) try { n.port.postMessage('destroy'); n.disconnect(); } catch {}
   nsSrc = nsNode = nsDest = nsGain = null; nsNodes = {};
 }
+// ---- Arka planda ses: telefonda oyuna ya da başka uygulamaya geçince ses kesilmesin ----
+// İşlenmiş ses (AudioContext) arka planda durdurulabiliyor ya da işlemci yetmiyor. O sırada mikrofonun ham hâlini
+// (tarayıcının kendi yankı/gürültü engellemesiyle) gönderiyoruz; uygulamaya dönünce işlenmiş sese geri geçiyoruz.
+let bgRaw = false;
+const rawTrack = () => rawStream?.getAudioTracks()[0] || null, procTrack = () => localStream?.getAudioTracks()[0] || null;
+function setSendAudio(t) { if (!t) return; for (const pc of Object.values(peers)) for (const sn of pc.getSenders()) if (sn.track?.kind === 'audio' && sn !== pc._ssender && sn.track !== t) sn.replaceTrack(t).catch(() => {}); }
+function useRawMic(on) {
+  const raw = rawTrack(), proc = procTrack();
+  if (!myVoice || !raw || !proc || raw === proc || raw.readyState === 'ended' || bgRaw === on) return;
+  bgRaw = on;
+  if (on) { raw.enabled = micLive(); setSendAudio(raw); }
+  else { raw.enabled = true; proc.enabled = micLive(); setSendAudio(proc); }
+}
+function nsCtxState() {
+  if (!myVoice || !nsCtx) return;
+  if (nsCtx.state !== 'running') { useRawMic(true); if (!document.hidden) nsCtx.resume().catch(() => {}); }
+  else if (!document.hidden || !isMobileDev) useRawMic(false);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!myVoice) return;
+  if (document.hidden) { if (isMobileDev) useRawMic(true); return; }
+  if (nsCtx && nsCtx.state !== 'running') nsCtx.resume().catch(() => {});
+  setTimeout(() => { if (!document.hidden && myVoice && (!nsCtx || nsCtx.state === 'running')) useRawMic(false); }, 400);
+  const raw = rawTrack();
+  if (raw && raw.readyState === 'ended') micRecover('Mikrofon yeniden bağlandı');
+  document.querySelectorAll('audio').forEach(a => { if (a.srcObject && a.paused) a.play().catch(() => {}); });
+  Object.values(peers).forEach(pc => { if (['disconnected', 'failed'].includes(pc.iceConnectionState)) pc.restartIce?.(); });
+  setTimeout(vqTick, 1200);
+});
+function voiceMediaSession(title) {
+  const ms = navigator.mediaSession; if (!ms) return;
+  try {
+    if (!title) { ms.metadata = null; ms.playbackState = 'none'; for (const a of ['hangup', 'togglemicrophone']) ms.setActionHandler(a, null); return; }
+    ms.metadata = new MediaMetadata({ title, artist: 'Kanka Chat · sesli', artwork: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }] });
+    ms.playbackState = 'playing';
+    try { ms.setActionHandler('hangup', () => leaveVoice()); } catch {}
+    try { ms.setActionHandler('togglemicrophone', () => $('#mute')?.click()); } catch {}
+  } catch {}
+}
 function setNS(mode) {
-  store.set('kanka-ns', mode === 'gt' ? null : mode);
+  store.set('kanka-ns', mode === nsDefault() ? null : mode);
   routeNS();
   rawStream?.getAudioTracks().forEach(t => t.applyConstraints({ echoCancellation: true, noiseSuppression: mode !== 'off', autoGainControl: true }).catch(() => {}));
   renderNSBtn();
@@ -7751,6 +7793,7 @@ async function joinVoiceNow(chId) {
     const ch = S.servers.flatMap(s => s.channels.map(c => ({ ...c, s: s.name }))).find(c => c.id === chId);
     const pc = chId.startsWith('call:') ? S.dms.find(d => d.id === chId.slice(5)) || { with: chId.slice(8).split('|').find(n => n !== S.me) } : null;
     $('#vname').textContent = ch ? `${ch.s} › ${ch.name}` : pc ? `Arama · ${pc.group ? groupName(pc) : pc.with}` : '';
+    voiceMediaSession(ch ? `${ch.name} · ${ch.s}` : pc ? `Arama · ${pc.group ? groupName(pc) : pc.with}` : 'Sesli oda');
     $('#voicebar').style.display = 'block';
     renderStage();
     if (S.view === 'server') renderSide();
@@ -7796,15 +7839,15 @@ async function vqTick() {
 }
 function vqStart() { clearInterval(vqT); vqPrev = {}; vqT = setInterval(vqTick, 3000); vqTick(); }
 // Mikrofon çıkarılır ya da değişirse kendiliğinden yenisine geç
-function watchMic() { rawStream?.getAudioTracks().forEach(t => t.onended = () => micRecover('Mikrofon değişti, yenisine geçildi')); }
+function watchMic() { rawStream?.getAudioTracks().forEach(t => t.onended = () => { if (!document.hidden) micRecover('Mikrofon değişti, yenisine geçildi'); }); } // arka plandaysa dönünce toparlanır
 async function micRecover(msg) {
   if (!myVoice || micRecovering) return; micRecovering = true;
   try {
     const old = localStream, oldT = old?.getAudioTracks() || []; stopMic();
     const fresh = await getMic(), nt = fresh.getAudioTracks()[0];
     for (const pc of Object.values(peers)) for (const sn of pc.getSenders()) if (sn.track && oldT.includes(sn.track)) await sn.replaceTrack(nt).catch(() => {});
-    localStream = fresh; oldT.forEach(t => t.stop());
-    stopSpeakDetect(); startSpeakDetect(); applyMute(); watchMic(); toast(msg);
+    localStream = fresh; oldT.forEach(t => t.stop()); bgRaw = false;
+    stopSpeakDetect(); startSpeakDetect(); applyMute(); watchMic(); if (document.hidden && isMobileDev) useRawMic(true); toast(msg);
   } catch { toast('Mikrofon bulunamadı. Bir mikrofon tak ya da Ayarlar › Bildirim ve uygulama\'dan seç.', null, false, { type: 'err' }); }
   micRecovering = false;
 }
@@ -7814,7 +7857,7 @@ function makePeer(sid) {
   const pc = new RTCPeerConnection(ICE);
   Object.assign(pc, { _polite: socket.id < sid, _making: false, _ignore: false });
   peers[sid] = pc;
-  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+  { const rt = bgRaw ? rawTrack() : null; localStream.getTracks().forEach(t => pc.addTrack(rt && t.kind === 'audio' ? rt : t, localStream)); }
   setTimeout(() => { const br = vch()?.c.bitrate === 'high' ? 128000 : 64000; pc.getSenders().filter(x => x.track?.kind === 'audio' && x.track === localStream?.getAudioTracks()[0]).forEach(x => { try { const p = x.getParameters(); if (!p.encodings?.length) p.encodings = [{}]; p.encodings[0].maxBitrate = br; p.encodings[0].priority = p.encodings[0].networkPriority = 'high'; x.setParameters(p).catch(() => {}); } catch {} }); }, 1500);
   if (videoStream) setTimeout(() => feedPeer(sid));
   pc.onicecandidate = e => e.candidate && socket.emit('signal', { to: sid, data: { ice: e.candidate } });
@@ -7925,10 +7968,10 @@ $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('
 renderNSBtn();
 function leaveVoice(switching) {
   srvMutedNow = false;
-  socket.emit('voiceLeave'); cleanupVoice();
+  socket.emit('voiceLeave'); cleanupVoice(); bgRaw = false;
   if (!switching) {
     stopVideo(true); localStream?.getTracks().forEach(t => t.stop()); localStream = null; stopMic(); stopSpeakDetect();
-    $('#voicebar').style.display = 'none'; playSound('leave');
+    $('#voicebar').style.display = 'none'; playSound('leave'); voiceMediaSession(null);
   }
   renderStage();
   if (S.view === 'server') renderSide();
@@ -8213,6 +8256,8 @@ function toggleDeaf(on = !deaf) {
 document.addEventListener('click', e => { if (e.target.closest('#deaf')) toggleDeaf(); });
 function applyMute() {
   localStream?.getAudioTracks().forEach(t => t.enabled = micLive());
+  if (bgRaw) { const r = rawTrack(); if (r) r.enabled = micLive(); }
+  try { navigator.mediaSession?.setMicrophoneActive?.(micLive()); } catch {}
   $('#mute').innerHTML = ic(muted ? 'micoff' : pttOn() && !pttDown ? 'keyboard' : 'mic') + CARET('in');
   $('#mute').title = muted ? 'Sesi aç' : pttOn() ? 'Bas-konuş: V tuşuna basılı tut' : 'Sustur';
   $('#mute').classList.toggle('off', muted);
