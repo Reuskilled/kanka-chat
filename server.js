@@ -3508,6 +3508,33 @@ io.on('connection', socket => {
     update(cur, msg);
   });
 
+  // Odada paylaşılan medya / bağlantı / dosyalar (en yeniden eskiye, aramalı, sayfalı)
+  socket.on('chanMedia', ({ chId, tab = 'media', q = '', before = null } = {}, cb = () => {}) => {
+    if (!me || typeof chId !== 'string' || !canAccess(me, chId)) return cb({ error: 'Bu odaya erişimin yok' });
+    if (limited('cmedia|' + me, 60, 60e3)) return cb({ error: 'Biraz yavaş' });
+    const f = findChannel(chId), noHist = f && !chPerm(f.s, f.c, me, 'history');
+    const ql = clean(q, 100).toLocaleLowerCase('tr'), has = (...xs) => !ql || xs.some(x => x && String(x).toLocaleLowerCase('tr').includes(ql));
+    const list = db.messages[chId] || []; let i = list.length - 1;
+    if (before) { const k = list.findIndex(m => m.id === before); if (k >= 0) i = k - 1; }
+    const out = []; let last = null;
+    for (; i >= 0 && out.length < 60; i--) {
+      const m = list[i]; if (!m || m.enc || m.ephemeral || (noHist && m.author !== me && !m.pinned)) continue;
+      const base = { id: m.id, author: m.author || null, time: m.time };
+      if (tab === 'media') {
+        if (m.image && has(m.author, m.text, 'resim')) out.push({ ...base, type: 'image', url: m.image });
+        if (m.gif?.url && has(m.author, m.text, m.gif.title, 'gif')) out.push({ ...base, type: 'gif', url: m.gif.url, thumb: m.gif.prev || m.gif.url, title: m.gif.title || '' });
+        for (const x of m.files || []) if ((x.kind === 'image' || x.kind === 'video') && has(m.author, m.text, x.name)) out.push({ ...base, type: x.kind, url: x.url, name: x.name, size: x.size });
+      } else if (tab === 'files') {
+        for (const x of m.files || []) if (x.kind !== 'image' && x.kind !== 'video' && has(m.author, m.text, x.name)) out.push({ ...base, type: x.kind, url: x.url, name: x.name, size: x.size });
+      } else {
+        const urls = [...new Set((String(m.text || '').match(/https?:\/\/[^\s<>"']+/gi) || []).map(u => u.replace(/[).,!?;:]+$/, '')))];
+        for (const u of urls.slice(0, 5)) { const pv = m.preview && (m.preview.url === u || urls.length === 1) ? m.preview : null;
+          if (has(u, m.author, pv?.title, pv?.site) || (urls.length === 1 && has(m.text))) out.push({ ...base, type: 'link', url: u, title: pv?.title || '', site: pv?.site || '', desc: pv?.desc || '', img: pv?.image || null, text: String(m.text || '').slice(0, 200) }); }
+      }
+      last = m.id;
+    }
+    cb({ items: out, more: i >= 0, cursor: last, e2e: !!(e2eChat(chId) && db.e2e?.[chId]?.eps?.length) });
+  });
   socket.on('search', (q, cb) => {
     if (!canAccess(me, cur)) return cb([]);
     q = clean(q, 100).toLocaleLowerCase('tr');

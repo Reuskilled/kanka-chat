@@ -552,6 +552,50 @@
   #watch .bar button { padding: 5px 10px; border-radius: 8px; background: var(--hover); font-weight: 800; font-size: 12px; color: var(--ink); margin-left: 6px; }
   #yt-wrap { aspect-ratio: 16/9; max-height: 42vh; margin: 0 auto; }
   #yt-wrap iframe, #yt-wrap > div { width: 100%; height: 100%; }
+  .sq-jump { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 4px; font-size: 13px; color: var(--muted); }
+  .sq-jump button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-size: 13px; cursor: pointer; }
+  .sq-jump button:hover { border-color: var(--accent); } .sq-jump svg { width: 14px; height: 14px; }
+  #modal-box.mdm-box { width: min(760px, calc(100vw - 24px)); max-height: min(86vh, 860px); display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+  .mdm { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+  .mdm-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 8px; }
+  .mdm-head h3 { margin: 0; display: flex; align-items: center; gap: 8px; }
+  .mdm-x { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; } .mdm-x:hover { background: var(--hover); color: var(--ink); }
+  .mdm-tabs { display: flex; gap: 4px; padding: 4px 20px 0; border-bottom: 1px solid var(--line); }
+  .mdm-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 10px 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; margin-bottom: -1px; }
+  .mdm-tabs button.on { color: var(--ink); border-bottom-color: var(--accent); } .mdm-tabs svg { width: 16px; height: 16px; }
+  .mdm-q { display: flex; align-items: center; gap: 8px; margin: 12px 20px 4px; padding: 0 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+  .mdm-q:focus-within { border-color: var(--accent); } .mdm-q svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+  .mdm-q input { flex: 1; min-width: 0; padding: 11px 0; border: 0; background: none; outline: none; color: var(--ink); font: inherit; }
+  .mdm-e2e { display: flex; align-items: center; gap: 6px; margin: 6px 20px 0; font-size: 12px; color: var(--muted); } .mdm-e2e svg { width: 13px; height: 13px; color: var(--green); }
+  .mdm-body { flex: 1; min-height: 240px; overflow-y: auto; padding: 4px 20px 20px; }
+  .mdm-mon { position: sticky; top: 0; z-index: 2; padding: 12px 0 8px; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--panel); }
+  .mdm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 6px; }
+  .mdm-tile { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--card); cursor: zoom-in; outline-offset: 2px; }
+  .mdm-tile img, .mdm-tile video { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s var(--ease-out); }
+  .mdm-tile:hover img, .mdm-tile:hover video { transform: scale(1.04); }
+  .mdm-tile em { position: absolute; left: 6px; top: 6px; padding: 1px 6px; border-radius: 6px; background: #000a; color: #fff; font: 800 10px/16px inherit; font-style: normal; letter-spacing: .05em; }
+  .mdm-tile .mdm-play { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 26px; text-shadow: 0 2px 10px #000a; pointer-events: none; }
+  .mdm-tile .mdm-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); } .mdm-ph svg { width: 22px; height: 22px; }
+  .mdm-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 6px; display: flex; justify-content: space-between; gap: 6px; font-size: 11px; color: #fffc; background: linear-gradient(transparent, #000b); opacity: 0; transition: opacity .15s; pointer-events: none; }
+  .mdm-cap b { color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mdm-go { position: absolute; right: 6px; top: 6px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; border: 0; background: #000a; color: #fff; cursor: pointer; opacity: 0; transition: opacity .15s; }
+  .mdm-go svg { width: 15px; height: 15px; }
+  .mdm-tile:hover .mdm-cap, .mdm-tile:hover .mdm-go, .mdm-tile:focus-visible .mdm-cap, .mdm-tile:focus-visible .mdm-go { opacity: 1; }
+  @media (hover: none) { .mdm-cap, .mdm-go { opacity: 1; } .mdm-grid { grid-template-columns: repeat(3, 1fr); } }
+  .mdm-link { padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin-bottom: 6px; }
+  .mdm-lk { display: flex; gap: 12px; align-items: flex-start; text-decoration: none; color: var(--ink); }
+  .mdm-fav { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 10px; color: #fff; font-weight: 800; font-size: 16px; }
+  .mdm-lt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .mdm-lt b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mdm-lk:hover .mdm-lt b { color: var(--accent); text-decoration: underline; }
+  .mdm-lt small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mdm-lt span { font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mdm-meta { display: flex; justify-content: space-between; align-items: center; margin: 6px 0 0 50px; font-size: 12px; color: var(--muted); } .mdm-meta .alink { font-size: 12px; }
+  .mdm-file { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin-bottom: 6px; }
+  .mdm-file .hbtn { flex: none; }
+  .mdm-empty { display: grid; justify-items: center; gap: 6px; padding: 56px 20px; text-align: center; color: var(--muted); }
+  .mdm-empty svg { width: 36px; height: 36px; opacity: .5; margin-bottom: 4px; } .mdm-empty b { color: var(--ink); font-size: 15px; }
+  .mdm-more { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 16px; color: var(--muted); font-size: 13px; }
+  @media (max-width: 640px) { #modal-box.mdm-box { width: 100%; max-height: 92vh; } .mdm-head, .mdm-tabs, .mdm-body { padding-left: 14px; padding-right: 14px; } .mdm-q, .mdm-e2e { margin-left: 14px; margin-right: 14px; } .mdm-tabs button { padding: 10px 8px; } }
   .sres { padding: 10px; border-radius: 12px; background: var(--card); margin-bottom: 6px; cursor: pointer; }
   .sres:hover { background: var(--hover); }
   .sres b { font-size: 13px; } .sres small { color: var(--muted); margin-left: 6px; }
@@ -6185,11 +6229,11 @@ let helloHTML = '';
 function setHeader(title, sub, showPlaylist) {
   const tw = document.getElementById('tb-where'); if (tw) tw.textContent = S.view === 'server' && S.server ? `· ${S.server.name}` : '· Arkadaşlar';
   $('#title').innerHTML = title; $('#subtitle').textContent = sub;
-  $('#head-actions').innerHTML = `<button class="hbtn" id="h-search" title="Ara" aria-label="Mesajlarda ara">${ic('search')}</button><button class="hbtn" id="h-pins" title="Sabitlenenler" aria-label="Sabitlenen mesajlar">${ic('pin')}</button><button class="hbtn" id="h-watch" title="Birlikte izle" aria-label="Birlikte izle">${ic('tv')}</button>` +
+  $('#head-actions').innerHTML = `<button class="hbtn" id="h-search" title="Ara" aria-label="Mesajlarda ara">${ic('search')}</button><button class="hbtn" id="h-media" title="Medya ve bağlantılar" aria-label="Medya, bağlantılar ve dosyalar">${ic('image')}</button><button class="hbtn" id="h-pins" title="Sabitlenenler" aria-label="Sabitlenen mesajlar">${ic('pin')}</button><button class="hbtn" id="h-watch" title="Birlikte izle" aria-label="Birlikte izle">${ic('tv')}</button>` +
     (showPlaylist ? `<button class="hbtn" id="pl-btn" title="Çalma listesi" aria-label="Çalma listesi">${ic('music')}</button>` : '');
   if (showPlaylist) { $('#head-actions').insertAdjacentHTML('beforeend', `<button class="hbtn" id="h-lb" title="Liderlik tablosu" aria-label="Liderlik tablosu">${ic('trophy')}</button>`); $('#h-lb').onclick = showLeaderboard; }
   if (showPlaylist) $('#pl-btn').onclick = showPlaylist_;
-  $('#h-search').onclick = showSearch; $('#h-pins').onclick = showPins; $('#h-watch').onclick = startWatch;
+  $('#h-search').onclick = showSearch; $('#h-media').onclick = () => showMedia(); $('#h-pins').onclick = showPins; $('#h-watch').onclick = startWatch;
 }
 function showLeaderboard() {
   const s = S.server;
@@ -6203,13 +6247,117 @@ function showLeaderboard() {
   });
 }
 function showSearch() {
-  modal(`<h3>${ic('search')}Mesajlarda ara</h3><p class="hint">Bu odadaki tüm mesajlarda arar.</p><input class="field" id="sq" placeholder="Ne arıyorsun?" autocomplete="off"><div id="sr"></div><div class="rowb"><button id="mx">Kapat</button></div>`);
+  modal(`<h3>${ic('search')}Mesajlarda ara</h3><p class="hint">Bu odadaki tüm mesajlarda arar.</p><input class="field" id="sq" placeholder="Ne arıyorsun?" autocomplete="off"><div class="sq-jump"><span>Şunlarda ara:</span><button type="button" data-mt="media">${ic('image')}Medya</button><button type="button" data-mt="links">${ic('link')}Bağlantılar</button><button type="button" data-mt="files">${ic('file')}Dosyalar</button></div><div id="sr"></div><div class="rowb"><button id="mx">Kapat</button></div>`);
   $('#mx').onclick = closeModal; $('#sq').focus();
+  document.querySelectorAll('.sq-jump [data-mt]').forEach(b => b.onclick = () => { const v = $('#sq').value; showMedia(b.dataset.mt); if (v) { $('#mdm-q').value = v; $('#mdm-q').dispatchEvent(new Event('input')); } });
   let t; $('#sq').oninput = e => { clearTimeout(t); t = setTimeout(() => socket.emit('search', e.target.value, list => {
     $('#sr').innerHTML = list.length ? list.map(m => `<div class="sres" data-j="${m.id}"><b style="color:${userColor(m.author)}">${esc(m.author || 'Sistem')}</b><small>${new Date(m.time).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}</small><div>${esc(m.text || m.plan?.title || m.poll?.question || m.song?.title || '')}</div></div>`).join('')
       : (e.target.value.trim() ? '<p class="hint">Sonuç bulunamadı.</p>' : '');
     $('#sr').querySelectorAll('.sres').forEach(d => d.onclick = () => { closeModal(); jumpTo(d.dataset.j); });
   }), 250); };
+}
+// ================= Odadaki medya, bağlantılar ve dosyalar =================
+// Sunucu odalarında liste sunucudan gelir; uçtan uca şifreli sohbetlerde mesajlar bu cihazda açılıp burada taranır.
+const URL_RE_G = /https?:\/\/[^\s<>"']+/gi;
+function mediaItemsOf(m, tab, ql) {
+  if (!m || m.ephemeral || (m.enc && !m._e2e)) return [];
+  const has = (...xs) => !ql || xs.some(x => x && String(x).toLocaleLowerCase('tr').includes(ql)), base = { id: m.id, author: m.author || null, time: m.time, m }, out = [];
+  if (tab === 'media') {
+    if (m.image && has(m.author, m.text, 'resim')) out.push({ ...base, type: 'image', url: m.image });
+    if (m.gif?.url && has(m.author, m.text, m.gif.title, 'gif')) out.push({ ...base, type: 'gif', url: m.gif.url, thumb: m.gif.prev || m.gif.url, title: m.gif.title || '' });
+    for (const x of m.files || []) if ((x.kind === 'image' || x.kind === 'video') && has(m.author, m.text, x.name)) out.push({ ...base, type: x.kind, url: x.url, name: x.name, size: x.size, enc: !!x.enc });
+  } else if (tab === 'files') {
+    for (const x of m.files || []) if (x.kind !== 'image' && x.kind !== 'video' && has(m.author, m.text, x.name)) out.push({ ...base, type: x.kind, url: x.url, name: x.name, size: x.size, enc: !!x.enc });
+  } else {
+    const urls = [...new Set((String(m.text || '').match(URL_RE_G) || []).map(u => u.replace(/[).,!?;:]+$/, '')))];
+    for (const u of urls.slice(0, 5)) { const pv = m.preview && (m.preview.url === u || urls.length === 1) ? m.preview : null;
+      if (has(u, m.author, pv?.title, pv?.site) || (urls.length === 1 && has(m.text))) out.push({ ...base, type: 'link', url: u, title: pv?.title || '', site: pv?.site || '', desc: pv?.desc || '', img: pv?.image || null, text: String(m.text || '').slice(0, 200) }); }
+  }
+  return out;
+}
+const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+const monthOf = t => new Date(t).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+// Eski bir mesaja git: ekranda yoksa geçmişi geriye doğru yükle
+async function goToMsg(id) {
+  if (S.msgs.some(m => m.id === id)) return jumpTo(id);
+  const ch = S.channel?.id; toast('Mesaj bulunuyor…');
+  for (let n = 0; n < 40 && S.channel?.id === ch && !S.msgs.some(m => m.id === id); n++) {
+    const r = await new Promise(res => socket.emit('history', { before: S.msgs[0]?.id }, res));
+    if (!r?.messages?.length) break;
+    if (r.messages.some(m => m.enc)) await E2E.prep(ch, r.messages, S.msgs).catch(() => {});
+    S.msgs = [...r.messages, ...S.msgs]; histMore = r.more;
+    if (!r.more) break;
+  }
+  renderMessages(); setTimeout(() => S.msgs.some(m => m.id === id) ? jumpTo(id) : toast('Mesaj bulunamadı (silinmiş olabilir)'), 60);
+}
+function showMedia(tab = 'media') {
+  const chId = S.channel?.id; if (!chId) return;
+  const e2e = /^(dm|g):/.test(chId) && (E2E.live(chId) || S.msgs.some(m => m.enc));
+  const TABS = [['media', 'Medya', 'image'], ['links', 'Bağlantılar', 'link'], ['files', 'Dosyalar', 'file']];
+  modal(`<div class="mdm"><div class="mdm-head"><h3>${ic('image')}Medya, bağlantılar ve dosyalar</h3><button type="button" class="mdm-x" id="mx" aria-label="Kapat">${ic('x')}</button></div>
+    <div class="mdm-tabs" role="tablist">${TABS.map(([k, t, i]) => `<button type="button" role="tab" data-t="${k}" class="${k === tab ? 'on' : ''}">${ic(i)}${t}</button>`).join('')}</div>
+    <label class="mdm-q">${ic('search')}<input id="mdm-q" placeholder="Bu odada ara: site adı, dosya adı, kişi…" autocomplete="off"></label>
+    ${e2e ? `<p class="mdm-e2e">${ic('lock')}Şifreli sohbet: liste bu cihazda, mesajlar açılarak hazırlanıyor.</p>` : ''}
+    <div class="mdm-body modal-scroll" id="mdm-body"></div></div>`, 'mdm-box');
+  $('#mx').onclick = closeModal;
+  const body = $('#mdm-body'); let items = [], cursor = null, more = false, busy = false, seq = 0, q = '';
+  const cut = () => q.trim().toLocaleLowerCase('tr');
+  const draw = () => {
+    if (!items.length && !busy) { body.innerHTML = `<div class="mdm-empty">${ic(tab === 'media' ? 'image' : tab === 'links' ? 'link' : 'file')}<b>${q ? 'Sonuç yok' : tab === 'media' ? 'Henüz resim ya da GIF yok' : tab === 'links' ? 'Henüz bağlantı paylaşılmadı' : 'Henüz dosya yok'}</b><span>${q ? 'Başka bir kelime dene.' : 'Bu odada paylaşılanlar burada toplanır.'}</span></div>`; return; }
+    let h = '', mon = '';
+    const groups = []; for (const it of items) { const k = monthOf(it.time); if (k !== mon) { groups.push({ k, list: [] }); mon = k; } groups.at(-1).list.push(it); }
+    for (const g of groups) {
+      h += `<div class="mdm-mon">${esc(g.k)}</div>`;
+      if (tab === 'media') h += `<div class="mdm-grid">${g.list.map((it, i) => { const src = it.thumb || it.url, idx = items.indexOf(it);
+        const inner = !src ? `<span class="mdm-ph">${ic('lock')}</span>` : src === '#' ? `<span class="mdm-ph">${ic('image')}</span>` : it.type === 'video' ? `<video src="${esc(src)}#t=0.1" preload="metadata" muted playsinline></video><span class="mdm-play">▶</span>` : `<img src="${esc(src)}" alt="${esc(it.name || it.title || '')}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
+        return `<div class="mdm-tile ${it.type}" data-i="${idx}" tabindex="0" role="button" aria-label="${esc((it.type === 'gif' ? 'GIF' : it.type === 'video' ? 'Video' : 'Resim') + ' · ' + (it.author || ''))}">${inner}${it.type === 'gif' ? '<em>GIF</em>' : ''}<span class="mdm-cap"><b>${esc(dn(it.author || ''))}</b>${hm(it.time)}</span><button type="button" class="mdm-go" data-go="${esc(it.id)}" title="Mesaja git">${ic('reply')}</button></div>`; }).join('')}</div>`;
+      else if (tab === 'links') h += g.list.map(it => { const host = hostOf(it.url);
+        return `<div class="mdm-link"><a href="${esc(it.url)}" target="_blank" rel="noopener noreferrer" class="mdm-lk"><span class="mdm-fav" style="background:${userColor(host)}">${esc((host[0] || '?').toUpperCase())}</span><span class="mdm-lt"><b>${esc(it.title || it.url.replace(/^https?:\/\//, ''))}</b><small>${esc(it.site || host)}</small>${it.desc ? `<span>${esc(it.desc.slice(0, 140))}</span>` : ''}</span></a>
+          <div class="mdm-meta"><span>${esc(dn(it.author || ''))} · ${new Date(it.time).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</span><button type="button" class="alink" data-go="${esc(it.id)}">Mesaja git</button></div></div>`; }).join('');
+      else h += g.list.map(it => `<div class="mdm-file"><span class="fc-ic">${ic(it.type === 'audio' ? 'mic' : 'file')}<em>${esc(extOf(it.name) || 'DOSYA')}</em></span><span class="mdm-lt"><b>${esc(it.name)}</b><small>${fmtSize(it.size || 0)} · ${esc(dn(it.author || ''))} · ${new Date(it.time).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</small></span>
+          ${it.url && it.url !== '#' ? `<a class="hbtn" href="${esc(it.url)}" download="${esc(it.name)}" title="İndir" aria-label="İndir">${ic('download')}</a>` : `<span class="hbtn" title="Açılıyor">${ic('lock')}</span>`}<button type="button" class="hbtn" data-go="${esc(it.id)}" title="Mesaja git" aria-label="Mesaja git">${ic('reply')}</button></div>`).join('');
+    }
+    h += busy ? '<div class="mdm-more">Yükleniyor…</div>' : more ? '<div class="mdm-more"><button type="button" class="btns2" id="mdm-more">Daha eskiler</button></div>' : '';
+    const st = body.scrollTop; body.innerHTML = h; body.scrollTop = st;
+    body.querySelectorAll('[data-go]').forEach(b => b.onclick = e => { e.stopPropagation(); e.preventDefault(); const id = b.dataset.go; closeModal(); goToMsg(id); });
+    body.querySelectorAll('.mdm-tile').forEach(t => t.onclick = t.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; const it = items[+t.dataset.i]; if (!it?.url || it.url === '#') return;
+      if (it.type === 'video') return window.open(it.url, '_blank', 'noopener');
+      $('#viewer img').src = it.url; $('#viewer').style.display = 'flex'; ovOpen('viewer', () => { $('#viewer').style.display = 'none'; }); });
+    $('#mdm-more') && ($('#mdm-more').onclick = load);
+  };
+  // Şifreli sohbet: mesajlar cihazda; yetmezse daha eski sayfalar indirilip bu cihazda açılır (en fazla 3000 mesaj)
+  let pool = null, poolMore = true;
+  const localLoad = async my => {
+    let target = items.length + 40;
+    if (!pool) { pool = [...S.msgs]; poolMore = histMore; for (let i = pool.length - 1; i >= 0; i--) items.push(...mediaItemsOf(pool[i], tab, cut())); target = 40; }
+    while (items.length < target && poolMore && pool.length < 3000 && my === seq) {
+      const r = await new Promise(res => socket.emit('history', { before: pool[0]?.id }, res));
+      if (my !== seq) return;
+      if (!r?.messages?.length) { poolMore = false; break; }
+      if (r.messages.some(m => m.enc)) await E2E.prep(chId, r.messages, pool).catch(() => {});
+      for (let i = r.messages.length - 1; i >= 0; i--) items.push(...mediaItemsOf(r.messages[i], tab, cut()));
+      pool = [...r.messages, ...pool]; poolMore = !!r.more;
+    }
+    more = poolMore && pool.length < 3000;
+  };
+  async function load() {
+    if (busy) return; busy = true; const my = seq; draw();
+    if (e2e) { await localLoad(my); if (my !== seq) return; busy = false; draw(); pendingFix(); return; }
+    socket.emit('chanMedia', { chId, tab, q, before: cursor }, r => {
+      if (my !== seq) return; busy = false;
+      if (r?.error) { body.innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
+      items.push(...r.items); cursor = r.cursor; more = r.more; draw();
+    });
+  }
+  // Şifreli dosyalar arka planda açılır; hazır oldukça küçük resimler görünür
+  let fixN = 0;
+  function pendingFix() { if (fixN++ > 20 || !items.some(it => it.enc && !it.url)) return; setTimeout(() => { if (!$('#mdm-body')) return; for (const it of items) if (it.enc && !it.url) { E2E.refresh(it.m); const f = mediaItemsOf(it.m, tab, cut()).find(x => x.name === it.name); if (f?.url) it.url = f.url; } draw(); pendingFix(); }, 700); }
+  const reset = () => { seq++; items = []; cursor = null; more = false; busy = false; pool = null; fixN = 0; load(); };
+  $('#mdm-body').addEventListener('scroll', () => { if (more && !busy && body.scrollTop + body.clientHeight > body.scrollHeight - 200) load(); }, { passive: true });
+  document.querySelectorAll('.mdm-tabs [data-t]').forEach(b => b.onclick = () => { tab = b.dataset.t; document.querySelectorAll('.mdm-tabs [data-t]').forEach(x => x.classList.toggle('on', x === b)); reset(); });
+  let tq; $('#mdm-q').oninput = e => { clearTimeout(tq); tq = setTimeout(() => { q = e.target.value; reset(); }, 250); };
+  setTimeout(() => !isMobileDev && $('#mdm-q')?.focus(), 50);
+  load();
 }
 function showPins() {
   const pins = S.msgs.filter(m => m.pinned);
@@ -6850,7 +6998,7 @@ const E2E = (() => {
   socket.on('e2eNeed', () => setTimeout(reshare, 500 + Math.random() * 1500));
   socket.on('e2eConvUpd', chId => { delete convs[chId]; for (const k in miss) if (k.startsWith(chId + '|')) delete miss[k]; if (S.channel?.id === chId) conv(chId, true).then(() => { lockBadge(chId); refresh(chId); }); });
   return {
-    pend: pw => { pendPw = pw; }, boot, peek, rewrap, wipe, enter, prep, seal, inner, live, edit, reveal, uploadEnc, conv,
+    pend: pw => { pendPw = pw; }, boot, peek, refresh: m => { if (m?.enc && m._d) apply(m); }, rewrap, wipe, enter, prep, seal, inner, live, edit, reveal, uploadEnc, conv,
     want: chId => C && on && live(chId), ready: () => ready, on: () => on,
   };
 })();
