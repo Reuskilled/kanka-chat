@@ -3106,7 +3106,7 @@ io.on('connection', socket => {
   });
   socket.on('mutuals', (n, cb = () => {}) => {
     const o = db.users[n]; if (!me || !o) return cb({ servers: [], friends: [] });
-    const servers = db.servers.filter(s => !s.public && s.members.includes(me) && s.members.includes(n)).map(s => ({ id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, joined: s.joinedAt?.[n] || null }));
+    const servers = db.servers.filter(s => { const m = membersOf(s); return m.includes(me) && m.includes(n); }).sort((a, b) => (b.id === 's1') - (a.id === 's1')).map(s => ({ id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, joined: s.joinedAt?.[n] || null }));
     const mine = new Set(db.users[me].friends || []), friends = n === me ? [] : (o.friends || []).filter(x => mine.has(x));
     cb({ matches: (o.matches || []).slice(0, 8), servers: n === me ? [] : servers, friends, joined: Object.fromEntries(db.servers.filter(s => s.members.includes(n) && s.joinedAt?.[n]).map(s => [s.id, s.joinedAt[n]])) });
   });
