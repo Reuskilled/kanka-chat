@@ -627,6 +627,22 @@ const backupList = () => fs.existsSync(BACKUPS) ? fs.readdirSync(BACKUPS).filter
 // ---------- Kötüye kullanım koruması ----------
 const limits = new Map();
 // key için pencere içinde en fazla max deneme; aşılırsa kalan bekleme süresini (sn) döndürür
+// Mesaj seli: hız sınırına 1 dakikada 3 kez takılan geçici olarak hiç yazamaz. Tekrar ederse süre artar (5 dk → 15 dk → 1 saat), 24 saatte sıfırlanır.
+const floodPen = new Map(); // isim -> { until, lvl, at, strikes: [] }
+function msgFlood(me) {
+  const now = Date.now(), p = floodPen.get(me) || { until: 0, lvl: 0, at: 0, strikes: [] };
+  if (p.until > now) return `Çok fazla mesaj attığın için ${Math.ceil((p.until - now) / 60e3)} dakika yazamazsın`;
+  if (!limited('msg|' + me, 8, 5000)) return null;
+  p.strikes = p.strikes.filter(t => now - t < 60e3); p.strikes.push(now);
+  if (p.strikes.length >= 3) {
+    if (now - p.at > 864e5) p.lvl = 0;
+    const dk = [5, 15, 60][Math.min(p.lvl, 2)]; p.lvl++; p.at = now; p.until = now + dk * 60e3; p.strikes = [];
+    floodPen.set(me, p); secLog('mesaj-seli', me, `hız sınırını zorladı, ${dk} dk yazma cezası`);
+    return `Çok hızlı ve çok fazla mesaj attın, ${dk} dakika yazamazsın`;
+  }
+  floodPen.set(me, p); return 'Çok hızlı yazıyorsun, biraz yavaşla 🙂';
+}
+setInterval(() => { const now = Date.now(); for (const [k, v] of floodPen) if (v.until < now && now - v.at > 864e5 && !v.strikes.some(t => now - t < 60e3)) floodPen.delete(k); }, 600e3);
 function limited(key, max, windowMs) {
   const now = Date.now(), arr = (limits.get(key) || []).filter(t => now - t < windowMs);
   if (arr.length >= max) { limits.set(key, arr); return Math.ceil((windowMs - (now - arr[0])) / 1000); }
@@ -2962,7 +2978,8 @@ io.on('connection', socket => {
       let n = 0; for (const k of Object.keys(v)) { if (BADK.has(k) || ++n > 400 || poisoned(v[k], d + 1)) return true; } return false; };
     socket.on = (ev, fn) => on(ev, (...args) => {
       if (args.some(a => typeof a !== 'function' && poisoned(a))) { const cb = args.findLast(a => typeof a === 'function'); cb?.({ error: 'Geçersiz istek' }); return; } // __proto__ kirletme girişimi
-      if (args.length && typeof args[args.length - 1] !== 'function' && fn.length > args.length) args.push(() => {});
+      if (args[0] === null && /^\s*(async\s*)?\(\s*\{/.test(fn.toString())) args[0] = undefined; // null gönderilince varsayılan {} devreye girsin
+      if (typeof args[args.length - 1] !== 'function') args.push(() => {}); // cevap fonksiyonu verilmese de olay çökmesin
       // Yaş doğrulaması: doğum tarihini girmemiş (ya da 13 yaş altı kilitli) hesap, tarihi girene kadar hiçbir şey yapamaz
       if (me && needAge(db.users[me]) && !AGE_FREE.has(ev)) { const cb = args.findLast(a => typeof a === 'function'); cb?.({ error: 'Devam etmek için doğum tarihini gir', ageGate: true }); return; }
       try { const r = fn(...args); if (r && typeof r.catch === 'function') r.catch(e => logCrash('olay:' + ev, e)); }
@@ -3658,7 +3675,7 @@ io.on('connection', socket => {
   socket.on('quickDM', ({ to, text } = {}, cb = () => {}) => {
     if (!me || !db.users[to] || to === me) return cb({ error: 'Kullanıcı bulunamadı' });
     text = cleanMsg(text); if (!text) return cb({ error: 'Boş mesaj' });
-    if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun, biraz yavaşla 🙂' });
+    { const fl = msgFlood(me); if (fl) return cb({ error: fl }); }
     if (db.users[me].blocked?.includes(to)) return cb({ error: 'Bu kişiyi engelledin. Mesaj göndermek için engeli kaldır.' });
     if (db.users[to].blocked?.includes(me)) return cb({ error: 'Bu kişi sana mesaj alımını kapattı.' });
     const r = postMessage(me, dmId(me, to), { kind: 'text', text });
@@ -3681,7 +3698,7 @@ io.on('connection', socket => {
       if (!e2eChat(cur) || !c || !p.enc || !c.eps.some(x => x.id === p.enc.ep) || !b64ok(p.enc.iv, 24) || !b64ok(p.enc.ct, 60000) || !b64ok(p.fc, 64)) return cb({ error: 'Şifreli mesaj geçersiz, sayfayı yenile' });
       p = { kind: 'text', enc: { ep: p.enc.ep, iv: p.enc.iv, ct: p.enc.ct }, fc: p.fc, replyTo: p.replyTo };
     } else if (db.e2e?.[cur]?.eps?.length && e2eChat(cur) && (!p.kind || p.kind === 'text' || ['poll', 'plan', 'song'].includes(p.kind)) && chatMembers(cur).every(n => e2eCur(n))) return cb({ error: 'Bu sohbet uçtan uca şifreli, sayfayı yenileyip tekrar dene', e2e: true });
-    if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun, biraz yavaşla 🙂' });
+    { const fl = msgFlood(me); if (fl) return cb({ error: fl }); }
     if (cur.startsWith('dm:')) {
       const other = dmPeers(cur).find(n => n !== me) || me, u = db.users[me], o = db.users[other];
       if (u?.blocked?.includes(other)) return cb({ error: 'Bu kişiyi engelledin. Mesaj göndermek için engeli kaldır.' });
@@ -3718,7 +3735,7 @@ io.on('connection', socket => {
     const { from, msgId, to } = p;
     if (!from || !msgId || !to) return cb({ error: 'Eksik bilgi' });
     if (!canAccess(me, from) || !canAccess(me, to)) return cb({ error: 'Bu odaya erişimin yok' });
-    if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı gönderiyorsun, biraz yavaşla 🙂' });
+    { const fl = msgFlood(me); if (fl) return cb({ error: fl }); }
     const src = findMsg(from, msgId);
     if (!src || src.ephemeral) return cb({ error: 'Mesaj bulunamadı' });
     if (src.enc) return cb({ error: 'Şifreli mesajlar iletilemez' });
@@ -3969,6 +3986,7 @@ io.on('connection', socket => {
 
   socket.on('react', ({ msgId, emoji } = {}) => {
     if (!canAccess(me, cur)) return;
+    if (limited('etk|' + me, 25, 10e3)) return socket.emit('toast', 'Çok hızlı, biraz yavaşla');
     const msg = findMsg(cur, msgId); if (!msg) return;
     const f = findChannel(cur); if (f && timedOut(f.s, me)) return socket.emit('toast', 'Susturulmuşken tepki veremezsin');
     const cm = /^:([a-z0-9_]{2,24}):$/.exec(typeof emoji === 'string' ? emoji : '');
@@ -4017,6 +4035,7 @@ io.on('connection', socket => {
 
   socket.on('planToggle', msgId => {
     if (!canAccess(me, cur)) return;
+    if (limited('etk|' + me, 25, 10e3)) return socket.emit('toast', 'Çok hızlı, biraz yavaşla');
     { const f = isPrivateChat(cur) ? null : findChannel(cur); if (f && timedOut(f.s, me)) return socket.emit('toast', 'Susturulmuşken kullanamazsın'); }
     const msg = findMsg(cur, msgId);
     if (!msg || msg.kind !== 'plan') return;
@@ -4027,6 +4046,7 @@ io.on('connection', socket => {
 
   socket.on('vote', ({ msgId, index } = {}) => {
     if (!canAccess(me, cur)) return;
+    if (limited('etk|' + me, 25, 10e3)) return socket.emit('toast', 'Çok hızlı, biraz yavaşla');
     { const f = isPrivateChat(cur) ? null : findChannel(cur); if (f && timedOut(f.s, me)) return socket.emit('toast', 'Susturulmuşken kullanamazsın'); }
     const msg = findMsg(cur, msgId);
     if (!msg || msg.kind !== 'poll' || !msg.poll.options[index]) return;
@@ -4038,6 +4058,7 @@ io.on('connection', socket => {
 
   socket.on('xoxMove', ({ msgId, i } = {}) => {
     if (!canAccess(me, cur)) return;
+    if (limited('etk|' + me, 25, 10e3)) return socket.emit('toast', 'Çok hızlı, biraz yavaşla');
     { const f = isPrivateChat(cur) ? null : findChannel(cur); if (f && (timedOut(f.s, me) || !chPerm(f.s, f.c, me, 'send'))) return socket.emit('toast', 'Bu odada oynama iznin yok'); }
     const msg = findMsg(cur, msgId);
     if (!msg || msg.kind !== 'xox') return;
@@ -4617,6 +4638,7 @@ io.on('connection', socket => {
     const s = adminServer(serverId, true); if (!s) return cb({ error: 'Sadece yönetici rol verebilir' });
     if (!roleTarget(s, name)) return cb({ error: 'Bu kişinin rolü değiştirilemez' });
     if (name === s.owner && me !== s.owner) return cb({ error: 'Sunucu sahibinin rolünü sadece kendisi değiştirebilir' });
+    if (name !== me && name !== BOT_NAME && !outranks(s, me, name)) return cb({ error: 'Senden yüksek ya da eşit birinin rolünü değiştiremezsin' });
     if (role === 'mod') s.roles[name] = 'mod'; else delete s.roles[name];
     audit(s, me, role === 'mod' ? 'Moderatör yaptı' : 'Moderatörlüğü aldı', name);
     save(); pushServers(membersOf(s)); cb({ ok: true });
@@ -4674,6 +4696,7 @@ io.on('connection', socket => {
     const mem = new Set(membersOf(s)); if (s.bot?.added) mem.add(BOT_NAME);
     const addL = Array.isArray(add) ? add.slice(0, 200) : [], remL = Array.isArray(remove) ? remove.slice(0, 200) : [];
     if ([...addL, ...remL].includes(s.owner) && me !== s.owner) return cb({ error: 'Sunucu sahibinin rollerini sadece kendisi değiştirebilir' });
+    if ([...addL, ...remL].some(n => n !== me && n !== BOT_NAME && !outranks(s, me, n))) return cb({ error: 'Senden yüksek ya da eşit birinin rollerini değiştiremezsin' });
     let n = 0;
     for (const name of addL) if (mem.has(name)) { const l = (s.memberRoles[name] ||= []); if (!l.includes(r.id)) { l.push(r.id); n++; } }
     for (const name of remL) { const l = s.memberRoles[name]; if (l?.includes(r.id)) { s.memberRoles[name] = l.filter(x => x !== r.id); if (!s.memberRoles[name].length) delete s.memberRoles[name]; n++; } }
@@ -4715,6 +4738,7 @@ io.on('connection', socket => {
   socket.on('memberRoles', ({ serverId, name, roles } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageRoles'); if (!s || !roleTarget(s, name)) return cb({ error: 'Yetkin yok' });
     if (name === s.owner && me !== s.owner) return cb({ error: 'Sunucu sahibinin rollerini sadece kendisi değiştirebilir' });
+    if (name !== me && name !== BOT_NAME && !outranks(s, me, name)) return cb({ error: 'Senden yüksek ya da eşit birinin rollerini değiştiremezsin' });
     const old = s.memberRoles[name] || [];
     const want = (roles || []).filter(rid => s.customRoles.some(r => r.id === rid && !r.bot));
     for (const rid of new Set([...old, ...want])) if (old.includes(rid) !== want.includes(rid) && !outranksRole(s, s.customRoles.find(r => r.id === rid))) return cb({ error: 'Senden yüksek bir rolü veremez/alamazsın' });
@@ -4988,7 +5012,7 @@ io.on('connection', socket => {
   // ----- Konular -----
   socket.on('threadReply', ({ msgId, text } = {}, cb = () => {}) => {
     if (!canAccess(me, cur)) return cb({ error: 'Erişim yok' });
-    if (limited('msg|' + me, 8, 5000)) return cb({ error: 'Çok hızlı yazıyorsun' });
+    { const fl = msgFlood(me); if (fl) return cb({ error: fl }); }
     const msg = findMsg(cur, msgId); text = cleanMsg(text);
     if (!msg || !text || msg.kind === 'system') return cb({ error: 'Gönderilemedi' });
     if (db.e2e?.[cur]?.eps?.length) return cb({ error: 'Şifreli sohbette konu açılamıyor' });
