@@ -2356,7 +2356,7 @@ const reportView = (r, n) => ({ ...r, by: siteAdmin(n) ? r.by : null, reasonText
 function siteBanUser(name, by, reason, until) {
   const u = db.users[name]; if (!u) return false;
   u.siteBan = { by, at: Date.now(), reason: clean(reason, 160), ...(until ? { until } : {}) };
-  staffLog(by, until ? 'Askıya aldı' : 'Hesabı kapattı', name, (until ? `${Math.round((until - Date.now()) / 864e5)} gün · ` : '') + clean(reason, 160));
+  staffLog(by, until ? 'Askıya aldı' : 'Hesabı kapattı', name, (until ? (h => h < 24 ? `${h} saat · ` : `${Math.round(h / 24)} gün · `)(Math.round((until - Date.now()) / 3600e3)) : '') + clean(reason, 160));
   sessDelUser(name); setTimeout(() => io.in('user:' + name).disconnectSockets(true), 300); // açık bağlantılar da kapansın
   for (const s of db.servers) voiceKick(s.channels.map(c => c.id), name, 'Hesabın kapatıldı');
   io.to('user:' + name).emit('siteBanned', u.siteBan.reason);
@@ -3374,7 +3374,7 @@ io.on('connection', socket => {
     if (action === 'ageReset') { if (!canStaff(me, 'ban')) return deny(); delete u.ageLock; delete u.dob; staffLog(me, 'Yaş kilidini kaldırdı', u.name); save(); io.to('user:' + u.name).emit('ageGate', { locked: false }); return cb({ ok: true, user: userCard(u) }); }
     if (action === 'streak') { if (!canStaff(me, 'ban')) return deny(); const n = Math.min(Math.max(parseInt(days) || 0, 0), 3650); u.streak = { last: ymd(), count: n, best: Math.max(n, u.streak?.best || 0) }; staffLog(me, 'Seriyi düzeltti', u.name, n + ' gün'); save(); io.emit('users', allUsers()); }
     if (action === 'warn') { if (!canStaff(me, 'warn')) return deny(); if (u.name === me) return cb({ error: 'Kendini uyaramazsın' }); siteWarnUser(u.name, me, reason); }
-    if (action === 'suspend') { if (!canStaff(me, 'suspend')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri askıya alınamaz' }); const d = [1, 3, 7, 30].includes(+days) ? +days : 1; siteBanUser(u.name, me, reason || 'Kural ihlali', Date.now() + d * 864e5); }
+    if (action === 'suspend') { if (!canStaff(me, 'suspend')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri askıya alınamaz' }); const ms = /^h(1|3|6|12)$/.test(String(days)) ? +String(days).slice(1) * 3600e3 : ([1, 3, 7, 30].includes(+days) ? +days : 1) * 864e5; siteBanUser(u.name, me, reason || 'Kural ihlali', Date.now() + ms); }
     if (action === 'ban') { if (!canStaff(me, 'ban')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri kapatılamaz' }); siteBanUser(u.name, me, reason); }
     if (action === 'unban') { if (!canStaff(me, 'suspend')) return deny(); if (u.siteBan && !u.siteBan.until && !canStaff(me, 'ban')) return deny(); delete u.siteBan; staffLog(me, 'Hesabı açtı', u.name); save(); }
     if (action === 'delete') {

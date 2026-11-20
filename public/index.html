@@ -12003,7 +12003,7 @@ function admUsers(B) {
       <label class="adm-lbl">Sebep (uyarı, askıya alma ya da silme için)</label><input class="field" id="u-why" maxlength="300" placeholder="Örn. küfür, spam, taciz…">
       <div class="rpc-acts">
         ${sCan('warn') ? `<button id="u-warn">${ic('alert')}Uyar</button>` : ''}
-        ${sCan('suspend') && !team && !u.banned ? `<span class="adm-susp"><select id="u-days"><option value="1">1 gün</option><option value="3">3 gün</option><option value="7">7 gün</option><option value="30">30 gün</option></select><button id="u-susp">${ic('hourglass')}Askıya al</button></span>` : ''}
+        ${sCan('suspend') && !team && !u.banned ? `<span class="adm-susp"><select id="u-days"><option value="h1">1 saat</option><option value="h3">3 saat</option><option value="h6">6 saat</option><option value="h12">12 saat</option><option value="1" selected>1 gün</option><option value="3">3 gün</option><option value="7">7 gün</option><option value="30">30 gün</option></select><button id="u-susp">${ic('hourglass')}Askıya al</button></span>` : ''}
         ${u.banned && (sCan('ban') || (sCan('suspend') && u.banned.until)) ? `<button id="u-unban" class="ok">${ic('unlock')}Hesabı aç</button>` : ''}
         ${sCan('ban') && !team && !u.banned ? `<button id="u-ban" class="danger">${ic('lock')}Hesabı kapat</button>` : ''}
         ${sCan('reset') ? `<button id="u-link">${ic('key')}Şifre sıfırlama linki</button>` : ''}
@@ -12017,7 +12017,7 @@ function admUsers(B) {
     const why = () => $('#u-why')?.value.trim();
     const act = (o, msg) => socket.emit('adminUser', { name: u.name, ...o }, x => { if (x.error) return out(esc(x.error), false); show(x); out(msg); loadBanned(); });
     $('#u-warn') && ($('#u-warn').onclick = () => { if (!why()) return out('Uyarı için bir sebep yaz. Kullanıcı bunu görecek.', false); act({ action: 'warn', reason: why() }, `<b>${esc(u.name)} uyarıldı.</b> Girişte ve şu an açıksa ekranında uyarıyı görecek.`); });
-    $('#u-susp') && armBtn($('#u-susp'), 'Emin misin?', () => act({ action: 'suspend', days: $('#u-days').value, reason: why() || 'Kural ihlali' }, `<b>${esc(u.name)} ${$('#u-days')?.value || 1} gün askıya alındı.</b>`));
+    $('#u-susp') && armBtn($('#u-susp'), 'Emin misin?', () => act({ action: 'suspend', days: $('#u-days').value, reason: why() || 'Kural ihlali' }, `<b>${esc(u.name)} ${$('#u-days')?.selectedOptions[0]?.textContent || '1 gün'} askıya alındı.</b>`));
     $('#u-ban') && armBtn($('#u-ban'), 'Kapatılsın mı?', () => act({ action: 'ban', reason: why() || 'Kural ihlali' }, `<b>${esc(u.name)} hesabı kapatıldı.</b>`));
     $('#u-agereset') && ($('#u-agereset').onclick = () => act({ action: 'ageReset' }, `<b>${esc(u.name)} için yaş kilidi kaldırıldı; tekrar doğum tarihi sorulacak.</b>`));
     $('#u-stks') && ($('#u-stks').onclick = () => act({ action: 'streak', days: +$('#u-stk').value }, `<b>${esc(u.name)} serisi ${+$('#u-stk').value} gün yapıldı.</b>`));
