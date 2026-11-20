@@ -3704,11 +3704,8 @@ io.on('connection', socket => {
     const modCmds = ['/uyar', '/uyarılar', '/uyarilar', '/uyarısil', '/uyarisil', '/sustur', '/temizle', '/kilitle', '/kilidiaç', '/kilidiac', '/aç', '/ac'];
     if (cmd === '/yardım' || cmd === '/yardim' || cmd === '/komutlar') {
       let txt = 'Herkes: /zar · /yazitura · /xox · /anket · /plan · /şarkı · /izle' + (s.bot?.ticket?.on ? ' · /destek' : '');
-      if (!s.bot?.added) txt += '\n\nKanka Bot bu sunucuda ekli değil. Eklemek için: Sunucu ayarları → Kanka Bot.';
-      else {
-        if (s.bot.ticket?.on) txt += '\n\nDestek:\n/destek konu · talebini aç\n/üstlen · açık talebi üstlen (yetkili)\n/kapat · talebi kapat';
-        txt += botOn(s, 'mod') ? '\n\nYetkililer:\n/uyar @isim sebep · uyarı ver\n/uyarılar @isim · uyarıları gör\n/uyarısil @isim · uyarıları sıfırla\n/sustur @isim 10 sebep · dakika olarak sustur\n/temizle 20 · son mesajları sil (en çok 100)\n/kilitle · odayı yazmaya kapat\n/kilidiaç · odayı yeniden aç' : '\n\nMod modülü kapalı. Sunucu ayarları → Kanka Bot\'tan açabilirsin.';
-      }
+      if (s.bot?.added && s.bot.ticket?.on) txt += '\n\nDestek:\n/destek konu · talebini aç\n/üstlen · açık talebi üstlen (yetkili)\n/kapat · talebi kapat';
+      if (can(s, me, 'timeout') || can(s, me, 'manageMessages') || can(s, me, 'manageChannels')) txt += '\n\nYetkililer:\n/uyar @isim sebep · uyarı ver\n/uyarılar @isim · uyarıları gör\n/uyarısil @isim · uyarıları sıfırla\n/sustur @isim 10 sebep · dakika olarak sustur\n/temizle 20 · son mesajları sil (en çok 100)\n/kilitle · odayı yazmaya kapat\n/kilidiaç · odayı yeniden aç' + (botOn(s, 'mod') ? '' : '\n\nOtomatik moderasyon (davet linki, spam, küfür filtresi) için: Sunucu ayarları → Kanka Bot → Mod modülü.');
       return W({ title: 'Kanka Bot komutları', tone: 'info', text: txt });
     }
     const ticketCmds = ['/destek', '/talep', '/ticket', '/üstlen', '/ustlen', '/kapat'];
@@ -3727,16 +3724,15 @@ io.on('connection', socket => {
       return W({ title: cmd === '/kapat' ? 'Talep kapatıldı' : 'Talep üstlenildi', tone: 'ok', text: cmd === '/kapat' ? 'Yazışma arşive taşındı.' : 'Artık bu taleple sen ilgileniyorsun.' });
     }
     if (!modCmds.includes(cmd)) return false;
-    if (!s.bot?.added) return W({ title: 'Kanka Bot bu sunucuda yok', tone: 'warn', text: 'Bu komut için önce Kanka Bot\'u ekle: Sunucu ayarları → Kanka Bot → Botu ekle.' });
-    if (!botOn(s, 'mod')) return W({ title: 'Mod modülü kapalı', tone: 'warn', text: 'Bu komut için sunucu ayarları → Kanka Bot → Mod modülünü aç.' });
+    // Bu komutlar yetkilinin zaten sahip olduğu yetkilerin kısayolu: Kanka Bot ekli / mod modülü açık olmasa da çalışır (her komut kendi yetkisini kontrol eder)
     const c = s.channels.find(x => x.id === cur);
     if (cmd === '/uyar') {
       if (!can(s, me, 'timeout')) return W({ title: 'Yetkin yok', tone: 'warn', text: 'Uyarı vermek için susturma yetkin olmalı.' });
       const n = target(); if (!n || n === me || !outranks(s, me, n)) return W({ title: 'Kullanım', tone: 'warn', text: '/uyar @isim sebep' });
       s.warns ||= {}; const arr = (s.warns[n] ||= []); arr.push({ by: me, time: Date.now(), reason: reason(1) });
-      const lim = s.bot.mod.warnLimit || 3;
+      const lim = s.bot?.mod?.warnLimit || 3;
       audit(s, me, 'Uyardı', `${n} (${arr.length}/${lim})${reason(1) ? ' · ' + reason(1) : ''}`);
-      if (arr.length >= lim && !botOutranks(s, n)) {
+      if (arr.length >= lim && s.bot?.added && !botOutranks(s, n)) {
         botPost(cur, { title: `${n} uyarıldı (${arr.length}/${lim})`, text: 'Uyarı sınırına ulaştı ama Kanka Bot\'un rolü bu kişininkinden düşük olduğu için otomatik susturamadı. Rol sırasını Sunucu ayarları → Roller\'den değiştirebilirsin.', tone: 'warn', fields: [['Yetkili', me]] });
       } else if (arr.length >= lim) {
         s.timeouts ||= {}; s.timeouts[n] = Date.now() + 60 * 60e3; s.warns[n] = [];
@@ -3916,7 +3912,7 @@ io.on('connection', socket => {
   socket.on('react', ({ msgId, emoji } = {}) => {
     if (!canAccess(me, cur)) return;
     const msg = findMsg(cur, msgId); if (!msg) return;
-    const f = findChannel(cur);
+    const f = findChannel(cur); if (f && timedOut(f.s, me)) return socket.emit('toast', 'Susturulmuşken tepki veremezsin');
     const cm = /^:([a-z0-9_]{2,24}):$/.exec(typeof emoji === 'string' ? emoji : '');
     if (cm) {
       if (!f || !f.s?.emojis?.[cm[1]]) return; // başka sunucunun/silinmiş emojisiyle tepki verilmez
@@ -3934,6 +3930,7 @@ io.on('connection', socket => {
 
   socket.on('edit', ({ msgId, text, enc, fc } = {}) => {
     if (!canAccess(me, cur)) return;
+    { const f = findChannel(cur); if (f && timedOut(f.s, me)) return socket.emit('toast', 'Susturulmuşken mesaj düzenleyemezsin'); }
     if (enc) { const msg = findMsg(cur, msgId), c = db.e2e?.[cur]; // şifreli düzenleme
       if (!msg || msg.author !== me || !msg.enc || !c?.eps.some(x => x.id === enc.ep) || !b64ok(enc.iv, 24) || !b64ok(enc.ct, 60000) || !b64ok(fc, 64)) return;
       msg.enc = { ep: enc.ep, iv: enc.iv, ct: enc.ct }; msg.fc = fc; msg.edited = true; return update(cur, msg); }
