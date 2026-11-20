@@ -56,6 +56,7 @@ const GAME_PROCS = {
   'HeroesOfTheStorm_x64': ['Heroes of the Storm', ''], Hearthstone: ['Hearthstone', ''], 'Diablo IV': ['Diablo IV', ''], 'Wow': ['World of Warcraft', ''], 'Content Warning': ['Content Warning', ''],
   'Sons Of The Forest': ['Sons of the Forest', ''], Raft: ['Raft', ''], 'Dead by Daylight': ['Dead by Daylight', ''], 'DeadByDaylight-Win64-Shipping': ['Dead by Daylight', ''],
   'Fall Guys': ['Fall Guys', ''], 'FallGuys_client_game': ['Fall Guys', ''], 'Valheim': ['Valheim', ''], 'HELLDIVERS2': ['Helldivers 2', ''], 'cod': ['Call of Duty', ''], 'BlackOps6': ['Call of Duty', ''],
+  RobRun: ['Rob Run', ''], 'ROB RUN': ['Rob Run', ''], 'Rob Run': ['Rob Run', ''], ROBRUN: ['Rob Run', ''], 'RobRun-Win64-Shipping': ['Rob Run', ''], 'RobRunClient': ['Rob Run', ''],
   'bf2042': ['Battlefield 2042', ''], 'bf6': ['Battlefield 6', ''], 'Minecraft Launcher': ['Minecraft', 'Başlatıcıda'],
 };
 app.get('/api/presence/games', (req, res) => res.json(GAME_PROCS));
