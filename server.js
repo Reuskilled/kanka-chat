@@ -2033,6 +2033,22 @@ function pushServers(names) {
 }
 const membersOf = s => s.public ? Object.keys(db.users) : s.members;
 
+// Normal mesajla aynı kurallar (zamanlanmış mesaj gibi socket 'message' dışından gelen yazılar için)
+function postGate(me, chId, text) {
+  if (!canAccess(me, chId)) return 'Bu odaya erişimin yok';
+  if (chId.startsWith('dm:')) {
+    if (dmPeers(chId).includes(BOT_NAME)) return 'Kanka Bot\'a buradan yazılamıyor';
+    const other = dmPeers(chId).find(n => n !== me) || me;
+    if (db.users[me]?.blocked?.includes(other)) return 'Bu kişiyi engelledin';
+    if (db.users[other]?.blocked?.includes(me)) return 'Bu kişi sana mesaj alımını kapattı';
+  }
+  const f = isPrivateChat(chId) ? null : findChannel(chId); if (!f) return null;
+  if (f.s.welcome?.enabled && f.s.owner !== me && !f.s.accepted?.[me]) return 'Önce sunucu kurallarını kabul etmelisin';
+  if (timedOut(f.s, me)) return 'Susturuldun';
+  if (!chPerm(f.s, f.c, me, 'send')) return 'Bu odaya yazma iznin yok';
+  if (/@(everyone|herkes)\b/i.test(text || '') && !chPerm(f.s, f.c, me, 'mention')) return '@herkes etiketleme iznin yok';
+  return automod(f.s, chId, me, text) || null;
+}
 function postMessage(me, chId, p = {}) {
   const u = db.users[me];
   const msg = { id: id(), author: me, color: u.color, time: Date.now(), kind: 'text', reactions: {} };
@@ -4001,6 +4017,7 @@ io.on('connection', socket => {
 
   socket.on('planToggle', msgId => {
     if (!canAccess(me, cur)) return;
+    { const f = isPrivateChat(cur) ? null : findChannel(cur); if (f && timedOut(f.s, me)) return socket.emit('toast', 'Susturulmuşken kullanamazsın'); }
     const msg = findMsg(cur, msgId);
     if (!msg || msg.kind !== 'plan') return;
     const g = msg.plan.going, i = g.indexOf(me);
@@ -4010,6 +4027,7 @@ io.on('connection', socket => {
 
   socket.on('vote', ({ msgId, index } = {}) => {
     if (!canAccess(me, cur)) return;
+    { const f = isPrivateChat(cur) ? null : findChannel(cur); if (f && timedOut(f.s, me)) return socket.emit('toast', 'Susturulmuşken kullanamazsın'); }
     const msg = findMsg(cur, msgId);
     if (!msg || msg.kind !== 'poll' || !msg.poll.options[index]) return;
     const already = msg.poll.options[index].votes.includes(me);
@@ -4020,6 +4038,7 @@ io.on('connection', socket => {
 
   socket.on('xoxMove', ({ msgId, i } = {}) => {
     if (!canAccess(me, cur)) return;
+    { const f = isPrivateChat(cur) ? null : findChannel(cur); if (f && (timedOut(f.s, me) || !chPerm(f.s, f.c, me, 'send'))) return socket.emit('toast', 'Bu odada oynama iznin yok'); }
     const msg = findMsg(cur, msgId);
     if (!msg || msg.kind !== 'xox') return;
     const g = msg.game; i = +i;
@@ -4419,7 +4438,8 @@ io.on('connection', socket => {
     const m = e ? e.msg : findMsg(chId, msgId); if (!m?.app) return cb({ error: 'Mesaj bulunamadı' });
     const a = db.apps[m.app]; if (!a || a.killed) return cb({ error: 'Bot kullanılamıyor' });
     const comp = (m.comps || []).flat().find(c => c.id === cid); if (!comp || comp.kapali) return cb({ error: 'Bu düğme artık kullanılamıyor' });
-    const f = findChannel(chId); if (f && timedOut(f.s, me)) return cb({ error: 'Susturulmuşken kullanamazsın' });
+    const f = isPrivateChat(chId) ? null : findChannel(chId); if (f && timedOut(f.s, me)) return cb({ error: 'Susturulmuşken kullanamazsın' });
+    if (f && !chPerm(f.s, f.c, me, 'apps')) return cb({ error: 'Bu odada uygulama kullanma iznin yok' });
     let data = { id: cid };
     if (comp.tur === 'secim') { const vals = (Array.isArray(values) ? values : []).map(String).filter(v => comp.secenekler.some(o => o.deger === v)); if (vals.length < comp.min || vals.length > comp.max) return cb({ error: 'Geçersiz seçim' }); data.degerler = vals; }
     newInter(a, comp.tur === 'secim' ? 'SECIM' : 'BUTON', me, chId, data, m); cb({ ok: true });
@@ -4988,6 +5008,7 @@ io.on('connection', socket => {
     text = cleanMsg(text); at = +at;
     if (!text) return cb({ error: 'Mesaj boş olamaz' });
     if (db.e2e?.[cur]?.eps?.length) return cb({ error: 'Şifreli sohbette zamanlanmış mesaj yok (sunucu metni görmesin diye)' });
+    { const g = postGate(me, cur, text); if (g) return cb({ error: g }); }
     if (!(at > Date.now() + 30e3) || at > Date.now() + 30 * 864e5) return cb({ error: 'Zaman en az 1 dakika sonra, en fazla 30 gün içinde olmalı' });
     db.scheduled ||= [];
     if (db.scheduled.filter(x => x.author === me).length >= 20) return cb({ error: 'En fazla 20 zamanlanmış mesajın olabilir' });
@@ -5041,7 +5062,7 @@ io.on('connection', socket => {
     io.to(to).emit('streamWatch', { from: socket.id, name: me, on: !!on });
   });
 
-  socket.on('typing', () => { if (me && cur && canAccess(me, cur)) socket.to(cur).emit('typing', { channelId: cur, name: me }); });
+  socket.on('typing', () => { if (!me || !cur || !canAccess(me, cur)) return; { const f = isPrivateChat(cur) ? null : findChannel(cur); if (f && (timedOut(f.s, me) || !chPerm(f.s, f.c, me, 'send'))) return; } if (limited('typ|' + me, 30, 10e3)) return; socket.to(cur).emit('typing', { channelId: cur, name: me }); });
 
   // ----- Sunucular -----
   socket.on('createServer', (arg, cb = () => {}) => {
@@ -5319,7 +5340,7 @@ setInterval(() => {
   const now = Date.now(), due = (db.scheduled || []).filter(x => x.at <= now);
   if (!due.length) return;
   db.scheduled = db.scheduled.filter(x => x.at > now);
-  for (const x of due) if (db.users[x.author] && canAccess(x.author, x.chId)) {
+  for (const x of due) if (db.users[x.author] && !postGate(x.author, x.chId, x.text)) {
     const r = postMessage(x.author, x.chId, { kind: 'text', text: x.text, scheduled: true });
     if (r.msg) { io.to('user:' + x.author).emit('toast', 'Zamanlanmış mesajın gönderildi'); }
   }
