@@ -352,6 +352,7 @@
   .rref { position: relative; display: flex; align-items: center; gap: 6px; max-width: 100%; margin: 0 0 4px 4px; font-size: 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
   .rref:hover { color: var(--ink); }
   .rref .mini { width: 16px; height: 16px; border-radius: 50%; color: #fff; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rref .mini { overflow: hidden; } .rref .mini img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
   .rref b { font-weight: 800; flex-shrink: 0; }
   .rref .txt { overflow: hidden; text-overflow: ellipsis; opacity: .85; }
   .row:not(.mine) .rref::before { content: ''; position: absolute; left: -32px; top: 8px; width: 26px; height: 12px; border-left: 2px solid #5c463a; border-top: 2px solid #5c463a; border-top-left-radius: 8px; }
@@ -4272,11 +4273,21 @@ socket.on('connect', () => {
   if (myVoice) { vcResume = { ch: myVoice, muted, deaf, deafWasMuted }; cleanupVoice(true); }
 });
 let vcResume = null;
+// Sayfa yenilenirken (ör. güncellemede "Yenile") sesteysen odayı ve mikrofon/kulaklığı hatırla; açılınca 2 dakika içindeyse aynen geri dön
+addEventListener('pagehide', () => { try { if (myVoice) sessionStorage.setItem('kanka-vc', JSON.stringify({ ch: myVoice, muted, deaf, deafWasMuted, at: Date.now() })); else sessionStorage.removeItem('kanka-vc'); } catch {} });
+try { const v = JSON.parse(sessionStorage.getItem('kanka-vc') || 'null'); sessionStorage.removeItem('kanka-vc'); if (v?.ch && Date.now() - v.at < 120e3) vcResume = { ...v, reload: true }; } catch {}
+// Yenilemeden sonra tarayıcı sesi kendiliğinden çalmayabilir (otomatik oynatma kuralı): ilk dokunuşta hepsini başlat
+function unlockAudio() {
+  const go = () => { document.querySelectorAll('audio').forEach(a => { if (a.srcObject && a.paused) a.play().catch(() => {}); }); nsCtx?.resume?.().catch(() => {}); };
+  const once = () => { go(); removeEventListener('pointerdown', once, true); removeEventListener('keydown', once, true); };
+  addEventListener('pointerdown', once, true); addEventListener('keydown', once, true);
+  setTimeout(() => { go(); setTimeout(() => { if ([...document.querySelectorAll('audio')].some(a => a.srcObject && a.paused)) toast('🔊 Sesli odadakileri duymak için sayfada herhangi bir yere tıkla'); }, 800); }, 2500);
+}
 function resumeVoice() {
   const r = vcResume; vcResume = null; if (!r || myVoice) return;
   // geri dönerken mikrofon/kulaklık asla kendiliğinden açılmasın
   muted = r.muted || r.deaf; deaf = r.deaf; deafWasMuted = r.deafWasMuted; applyDeaf(); applyMute();
-  joinVoiceNow(r.ch, r).then(ok => { if (!ok) toast('Sesli odaya geri bağlanılamadı, tekrar katıl'); });
+  joinVoiceNow(r.ch, r).then(ok => { if (!ok) return toast('Sesli odaya geri bağlanılamadı, tekrar katıl'); if (r.reload) { toast('🎧 Sesli odaya geri döndün'); unlockAudio(); } });
 }
 async function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); await Promise.race([E2E.wipe(), new Promise(r => setTimeout(r, 800))]); location.reload(); }
 // Resim seç ve yükle. Büyük fotoğraflar küçültülür, telefonun HEIC/AVIF/BMP gibi biçimleri tarayıcı açabiliyorsa WebP'ye çevrilir.
@@ -7060,7 +7071,7 @@ function msgHTML(m, prev) {
   const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'own' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}<span class="gtime">${hm(m.time)}</span>
-    <div class="col">${m.inter ? interTag(m) : ''}${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${botTag(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+    <div class="col">${m.inter ? interTag(m) : ''}${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${avInner(m.replyTo.author)}</span><b style="color:${(S.view === 'server' && roleColor(S.server, m.replyTo.author)) || userColor(m.replyTo.author)}">@${esc(dn(m.replyTo.author))}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${botTag(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 // ================= Uçtan uca şifreleme (DM ve grup DM) =================
