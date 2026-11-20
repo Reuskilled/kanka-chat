@@ -3265,6 +3265,11 @@
   @keyframes fadeIn { from { opacity: 0; } }
   @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
     #app { height: 100vh; height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+    body.vv, body.vv #app { height: var(--vvh, 100dvh) !important; }
+    body.vv.has-eb #app, body.vv.has-ab #app { height: calc(var(--vvh, 100dvh) - 40px) !important; }
+    body.vv.has-tb #app { height: calc(var(--vvh, 100dvh) - 34px) !important; }
+    body.vv.has-tb.has-eb #app { height: calc(var(--vvh, 100dvh) - 74px) !important; }
+    body.kb-open #compose { margin-bottom: 8px; }
     #input, .field, select, textarea, input[type=text], input[type=search], input[type=password], input[type=email] { font-size: 16px !important; }
     #compose { margin-bottom: calc(10px + env(safe-area-inset-bottom)); }
     #rail, #side { padding-top: calc(env(safe-area-inset-top) + 8px); padding-bottom: env(safe-area-inset-bottom); }
@@ -3609,6 +3614,20 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
 const kDev = (() => { const ck = (document.cookie.match(/(?:^|; )kdid=([a-z0-9-]{16,64})/i) || [])[1]; let d = null; try { d = localStorage.getItem('kanka-did'); } catch {} d = d || ck || (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''));
   try { localStorage.setItem('kanka-did', d); } catch {} try { document.cookie = `kdid=${d}; max-age=${400 * 86400}; path=/; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`; } catch {} return d; })();
 const socket = io({ auth: { d: kDev } });
+// Telefonda klavye: iOS Safari sayfayı küçültmüyor, üstüne biniyor. Uygulamanın yüksekliğini görünür alana eşitle ki yazı kutusu klavyenin hemen üstünde kalsın.
+if (window.visualViewport && matchMedia('(pointer: coarse)').matches) {
+  const vv = window.visualViewport, root = document.documentElement; let raf = 0;
+  const fit = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => {
+    const box = document.getElementById('messages'), atEnd = box && box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+    root.style.setProperty('--vvh', Math.round(vv.height) + 'px'); document.body.classList.add('vv');
+    const kb = window.innerHeight - vv.height > 120; document.body.classList.toggle('kb-open', kb);
+    if (window.scrollY || document.documentElement.scrollTop) window.scrollTo(0, 0); // iOS sayfayı yukarı itiyor; sabitle
+    if (atEnd && box) box.scrollTop = box.scrollHeight; // en alttaysan klavye açılınca da son mesajlar görünsün
+  }); };
+  vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); window.addEventListener('orientationchange', () => setTimeout(fit, 300));
+  document.addEventListener('focusin', () => setTimeout(fit, 50)); document.addEventListener('focusout', () => setTimeout(fit, 120));
+  fit();
+}
 const ICON = {
   bug: '<path d="M8 6.5a4 4 0 0 1 8 0"/><rect x="7" y="7" width="10" height="12" rx="5"/><path d="M12 11v8M4 10l3 1.5M20 10l-3 1.5M3.5 15H7M20.5 15H17M5 20l2.5-2M19 20l-2.5-2M9.5 4 8 2.5M14.5 4 16 2.5"/>',
   logo: '<path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><path d="M9 9.5v1M15 9.5v1M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/>',
