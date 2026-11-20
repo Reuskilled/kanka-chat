@@ -4509,7 +4509,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-call
 const railVoiceN = s => new Set(s.channels.filter(c => voiceLike(c.type)).flatMap(c => S.voice?.[c.id] || [])).size;
 const railVoiceBadge = s => { const n = railVoiceN(s); return n ? `<span class="rvc">${ic('volume')}${n}</span>` : ''; };
 function updRailVoice() { $('#rail')?.querySelectorAll('.srv[data-id]').forEach(b => { const s = S.servers.find(x => x.id === b.dataset.id); if (!s) return; b.querySelector('.rvc')?.remove(); b.insertAdjacentHTML('beforeend', railVoiceBadge(s)); }); }
-function renderRail() {
+function updTitle() {
   // Sekme sayacı: yalnızca gerçekten açılıp okunabilecek yerler (görünen kanal / mevcut DM). Görünmeyen ya da silinmiş kanal kayıtları temizlenir.
   const vis = new Set((S.dms || []).map(d => d.id)); for (const sv of S.servers) for (const c of sv.channels) vis.add(c.id);
   for (const id of [...S.unread]) if (!vis.has(id) && !/^(dm|g):/.test(id)) S.unread.delete(id);
@@ -4517,6 +4517,9 @@ function renderRail() {
   const unreadN = [...S.unread].filter(id => vis.has(id) && !mutedServers.has(S.servers.find(sv => sv.channels.some(c => c.id === id))?.id)).length + (S.unreadDM && !dmU ? 1 : 0);
   window.kankaDesktop?.badge(unreadN);
   document.title = (unreadN ? `(${unreadN}) ` : '') + 'Kanka Chat';
+}
+function renderRail() {
+  updTitle();
   $('#rail').innerHTML =
     `<button class="srv home ${S.view === 'dm' ? 'active' : ''}" id="home" title="Arkadaşlar ve özel mesajlar">${ic('logo')}${S.unreadDM ? '<span class="dot"></span>' : ''}</button>${railCalls()}${railDMs()}<div class="rsep"></div>` +
     orderedServers().map(s => `<button class="srv ${S.view === 'server' && s.id === S.server?.id ? 'active' : ''} ${mutedServers.has(s.id) ? 'smuted' : ''}" data-id="${s.id}" aria-label="${esc(s.name)}">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}${S.unreadServers.has(s.id) && !(S.view === 'server' && s.id === S.server?.id) ? '<span class="upill"></span>' : ''}${(() => { const n = mentCount(s); return n ? `<span class="mcnt">${n > 9 ? '9+' : n}</span>` : ''; })()}${railVoiceBadge(s)}</button>`).join('') +
@@ -6085,7 +6088,7 @@ function selectChannel(id) {
   document.body.classList.remove('vview'); renderPip();
   document.body.classList.remove('drawer');
   S.channel = S.server.channels.find(c => c.id === id);
-  S.unread.delete(id); renderMembers();
+  S.unread.delete(id); updTitle(); renderMembers();
   setHeader(`${roomIcon(S.channel)} ${esc(S.channel.name)}`, S.channel.topic || S.server.name, true);
   $('#follow-btn')?.remove();
   if (S.channel.news) { const fb = document.createElement('button'); fb.id = 'follow-btn'; fb.className = 'followb'; fb.innerHTML = `${ic('megaphone')}<span>Takip et</span>`; fb.onclick = () => showFollow(S.server, S.channel); $('#head-actions').prepend(fb); }
@@ -6284,7 +6287,7 @@ function openDMChannel(id, other) {
   document.body.classList.remove('drawer');
   S.view = 'dm';
   S.channel = { id, with: other, dm: true };
-  S.unread.delete(id); delete dmCnt[id]; if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false;
+  S.unread.delete(id); delete dmCnt[id]; if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; updTitle();
   renderRail(); // sol çubuktaki mesaj atan profili hemen kalksın
   if (other === 'Kanka Bot') { setHeader(`${ic('chat')} Kanka Bot <span class="botbadge">BOT</span>`, 'Kanka bildirimleri', false);
     enterRoom(id, 'Kanka Bot\'a cevap yazılamıyor', `<div class="hello"><div class="av" style="width:64px;height:64px;margin:0 auto 8px"><img src="/icon-192.png" alt=""></div><b>Kanka Bot</b>Kanka ekibinden gelen bildirimler burada. Bu sohbete cevap yazılamıyor.</div>`);
@@ -6305,7 +6308,7 @@ function openGroup(id) {
   document.body.classList.remove('drawer');
   S.view = 'dm';
   S.channel = { id, group: true, name: groupName(g), members: g.members, owner: g.owner };
-  S.unread.delete(id); delete dmCnt[id]; if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false;
+  S.unread.delete(id); delete dmCnt[id]; if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; updTitle();
   renderRail();
   setHeader(`${ic('users')} ${esc(groupName(g))}`, `${g.members.length} üye`, false);
   addCallButtons(true);
