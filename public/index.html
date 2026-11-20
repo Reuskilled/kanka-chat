@@ -3859,6 +3859,13 @@ function reactionHTML(key, id, us) {
   const m = EMOJI_TOKEN.exec(key), url = m && serverEmojis()[m[1]];
   return `<button class="${us.includes(S.me) ? 'on' : ''}" data-react="${id}" data-e="${esc(key)}" title="${esc(us.join(', '))}">${url ? `<img class="cemoji" src="${esc(url)}" alt="${esc(key)}">` : esc(key)}<span>${us.length}</span></button>`;
 }
+// #oda-adı: önce açık sunucuda, yoksa üye olunan diğer sunucularda ara (DM'de de çalışır)
+function chByName(n) {
+  const nl = n.toLocaleLowerCase('tr'), hit = c => !voiceLike(c.type) && (c.name === n || c.name.toLocaleLowerCase('tr') === nl);
+  const cur = S.view === 'server' && S.server; if (cur) { const c = cur.channels.find(hit); if (c) return { s: cur, c }; }
+  for (const sv of S.servers || []) { const c = sv.channels.find(hit); if (c) return { s: sv, c }; }
+  return null;
+}
 function inlineFmt(t) {
   const codes = [];
   let h = esc(t)
@@ -3868,7 +3875,7 @@ function inlineFmt(t) {
   // link önce yer tutucuya alınır: içindeki @ad, _ , * ve # biçimlendirmeye girmesin
   h = h.replace(/(https?:\/\/[^\s<]+)/g, u => `\u0000${codes.push(`<a href="${u}" target="_blank" rel="noopener">${u}</a>`) - 1}\u0000`)
     .replace(/@([\p{L}\p{N}_.-]+)/gu, (m, n) => S.users[n] || /^(everyone|herkes)$/i.test(n) ? `<span class="mention${n === S.me || /^(everyone|herkes)$/i.test(n) ? ' me' : ''}"${S.users[n] ? ` data-u="${n}" role="button" tabindex="0"` : ''}>@${n}</span>` : (S.server?.customRoles || []).find(r => r.name === n) ? `<span class="mention" style="color:${(S.server.customRoles.find(r => r.name === n)).color}">@${n}</span>` : m)
-    .replace(/(^|[\s(])#([\p{L}\p{N}_-]+)/gu, (m, pre, n) => { const nl = n.toLocaleLowerCase('tr'), c = S.view === 'server' && S.server?.channels.find(x => !voiceLike(x.type) && (x.name === n || x.name.toLocaleLowerCase('tr') === nl)); return c ? `${pre}<a class="chref" data-goch="${c.id}">#${n}</a>` : m; })
+    .replace(/(^|[\s(\[*_~>.,!?;])#([\p{L}\p{N}_-]+)/gu, (m, pre, n) => { const c = chByName(n); return c ? `${pre}<a class="chref" data-goch="${c.c.id}" data-gosv="${c.s.id}"${c.s.id !== S.server?.id || S.view !== 'server' ? ` title="${esc(c.s.name)}"` : ''}>#${n}</a>` : m; })
     .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
     .replace(/(^|[^*\w])\*([^*\n]+)\*(?!\w)/g, '$1<i>$2</i>')
     .replace(/(^|[^_\w])_([^_\n]+)_(?!\w)/g, '$1<i>$2</i>')
@@ -5411,7 +5418,7 @@ function msetBack(fromPop) {
 }
 addEventListener('resize', () => { if ($('#modal').classList.contains('open')) msetEnhance(false); });
 document.addEventListener('click', e => { const mu = e.target.closest('.mention[data-u]'); if (!mu || !S.users[mu.dataset.u]) return; e.preventDefault(); e.stopPropagation(); closePop(); closeVPop(); miniProfile(mu.dataset.u, mu); }, true);
-document.addEventListener('click', e => { const a = e.target.closest('.chref[data-goch]'); if (!a) return; e.preventDefault(); if (S.server?.channels.some(c => c.id === a.dataset.goch)) selectChannel(a.dataset.goch); });
+document.addEventListener('click', e => { const a = e.target.closest('.chref[data-goch]'); if (!a) return; e.preventDefault(); const ch = a.dataset.goch, sv = a.dataset.gosv || S.servers.find(x => x.channels.some(c => c.id === ch))?.id; if (S.view === 'server' && S.server?.id === sv) selectChannel(ch); else if (sv) selectServer(sv, ch); });
 
 // ================= Kanka Bot =================
 const KB_MODS = [
