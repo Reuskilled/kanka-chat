@@ -1305,6 +1305,13 @@ function canAccess(name, chId) {
   const f = findChannel(chId);
   return !!f && (f.c.type === 'text' || f.c.type === 'forum' || voiceLike(f.c.type)) && (f.s.public || f.s.members.includes(name)) && !f.s.bans?.[name] && seesChannel(f.s, f.c, name);
 }
+// Mesaj silinince/temizlenince okunmamış sayaçlarını geri al: silinenlerin zamanları + kanalda kalan son mesajın zamanı
+function unActivity(chId, gone) {
+  const times = (gone || []).map(m => m?.time || 0), last = (db.messages[chId] || []).at(-1)?.time || 0;
+  if (!times.length) return;
+  const to = isPrivateChat(chId) ? chatMembers(chId) : (() => { const f = findChannel(chId); return f ? membersOf(f.s).filter(n => canAccess(n, chId)) : []; })();
+  for (const n of to) io.to('user:' + n).emit('chanUnact', { channelId: chId, last, times });
+}
 function dmsFor(name) {
   const dms = Object.keys(db.messages)
     .filter(k => k.startsWith('dm:') && dmPeers(k).includes(name) && db.messages[k].length)
@@ -2830,7 +2837,7 @@ api.delete('/odalar/:cid/mesajlar/:mid', R((a, req) => {
   if (m.author !== a.bot && (f.dm || !can(f.s, a.bot, 'manageMessages'))) return { error: 'Başkasının mesajını silmek için "Mesajları yönet" izni gerekli', code: 403 };
   if (m.author !== a.bot && !f.dm && m.author === f.s.owner) return { error: 'Sunucu sahibinin mesajı bot tarafından silinemez', code: 403 };
   db.messages[cid] = list.filter(x => x !== m); if (m.author !== a.bot && !f.dm) audit(f.s, a.bot, 'Mesaj sildi (bot)', m.author || '');
-  save(); io.to(cid).emit('remove', { channelId: cid, msgId: m.id }); return { ok: true };
+  save(); io.to(cid).emit('remove', { channelId: cid, msgId: m.id }); unActivity(cid, [m]); return { ok: true };
 }));
 api.put('/odalar/:cid/mesajlar/:mid/tepkiler/:emoji', R((a, req) => {
   const cid = req.params.cid, f = botChan(a, cid, cid.startsWith('dm:') ? 'view' : 'react'); if (f.error) return f;
@@ -3278,7 +3285,7 @@ io.on('connection', socket => {
       const list = db.messages[r.chId] || [], i = list.findIndex(m => m.id === r.msg?.id);
       if (i >= 0) {
         if (!site && !(s && s.channels.some(c => c.id === r.chId))) return cb({ error: 'Bu mesajı silemezsin' });
-        list.splice(i, 1); io.to(r.chId).emit('remove', { channelId: r.chId, msgId: r.msg.id });
+        const [gm] = list.splice(i, 1); io.to(r.chId).emit('remove', { channelId: r.chId, msgId: r.msg.id }); unActivity(r.chId, [gm]);
         if (s) audit(s, me, 'Şikayet üzerine mesaj sildi', `${r.target}: ${(r.msg.text || '').slice(0, 60)}`);
       }
       close('Mesaj silindi');
@@ -3804,6 +3811,7 @@ io.on('connection', socket => {
       const k = Math.min(Math.max(parseInt(rest[0]) || 0, 1), 100); if (!parseInt(rest[0])) return W({ title: 'Kullanım', tone: 'warn', text: '/temizle 20 (en çok 100)' });
       const list = db.messages[cur] || [], gone = list.splice(Math.max(0, list.length - k), k);
       for (const m of gone) io.to(cur).emit('remove', { channelId: cur, msgId: m.id });
+      unActivity(cur, gone);
       if (db.playlists[cur]) { const ids = new Set(gone.map(m => m.id)); db.playlists[cur] = db.playlists[cur].filter(x => !ids.has(x.id)); io.to(cur).emit('playlist', { channelId: cur, playlist: db.playlists[cur] }); }
       audit(s, me, 'Mesajları temizledi', `#${c?.name} · ${gone.length} mesaj`); save();
       return W({ title: 'Temizlendi', tone: 'ok', text: `${gone.length} mesaj silindi.` });
@@ -3982,13 +3990,13 @@ io.on('connection', socket => {
     const f = findChannel(cur);
     if (list[i].author !== me && !(f && (isMod(f.s, me) || chPerm(f.s, f.c, me, 'manage')))) return;
     if (list[i].author !== me && f) audit(f.s, me, 'Mesaj sildi', `${list[i].author}: ${(list[i].text || '').slice(0, 60)}`);
-    list.splice(i, 1);
+    const gm = list.splice(i, 1);
     if (db.playlists[cur]) {
       db.playlists[cur] = db.playlists[cur].filter(s => s.id !== msgId);
       io.to(cur).emit('playlist', { channelId: cur, playlist: db.playlists[cur] });
     }
     save();
-    io.to(cur).emit('remove', { channelId: cur, msgId });
+    io.to(cur).emit('remove', { channelId: cur, msgId }); unActivity(cur, gm);
   });
 
   socket.on('planToggle', msgId => {

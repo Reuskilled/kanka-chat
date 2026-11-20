@@ -6578,6 +6578,14 @@ const lastRead = JSON.parse(store.get('kanka-read') || '{}');
 const readSent = {};
 const chCnt = {}; // son baktığından beri gelen mesaj sayısı (oda listesinde beyaz nokta)
 const markRead = id => { delete chCnt[id]; delete dmCnt[id]; const had = mentionsAll().some(x => x.channelId === id && x.t > (lastRead[id] || 0)); lastRead[id] = Date.now(); if (had) setTimeout(() => { renderRail(); if (S.view === 'server') renderSide(); }, 0); store.set('kanka-read', JSON.stringify(lastRead)); clearTimeout(readSent[id]); readSent[id] = setTimeout(() => { delete readSent[id]; socket.emit('read', id); }, 700); };
+socket.on('chanUnact', ({ channelId: id, last, times }) => {
+  const lr = lastRead[id] || 0, n = (times || []).filter(t => t > lr).length; if (!n) return;
+  if (last <= lr) { S.unread.delete(id); delete chCnt[id]; delete dmCnt[id]; }
+  else { if (chCnt[id]) chCnt[id] = Math.max(1, chCnt[id] - n); if (dmCnt[id]) dmCnt[id] = Math.max(1, dmCnt[id] - n); }
+  if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false;
+  for (const sv of S.servers) if (!sv.channels.some(c => S.unread.has(c.id))) S.unreadServers.delete(sv.id);
+  renderRail(); if (S.view === 'server') renderSide(); else if (S.view === 'dm') renderDMSide?.(); refreshHome();
+});
 socket.on('readSync', ({ id }) => { lastRead[id] = Math.max(lastRead[id] || 0, Date.now()); delete chCnt[id]; delete dmCnt[id]; store.set('kanka-read', JSON.stringify(lastRead)); S.unread.delete(id); { if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; for (const sv of S.servers) if (!sv.channels.some(c => S.unread.has(c.id))) S.unreadServers.delete(sv.id); renderRail(); if (S.view === 'server') renderSide(); else if (S.view === 'dm') renderDMSide?.(); refreshHome(); } });
 // ---- Emoji favorileri / sık kullanılan: hesapta senkron, cihazda yedek ----
 let eFav = [];
