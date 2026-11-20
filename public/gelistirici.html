@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bot Geliştirici Belgeleri · Kanka Chat</title>
+<meta name="description" content="Kanka Chat için bot yaz: komutlar, butonlar, kartlar, formlar. JavaScript ve Python kütüphaneleriyle 5 dakikada ilk botun.">
+<link rel="stylesheet" href="/legal.css">
+<style>
+  .wrap { max-width: 980px; }
+  pre { background: #120c09; border: 1px solid #ffffff14; border-radius: 12px; padding: 14px 16px; overflow-x: auto; font: 13px/1.55 ui-monospace, Consolas, monospace; color: #f3e8df; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .92em; }
+  p code, li code, td code { background: #ffffff12; padding: 1px 6px; border-radius: 6px; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #ffffff12; vertical-align: top; }
+  th { color: #c9b8ab; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 6px; }
+  .toc a { padding: 6px 12px; border-radius: 999px; background: #ffffff0f; text-decoration: none; font-size: 13px; font-weight: 700; }
+  .tabs { display: flex; gap: 6px; margin: 12px 0 0; } .tabs button { padding: 7px 14px; border-radius: 10px 10px 0 0; border: 1px solid #ffffff14; border-bottom: 0; background: #ffffff08; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+  .tabs button.on { background: #120c09; color: #ff8a4c; } .tabs + pre { margin-top: 0; border-top-left-radius: 0; }
+  .note { padding: 12px 14px; border-radius: 12px; background: #ff8a4c14; border: 1px solid #ff8a4c33; margin: 12px 0; font-size: 14px; }
+  .dl { display: inline-flex; gap: 6px; align-items: center; padding: 9px 14px; border-radius: 10px; background: #ff8a4c; color: #1a0f0a !important; font-weight: 800; text-decoration: none; margin: 4px 8px 4px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="brand" href="/"><i>🦝</i>Kanka Chat</a><nav><a href="/gelistirici" class="on">Geliştiriciler</a><a href="/kosullar">Kullanım Şartları</a><a href="/gizlilik">Gizlilik</a><a href="/">Uygulamaya dön</a></nav></div>
+  <div class="card">
+    <h1>Kanka için bot yaz</h1>
+    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.0, kanka.py 1.0</div>
+    <div class="tldr"><b>Kısaca:</b>
+      <ul>
+        <li>Bot geliştirici başvurun kabul edildiyse Kanka'da <b>Ayarlar › Bot geliştirici</b> sayfası Geliştirici Portalı'na dönüşür. Oradan bot oluşturur, token alırsın.</li>
+        <li>Botunu kendi bilgisayarında ya da sunucunda çalıştırırsın; Kanka'ya WebSocket ile bağlanır, REST API ile mesaj gönderir.</li>
+        <li><code>/komut</code>, butonlar, seçim menüleri, kartlar ve form pencereleri hazır.</li>
+        <li>Doğrulanmamış bir bot en fazla <b>50 farklı kişiye</b> ulaşabilir. Büyümek için portaldan doğrulama istersin.</li>
+      </ul>
+    </div>
+    <div class="toc"><a href="#baslangic">Başlangıç</a><a href="#komutlar">Komutlar</a><a href="#bilesenler">Butonlar ve menüler</a><a href="#kartlar">Kartlar</a><a href="#formlar">Formlar</a><a href="#olaylar">Olaylar</a><a href="#rest">REST API</a><a href="#gateway">Gateway</a><a href="#http">HTTP etkileşimleri</a><a href="#sinirlar">Sınırlar ve kurallar</a></div>
+
+    <h2 id="baslangic">1. Beş dakikada ilk bot</h2>
+    <ol>
+      <li>Kanka'da <b>Ayarlar › Bot geliştirici › Yeni bot</b>. Bot adını yaz; token bir kez gösterilir, kopyala. İlk botunla birlikte içinde botun hazır olan bir <b>deneme sunucusu</b> açılır.</li>
+      <li>Kütüphaneyi indir (npm ve PyPI'a yakında):<br><a class="dl" href="/sdk/kanka.js" download>⬇ kanka.js</a><a class="dl" href="/sdk/kanka.py" download>⬇ kanka.py</a></li>
+      <li>Token'ı <code>KANKA_TOKEN</code> ortam değişkenine koy ve çalıştır. Deneme sunucusunda <code>/</code> yaz; komutun listede.</li>
+    </ol>
+    <div class="tabs" data-g="ilk"><button class="on" data-t="js">JavaScript</button><button data-t="py">Python</button></div>
+<pre data-g="ilk" data-t="js">// Node.js 18+ · npm i ws (Node 22'de gerekmez)
+const { Kanka } = require('./kanka.js');
+const bot = new Kanka({ token: process.env.KANKA_TOKEN });
+
+bot.komut('zar', { aciklama: 'Zar at', secenekler: [{ ad: 'yuz', tur: 'tamsayi', aciklama: 'Kaç yüzlü?' }] },
+  k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * k.secenek('yuz', 6))}`));
+
+bot.on('mesaj', m => { if (m.icerik === 'ping') m.cevapla('pong 🏓'); });
+bot.on('hazir', () => console.log(bot.ben.ad, 'hazır!'));
+bot.baglan();</pre>
+<pre data-g="ilk" data-t="py" hidden># Python 3.9+ · pip install aiohttp
+import os, random, kanka
+bot = kanka.Bot(token=os.environ["KANKA_TOKEN"])
+
+@bot.komut("zar", aciklama="Zar at", secenekler=[kanka.Secenek("yuz", "tamsayi", "Kaç yüzlü?")])
+async def zar(k):
+    await k.cevapla(f"🎲 {random.randint(1, k.secenek('yuz', 6))}")
+
+@bot.olay("mesaj")
+async def mesaj(m):
+    if m["icerik"] == "ping": await m.cevapla("pong 🏓")
+
+bot.calistir()</pre>
+    <div class="note">Token botunun şifresidir. Koda yazma, GitHub'a yükleme. Sızarsa portaldan <b>Token'ı yenile</b>; eskisi anında çalışmaz olur.</div>
+    <p>Botu başka sunuculara eklemek için portaldaki <b>Sunucuya ekleme linki</b>ni paylaş: <code>https://kankahq.com/bot-ekle/&lt;uygulama&gt;?izin=manageMessages,kick</code>. Linki açan kişi istenen izinleri görür, onaylar; bot sunucuya kendi rolüyle girer.</p>
+
+    <h2 id="komutlar">2. Komutlar</h2>
+    <p>Komutlar kullanıcıların <code>/</code> listesinde botun adı ve simgesiyle çıkar. Kanka'nın kendi komutuyla aynı adı taşıyorsa <code>/ad:botadi</code> olarak görünür. Seçenekleri olan bir komutu kullanıcı listeden seçince Kanka seçenekler için bir form açar; <code>/zar 20</code> ya da <code>/zar yuz:20</code> gibi yazmak da olur.</p>
+    <table><tr><th>Seçenek türü</th><th>Bota gelen değer</th></tr>
+      <tr><td><code>yazi</code></td><td>metin (en fazla 1000 karakter)</td></tr>
+      <tr><td><code>sayi</code> / <code>tamsayi</code></td><td>sayı</td></tr>
+      <tr><td><code>evethayir</code></td><td><code>true</code> / <code>false</code></td></tr>
+      <tr><td><code>kisi</code></td><td>kullanıcı adı (sunucuda olmalı)</td></tr>
+      <tr><td><code>oda</code> / <code>rol</code></td><td>oda ya da rol kimliği</td></tr></table>
+    <p>Sabit seçimler için <code>secimler: [{ ad: 'Yazı', deger: 'yazi' }]</code> ekle. Bir komutu tek sunucuya özel yapmak için JavaScript'te <code>{ sunucu: '&lt;id&gt;' }</code>, Python'da <code>sunucu="&lt;id&gt;"</code>. En fazla 50 komut, komut başına 10 seçenek.</p>
+    <p><b>3 saniye kuralı:</b> komuta 3 saniye içinde cevap vermelisin. Uzun sürecek işler için önce <code>k.bekle()</code> de (kullanıcı "düşünüyor…" görür), sonra 15 dakika içinde <code>k.duzenle('...')</code> ile bitir. <code>k.cevapla({ icerik, gizli: true })</code> cevabı sadece komutu kullanan kişiye gösterir.</p>
+<pre>bot.komut('rapor', { aciklama: 'Uzun rapor' }, async k => {
+  await k.bekle();
+  const sonuc = await uzunIs();
+  await k.duzenle(`Hazır: ${sonuc}`);
+});</pre>
+
+    <h2 id="bilesenler">3. Butonlar ve seçim menüleri</h2>
+    <p>Bir mesaja en fazla 5 satır ekleyebilirsin; bir satırda 5 buton ya da 1 seçim menüsü olur. Buton stilleri: <code>ana</code>, <code>ikincil</code>, <code>basari</code>, <code>tehlike</code>, <code>link</code> (link butonu <code>url</code> açar, bota olay gelmez).</p>
+<pre>const { Kanka, Buton, LinkButon, Secim } = require('./kanka.js');
+bot.komut('oylama', { aciklama: 'Hızlı oylama' }, k => k.cevapla({
+  icerik: 'Akşam oyun var mı?',
+  bilesenler: [
+    [Buton('evet', 'Evet', 'basari', { emoji: '👍' }), Buton('hayir', 'Hayır', 'tehlike'), LinkButon('https://kankahq.com', 'Site')],
+    [Secim('oyun', ['Valorant', 'CS2', 'LoL'], { yerTutucu: 'Hangi oyun?' })],
+  ],
+}));
+bot.buton(/^(evet|hayir)$/, e => e.guncelle(`${e.kullanici.gorunenAd}: ${e.veri.id}`)); // mesajı yerinde değiştirir
+bot.secim('oyun', e => e.cevapla({ icerik: `Seçtiğin: ${e.degerler[0]}`, gizli: true }));</pre>
+
+    <h2 id="kartlar">4. Kartlar</h2>
+<pre>const { Kart } = require('./kanka.js');
+k.cevapla({ kartlar: [ new Kart().baslik('Sunucu durumu').aciklama('Her şey yolunda ✅').renk('#2f9e65')
+  .alan('Üye', '42', true).alan('Çevrimiçi', '17', true).altyazi('Son güncelleme: şimdi') ] });</pre>
+    <p>Kart alanları: <code>baslik</code>, <code>aciklama</code> (markdown), <code>renk</code>, <code>url</code>, <code>alanlar</code> (en fazla 15), <code>resim</code>, <code>kucukResim</code>, <code>altyazi</code>. Resimler <code>https://</code> olmalı. Mesaj başına 5 kart.</p>
+
+    <h2 id="formlar">5. Form pencereleri</h2>
+<pre>bot.komut('basvur', { aciklama: 'Moderatörlük başvurusu' }, k => k.formAc({
+  id: 'basvuru', baslik: 'Moderatör başvurusu',
+  alanlar: [{ id: 'yas', etiket: 'Kaç saat aktifsin?' }, { id: 'neden', etiket: 'Neden sen?', tur: 'uzun' }],
+}));
+bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!', gizli: true }));</pre>
+
+    <h2 id="olaylar">6. Olaylar</h2>
+    <p>Bağlanırken hangi olayları istediğini <b>niyetler</b> ile söylersin: <code>new Kanka({ token, niyetler: ['mesajlar', 'uyeler'] })</code>.</p>
+    <table><tr><th>Niyet</th><th>Gelen olaylar (kanka.js adı)</th></tr>
+      <tr><td><code>mesajlar</code></td><td><code>mesaj</code>, <code>mesajDuzenlendi</code>, <code>mesajSilindi</code> (botun görebildiği odalarda)</td></tr>
+      <tr><td><code>icerik</code></td><td>Yukarıdaki mesajların içeriği. Yoksa içerik sadece bot etiketlendiğinde ya da DM'de gelir.</td></tr>
+      <tr><td><code>uyeler</code></td><td><code>uyeKatildi</code>, <code>uyeAyrildi</code>, <code>uyeGuncellendi</code></td></tr>
+      <tr><td><code>tepkiler</code></td><td><code>tepki</code>, <code>tepkiKaldirildi</code></td></tr>
+      <tr><td><code>dm</code></td><td>Bota yazılan özel mesajlar</td></tr>
+      <tr><td>(her zaman)</td><td><code>hazir</code>, <code>sunucuyaEklendi</code>, <code>sunucudanCikarildi</code>, komut ve bileşen etkileşimleri</td></tr></table>
+    <div class="note">Doğrulanmamış botlar <code>icerik</code> niyetini serbestçe kullanabilir. Doğrulanan botlar için mesaj içeriği izni doğrulama sırasında ayrıca verilir.</div>
+
+    <h2 id="rest">7. REST API</h2>
+    <p>Adres: <code>https://kankahq.com/api/v1</code> · Başlık: <code>Authorization: Bot &lt;token&gt;</code> · Gövde JSON. Hata olursa <code>{ "hata": "..." }</code> döner. Alışık olduğun adlar da kabul edilir: <code>content</code>, <code>embeds</code>, <code>components</code>.</p>
+    <table><tr><th>Uç nokta</th><th>Ne yapar</th></tr>
+      <tr><td><code>GET /ben</code></td><td>Botun bilgisi, erişim (kaç kişi), doğrulama durumu</td></tr>
+      <tr><td><code>GET /sunucular</code>, <code>GET /sunucular/:id</code></td><td>Sunucular, odalar, roller, botun izinleri</td></tr>
+      <tr><td><code>GET /sunucular/:id/uyeler[/:ad]</code></td><td>Üyeler</td></tr>
+      <tr><td><code>GET /odalar/:id/mesajlar?limit=50&amp;once=&lt;id&gt;</code></td><td>Mesaj geçmişi</td></tr>
+      <tr><td><code>POST /odalar/:id/mesajlar</code></td><td>Mesaj gönder: <code>{ icerik, kartlar, bilesenler, yanit }</code></td></tr>
+      <tr><td><code>PATCH</code> / <code>DELETE /odalar/:id/mesajlar/:mid</code></td><td>Düzenle / sil (başkasınınkini silmek için "Mesajları yönet")</td></tr>
+      <tr><td><code>PUT</code> / <code>DELETE /odalar/:id/mesajlar/:mid/tepkiler/:emoji</code></td><td>Tepki ekle / kaldır</td></tr>
+      <tr><td><code>PUT</code> / <code>DELETE /odalar/:id/sabitler/:mid</code></td><td>Sabitle / kaldır</td></tr>
+      <tr><td><code>POST /kullanicilar/:ad/dm</code></td><td>Özel mesaj (ortak sunucu gerekir)</td></tr>
+      <tr><td><code>PUT</code> / <code>DELETE /sunucular/:id/uyeler/:ad/roller/:rol</code></td><td>Rol ver / al (botun rolünden aşağıdakiler)</td></tr>
+      <tr><td><code>POST /sunucular/:id/uyeler/:ad/sustur</code></td><td><code>{ dakika, sebep }</code> (0 = kaldır)</td></tr>
+      <tr><td><code>DELETE /sunucular/:id/uyeler/:ad</code>, <code>PUT /sunucular/:id/yasaklar/:ad</code></td><td>At / yasakla</td></tr>
+      <tr><td><code>GET</code> / <code>PUT /komutlar</code>, <code>/sunucular/:id/komutlar</code></td><td>Komut listesini oku / tamamen değiştir</td></tr>
+      <tr><td><code>POST /etkilesim/:id/:token/cevap</code></td><td><code>{ tur: 'mesaj' | 'bekle' | 'guncelle' | 'form', ... }</code> (bot token'ı gerekmez)</td></tr>
+      <tr><td><code>PATCH /etkilesim/:id/:token/mesaj</code>, <code>POST .../takip</code></td><td>"bekle"den sonra düzenle / ek mesaj</td></tr></table>
+
+    <h2 id="gateway">8. Gateway (kütüphane kullanmayanlar için)</h2>
+    <p><code>wss://kankahq.com/bot/gateway</code> adresine bağlan. Her mesaj <code>{ op, d, t, s }</code> biçiminde JSON'dur.</p>
+    <table><tr><th>op</th><th>Anlamı</th></tr>
+      <tr><td>10 MERHABA</td><td>Sunucu gönderir: <code>{ nabizAraligi: 30000 }</code></td></tr>
+      <tr><td>2 TANIT</td><td>Sen gönderirsin: <code>{ token, niyetler: [...] }</code></td></tr>
+      <tr><td>1 NABIZ / 11 NABIZ_ALINDI</td><td>Her <code>nabizAraligi</code> ms'de bir 1 gönder; 75 saniye gelmezse bağlantı kapanır</td></tr>
+      <tr><td>0 OLAY</td><td><code>t</code>: <code>HAZIR</code>, <code>MESAJ_GELDI</code>, <code>MESAJ_DUZENLENDI</code>, <code>MESAJ_SILINDI</code>, <code>KOMUT</code>, <code>BUTON</code>, <code>SECIM</code>, <code>FORM</code>, <code>UYE_KATILDI</code>, <code>UYE_AYRILDI</code>, <code>UYE_GUNCELLENDI</code>, <code>TEPKI_EKLENDI</code>, <code>TEPKI_KALDIRILDI</code>, <code>SUNUCUYA_EKLENDI</code>, <code>SUNUCUDAN_CIKARILDI</code>; <code>s</code> sıra numarası</td></tr>
+      <tr><td>6 DEVAM</td><td>Koptuktan sonra 2 dakika içinde: <code>{ token, oturum, sira }</code>; kaçırdığın olaylar gelir</td></tr></table>
+    <p>Kapanış kodları: <code>4004</code> token geçersiz, <code>4005</code> zaten 2 bağlantı var, <code>4008</code> çok sık, <code>4014</code> bot durduruldu.</p>
+
+    <h2 id="http">9. HTTP etkileşimleri</h2>
+    <p>Botun sürekli bağlı kalmak zorunda değil. Portalda bir <b>etkileşim adresi</b> girersen bot bağlı değilken komutlar ve butonlar bu adrese POST edilir; cevabı aynı isteğin cevabında JSON olarak dönersin (<code>{ "tur": "mesaj", "icerik": "..." }</code>). Her istek imzalıdır, mutlaka doğrula:</p>
+<pre>// X-Kanka-Zaman ve X-Kanka-Imza başlıkları: HMAC-SHA256(sır, zaman + "." + gövde), hex
+const { imzaDogrula } = require('./kanka.js');
+if (!imzaDogrula(process.env.KANKA_SIR, req.headers['x-kanka-zaman'], hamGovde, req.headers['x-kanka-imza'])) return res.status(401).end();
+if (istek.tur === 'PING') return res.json({ tur: 'PONG' }); // adresi kaydederken gelir</pre>
+
+    <h2 id="sinirlar">10. Sınırlar ve kurallar</h2>
+    <ul>
+      <li><b>Erişim sınırı:</b> doğrulanmamış bir bot en fazla <b>50 farklı kişiye</b> ulaşabilir (botun olduğu sunuculardaki farklı insanlar). Bu sınırı geçecek bir sunucuya eklenemez. 2 sunucuda 50 kişi de olsa, 5 sunucuda 30 kişi de olsa sayılan, kaç farklı kişiye ulaştığıdır. Portaldan doğrulama iste; Kanka ekibi botu inceleyip onaylarsa sınır kalkar ve adının yanında tik çıkar.</li>
+      <li><b>Hız:</b> bot başına saniyede 10 istek; oda başına 5 saniyede 5 mesaj; dakikada 30 DM. Aşarsan <code>429</code> ve <code>tekrarDene</code> (saniye) döner. Sürekli aşan bot 1 saat durur.</li>
+      <li><b>Özel mesaj:</b> bot sadece ortak bir sunucusu olan ve "Botlar bana özel mesaj atabilsin" ayarını kapatmamış kişilere yazabilir. Bot DM'leri uçtan uca şifreli değildir; kullanıcının kendi şifreli DM'lerini botlar asla göremez.</li>
+      <li>Bir sunucuda en fazla 25 bot olur; herkese açık sunuculara bot eklenmez.</li>
+      <li>Kullanıcıları kandırma, spam yapma, izinsiz veri toplama. Kurallara uymayan botları Kanka ekibi durdurabilir.</li>
+      <li><b>Bot Geliştirici rozeti:</b> botların başkalarının 3 sunucusunda kullanılsın ve 50 komut çalıştırılsın (kendi sunucuların ve kendi denemelerin sayılmaz). İlerlemeni portalda görürsün.</li>
+    </ul>
+    <p>Sorun mu var? Kanka HQ'daki <b>#bot-gelistirici</b> odasına yaz.</p>
+  </div>
+</div>
+<script>
+document.querySelectorAll('.tabs').forEach(t => t.querySelectorAll('button').forEach(b => b.onclick = () => {
+  t.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll(`pre[data-g="${t.dataset.g}"]`).forEach(p => p.hidden = p.dataset.t !== b.dataset.t);
+}));
+</script>
+</body>
+</html>

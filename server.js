@@ -152,6 +152,8 @@ app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURICompone
 app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && isStar(x)); res.redirect(s ? '/?davet=' + encodeURIComponent(s.invite) : '/'); });
 // İzlenen kısa link: kankahq.com/r/youtube-rozet → kaynak "youtube", kampanya "rozet" (video açıklamalarına koymak için)
 app.get('/r/:tag', (req, res) => { const t = String(req.params.tag).toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 60); const [src, ...rest] = t.split('-'); res.redirect('/?utm_source=' + encodeURIComponent(src || 'link') + (rest.length ? '&utm_campaign=' + encodeURIComponent(rest.join('-')) : '') + '&utm_medium=kisalink'); });
+app.get('/bot-ekle/:id', (req, res) => res.redirect('/?botekle=' + encodeURIComponent(String(req.params.id).slice(0, 40)) + (req.query.izin ? '&izin=' + encodeURIComponent(String(req.query.izin).slice(0, 300)) : '')));
+app.get('/gelistirici', (req, res) => res.sendFile(path.join(__dirname, 'public', 'gelistirici.html')));
 app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
 // İndirme güvenliği: sunulan kurulum dosyasının SHA-256'sı (VirusTotal raporu bu özetle açılır)
 let exeHash = { at: 0, mtime: 0, v: null };
@@ -724,7 +726,7 @@ const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (
 const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
 const HEX = /^#[0-9a-f]{6}$/i;
 const pubUser = u => ({ displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
-  birthday: u.birthday || null, music: u.music || null, activities: activitiesOf(u), badges: shownBadges(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
+  birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), badges: shownBadges(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
 const allUsers = () => Object.values(db.users).map(pubUser);
@@ -1170,7 +1172,7 @@ function partnerPerks() {
 // üyelerin açık anahtarlarına sarılır (wraps). Mesajlar sadece bu anahtarla şifreli metin olarak tutulur.
 const B64 = /^[A-Za-z0-9+/=_-]+$/;
 const b64ok = (x, max) => typeof x === 'string' && x.length > 0 && x.length <= max && B64.test(x);
-const e2eChat = chId => isPrivateChat(chId) && !chatMembers(chId).some(n => n === 'Claude' || n === BOT_NAME);
+const e2eChat = chId => isPrivateChat(chId) && !chatMembers(chId).some(n => n === 'Claude' || n === BOT_NAME || db.users[n]?.bot);
 const e2eKid = pubB64 => crypto.createHash('sha256').update(Buffer.from(pubB64, 'base64')).digest('hex').slice(0, 16);
 const e2eCur = n => db.users[n]?.e2e || null;
 function e2ePubs(names) { const o = {}; for (const n of names) { const u = db.users[n]; if (!u) continue; if (u.e2e) o[u.e2e.kid] = { n, pub: u.e2e.pub }; for (const k of u.e2eOld || []) o[k.kid] = { n, pub: k.pub, old: true }; } return o; }
@@ -1272,7 +1274,7 @@ const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s
   afk: s.afk || null,
   tplUndo: viewer && s.owner === viewer && s.tplUndo && Date.now() - s.tplUndo.t < TPL_UNDO_MS ? { t: s.tplUndo.t, channels: s.tplUndo.added.channels.length, categories: s.tplUndo.added.categories.length, roles: s.tplUndo.added.roles.length } : null,
   bot: viewer && can(s, viewer, 'manageServer') ? botCfg(s) : { added: !!s.bot?.added, mod: { on: botOn(s, 'mod') }, welcome: { on: botOn(s, 'welcome') }, ticket: { on: botOn(s, 'ticket'), askReason: s.bot?.ticket?.askReason !== false } },
-  myTicketStaff: viewer ? isTicketStaff(s, viewer) : false,
+  myTicketStaff: viewer ? isTicketStaff(s, viewer) : false, appCmds: cmdsFor(s, viewer),
   welcome: s.welcome || null, accepted: !s.welcome?.enabled || !!s.accepted?.[viewer] || s.owner === viewer
 });
 const findChannel = chId => {
@@ -2116,7 +2118,7 @@ for (const k of ['waitlist', 'reports']) db[k] ||= [];
 db.beta ||= { on: true, cap: 300 };
 const CODES_PER_USER = 3;
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i;
-const userCount = () => Object.keys(db.users).filter(n => n !== 'Claude').length;
+const userCount = () => Object.keys(db.users).filter(n => n !== 'Claude' && !db.users[n].bot).length;
 const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 function newCode(by, note = '') {
   let c; do { c = 'KNK-' + Array.from({ length: 6 }, () => CODE_ABC[crypto.randomInt(CODE_ABC.length)]).join(''); } while (db.codes[c]);
@@ -2237,7 +2239,7 @@ async function sendMail(to, subject, html, attachments, kind = 'diğer') {
     return false;
   }
 }
-const findUserBy = who => { who = clean(who, 190).toLowerCase(); return who && (Object.values(db.users).find(u => u.name.toLowerCase() === who || (u.email && u.email === who)) || Object.values(db.users).find(u => (u.oldNames || []).some(o => o.n.toLowerCase() === who && Date.now() - o.at < NAME_HOLD))); }; // eski adla da giriş (ayrılma süresi içinde)
+const findUserBy = who => { who = clean(who, 190).toLowerCase(); return who && (Object.values(db.users).find(u => !u.bot && u.name.toLowerCase() === who || (u.email && u.email === who)) || Object.values(db.users).find(u => (u.oldNames || []).some(o => o.n.toLowerCase() === who && Date.now() - o.at < NAME_HOLD))); }; // eski adla da giriş (ayrılma süresi içinde)
 // ---------- Kullanıcı adı değiştirme ----------
 const NAME_HOLD = 14 * 864e5, NAME_COOLDOWN = 7 * 864e5;
 const RESERVED_NAMES = ['kanka', 'kanka bot', 'kankabot', 'claude', 'admin', 'yonetim', 'yönetim', 'destek', 'sistem'];
@@ -2378,6 +2380,7 @@ function deleteUserData(name) {
   sessDelUser(name); setTimeout(() => io.in('user:' + name).disconnectSockets(true), 300);
   for (const [c, x] of Object.entries(db.codes)) if (x.by === name && !x.usedBy) delete db.codes[c];
   const em = db.users[name]?.email; if (em) db.waitlist = db.waitlist.filter(w => w.email !== em);
+  for (const a of Object.values(db.apps || {})) if (a.owner === name) appRemove(a);
   delete db.users[name];
   save();
 }
@@ -2393,6 +2396,473 @@ let buildTimer = null;
 try {
   fs.watch(path.dirname(INDEX), (ev, file) => { if (file && file !== 'index.html') return; clearTimeout(buildTimer); buildTimer = setTimeout(() => { const b = readBuild(); if (b && b !== build) { build = b; io.emit('build', build); } }, 1500); });
 } catch {}
+
+// =====================================================================
+// ---------- Kanka Bot API: geliştiricilerin kendi botları ----------
+// Uygulama (db.apps) + bot hesabı (db.users[ad].bot) · Gateway (WebSocket /bot/gateway) · REST (/api/v1) · komutlar ve etkileşimler
+// Doğrulanmamış bir bot en fazla REACH_MAX farklı kişiye ulaşabilir; fazlası için Kanka ekibinin onayı (doğrulama) gerekir.
+// =====================================================================
+const REACH_MAX = 50, APP_MAX = 5, CMD_MAX = 50, INTER_TTL = 15 * 60e3, INTER_WAIT = 3000;
+const BOT_INTENTS = ['mesajlar', 'icerik', 'uyeler', 'tepkiler', 'dm'];
+const OPT_TYPES = ['yazi', 'sayi', 'tamsayi', 'kisi', 'oda', 'rol', 'evethayir'];
+const BTN_STYLES = ['ana', 'ikincil', 'basari', 'tehlike', 'link'];
+const BOT_PERMS = PERMS.filter(p => p !== 'administrator'); // yönetici yetkisi bota verilmez, sunucu sahibi isterse rolü elle yükseltir
+const isBotUser = n => !!db.users[n]?.bot;
+const appOf = n => db.apps?.[db.users[n]?.bot?.app] || null;
+const appTokH = t => crypto.createHash('sha256').update('kbot|' + t).digest('hex');
+const appByToken = t => { if (typeof t !== 'string' || t.length < 30 || t.length > 120) return null; const h = appTokH(t); return Object.values(db.apps || {}).find(a => a.tokenH && a.tokenH.length === h.length && crypto.timingSafeEqual(Buffer.from(a.tokenH), Buffer.from(h))) || null; };
+const devOk = n => !!db.users[n] && (db.devApps?.[n]?.status === 'accepted' || !!db.users[n].devBeta || siteAdmin(n));
+const botServers = a => db.servers.filter(s => !s.public && s.members.includes(a.bot));
+const humans = list => list.filter(n => db.users[n] && !db.users[n].bot && n !== 'Claude' && n !== BOT_NAME);
+function reachOf(a, extra) { const set = new Set(); for (const s of botServers(a)) humans(s.members).forEach(n => set.add(n)); if (extra) humans(extra.members).forEach(n => set.add(n)); return set.size; }
+const contentOk = a => !a.verified || !!a.contentOk; // küçük (doğrulanmamış) botlar içeriği görebilir; büyüyenler için onay gerekir
+function appView(a, full) {
+  const u = db.users[a.bot] || {};
+  const v = { id: a.id, ad: a.bot, gorunenAd: u.displayName || a.name, aciklama: a.desc || '', avatar: u.avatar || null, sahip: a.owner, dogrulandi: !!a.verified, olusturuldu: a.createdAt, listede: !!(a.listed && a.verified) };
+  if (!full) return v;
+  return { ...v, tokenVar: !!a.tokenH, tokenAt: a.tokenAt || null, gizlilik: a.privacy || '', etkilesimUrl: a.interUrl || '', dmIzin: a.dmOk !== false, kapali: a.killed || null,
+    erisim: reachOf(a), esik: REACH_MAX, sunucular: botServers(a).map(s => ({ id: s.id, ad: s.name, uye: humans(s.members).length })),
+    dogrulama: a.verifyReq || null, icerikIzni: contentOk(a), komutlar: (a.cmds || []).length, istatistik: appStatsOut(a), cevrimici: botConnsOf(a.id).length > 0,
+    sirIpucu: a.secret ? a.secret.slice(0, 6) + '…' : null };
+}
+function appStatsOut(a) { const st = a.stats || {}, d = ymd(); return { komutToplam: st.cmds || 0, komutBugun: st.day?.[d] || 0, kullanan: (st.users || []).length, gun: Object.entries(st.day || {}).slice(-14) }; }
+function appCount(a, user) { // komut sayaçları: geliştirici rozeti için kendi denemeleri sayılmaz
+  const st = (a.stats ||= {}), d = ymd(); st.cmds = (st.cmds || 0) + 1; (st.day ||= {})[d] = (st.day[d] || 0) + 1;
+  for (const k of Object.keys(st.day)) if (k < ymd(Date.now() - 30 * 864e5)) delete st.day[k];
+  if (user !== a.owner) { if (!(st.users ||= []).includes(user)) { st.users.push(user); if (st.users.length > 5000) st.users.shift(); } st.cmdsOther = (st.cmdsOther || 0) + 1; devStatsSync(a.owner); }
+}
+function devStatsSync(owner) {
+  const u = db.users[owner]; if (!u) return; const mine = Object.values(db.apps || {}).filter(a => a.owner === owner);
+  const srv = new Set(); for (const a of mine) for (const s of botServers(a)) if (s.owner !== owner) srv.add(s.id);
+  u.devStats = { servers: srv.size, cmds: mine.reduce((t, a) => t + (a.stats?.cmdsOther || 0), 0) }; // kendi sunucuları ve kendi denemeleri sayılmaz
+  devCheck(owner);
+}
+const noPing = t => String(t || '').replace(/@(everyone|here|herkes)/gi, '@​$1');
+// ---- Mesaj içeriği: kartlar (embed) ve bileşenler (buton / seçim menüsü) ----
+const hexColor = c => Number.isInteger(c) ? '#' + (c >>> 0 & 0xffffff).toString(16).padStart(6, '0') : /^#[0-9a-f]{6}$/i.test(c || '') ? c : null;
+const httpsUrl = u => typeof u === 'string' && /^https:\/\/[^\s<>"']{4,400}$/i.test(u) ? u : null;
+function cleanEmbeds(list) {
+  if (!Array.isArray(list)) return [];
+  return list.slice(0, 5).map(e => { if (!e || typeof e !== 'object') return null;
+    const k = { baslik: noPing(clean(e.baslik ?? e.title, 200)), aciklama: noPing(clean(e.aciklama ?? e.description, 3000)), renk: hexColor(e.renk ?? e.color), url: httpsUrl(e.url),
+      alanlar: (Array.isArray(e.alanlar ?? e.fields) ? (e.alanlar ?? e.fields) : []).slice(0, 15).map(f => ({ ad: noPing(clean(f?.ad ?? f?.name, 100)), deger: noPing(clean(f?.deger ?? f?.value, 800)), satir: !!(f?.satir ?? f?.inline) })).filter(f => f.ad || f.deger),
+      resim: httpsUrl(e.resim ?? e.image?.url ?? e.image), kucukResim: httpsUrl(e.kucukResim ?? e.thumbnail?.url ?? e.thumbnail), altyazi: noPing(clean(e.altyazi ?? e.footer?.text ?? e.footer, 200)) };
+    return k.baslik || k.aciklama || k.alanlar.length || k.resim ? k : null; }).filter(Boolean);
+}
+function cleanComps(rows) {
+  if (!Array.isArray(rows)) return [];
+  const ids = new Set();
+  return rows.slice(0, 5).map(r => (Array.isArray(r) ? r : Array.isArray(r?.bilesenler ?? r?.components) ? (r.bilesenler ?? r.components) : [r]).slice(0, 5).map(c => {
+    if (!c || typeof c !== 'object') return null; const tur = c.tur ?? (c.type === 3 ? 'secim' : 'buton');
+    if (tur === 'buton') {
+      const stil = BTN_STYLES.includes(c.stil) ? c.stil : c.url ? 'link' : 'ana', b = { tur, stil, etiket: clean(c.etiket ?? c.label, 80), emoji: clean(c.emoji, 16) || null, kapali: !!(c.kapali ?? c.disabled) };
+      if (stil === 'link') { b.url = httpsUrl(c.url); if (!b.url) return null; } else { b.id = clean(c.id ?? c.custom_id, 100); if (!b.id || ids.has(b.id)) return null; ids.add(b.id); }
+      return b.etiket || b.emoji ? b : null;
+    }
+    if (tur === 'secim') {
+      const id = clean(c.id ?? c.custom_id, 100); if (!id || ids.has(id)) return null; ids.add(id);
+      const sec = (Array.isArray(c.secenekler ?? c.options) ? (c.secenekler ?? c.options) : []).slice(0, 25).map(o => ({ etiket: clean(o?.etiket ?? o?.label, 100), deger: clean(o?.deger ?? o?.value, 100), aciklama: clean(o?.aciklama ?? o?.description, 100) || null, emoji: clean(o?.emoji, 16) || null })).filter(o => o.etiket && o.deger);
+      if (!sec.length) return null;
+      const min = Math.min(Math.max(parseInt(c.min ?? c.min_values) || 1, 0), sec.length), max = Math.min(Math.max(parseInt(c.max ?? c.max_values) || 1, min || 1), sec.length);
+      return { tur, id, yerTutucu: clean(c.yerTutucu ?? c.placeholder, 100) || 'Bir seçenek seç', secenekler: sec, min, max, kapali: !!(c.kapali ?? c.disabled) };
+    }
+    return null;
+  }).filter(Boolean)).filter(r => r.length).filter(r => r.every(c => c.tur === 'buton') || r.length === 1);
+}
+function msgBody(b) { // REST gövdesinden mesaj alanları (Kanka ve alışık olunan İngilizce adlar)
+  const text = noPing(clean(b?.icerik ?? b?.content ?? '', MSG_MAX));
+  return { text, embeds: cleanEmbeds(b?.kartlar ?? b?.embeds), comps: cleanComps(b?.bilesenler ?? b?.components) };
+}
+// ---- Bota giden mesaj görünümü ----
+function msgForBot(a, chId, m, full) {
+  const f = findChannel(chId), dm = chId.startsWith('dm:'), mention = !!m.text && new RegExp('@' + a.bot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}\\p{N}_.-])', 'u').test(m.text);
+  const see = !!full || dm || mention || m.author === a.bot;
+  const au = db.users[m.author];
+  return { id: m.id, oda: chId, sunucu: f?.s.id || null, dm, zaman: m.time, duzenlendi: !!m.edited,
+    yazar: m.author ? { ad: m.author, gorunenAd: au?.displayName || m.author, bot: !!au?.bot } : null,
+    icerik: see ? (m.text || '') : '', kartlar: see ? (m.embeds || []) : [], bilesenler: m.comps || [], etiketlendi: mention,
+    ekler: see ? (m.files || []).map(x => ({ ad: x.name, url: x.url, boyut: x.size, tur: x.kind })) : [], yanit: m.replyTo?.id || null, tepkiler: Object.fromEntries(Object.entries(m.reactions || {}).map(([e, us]) => [e, us.length])) };
+}
+// ---- Gateway (WebSocket) ----
+const botConns = new Map(); // appId -> Set(bağlantı)
+const botSessions = new Map(); // oturum id -> { app, seq, buf, closedAt }
+const botConnsOf = appId => [...(botConns.get(appId) || [])];
+let WSS = null; try { const { WebSocketServer } = require('ws'); WSS = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 }); } catch (e) { console.error('ws paketi yok, bot gateway kapalı', e.message); }
+function gwSend(conn, o) { try { if (conn.ws.readyState === 1) conn.ws.send(JSON.stringify(o)); } catch {} }
+function gwDispatch(appId, t, d, filter) {
+  for (const conn of botConnsOf(appId)) {
+    if (!conn.ready || (filter && !filter(conn))) continue;
+    const sess = botSessions.get(conn.session); if (!sess) continue;
+    const ev = { op: 0, t, s: ++sess.seq, d }; sess.buf.push(ev); if (sess.buf.length > 300) sess.buf.shift();
+    gwSend(conn, ev);
+  }
+}
+if (WSS) {
+  server.on('upgrade', (req, sock, head) => {
+    let p; try { p = new URL(req.url, 'http://x').pathname; } catch { return; }
+    if (p !== '/bot/gateway') return; // diğer yükseltmeler (socket.io) kendi yoluna
+    WSS.handleUpgrade(req, sock, head, ws => gwConnection(ws, req));
+  });
+}
+function gwConnection(ws, req) {
+  const ipk = 'gw|' + reqIp(req);
+  if (limited(ipk, 30, 60e3)) return ws.close(4008, 'Çok sık bağlanıyorsun');
+  const conn = { ws, app: null, intents: new Set(), ready: false, session: null, alive: Date.now() };
+  gwSend(conn, { op: 10, d: { nabizAraligi: 30000, heartbeat_interval: 30000 } });
+  const kill = setTimeout(() => { if (!conn.ready) ws.close(4003, 'Kimlik doğrulama gelmedi'); }, 15000);
+  const hb = setInterval(() => { if (Date.now() - conn.alive > 75000) ws.close(4009, 'Nabız gelmedi'); }, 20000);
+  ws.on('message', raw => {
+    let m; try { m = JSON.parse(String(raw)); } catch { return ws.close(4002, 'Geçersiz JSON'); }
+    if (limited('gwmsg|' + (conn.app?.id || ipk), 120, 60e3)) return ws.close(4008, 'Çok fazla mesaj');
+    if (m.op === 1) { conn.alive = Date.now(); return gwSend(conn, { op: 11 }); }
+    if (m.op === 2 || m.op === 6) {
+      const d = m.d || {}, a = appByToken(String(d.token || '').replace(/^Bot\s+/i, ''));
+      if (!a) return ws.close(4004, 'Token geçersiz');
+      if (a.killed) return ws.close(4014, 'Bu bot Kanka ekibi tarafından durduruldu');
+      if (botConnsOf(a.id).length >= 2) return ws.close(4005, 'Bu bot zaten 2 bağlantıyla bağlı');
+      conn.app = a; conn.alive = Date.now();
+      const want = Array.isArray(d.niyetler ?? d.intents) ? (d.niyetler ?? d.intents) : ['mesajlar', 'uyeler', 'tepkiler', 'dm'];
+      conn.intents = new Set(want.filter(x => BOT_INTENTS.includes(x)));
+      if (conn.intents.has('icerik') && !contentOk(a)) { conn.intents.delete('icerik'); }
+      let sess = m.op === 6 && botSessions.get(String(d.oturum ?? d.session_id ?? '')), resumed = false;
+      if (sess && sess.app === a.id) { resumed = true; sess.closedAt = null; } else { sess = { app: a.id, seq: 0, buf: [], closedAt: null }; }
+      conn.session = resumed ? String(d.oturum ?? d.session_id) : crypto.randomBytes(12).toString('hex'); botSessions.set(conn.session, sess);
+      (botConns.get(a.id) || botConns.set(a.id, new Set()).get(a.id)).add(conn); conn.ready = true; clearTimeout(kill);
+      a.lastOnline = Date.now();
+      if (resumed) { const from = +(d.sira ?? d.seq) || 0; for (const ev of sess.buf.filter(e => e.s > from)) gwSend(conn, ev); gwSend(conn, { op: 0, t: 'DEVAM_EDILDI', s: sess.seq, d: {} }); }
+      else gwSend(conn, { op: 0, t: 'HAZIR', s: ++sess.seq, d: { oturum: conn.session, bot: appView(a), niyetler: [...conn.intents], icerikIzni: contentOk(a),
+        sunucular: botServers(a).map(s => botServerView(a, s)) } });
+      return;
+    }
+  });
+  ws.on('close', () => { clearTimeout(kill); clearInterval(hb); if (conn.app) { botConns.get(conn.app.id)?.delete(conn); const s = botSessions.get(conn.session); if (s) s.closedAt = Date.now(); } });
+  ws.on('error', () => {});
+}
+setInterval(() => { for (const [k, s] of botSessions) if (s.closedAt && Date.now() - s.closedAt > 120e3) botSessions.delete(k); }, 60e3);
+function botServerView(a, s) {
+  return { id: s.id, ad: s.name, simge: s.iconImg || null, sahip: s.owner, uyeSayisi: humans(s.members).length,
+    odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => ({ id: c.id, ad: c.name, tur: c.type, konu: c.topic || '', kategori: c.cat || null, yazabilir: chPerm(s, c, a.bot, 'send') })),
+    roller: (s.customRoles || []).map((r, i) => ({ id: r.id, ad: r.name, renk: r.color || null, sira: i, bot: r.managed || null })), izinler: [...permsOf(s, a.bot)] };
+}
+const memberView = (s, n) => { const u = db.users[n] || {}; return { ad: n, gorunenAd: u.displayName || n, bot: !!u.bot, avatar: u.avatar || null, roller: s.memberRoles?.[n] || [], katildi: s.joinedAt?.[n] || null, susturulduBitis: (s.timeouts?.[n] || 0) > Date.now() ? s.timeouts[n] : null }; };
+// Mesaj olaylarını botlara ilet: socket.io yayınlarına kanca (her yerden atılan mesaj, düzenleme ve silme yakalanır)
+const lastBotText = new Map();
+{
+  const BO = Object.getPrototypeOf(io.to('__kanca__')), orig = BO.emit;
+  BO.emit = function (ev, ...args) {
+    const d = args[0];
+    if ((ev === 'message' || ev === 'update' || ev === 'remove') && d && typeof d.channelId === 'string' && this.rooms?.has?.(d.channelId) && !d.msg?.ephemeral) { try { botTap(ev, d); } catch (e) { logCrash('botTap', e); } }
+    return orig.call(this, ev, ...args);
+  };
+}
+function botsIn(chId) {
+  if (chId.startsWith('dm:')) return dmPeers(chId).filter(isBotUser).map(n => ({ a: appOf(n), s: null, c: null })).filter(x => x.a && !x.a.killed);
+  const f = findChannel(chId); if (!f || f.s.public) return [];
+  return f.s.members.filter(isBotUser).map(n => ({ a: appOf(n), s: f.s, c: f.c })).filter(x => x.a && !x.a.killed && seesChannel(x.s, x.c, x.a.bot));
+}
+function botTap(ev, d) {
+  const targets = botsIn(d.channelId); if (!targets.length) return;
+  for (const { a } of targets) {
+    const dm = d.channelId.startsWith('dm:'), need = dm ? 'dm' : 'mesajlar';
+    if (ev === 'message') { const m = d.msg; if (!m?.author || m.kind === 'system') continue; lastBotText.set(m.id, m.text || '');
+      for (const conn of botConnsOf(a.id)) if (conn.ready && conn.intents.has(need)) gwDispatch(a.id, 'MESAJ_GELDI', msgForBot(a, d.channelId, m, dm || (conn.intents.has('icerik') && contentOk(a))), x => x === conn); }
+    else if (ev === 'update') { const m = d.msg; if (!m) continue; const t = (m.text || '') + JSON.stringify(m.embeds || []); if (lastBotText.get(m.id) === t) continue; lastBotText.set(m.id, t);
+      for (const conn of botConnsOf(a.id)) if (conn.ready && conn.intents.has(need)) gwDispatch(a.id, 'MESAJ_DUZENLENDI', msgForBot(a, d.channelId, m, dm || (conn.intents.has('icerik') && contentOk(a))), x => x === conn); }
+    else if (ev === 'remove') gwDispatch(a.id, 'MESAJ_SILINDI', { id: d.msgId, oda: d.channelId }, c => c.intents.has(need));
+  }
+  if (lastBotText.size > 20000) lastBotText.clear();
+}
+function botReact(chId, msg, emoji, user, added) {
+  for (const { a } of botsIn(chId)) gwDispatch(a.id, added ? 'TEPKI_EKLENDI' : 'TEPKI_KALDIRILDI', { mesaj: msg.id, oda: chId, emoji, kullanici: user }, c => c.intents.has('tepkiler'));
+}
+function botMember(s, name, kind) { // üye katıldı / ayrıldı / güncellendi; bot atıldıysa kendisine bildir
+  if (!s || s.public) return;
+  if (kind === 'leave' && isBotUser(name)) { const a = appOf(name); if (a) { s.customRoles = (s.customRoles || []).filter(r => r.managed !== a.id); gwDispatch(a.id, 'SUNUCUDAN_CIKARILDI', { id: s.id, ad: s.name }); devStatsSync(a.owner); } return; }
+  for (const n of s.members.filter(isBotUser)) { const a = appOf(n); if (!a || a.killed || n === name) continue;
+    const t = kind === 'join' ? 'UYE_KATILDI' : kind === 'leave' ? 'UYE_AYRILDI' : 'UYE_GUNCELLENDI';
+    gwDispatch(a.id, t, { sunucu: s.id, uye: kind === 'leave' ? { ad: name } : memberView(s, name) }, c => c.intents.has('uyeler'));
+    if (kind === 'join' && !a.verified) { const r = reachOf(a); if (r > REACH_MAX && !a.reachWarned) { a.reachWarned = Date.now(); botDm(a.owner, { title: `🤖 ${a.bot} ${REACH_MAX} kişiyi geçti`, tone: 'warn', text: `botun artık ${r} kişiye ulaşıyor. doğrulanmamış botlar yeni sunuculara eklenemez. Geliştirici Portalı'ndan doğrulama isteyebilirsin.` }); } }
+  }
+}
+// ---- Bot mesajı gönderme ----
+function appPost(a, chId, body, extra = {}) {
+  const u = db.users[a.bot];
+  const msg = { id: id(), author: a.bot, color: u.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, text: body.text || '', ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
+  if (!msg.text && !msg.embeds && !msg.comps && !msg.loading) return { error: 'Boş mesaj: icerik, kartlar ya da bilesenler gerekli' };
+  const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
+  save(); io.to(chId).emit('message', { channelId: chId, msg });
+  if (chId.startsWith('dm:')) for (const n of dmPeers(chId)) { io.to('user:' + n).emit('dms', dmsFor(n)); if (n !== a.bot) notifyUser(n, { from: a.bot, text: msg.text || msg.embeds?.[0]?.baslik || 'Yeni mesaj', channelId: chId, where: 'özel mesaj', dm: true }); }
+  else { const f = findChannel(chId); if (f) for (const n of membersOf(f.s)) if (n !== a.bot) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
+    for (const n of new Set((msg.text.match(/@([\p{L}\p{N}_.-]{2,20})/gu) || []).map(x => x.slice(1)))) if (f && f.s.members.includes(n) && !isBotUser(n) && seesChannel(f.s, f.c, n)) notifyUser(n, { from: a.bot, text: msg.text.slice(0, 160), channelId: chId, where: `${f.s.name} › ${f.c.name}`, mention: true }); }
+  return { msg };
+}
+function ephPost(a, chId, user, body, extra = {}) { // sadece tek kişinin göreceği mesaj (kaydedilmez)
+  const msg = { id: 'e' + id(), author: a.bot, color: db.users[a.bot]?.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, ephemeral: true, text: body.text || '', ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
+  ephMsgs.set(msg.id, { msg, chId, user, at: Date.now() }); if (ephMsgs.size > 5000) ephMsgs.delete(ephMsgs.keys().next().value);
+  io.to('user:' + user).emit('message', { channelId: chId, msg });
+  return msg;
+}
+const ephMsgs = new Map();
+// ---- Etkileşimler (komut, buton, seçim, form) ----
+const inters = new Map();
+setInterval(() => { const now = Date.now(); for (const [k, x] of inters) if (now - x.at > INTER_TTL) inters.delete(k); for (const [k, x] of ephMsgs) if (now - x.at > INTER_TTL) ephMsgs.delete(k); }, 60e3);
+function newInter(a, type, user, chId, data, msg) {
+  const f = findChannel(chId), it = { id: id() + id(), token: crypto.randomBytes(24).toString('hex'), app: a.id, type, user, chId, sid: f?.s.id || null, data, msgId: msg?.id || null, eph: !!msg?.ephemeral, at: Date.now(), done: false, deferred: null };
+  inters.set(it.id, it);
+  const u = db.users[user] || {};
+  const payload = { id: it.id, token: it.token, tur: type, oda: chId, sunucu: it.sid, dm: chId.startsWith('dm:'),
+    kullanici: { ad: user, gorunenAd: u.displayName || user, avatar: u.avatar || null, roller: f ? f.s.memberRoles?.[user] || [] : [], izinler: f ? [...permsOf(f.s, user)] : [] },
+    veri: data, mesaj: msg ? msgForBot(a, chId, msg, true) : null };
+  setTimeout(() => { if (!it.done && !it.deferred) ephWhisper(user, chId, `${a.bot} cevap vermedi. Bot kapalı ya da yavaş olabilir.`); }, INTER_WAIT + 400);
+  if (botConnsOf(a.id).length) gwDispatch(a.id, type === 'KOMUT' ? 'KOMUT' : type === 'FORM' ? 'FORM' : type === 'SECIM' ? 'SECIM' : 'BUTON', payload);
+  else if (a.interUrl) interHttp(a, payload).then(r => r && interRespond(it, r)).catch(() => {});
+  else { it.done = true; ephWhisper(user, chId, `${a.bot} şu an çevrimdışı.`); }
+  if (type === 'KOMUT') { appCount(a, user); save(); }
+  return it;
+}
+const ephWhisper = (user, chId, text) => io.to('user:' + user).emit('message', { channelId: chId, msg: { id: 'w' + id(), kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: '', text, plain: true, tone: 'warn' } } });
+// HTTP ile etkileşim: bot sürekli bağlı kalmadan, Kanka isteği adresine POST eder (imzalı) ve cevabı aynı istekte alır
+function interHttp(a, payload) {
+  return new Promise(res => {
+    let u; try { u = new URL(a.interUrl); } catch { return res(null); }
+    const body = JSON.stringify(payload), ts = String(Math.floor(Date.now() / 1000)), sig = crypto.createHmac('sha256', a.secret).update(ts + '.' + body).digest('hex');
+    const mod = u.protocol === 'https:' ? require('https') : http;
+    const rq = mod.request(u, { method: 'POST', lookup: process.env.BOT_HTTP_TEST === '1' ? undefined : safeLookup, timeout: INTER_WAIT, headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body), 'User-Agent': 'KankaBot/1.0', 'X-Kanka-Zaman': ts, 'X-Kanka-Imza': sig } }, r => {
+      let buf = ''; r.setEncoding('utf8'); r.on('data', c => { buf += c; if (buf.length > 200e3) rq.destroy(); }); r.on('end', () => { try { res(r.statusCode < 300 ? JSON.parse(buf || 'null') : null); } catch { res(null); } });
+    });
+    rq.on('timeout', () => rq.destroy()); rq.on('error', () => res(null)); rq.end(body);
+  });
+}
+function interRespond(it, b) {
+  const a = db.apps[it.app]; if (!a) return { error: 'Uygulama yok', code: 404 };
+  const tur = b?.tur ?? b?.type ?? 'mesaj', body = msgBody(b?.veri ?? b?.data ?? b), gizli = !!(b?.gizli ?? b?.ephemeral ?? (b?.veri ?? b?.data)?.gizli);
+  if (tur === 'PONG') return { ok: true };
+  if (tur === 'form') {
+    if (it.done) return { error: 'Bu etkileşim zaten cevaplandı', code: 400 };
+    const f = b?.form ?? b?.veri ?? b;
+    const alanlar = (Array.isArray(f?.alanlar) ? f.alanlar : []).slice(0, 5).map(x => ({ id: clean(x?.id, 60), etiket: clean(x?.etiket, 60), tur: x?.tur === 'uzun' ? 'uzun' : 'kisa', zorunlu: x?.zorunlu !== false, yerTutucu: clean(x?.yerTutucu, 100), min: Math.max(0, parseInt(x?.min) || 0), max: Math.min(4000, parseInt(x?.max) || 400), deger: clean(x?.deger, 4000) })).filter(x => x.id && x.etiket);
+    if (!alanlar.length) return { error: 'Form için en az bir alan gerekli', code: 400 };
+    it.done = true; it.form = { id: clean(f?.id, 100) || 'form', baslik: clean(f?.baslik, 60) || a.bot };
+    io.to('user:' + it.user).emit('appForm', { iid: it.id, app: a.id, bot: a.bot, baslik: it.form.baslik, alanlar });
+    return { ok: true };
+  }
+  if (tur === 'bekle') {
+    if (it.done) return { error: 'Bu etkileşim zaten cevaplandı', code: 400 };
+    it.done = true; it.deferred = gizli ? ephPost(a, it.chId, it.user, { text: '' }, { loading: true, inter: it.type === 'KOMUT' ? { user: it.user, cmd: it.data?.ad } : undefined }) : appPost(a, it.chId, { text: '' }, { loading: true, inter: it.type === 'KOMUT' ? { user: it.user, cmd: it.data?.ad } : undefined }).msg;
+    return { ok: true };
+  }
+  if (tur === 'guncelle') { // butona basılan mesajı yerinde değiştir
+    if (it.done) return { error: 'Bu etkileşim zaten cevaplandı', code: 400 };
+    if (!it.msgId) return { error: 'Güncellenecek mesaj yok (sadece buton/seçim için)', code: 400 };
+    it.done = true; return editAppMsg(a, it.chId, it.msgId, b?.veri ?? b?.data ?? b, it.user);
+  }
+  if (it.done) return { error: 'Bu etkileşim zaten cevaplandı; bekle ile başladıysan mesajı düzenle', code: 400 };
+  if (!body.text && !body.embeds.length && !body.comps.length) return { error: 'Boş cevap', code: 400 };
+  it.done = true;
+  const inter = it.type === 'KOMUT' ? { user: it.user, cmd: it.data?.ad } : undefined;
+  if (gizli) { ephPost(a, it.chId, it.user, body, { inter }); return { ok: true }; }
+  const f = findChannel(it.chId); if (f && !chPerm(f.s, f.c, a.bot, 'send')) { ephPost(a, it.chId, it.user, body, { inter }); return { ok: true, not: 'Botun bu odada yazma izni yok, cevap sadece kullanıcıya gösterildi' }; }
+  const r = appPost(a, it.chId, body, { inter }); return r.error ? { error: r.error, code: 400 } : { ok: true, mesaj: r.msg.id };
+}
+function editAppMsg(a, chId, msgId, b, user) {
+  const body = msgBody(b), e = ephMsgs.get(msgId);
+  if (e) { const m = e.msg; if (m.app !== a.id) return { error: 'Bu mesaj botun değil', code: 403 }; Object.assign(m, { text: body.text, embeds: body.embeds.length ? body.embeds : undefined, comps: body.comps.length || Array.isArray(b?.bilesenler ?? b?.components) ? body.comps : m.comps, loading: false, edited: !!m.text });
+    io.to('user:' + e.user).emit('update', { channelId: e.chId, msg: m }); return { ok: true }; }
+  const m = findMsg(chId, msgId); if (!m || m.author !== a.bot) return { error: 'Mesaj bulunamadı ya da botun değil', code: 404 };
+  if (!body.text && !body.embeds.length && !body.comps.length && !Array.isArray(b?.bilesenler ?? b?.components)) return { error: 'Boş mesaj', code: 400 };
+  m.text = body.text; if (body.embeds.length || Array.isArray(b?.kartlar ?? b?.embeds)) m.embeds = body.embeds; if (Array.isArray(b?.bilesenler ?? b?.components)) m.comps = body.comps;
+  if (!m.loading) m.edited = true; m.loading = false; save(); io.to(chId).emit('update', { channelId: chId, msg: m });
+  return { ok: true };
+}
+// ---- Komut kayıtları ----
+function cleanCmds(list) {
+  if (!Array.isArray(list)) return { error: 'Komut listesi dizi olmalı' };
+  if (list.length > CMD_MAX) return { error: `En fazla ${CMD_MAX} komut` };
+  const out = [], names = new Set();
+  for (const c of list) {
+    const ad = String(c?.ad ?? c?.name ?? '').toLocaleLowerCase('tr').trim();
+    if (!/^[\p{Ll}\p{N}_-]{1,32}$/u.test(ad)) return { error: `Geçersiz komut adı: "${ad}" (küçük harf, rakam, _ ve -, en fazla 32)` };
+    if (names.has(ad)) return { error: `Aynı adla iki komut: ${ad}` }; names.add(ad);
+    const opts = [];
+    for (const o of (Array.isArray(c.secenekler ?? c.options) ? (c.secenekler ?? c.options) : []).slice(0, 10)) {
+      const oad = String(o?.ad ?? o?.name ?? '').toLocaleLowerCase('tr').trim(), tur = o?.tur ?? o?.type ?? 'yazi';
+      if (!/^[\p{Ll}\p{N}_-]{1,32}$/u.test(oad)) return { error: `Geçersiz seçenek adı: "${oad}"` };
+      if (!OPT_TYPES.includes(tur)) return { error: `Seçenek türü şunlardan biri olmalı: ${OPT_TYPES.join(', ')}` };
+      opts.push({ ad: oad, aciklama: clean(o?.aciklama ?? o?.description, 100) || oad, tur, zorunlu: !!(o?.zorunlu ?? o?.required),
+        secimler: (Array.isArray(o?.secimler ?? o?.choices) ? (o.secimler ?? o.choices) : []).slice(0, 25).map(x => ({ ad: clean(x?.ad ?? x?.name, 100), deger: x?.deger ?? x?.value })).filter(x => x.ad && x.deger !== undefined) });
+    }
+    opts.sort((x, y) => (y.zorunlu ? 1 : 0) - (x.zorunlu ? 1 : 0));
+    out.push({ ad, aciklama: clean(c.aciklama ?? c.description, 100) || ad, secenekler: opts });
+  }
+  return { list: out };
+}
+function cmdsFor(s, viewer) { // istemcinin / listesine: bu sunucudaki botların komutları
+  if (!s || s.public) return [];
+  const out = [];
+  for (const n of s.members.filter(isBotUser)) { const a = appOf(n); if (!a || a.killed) continue;
+    for (const c of [...(a.cmds || []), ...(a.srvCmds?.[s.id] || [])]) out.push({ app: a.id, bot: a.bot, ...c }); }
+  return out;
+}
+function dmCmdsFor(bot) { const a = appOf(bot); return a && !a.killed ? (a.cmds || []).map(c => ({ app: a.id, bot: a.bot, ...c })) : []; }
+// Seçenek değerlerini türüne göre doğrula
+function parseOpts(cmd, raw, s) {
+  const out = {};
+  for (const o of cmd.secenekler) {
+    let v = raw?.[o.ad];
+    if (v === undefined || v === null || v === '') { if (o.zorunlu) return { error: `"${o.ad}" gerekli` }; continue; }
+    if (o.secimler.length) { const c = o.secimler.find(x => String(x.deger) === String(v) || x.ad === v); if (!c) return { error: `"${o.ad}" için geçersiz seçim` }; v = c.deger; }
+    else if (o.tur === 'sayi' || o.tur === 'tamsayi') { v = Number(String(v).replace(',', '.')); if (!Number.isFinite(v) || (o.tur === 'tamsayi' && !Number.isInteger(v))) return { error: `"${o.ad}" ${o.tur === 'tamsayi' ? 'tam sayı' : 'sayı'} olmalı` }; }
+    else if (o.tur === 'evethayir') v = v === true || /^(evet|true|1|açık|acik)$/i.test(String(v));
+    else if (o.tur === 'kisi') { v = String(v).replace(/^@/, ''); if (!db.users[v] || (s && !s.members.includes(v))) return { error: `"${o.ad}": kişi bulunamadı` }; }
+    else if (o.tur === 'oda') { const c = s?.channels.find(c => c.id === v || c.name === String(v).replace(/^#/, '')); if (!c) return { error: `"${o.ad}": oda bulunamadı` }; v = c.id; }
+    else if (o.tur === 'rol') { const r = (s?.customRoles || []).find(r => r.id === v || r.name === String(v).replace(/^@/, '')); if (!r) return { error: `"${o.ad}": rol bulunamadı` }; v = r.id; }
+    else v = clean(v, 1000);
+    out[o.ad] = v;
+  }
+  return { out };
+}
+// ---- REST API ----
+const apiHits = new Map();
+function apiAuth(req, res) {
+  const a = appByToken(String(req.headers.authorization || '').replace(/^Bot\s+/i, ''));
+  if (!a) { res.status(401).json({ hata: 'Token geçersiz', error: 'Unauthorized' }); return null; }
+  if (a.killed) { res.status(403).json({ hata: 'Bu bot Kanka ekibi tarafından durduruldu' + (a.killed.reason ? ': ' + a.killed.reason : '') }); return null; }
+  const now = Date.now(), h = (apiHits.get(a.id) || []).filter(t => now - t < 1000);
+  if (h.length >= 10) { if (a.over && now - a.over.t < 60e3) { a.over.n++; if (a.over.n > 300) { a.pausedUntil = now + 3600e3; secLog('bot-durdu', a.bot, 'sürekli hız sınırını aştı, 1 saat durduruldu'); } } else a.over = { t: now, n: 1 };
+    res.set('Retry-After', '1'); res.status(429).json({ hata: 'Çok hızlı: saniyede en fazla 10 istek', tekrarDene: 1, retry_after: 1 }); return null; }
+  if ((a.pausedUntil || 0) > now) { res.status(429).json({ hata: 'Bot sürekli sınırı aştığı için bir süre durduruldu', tekrarDene: Math.ceil((a.pausedUntil - now) / 1000) }); return null; }
+  h.push(now); apiHits.set(a.id, h); a.lastApi = now;
+  return a;
+}
+const api = express.Router();
+api.use(express.json({ limit: '128kb' }));
+api.use((err, req, res, next) => res.status(400).json({ hata: 'Geçersiz JSON' }));
+const R = (fn) => (req, res) => { const a = apiAuth(req, res); if (!a) return; try { const r = fn(a, req, res); if (r && !res.headersSent) res.status(r.code || (r.error ? 400 : 200)).json(r.error ? { hata: r.error } : r); } catch (e) { logCrash('api ' + req.path, e); if (!res.headersSent) res.status(500).json({ hata: 'Sunucu hatası' }); } };
+const botSrv = (a, sid) => { const s = db.servers.find(x => x.id === sid); return s && !s.public && s.members.includes(a.bot) ? s : null; };
+function botChan(a, cid, need = 'view') {
+  if (typeof cid !== 'string') return { error: 'Oda yok', code: 404 };
+  if (cid.startsWith('dm:')) { if (!dmPeers(cid).includes(a.bot)) return { error: 'Oda bulunamadı', code: 404 }; return { dm: true }; }
+  const f = findChannel(cid); if (!f || f.s.public || !f.s.members.includes(a.bot) || !seesChannel(f.s, f.c, a.bot)) return { error: 'Oda bulunamadı ya da bot göremiyor', code: 404 };
+  if (need !== 'view' && !chPerm(f.s, f.c, a.bot, need)) return { error: `Botun bu odada "${need}" izni yok`, code: 403 };
+  return f;
+}
+const chanHits = new Map();
+api.get('/ben', R(a => ({ bot: appView(a), sunucuSayisi: botServers(a).length, erisim: reachOf(a), esik: REACH_MAX, dogrulandi: !!a.verified, icerikIzni: contentOk(a) })));
+api.get('/sunucular', R(a => ({ sunucular: botServers(a).map(s => botServerView(a, s)) })));
+api.get('/sunucular/:sid', R((a, req) => { const s = botSrv(a, req.params.sid); return s ? botServerView(a, s) : { error: 'Sunucu bulunamadı', code: 404 }; }));
+api.get('/sunucular/:sid/uyeler', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; return { uyeler: s.members.slice(0, 2000).map(n => memberView(s, n)) }; }));
+api.get('/sunucular/:sid/uyeler/:ad', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s || !s.members.includes(req.params.ad)) return { error: 'Üye bulunamadı', code: 404 }; return memberView(s, req.params.ad); }));
+api.get('/odalar/:cid', R((a, req) => { const f = botChan(a, req.params.cid); if (f.error) return f; if (f.dm) return { id: req.params.cid, tur: 'dm', kisiler: dmPeers(req.params.cid) }; return { id: f.c.id, ad: f.c.name, tur: f.c.type, konu: f.c.topic || '', sunucu: f.s.id, yazabilir: chPerm(f.s, f.c, a.bot, 'send') }; }));
+api.get('/odalar/:cid/mesajlar', R((a, req) => {
+  const cid = req.params.cid, f = botChan(a, cid, cid.startsWith('dm:') ? 'view' : 'history'); if (f.error) return f;
+  const list = db.messages[cid] || [], lim = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 100);
+  let end = list.length; if (req.query.once) { const i = list.findIndex(m => m.id === req.query.once); if (i >= 0) end = i; }
+  return { mesajlar: list.slice(Math.max(0, end - lim), end).filter(m => !m.enc).map(m => msgForBot(a, cid, m, cid.startsWith('dm:') || contentOk(a) ? true : false)) };
+}));
+api.get('/odalar/:cid/mesajlar/:mid', R((a, req) => { const f = botChan(a, req.params.cid); if (f.error) return f; const m = findMsg(req.params.cid, req.params.mid); return m && !m.enc ? msgForBot(a, req.params.cid, m, req.params.cid.startsWith('dm:') || contentOk(a)) : { error: 'Mesaj yok', code: 404 }; }));
+api.post('/odalar/:cid/mesajlar', R((a, req) => {
+  const cid = req.params.cid, f = botChan(a, cid, 'send'); if (f.error) return f;
+  const now = Date.now(), k = a.id + '|' + cid, h = (chanHits.get(k) || []).filter(t => now - t < 5000);
+  if (h.length >= 5) return { error: 'Bu odaya çok hızlı yazıyorsun: 5 saniyede en fazla 5 mesaj', code: 429 };
+  h.push(now); chanHits.set(k, h);
+  if (!f.dm && timedOut(f.s, a.bot)) return { error: 'Bot bu sunucuda susturulmuş', code: 403 };
+  const body = msgBody(req.body || {}); let extra = {};
+  const rid = req.body?.yanit ?? req.body?.message_reference?.message_id; if (rid) { const r = findMsg(cid, rid); if (r) extra.replyTo = { id: r.id, author: r.author, text: r.enc ? '' : (r.text || '').slice(0, 100) }; }
+  const r = appPost(a, cid, body, extra); return r.error ? r : { mesaj: msgForBot(a, cid, r.msg, true) };
+}));
+api.patch('/odalar/:cid/mesajlar/:mid', R((a, req) => { const f = botChan(a, req.params.cid); if (f.error) return f; return editAppMsg(a, req.params.cid, req.params.mid, req.body || {}); }));
+api.delete('/odalar/:cid/mesajlar/:mid', R((a, req) => {
+  const cid = req.params.cid, f = botChan(a, cid); if (f.error) return f;
+  const list = db.messages[cid] || [], m = list.find(x => x.id === req.params.mid); if (!m) return { error: 'Mesaj yok', code: 404 };
+  if (m.author !== a.bot && (f.dm || !can(f.s, a.bot, 'manageMessages'))) return { error: 'Başkasının mesajını silmek için "Mesajları yönet" izni gerekli', code: 403 };
+  if (m.author !== a.bot && !f.dm && m.author === f.s.owner) return { error: 'Sunucu sahibinin mesajı bot tarafından silinemez', code: 403 };
+  db.messages[cid] = list.filter(x => x !== m); if (m.author !== a.bot && !f.dm) audit(f.s, a.bot, 'Mesaj sildi (bot)', m.author || '');
+  save(); io.to(cid).emit('remove', { channelId: cid, msgId: m.id }); return { ok: true };
+}));
+api.put('/odalar/:cid/mesajlar/:mid/tepkiler/:emoji', R((a, req) => {
+  const cid = req.params.cid, f = botChan(a, cid, cid.startsWith('dm:') ? 'view' : 'react'); if (f.error) return f;
+  const m = findMsg(cid, req.params.mid); if (!m) return { error: 'Mesaj yok', code: 404 };
+  const e = clean(decodeURIComponent(req.params.emoji), 16); if (!e) return { error: 'Emoji gerekli' };
+  const arr = ((m.reactions ||= {})[e] ||= []); if (!arr.includes(a.bot)) arr.push(a.bot); save(); io.to(cid).emit('update', { channelId: cid, msg: m }); return { ok: true };
+}));
+api.delete('/odalar/:cid/mesajlar/:mid/tepkiler/:emoji', R((a, req) => {
+  const cid = req.params.cid, f = botChan(a, cid); if (f.error) return f; const m = findMsg(cid, req.params.mid); if (!m) return { error: 'Mesaj yok', code: 404 };
+  const e = clean(decodeURIComponent(req.params.emoji), 16), arr = m.reactions?.[e]; if (arr) { const i = arr.indexOf(a.bot); if (i >= 0) arr.splice(i, 1); if (!arr.length) delete m.reactions[e]; } save(); io.to(cid).emit('update', { channelId: cid, msg: m }); return { ok: true };
+}));
+api.put('/odalar/:cid/sabitler/:mid', R((a, req) => { const f = botChan(a, req.params.cid); if (f.error) return f; if (!f.dm && !can(f.s, a.bot, 'pinMessages') && !can(f.s, a.bot, 'manageMessages')) return { error: 'Sabitleme izni yok', code: 403 }; const m = findMsg(req.params.cid, req.params.mid); if (!m) return { error: 'Mesaj yok', code: 404 }; m.pinned = true; save(); io.to(req.params.cid).emit('update', { channelId: req.params.cid, msg: m }); return { ok: true }; }));
+api.delete('/odalar/:cid/sabitler/:mid', R((a, req) => { const f = botChan(a, req.params.cid); if (f.error) return f; if (!f.dm && !can(f.s, a.bot, 'pinMessages') && !can(f.s, a.bot, 'manageMessages')) return { error: 'Sabitleme izni yok', code: 403 }; const m = findMsg(req.params.cid, req.params.mid); if (!m) return { error: 'Mesaj yok', code: 404 }; delete m.pinned; save(); io.to(req.params.cid).emit('update', { channelId: req.params.cid, msg: m }); return { ok: true }; }));
+// Bottan özel mesaj: ortak bir sunucu gerekir ve kişi bot DM'lerini kapatmamış olmalı
+api.post('/kullanicilar/:ad/dm', R((a, req) => {
+  const n = req.params.ad, u = db.users[n]; if (!u || u.bot) return { error: 'Kişi bulunamadı', code: 404 };
+  if (a.dmOk === false) return { error: 'Bu uygulamada DM kapalı (Geliştirici Portalı)', code: 403 };
+  if (u.botDmOff) return { error: 'Bu kişi botlardan özel mesaj almıyor', code: 403 };
+  if (u.blocked?.includes(a.bot)) return { error: 'Bu kişi botu engellemiş', code: 403 };
+  if (!botServers(a).some(s => s.members.includes(n)) && !db.messages[dmId(a.bot, n)]?.some(m => m.author === n)) return { error: 'Bot ile bu kişinin ortak bir sunucusu yok', code: 403 };
+  if (limited('botdm|' + a.id, 30, 60e3) || limited('botdm1|' + a.id + '|' + n, 5, 60e3)) return { error: 'Çok fazla DM: dakikada en fazla 30 (kişi başı 5)', code: 429 };
+  const cid = dmId(a.bot, n), r = appPost(a, cid, msgBody(req.body || {})); return r.error ? r : { oda: cid, mesaj: msgForBot(a, cid, r.msg, true) };
+}));
+// Üye yönetimi (bot rolünün izinleri ve rol sırası geçerli)
+const botMod = (a, req, perm) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; const n = req.params.ad; if (!s.members.includes(n)) return { error: 'Üye bulunamadı', code: 404 };
+  if (!can(s, a.bot, perm)) return { error: `Botun "${perm}" izni yok`, code: 403 }; if (n === s.owner || !outranks(s, a.bot, n)) return { error: 'Bu üye botun rolünden üstte', code: 403 }; return { s, n }; };
+api.put('/sunucular/:sid/uyeler/:ad/roller/:rid', R((a, req) => {
+  const x = botMod(a, req, 'manageRoles'); if (x.error) return x; const { s, n } = x, rid = req.params.rid;
+  const i = s.customRoles.findIndex(r => r.id === rid); if (i < 0) return { error: 'Rol yok', code: 404 };
+  const mine = (s.memberRoles[a.bot] || []).map(id => s.customRoles.findIndex(r => r.id === id)).filter(k => k >= 0); if (!mine.length || Math.min(...mine) >= i) return { error: 'Bot sadece kendi rolünden aşağıdaki rolleri verebilir', code: 403 };
+  if (s.customRoles[i].managed) return { error: 'Bot rolleri elle verilemez', code: 403 };
+  const l = (s.memberRoles[n] ||= []); if (!l.includes(rid)) l.push(rid); audit(s, a.bot, 'Rol verdi (bot)', `${n} · ${s.customRoles[i].name}`); save(); pushServers(membersOf(s)); botMember(s, n, 'update'); return { ok: true };
+}));
+api.delete('/sunucular/:sid/uyeler/:ad/roller/:rid', R((a, req) => {
+  const x = botMod(a, req, 'manageRoles'); if (x.error) return x; const { s, n } = x, rid = req.params.rid, i = s.customRoles.findIndex(r => r.id === rid); if (i < 0) return { error: 'Rol yok', code: 404 };
+  const mine = (s.memberRoles[a.bot] || []).map(id => s.customRoles.findIndex(r => r.id === id)).filter(k => k >= 0); if (!mine.length || Math.min(...mine) >= i) return { error: 'Bot sadece kendi rolünden aşağıdaki rolleri alabilir', code: 403 };
+  s.memberRoles[n] = (s.memberRoles[n] || []).filter(r => r !== rid); if (!s.memberRoles[n].length) delete s.memberRoles[n]; audit(s, a.bot, 'Rol aldı (bot)', `${n} · ${s.customRoles[i].name}`); save(); pushServers(membersOf(s)); botMember(s, n, 'update'); return { ok: true };
+}));
+api.post('/sunucular/:sid/uyeler/:ad/sustur', R((a, req) => {
+  const x = botMod(a, req, 'timeout'); if (x.error) return x; const { s, n } = x, dk = Math.min(Math.max(parseInt(req.body?.dakika) || 10, 0), 40320);
+  if (!dk) delete s.timeouts[n]; else s.timeouts[n] = Date.now() + dk * 60e3; audit(s, a.bot, dk ? 'Susturdu (bot)' : 'Susturmayı kaldırdı (bot)', n + (req.body?.sebep ? ' · ' + clean(req.body.sebep, 120) : '')); save(); pushServers(membersOf(s)); if (dk) io.to('user:' + n).emit('toast', `${s.name} sunucusunda ${dk} dakika susturuldun`); return { ok: true };
+}));
+api.delete('/sunucular/:sid/uyeler/:ad', R((a, req) => {
+  const x = botMod(a, req, 'kick'); if (x.error) return x; const { s, n } = x;
+  if (nukeCheck(s, a.bot, 'üye atma')) return { error: 'Kısa sürede çok fazla üye attın, işlem durduruldu', code: 429 };
+  s.members = s.members.filter(m => m !== n); delete s.roles[n]; delete s.memberRoles?.[n]; audit(s, a.bot, 'Sunucudan attı (bot)', n + (req.body?.sebep ? ' · ' + clean(req.body.sebep, 120) : ''));
+  voiceKick(s.channels.map(c => c.id), n, 'Sunucudan çıkarıldın'); save(); pushServers([n, ...s.members]); io.to('user:' + n).emit('toast', `${s.name} sunucusundan çıkarıldın`); botMember(s, n, 'leave'); return { ok: true };
+}));
+api.put('/sunucular/:sid/yasaklar/:ad', R((a, req) => {
+  const x = botMod(a, req, 'ban'); if (x.error) return x; const { s, n } = x;
+  if (nukeCheck(s, a.bot, 'yasaklama')) return { error: 'Kısa sürede çok fazla yasaklama, işlem durduruldu', code: 429 };
+  s.bans[n] = { by: a.bot, time: Date.now(), reason: clean(req.body?.sebep, 120) }; s.members = s.members.filter(m => m !== n); delete s.roles[n]; delete s.memberRoles?.[n];
+  audit(s, a.bot, 'Yasakladı (bot)', n); voiceKick(s.channels.map(c => c.id), n, 'Sunucudan yasaklandın'); save(); pushServers([n, ...s.members]); io.to('user:' + n).emit('toast', `${s.name} sunucusundan yasaklandın`); botMember(s, n, 'leave'); return { ok: true };
+}));
+// Komutlar: tamamını tek seferde yaz (PUT) ya da oku (GET); her yerde geçerli ya da tek sunucuya özel
+api.get('/komutlar', R(a => ({ komutlar: a.cmds || [] })));
+api.put('/komutlar', R((a, req) => { const r = cleanCmds(Array.isArray(req.body) ? req.body : req.body?.komutlar); if (r.error) return r; a.cmds = r.list; save(); for (const s of botServers(a)) pushServers(membersOf(s)); return { komutlar: a.cmds }; }));
+api.get('/sunucular/:sid/komutlar', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; return { komutlar: a.srvCmds?.[s.id] || [] }; }));
+api.put('/sunucular/:sid/komutlar', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; const r = cleanCmds(Array.isArray(req.body) ? req.body : req.body?.komutlar); if (r.error) return r; (a.srvCmds ||= {})[s.id] = r.list; save(); pushServers(membersOf(s)); return { komutlar: r.list }; }));
+// Etkileşim cevabı (token'sız da çalışır: etkileşim token'ı yeterli, böylece HTTP botları da kullanabilir)
+const interRoute = fn => (req, res) => {
+  const it = inters.get(req.params.iid);
+  if (!it || !req.params.tok || it.token.length !== String(req.params.tok).length || !crypto.timingSafeEqual(Buffer.from(it.token), Buffer.from(String(req.params.tok)))) return res.status(404).json({ hata: 'Etkileşim bulunamadı ya da süresi doldu' });
+  if (Date.now() - it.at > INTER_TTL) return res.status(404).json({ hata: 'Etkileşimin süresi doldu (15 dk)' });
+  if (!it.done && !it.deferred && Date.now() - it.at > INTER_WAIT + 2000 && req.method === 'POST') return res.status(400).json({ hata: '3 saniye içinde cevap verilmedi; uzun işler için önce "bekle" gönder' });
+  const r = fn(it, req.body || {}); res.status(r.code || (r.error ? 400 : 200)).json(r.error ? { hata: r.error } : r);
+};
+api.post('/etkilesim/:iid/:tok/cevap', interRoute((it, b) => interRespond(it, b)));
+api.patch('/etkilesim/:iid/:tok/mesaj', interRoute((it, b) => { if (!it.deferred && !it.done) return { error: 'Önce cevap ver', code: 400 }; const a = db.apps[it.app]; const mid = it.deferred?.id || it.msgId; if (!mid) return { error: 'Düzenlenecek mesaj yok', code: 400 }; return editAppMsg(a, it.chId, mid, b, it.user); }));
+api.post('/etkilesim/:iid/:tok/takip', interRoute((it, b) => { const a = db.apps[it.app]; const body = msgBody(b); if (b.gizli ?? b.ephemeral) { ephPost(a, it.chId, it.user, body); return { ok: true }; } const r = appPost(a, it.chId, body); return r.error ? r : { ok: true, mesaj: r.msg.id }; }));
+api.use((req, res) => res.status(404).json({ hata: 'Böyle bir uç nokta yok. Belgeler: /gelistirici' }));
+app.use('/api/v1', api);
+function botJoin(a, s, perms, by) {
+  s.members.push(a.bot); (s.joinedAt ||= {})[a.bot] = Date.now();
+  const role = { id: id(), name: a.bot, color: '#8b93ff', perms: perms.filter(p => BOT_PERMS.includes(p)), hoist: false, managed: a.id, mentionable: false };
+  (s.customRoles ||= []).push(role); (s.memberRoles ||= {})[a.bot] = [role.id];
+  audit(s, by, 'Bot ekledi', a.bot);
+  gwDispatch(a.id, 'SUNUCUYA_EKLENDI', botServerView(a, s));
+  devStatsSync(a.owner);
+}
+function appRemove(a) {
+  for (const c of botConnsOf(a.id)) c.ws.close(4004, 'Uygulama silindi');
+  for (const s of db.servers) if (s.members.includes(a.bot)) { s.members = s.members.filter(n => n !== a.bot); delete s.memberRoles?.[a.bot]; delete s.joinedAt?.[a.bot]; delete s.roles?.[a.bot]; s.customRoles = (s.customRoles || []).filter(r => r.managed !== a.id); pushServers(membersOf(s)); }
+  delete db.users[a.bot]; delete db.apps[a.id]; save(); io.emit('users', allUsers());
+}
 
 // ---------- Bağlantı ----------
 const tfaPending = new Map(); // isim -> { secret, exp } (kurulum sırasında)
@@ -2443,7 +2913,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), voiceAge: voiceAges(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
+      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 
@@ -3435,7 +3905,7 @@ io.on('connection', socket => {
     const i = arr.indexOf(me);
     i >= 0 ? arr.splice(i, 1) : arr.push(me);
     if (!arr.length) delete msg.reactions[emoji];
-    update(cur, msg);
+    update(cur, msg); botReact(cur, msg, emoji, me, i < 0);
   });
 
   socket.on('edit', ({ msgId, text, enc, fc } = {}) => {
@@ -3779,6 +4249,145 @@ io.on('connection', socket => {
       save(); io.to(chId).emit('e2eMigrated', { channelId: chId }); }
     cb({ ok: true, n });
   });
+  // ---------- Bot API: Geliştirici Portalı, botu sunucuya ekleme, komut ve bileşen etkileşimleri ----------
+  const myApp = (aid, cb) => { const a = db.apps?.[aid]; if (!a || (a.owner !== me && !siteAdmin(me))) { cb({ error: 'Uygulama bulunamadı' }); return null; } return a; };
+  socket.on('appMine', (_ = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' });
+    cb({ ok: true, izin: devOk(me), basvuru: db.devApps?.[me]?.status || null, max: APP_MAX, esik: REACH_MAX, apps: Object.values(db.apps || {}).filter(a => a.owner === me).map(a => appView(a, true)), devStats: db.users[me].devStats || { servers: 0, cmds: 0 }, hedef: DEV_GOAL, rozet: !!db.users[me].devEarned });
+  });
+  socket.on('appCreate', ({ name, desc } = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' });
+    if (!devOk(me)) return cb({ error: 'Bot oluşturmak için bot geliştirici başvurunun kabul edilmiş olması gerekiyor' });
+    if (limited('appc|' + me, 5, 3600e3)) return cb({ error: 'Biraz bekle' });
+    const mine = Object.values(db.apps || {}).filter(a => a.owner === me);
+    if (mine.length >= APP_MAX && !siteAdmin(me)) return cb({ error: `En fazla ${APP_MAX} uygulama oluşturabilirsin` });
+    name = clean(name, 20);
+    if (!NAME_RE.test(name)) return cb({ error: 'Bot adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin', field: 'name' });
+    if (nameTaken(name) || /kanka|claude|admin|yönetim|yonetim|destek|resmi|official/i.test(name)) return cb({ error: 'Bu ad kullanılamaz ya da alınmış', field: 'name' });
+    const aid = id() + id(), token = crypto.randomBytes(30).toString('base64url');
+    db.users[name] = { name, bot: { app: aid }, color: COLORS[crypto.randomInt(COLORS.length)], xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], displayName: name, bio: clean(desc, 190) };
+    const a = (db.apps ||= {})[aid] = { id: aid, owner: me, bot: name, name, desc: clean(desc, 400), createdAt: Date.now(), tokenH: appTokH(token), tokenAt: Date.now(), secret: crypto.randomBytes(24).toString('hex'), cmds: [], dmOk: true, stats: {} };
+    if (!mine.length) { // ilk botla birlikte bir deneme sunucusu: bot içinde hazır
+      const s = { id: id(), name: `${name} deneme`, icon: '🤖', owner: me, members: [me], joinedAt: { [me]: Date.now() }, createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: newInviteCode(), template: 'bos', botTest: aid,
+        channels: [{ id: id(), name: 'genel', type: 'text', topic: 'Botunu burada dene: / yaz, komutların listede görünür' }, { id: id(), name: 'bot-kayitlari', type: 'text', topic: 'Botunun mesaj attığı ikinci bir oda' }] };
+      db.servers.push(s); botJoin(a, s, BOT_PERMS, me); a.testServer = s.id;
+    }
+    save(); io.emit('users', allUsers()); pushServers([me]);
+    cb({ ok: true, app: appView(a, true), token, sir: a.secret });
+  });
+  socket.on('appUpdate', async ({ id: aid, desc, displayName, avatar, privacy, dmOk, interUrl, listed } = {}, cb = () => {}) => {
+    const a = myApp(aid, cb); if (!a) return; const u = db.users[a.bot];
+    if (desc !== undefined) { a.desc = clean(desc, 400); u.bio = clean(desc, 190); }
+    if (displayName !== undefined) u.displayName = clean(displayName, 32) || a.bot;
+    if (avatar !== undefined && (avatar === null || UPLOAD_RE.test(avatar) || /^\/dosya\/[a-f0-9]{24}(\/[^?#\s]*)?$/.test(avatar) || PRESET_AV.includes(avatar))) u.avatar = avatar || PRESET_AV[0];
+    if (privacy !== undefined) a.privacy = /^https:\/\/\S{4,300}$/.test(privacy || '') ? privacy : '';
+    if (dmOk !== undefined) a.dmOk = !!dmOk;
+    if (listed !== undefined) a.listed = !!listed;
+    if (interUrl !== undefined) {
+      const url = String(interUrl || '').trim();
+      if (!url) a.interUrl = '';
+      else { if (!/^https:\/\/\S{4,300}$/.test(url) && !(process.env.BOT_HTTP_TEST === '1' && /^http:\/\/127\.0\.0\.1:\d+\/\S*$/.test(url))) return cb({ error: 'Etkileşim adresi https:// ile başlamalı' });
+        const old = a.interUrl; a.interUrl = url; const r = await interHttp(a, { tur: 'PING' });
+        if (!r || (r.tur ?? r.type) !== 'PONG') { a.interUrl = old || ''; return cb({ error: 'Adres doğrulanamadı: { "tur": "PING" } isteğine 3 saniye içinde { "tur": "PONG" } dönmeli (imzayı da kontrol etmelisin)' }); } }
+    }
+    save(); io.emit('users', allUsers()); cb({ ok: true, app: appView(a, true) });
+  });
+  socket.on('appToken', ({ id: aid, secret } = {}, cb = () => {}) => {
+    const a = myApp(aid, cb); if (!a) return; if (limited('appt|' + me, 10, 3600e3)) return cb({ error: 'Biraz bekle' });
+    if (secret) { a.secret = crypto.randomBytes(24).toString('hex'); save(); return cb({ ok: true, sir: a.secret }); }
+    const token = crypto.randomBytes(30).toString('base64url'); a.tokenH = appTokH(token); a.tokenAt = Date.now(); save();
+    for (const c of botConnsOf(a.id)) c.ws.close(4004, 'Token yenilendi');
+    cb({ ok: true, token });
+  });
+  socket.on('appDelete', ({ id: aid, confirm } = {}, cb = () => {}) => {
+    const a = myApp(aid, cb); if (!a) return; if (confirm !== a.bot) return cb({ error: 'Onay için botun adını aynen yaz' });
+    appRemove(a); cb({ ok: true });
+  });
+  socket.on('appVerifyReq', ({ id: aid, why, needContent, contentWhy } = {}, cb = () => {}) => {
+    const a = myApp(aid, cb); if (!a) return; if (a.verified) return cb({ error: 'Bot zaten doğrulanmış' });
+    if (a.verifyReq?.status === 'pending') return cb({ error: 'İsteğin zaten inceleniyor' });
+    why = clean(why, 800); if (why.length < 30) return cb({ error: 'Botun ne yaptığını biraz daha anlat (en az 30 karakter)' });
+    a.verifyReq = { at: Date.now(), why, needContent: !!needContent, contentWhy: clean(contentWhy, 500), status: 'pending', reach: reachOf(a) }; save();
+    for (const n of Object.keys(db.users)) if (staffRank(n)) io.to('user:' + n).emit('toast', `🤖 Doğrulama isteği: ${a.bot}`);
+    cb({ ok: true, app: appView(a, true) });
+  });
+  // Ekleme ekranı: bot bilgisi + eklenebileceğin sunucular
+  socket.on('appInfo', ({ id: aid, perms } = {}, cb = () => {}) => {
+    const a = db.apps?.[aid]; if (!a) return cb({ error: 'Bot bulunamadı' }); if (a.killed) return cb({ error: 'Bu bot şu an kullanılamıyor' });
+    const want = (Array.isArray(perms) ? perms : String(perms || '').split(',')).filter(p => BOT_PERMS.includes(p));
+    const reach = reachOf(a);
+    cb({ ok: true, app: appView(a), izinler: want, tumIzinler: BOT_PERMS, erisim: reach, esik: REACH_MAX,
+      sunucular: me ? db.servers.filter(s => !s.public && s.members.includes(me) && can(s, me, 'manageServer')).map(s => ({ id: s.id, ad: s.name, simge: s.icon, simgeImg: s.iconImg || null, var: s.members.includes(a.bot), uye: humans(s.members).length, sigmaz: !a.verified && reachOf(a, s) > REACH_MAX })) : [] });
+  });
+  socket.on('appAuthorize', ({ id: aid, serverId, perms } = {}, cb = () => {}) => {
+    const a = db.apps?.[aid], s = db.servers.find(x => x.id === serverId);
+    if (!me || !a || !s) return cb({ error: 'Bulunamadı' }); if (a.killed) return cb({ error: 'Bu bot şu an kullanılamıyor' });
+    if (s.public) return cb({ error: 'Herkese açık sunuculara bot eklenemez' });
+    if (!s.members.includes(me) || !can(s, me, 'manageServer')) return cb({ error: 'Bu sunucuya bot eklemek için "Sunucuyu yönet" yetkin olmalı' });
+    if (s.members.includes(a.bot)) return cb({ error: 'Bot zaten bu sunucuda' });
+    if (s.bans?.[a.bot]) return cb({ error: 'Bu bot bu sunucudan yasaklanmış' });
+    if (s.members.filter(isBotUser).length >= 25) return cb({ error: 'Bir sunucuda en fazla 25 bot olabilir' });
+    if (!a.verified && reachOf(a, s) > REACH_MAX) return cb({ error: `Bu bot henüz doğrulanmadı: doğrulanmamış botlar en fazla ${REACH_MAX} kişiye ulaşabilir (bu sunucuyla ${reachOf(a, s)} olur). Geliştiricisi Kanka'dan doğrulama isteyebilir.`, esik: true });
+    if (limited('appauth|' + me, 10, 600e3)) return cb({ error: 'Biraz bekle' });
+    botJoin(a, s, (Array.isArray(perms) ? perms : []).filter(p => BOT_PERMS.includes(p)), me);
+    save(); pushServers(membersOf(s)); io.emit('users', allUsers());
+    if (a.owner !== me) botDm(a.owner, { title: `🤖 ${a.bot} yeni bir sunucuya eklendi`, tone: 'good', text: `${s.name} sunucusuna ${me} tarafından eklendi. botun artık ${botServers(a).length} sunucuda, ${reachOf(a)} kişiye ulaşıyor.` });
+    cb({ ok: true, serverId: s.id });
+  });
+  // Komut kullan
+  socket.on('appCmd', ({ chId, app: aid, name, opts } = {}, cb = () => {}) => {
+    if (!me || typeof chId !== 'string' || !canAccess(me, chId)) return cb({ error: 'Erişim yok' });
+    if (limited('appcmd|' + me, 20, 60e3)) return cb({ error: 'Çok hızlı komut kullanıyorsun' });
+    const a = db.apps?.[aid]; if (!a) return cb({ error: 'Bot bulunamadı' }); if (a.killed) return cb({ error: 'Bu bot şu an kullanılamıyor' });
+    let s = null;
+    if (chId.startsWith('dm:')) { if (!dmPeers(chId).includes(a.bot)) return cb({ error: 'Bu bot burada yok' }); }
+    else { const f = findChannel(chId); if (!f || !f.s.members.includes(a.bot) || !seesChannel(f.s, f.c, a.bot)) return cb({ error: 'Bu bot bu odayı göremiyor' });
+      s = f.s; if (!chPerm(f.s, f.c, me, 'apps')) return cb({ error: 'Bu odada uygulama kullanma iznin yok' }); if (timedOut(f.s, me)) return cb({ error: 'Susturulmuşken komut kullanamazsın' }); }
+    const cmd = [...(a.cmds || []), ...(s ? a.srvCmds?.[s.id] || [] : [])].find(c => c.ad === String(name || '').toLocaleLowerCase('tr')); if (!cmd) return cb({ error: 'Komut bulunamadı' });
+    const p = parseOpts(cmd, opts && typeof opts === 'object' ? opts : {}, s); if (p.error) return cb({ error: p.error });
+    const it = newInter(a, 'KOMUT', me, chId, { ad: cmd.ad, secenekler: p.out });
+    cb({ ok: true, iid: it.id });
+  });
+  socket.on('appComp', ({ chId, msgId, cid, values } = {}, cb = () => {}) => {
+    if (!me || typeof chId !== 'string' || !canAccess(me, chId)) return cb({ error: 'Erişim yok' });
+    if (limited('appcomp|' + me, 30, 60e3)) return cb({ error: 'Çok hızlı' });
+    const e = ephMsgs.get(msgId); if (e && e.user !== me) return cb({ error: 'Bu mesaj sana ait değil' });
+    const m = e ? e.msg : findMsg(chId, msgId); if (!m?.app) return cb({ error: 'Mesaj bulunamadı' });
+    const a = db.apps[m.app]; if (!a || a.killed) return cb({ error: 'Bot kullanılamıyor' });
+    const comp = (m.comps || []).flat().find(c => c.id === cid); if (!comp || comp.kapali) return cb({ error: 'Bu düğme artık kullanılamıyor' });
+    const f = findChannel(chId); if (f && timedOut(f.s, me)) return cb({ error: 'Susturulmuşken kullanamazsın' });
+    let data = { id: cid };
+    if (comp.tur === 'secim') { const vals = (Array.isArray(values) ? values : []).map(String).filter(v => comp.secenekler.some(o => o.deger === v)); if (vals.length < comp.min || vals.length > comp.max) return cb({ error: 'Geçersiz seçim' }); data.degerler = vals; }
+    newInter(a, comp.tur === 'secim' ? 'SECIM' : 'BUTON', me, chId, data, m); cb({ ok: true });
+  });
+  socket.on('appFormSubmit', ({ iid, values } = {}, cb = () => {}) => {
+    const it = inters.get(iid); if (!me || !it || it.user !== me || !it.form) return cb({ error: 'Form süresi doldu' });
+    const a = db.apps[it.app]; if (!a || a.killed) return cb({ error: 'Bot kullanılamıyor' });
+    const vals = {}; for (const [k, v] of Object.entries(values && typeof values === 'object' ? values : {}).slice(0, 5)) vals[clean(k, 60)] = clean(v, 4000);
+    const f2 = it.form; it.form = null;
+    newInter(a, 'FORM', me, it.chId, { id: f2.id, alanlar: vals }, it.msgId ? findMsg(it.chId, it.msgId) || ephMsgs.get(it.msgId)?.msg : null); cb({ ok: true });
+  });
+  socket.on('appDmCmds', (bot, cb = () => {}) => cb({ komutlar: me && typeof bot === 'string' && isBotUser(bot) ? dmCmdsFor(bot) : [] }));
+  socket.on('setBotDm', (on, cb = () => {}) => { const u = db.users[me]; if (!u) return cb({}); u.botDmOff = !on; save(); cb({ ok: true, on: !u.botDmOff }); });
+  socket.on('appDirectory', (_ = {}, cb = () => {}) => cb({ ok: true, apps: Object.values(db.apps || {}).filter(a => a.verified && a.listed && !a.killed).map(a => ({ ...appView(a), sunucu: botServers(a).length, erisim: reachOf(a) })).sort((x, y) => y.erisim - x.erisim) }));
+  // Yönetim: doğrulama istekleri ve acil kapatma
+  socket.on('adminApps', (_ = {}, cb = () => {}) => {
+    if (!staffRank(me)) return cb({ error: 'Yetkin yok' });
+    cb({ ok: true, esik: REACH_MAX, apps: Object.values(db.apps || {}).map(a => ({ ...appView(a, true), sahipSeviye: level(db.users[a.owner]?.xp || 0) })).sort((x, y) => (y.dogrulama?.status === 'pending') - (x.dogrulama?.status === 'pending') || y.erisim - x.erisim) });
+  });
+  socket.on('adminAppAct', ({ id: aid, action, note, contentOk: cOk } = {}, cb = () => {}) => {
+    if (!staffRank(me) || !['owner', 'admin'].includes(staffRank(me))) return cb({ error: 'Sadece kurucu ve yöneticiler' });
+    const a = db.apps?.[aid]; if (!a) return cb({ error: 'Uygulama yok' }); note = clean(note, 400);
+    if (action === 'verify') { a.verified = Date.now(); a.contentOk = !!cOk; if (a.verifyReq) Object.assign(a.verifyReq, { status: 'ok', by: me, decidedAt: Date.now(), note });
+      botDm(a.owner, { title: `✅ ${a.bot} doğrulandı`, tone: 'good', text: `botun artık ${REACH_MAX} kişi sınırı olmadan her sunucuya eklenebilir${cOk ? ' ve mesaj içeriklerini görebilir' : ''}. adının yanında doğrulanmış tiki görünüyor.${note ? '\n\nekipten not: ' + note : ''}` }); staffLog(me, 'Botu doğruladı', a.bot); }
+    else if (action === 'reject') { if (a.verifyReq) Object.assign(a.verifyReq, { status: 'rejected', by: me, decidedAt: Date.now(), note });
+      botDm(a.owner, { title: `${a.bot} doğrulama isteği`, tone: 'warn', text: `şimdilik onaylanmadı.${note ? ' sebep: ' + note : ''} düzeltip tekrar isteyebilirsin.` }); staffLog(me, 'Bot doğrulamasını reddetti', a.bot, note); }
+    else if (action === 'unverify') { a.verified = null; a.contentOk = false; staffLog(me, 'Bot doğrulamasını kaldırdı', a.bot, note); }
+    else if (action === 'kill') { a.killed = { at: Date.now(), by: me, reason: note }; for (const c of botConnsOf(a.id)) c.ws.close(4014, 'Bot durduruldu'); botDm(a.owner, { title: `⛔ ${a.bot} durduruldu`, tone: 'danger', text: `botun Kanka ekibi tarafından durduruldu.${note ? ' sebep: ' + note : ''} itiraz için kankahq1@gmail.com` }); staffLog(me, 'Botu durdurdu', a.bot, note); }
+    else if (action === 'unkill') { a.killed = null; staffLog(me, 'Botu yeniden açtı', a.bot); }
+    else return cb({ error: 'Geçersiz işlem' });
+    save(); io.emit('users', allUsers()); cb({ ok: true, app: appView(a, true) });
+  });
   socket.on('botInfo', (_ = {}, cb = () => {}) => {
     if (!me) return cb({});
     const all = db.servers.filter(x => x.bot?.added && !x.public), mine = all.filter(x => x.members.includes(me) || x.owner === me);
@@ -4026,7 +4635,7 @@ io.on('connection', socket => {
     const want = (roles || []).filter(rid => s.customRoles.some(r => r.id === rid && !r.bot));
     for (const rid of new Set([...old, ...want])) if (old.includes(rid) !== want.includes(rid) && !outranksRole(s, s.customRoles.find(r => r.id === rid))) return cb({ error: 'Senden yüksek bir rolü veremez/alamazsın' });
     if (want.length) s.memberRoles[name] = want; else delete s.memberRoles[name];
-    audit(s, me, 'Rollerini değiştirdi', name); pushSrv(s); cb({ ok: true });
+    audit(s, me, 'Rollerini değiştirdi', name); pushSrv(s); botMember(s, name, 'update'); cb({ ok: true });
   });
   socket.on('channelSave', ({ serverId, channelId, name, cat, perms, sync, topic, slow, limit, bitrate, news } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageChannels'); if (!s) return cb({ error: 'Oda yönetme yetkin yok' });
@@ -4143,7 +4752,7 @@ io.on('connection', socket => {
     audit(s, me, 'Yasakladı', name + (reason ? ' · ' + clean(reason, 120) : ''));
     voiceKick(s.channels.map(c => c.id), name, 'Sunucudan yasaklandın');
     save(); pushServers([name, ...s.members]);
-    io.to('user:' + name).emit('toast', `${s.name} sunucusundan yasaklandın`);
+    io.to('user:' + name).emit('toast', `${s.name} sunucusundan yasaklandın`); botMember(s, name, 'leave');
     cb({ ok: true });
   });
   socket.on('kick', ({ serverId, name } = {}, cb = () => {}) => {
@@ -4155,7 +4764,7 @@ io.on('connection', socket => {
     audit(s, me, 'Sunucudan attı', name);
     voiceKick(s.channels.map(c => c.id), name, 'Sunucudan çıkarıldın');
     save(); pushServers([name, ...s.members]);
-    io.to('user:' + name).emit('toast', `${s.name} sunucusundan çıkarıldın`);
+    io.to('user:' + name).emit('toast', `${s.name} sunucusundan çıkarıldın`); botMember(s, name, 'leave');
     cb({ ok: true });
   });
   socket.on('deleteChannel', ({ serverId, channelId } = {}, cb = () => {}) => {
@@ -4556,7 +5165,7 @@ io.on('connection', socket => {
     inviteGuard('u:' + me, !!s); inviteGuard('ip:' + ip, !!s);
     if (!s) return cb({ error: 'Davet kodu geçersiz' });
     if (s.bans?.[me]) return cb({ error: 'Bu sunucudan yasaklandın' });
-    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); const ar = autoRoleOnJoin(s, me); save(); pushServers(s.members); botWelcome(s, me, ar); }
+    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); const ar = autoRoleOnJoin(s, me); save(); pushServers(s.members); botWelcome(s, me, ar); botMember(s, me, 'join'); }
     cb(serverView(s, me));
   });
 
@@ -4564,7 +5173,7 @@ io.on('connection', socket => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || s.public) return cb({ error: 'Bu sunucudan ayrılamazsın' });
     if (s.owner === me && s.members.some(n => n !== me)) return cb({ error: 'Sunucunun sahibisin. Ayrılmadan önce Sunucu ayarları → Genel → Sahipliği devret, ya da sunucuyu sil.', owner: true });
-    s.members = s.members.filter(n => n !== me);
+    s.members = s.members.filter(n => n !== me); botMember(s, me, 'leave');
     for (const c of s.channels.filter(c => c.ticket && !c.ticket.closedAt && c.ticket.by === me)) closeTicket(s, c, me);
     botBye(s, me);
     voiceKick(s.channels.map(c => c.id), me, 'Sunucudan ayrıldın');

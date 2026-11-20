@@ -554,6 +554,65 @@
   #yt-wrap iframe, #yt-wrap > div { width: 100%; height: 100%; }
   #livecard .lc-ph > svg { width: 26px; height: 26px; color: var(--muted); }
   #livecard .lc-go:disabled { opacity: .55; cursor: not-allowed; }
+  .botbadge.app { display: inline-flex; align-items: center; gap: 2px; background: #6f78ff; color: #fff; vertical-align: 1px; }
+  .botbadge.app .ic { width: 10px; height: 10px; stroke-width: 3.2; }
+  .inter-tag { display: flex; align-items: center; gap: 6px; margin: 0 0 3px; font-size: 12.5px; color: var(--muted); min-width: 0; }
+  .inter-tag .av { width: 16px; height: 16px; font-size: 8px; } .inter-tag b { color: var(--ink); font-weight: 800; } .inter-tag span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .aembed { display: flex; gap: 14px; max-width: 520px; margin: 6px 0 2px; padding: 12px 14px 12px 16px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--tone); }
+  .ae-main { flex: 1; min-width: 0; display: grid; gap: 6px; }
+  .ae-t { font-weight: 800; font-size: 15px; color: var(--ink); text-decoration: none; } a.ae-t { color: var(--accent-2); } a.ae-t:hover { text-decoration: underline; }
+  .ae-d { font-size: 14px; line-height: 1.45; color: var(--ink); word-break: break-word; }
+  .ae-f { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; } .ae-f > div { grid-column: 1 / -1; min-width: 0; } .ae-f > div.in { grid-column: auto; }
+  .ae-f small { display: block; font-size: 12px; font-weight: 800; color: var(--muted); } .ae-f span { font-size: 13.5px; word-break: break-word; }
+  .ae-img { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 4px; cursor: zoom-in; } .ae-th { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; flex: none; }
+  .ae-ft { font-size: 12px; color: var(--muted); }
+  .acomps { display: grid; gap: 6px; margin: 6px 0 2px; } .acomp-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .abtn { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 14px; border-radius: 9px; font: inherit; font-weight: 800; font-size: 14px; text-decoration: none; cursor: pointer; border: 0; transition: filter .15s, transform .1s; }
+  .abtn:hover:not(:disabled) { filter: brightness(1.12); } .abtn:active:not(:disabled) { transform: translateY(1px); } .abtn:disabled { opacity: .45; cursor: not-allowed; }
+  .abtn.ana { background: #6f78ff; color: #fff; } .abtn.ikincil, .abtn.link { background: var(--hover); color: var(--ink); } .abtn.basari { background: #2f9e65; color: #fff; } .abtn.tehlike { background: #d6453d; color: #fff; }
+  .abtn.link .ic { width: 14px; height: 14px; } .abtn .ab-e { font-size: 16px; } .abtn.busy, .asel.busy, .amulti.busy { opacity: .6; pointer-events: none; }
+  .asel { max-width: 420px; width: 100%; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-size: 14px; }
+  .amulti { display: grid; gap: 6px; max-width: 460px; padding: 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); } .amulti small { color: var(--muted); font-size: 12px; } .amulti small em { font-style: normal; }
+  .amulti > div { display: flex; flex-wrap: wrap; gap: 6px; } .am-o { padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .am-o.on { background: #6f78ff; border-color: #6f78ff; color: #fff; } .amulti .am-go { justify-self: start; }
+  .eph-f { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 12px; color: var(--muted); } .eph-f .ic { width: 13px; height: 13px; } .eph-f .alink { font-size: 12px; }
+  .app-think { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-style: italic; }
+  .app-think .dots { display: inline-flex; gap: 3px; } .app-think .dots i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: thinkDot 1.2s infinite; } .app-think .dots i:nth-child(2) { animation-delay: .15s; } .app-think .dots i:nth-child(3) { animation-delay: .3s; }
+  @keyframes thinkDot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+  .af-form { display: grid; gap: 4px; } .af-h { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; } .af-h .av { width: 44px; height: 44px; font-size: 18px; } .af-h h3 { margin: 0; } .af-h small { color: var(--muted); font-size: 13px; }
+  .af-l { display: grid; gap: 4px; margin-bottom: 6px; } .af-l > span { font-weight: 800; font-size: 13px; } .af-l > span em { color: var(--red); font-style: normal; } .af-l > span small { color: var(--muted); font-weight: 600; }
+  .af-l .field { margin: 0; }
+  .sg-ic.sg-av { background: none !important; padding: 0; } .sg-ic.sg-av .av { width: 26px; height: 26px; font-size: 11px; }
+  .sg-g.sg-bot { display: flex; align-items: center; gap: 6px; } .sg-g.sg-bot .av { width: 16px; height: 16px; font-size: 8px; }
+  .ba-h { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; } .ba-h .av { width: 56px; height: 56px; font-size: 22px; flex: none; } .ba-h h3 { margin: 0 0 4px; } .ba-h small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .ba-p { display: grid; gap: 4px; margin: 10px 0; padding: 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); } .ba-p > b { margin-bottom: 4px; } .ba-p > small { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .ba-pr { display: flex; gap: 10px; align-items: center; padding: 6px 2px; cursor: pointer; font-size: 14px; } .ba-pr input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; } .ba-pr small { color: var(--muted); }
+  .dp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; } .dp-head h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
+  .dp-badge { display: flex; gap: 12px; padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); margin-bottom: 14px; } .dp-badge.ok { border-color: #2f9e6566; }
+  .dp-bi { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #6f78ff26; color: #8b93ff; flex: none; } .dp-badge.ok .dp-bi { background: #2f9e6526; color: #4cc38a; } .dp-bi .ic { width: 20px; height: 20px; }
+  .dp-badge b { display: block; } .dp-badge small { display: block; color: var(--muted); font-size: 12.5px; margin: 2px 0 8px; }
+  .dp-prog { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font-size: 12px; font-weight: 800; color: var(--muted); }
+  .dp-bar { height: 6px; border-radius: 6px; background: var(--hover); overflow: hidden; } .dp-bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #6f78ff, #9aa1ff); }
+  .dp-list { display: grid; gap: 8px; margin-bottom: 12px; } .dp-app { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); text-align: left; color: var(--ink); cursor: pointer; }
+  .dp-app:hover { border-color: #6f78ff88; } .dp-app .av { width: 42px; height: 42px; font-size: 17px; } .dp-at { flex: 1; min-width: 0; display: grid; gap: 2px; } .dp-at small { color: var(--muted); font-size: 12.5px; display: flex; align-items: center; gap: 5px; } .dp-app > .ic { width: 16px; height: 16px; transform: rotate(-90deg); color: var(--muted); }
+  .dp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; } .dp-dot.on { background: #3fcf8e; } .dp-dot.off { background: var(--red); }
+  .dp-empty { display: grid; justify-items: center; gap: 6px; padding: 40px 20px; text-align: center; border-radius: 16px; border: 1px dashed var(--line); color: var(--muted); margin-bottom: 12px; } .dp-empty .ic { width: 32px; height: 32px; } .dp-empty b { color: var(--ink); }
+  .dp-back { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px 6px 4px; border-radius: 10px; font-weight: 800; font-size: 13px; color: var(--muted); margin-bottom: 8px; } .dp-back .ic { width: 16px; height: 16px; transform: rotate(90deg); } .dp-back:hover { background: var(--hover); color: var(--ink); }
+  .dp-top { display: flex; gap: 12px; align-items: center; } .dp-top .av { width: 52px; height: 52px; font-size: 20px; flex: none; } .dp-top h3 { margin: 0; } .dp-top small { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .dp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 14px 0 8px; } .dp-stats > div { padding: 10px 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+  .dp-stats b { display: block; font-size: 20px; } .dp-stats b em { font-style: normal; font-size: 13px; color: var(--muted); } .dp-stats small { color: var(--muted); font-size: 12px; font-weight: 700; }
+  .dp-chart { display: flex; align-items: flex-end; gap: 4px; height: 90px; padding: 8px 10px 0; border-radius: 12px; background: var(--card); border: 1px solid var(--line); margin-bottom: 8px; }
+  .dp-chart span { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 2px; } .dp-chart i { width: 100%; max-width: 22px; border-radius: 4px 4px 0 0; background: #6f78ff; } .dp-chart small { font-size: 10px; color: var(--muted); padding-bottom: 4px; }
+  .dp-avs { display: flex; flex-wrap: wrap; gap: 6px; } .dp-avs button { width: 44px; height: 44px; border-radius: 12px; padding: 3px; border: 2px solid transparent; background: var(--card); } .dp-avs button.on { border-color: var(--accent); } .dp-avs img { width: 100%; height: 100%; border-radius: 9px; }
+  .dp-avs .dp-up { width: auto; padding: 0 12px; display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; } .dp-up .ic { width: 15px; height: 15px; }
+  .dp-perms { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .dp-tok { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .dp-tok code { flex: 1; min-width: 200px; padding: 10px 12px; border-radius: 10px; background: var(--bg); font: 700 12.5px ui-monospace, monospace; word-break: break-all; user-select: all; }
+  .dp-sir { font: 700 12px ui-monospace, monospace; word-break: break-all; user-select: all; }
+  .dp-srv { display: grid; gap: 6px; margin-bottom: 12px; } .dp-srv > div { display: flex; justify-content: space-between; padding: 8px 12px; border-radius: 10px; background: var(--card); } .dp-srv small { color: var(--muted); }
+  .dp-adm.pend { border-color: #f6c44566; } .dp-req { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--bg); font-size: 13.5px; } .dp-req p { margin: 4px 0 0; color: var(--muted); } .adm-h { margin: 6px 0 8px; }
+  .dir-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 26px 0 10px; } .dir-h small { color: var(--muted); font-size: 13px; font-weight: 600; } .dir-h .ic { width: 18px; height: 18px; }
+  .dir-bots { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; } .dir-bot { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+  .dir-bot .av { width: 44px; height: 44px; font-size: 17px; flex: none; } .dir-bot > div { flex: 1; min-width: 0; display: grid; gap: 2px; } .dir-bot small { color: var(--muted); font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } .dir-bot em { font-style: normal; font-size: 12px; color: var(--muted); }
   .sbox { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); color: var(--muted); cursor: text; transition: border-color .15s, background .15s, width .2s var(--ease-out); }
   .sbox:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
   .sbox:focus-within { border-color: var(--accent); background: var(--panel); color: var(--ink); }
@@ -4124,7 +4183,8 @@ function onAuth(res) {
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ageGate) return showAgeGate(res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
   if (res.ice?.length) ICE.iceServers = res.ice;
-  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me);
+  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff;
+  { const be = new URLSearchParams(location.search).get('botekle'); if (be) { const iz = new URLSearchParams(location.search).get('izin') || ''; history.replaceState(null, '', '/'); setTimeout(() => showBotAuthorize(be, iz.split(',').filter(Boolean)), 900); } }
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
@@ -4285,7 +4345,7 @@ function showSettings(tab) {
         ${[['gt', 'Yapay zekâ (önerilen)', 'Alkış, klavye, köpek, fan, kapı gibi sesleri bastırır, sadece konuşman gider. Discord\'daki Krisp gibi.'], ['rnn', 'Hafif', 'Sadece fan ve uğultu gibi sabit gürültüleri azaltır. Eski bilgisayarlar için.'], ['std', 'Standart', 'Tarayıcının kendi hafif gürültü azaltması.'], ['off', 'Kapalı', 'Mikrofon sesi olduğu gibi gider (stüdyo mikrofonu için).']]
           .map(([k, t, d]) => `<label class="chk"><input type="radio" name="ns" value="${k}" ${nsMode() === k ? 'checked' : ''}><span>${t}<small>${d}</small></span></label>`).join('')}</div>
       <p class="hint">Neler için haber verelim?</p>
-      <div class="pc-sec"><label class="switch">Etiketlendiğimde ve özel mesaj geldiğinde bildir<input type="checkbox" id="p-nt" ${notifOn() ? 'checked' : ''}></label>
+      <div class="pc-sec"><label class="switch">Etiketlendiğimde ve özel mesaj geldiğinde bildir<input type="checkbox" id="p-nt" ${notifOn() ? 'checked' : ''}></label><label class="switch">Botlar bana özel mesaj atabilsin<input type="checkbox" id="p-botdm" ${S.botDmOff ? '' : 'checked'}></label>
       </div>${pushSettingsHTML()}</div>`,
   };
   const swatches = (el, key, opts) => {
@@ -4362,6 +4422,7 @@ function showSettings(tab) {
     if (t === 'notif') {
       wireOverlaySettings();
       $('#p-nt').onchange = e => { store.set('kanka-notif', e.target.checked ? null : 'off'); syncPrefs(); };
+      $('#p-botdm').onchange = e => socket.emit('setBotDm', e.target.checked, r => { S.botDmOff = !r?.on; toast(r?.on ? 'Botlar sana özel mesaj atabilir' : 'Botlardan özel mesaj almayacaksın'); });
       wirePushSettings();
     }
     preview();
@@ -5363,6 +5424,9 @@ function showBots() {
   $('#discover').innerHTML = `<div class="bots-hero"><img src="/icon-192.png" alt=""><div><h2>Kanka Bot<span class="botbadge">BOT</span></h2><p>Discord'da her iş için ayrı bot kurman gerekirdi. Kanka Bot tek başına yetiyor: sunucunu korur, kural bozanı uyarır, yeni gelenleri karşılar, maç sonuçlarını sohbete düşürür. Her gün yeni modül geliyor.</p>
     <button class="primary" id="bots-add">${ic('plus')} Sunucuna ekle</button></div></div><div class="botgrid">${KB_MODS.map(kbCard(false)).join('')}</div><p class="kbsoon">Yakında: Takım Kur · Seviye · Çekiliş</p>`;
   $('#bots-add').onclick = pickBotServer;
+  socket.emit('appDirectory', {}, r => { if (!r?.apps?.length || !$('#discover .botgrid')) return;
+    $('#discover').insertAdjacentHTML('beforeend', `<h3 class="dir-h">${ic('users')}Topluluk botları <small>Kanka ekibinin doğruladığı, geliştiricilerin yaptığı botlar</small></h3><div class="dir-bots">${r.apps.map(a => `<div class="dir-bot">${av(a.ad)}<div><b>${esc(a.gorunenAd)} <span class="botbadge app">${ic('check')}BOT</span></b><small>${esc(a.aciklama || '')}</small><em>${a.sunucu} sunucu · ${a.erisim} kişi</em></div><button class="btns2" data-addapp="${esc(a.id)}">${ic('plus')} Ekle</button></div>`).join('')}</div><p class="kbsoon">Kendi botunu yapmak ister misin? <a href="/gelistirici" target="_blank" rel="noopener">Geliştirici belgeleri</a></p>`);
+    $('#discover').querySelectorAll('[data-addapp]').forEach(b => b.onclick = () => showBotAuthorize(b.dataset.addapp, [])); });
 }
 function pickBotServer() {
   const list = myBotServers();
@@ -6188,7 +6252,8 @@ function openDMChannel(id, other) {
     enterRoom(id, 'Kanka Bot\'a cevap yazılamıyor', `<div class="hello"><div class="av" style="width:64px;height:64px;margin:0 auto 8px"><img src="/icon-192.png" alt=""></div><b>Kanka Bot</b>Kanka ekibinden gelen bildirimler burada. Bu sohbete cevap yazılamıyor.</div>`);
     $('#compose')?.classList.add('ro-bot'); renderDMSide(); renderMembers(); return; }
   $('#compose')?.classList.remove('ro-bot');
-  setHeader(`${ic('chat')} ${esc(other)}`, S.online.has(other) ? stLabel(other) : 'Çevrimdışı', false);
+  setHeader(`${ic('chat')} ${esc(other)}${botTag(other)}`, S.users[other]?.bot ? 'Bot · mesajların botun sahibine iletilir, uçtan uca şifreli değildir' : S.online.has(other) ? stLabel(other) : 'Çevrimdışı', false);
+  if (S.users[other]?.bot) loadDmAppCmds(other);
   addCallButtons();
   enterRoom(id, `${other} kişisine mesaj yaz...`,
     `<div class="hello"><div class="av" style="width:64px;height:64px;font-size:26px;margin:0 auto 8px;background:${userColor(other)}">${avInner(other)}</div><b>${esc(other)}</b>Bu, ${esc(other)} ile özel sohbetinin başlangıcı.</div>`);
@@ -6717,6 +6782,101 @@ function filesHTML(files) {
   }
   return h;
 }
+// ================= Geliştirici botları: mesaj kartları, butonlar, komutlar =================
+const botTag = n => { const b = S.users[n]?.bot; return b ? `<span class="botbadge app">${b.dogrulandi ? ic('check') : ''}BOT</span>` : ''; };
+const interTag = m => `<div class="inter-tag">${av(m.inter.user)}<b>${esc(dn(m.inter.user))}</b><span>/${esc(m.inter.cmd || '')} kullandı</span></div>`;
+const toneOk = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : 'var(--accent)';
+function embedHTML(e) {
+  const t = e.baslik ? (e.url ? `<a class="ae-t" href="${esc(e.url)}" target="_blank" rel="noopener noreferrer">${esc(e.baslik)}</a>` : `<b class="ae-t">${esc(e.baslik)}</b>`) : '';
+  return `<div class="aembed" style="--tone:${toneOk(e.renk)}"><div class="ae-main">${t}${e.aciklama ? `<div class="ae-d">${fmt(e.aciklama)}</div>` : ''}${e.alanlar?.length ? `<div class="ae-f">${e.alanlar.map(f => `<div class="${f.satir ? 'in' : ''}"><small>${esc(f.ad)}</small><span>${fmt(f.deger)}</span></div>`).join('')}</div>` : ''}${e.resim ? `<img class="ae-img" src="${esc(e.resim)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-view>` : ''}${e.altyazi ? `<div class="ae-ft">${esc(e.altyazi)}</div>` : ''}</div>${e.kucukResim ? `<img class="ae-th" src="${esc(e.kucukResim)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}</div>`;
+}
+function compHTML(m, c) {
+  const lab = `${c.emoji ? `<span class="ab-e">${esc(c.emoji)}</span>` : ''}${esc(c.etiket || '')}`;
+  if (c.tur === 'buton') return c.stil === 'link' ? `<a class="abtn link" href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${lab}${ic('link')}</a>` : `<button type="button" class="abtn ${esc(c.stil)}" data-acomp="${esc(m.id)}" data-cid="${esc(c.id)}" ${c.kapali ? 'disabled' : ''}>${lab}</button>`;
+  if (c.tur === 'secim' && c.max <= 1) return `<select class="asel" data-acomp="${esc(m.id)}" data-cid="${esc(c.id)}" ${c.kapali ? 'disabled' : ''} aria-label="${esc(c.yerTutucu)}"><option value="" selected disabled>${esc(c.yerTutucu)}</option>${c.secenekler.map(o => `<option value="${esc(o.deger)}">${o.emoji ? esc(o.emoji) + ' ' : ''}${esc(o.etiket)}${o.aciklama ? ' · ' + esc(o.aciklama) : ''}</option>`).join('')}</select>`;
+  if (c.tur === 'secim') return `<div class="amulti" data-acomp="${esc(m.id)}" data-cid="${esc(c.id)}" data-min="${c.min}" data-max="${c.max}"><small>${esc(c.yerTutucu)} <em>(${c.min === c.max ? c.max : `${c.min}-${c.max}`} seçim)</em></small><div>${c.secenekler.map(o => `<button type="button" class="am-o" data-v="${esc(o.deger)}" ${c.kapali ? 'disabled' : ''}>${o.emoji ? esc(o.emoji) + ' ' : ''}${esc(o.etiket)}</button>`).join('')}</div><button type="button" class="abtn ana am-go" ${c.kapali ? 'disabled' : ''}>Gönder</button></div>`;
+  return '';
+}
+function appBodyHTML(m) {
+  const txt = m.loading ? `<div class="bubble app-think"><span class="dots"><i></i><i></i><i></i></span>${esc(dn(m.author))} düşünüyor…</div>` : m.text ? `<div class="bubble">${fmt(m.text)}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>` : '';
+  const rows = (m.comps || []).map(r => `<div class="acomp-row">${r.map(c => compHTML(m, c)).join('')}</div>`).join('');
+  return txt + (m.embeds || []).map(embedHTML).join('') + (rows ? `<div class="acomps">${rows}</div>` : '') + (m.ephemeral ? `<div class="eph-f">${ic('eye')}Sadece sen görüyorsun · <button type="button" class="alink" data-ephx="${esc(m.id)}">Kapat</button></div>` : '');
+}
+function appComp(el, values) {
+  const mid = el.dataset.acomp, cid = el.dataset.cid; el.classList.add('busy'); setTimeout(() => el.classList.remove('busy'), 1200);
+  socket.emit('appComp', { chId: S.channel?.id, msgId: mid, cid, values }, r => { if (r?.error) toast(r.error, null, false, { type: 'err' }); });
+}
+document.addEventListener('click', e => {
+  const x = e.target.closest('[data-ephx]'); if (x) { const id = x.dataset.ephx; S.msgs = S.msgs.filter(m => m.id !== id); document.querySelector(`.row[data-id="${CSS.escape(id)}"]`)?.remove(); return; }
+  const b = e.target.closest('button.abtn[data-acomp]'); if (b && !b.disabled) return appComp(b);
+  const o = e.target.closest('.amulti .am-o'); if (o) { const box = o.closest('.amulti'), max = +box.dataset.max; if (!o.classList.contains('on') && box.querySelectorAll('.am-o.on').length >= max) return toast(`En fazla ${max} seçebilirsin`); o.classList.toggle('on'); return; }
+  const g = e.target.closest('.amulti .am-go'); if (g) { const box = g.closest('.amulti'), v = [...box.querySelectorAll('.am-o.on')].map(x => x.dataset.v); if (v.length < +box.dataset.min) return toast(`En az ${box.dataset.min} seçmelisin`); return appComp(box, v); }
+});
+document.addEventListener('change', e => { const s = e.target.closest('select.asel[data-acomp]'); if (s && s.value) { appComp(s, [s.value]); } });
+// Botun açtığı form penceresi
+socket.on('appForm', f => {
+  modal(`<form id="af-form" class="af-form"><div class="af-h">${av(f.bot)}<div><h3>${esc(f.baslik)}</h3><small>${esc(f.bot)} <span class="botbadge app">BOT</span></small></div></div>
+    ${f.alanlar.map(a => `<label class="af-l"><span>${esc(a.etiket)}${a.zorunlu ? ' <em>*</em>' : ''}</span>${a.tur === 'uzun' ? `<textarea class="field" name="${esc(a.id)}" rows="4" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}">${esc(a.deger)}</textarea>` : `<input class="field" name="${esc(a.id)}" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}" value="${esc(a.deger)}" autocomplete="off">`}</label>`).join('')}
+    <p class="hint" style="font-size:12px">Yazdıkların ${esc(f.bot)} botuna ve sahibine gönderilir.</p>
+    <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="btnp" type="submit">${ic('send')} Gönder</button></div></form>`);
+  $('#mx').onclick = closeModal; setTimeout(() => $('#af-form [name]')?.focus(), 50);
+  $('#af-form').onsubmit = e => { e.preventDefault(); const vals = Object.fromEntries(f.alanlar.map(a => [a.id, $('#af-form').querySelector(`[name="${CSS.escape(a.id)}"]`).value]));
+    socket.emit('appFormSubmit', { iid: f.iid, values: vals }, r => { if (r?.error) return toast(r.error, null, false, { type: 'err' }); closeModal(); }); };
+});
+// ---- Komutlar: / listesinde botların komutları ----
+const dmAppCmds = {};
+function appCmdTuples() {
+  let list = [];
+  if (S.view === 'server') list = S.server?.appCmds || [];
+  else if (S.channel?.with && S.users[S.channel.with]?.bot) list = dmAppCmds[S.channel.with] || [];
+  const builtin = new Set([...CMDS, ...TICKET_CMDS, ...MOD_CMDS].map(c => c[0])), seen = new Set();
+  return list.map(c => { let key = '/' + c.ad; if (builtin.has(key) || seen.has(key)) key = `/${c.ad}:${c.bot.toLocaleLowerCase('tr')}`; seen.add(key); return [key, c.aciklama, 'bot', '#8b93ff', c.secenekler.map(o => o.ad + (o.zorunlu ? '' : '?')), undefined, c]; });
+}
+function loadDmAppCmds(bot) { socket.emit('appDmCmds', bot, r => { dmAppCmds[bot] = r?.komutlar || []; }); }
+const OPT_TR = { yazi: 'yazı', sayi: 'sayı', tamsayi: 'tam sayı', kisi: 'kişi', oda: 'oda', rol: 'rol', evethayir: 'evet / hayır' };
+function runAppCmd(c, arg) {
+  const opts = {}, list = c.secenekler, kv = [...String(arg || '').matchAll(/([\p{L}\p{N}_-]+):("[^"]*"|\S+)/gu)];
+  if (kv.length) for (const [, k, v] of kv) opts[k.toLocaleLowerCase('tr')] = v.replace(/^"|"$/g, '');
+  else if (arg && arg.trim()) { const parts = arg.trim().split(/\s+/); list.forEach((o, i) => { if (i < parts.length) opts[o.ad] = i === list.length - 1 ? parts.slice(i).join(' ') : parts[i]; }); }
+  if (list.some(o => o.zorunlu && (opts[o.ad] === undefined || opts[o.ad] === ''))) return appCmdForm(c, opts);
+  socket.emit('appCmd', { chId: S.channel?.id, app: c.app, name: c.ad, opts }, r => { if (r?.error) toast(r.error, null, false, { type: 'err' }); });
+}
+function appCmdForm(c, pre = {}) {
+  const srv = S.view === 'server' ? S.server : null;
+  const field = o => {
+    const v = pre[o.ad] ?? '', nm = `name="${esc(o.ad)}" ${o.zorunlu ? 'required' : ''}`;
+    if (o.secimler?.length) return `<select class="field" ${nm}><option value="">Seç…</option>${o.secimler.map(x => `<option value="${esc(String(x.deger))}" ${String(x.deger) === String(v) ? 'selected' : ''}>${esc(x.ad)}</option>`).join('')}</select>`;
+    if (o.tur === 'evethayir') return `<select class="field" ${nm}><option value="">Seç…</option><option value="evet">Evet</option><option value="hayir">Hayır</option></select>`;
+    if (o.tur === 'kisi') return `<select class="field" ${nm}><option value="">Kişi seç…</option>${(srv ? srv.members : [S.me, S.channel?.with]).filter(Boolean).map(n => `<option value="${esc(n)}">${esc(dn(n))}</option>`).join('')}</select>`;
+    if (o.tur === 'oda') return `<select class="field" ${nm}><option value="">Oda seç…</option>${(srv?.channels || []).map(ch => `<option value="${esc(ch.id)}">#${esc(ch.name)}</option>`).join('')}</select>`;
+    if (o.tur === 'rol') return `<select class="field" ${nm}><option value="">Rol seç…</option>${(srv?.customRoles || []).filter(r => !r.managed).map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}</select>`;
+    return `<input class="field" ${nm} ${o.tur === 'sayi' || o.tur === 'tamsayi' ? `type="number" ${o.tur === 'tamsayi' ? 'step="1"' : 'step="any"'}` : 'maxlength="1000"'} value="${esc(v)}" autocomplete="off">`;
+  };
+  modal(`<form id="ac-form" class="af-form"><div class="af-h">${av(c.bot)}<div><h3>/${esc(c.ad)}</h3><small>${esc(c.aciklama)} · ${esc(c.bot)} <span class="botbadge app">BOT</span></small></div></div>
+    ${c.secenekler.map(o => `<label class="af-l"><span>${esc(o.ad)}${o.zorunlu ? ' <em>*</em>' : ''} <small>${esc(o.aciklama)} · ${OPT_TR[o.tur] || o.tur}</small></span>${field(o)}</label>`).join('')}
+    <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="btnp" type="submit">${ic('send')} Çalıştır</button></div></form>`);
+  $('#mx').onclick = closeModal; setTimeout(() => $('#ac-form [name]')?.focus(), 50);
+  $('#ac-form').onsubmit = e => { e.preventDefault(); const opts = {}; for (const o of c.secenekler) { const v = $('#ac-form').querySelector(`[name="${CSS.escape(o.ad)}"]`).value; if (v !== '') opts[o.ad] = v; }
+    socket.emit('appCmd', { chId: S.channel?.id, app: c.app, name: c.ad, opts }, r => { if (r?.error) return toast(r.error, null, false, { type: 'err' }); closeModal(); }); };
+}
+// ---- Botu sunucuya ekleme ekranı (kankahq.com/bot-ekle/...) ----
+const PERM_TR = { manageServer: 'Sunucuyu yönet', manageRoles: 'Rolleri yönet', manageChannels: 'Odaları yönet', manageEmojis: 'Emojileri yönet', manageWebhooks: 'Webhook yönet', viewAudit: 'Kayıt defterini gör', manageMessages: 'Mesajları yönet (başkasınınkini sil)', pinMessages: 'Mesaj sabitle', slowBypass: 'Yavaş moda takılmasın', mentionEveryone: '@herkes etiketle', kick: 'Üye at', ban: 'Üye yasakla', timeout: 'Üye sustur', voiceMute: 'Seste sustur', voiceMove: 'Sesten taşı' };
+function showBotAuthorize(aid, perms) {
+  socket.emit('appInfo', { id: aid, perms }, r => {
+    if (r?.error) return toast(r.error, null, false, { type: 'err' });
+    const a = r.app, srvs = r.sunucular;
+    modal(`<div class="ba"><div class="ba-h">${av(a.ad)}<div><h3>${esc(a.gorunenAd)} ${a.dogrulandi ? `<span class="botbadge app">${ic('check')}BOT</span>` : '<span class="botbadge app">BOT</span>'}</h3><small>${esc(a.aciklama || 'Açıklama yok')}</small><small>Geliştirici: <b>${esc(a.sahip)}</b>${a.dogrulandi ? ' · Kanka tarafından doğrulandı' : ` · Doğrulanmadı (en fazla ${r.esik} kişiye ulaşabilir, şu an ${r.erisim})`}</small></div></div>
+      <label class="af-l"><span>Hangi sunucuya eklensin?</span><select class="field" id="ba-s"><option value="">Sunucu seç…</option>${srvs.map(s => `<option value="${esc(s.id)}" ${s.var || s.sigmaz ? 'disabled' : ''}>${esc(s.ad)} · ${s.uye} kişi${s.var ? ' (zaten var)' : s.sigmaz ? ` (bot doğrulanmadığı için olmaz)` : ''}</option>`).join('')}</select></label>
+      ${srvs.length ? '' : '<p class="hint">Bot ekleyebileceğin bir sunucun yok: sunucuda "Sunucuyu yönet" yetkin olmalı.</p>'}
+      <div class="ba-p"><b>Bu bot şunları yapabilecek</b><label class="ba-pr on"><input type="checkbox" checked disabled><span>Mesajları görmek, mesaj ve komut cevabı göndermek</span></label>${r.izinler.map(p => `<label class="ba-pr"><input type="checkbox" name="perm" value="${esc(p)}" checked><span>${esc(PERM_TR[p] || p)}</span></label>`).join('')}
+        <small>İzinleri istediğin zaman Sunucu ayarları › Roller'de <b>${esc(a.ad)}</b> rolünden değiştirebilirsin. Bot şifreli DM'lerini asla göremez.</small></div>
+      <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="btnp" id="ba-ok" type="button">${ic('check')} Sunucuya ekle</button></div></div>`);
+    $('#mx').onclick = closeModal;
+    $('#ba-ok').onclick = () => { const sid = $('#ba-s').value; if (!sid) return toast('Önce bir sunucu seç');
+      socket.emit('appAuthorize', { id: aid, serverId: sid, perms: [...document.querySelectorAll('.ba [name=perm]:checked')].map(x => x.value) }, x => {
+        if (x?.error) return toast(x.error, null, false, { type: 'err' }); closeModal(); toast(`${a.gorunenAd} sunucuna eklendi 🎉`, null, false, { type: 'party' }); selectServer(sid); }); };
+  });
+}
 function msgHTML(m, prev) {
   const newDay = !prev || new Date(prev.time).toDateString() !== new Date(m.time).toDateString();
   const day = newDay ? `<div class="day">${dayLabel(m.time)}</div>` : '';
@@ -6775,8 +6935,8 @@ function msgHTML(m, prev) {
       <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<div class="bembed-txt">${fmt(b.text)}</div>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
   }
   const mine = m.author === S.me && !m.xfrom;
-  const cont = !newDay && prev && prev.kind !== 'system' && prev.author === m.author && m.time - prev.time < 5 * 60e3 && !m.replyTo;
-  const lvl = S.users[m.author] ? lvTag(S.users[m.author].level) : '';
+  const cont = !newDay && prev && prev.kind !== 'system' && prev.author === m.author && m.time - prev.time < 5 * 60e3 && !m.replyTo && !m.inter;
+  const lvl = S.users[m.author] && !S.users[m.author].bot ? lvTag(S.users[m.author].level) : '';
   const stamp = `<span class="stamp">${m.scheduled ? ic('clock') + ' ' : ''}${hm(m.time)}${m.edited ? ' · düzenlendi' : ''}</span>`;
   let body;
   if (m.kind === 'plan') {
@@ -6805,6 +6965,8 @@ function msgHTML(m, prev) {
     body = matchCardHTML(m);
   } else if (m.kind === 'song') {
     body = `<div class="kcard"><div class="kt">${ic('music')}Çalma listesine eklendi</div><h4 style="word-break:break-all"><a href="${esc(m.song.url)}" target="_blank" rel="noopener">${esc(m.song.title)}</a></h4><div class="sub">${esc(m.song.by)} ekledi</div></div>`;
+  } else if (m.app) {
+    body = appBodyHTML(m);
   } else if (m.enc && !m._e2e) {
     body = `<div class="bubble e2e-ph">${ic('lock')}<span>${m._lock === 'bad' ? 'Bu şifreli mesaj doğrulanamadı' : m._lock === 'locked' ? 'Şifreli mesaj · görmek için kilidi aç' : 'Şifreli mesaj · anahtar bekleniyor'}</span></div>`;
   } else {
@@ -6820,7 +6982,7 @@ function msgHTML(m, prev) {
   const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'own' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}<span class="gtime">${hm(m.time)}</span>
-    <div class="col">${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+    <div class="col">${m.inter ? interTag(m) : ''}${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${esc([...m.replyTo.author][0].toUpperCase())}</span><b style="color:${userColor(m.replyTo.author)}">@${esc(m.replyTo.author)}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${botTag(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 // ================= Uçtan uca şifreleme (DM ve grup DM) =================
@@ -7270,6 +7432,7 @@ $('#compose').onsubmit = e => {
   if (!text) return;
   $('#input').value = ''; growInput(); hideSuggest(); $('#cmdhint').style.display = 'none'; if (S.channel) delete drafts[S.channel.id];
   const [cmd, ...rest] = text.split(' '); const arg = rest.join(' ');
+  { const t = text.startsWith('/') && appCmdTuples().find(x => x[0] === cmd.toLocaleLowerCase('tr')); if (t) return runAppCmd(t[6], arg); } // bot komutu
   const parts = arg.split('|').map(s => s.trim()).filter(Boolean);
   if (cmd === '/plan') return send({ kind: 'plan', title: parts[0], when: parts[1] });
   if (cmd === '/anket') return send({ kind: 'poll', question: parts[0], options: parts.slice(1) });
@@ -7380,26 +7543,28 @@ const MOD_CMDS = [['/uyar', 'Üyeye uyarı ver, sınırda susturulur', 'flag', '
   ['/uyarılar', 'Üyenin uyarılarını gör', 'log', '#5aa9ff', ['@isim']], ['/uyarısil', 'Uyarıları sıfırla', 'refresh', '#6fd39b', ['@isim']], ['/temizle', 'Son mesajları topluca sil', 'trash', '#ff6b6b', ['sayı']],
   ['/kilitle', 'Odayı yazmaya kapat', 'lock', '#ef5a5a', []], ['/kilidiaç', 'Odayı yeniden aç', 'unlock', '#3fcf8e', []]];
 const TICKET_CMDS = [['/destek', 'Destek talebi aç, yetkililer ilgilensin', 'ticket', '#5aa9ff', ['konu']], ['/üstlen', 'Açık talebi üstlen (yetkili)', 'usercheck', '#3fcf8e', []], ['/kapat', 'Talebi kapat, arşive taşı', 'lock', '#ef5a5a', []]];
-const cmdDef = c => [...CMDS, ...(S.server?.bot?.ticket?.on ? TICKET_CMDS : []), ...MOD_CMDS].find(x => x[0] === c);
+const cmdDef = c => [...CMDS, ...(S.server?.bot?.ticket?.on ? TICKET_CMDS : []), ...MOD_CMDS].find(x => x[0] === c) || appCmdTuples().find(x => x[0] === c);
 const modCmdsOn = () => S.view === 'server' && S.server?.bot?.mod?.on && isMod(S.server, S.me);
 const ticketCmdsOn = () => S.view === 'server' && !!S.server?.bot?.ticket?.on;
 const inTicket = () => ticketCmdsOn() && !!S.channel?.ticket && !S.channel.ticket.closed;
-const cmdList = () => [...CMDS, ...(ticketCmdsOn() ? TICKET_CMDS.filter(c => c[0] === '/destek' || inTicket()) : []), ...(modCmdsOn() ? MOD_CMDS : [])];
+const cmdList = () => [...CMDS, ...(ticketCmdsOn() ? TICKET_CMDS.filter(c => c[0] === '/destek' || inTicket()) : []), ...(modCmdsOn() ? MOD_CMDS : []), ...appCmdTuples()];
 let suggQ = '';
 function hideSuggest() { const was = sugg.length && !suggCmd; sugg = []; suggCmd = false; suggCh = false; $('#suggest').style.display = 'none'; $('#suggest').classList.remove('cmd'); if (was) cmdHint(); }
 function cmdRow(n, i) {
-  const [c, d, icn, col, args = []] = cmdDef(n), q = suggQ.length > 1 && c.startsWith(suggQ) ? suggQ.length : 0;
-  return `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(c)}" data-i="${i}"><i class="sg-ic" style="--c:${col}">${ic(icn)}</i><span class="sg-t"><b><span>${q ? `<u>${esc(c.slice(0, q))}</u>${esc(c.slice(q))}` : esc(c)}</span>${args.map(a => `<em>${esc(a)}</em>`).join('')}</b><small>${esc(d)}</small></span><kbd>↵</kbd></button>`;
+  const [c, d, icn, col, args = [], , ap] = cmdDef(n), q = suggQ.length > 1 && c.startsWith(suggQ) ? suggQ.length : 0;
+  return `<button type="button" class="${i === suggI ? 'sel' : ''}" data-n="${esc(c)}" data-i="${i}"><i class="sg-ic ${ap ? 'sg-av' : ''}" style="--c:${col}">${ap ? av(ap.bot) : ic(icn)}</i><span class="sg-t"><b><span>${q ? `<u>${esc(c.slice(0, q))}</u>${esc(c.slice(q))}` : esc(c)}</span>${args.map(a => `<em>${esc(a)}</em>`).join('')}</b><small>${esc(d)}</small></span><kbd>↵</kbd></button>`;
 }
 function renderSuggest() {
   if (!sugg.length && !suggCmd) return hideSuggest();
   $('#suggest').classList.toggle('cmd', suggCmd);
   if (suggCmd) {
-    const fun = sugg.filter(n => CMDS.some(c => c[0] === n)), tck = sugg.filter(n => TICKET_CMDS.some(c => c[0] === n)), mod = sugg.filter(n => MOD_CMDS.some(c => c[0] === n));
+    const fun = sugg.filter(n => CMDS.some(c => c[0] === n)), tck = sugg.filter(n => TICKET_CMDS.some(c => c[0] === n)), mod = sugg.filter(n => MOD_CMDS.some(c => c[0] === n)), apT = appCmdTuples(), aps = sugg.filter(n => apT.some(c => c[0] === n));
     let k = 0; const rows = arr => arr.map(n => cmdRow(n, k++)).join('');
     const funH = fun.length ? `<div class="sg-g">${ic('sparkle')}Kanka komutları</div>${rows(fun)}` : '', tckH = tck.length ? `<div class="sg-g"><img src="/icon-192.png" alt="">Kanka Bot · Destek<span class="botbadge">BOT</span></div>${rows(tck)}` : '', modH = mod.length ? `<div class="sg-g"><img src="/icon-192.png" alt="">Kanka Bot · Moderasyon<span class="botbadge">BOT</span></div>${rows(mod)}` : '';
-    sugg = [...fun, ...tck, ...mod];
-    $('#suggest').innerHTML = `<div class="sg-sc">${sugg.length ? funH + tckH + modH : `<div class="sg-none">"${esc(suggQ)}" diye bir komut yok</div>`}</div><div class="sg-f"><span><kbd>↑</kbd> <kbd>↓</kbd> gez</span><span><kbd>Tab</kbd> seç</span><span><kbd>Esc</kbd> kapat</span></div>`;
+    const bots = [...new Set(aps.map(n => apT.find(c => c[0] === n)[6].bot))], apsO = bots.flatMap(b => aps.filter(n => apT.find(c => c[0] === n)[6].bot === b));
+    sugg = [...fun, ...tck, ...mod, ...apsO];
+    const appH = bots.map(b => `<div class="sg-g sg-bot">${av(b)}${esc(dn(b))}<span class="botbadge app">BOT</span></div>${apsO.filter(n => apT.find(c => c[0] === n)[6].bot === b).map(n => cmdRow(n, sugg.indexOf(n))).join('')}`).join('');
+    $('#suggest').innerHTML = `<div class="sg-sc">${sugg.length ? funH + tckH + modH + appH : `<div class="sg-none">"${esc(suggQ)}" diye bir komut yok</div>`}</div><div class="sg-f"><span><kbd>↑</kbd> <kbd>↓</kbd> gez</span><span><kbd>Tab</kbd> seç</span><span><kbd>Esc</kbd> kapat</span></div>`;
     $('#suggest').style.display = 'block';
     $('#suggest').querySelector('button.sel')?.scrollIntoView({ block: 'nearest' });
     $('#suggest').querySelectorAll('button[data-n]').forEach(b => { b.onclick = () => { suggI = +b.dataset.i; pickSuggestion(); }; b.onmousemove = () => { if (suggI !== +b.dataset.i) { suggI = +b.dataset.i; $('#suggest').querySelectorAll('button[data-n]').forEach(x => x.classList.toggle('sel', +x.dataset.i === suggI)); } }; });
@@ -7430,7 +7595,7 @@ let lastTyping = 0;
 $('#input').addEventListener('input', () => {
   if (Date.now() - lastTyping > 2000) { lastTyping = Date.now(); socket.emit('typing'); }
   cmdHint();
-  const cm = /^(\/[\p{L}]*)$/u.exec($('#input').value);
+  const cm = /^(\/[\p{L}\p{N}_:-]*)$/u.exec($('#input').value);
   if (cm) {
     const list = cmdList(), q = cm[1].toLocaleLowerCase('tr'), w = q.slice(1);
     suggQ = q; sugg = list.filter(c => c[0].startsWith(q)).map(c => c[0]);
@@ -7497,21 +7662,21 @@ function renderMembers() {
   if (chNow?.viewers) names = names.filter(n => chNow.viewers.includes(n)); // gizli oda: sadece görebilenler
   // Bot ayrı bir bölümde değil, atandığı rollerle birlikte üye listesinde gruplanır
   if (srv?.bot?.added && !names.includes(BOT_NAME)) names = [...names, BOT_NAME];
-  const isOn = n => n === BOT_NAME ? true : S.online.has(n);
+  const isOn = n => n === BOT_NAME || !!S.users[n]?.bot ? true : S.online.has(n), isB = n => !!S.users[n]?.bot;
   const item = (n, status) => {
     if (n === BOT_NAME) {
       const rc = roleColor(srv, BOT_NAME);
       return `<div class="mem botmem" data-bot="1"><div class="av on-dot st-online"><img src="/icon-192.png" alt=""></div><div class="info"><span style="${rc ? 'color:' + rc : 'color:var(--accent)'}">Kanka Bot<span class="botbadge">BOT</span></span>${status ? `<span class="st">${esc(status)}</span>` : ''}</div></div>`;
     }
-    const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
+    const o = S.online.has(n) || !!S.users[n]?.bot, r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n);
-    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u ? lvTag(u.level) : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}" data-n="${esc(n)}">${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) && !u?.bot ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u?.bot ? botTag(n) : u ? lvTag(u.level) : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
-  const groups = [['Yönetici', n => roleOf(srv, n) === 'admin' && isOn(n)], ...hoist.map(r => [r.name, n => isOn(n) && topHoist(n) === r]),
-    ['Moderatörler', n => roleOf(srv, n) === 'mod' && !topHoist(n) && isOn(n)],
-    ['Çevrimiçi', n => roleOf(srv, n) === 'member' && !topHoist(n) && isOn(n)], ['Çevrimdışı', n => !isOn(n)]];
+  const groups = [['Yönetici', n => !isB(n) && roleOf(srv, n) === 'admin' && isOn(n)], ...hoist.map(r => [r.name, n => !isB(n) && isOn(n) && topHoist(n) === r]),
+    ['Moderatörler', n => !isB(n) && roleOf(srv, n) === 'mod' && !topHoist(n) && isOn(n)],
+    ['Çevrimiçi', n => !isB(n) && roleOf(srv, n) === 'member' && !topHoist(n) && isOn(n)], ['Botlar', n => isB(n)], ['Çevrimdışı', n => !isOn(n)]];
   const onl = names.filter(isOn).length;
   const mb = $('#mem-btn'); mb.classList.toggle('show', !!(srv && S.channel) || !!S.channel?.group); mb.querySelector('.mb-n').textContent = onl ? (onl > 99 ? '99+' : onl) : '';
   const mdrH = `<div class="mdr-h"><span style="flex:1"><b>Üyeler</b><small>${S.channel ? (srv ? '#' + esc(S.channel.name) + ' · ' : '') : ''}${onl} çevrimiçi · ${names.length} kişi</small></span><button id="mdr-x" aria-label="Kapat">${ic('x')}</button></div>`;
@@ -11420,6 +11585,113 @@ function wireAccount() {
   };
 }
 
+// ================= Geliştirici Portalı =================
+const BOT_ADD_URL = (id, perms) => `${location.origin}/bot-ekle/${id}${perms?.length ? '?izin=' + perms.join(',') : ''}`;
+function devPortal(root, openId) {
+  socket.emit('appMine', {}, r => {
+    if (!root.isConnected) return;
+    if (r.error) { root.innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
+    const ds = r.devStats || {}, g = r.hedef || { servers: 3, cmds: 50 };
+    const bar = (v, max) => `<span class="dp-bar"><i style="width:${Math.min(100, Math.round(v / max * 100))}%"></i></span>`;
+    const head = `<div class="dp-head"><div><h3>${ic('code')}Geliştirici Portalı</h3><p class="hint" style="margin:2px 0 0">Botlarını buradan yönet. Nasıl yazılır: <a href="/gelistirici" target="_blank" rel="noopener">belgeler ve örnekler</a></p></div>
+      ${r.apps.length < r.max ? `<button class="btnp" id="dp-new">${ic('plus')} Yeni bot</button>` : ''}</div>
+      <div class="dp-badge ${r.rozet ? 'ok' : ''}"><span class="dp-bi">${ic(r.rozet ? 'check' : 'code')}</span><div><b>${r.rozet ? 'Bot Geliştirici rozeti senin' : 'Bot Geliştirici rozetine doğru'}</b>
+        <small>Botların başkalarının ${g.servers} sunucusunda kullanılsın ve ${g.cmds} komut çalıştırılsın (kendi sunucuların ve kendi denemelerin sayılmaz).</small>
+        <div class="dp-prog"><span>Sunucu ${Math.min(ds.servers || 0, g.servers)}/${g.servers}</span>${bar(ds.servers || 0, g.servers)}<span>Komut ${Math.min(ds.cmds || 0, g.cmds)}/${g.cmds}</span>${bar(ds.cmds || 0, g.cmds)}</div></div></div>`;
+    const card = a => `<button class="dp-app" data-app="${esc(a.id)}">${av(a.ad)}<span class="dp-at"><b>${esc(a.gorunenAd)} ${a.dogrulandi ? `<span class="botbadge app">${ic('check')}BOT</span>` : '<span class="botbadge app">BOT</span>'}</b>
+      <small><i class="dp-dot ${a.kapali ? 'off' : a.cevrimici ? 'on' : ''}"></i>${a.kapali ? 'Durduruldu' : a.cevrimici ? 'Bağlı' : 'Bağlı değil'} · ${a.sunucular.length} sunucu · ${a.erisim} kişi${a.dogrulandi ? '' : `/${r.esik}`}</small></span>${ic('chevron')}</button>`;
+    const open = openId && r.apps.find(a => a.id === openId);
+    if (open) return appDetail(root, open, r);
+    root.innerHTML = head + (r.apps.length ? `<div class="dp-list">${r.apps.map(card).join('')}</div>` : `<div class="dp-empty">${ic('code')}<b>Henüz botun yok</b><span>İlk botunu oluştur; senin için bir deneme sunucusu da açılır, bot içinde hazır bekler.</span></div>`) + `<p class="hint" style="font-size:12px">En fazla ${r.max} bot. Doğrulanmamış bir bot en fazla ${r.esik} farklı kişiye ulaşabilir; daha fazlası için botun sayfasından doğrulama iste.</p>`;
+    root.querySelectorAll('[data-app]').forEach(b => b.onclick = () => devPortal(root, b.dataset.app));
+    $('#dp-new') && ($('#dp-new').onclick = () => form(`${ic('code')}Yeni bot`, 'Bot adı kullanıcı adı gibidir: 2-20 karakter, harf, rakam, _ . -', [{ k: 'name', p: 'Bot adı (örn. ZarBot)' }, { k: 'desc', p: 'Ne yapıyor? (kısa açıklama)', opt: true }], v => socket.emit('appCreate', v, x => {
+      if (x.error) return toast(x.error, null, false, { type: 'err' });
+      showToken(x.app.ad, x.token, x.sir, true); devPortal(root, x.app.id);
+    })));
+  });
+}
+function showToken(name, token, secret, first) {
+  modal(`<h3>${ic('lock')}${esc(name)} ${first ? 'hazır!' : 'için yeni token'}</h3><p class="hint">Bu token botunun şifresi. <b>Sadece şimdi gösteriliyor</b>; kopyalayıp güvenli bir yere koy (örneğin <code>.env</code> dosyası). Kimseyle paylaşma, GitHub'a yükleme. Sızarsa portaldan yenile.</p>
+    <div class="dp-tok"><code id="dp-tk">${esc(token)}</code><button class="btns2" id="dp-cp">${ic('copy')} Kopyala</button></div>
+    ${secret ? `<p class="hint" style="font-size:12.5px;margin-top:10px">HTTP ile etkileşim alacaksan imza sırrın: <code class="dp-sir">${esc(secret)}</code></p>` : ''}
+    ${first ? `<p class="hint" style="font-size:12.5px">Senin için <b>${esc(name)} deneme</b> sunucusu açıldı, bot içinde. Komutlarını orada deneyebilirsin.</p>` : ''}
+    <div class="rowb"><button class="btnp" id="mx">Tamam, kaydettim</button></div>`);
+  $('#mx').onclick = closeModal; $('#dp-cp').onclick = () => { navigator.clipboard?.writeText(token).then(() => toast('Token kopyalandı'), () => toast('Kopyalanamadı, elle seç')); };
+}
+function appDetail(root, a, r) {
+  const st = a.istatistik || {}, maxDay = Math.max(1, ...(st.gun || []).map(x => x[1]));
+  const perms = Object.keys(PERM_TR);
+  root.innerHTML = `<button class="dp-back" id="dp-back">${ic('chevron')} Botlarım</button>
+    <div class="dp-top">${av(a.ad)}<div><h3>${esc(a.gorunenAd)} ${a.dogrulandi ? `<span class="botbadge app">${ic('check')}BOT</span>` : '<span class="botbadge app">BOT</span>'}</h3><small>@${esc(a.ad)} · <i class="dp-dot ${a.kapali ? 'off' : a.cevrimici ? 'on' : ''}"></i>${a.kapali ? 'Kanka ekibi durdurdu' + (a.kapali.reason ? ': ' + esc(a.kapali.reason) : '') : a.cevrimici ? 'Şu an bağlı' : 'Şu an bağlı değil'}</small></div></div>
+    <div class="dp-stats"><div><b>${a.sunucular.length}</b><small>sunucu</small></div><div><b>${a.erisim}${a.dogrulandi ? '' : `<em>/${a.esik}</em>`}</b><small>kişiye ulaşıyor</small></div><div><b>${st.komutBugun || 0}</b><small>bugün komut</small></div><div><b>${st.komutToplam || 0}</b><small>toplam komut</small></div><div><b>${st.kullanan || 0}</b><small>komut kullanan kişi</small></div></div>
+    ${st.gun?.length ? `<div class="dp-chart" aria-label="Son günlerde komut sayısı">${st.gun.map(([d, n]) => `<span title="${esc(d)}: ${n} komut"><i style="height:${Math.max(4, Math.round(n / maxDay * 100))}%"></i><small>${esc(d.slice(8))}</small></span>`).join('')}</div>` : ''}
+    ${!a.dogrulandi && a.erisim > a.esik * .7 ? `<div class="acc-warn">${ic('info')}<span><b>${a.erisim >= a.esik ? 'Sınıra ulaştın' : 'Sınıra yaklaşıyorsun'}</b>Doğrulanmamış botlar en fazla ${a.esik} kişiye ulaşabilir. Aşağıdan doğrulama iste.</span></div>` : ''}
+    <div class="st-sec">Genel</div>
+    <div class="st-field st-2"><div><label>Görünen ad</label><input class="field" id="ap-dn" maxlength="32" value="${esc(a.gorunenAd)}" style="margin:0"></div><div><label>Gizlilik politikası linki</label><input class="field" id="ap-pr" maxlength="300" placeholder="https://..." value="${esc(a.gizlilik)}" style="margin:0"></div></div>
+    <div class="st-field"><label>Açıklama (profilde ve ekleme ekranında görünür)</label><textarea class="field" id="ap-ds" maxlength="400" rows="3" style="margin:0">${esc(a.aciklama)}</textarea></div>
+    <div class="st-field"><label>Simge</label><div class="dp-avs">${(S.presets || []).map(u => `<button type="button" data-av="${esc(u)}" class="${a.avatar === u ? 'on' : ''}"><img src="${esc(u)}" alt=""></button>`).join('')}<button type="button" class="dp-up" id="ap-up">${ic('image')}Yükle</button></div><input type="file" id="ap-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>
+    <label class="ba-pr"><input type="checkbox" id="ap-dm" ${a.dmIzin ? 'checked' : ''}><span>Bot kullanıcılara özel mesaj atabilsin <small>(ortak sunucu gerekir; kullanıcı bot DM'lerini kapatabilir)</small></span></label>
+    ${a.dogrulandi ? `<label class="ba-pr"><input type="checkbox" id="ap-ls" ${a.listede ? 'checked' : ''}><span>Botlar sayfasında listelensin</span></label>` : ''}
+    <div class="st-field"><button class="btns2" id="ap-save">${ic('check')} Kaydet</button></div>
+    <div class="st-sec">Sunucuya ekleme linki</div>
+    <p class="hint" style="margin-top:0">Botun hangi izinleri istesin? Linki paylaş; ekleyen kişi izinleri görüp onaylar.</p>
+    <div class="dp-perms">${perms.map(p => `<label class="dv-chip"><input type="checkbox" name="lp" value="${p}" ${['manageMessages'].includes(p) ? 'checked' : ''}><span>${esc(PERM_TR[p])}</span></label>`).join('')}</div>
+    <div class="dp-tok"><code id="ap-link"></code><button class="btns2" id="ap-lcp">${ic('copy')} Kopyala</button><button class="btns2" id="ap-ltry">${ic('plus')} Kendi sunucuma ekle</button></div>
+    <div class="st-sec">Token ve bağlantı</div>
+    <p class="hint" style="margin-top:0">Token oluşturuldu: ${a.tokenAt ? new Date(a.tokenAt).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}. Token'ı unuttuysan ya da sızdıysa yenile; eskisi anında çalışmaz olur.</p>
+    <div class="st-field" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btns2" id="ap-tok">${ic('refresh')} Token'ı yenile</button><button class="btns2" id="ap-sir">${ic('lock')} İmza sırrını yenile</button></div>
+    <div class="st-field"><label>HTTP etkileşim adresi (isteğe bağlı)</label><div style="display:flex;gap:8px"><input class="field" id="ap-url" placeholder="https://botum.ornek.com/kanka" value="${esc(a.etkilesimUrl)}" style="margin:0"><button class="btns2" id="ap-url-s">Kaydet</button></div><small class="hint" style="font-size:12px">Bot sürekli bağlı değilken komutlar bu adrese imzalı POST olarak gider. Kaydederken adres <code>{"tur":"PING"}</code> isteğine <code>{"tur":"PONG"}</code> dönmeli.</small></div>
+    <div class="st-sec">Doğrulama</div>
+    ${a.dogrulandi ? `<div class="acc-warn ok">${ic('check')}<span><b>Doğrulanmış bot</b>Sınır yok${a.icerikIzni ? ', mesaj içeriklerini görebilir' : '; mesaj içeriği izni yok (sadece komutlar ve etiketlendiği mesajlar)'}.</span></div>`
+      : a.dogrulama?.status === 'pending' ? `<div class="acc-warn">${ic('clock')}<span><b>İsteğin inceleniyor</b>${new Date(a.dogrulama.at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} tarihinde istedin.</span></div>`
+      : `${a.dogrulama?.status === 'rejected' ? `<div class="acc-warn">${ic('info')}<span><b>Son istek onaylanmadı</b>${esc(a.dogrulama.note || '')}</span></div>` : ''}<p class="hint" style="margin-top:0">Doğrulanan botlar ${a.esik} kişi sınırı olmadan büyür ve adının yanında tik çıkar. Kanka ekibi botu inceler.</p>
+        <div class="st-field"><label>Botun ne yapıyor, kimler kullanıyor?</label><textarea class="field" id="ap-vw" rows="3" maxlength="800" style="margin:0" placeholder="En az 30 karakter"></textarea></div>
+        <label class="ba-pr"><input type="checkbox" id="ap-vc"><span>Botum mesaj içeriklerini görmeli <small>(sadece gerçekten gerekiyorsa; komutlar ve etiketlendiği mesajlar zaten gelir)</small></span></label>
+        <div class="st-field" id="ap-vcw-w" hidden><input class="field" id="ap-vcw" maxlength="500" placeholder="Neden? (örn. küfür filtresi)" style="margin:0"></div>
+        <div class="st-field"><button class="btns2" id="ap-v">${ic('shield')} Doğrulama iste</button></div>`}
+    <div class="st-sec">Komutlar (${a.komutlar})</div>
+    <p class="hint" style="margin-top:0">Komutları botun kodundan kaydeder: <code>PUT /api/v1/komutlar</code>. Kütüphane kullanıyorsan <code>bot.komut(...)</code> bunu senin için yapar.</p>
+    <div class="st-sec">Sunucular</div>
+    ${a.sunucular.length ? `<div class="dp-srv">${a.sunucular.map(s => `<div><b>${esc(s.ad)}</b><small>${s.uye} kişi</small></div>`).join('')}</div>` : '<p class="hint">Henüz hiçbir sunucuda değil.</p>'}
+    <details class="adm-del"><summary>${ic('trash')}Botu sil</summary><p class="hint">Bot tüm sunuculardan çıkar, token çalışmaz olur. Geri alınamaz. Onay için botun adını yaz.</p><div class="adm-inl"><input class="field" id="ap-delc" placeholder="${esc(a.ad)}" style="margin:0"><button class="danger" id="ap-del">${ic('trash')} Sil</button></div></details>`;
+  const re = () => devPortal(root, a.id);
+  $('#dp-back').onclick = () => devPortal(root);
+  let avSel = a.avatar;
+  root.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { avSel = b.dataset.av; root.querySelectorAll('[data-av]').forEach(x => x.classList.toggle('on', x === b)); });
+  $('#ap-up').onclick = () => $('#ap-file').click();
+  $('#ap-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; if (f.size > 4e6) return toast('Resim en fazla 4 MB olabilir');
+    const rd = new FileReader(); rd.onload = () => socket.emit('upload', { data: rd.result }, x => { if (x?.error || !x?.url) return toast(x?.error || 'Resim yüklenemedi', null, false, { type: 'err' }); avSel = x.url; toast('Simge yüklendi, Kaydet\'e bas'); }); rd.readAsDataURL(f); };
+  $('#ap-save').onclick = () => socket.emit('appUpdate', { id: a.id, displayName: $('#ap-dn').value, privacy: $('#ap-pr').value, desc: $('#ap-ds').value, avatar: avSel, dmOk: $('#ap-dm').checked, listed: $('#ap-ls')?.checked }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Kaydedildi'); re(); });
+  const link = () => { const ps = [...root.querySelectorAll('[name=lp]:checked')].map(x => x.value); $('#ap-link').textContent = BOT_ADD_URL(a.id, ps); return ps; };
+  root.querySelectorAll('[name=lp]').forEach(x => x.onchange = link); link();
+  $('#ap-lcp').onclick = () => navigator.clipboard?.writeText($('#ap-link').textContent).then(() => toast('Link kopyalandı'));
+  $('#ap-ltry').onclick = () => { closeModal(); showBotAuthorize(a.id, link()); };
+  $('#ap-tok').onclick = () => confirmBox(`${a.ad} için yeni token oluşturulsun mu? Eski token anında çalışmaz olur, botunu yeni token'la yeniden başlatman gerekir.`, () => socket.emit('appToken', { id: a.id }, x => x.error ? toast(x.error) : showToken(a.ad, x.token)));
+  $('#ap-sir').onclick = () => confirmBox('İmza sırrı yenilensin mi? HTTP etkileşim kullanıyorsan botundaki sırrı da değiştirmen gerekir.', () => socket.emit('appToken', { id: a.id, secret: true }, x => x.error ? toast(x.error) : modal(`<h3>Yeni imza sırrı</h3><div class="dp-tok"><code>${esc(x.sir)}</code></div><div class="rowb"><button class="btnp" id="mx">Tamam</button></div>`, '') || ($('#mx').onclick = closeModal)));
+  $('#ap-url-s').onclick = () => { const b = $('#ap-url-s'); b.disabled = true; socket.emit('appUpdate', { id: a.id, interUrl: $('#ap-url').value }, x => { b.disabled = false; if (x.error) return toast(x.error, null, false, { type: 'err' }); toast($('#ap-url').value ? 'Adres doğrulandı ve kaydedildi' : 'Adres kaldırıldı'); }); };
+  if ($('#ap-v')) { $('#ap-vc').onchange = () => $('#ap-vcw-w').hidden = !$('#ap-vc').checked;
+    $('#ap-v').onclick = () => socket.emit('appVerifyReq', { id: a.id, why: $('#ap-vw').value, needContent: $('#ap-vc').checked, contentWhy: $('#ap-vcw').value }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Doğrulama isteğin gönderildi'); re(); }); }
+  $('#ap-del').onclick = () => socket.emit('appDelete', { id: a.id, confirm: $('#ap-delc').value }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Bot silindi'); devPortal(root); });
+}
+// Yönetim paneli: botlar, doğrulama istekleri, acil durdurma
+function admApps(B, el) {
+  socket.emit('adminApps', {}, r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const pend = r.apps.filter(a => a.dogrulama?.status === 'pending');
+    B.innerHTML = `<div class="adm-box"><p class="hint" style="margin:0">Doğrulanmamış botlar en fazla ${r.esik} farklı kişiye ulaşabilir. Doğrulanan bot sınırsız büyür; mesaj içeriği iznini ayrıca verirsin. Durdurulan bot hiçbir yerde çalışmaz.</p></div>
+      ${pend.length ? `<h4 class="adm-h">Doğrulama bekleyenler (${pend.length})</h4>` : ''}
+      ${r.apps.map(a => `<div class="adm-box dp-adm ${a.dogrulama?.status === 'pending' ? 'pend' : ''}"><div class="dp-top">${av(a.ad)}<div><h3>${esc(a.gorunenAd)} ${a.dogrulandi ? `<span class="botbadge app">${ic('check')}BOT</span>` : '<span class="botbadge app">BOT</span>'}${a.kapali ? ' <span class="botbadge" style="background:var(--red)">DURDURULDU</span>' : ''}</h3>
+        <small>Sahibi <b>${esc(a.sahip)}</b> (Sv ${a.sahipSeviye}) · ${a.sunucular.length} sunucu · ${a.erisim} kişi · ${a.istatistik.komutToplam} komut · ${a.cevrimici ? 'bağlı' : 'bağlı değil'}</small></div></div>
+        ${a.aciklama ? `<p class="hint" style="margin:8px 0 0">${esc(a.aciklama)}</p>` : ''}
+        ${a.dogrulama?.status === 'pending' ? `<div class="dp-req"><b>Doğrulama isteği</b><p>${esc(a.dogrulama.why)}</p>${a.dogrulama.needContent ? `<p><b>Mesaj içeriği istiyor:</b> ${esc(a.dogrulama.contentWhy || '(sebep yazmamış)')}</p>` : ''}</div>` : ''}
+        <div class="adm-inl" style="margin-top:10px;flex-wrap:wrap">${!a.dogrulandi ? `<button class="ok" data-act="verify" data-id="${esc(a.id)}">${ic('check')}Doğrula</button><button class="ok" data-act="verifyc" data-id="${esc(a.id)}">${ic('check')}Doğrula + içerik izni</button>${a.dogrulama?.status === 'pending' ? `<button data-act="reject" data-id="${esc(a.id)}">${ic('x')}Reddet</button>` : ''}` : `<button data-act="unverify" data-id="${esc(a.id)}">Doğrulamayı kaldır</button>`}
+          ${a.kapali ? `<button class="ok" data-act="unkill" data-id="${esc(a.id)}">${ic('unlock')}Yeniden aç</button>` : `<button class="danger" data-act="kill" data-id="${esc(a.id)}">${ic('lock')}Durdur</button>`}</div></div>`).join('') || '<p class="hint">Henüz bot yok.</p>'}`;
+    B.querySelectorAll('[data-act]').forEach(b => b.onclick = () => {
+      const act = b.dataset.act, go = note => socket.emit('adminAppAct', { id: b.dataset.id, action: act === 'verifyc' ? 'verify' : act, contentOk: act === 'verifyc', note }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Yapıldı'); admApps(B, el); });
+      if (act === 'kill' || act === 'reject') form(act === 'kill' ? 'Bot durdurulsun mu?' : 'Doğrulama reddedilsin mi?', 'Sebep geliştiriciye Kanka Bot DM\'iyle iletilir.', [{ k: 'note', p: 'Sebep', opt: act === 'reject' }], v => go(v.note)); else go('');
+    });
+  });
+}
 // ================= Bot geliştirici beta başvurusu =================
 const DEV_LANGS = ['JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'Go', 'Rust', 'PHP', 'Diğer'];
 const DEV_EXP = { yok: 'Hiç bot yazmadım', az: 'Birkaç tane yazdım', cok: 'Çok yazdım, yayında botum var' };
@@ -11431,6 +11703,7 @@ function devPage(root) {
     const a = r.app;
     const intro = `<div class="dv-hero"><div class="dv-hi">${ic('code')}</div><div><b>Kanka'ya bot sistemi geliyor</b><span>Kendi botunu yazmak isteyen geliştiricilerle ilk sürümü birlikte test ediyoruz. Başvurun sadece Kanka ekibine görünür.</span></div></div>
       <ul class="dv-perks"><li>${ic('sparkle')}Bot sistemine herkesten önce erişim</li><li>${ic('chat')}Geliştiricilere özel kanal, doğrudan ekiple iletişim</li><li>${ic('bug')}Bulduğun hatalar için 🐞 Hata Avcısı rozeti</li><li>${ic('shield')}Profilinde 🤖 Bot Geliştirici rozeti</li></ul>`;
+    if (a?.status === 'accepted' || S.siteAdmin) return devPortal(root); // kabul edilen geliştirici: doğrudan portal
     if (a && a.status !== 'rejected') {
       const [st, c, i] = DEV_ST[a.status];
       root.innerHTML = intro + `<div class="dv-status" style="--c:${c}"><span>${ic(i)}</span><div><b>${st}</b><small>${new Date(a.at).toLocaleDateString('tr', { day: 'numeric', month: 'long' })} tarihinde başvurdun · ${esc(a.langs.join(', '))}</small></div></div>
@@ -11492,7 +11765,7 @@ function admDev(B) {
 // ================= Kanka yönetimi (site yöneticisi) =================
 function adminPanel(el, sub = 'overview') {
   const R = S.staff, A = ['owner', 'admin'].includes(R);
-  const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['srvapps', 'Sunucu rozetleri', 'check'], ['log', 'Kayıtlar', 'clock'],
+  const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['apps', 'Botlar', 'shield'], ['srvapps', 'Sunucu rozetleri', 'check'], ['log', 'Kayıtlar', 'clock'],
     ...(A ? [['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
   if (!subs.some(x => x[0] === sub)) sub = 'overview';
   el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
@@ -11503,6 +11776,7 @@ function adminPanel(el, sub = 'overview') {
   if (sub === 'analiz') return admAnalytics(B, el);
   if (sub === 'team') return admTeam(B);
   if (sub === 'dev') return admDev(B);
+  if (sub === 'apps') return admApps(B, el);
   if (sub === 'srvapps') return admSrvApps(B);
   if (sub === 'log') return admLog(B);
   if (sub === 'users') return admUsers(B);
