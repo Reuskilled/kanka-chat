@@ -2355,7 +2355,7 @@ const reportView = (r, n) => ({ ...r, by: siteAdmin(n) ? r.by : null, reasonText
   msgAlive: r.msg ? !!findMsg(r.chId, r.msg.id) : null, priors: db.reports.filter(x => x.target === r.target && x.id !== r.id).length });
 function siteBanUser(name, by, reason, until) {
   const u = db.users[name]; if (!u) return false;
-  u.siteBan = { by, at: Date.now(), reason: clean(reason, 160), ...(until ? { until } : {}) };
+  u.siteBan = { by, at: Date.now(), reason: clean(reason, 160), ...(until ? { until } : {}), devs: (u.idSeen?.d || []).map(x => x.h), ips: (u.idSeen?.i || []).map(x => x.h) };
   staffLog(by, until ? 'Askıya aldı' : 'Hesabı kapattı', name, (until ? (h => h < 24 ? `${h} saat · ` : `${Math.round(h / 24)} gün · `)(Math.round((until - Date.now()) / 3600e3)) : '') + clean(reason, 160));
   sessDelUser(name); setTimeout(() => io.in('user:' + name).disconnectSockets(true), 300); // açık bağlantılar da kapansın
   for (const s of db.servers) voiceKick(s.channels.map(c => c.id), name, 'Hesabın kapatıldı');
@@ -2372,6 +2372,34 @@ function siteWarnUser(name, by, reason) {
   save(); return w;
 }
 const banText = u => (u.siteBan?.until ? `Bu hesap ${new Date(u.siteBan.until).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })} tarihine kadar askıya alındı.` : 'Bu hesap Kanka Chat kurallarını ihlal ettiği için kapatıldı.') + (u.siteBan?.reason ? ` Sebep: ${u.siteBan.reason}` : '') + ' Hata olduğunu düşünüyorsan kankahq1@gmail.com adresine yaz.';
+// ---- Yan hesap engeli: askıya alınan/kapatılan kişinin cihazı ve bağlantısı ----
+// Ham IP ya da cihaz kimliği saklanmaz; sunucuya özel anahtarla özetlenir (geri çevrilemez). Kişi başı son 8 cihaz/bağlantı.
+const idH = x => x ? crypto.createHmac('sha256', (db.idKey ||= crypto.randomBytes(24).toString('hex'))).update(String(x)).digest('hex').slice(0, 20) : null;
+const IP_BAN_MS = 864e5; // bağlantı (IP) eşleşmesi en çok 24 saat: mobil operatörde yüzlerce kişi aynı IP'yi paylaşır, masumlar uzun süre engellenmesin
+function seenAdd(u, dH, iH) {
+  const s = (u.idSeen ||= { d: [], i: [] }), now = Date.now();
+  for (const [k, v] of [['d', dH], ['i', iH]]) if (v) { s[k] = s[k].filter(x => x.h !== v && now - x.at < 90 * 864e5); s[k].unshift({ h: v, at: now }); s[k] = s[k].slice(0, 8); }
+}
+// Bu cihaz/bağlantı askıdaki başka bir hesaba ait mi? (dev: cihaz eşleşmesi girişi de engeller, ip: sadece yeni kayıt)
+function evasionOf(dH, iH, self) {
+  const now = Date.now();
+  for (const u of Object.values(db.users)) {
+    if (u.name === self || !u.siteBan || !isBanned(u)) continue;
+    const b = u.siteBan, devs = b.devs || (u.idSeen?.d || []).map(x => x.h), ips = b.ips || (u.idSeen?.i || []).map(x => x.h);
+    if (dH && devs.includes(dH)) return { u, by: 'dev' };
+    if (iH && ips.includes(iH) && now - (b.at || 0) < IP_BAN_MS) return { u, by: 'ip' };
+  }
+  return null;
+}
+const evadeText = (u, by = 'dev') => by === 'ip' ? 'Bu bağlantıdan kısa süre önce Kanka\'dan uzaklaştırılan bir hesap kullanılmış. Yeni hesap açmak için biraz bekle ya da farklı bir bağlantı dene; hata olduğunu düşünüyorsan bize yaz.' : u.siteBan?.until ? `Bu cihazda ${new Date(u.siteBan.until).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })} tarihine kadar askıya alınmış bir hesap var. Askı bitene kadar başka hesapla giriş yapılamaz.` : 'Bu cihazda Kanka Chat\'ten uzaklaştırılmış bir hesap var, başka hesapla giriş yapılamaz.';
+// Gmail'de nokta ve +etiket aynı kutuya gider: aynı adresle ikinci hesap açılmasın
+const mailKey = e => { const [a, d] = String(e || '').toLowerCase().split('@'); if (!d) return e; const dd = d === 'googlemail.com' ? 'gmail.com' : d; return (dd === 'gmail.com' ? a.split('+')[0].replace(/\./g, '') : a.split('+')[0]) + '@' + dd; };
+// Aynı cihazı ya da bağlantıyı kullanmış diğer hesaplar (ekip görür)
+function linkedOf(u) {
+  const d = new Set((u.idSeen?.d || []).map(x => x.h)), i = new Set((u.idSeen?.i || []).map(x => x.h)), out = [];
+  for (const o of Object.values(db.users)) { if (o === u || o.bot) continue; const sd = (o.idSeen?.d || []).some(x => d.has(x.h)), si = (o.idSeen?.i || []).some(x => i.has(x.h)); if (sd || si) out.push({ name: o.name, cihaz: sd, ag: si, askida: !!o.siteBan && isBanned(o) }); }
+  return out.slice(0, 20);
+}
 
 setInterval(() => { // eski şikayetleri ve süresi dolan sıfırlama linklerini temizle (gizlilik politikasında yazan süreler)
   const lim = Date.now() - 730 * 864e5; db.reports = db.reports.filter(r => r.at > lim);
@@ -2921,9 +2949,12 @@ io.on('connection', socket => {
     socket.onAny(() => { const now = Date.now(); if (now - t0 > 10e3) { n = 0; t0 = now; } if (++n === 400) { secLog('istek-seli', socket.data?.me || 'bağlantı', '10 saniyede 400+ istek, bağlantı kesildi'); socket.disconnect(true); } }); }
   socket.emit('build', build);
   const ip = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']);
+  const devRaw = socket.handshake.auth?.d, dH = typeof devRaw === 'string' && /^[a-z0-9-]{16,64}$/i.test(devRaw) ? idH('d|' + devRaw) : null, iH = ip && ip !== 'bilinmiyor' ? idH('i|' + ip) : null;
   let me = null, cur = null, myVoice = null;
 
   function start(name) {
+    { const ev = evasionOf(dH, null, name); if (ev) { secLog('yan-hesap', name, `askıdaki ${ev.u.name} ile aynı cihaz`); staffLog('Kanka', 'Yan hesap girişi engellendi', name, `askıdaki hesap: ${ev.u.name}`); return { error: evadeText(ev.u), banned: true }; } }
+    { const u0 = db.users[name]; if (u0 && !u0.bot) { seenAdd(u0, dH, iH); save(); } }
     me = name;
     socket.join('user:' + name);
     online.set(socket.id, name); if (isMobileUA(socket.handshake.headers['user-agent'])) mobileSockets.add(socket.id);
@@ -2950,7 +2981,8 @@ io.on('connection', socket => {
     if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz. Şifreni unutursan buraya link göndeririz.', field: 'email' });
     if (!terms) return cb({ error: 'Devam etmek için kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
     if (nameTaken(name)) return cb({ error: 'Bu kullanıcı adı alınmış.', field: 'name' });
-    if (Object.values(db.users).some(u => u.email === email)) return cb({ error: 'Bu e-posta ile zaten bir hesap var. Şifreni unuttuysan giriş ekranından sıfırlayabilirsin.', field: 'email' });
+    { const ev = evasionOf(dH, iH, null); if (ev) { secLog('yan-hesap', name, `kayıt engellendi, askıdaki ${ev.u.name} (${ev.by === 'dev' ? 'cihaz' : 'bağlantı'})`); return cb({ error: evadeText(ev.u, ev.by) }); } }
+    if (Object.values(db.users).some(u => u.email === email || (u.email && mailKey(u.email) === mailKey(email)))) return cb({ error: 'Bu e-posta ile zaten bir hesap var. Şifreni unuttuysan giriş ekranından sıfırlayabilirsin.', field: 'email' });
     const gate = betaGate(code, invite); if (gate.error) return cb({ ...gate, field: 'code' });
     const w = limited('reg|' + ip, 5, 3600e3);
     if (w) return cb({ error: `Bu bağlantıdan çok fazla hesap açıldı. ${Math.ceil(w / 60)} dakika sonra tekrar dene.` });
@@ -3361,7 +3393,7 @@ io.on('connection', socket => {
   });
   // ---- Yönetim paneli: kullanıcılar, ekip, istatistik, kayıtlar ----
   const SM = cb => { if (siteMod(me)) return true; cb({ error: 'Sadece Kanka ekibi' }); return false; };
-  const userCard = u => ({ name: u.name, email: canStaff(me, 'email') && u.email ? u.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2') : null, createdAt: u.createdAt, invitedBy: u.invitedBy || null,
+  const userCard = u => ({ linked: canStaff(me, 'lookup') ? linkedOf(u) : [], name: u.name, email: canStaff(me, 'email') && u.email ? u.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2') : null, createdAt: u.createdAt, invitedBy: u.invitedBy || null,
     banned: isBanned(u) ? u.siteBan : null, reports: db.reports.filter(r => r.target === u.name).length, servers: serversFor(u.name).filter(s => !s.public).length,
     level: level(u.xp), xp: u.xp || 0, msgs: u.msgs || 0, streak: u.streak?.count || 0, age: u.ageLock ? 'locked' : u.dob ? 'ok' : 'none', online: onlineNames().includes(u.name), rank: staffRank(u.name),
     warns: (u.siteWarns || []).slice(-10).reverse().map(w => ({ at: w.at, by: w.by, reason: w.reason, seen: w.seen })) });
