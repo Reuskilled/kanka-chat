@@ -8517,12 +8517,19 @@ function sysNotify(title, n) {
     return true;
   } catch { return false; }
 }
+// Masaüstü uygulamasında oyundayken bildirim ekranın köşesinde (oyun içi katman) görünür
+function ovNotify(n, title) {
+  if (!document.hasFocus() && window.kankaDesktop?.overlayNotify) {
+    const u = S.users[n.from] || {}, av = u.avatar ? (/^https:\/\//.test(u.avatar) ? u.avatar : location.origin.startsWith('https') ? location.origin + u.avatar : null) : null;
+    window.kankaDesktop.overlayNotify({ t: n.friend ? `${dn(n.from)} arkadaşlık isteği gönderdi` : title.replace(n.from, dn(n.from)), x: n.friend ? '' : String(n.text || '').slice(0, 140), w: n.where || '', c: u.color || userColor(n.from), av, i: (dn(n.from) || '?')[0].toUpperCase() });
+  }
+}
 socket.on('notify', async n => {
   if (n.channelId === S.channel?.id && document.hasFocus()) return;
   if (n.e) n.text = await E2E.peek(n.channelId, n.e, n.from) || n.text;
   if (n.mention && !n.dm && n.channelId) { rememberMention(n); refreshHome(); renderRail(); if (S.view === 'server') renderSide(); } else if (n.dm || n.friend) refreshHome();
   if (!n.dm && n.channelId && notifMode(n.channelId) === 'none') return;
-  if (!notifOn() || isDnd()) { if (n.dm) { S.unread.add(n.channelId); dmCnt[n.channelId] = (dmCnt[n.channelId] || 0) + 1; if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); } return; }
+  if (!notifOn() || isDnd()) { if (!isDnd()) ovNotify(n, n.friend ? `${n.from}` : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? `${n.from} sana yazdı` : `${n.from} seni etiketledi`); if (n.dm) { S.unread.add(n.channelId); dmCnt[n.channelId] = (dmCnt[n.channelId] || 0) + 1; if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); } return; }
   if (n.dm) { S.unread.add(n.channelId); dmCnt[n.channelId] = (dmCnt[n.channelId] || 0) + 1; if (S.view !== 'dm') S.unreadDM = true; renderRail(); if (S.view === 'dm') renderDMSide(); }
   playSound('mention');
   const title = n.friend ? `${n.from}` : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? `${n.from} sana yazdı` : `${n.from} seni etiketledi`;
@@ -8531,11 +8538,7 @@ socket.on('notify', async n => {
     else if (n.dm) openChat(n.channelId, n.from);
     else { const s = S.servers.find(s => s.channels.some(c => c.id === n.channelId)); if (s) selectServer(s.id, n.channelId); }
   }, true, { type: 'msg', av: n.from });
-  // Masaüstü uygulamasında oyundayken bildirim ekranın köşesinde (oyun içi katman) görünür
-  if (!document.hasFocus() && window.kankaDesktop?.overlayNotify) {
-    const u = S.users[n.from] || {}, av = u.avatar ? (/^https:\/\//.test(u.avatar) ? u.avatar : location.origin.startsWith('https') ? location.origin + u.avatar : null) : null;
-    window.kankaDesktop.overlayNotify({ t: n.friend ? `${dn(n.from)} arkadaşlık isteği gönderdi` : title.replace(n.from, dn(n.from)), x: n.friend ? '' : String(n.text || '').slice(0, 140), w: n.where || '', c: u.color || userColor(n.from), av, i: (dn(n.from) || '?')[0].toUpperCase() });
-  }
+  ovNotify(n, title);
 });
 
 // ================= Yönetici yedeği: masaüstü uygulaması her gün sunucu yedeğini bu bilgisayara indirir =================
