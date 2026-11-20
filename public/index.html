@@ -2365,6 +2365,15 @@
   .btip b { display: block; font-size: 14.5px; font-weight: 900; }
   .btip small { display: block; color: #cbb8aa; font-size: 12.5px; margin-top: 2px; line-height: 1.35; }
   .rar { display: inline-block; font-size: 10.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--rc); margin-top: 1px; }
+  .agrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+  .acard { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .acard.got { border-color: color-mix(in srgb, var(--tc) 40%, var(--line)); }
+  .acard.lock { opacity: .7; }
+  .acard > div { min-width: 0; flex: 1; }
+  .acard b { display: block; font-size: 13.5px; font-weight: 850; }
+  .acard small { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 1px; }
+  .acard .tier { display: inline-block; font-size: 10.5px; font-weight: 900; letter-spacing: .02em; padding: 1px 7px; border-radius: 999px; margin-left: 4px; vertical-align: 1px; color: #1a120c; background: var(--tc); }
+  .acard .mprog { margin-top: 5px; }
   .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
   .mcard { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); overflow: hidden; transition: transform .18s var(--ease-out), border-color .18s; animation: fadeUp .35s var(--ease-out) both; }
   .mcard.got::before { content: ''; position: absolute; inset: 0; background: radial-gradient(140px 90px at 15% 50%, color-mix(in srgb, var(--c1) 22%, transparent), transparent 70%); pointer-events: none; }
@@ -7828,7 +7837,7 @@ function cardHTML(n, u, { srv, online, preview } = {}) {
     <div class="pc-status">${esc(u?.status || (online ? '● ' + stLabel(n) : 'Çevrimdışı'))}${u?.status && isMob(n) ? ' · telefonda' : ''}${u?.birthday ? ` · ${ic('cake')} ${new Date('2000-' + u.birthday + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}` : ''}</div>
     ${preview ? '' : actCards(u)}
     <div class="pc-sec"><h5>Hakkımda</h5><div class="pc-bio ${u?.bio ? '' : 'empty'}">${u?.bio ? fmt(u.bio) : (preview ? 'Kendinden biraz bahset...' : 'Henüz bir şey yazmamış.')}</div></div>
-    ${u?.badges?.length ? `<div class="pc-sec"><h5>Rozetler</h5><div class="badges">${u.badges.map(b => S.badgeInfo[b] ? `<span title="${esc(S.badgeInfo[b][2])}" style="color:${BADGE_IC[b]?.[1] || 'var(--ink)'}">${ic(BADGE_IC[b]?.[0] || 'star')}${esc(S.badgeInfo[b][1])}</span>` : '').join('')}</div></div>` : ''}
+    ${u?.badges?.some(b => RARE_B.includes(b)) ? `<div class="pc-sec"><h5>Rozetler</h5><div class="badges">${u.badges.filter(b => RARE_B.includes(b)).map(b => S.badgeInfo[b] ? `<span title="${esc(S.badgeInfo[b][2])}" style="color:${BADGE_IC[b]?.[1] || 'var(--ink)'}">${ic(BADGE_IC[b]?.[0] || 'star')}${esc(S.badgeInfo[b][1])}</span>` : '').join('')}</div></div>` : ''}
     ${u?.music ? `<div class="pc-sec"><h5>Profil şarkısı</h5><a class="music-card" href="${esc(u.music)}" target="_blank" rel="noopener">${ytId(u.music) ? `<img src="https://img.youtube.com/vi/${ytId(u.music)}/mqdefault.jpg" alt="">` : `<span style="font-size:32px;color:var(--accent)">${ic('music')}</span>`}<span><b>Dinlemek için tıkla</b><small>${esc(u.music.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40))}</small></span></a></div>` : ''}
     <div class="pc-sec"><h5>Seviye ${u?.streak ? `<span class="streak" style="float:right">${ic('fire')} ${u.streak} gün seri</span>` : ''}</h5>${xpBar(u || { level: 1, xp: 0 })}</div>
     ${preview ? '' : `<div class="pc-sec"><div class="pc-stats"><div><b>${u?.level || 1}</b><span>Seviye</span></div><div><b>${u?.xp || 0}</b><span>Mesaj</span></div><div><b>${since(u?.createdAt).split(' ').slice(0, 2).join(' ')}</b><span>Katıldı</span></div></div></div>`}
@@ -7956,7 +7965,25 @@ const BADGE_DEF = {
   beta: { ic: 'sparkle', c: ['#7cf0ff', '#6a4bff'], r: 3, how: 'Sadece Kanka\'ya katılan ilk 300 kişiye verildi', limited: 300 },
   ekip: { ic: 'shield', c: ['#8ec5ff', '#2f6fe0'], r: 3, how: 'Kanka Chat moderasyon ekibine katıl', award: true },
 };
-const BADGE_ORDER = Object.keys(BADGE_DEF).sort((a, b) => BADGE_DEF[b].r - BADGE_DEF[a].r);
+// Rozet = nadir olanlar (ismin yanında görünür). Kolay kazanılanlar "Başarım" olarak profilde kademeli durur.
+const RARE_B = ['ekip', 'avci', 'dev', 'partner', 'yildiz', 'beta', 'erken'];
+const BADGE_ORDER = Object.keys(BADGE_DEF).filter(k => RARE_B.includes(k)).sort((a, b) => BADGE_DEF[b].r - BADGE_DEF[a].r);
+const ACH_ORDER = ['sohbet', 'xox', 'seri7', 'sosyal', 'kurucu', 'gece', 'caylak'];
+const ACH_HOW = { kurucu: 'Kendi sunucunu kur (10 ve 50 üyede kademe atlar)', sohbet: '100 mesaj gönder (1.000 ve 10.000 mesajda kademe atlar)', xox: '3 XOX oyunu kazan (25 ve 100 galibiyette kademe atlar)', seri7: '7 gün üst üste giriş yap (30 ve 100 günde kademe atlar)', sosyal: '5 arkadaş edin (25 ve 100 arkadaşta kademe atlar)' };
+const ACH_NAME = { sohbet: 'Geveze', xox: 'XOX ustası', seri7: 'Ateşli seri', sosyal: 'Sosyal kelebek', kurucu: 'Kurucu', gece: 'Gece kuşu', caylak: 'Çaylak' };
+const ACH_UNIT = { sohbet: 'mesaj', xox: 'galibiyet', seri7: 'gün seri', sosyal: 'arkadaş', kurucu: 'üye' };
+const TIERS = [null, ['Bronz', '#d08a4e'], ['Gümüş', '#c9d3dd'], ['Altın', '#ffcf5c']];
+function achGrid(n, u) {
+  const a = u.ach; if (!a) return '';
+  const me = n === S.me, list = ACH_ORDER.filter(k => a[k] && (me || a[k][0] > 0)).sort((x, y) => a[y][0] - a[x][0]);
+  if (!list.length) return '';
+  const got = ACH_ORDER.filter(k => a[k]?.[0] > 0).length;
+  return `<section><h5>Başarımlar <small>${got}/${ACH_ORDER.length}</small></h5><div class="agrid">${list.map(k => {
+    const [tier, v, next] = a[k], multi = !!ACH_UNIT[k], t = TIERS[tier], d = BADGE_DEF[k], unit = ACH_UNIT[k] || '';
+    const sub = !tier ? esc(ACH_HOW[k] || d?.how || '') : !multi ? esc(S.badgeInfo?.[k]?.[2] || '') : k === 'kurucu' ? `En kalabalık sunucusu ${v} üye${next ? ' · sonraki: ' + next : ' · en üst kademe'}` : next ? `${v.toLocaleString('tr-TR')} ${unit} · sonraki: ${next.toLocaleString('tr-TR')}` : `${v.toLocaleString('tr-TR')} ${unit} · en üst kademe`;
+    const prog = me && next && multi ? `<div class="mprog"><i style="width:${Math.min(100, Math.round(v / next * 100))}%"></i></div>` : '';
+    return `<div class="acard ${tier ? 'got' : 'lock'}" style="--tc:${t ? t[1] : '#5a4a40'}">${medal(k, 34, !tier)}<div><b>${ACH_NAME[k]}${multi && t ? ` <span class="tier">${t[0]}</span>` : ''}</b><small>${sub}</small>${prog}</div></div>`; }).join('')}</div></section>`;
+}
 const SHAPES = [
   '<circle cx="24" cy="24" r="21"/>',
   '<path d="M24 3 42 9.5V24c0 10-7.5 17.5-18 21C13.5 41.5 6 34 6 24V9.5Z"/>',
@@ -8008,7 +8035,7 @@ const badgeChips = (u, size = 26) => BADGE_ORDER.filter(k => (u?.badges || []).i
 function badgeGrid(n, u, prog) {
   const me = n === S.me, have = new Set(u.badges || []), list = me ? [...BADGE_ORDER.filter(k => have.has(k)), ...BADGE_ORDER.filter(k => !have.has(k))] : BADGE_ORDER.filter(k => have.has(k));
   if (!list.length) return '';
-  return `<section><h5>Rozetler <small>${have.size}/${BADGE_ORDER.length}</small></h5><div class="mgrid">${list.map(k => { const d = BADGE_DEF[k], got = have.has(k), info = S.badgeInfo?.[k] || ['', k, ''], pr = prog?.[k];
+  return `<section><h5>Rozetler <small>${BADGE_ORDER.filter(k => have.has(k)).length}/${BADGE_ORDER.length}</small></h5><div class="mgrid">${list.map(k => { const d = BADGE_DEF[k], got = have.has(k), info = S.badgeInfo?.[k] || ['', k, ''], pr = prog?.[k];
     return `<div class="mcard ${got ? 'got' : 'lock'} r${d.r}" data-badge="${k}" style="--c1:${d.c[0]};--c2:${d.c[1]};--rc:${RARITY[d.r][1]}">${medal(k, 54, !got)}<div><b>${esc(info[1])}</b><span class="rar">${RARITY[d.r][0]}${d.limited ? ' · Sınırlı' : ''}</span>${got && k === 'beta' && u.betaNo ? `<em class="bno">${betaNoTxt(u.betaNo)}</em>` : ''}<small>${got ? esc(info[2]) : esc(d.how)}</small>
       ${!got && pr && pr[1] > 1 ? `<div class="mprog"><i style="width:${Math.round(pr[0] / pr[1] * 100)}%"></i></div><em>${pr[0]} / ${pr[1]}</em>` : ''}</div></div>`; }).join('')}</div></section>`;
 }
@@ -8126,8 +8153,8 @@ function profAboutHTML(n, u) {
   return `${ac ? `<section class="pf-now">${ac.replace('<div class="pc-sec"><h5>Şu an</h5>', '<h5>Şu an</h5><div class="pf-nowc">')}</section>` : ''}${u.bio ? `<section><h5>Hakkımda</h5><div class="pf-bio">${fmt(u.bio)}</div></section>` : n === S.me ? `<section><h5>Hakkımda</h5><div class="pf-bio empty">Kendinden biraz bahset, profilini düzenle.</div></section>` : ''}
     ${Object.keys(u.socials || {}).length ? `<section><h5>Bağlantılar</h5><div class="psocs">${socialsHTML(u)}</div></section>` : ''}
     <section class="pf-grid"><div class="pf-lvl"><div class="pl-h"><b>Seviye ${u.level || 1}</b>${u.streak ? `<span class="streak">${ic('fire')} ${u.streak} gün seri</span>` : ''}</div>${xpBar(u)}<small>Sonraki seviyeye yaklaşık <b>${Math.max(1, next)}</b> mesaj</small></div>
-      <div class="pf-stats"><div><b>${u.xp || 0}</b><span>Mesaj</span></div><div><b>${u.friendCount || 0}</b><span>Arkadaş</span></div><div><b>${u.badges?.length || 0}</b><span>Rozet</span></div></div></section>
-    <div id="pf-badges-sec">${badgeGrid(n, u, window._bprog)}</div>
+      <div class="pf-stats"><div><b>${u.xp || 0}</b><span>Mesaj</span></div><div><b>${u.friendCount || 0}</b><span>Arkadaş</span></div><div><b>${(u.badges || []).filter(k => RARE_B.includes(k)).length}</b><span>Rozet</span></div></div></section>
+    <div id="pf-badges-sec">${badgeGrid(n, u, window._bprog)}</div>${achGrid(n, u)}
     ${u.music ? `<section><h5>Profil şarkısı</h5><a class="music-card" href="${esc(u.music)}" target="_blank" rel="noopener">${ytId(u.music) ? `<img src="https://img.youtube.com/vi/${ytId(u.music)}/mqdefault.jpg" alt="">` : `<span class="mc-ic">${ic('music')}</span>`}<span><b>Şarkıyı aç</b><small>${esc(u.music.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40))}</small></span></a></section>` : ''}
     ${u.birthday ? `<section class="pf-line">${ic('cake')}<span>Doğum günü: <b>${new Date('2000-' + u.birthday + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</b></span></section>` : ''}
     ${uNotes[n] && n !== S.me ? `<section><h5>Notun <small>(sadece sen görürsün)</small></h5><div class="unote">${esc(uNotes[n])}</div></section>` : ''}`;

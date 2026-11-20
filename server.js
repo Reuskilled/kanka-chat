@@ -753,7 +753,7 @@ const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (
 const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
 const HEX = /^#[0-9a-f]{6}$/i;
 const pubUser = u => ({ displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
-  birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), badges: shownBadges(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
+  birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
 const allUsers = () => Object.values(db.users).map(pubUser);
@@ -1799,7 +1799,7 @@ const BADGES = {
   xox: ['⭕', 'XOX şampiyonu', '3 XOX oyunu kazandı'],
   seri7: ['🔥', 'Ateşli seri', '7 gün üst üste giriş'],
   kurucu: ['🏰', 'Kurucu', 'Bir sunucu kurdu'],
-  sosyal: ['🤝', 'Sosyal kelebek', '5+ arkadaş'],
+  sosyal: ['🦋', 'Sosyal kelebek', '5+ arkadaş'],
   caylak: ['🐣', 'Çaylak', 'Başlangıç rehberini bitirdi'],
   beta: ['🧪', 'Beta Tester', 'Kanka betasındaki ilk 300 kişiden biri'],
   ekip: ['🛡️', 'Kanka Ekibi', 'Kanka Chat moderasyon ekibinde'],
@@ -1842,6 +1842,15 @@ function badgesOf(u) {
   return b;
 }
 // Profilde görünen rozetler: kişinin gizlediklerini çıkar
+// Başarımlar: kolay kazanılanlar rozet değil, profilde kademeli (1 bronz, 2 gümüş, 3 altın) gösterilir. Değer: [kademe, şu anki, sonraki eşik]
+const ACH = { sohbet: [100, 1000, 10000], xox: [3, 25, 100], seri7: [7, 30, 100], sosyal: [5, 25, 100], kurucu: [1, 10, 50], gece: [1], caylak: [1] };
+let ownCache = null; // sunucu sahibi -> sahip olduğu en kalabalık sunucunun üye sayısı (her kullanıcı için tüm sunucuları taramamak için)
+function achOf(u) {
+  if (!ownCache || Date.now() - ownCache.t > 30e3) { const m = new Map(); for (const s of db.servers) if (!s.public) m.set(s.owner, Math.max(m.get(s.owner) || 0, s.members.length, 1)); ownCache = { t: Date.now(), m }; }
+  const val = { sohbet: u.msgs || u.xp || 0, xox: u.xoxWins || 0, seri7: u.streak?.best || 0, sosyal: (u.friends || []).length, kurucu: ownCache.m.get(u.name) || 0, gece: u.night ? 1 : 0, caylak: u.onb?.rewarded ? 1 : 0 };
+  const o = {}; for (const [k, t] of Object.entries(ACH)) { const v = val[k], tier = t.filter(x => v >= x).length; o[k] = [tier, v, t[tier] ?? null]; }
+  return o;
+}
 const shownBadges = u => { const h = new Set(u.hideBadges || []); return badgesOf(u).filter(k => !h.has(k)); };
 
 // ---------- Çevrimiçi ve ses durumu ----------
