@@ -1913,7 +1913,9 @@ function notifyUser(name, n) {
     tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend,
     e: n.e && n.e.enc.ct.length <= 2400 ? n.e : undefined }); // bildirim boyutu sınırlı: kısa şifreli mesaj telefonda çözülüp gösterilir
 }
-const presenceList = () => onlineNames().map(n => { const st = statusOf(n); return st && onMobile(n) ? [n, st, 'm'] : [n, st]; }).filter(x => x[1]);
+const presenceList = () => [...onlineNames().map(n => { const st = statusOf(n); return st && onMobile(n) ? [n, st, 'm'] : [n, st]; }).filter(x => x[1]),
+  ...botsOnline().map(n => [n, 'online'])]; // geliştirici botları: ağ geçidine bağlıyken çevrimiçi
+function botsOnline() { const out = []; try { for (const [appId, set] of botConns) if ([...set].some(c => c.ready) && db.apps?.[appId]?.bot) out.push(db.apps[appId].bot); } catch {} return out; }
 // Odadaki sohbet ne zamandır sürüyor: oda boşken doluya geçince başlar, tamamen boşalınca sıfırlanır
 // Seste geçen süre (kişi başı, gün gün): Yuva'daki "Bu hafta seste" grafiği için. Dakikada bir sayılır, 21 gün tutulur.
 const dayKeyTR = (t = Date.now()) => new Date(t + 3 * 3600e3).toISOString().slice(0, 10);
@@ -2576,7 +2578,7 @@ function gwConnection(ws, req) {
       let sess = m.op === 6 && botSessions.get(String(d.oturum ?? d.session_id ?? '')), resumed = false;
       if (sess && sess.app === a.id) { resumed = true; sess.closedAt = null; } else { sess = { app: a.id, seq: 0, buf: [], closedAt: null }; }
       conn.session = resumed ? String(d.oturum ?? d.session_id) : crypto.randomBytes(12).toString('hex'); botSessions.set(conn.session, sess);
-      (botConns.get(a.id) || botConns.set(a.id, new Set()).get(a.id)).add(conn); conn.ready = true; clearTimeout(kill);
+      (botConns.get(a.id) || botConns.set(a.id, new Set()).get(a.id)).add(conn); conn.ready = true; clearTimeout(kill); pushPresence();
       a.lastOnline = Date.now();
       if (resumed) { const from = +(d.sira ?? d.seq) || 0; for (const ev of sess.buf.filter(e => e.s > from)) gwSend(conn, ev); gwSend(conn, { op: 0, t: 'DEVAM_EDILDI', s: sess.seq, d: {} }); }
       else gwSend(conn, { op: 0, t: 'HAZIR', s: ++sess.seq, d: { oturum: conn.session, bot: appView(a), niyetler: [...conn.intents], icerikIzni: contentOk(a),
@@ -2584,7 +2586,7 @@ function gwConnection(ws, req) {
       return;
     }
   });
-  ws.on('close', () => { clearTimeout(kill); clearInterval(hb); if (conn.app) { botConns.get(conn.app.id)?.delete(conn); const s = botSessions.get(conn.session); if (s) s.closedAt = Date.now(); } });
+  ws.on('close', () => { clearTimeout(kill); clearInterval(hb); if (conn.app) { botConns.get(conn.app.id)?.delete(conn); if (conn.ready) setTimeout(pushPresence, 0); const s = botSessions.get(conn.session); if (s) s.closedAt = Date.now(); } });
   ws.on('error', () => {});
 }
 setInterval(() => { for (const [k, s] of botSessions) if (s.closedAt && Date.now() - s.closedAt > 120e3) botSessions.delete(k); }, 60e3);
