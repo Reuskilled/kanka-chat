@@ -206,6 +206,19 @@ try {
   }
 } catch {}`);
 const PS_LOL = enc(`(Get-CimInstance Win32_Process -Filter "Name='LeagueClientUx.exe'" -ErrorAction SilentlyContinue | Select-Object -First 1).CommandLine`);
+// Listede olmayan oyunlar: Steam / Epic / Xbox oyun klasöründen çalışan ve penceresi olan program oyun sayılır, adı klasörden gelir
+const PS_LIB = enc(`[Console]::OutputEncoding=[Text.Encoding]::UTF8
+Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 -and $_.Path -match '\\\\(steamapps\\\\common|Epic Games|XboxGames)\\\\' } | ForEach-Object { $_.Path }`);
+const LIB_SKIP = /(launcher|crash|setup|redist|anticheat|easyanticheat|battleye|unins|updater|helper|bootstrap|report|vcredist|dxsetup|overlay)/i;
+const LIB_TOOLS = /^(steamworks shared|steamvr|wallpaper[ _]engine|soundpad|steam controller configs|common redistributables|lossless scaling|obs studio)$/i;
+function libGame(out) {
+  for (const p of out.split(/\r?\n/).map(x => x.trim()).filter(Boolean)) {
+    const m = /\\(?:steamapps\\common|Epic Games|XboxGames)\\([^\\]+)\\/i.exec(p), exe = p.split('\\').pop();
+    if (!m || LIB_SKIP.test(exe) || LIB_TOOLS.test(m[1])) continue;
+    return m[1].replace(/\s+/g, ' ').trim().slice(0, 60);
+  }
+  return null;
+}
 const ps = b64 => run('powershell', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', b64]);
 let games = {}, lastStatus = 'Etkinlik: bekleniyor', lolPid = null;
 const run = (cmd, args) => new Promise(res => execFile(cmd, args, { windowsHide: true, maxBuffer: 8 * 1024 * 1024 }, (e, out) => res(e ? '' : String(out))));
@@ -235,6 +248,7 @@ async function detect() {
     if (score > best) { best = score; game = hit[0]; detail = hit[1] || ''; }
     if (best === 2) break;
   }
+  if (!game) { const g = libGame(await ps(PS_LIB)); if (g) { game = g; detail = ''; } }
   const names = new Map(lines.map(l => { const r = csvRow(l); return [(r[0] || '').toLowerCase(), r[1]]; }));
   // Oyunların kendi yerel servislerinden ayrıntı: şampiyon, mod, derece, skor, KDA
   let rich = null;
