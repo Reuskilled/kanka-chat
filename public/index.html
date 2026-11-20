@@ -510,7 +510,17 @@
   .toast small { display: block; color: var(--muted); font-size: 12px; }
   @keyframes pop { from { transform: translateY(10px); opacity: 0; } }
   #viewer { display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.85); align-items: center; justify-content: center; cursor: zoom-out; }
-  #viewer img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
+  #viewer img { max-width: 90vw; max-height: 90vh; border-radius: 12px; user-select: none; -webkit-user-drag: none; }
+  #viewer .vw-b { position: absolute; display: grid; place-items: center; border: 0; color: #fff; background: rgba(20,20,22,.55); backdrop-filter: blur(6px); cursor: pointer; transition: background .15s, transform .15s; }
+  #viewer .vw-b:hover { background: rgba(60,60,64,.8); }
+  #viewer .vw-x { top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; }
+  #viewer .vw-nav { top: 50%; width: 48px; height: 48px; border-radius: 50%; transform: translateY(-50%); display: none; }
+  #viewer .vw-nav:active { transform: translateY(-50%) scale(.94); }
+  #viewer .vw-prev { left: 18px; } #viewer .vw-next { right: 18px; }
+  #viewer.multi .vw-nav { display: grid; }
+  #viewer .vw-cnt { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); padding: 5px 12px; border-radius: 999px; background: rgba(20,20,22,.6); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .02em; display: none; }
+  #viewer.multi .vw-cnt { display: block; }
+  @media (max-width: 760px) { #viewer .vw-nav { width: 40px; height: 40px; } #viewer .vw-prev { left: 8px; } #viewer .vw-next { right: 8px; } }
 
   .av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
   .srv img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
@@ -3579,7 +3589,7 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
 <div id="modal"><div class="box" id="modal-box"></div></div>
 <div id="toasts"></div>
 <div id="updbar" role="status"><span class="ui"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></span><span><b id="upd-t"></b><small id="upd-s"></small></span><button class="go" id="upd-go"></button><button class="later" id="upd-later">Sonra</button></div>
-<div id="viewer"><img alt=""></div>
+<div id="viewer"><button type="button" class="vw-b vw-x" aria-label="Kapat" title="Kapat (Esc)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button type="button" class="vw-b vw-nav vw-prev" aria-label="Önceki görsel" title="Önceki (←)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><img alt=""><button type="button" class="vw-b vw-nav vw-next" aria-label="Sonraki görsel" title="Sonraki (→)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><div class="vw-cnt"></div></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://www.youtube.com/iframe_api" async></script>
@@ -6477,7 +6487,7 @@ function showMedia(tab = 'media') {
     body.querySelectorAll('[data-go]').forEach(b => b.onclick = e => { e.stopPropagation(); e.preventDefault(); const id = b.dataset.go; closeModal(); goToMsg(id); });
     body.querySelectorAll('.mdm-tile').forEach(t => t.onclick = t.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; const it = items[+t.dataset.i]; if (!it?.url || it.url === '#') return;
       if (it.type === 'video') return window.open(it.url, '_blank', 'noopener');
-      $('#viewer img').src = it.url; $('#viewer').style.display = 'flex'; ovOpen('viewer', () => { $('#viewer').style.display = 'none'; }); });
+      const pics = items.filter(x => x.type !== 'video' && x.url && x.url !== '#'); openViewer(pics.map(x => x.url), pics.indexOf(it)); });
     $('#mdm-more') && ($('#mdm-more').onclick = load);
   };
   // Şifreli sohbet: mesajlar cihazda; yetmezse daha eski sayfalar indirilip bu cihazda açılır (en fazla 3000 mesaj)
@@ -7345,9 +7355,20 @@ $('#messages').onclick = e => {
   else if (t.dataset.callback) { if (S.channel?.id === t.dataset.callback) startCall(false); }
   else if (t.dataset.calljoin) joinVoice('call:' + t.dataset.calljoin);
   else if (t.dataset.poll) socket.emit('vote', { msgId: t.dataset.poll, index: +t.dataset.i });
-  else if (t.dataset.view !== undefined) { $('#viewer img').src = t.src; $('#viewer').style.display = 'flex'; ovOpen('viewer', () => $('#viewer').style.display = 'none'); }
+  else if (t.dataset.view !== undefined) { const imgs = [...(t.closest('.row, .rpc-line, .modal, .mdm-body') || t.parentElement).querySelectorAll('img[data-view]')].filter(x => x.src); openViewer(imgs.map(x => x.src), Math.max(0, imgs.indexOf(t))); }
 };
-$('#viewer').onclick = () => { $('#viewer').style.display = 'none'; ovClosed('viewer'); };
+// Görsel görüntüleyici: aynı mesajdaki görseller arasında ok tuşları / kaydırma ile geçiş
+const VW = { list: [], i: 0 };
+function vwShow() { const v = $('#viewer'), n = VW.list.length; v.querySelector('img').src = VW.list[VW.i] || ''; v.classList.toggle('multi', n > 1); v.querySelector('.vw-cnt').textContent = n > 1 ? `${VW.i + 1} / ${n}` : ''; }
+function openViewer(list, i = 0) { VW.list = (list || []).filter(Boolean); if (!VW.list.length) return; VW.i = Math.max(0, Math.min(i, VW.list.length - 1)); vwShow(); $('#viewer').style.display = 'flex'; ovOpen('viewer', () => { $('#viewer').style.display = 'none'; }); }
+function vwStep(d) { const n = VW.list.length; if (n < 2) return; VW.i = (VW.i + d + n) % n; vwShow(); }
+const vwOpen = () => $('#viewer').style.display === 'flex';
+function closeViewer() { $('#viewer').style.display = 'none'; ovClosed('viewer'); }
+$('#viewer').onclick = e => { if (e.target.closest('.vw-prev')) return vwStep(-1); if (e.target.closest('.vw-next')) return vwStep(1); if (vwSwiped) { vwSwiped = false; return; } closeViewer(); };
+document.addEventListener('keydown', e => { if (!vwOpen()) return; if (e.key === 'ArrowLeft') { e.preventDefault(); vwStep(-1); } else if (e.key === 'ArrowRight') { e.preventDefault(); vwStep(1); } });
+let vwX = null, vwSwiped = false;
+$('#viewer').addEventListener('pointerdown', e => { vwX = e.clientX; vwSwiped = false; });
+$('#viewer').addEventListener('pointerup', e => { if (vwX == null) return; const dx = e.clientX - vwX; vwX = null; if (Math.abs(dx) > 50 && VW.list.length > 1) { vwSwiped = true; vwStep(dx < 0 ? 1 : -1); } });
 
 let msgQ = Promise.resolve();
 const viaE2E = fn => d => { msgQ = msgQ.then(() => d?.msg?.enc && d.channelId === S.channel?.id ? E2E.prep(d.channelId, [d.msg], S.msgs) : 0).catch(() => {}).then(() => fn(d)); };
