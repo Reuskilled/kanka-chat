@@ -151,6 +151,7 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
       <tr><td>1 NABIZ / 11 NABIZ_ALINDI</td><td>Her <code>nabizAraligi</code> ms'de bir 1 gönder; 75 saniye gelmezse bağlantı kapanır</td></tr>
       <tr><td>0 OLAY</td><td><code>t</code>: <code>HAZIR</code>, <code>MESAJ_GELDI</code>, <code>MESAJ_DUZENLENDI</code>, <code>MESAJ_SILINDI</code>, <code>KOMUT</code>, <code>BUTON</code>, <code>SECIM</code>, <code>FORM</code>, <code>UYE_KATILDI</code>, <code>UYE_AYRILDI</code>, <code>UYE_GUNCELLENDI</code>, <code>TEPKI_EKLENDI</code>, <code>TEPKI_KALDIRILDI</code>, <code>SUNUCUYA_EKLENDI</code>, <code>SUNUCUDAN_CIKARILDI</code>; <code>s</code> sıra numarası</td></tr>
       <tr><td>6 DEVAM</td><td>Koptuktan sonra 2 dakika içinde: <code>{ token, oturum, sira }</code>; kaçırdığın olaylar gelir</td></tr></table>
+    <p><b>Mesajı kim yazdı?</b> Her mesajda <code>yazar</code> alanı vardır: <code>{ ad, gorunenAd, bot }</code>. Yazar bir geliştirici botuysa <code>yazar.uygulama</code> da gelir: <code>{ id, ad, gorunenAd, dogrulandi, sahip }</code>. Kanka'nın kendi botunun mesajlarında <code>yazar.sistem: true</code> olur. Botların birbirine cevap verip döngüye girmemesi için <code>yazar.bot</code> doğruysa mesajı yok saymanı öneririz.</p>
     <p>Kapanış kodları: <code>4004</code> token geçersiz, <code>4005</code> zaten 2 bağlantı var, <code>4008</code> çok sık, <code>4014</code> bot durduruldu.</p>
 
     <h2 id="http">9. HTTP etkileşimleri</h2>

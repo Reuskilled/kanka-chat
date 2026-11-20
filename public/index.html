@@ -6935,7 +6935,7 @@ function msgHTML(m, prev) {
       <div class="bembed" style="--tone:${T}">${b.title ? `<b class="bt">${esc(b.title)}</b>` : ''}${b.text ? `<div class="bembed-txt">${fmt(b.text)}</div>` : ''}${b.fields?.length ? `<div class="bf">${b.fields.map(([k, v]) => `<div><small>${esc(k)}</small>${esc(v)}</div>`).join('')}</div>` : ''}</div>${m.ephemeral ? '<div class="eph">Bunu sadece sen görüyorsun</div>' : ''}${rb ? `<div class="reacts">${rb}</div>` : ''}</div>${bt}</div>`;
   }
   const mine = m.author === S.me && !m.xfrom;
-  const cont = !newDay && prev && prev.kind !== 'system' && prev.author === m.author && m.time - prev.time < 5 * 60e3 && !m.replyTo && !m.inter;
+  const cont = !newDay && prev && prev.kind !== 'system' && prev.kind !== 'bot' && prev.author === m.author && m.time - prev.time < 5 * 60e3 && !m.replyTo && !m.inter;
   const lvl = S.users[m.author] && !S.users[m.author].bot ? lvTag(S.users[m.author].level) : '';
   const stamp = `<span class="stamp">${m.scheduled ? ic('clock') + ' ' : ''}${hm(m.time)}${m.edited ? ' · düzenlendi' : ''}</span>`;
   let body;

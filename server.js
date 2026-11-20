@@ -1540,13 +1540,13 @@ for (const s0 of db.servers) if (s0.bot?.mod?.on && s0.bot.added === undefined) 
   if (b.welcome.ch) setTimeout(() => botPost(b.welcome.ch, { title: '🤖 Kanka Bot burada!', text: 'Bundan sonra Kanka HQ\'ya gelen her yeni kankayı ben karşılayacağım. Sunucuna eklemek için: Keşfet → Botlar.', tone: 'ok' }), 3000);
 })();
 function botPost(chId, { title, text, tone = 'info', fields } = {}) {
-  const msg = { id: id(), kind: 'bot', time: Date.now(), bot: { title: clean(title, 80), text: clean(text, 900), tone, fields: (fields || []).slice(0, 6).map(([a, b]) => [clean(a, 40), clean(b, 120)]) }, reactions: {} };
+  const msg = { id: id(), author: BOT_NAME, kind: 'bot', time: Date.now(), bot: { title: clean(title, 80), text: clean(text, 900), tone, fields: (fields || []).slice(0, 6).map(([a, b]) => [clean(a, 40), clean(b, 120)]) }, reactions: {} };
   const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
   save(); io.to(chId).emit('message', { channelId: chId, msg });
   return msg;
 }
 // Sadece komutu yazana görünen cevap (kaydedilmez)
-const botWhisper = (sock, chId, o) => sock.emit('message', { channelId: chId, msg: { id: 'w' + id(), kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: clean(o.title, 80), text: clean(o.text, 1500), tone: o.tone || 'info', fields: o.fields || [] }, reactions: {} } });
+const botWhisper = (sock, chId, o) => sock.emit('message', { channelId: chId, msg: { id: 'w' + id(), author: BOT_NAME, kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: clean(o.title, 80), text: clean(o.text, 1500), tone: o.tone || 'info', fields: o.fields || [] }, reactions: {} } });
 function modLog(s, o) {
   const m = s.bot?.mod; if (!m?.on || !m.logCh) return;
   if (!s.channels.some(c => c.id === m.logCh && (c.type || 'text') === 'text')) return;
@@ -1614,7 +1614,7 @@ function openTicket(s, by, reason) {
   if (lastIdx >= 0) s.channels.splice(lastIdx + 1, 0, c); else s.channels.push(c);
   botPost(c.id, { title: 'Destek talebi açıldı', text: (t.welcome || 'Merhaba {üye}! Talebini buraya yazabilirsin.').replace(/\{üye\}/g, '@' + by).replace(/\{sunucu\}/g, s.name), tone: 'ok', fields: [['Açan', by], ...(rs ? [['Konu', rs]] : [])] });
   const list = (db.messages[c.id] ||= []);
-  const card = { id: id(), kind: 'bot', time: Date.now() + 1, ticket: { no: t.seq, by, claimedBy: null, closed: false }, bot: { title: 'Destek durumu', text: 'Yetkililer en kısa sürede ilgilenecek. Talebi kapatmak için aşağıdaki butona basabilirsin.', tone: 'info', fields: ticketCardFields(c) }, reactions: {} };
+  const card = { id: id(), author: BOT_NAME, kind: 'bot', time: Date.now() + 1, ticket: { no: t.seq, by, claimedBy: null, closed: false }, bot: { title: 'Destek durumu', text: 'Yetkililer en kısa sürede ilgilenecek. Talebi kapatmak için aşağıdaki butona basabilirsin.', tone: 'info', fields: ticketCardFields(c) }, reactions: {} };
   list.push(card); if (list.length > 2000) list.shift();
   c.ticket.cardId = card.id;
   io.to(c.id).emit('message', { channelId: c.id, msg: card });
@@ -2002,7 +2002,7 @@ function callAloneWatch(chId) {
   s.aloneT = setTimeout(() => {
     const r = voice.get('call:' + chId);
     if (!r || r.size !== 1 || ![...r.values()].includes(name)) return;
-    io.to('user:' + name).emit('message', { channelId: chId, msg: { id: 'w' + id(), kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: 'Kanka fark etti', text: 'Üç dakikadır odada senden başka kimse yok kanka. Mikrofonu kapatsan da kimse fark etmez, benden söylemesi 🙂 Kapatmak istersen kapat gitsin; ben buradayım.', tone: 'warn' }, reactions: {} } });
+    io.to('user:' + name).emit('message', { channelId: chId, msg: { id: 'w' + id(), author: BOT_NAME, kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: 'Kanka fark etti', text: 'Üç dakikadır odada senden başka kimse yok kanka. Mikrofonu kapatsan da kimse fark etmez, benden söylemesi 🙂 Kapatmak istersen kapat gitsin; ben buradayım.', tone: 'warn' }, reactions: {} } });
     io.to('user:' + name).emit('toast', '3 dakikadır tek başınasın kanka. Boş odaysa kapat gitsin.');
   }, CALL_ALONE_MS);
   s.aloneT.unref?.();
@@ -2500,7 +2500,7 @@ function msgForBot(a, chId, m, full) {
   const see = !!full || dm || mention || m.author === a.bot;
   const au = db.users[m.author];
   return { id: m.id, oda: chId, sunucu: f?.s.id || null, dm, zaman: m.time, duzenlendi: !!m.edited,
-    yazar: m.author ? { ad: m.author, gorunenAd: au?.displayName || m.author, bot: !!au?.bot } : null,
+    yazar: m.author ? { ad: m.author, gorunenAd: au?.displayName || m.author, bot: !!au?.bot || m.author === BOT_NAME, ...(m.author === BOT_NAME ? { sistem: true } : {}), ...(au?.bot ? { uygulama: db.apps?.[au.bot.app] ? appInfoOf(db.apps[au.bot.app]) : { id: au.bot.app } } : {}) } : null,
     icerik: see ? (m.text || '') : '', kartlar: see ? (m.embeds || []) : [], bilesenler: m.comps || [], etiketlendi: mention,
     ekler: see ? (m.files || []).map(x => ({ ad: x.name, url: x.url, boyut: x.size, tur: x.kind })) : [], yanit: m.replyTo?.id || null, tepkiler: Object.fromEntries(Object.entries(m.reactions || {}).map(([e, us]) => [e, us.length])) };
 }
@@ -2606,9 +2606,11 @@ function botMember(s, name, kind) { // üye katıldı / ayrıldı / güncellendi
   }
 }
 // ---- Bot mesajı gönderme ----
+// Mesajın kendisi hangi bottan geldiğini söylesin (kullanıcı listesine bakmadan): ad, görünen ad, doğrulama, sahip
+const appInfoOf = a => ({ id: a.id, ad: a.bot, gorunenAd: db.users[a.bot]?.displayName || a.name || a.bot, dogrulandi: !!a.verified, sahip: a.owner || null });
 function appPost(a, chId, body, extra = {}) {
   const u = db.users[a.bot];
-  const msg = { id: id(), author: a.bot, color: u.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, text: body.text || '', ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
+  const msg = { id: id(), author: a.bot, color: u.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, appInfo: appInfoOf(a), text: body.text || '', ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
   if (!msg.text && !msg.embeds && !msg.comps && !msg.loading) return { error: 'Boş mesaj: icerik, kartlar ya da bilesenler gerekli' };
   const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
   save(); io.to(chId).emit('message', { channelId: chId, msg });
@@ -2618,7 +2620,7 @@ function appPost(a, chId, body, extra = {}) {
   return { msg };
 }
 function ephPost(a, chId, user, body, extra = {}) { // sadece tek kişinin göreceği mesaj (kaydedilmez)
-  const msg = { id: 'e' + id(), author: a.bot, color: db.users[a.bot]?.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, ephemeral: true, text: body.text || '', ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
+  const msg = { id: 'e' + id(), author: a.bot, color: db.users[a.bot]?.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, appInfo: appInfoOf(a), ephemeral: true, text: body.text || '', ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
   ephMsgs.set(msg.id, { msg, chId, user, at: Date.now() }); if (ephMsgs.size > 5000) ephMsgs.delete(ephMsgs.keys().next().value);
   io.to('user:' + user).emit('message', { channelId: chId, msg });
   return msg;
@@ -2641,7 +2643,7 @@ function newInter(a, type, user, chId, data, msg) {
   if (type === 'KOMUT') { appCount(a, user); save(); }
   return it;
 }
-const ephWhisper = (user, chId, text) => io.to('user:' + user).emit('message', { channelId: chId, msg: { id: 'w' + id(), kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: '', text, plain: true, tone: 'warn' } } });
+const ephWhisper = (user, chId, text) => io.to('user:' + user).emit('message', { channelId: chId, msg: { id: 'w' + id(), author: BOT_NAME, kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: '', text, plain: true, tone: 'warn' } } });
 // HTTP ile etkileşim: bot sürekli bağlı kalmadan, Kanka isteği adresine POST eder (imzalı) ve cevabı aynı istekte alır
 function interHttp(a, payload) {
   return new Promise(res => {
@@ -3876,7 +3878,7 @@ io.on('connection', socket => {
     if (!s.bot?.added || !t.on) return cb({ error: 'Önce Destek modülünü aç' });
     const c = s.channels.find(x => x.id === chId && (x.type || 'text') === 'text' && !x.news);
     if (!c) return cb({ error: 'Geçerli bir yazılı oda seç' });
-    const msg = { id: id(), kind: 'bot', time: Date.now(), ticketPanel: true, bot: { title: 'Destek', text: t.panelText || 'Bir sorunun mu var? Talebini aç, yetkililer ilgilenecek.', tone: 'info', fields: [] }, reactions: {} };
+    const msg = { id: id(), author: BOT_NAME, kind: 'bot', time: Date.now(), ticketPanel: true, bot: { title: 'Destek', text: t.panelText || 'Bir sorunun mu var? Talebini aç, yetkililer ilgilenecek.', tone: 'info', fields: [] }, reactions: {} };
     const list = (db.messages[c.id] ||= []); list.push(msg); if (list.length > 2000) list.shift();
     t.panelCh = c.id;
     audit(s, me, 'Destek panelini gönderdi', '#' + c.name);
