@@ -4510,7 +4510,11 @@ const railVoiceN = s => new Set(s.channels.filter(c => voiceLike(c.type)).flatMa
 const railVoiceBadge = s => { const n = railVoiceN(s); return n ? `<span class="rvc">${ic('volume')}${n}</span>` : ''; };
 function updRailVoice() { $('#rail')?.querySelectorAll('.srv[data-id]').forEach(b => { const s = S.servers.find(x => x.id === b.dataset.id); if (!s) return; b.querySelector('.rvc')?.remove(); b.insertAdjacentHTML('beforeend', railVoiceBadge(s)); }); }
 function renderRail() {
-  const unreadN = S.unread.size + (S.unreadDM ? 1 : 0);
+  // Sekme sayacı: yalnızca gerçekten açılıp okunabilecek yerler (görünen kanal / mevcut DM). Görünmeyen ya da silinmiş kanal kayıtları temizlenir.
+  const vis = new Set((S.dms || []).map(d => d.id)); for (const sv of S.servers) for (const c of sv.channels) vis.add(c.id);
+  for (const id of [...S.unread]) if (!vis.has(id) && !/^(dm|g):/.test(id)) S.unread.delete(id);
+  const dmU = (S.dms || []).some(d => S.unread.has(d.id));
+  const unreadN = [...S.unread].filter(id => vis.has(id) && !mutedServers.has(S.servers.find(sv => sv.channels.some(c => c.id === id))?.id)).length + (S.unreadDM && !dmU ? 1 : 0);
   window.kankaDesktop?.badge(unreadN);
   document.title = (unreadN ? `(${unreadN}) ` : '') + 'Kanka Chat';
   $('#rail').innerHTML =

@@ -428,7 +428,7 @@ function deliverMatch(u, m) {
   save();
   io.to(chId).emit('message', { channelId: chId, msg });
   const f = findChannel(chId);
-  if (f) for (const n of membersOf(f.s)) if (n !== u.name) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
+  if (f) for (const n of membersOf(f.s)) if (n !== u.name && canAccess(n, chId)) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
 }
 const autoSrc = new Map(); // kullanıcı -> (kaynak -> son bildirim)
 // ---- Webhook'lar: dışarıdan bir odaya mesaj gönderme (Discord webhook biçimiyle uyumlu) ----
@@ -2116,7 +2116,7 @@ function postMessage(me, chId, p = {}) {
     }
   } else {
     const f = findChannel(chId);
-    for (const n of membersOf(f.s)) if (n !== me) {
+    for (const n of membersOf(f.s)) if (n !== me && canAccess(n, chId)) {
       io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
       const pr = prefsOf(db.users[n]);
       if (pr.ch?.[chId] === 'all' && !(pr.muted || []).includes(f.s.id) && seesChannel(f.s, f.c, n) && !(msg.text || '').includes('@' + n))
@@ -2645,7 +2645,7 @@ function appPost(a, chId, body, extra = {}) {
   const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
   save(); io.to(chId).emit('message', { channelId: chId, msg });
   if (chId.startsWith('dm:')) for (const n of dmPeers(chId)) { io.to('user:' + n).emit('dms', dmsFor(n)); if (n !== a.bot) notifyUser(n, { from: a.bot, text: msg.text || msg.embeds?.[0]?.baslik || 'Yeni mesaj', channelId: chId, where: 'özel mesaj', dm: true }); }
-  else { const f = findChannel(chId); if (f) for (const n of membersOf(f.s)) if (n !== a.bot) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
+  else { const f = findChannel(chId); if (f) for (const n of membersOf(f.s)) if (n !== a.bot && canAccess(n, chId)) io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
     for (const n of new Set((msg.text.match(/@([\p{L}\p{N}_.-]{2,20})/gu) || []).map(x => x.slice(1)))) if (f && f.s.members.includes(n) && !isBotUser(n) && seesChannel(f.s, f.c, n)) notifyUser(n, { from: a.bot, text: msg.text.slice(0, 160), channelId: chId, where: `${f.s.name} › ${f.c.name}`, mention: true }); }
   return { msg };
 }
