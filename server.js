@@ -361,6 +361,7 @@ async function albumArt(title, artist) {
   artCache.set(k, url); return url;
 }
 function activitiesOf(u) {
+  if (u.presence === 'invisible') return null; // görünmez: oyun/müzik de "çevrimiçiyim" diye ele vermesin
   const auto = u.auto && Date.now() - u.auto.at < 45e3 ? u.auto : null;
   return auto && (auto.game || auto.music) ? { game: auto.game, music: auto.music, auto: true } : null;
 }
@@ -673,7 +674,17 @@ function writeDbNow() {
     saveFails = 0;
   } catch (e) { saveFails++; console.error('Kayıt yazılamadı (' + saveFails + '):', e.message); setTimeout(save, Math.min(30e3, 1000 * saveFails)); }
 }
+// Erişimi kalkan (atılan, yasaklanan, gruptan çıkan, odayı görme izni alınan) kişi açık tuttuğu odanın canlı akışından düşsün
+let roomCheckQ = false;
+function roomCheck() {
+  roomCheckQ = false;
+  for (const sk of io.sockets.sockets.values()) {
+    const c = sk.data.cur; if (!c || canAccess(sk.data.name, c)) continue;
+    sk.leave(c); sk.data.cur = null; sk.emit('roomLost', c);
+  }
+}
 function save() {
+  if (!roomCheckQ) { roomCheckQ = true; setImmediate(roomCheck); }
   if (saveTimer) return; // 300 ms içindeki tüm değişiklikler tek yazımda
   saveTimer = setTimeout(writeDbNow, 300);
 }
@@ -1958,7 +1969,15 @@ function pushCalls() {
   if (sig === lastCallsSig) return; lastCallsSig = sig;
   for (const n of new Set(online.values())) io.to('user:' + n).emit('calls', callsFor(n));
 }
-const pushVoice = () => { io.emit('voiceState', voiceState()); io.emit('voiceAge', voiceAges()); io.emit('voiceLive', liveState()); io.emit('voiceFlags', flagsState()); pushCalls(); };
+// Ses odası bilgisi sadece o odayı görebilene: özel sunucunun / gizli odanın kimlerle dolu olduğu dışarı sızmasın
+const seenBy = (o, n) => { const r = {}; for (const k in o) if (canAccess(n, k)) r[k] = o[k]; return r; };
+const eachOnline = fn => { for (const n of new Set(online.values())) fn(n); };
+const pushFlags = () => { const F = flagsState(); eachOnline(n => io.to('user:' + n).emit('voiceFlags', seenBy(F, n))); };
+function voiceTo(names) {
+  const V = voiceState(), A = voiceAges(), L = liveState(), F = flagsState();
+  for (const n of names) { const t = io.to('user:' + n); t.emit('voiceState', seenBy(V, n)); t.emit('voiceAge', seenBy(A, n)); t.emit('voiceLive', seenBy(L, n)); t.emit('voiceFlags', seenBy(F, n)); }
+}
+const pushVoice = () => { voiceTo(new Set(online.values())); pushCalls(); };
 // Özel arama günlüğü: sohbete "arama başladı / bitti / cevapsız" yazar, 3 dakika yalnız kalana Kanka seslenir
 const callSess = new Map();
 const CALL_ALONE_MS = +process.env.CALL_ALONE_MS || 180e3;
@@ -1999,7 +2018,9 @@ function callEnded(chId) {
 }
 function pushServers(names) {
   viewersCache.clear(); // izin değişmiş olabilir: listeyi baştan hesapla, aynı gönderimde tekrar kullan
+  roomCheck();
   for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
+  if (voice.size) { const on = new Set(online.values()); voiceTo([...new Set(names)].filter(n => on.has(n))); } // erişim değişti: ses odaları da yeniden süzülsün
 }
 const membersOf = s => s.public ? Object.keys(db.users) : s.members;
 
@@ -2910,8 +2931,8 @@ io.on('connection', socket => {
     const reward = touchStreak(name);
     const token = sessNew(name); save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
-      token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: flagsState(), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
-      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: voiceState(), voiceAge: voiceAges(), calls: callsFor(name), live: liveState(), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
+      token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: seenBy(flagsState(), name), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
+      servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: seenBy(voiceState(), name), voiceAge: seenBy(voiceAges(), name), calls: callsFor(name), live: seenBy(liveState(), name), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
       myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
@@ -3457,7 +3478,7 @@ io.on('connection', socket => {
     if (typeof cb !== 'function') cb = () => {};
     if (!canAccess(me, chId)) return cb({ error: 'Bu odaya erişimin yok' });
     if (cur) socket.leave(cur);
-    cur = chId; socket.join(chId);
+    cur = chId; socket.join(chId); socket.data.cur = chId; socket.data.name = me;
     const s = serverOf(chId); if (s) try { dailyQuestion(s); } catch (e) { console.error('dailyQuestion', e); } // hata olsa da oda açılsın
     const fj = findChannel(chId), noHist = fj && !chPerm(fj.s, fj.c, me, 'history');
     cb({ messages: noHist ? (db.messages[chId] || []).filter(m => m.pinned || m.author === me).slice(-30) : (db.messages[chId] || []).slice(-150), noHistory: noHist || undefined, playlist: db.playlists[chId] || [], watch: watch.get(chId) || null });
@@ -3468,7 +3489,8 @@ io.on('connection', socket => {
   socket.on('setStatus', (arg, cb = () => {}) => {
     const { st, until } = typeof arg === 'string' ? { st: arg } : (arg || {});
     if (!me || !['online', 'idle', 'dnd', 'invisible'].includes(st)) return cb({ error: 'Geçersiz durum' });
-    const u = db.users[me]; u.presence = st;
+    const u = db.users[me], wasInv = u.presence === 'invisible'; u.presence = st;
+    if (wasInv !== (st === 'invisible')) pushActivity(u);
     const t = +until; u.presenceUntil = st !== 'online' && t > Date.now() && t < Date.now() + 31 * 864e5 ? t : null;
     save(); pushPresence(); io.to('user:' + me).emit('myStatus', { st, until: u.presenceUntil }); cb({ ok: true, until: u.presenceUntil }); // diğer cihazlar da bilsin (rahatsız etmeyin her yerde geçerli)
   });
@@ -4011,7 +4033,8 @@ io.on('connection', socket => {
     if (!canAccess(me, cur)) return cb([]);
     q = clean(q, 100).toLocaleLowerCase('tr');
     if (!q) return cb([]);
-    cb((db.messages[cur] || []).filter(m => [m.text, m.author, m.plan?.title, m.poll?.question, m.song?.title].some(t => t && t.toLocaleLowerCase('tr').includes(q))).slice(-50).reverse());
+    const fs_ = findChannel(cur), noHist = fs_ && !chPerm(fs_.s, fs_.c, me, 'history'); // geçmişi okuma izni yoksa aramada da çıkmasın
+    cb((db.messages[cur] || []).filter(m => !m.ephemeral && (!noHist || m.author === me || m.pinned)).filter(m => [m.text, m.author, m.plan?.title, m.poll?.question, m.song?.title].some(t => t && t.toLocaleLowerCase('tr').includes(q))).slice(-50).reverse());
   });
 
   // ----- Birlikte izle -----
@@ -4609,7 +4632,7 @@ io.on('connection', socket => {
       const on = action === 'mute';
       on ? srvMuted.add(s.id + '|' + name) : srvMuted.delete(s.id + '|' + name);
       for (const [sid, n] of voice.get(cur) || []) if (n === name) { io.to(sid).emit('srvMute', { on, by: me }); if (on) { voiceFlags.set(sid, { ...(voiceFlags.get(sid) || {}), m: true }); } }
-      io.emit('voiceFlags', flagsState());
+      pushFlags();
       audit(s, me, on ? 'Seste susturdu' : 'Ses susturmasını kaldırdı', name);
     } else if (action === 'disconnect') {
       voiceKick([cur], name, `${me} seni sesli odadan çıkardı`); audit(s, me, 'Sesten çıkardı', name);
@@ -4954,7 +4977,7 @@ io.on('connection', socket => {
     if (now.screen) { const lm = liveMeta.get(socket.id) || { since: Date.now() }; Object.assign(lm, { q: clean(st?.q, 12), viewers: Math.min(+st?.viewers || 0, 99), audio: !!st?.audio }); liveMeta.set(socket.id, lm); }
     else liveMeta.delete(socket.id);
     socket.to('v:' + myVoice).emit('media', { sid: socket.id, name: me, ...now, streamId: clean(st?.streamId, 80), viewers: Math.min(+st?.viewers || 0, 99), q: clean(st?.q, 12), audio: !!st?.audio });
-    if (!!was !== now.screen) pushVoice(); else io.emit('voiceFlags', flagsState());
+    if (!!was !== now.screen) pushVoice(); else pushFlags();
   });
   // Yayın önizlemesi: yayıncı ~10 sn'de bir küçük bir kare gönderir; odayı görebilenler üstüne gelince görür
   socket.on('liveThumb', data => {
@@ -4977,7 +5000,7 @@ io.on('connection', socket => {
     io.to(to).emit('streamWatch', { from: socket.id, name: me, on: !!on });
   });
 
-  socket.on('typing', () => { if (me && cur) socket.to(cur).emit('typing', { channelId: cur, name: me }); });
+  socket.on('typing', () => { if (me && cur && canAccess(me, cur)) socket.to(cur).emit('typing', { channelId: cur, name: me }); });
 
   // ----- Sunucular -----
   socket.on('createServer', (arg, cb = () => {}) => {
@@ -5229,7 +5252,7 @@ io.on('connection', socket => {
   socket.on('vflags', ({ m, d } = {}) => {
     if (!myVoice) return;
     const sv = findChannel(myVoice)?.s; if (sv && !m && srvMuted.has(sv.id + '|' + me)) { m = true; socket.emit('srvMute', { on: true }); }
-    const pv = voiceFlags.get(socket.id) || {}; voiceFlags.set(socket.id, { m: !!m, d: !!d }); if (!!pv.m !== !!m || !!pv.d !== !!d) io.emit('voiceFlags', flagsState()); });
+    const pv = voiceFlags.get(socket.id) || {}; voiceFlags.set(socket.id, { m: !!m, d: !!d }); if (!!pv.m !== !!m || !!pv.d !== !!d) pushFlags(); });
   socket.on('signal', ({ to, data } = {}) => {
     if (!myVoice || !voice.get(myVoice)?.has(to)) return;
     io.to(to).emit('signal', { from: socket.id, data });
@@ -5246,7 +5269,7 @@ setInterval(() => {
   const now = Date.now();
   let pres = false, prof = false;
   for (const u of Object.values(db.users)) {
-    if (u.presenceUntil && u.presenceUntil <= now) { u.presence = 'online'; u.presenceUntil = null; pres = true; io.to('user:' + u.name).emit('myStatus', { st: 'online', until: null, expired: true }); }
+    if (u.presenceUntil && u.presenceUntil <= now) { u.presence = 'online'; u.presenceUntil = null; pres = true; pushActivity(u); io.to('user:' + u.name).emit('myStatus', { st: 'online', until: null, expired: true }); }
     if (u.statusUntil && u.statusUntil <= now) { u.status = ''; u.statusUntil = null; prof = true; io.to('user:' + u.name).emit('customStatus', { text: '', until: null, expired: true }); }
   }
   if (pres) pushPresence(); if (prof) io.emit('users', allUsers()); if (pres || prof) save();
