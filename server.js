@@ -1922,7 +1922,7 @@ const voiceStart = new Map();
 function voiceAges() {
   const now = Date.now(), o = {};
   for (const k of [...voiceStart.keys()]) if (!voice.get(k)?.size) voiceStart.delete(k);
-  for (const [k, m] of voice) if (m.size) { if (!voiceStart.has(k)) voiceStart.set(k, now); o[k] = now - voiceStart.get(k); } // saat farkı olmasın diye "kaç ms önce" gönderilir
+  for (const [k, m] of voice) if (m.size) { if (!voiceStart.has(k)) voiceStart.set(k, now); if (!k.startsWith('call:')) o[k] = now - voiceStart.get(k); } // özel aramalar herkese gitmesin (DM id'si iki ismi içeriyor) · saat farkı olmasın diye "kaç ms önce" gönderilir
   return o;
 }
 const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.startsWith('call:')).map(([k, m]) => [k, [...new Set(m.values())]]));
