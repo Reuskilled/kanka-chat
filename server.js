@@ -941,7 +941,19 @@ const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (
 const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
 const effectOk = (u, ef) => !ef || ef === 'none' || PEFFECTS.includes(ef);
 const nameBannerOk = (u, nb) => !nb || nb === 'none' || NAME_BANNERS.includes(nb);
+const NS_FONTS = ['default', 'serif', 'cinzel', 'rounded', 'script', 'pixel', 'cyber', 'mono'];
+const NS_MODES = ['none', 'solid', 'gradient'];
+const NS_ANIMS = ['none', 'flow', 'shimmer', 'glow', 'rainbow'];
 const HEX = /^#[0-9a-f]{6}$/i;
+const cleanNameStyle = ns => {
+  if (!ns || typeof ns !== 'object') return null;
+  const font = NS_FONTS.includes(ns.font) ? ns.font : 'default';
+  const mode = NS_MODES.includes(ns.mode) ? ns.mode : 'none';
+  const anim = NS_ANIMS.includes(ns.anim) ? ns.anim : 'none';
+  const c1 = HEX.test(ns.c1) ? ns.c1 : '#d4ff00';
+  const c2 = HEX.test(ns.c2) ? ns.c2 : '#ec4899';
+  return font === 'default' && mode === 'none' && anim === 'none' ? null : { font, mode, c1, c2, anim };
+};
 // ---- Kalıcı kullanıcı kimliği ----
 // Ad değişse de değişmeyen sayısal kimlik (Discord'daki gibi). Hesabın açıldığı zamandan türetilir: (ms - 2025-01-01) << 12 | sıra.
 // Botlar ve geliştiriciler kullanıcıyı bununla saklar; ad değişince bağ kopmaz.
@@ -973,7 +985,7 @@ function migrateUids() { // eski hesaplara, açılış sırasına göre kimlik v
   for (const [n, u] of miss) { u.name ||= n; u.id = mkUid(u.createdAt); uidIndex().set(u.id, n); }
   if (miss.length) { save(); console.log(`Kullanıcı kimliği: ${miss.length} hesaba kalıcı kimlik verildi`); }
 }
-const pubUser = u => ({ id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect || null, nameBanner: u.nameBanner || null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
+const pubUser = u => ({ id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect || null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
@@ -4465,7 +4477,7 @@ io.on('connection', socket => {
   });
 
   // ----- Profil -----
-  socket.on('updateProfile', ({ avatar, status, bio, banner, color, birthday, music, displayName, pronouns, theme, bannerImg, frame, effect, nameBanner, socials } = {}, cb = () => {}) => {
+  socket.on('updateProfile', ({ avatar, status, bio, banner, color, birthday, music, displayName, pronouns, theme, bannerImg, frame, effect, nameBanner, nameStyle, socials } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
     if (avatar === null) u.avatar = null;
     else if (avatar !== undefined) { if (!AVATAR_OK(avatar)) return cb({ error: 'Geçersiz resim' }); u.avatar = avatar; }
@@ -4482,6 +4494,7 @@ io.on('connection', socket => {
     if (frame !== undefined) { if (frame && !frameOk(u, frame)) return cb({ error: 'Bu çerçeve henüz açılmadı' }); u.frame = frame && frame !== 'none' ? frame : null; }
     if (effect !== undefined) { if (effect && !effectOk(u, effect)) return cb({ error: 'Geçersiz profil efekti' }); u.effect = effect && effect !== 'none' ? effect : null; }
     if (nameBanner !== undefined) { if (nameBanner && !nameBannerOk(u, nameBanner)) return cb({ error: 'Geçersiz isim afişi' }); u.nameBanner = nameBanner && nameBanner !== 'none' ? nameBanner : null; }
+    if (nameStyle !== undefined) { if (nameStyle && staffRank(u.name) !== 'owner') return cb({ error: 'Görünen ad stili sadece Kurucu rütbesine özeldir' }); u.nameStyle = staffRank(u.name) === 'owner' ? cleanNameStyle(nameStyle) : null; }
     if (socials !== undefined) { const o = {}; for (const k of SOCIALS) { const v = clean(socials?.[k], 60).replace(/^https?:\/\/\S+\//, '').replace(/^@/, ''); if (v && /^[\w.\-]{1,40}$/.test(v)) o[k] = v; } u.socials = o; }
     if (u.bio || u.status) onbFlag(me, 'profile');
     save(); io.emit('users', allUsers()); cb({ ok: true });

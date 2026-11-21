@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="Kanka">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&family=JetBrains+Mono:wght@700&family=Nunito:wght@400;600;700;800&family=Pacifico&family=Playfair+Display:ital,wght@0,700;1,700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #09090b; --panel: #111114; --card: #18181c; --hover: #222228; --line: #27272e;
@@ -2397,6 +2397,57 @@
   .nb-prev-row .info b { font-size: 13px; font-weight: 800; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.85); }
   .nb-prev-row .info span { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.78); text-shadow: 0 1px 3px rgba(0,0,0,.8); }
   @media (prefers-reduced-motion: reduce) { .has-nb:hover .nb-sheen, .has-nb:hover .nb-bg, .has-nb:hover .nb-art .mv, .has-nb:hover .nb-art .sp, .nb-card:hover .nb-sheen, .nb-card:hover .nb-bg, .nb-card:hover .nb-art .mv, .nb-card:hover .nb-art .sp { animation: none !important; } }
+  /* Görünen ad stili (Kurucu) */
+  .dn-st { display: inline-block; line-height: 1.22; max-width: 100%; vertical-align: baseline; }
+  .nsf-serif { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; }
+  .nsf-cinzel { font-family: 'Cinzel', Georgia, serif; font-weight: 800; letter-spacing: .03em; }
+  .nsf-rounded { font-family: 'Fredoka', 'Nunito', sans-serif; font-weight: 700; }
+  .nsf-script { font-family: 'Pacifico', cursive; font-weight: 400; letter-spacing: .01em; padding-right: 3px; }
+  .nsf-pixel { font-family: 'Silkscreen', monospace; font-weight: 700; font-size: .88em; letter-spacing: -.02em; }
+  .nsf-cyber { font-family: 'Chakra Petch', sans-serif; font-weight: 700; letter-spacing: .04em; }
+  .nsf-mono { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: .92em; }
+  .dn-st.ns-solid { color: var(--ns1); }
+  .dn-st.ns-clip { -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent !important; text-shadow: none !important; }
+  .has-nb .dn-st.ns-clip { filter: drop-shadow(0 1px 3px rgba(0,0,0,.85)); }
+  .dn-st.ns-grad { background-image: linear-gradient(90deg, var(--ns1), var(--ns2)); }
+  .dn-st.ns-a-flow { background-image: linear-gradient(90deg, var(--ns1), var(--ns2), var(--ns1)); background-size: 220% 100%; animation: nsFlow 3.2s linear infinite; }
+  .dn-st.ns-a-shimmer { background-image: linear-gradient(110deg, var(--ns1) 0%, var(--ns2) 38%, #ffffff 50%, var(--ns1) 62%, var(--ns2) 100%); background-size: 240% 100%; animation: nsShimmer 2.8s ease-in-out infinite; }
+  .dn-st.ns-a-rainbow { background-image: linear-gradient(90deg, #ff4d6d, #ffb703, #d4ff00, #00f5d4, #4cc9f0, #a855f7, #ff4d6d); background-size: 260% 100%; animation: nsFlow 4s linear infinite; }
+  .dn-st.ns-a-glow { animation: nsGlow 2.4s ease-in-out infinite; }
+  @keyframes nsFlow { from { background-position: 0% 50%; } to { background-position: 220% 50%; } }
+  @keyframes nsShimmer { 0% { background-position: 200% 50%; } 100% { background-position: -40% 50%; } }
+  @keyframes nsGlow { 0%, 100% { filter: drop-shadow(0 0 3px var(--nsg)) drop-shadow(0 0 8px color-mix(in srgb, var(--nsg) 55%, transparent)); } 50% { filter: drop-shadow(0 0 6px var(--nsg)) drop-shadow(0 0 16px var(--nsg)); } }
+  @media (prefers-reduced-motion: reduce) { .dn-st { animation: none !important; } }
+  .ns-box { display: grid; gap: 12px; padding: 12px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); }
+  .ns-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .ns-sub { font-size: 11px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+  .ns-clr { padding: 3px 9px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 800; }
+  .ns-clr:hover { color: var(--ink); border-color: var(--accent); }
+  .ns-fonts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+  @media (max-width: 560px) { .ns-fonts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .ns-fbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 9px 6px; border-radius: 12px; background: var(--card); border: 1.5px solid var(--line); color: var(--ink); transition: transform .13s, border-color .14s; }
+  .ns-fbtn:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .ns-fbtn.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .ns-fbtn b { font-size: 20px; line-height: 1.15; }
+  .ns-fbtn span { font-size: 10.5px; font-weight: 700; color: var(--muted); }
+  .ns-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ns-seg button { padding: 6px 12px; border-radius: 10px; background: var(--card); border: 1.5px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 800; transition: all .13s; }
+  .ns-seg button:hover { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .ns-seg button.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .ns-colors { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .ns-pick { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px 4px 5px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-size: 11.5px; font-weight: 700; color: var(--ink); cursor: pointer; }
+  .ns-pick input[type=color] { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; }
+  .ns-pres { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ns-pres button { width: 26px; height: 26px; border-radius: 8px; border: 2px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); transition: transform .12s; }
+  .ns-pres button:hover { transform: scale(1.1); }
+  .ns-pres button.on { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+  .ns-prev { display: grid; gap: 8px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+  .ns-prev-chat { display: flex; align-items: flex-start; gap: 9px; padding: 4px 6px; }
+  .ns-prev-chat .av { width: 32px; height: 32px; font-size: 12px; flex-shrink: 0; }
+  .ns-prev-chat .nc-b { display: grid; gap: 2px; min-width: 0; }
+  .ns-prev-chat .nc-h { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13.5px; font-weight: 800; }
+  .ns-prev-chat .nc-h small { font-size: 10.5px; font-weight: 600; color: var(--muted); }
+  .ns-prev-chat .nc-t { font-size: 12.5px; color: var(--ink); opacity: .88; }
   .bnr { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .bnr .bprev { width: 180px; height: 60px; border-radius: 12px; border: 1px solid var(--line); }
   .socin { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -4477,12 +4528,12 @@ function showSettings(tab) {
   if (tab && !$('#modal').classList.contains('open')) msetDirect = true;
   tab ||= 'profile';
   const u = S.users[S.me];
-  const KEYS = ['avatar', 'status', 'bio', 'banner', 'color', 'birthday', 'music', 'displayName', 'pronouns', 'theme', 'bannerImg', 'frame', 'effect', 'nameBanner', 'socials'];
-  const OBJ = { theme: null, socials: {}, frame: null, effect: null, nameBanner: null, bannerImg: null, avatar: null, banner: null };
+  const KEYS = ['avatar', 'status', 'bio', 'banner', 'color', 'birthday', 'music', 'displayName', 'pronouns', 'theme', 'bannerImg', 'frame', 'effect', 'nameBanner', 'nameStyle', 'socials'];
+  const OBJ = { theme: null, socials: {}, frame: null, effect: null, nameBanner: null, nameStyle: null, bannerImg: null, avatar: null, banner: null };
   let nbCat = 'all';
   const initDraft = () => Object.fromEntries(KEYS.map(k => [k, k in OBJ ? (u[k] && typeof u[k] === 'object' ? JSON.parse(JSON.stringify(u[k])) : u[k] || OBJ[k]) : u[k] || '']));
   const draft = initDraft();
-  const norm = (k, v) => JSON.stringify(k === 'socials' ? Object.fromEntries(Object.entries(v || {}).filter(([, x]) => x)) : v || (k in OBJ ? null : ''));
+  const norm = (k, v) => JSON.stringify(k === 'socials' ? Object.fromEntries(Object.entries(v || {}).filter(([, x]) => x)) : k === 'nameStyle' ? cleanNs(v) : v || (k in OBJ ? null : ''));
   const dirty = () => KEYS.some(k => norm(k, draft[k]) !== norm(k, u[k]));
   modal(`<nav class="st-nav"><h4>KULLANICI AYARLARI</h4>
       <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button><button data-tab="dev">${ic('code')}Bot geliştirici</button>${S.staff ? `<h4 style="margin-top:14px">KANKA EKİBİ</h4><button data-tab="admin">${ic('shield')}Yönetim paneli${S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>` : ''}
@@ -4493,8 +4544,16 @@ function showSettings(tab) {
   const drawNbPrev = () => {
     const box = $('#st-nbprev'); if (!box) return;
     const id = draft.nameBanner && NAME_BANNERS.some(x => x.id === draft.nameBanner && x.id !== 'none') ? draft.nameBanner : null;
-    const nm = esc(draft.displayName || S.me), st = esc(draft.status || 'Yeni görünümle oynuyor');
+    const nm = styledNameHTML(draft.displayName || S.me, S.staff === 'owner' ? draft.nameStyle : null), st = esc(draft.status || 'Yeni görünümle oynuyor');
     box.innerHTML = `<div class="nb-prevbox"><small>Üye listesi & Özel mesaj önizlemesi (üstüne gel)</small>
+      <div class="nb-prev-row ${id ? 'has-nb nb-' + id : ''}">${id ? nbLayers(id) : ''}${nbAvHTML()}<div class="info"><b>${nm}</b><span>${st}</span></div></div></div>`;
+  };
+  const drawNsPrev = () => {
+    const box = $('#st-nsprev'); if (!box) return;
+    const id = draft.nameBanner && NAME_BANNERS.some(x => x.id === draft.nameBanner && x.id !== 'none') ? draft.nameBanner : null;
+    const nm = styledNameHTML(draft.displayName || S.me, draft.nameStyle), st = esc(draft.status || 'Kurucu çevrimiçi');
+    box.innerHTML = `<div class="ns-prev"><span class="ns-sub">Canlı önizleme</span>
+      <div class="ns-prev-chat">${nbAvHTML()}<div class="nc-b"><div class="nc-h" style="color:${draft.color || u.color}">${nm}<span class="pe-tag" style="margin:0">KURUCU</span><small>bugün 03:15</small></div><div class="nc-t">Yeni görünen ad stili efsane duruyor 🔥</div></div></div>
       <div class="nb-prev-row ${id ? 'has-nb nb-' + id : ''}">${id ? nbLayers(id) : ''}${nbAvHTML()}<div class="info"><b>${nm}</b><span>${st}</span></div></div></div>`;
   };
   const preview = () => {
@@ -4503,6 +4562,7 @@ function showSettings(tab) {
     $('#st-card .pf-actslot').innerHTML = `<button class="btnp" tabindex="-1">${ic('chat')} Mesaj</button><button class="btns2" tabindex="-1">${ic('userplus')}</button>`;
     mountProfileEffect($('#st-card .pf-side'), pu.effect);
     drawNbPrev();
+    drawNsPrev();
     fillBars();
     if (!$('.st-save')?.classList.contains('saved')) $('.st-save')?.classList.toggle('dirty', dirty());
   };
@@ -4518,6 +4578,7 @@ function showSettings(tab) {
       <div class="st-field"><label>Profil efekti</label><div class="peffects" id="st-peffects">${PEFFECTS.map(ef => { const on = (draft.effect || 'none') === ef[0];
         return `<button type="button" data-ef="${ef[0]}" class="${on ? 'on' : ''}" title="${ef[1]}"><div class="pe-pv" style="background:${ef[3]};color:${ef[4]}">${ef[2]}</div><span>${ef[1]}</span></button>`; }).join('')}</div><p class="hint">Profil kartın açıldığında üstünde canlı oynar.</p></div>
       <div class="st-field"><label>İsim afişi</label><div id="st-nbbox"></div><div id="st-nbprev"></div><p class="hint">Üye listesinde ve özel mesajlarda isminin arkasında görünür; fareyle üstüne gelince hareketlenir.</p></div>
+      ${S.staff === 'owner' ? `<div class="st-field"><label>Görünen ad stili <span class="pe-tag">KURUCU</span></label><div id="st-nsbox"></div><div id="st-nsprev" style="margin-top:8px"></div><p class="hint">Sadece Kurucu rütbesine özeldir. Sohbette, üye listesinde, özel mesajlarda ve profil kartında görünür.</p></div>` : ''}
       <div class="st-field"><label>Afiş</label><div class="bnr"><div class="bprev" style="${banStyle(S.me, { ...u, ...draft })}"></div><button class="btns2" id="st-bimg">${ic('image')} Resim / GIF yükle</button>${draft.bannerImg ? `<button class="btns2" id="st-brm">Resmi kaldır</button>` : ''}</div>${draft.bannerImg ? '' : '<div class="swatches" id="sw-banner" style="margin-top:10px"></div>'}</div>
       <div class="st-field"><label>Profil teması</label><div class="themes"><button type="button" class="none ${draft.theme ? '' : 'on'}" data-th="none" title="Tema yok">${ic('x')}</button>${PTHEMES.map((t, i) => `<button type="button" data-th="${i}" class="${JSON.stringify(draft.theme) === JSON.stringify(t) ? 'on' : ''}" style="background:linear-gradient(160deg, ${t[0]}, ${t[1]})"></button>`).join('')}
         <label>Özel <input type="color" id="th-a" value="${draft.theme?.[0] || '#ff8a4c'}"><input type="color" id="th-b" value="${draft.theme?.[1] || '#5b2a86'}"></label></div><p class="hint">Tema profil kartının tamamını boyar.</p></div>
@@ -4599,6 +4660,36 @@ function showSettings(tab) {
         };
         drawNb();
       }
+      if ($('#st-nsbox')) {
+        const nsCur = () => cleanNs(draft.nameStyle) || { font: 'default', mode: 'none', c1: '#d4ff00', c2: '#00f5d4', anim: 'none' };
+        const nsSet = patch => { const nxt = { ...nsCur(), ...patch }; draft.nameStyle = cleanNs(nxt); };
+        const drawNs = () => {
+          const s = nsCur(), has = !!cleanNs(draft.nameStyle);
+          $('#st-nsbox').innerHTML = `<div class="ns-box">
+            <div class="ns-head"><span class="ns-sub">Yazı tipi</span>${has ? '<button type="button" class="ns-clr" id="ns-clr">Stili sıfırla</button>' : ''}</div>
+            <div class="ns-fonts">${NS_FONTS.map(([id, lbl]) => `<button type="button" class="ns-fbtn ${s.font === id ? 'on' : ''}" data-nsf="${id}"><b class="${id !== 'default' ? 'nsf-' + id : ''}">Gg</b><span>${lbl}</span></button>`).join('')}</div>
+            <div class="ns-sub">Renk</div>
+            <div class="ns-seg">${NS_MODES.map(([id, lbl]) => `<button type="button" class="${s.mode === id ? 'on' : ''}" data-nsm="${id}">${lbl}</button>`).join('')}</div>
+            ${s.mode !== 'none' ? `<div class="ns-colors">
+              <label class="ns-pick"><input type="color" id="ns-c1" value="${s.c1}">${s.mode === 'gradient' ? '1. renk' : 'Renk'}</label>
+              ${s.mode === 'gradient' ? `<label class="ns-pick"><input type="color" id="ns-c2" value="${s.c2}">2. renk</label>` : ''}
+              <div class="ns-pres">${NS_PRESETS.map(([a, b, nm], i) => `<button type="button" data-nsp="${i}" class="${s.c1.toLowerCase() === a && (s.mode === 'solid' || s.c2.toLowerCase() === b) ? 'on' : ''}" style="background:${s.mode === 'gradient' ? `linear-gradient(135deg,${a},${b})` : a}" title="${nm}" aria-label="${nm}"></button>`).join('')}</div>
+            </div>` : ''}
+            <div class="ns-sub">Animasyon</div>
+            <div class="ns-seg">${NS_ANIMS.map(([id, lbl]) => `<button type="button" class="${s.anim === id ? 'on' : ''}" data-nsa="${id}">${lbl}</button>`).join('')}</div>
+          </div>`;
+          $('#ns-clr')?.addEventListener('click', () => { draft.nameStyle = null; drawNs(); preview(); });
+          $('#st-nsbox').querySelectorAll('[data-nsf]').forEach(b => b.onclick = () => { nsSet({ font: b.dataset.nsf }); drawNs(); preview(); });
+          $('#st-nsbox').querySelectorAll('[data-nsm]').forEach(b => b.onclick = () => { nsSet({ mode: b.dataset.nsm }); drawNs(); preview(); });
+          $('#st-nsbox').querySelectorAll('[data-nsa]').forEach(b => b.onclick = () => { nsSet({ anim: b.dataset.nsa }); drawNs(); preview(); });
+          $('#st-nsbox').querySelectorAll('[data-nsp]').forEach(b => b.onclick = () => { const [a, c] = NS_PRESETS[+b.dataset.nsp]; nsSet({ c1: a, c2: c }); drawNs(); preview(); });
+          const c1 = $('#ns-c1'), c2 = $('#ns-c2');
+          if (c1) c1.oninput = e => { nsSet({ c1: e.target.value }); $('#st-nsbox').querySelectorAll('[data-nsp]').forEach(x => x.classList.remove('on')); preview(); };
+          if (c2) c2.oninput = e => { nsSet({ c2: e.target.value }); $('#st-nsbox').querySelectorAll('[data-nsp]').forEach(x => x.classList.remove('on')); preview(); };
+          drawNsPrev();
+        };
+        drawNs();
+      }
       $('#st-bimg').onclick = () => readImage(url => { draft.bannerImg = url; open('profile'); preview(); });
       if ($('#st-brm')) $('#st-brm').onclick = () => { draft.bannerImg = null; open('profile'); preview(); };
       $('#st-main').querySelectorAll('[data-th]').forEach(b => b.onclick = () => { draft.theme = b.dataset.th === 'none' ? null : [...PTHEMES[+b.dataset.th]]; open('profile'); preview(); });
@@ -4616,9 +4707,9 @@ function showSettings(tab) {
       $('#st-music').oninput = e => { draft.music = e.target.value.trim(); preview(); };
       $('#st-reset').onclick = () => { Object.assign(draft, initDraft()); open('profile'); preview(); };
       $('#st-saveb').onclick = () => socket.emit('updateProfile', { avatar: draft.avatar, status: draft.status, bio: draft.bio, banner: draft.banner || '', color: draft.color, birthday: draft.birthday || '', music: draft.music || '',
-        displayName: draft.displayName, pronouns: draft.pronouns, theme: draft.theme, bannerImg: draft.bannerImg, frame: draft.frame || 'none', effect: draft.effect || 'none', nameBanner: draft.nameBanner || 'none', socials: draft.socials }, r => {
+        displayName: draft.displayName, pronouns: draft.pronouns, theme: draft.theme, bannerImg: draft.bannerImg, frame: draft.frame || 'none', effect: draft.effect || 'none', nameBanner: draft.nameBanner || 'none', ...(S.staff === 'owner' ? { nameStyle: draft.nameStyle } : {}), socials: draft.socials }, r => {
         if (r.error) return toast(r.error);
-        const bar = $('.st-save'); flashSaved(bar); Object.assign(u, JSON.parse(JSON.stringify(draft))); renderMembers(); if (S.view === 'dm') renderDMSide(); setTimeout(preview, 1400); toast('Profilin kaydedildi');
+        const bar = $('.st-save'); flashSaved(bar); Object.assign(u, JSON.parse(JSON.stringify(draft))); renderMembers(); if (S.view === 'dm') renderDMSide(); if (S.msgs.length) renderMessages(); setTimeout(preview, 1400); toast('Profilin kaydedildi');
       });
     }
     if (t === 'account') $('#p-pw').onclick = () => { const nextPw = $('#p-new').value; socket.emit('changePassword', { old: $('#p-old').value, next: nextPw }, async r => {
@@ -6565,7 +6656,7 @@ function renderDMSide() {
   }, 2);
   $('#side-list').innerHTML = `<div class="room ${!S.channel ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
     const dnb = !d.group ? nbOf(S.users[d.with]) : null;
-    return `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''} ${S.calls?.[d.id]?.length ? 'incall' : ''}${dnb ? ' has-nb nb-' + dnb : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${dnb ? nbLayers(dnb) : ''}${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, S.online.has(d.with))}<span class="nb-dmn">${esc(d.with)}</span>`}</div>`;
+    return `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''} ${S.calls?.[d.id]?.length ? 'incall' : ''}${dnb ? ' has-nb nb-' + dnb : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${dnb ? nbLayers(dnb) : ''}${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, S.online.has(d.with))}<span class="nb-dmn">${styledNameHTML(d.with, S.users[d.with]?.nameStyle)}</span>`}</div>`;
   }).join('')
     : `<p style="padding:6px 20px;color:var(--muted);font-size:14px">Henüz sohbet yok.</p>`);
   $('#side-list').querySelectorAll('.room[data-id]').forEach(r => r.onclick = () => openChat(r.dataset.id, r.dataset.w));
@@ -6948,7 +7039,7 @@ const dayLabel = t => {
   return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
 };
 let lastMsgUsersSig = '';
-const msgUsersSig = () => JSON.stringify([...new Set(S.msgs.map(m => m.author).filter(Boolean))].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.color, u.avatar, u.frame, u.level, u.nameColor, u.avatarDeco]; }));
+const msgUsersSig = () => JSON.stringify([...new Set(S.msgs.map(m => m.author).filter(Boolean))].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.color, u.avatar, u.frame, u.level, u.nameColor, u.avatarDeco, u.nameStyle]; }));
 let roomLoading = null;
 function renderMessages(toBottom) {
   if (roomLoading) return; // oda yüklenirken eski/boş ekran çizme
@@ -7246,7 +7337,7 @@ function msgHTML(m, prev) {
   const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'own' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}<span class="gtime">${hm(m.time)}</span>
-    <div class="col">${m.inter ? interTag(m) : ''}${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${avInner(m.replyTo.author)}</span><b style="color:${(S.view === 'server' && roleColor(S.server, m.replyTo.author)) || userColor(m.replyTo.author)}">@${esc(dn(m.replyTo.author))}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${esc(dn(m.author))}</span>${botTag(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+    <div class="col">${m.inter ? interTag(m) : ''}${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${avInner(m.replyTo.author)}</span><b style="color:${(S.view === 'server' && roleColor(S.server, m.replyTo.author)) || userColor(m.replyTo.author)}">@${esc(dn(m.replyTo.author))}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${styledNameHTML(dn(m.author), S.users[m.author]?.nameStyle)}</span>${botTag(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 // ================= Uçtan uca şifreleme (DM ve grup DM) =================
@@ -7970,7 +8061,7 @@ function renderMembers() {
     }
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n), nb = nbOf(u);
-    return `<div class="mem ${o ? '' : 'off'}${nb ? ' has-nb nb-' + nb : ''}" data-n="${esc(n)}">${nb ? nbLayers(nb) : ''}${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${esc(dn(n))}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) && !u?.bot ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u?.bot ? botTag(n) : u ? lvTag(u.level) : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}${nb ? ' has-nb nb-' + nb : ''}" data-n="${esc(n)}">${nb ? nbLayers(nb) : ''}${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${styledNameHTML(dn(n), u?.nameStyle)}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) && !u?.bot ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u?.bot ? botTag(n) : u ? lvTag(u.level) : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
@@ -8374,6 +8465,53 @@ const NAME_BANNERS = [
 ];
 const nbOf = u => u?.nameBanner && NAME_BANNERS.some(x => x.id === u.nameBanner && x.id !== 'none') ? u.nameBanner : null;
 const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `<div class="nb-bg"></div><div class="nb-art">${b.svg}</div><div class="nb-sheen"></div>`; };
+const NS_FONTS = [
+  ['default', 'Varsayılan'], ['serif', 'Klasik'], ['cinzel', 'Kraliyet'], ['rounded', 'Yuvarlak'],
+  ['script', 'El Yazısı'], ['pixel', 'Piksel'], ['cyber', 'Siber'], ['mono', 'Kod'],
+];
+const NS_MODES = [['none', 'Yok'], ['solid', 'Düz renk'], ['gradient', 'Gradyan']];
+const NS_ANIMS = [['none', 'Yok'], ['flow', 'Akış'], ['shimmer', 'Parıltı'], ['glow', 'Işıltı'], ['rainbow', 'Gökkuşağı']];
+const NS_PRESETS = [
+  ['#d4ff00', '#00f5d4', 'Asit Neon'],
+  ['#ff6b6b', '#ffd166', 'Gün Batımı'],
+  ['#a855f7', '#22d3ee', 'Siber'],
+  ['#fde047', '#f59e0b', 'Altın'],
+  ['#f472b6', '#c084fc', 'Sakura'],
+  ['#38bdf8', '#818cf8', 'Buzul'],
+  ['#ff4d6d', '#fb923c', 'Kor Alev'],
+];
+const NS_HEX = /^#[0-9a-f]{6}$/i;
+const cleanNs = ns => {
+  if (!ns || typeof ns !== 'object') return null;
+  const font = NS_FONTS.some(x => x[0] === ns.font) ? ns.font : 'default';
+  const mode = NS_MODES.some(x => x[0] === ns.mode) ? ns.mode : 'none';
+  const anim = NS_ANIMS.some(x => x[0] === ns.anim) ? ns.anim : 'none';
+  const c1 = NS_HEX.test(ns.c1) ? ns.c1 : '#d4ff00';
+  const c2 = NS_HEX.test(ns.c2) ? ns.c2 : '#ec4899';
+  return font === 'default' && mode === 'none' && anim === 'none' ? null : { font, mode, c1, c2, anim };
+};
+function styledNameHTML(txt, ns) {
+  const s = cleanNs(ns);
+  if (!s) return esc(txt);
+  const cls = ['dn-st'];
+  if (s.font !== 'default') cls.push('nsf-' + s.font);
+  let ns1 = s.c1, ns2 = s.c2, nsg = s.mode === 'none' ? 'var(--accent)' : s.c1;
+  if (s.anim === 'rainbow') cls.push('ns-clip', 'ns-a-rainbow');
+  else if (s.anim === 'flow') {
+    cls.push('ns-clip', 'ns-a-flow');
+    if (s.mode === 'none') { ns1 = 'var(--ink)'; ns2 = 'var(--accent)'; }
+    else if (s.mode === 'solid') ns2 = `color-mix(in srgb, ${s.c1} 40%, #ffffff)`;
+  } else if (s.anim === 'shimmer') {
+    cls.push('ns-clip', 'ns-a-shimmer');
+    if (s.mode === 'none') { ns1 = 'var(--ink)'; ns2 = 'var(--ink)'; }
+    else if (s.mode === 'solid') ns2 = s.c1;
+  } else {
+    if (s.mode === 'solid') cls.push('ns-solid');
+    else if (s.mode === 'gradient') cls.push('ns-clip', 'ns-grad');
+    if (s.anim === 'glow') cls.push('ns-a-glow');
+  }
+  return `<span class="${cls.join(' ')}" style="--ns1:${ns1};--ns2:${ns2};--nsg:${nsg}">${esc(txt)}</span>`;
+}
 function mountProfileEffect(el, fx) {
   if (!el) return;
   el.querySelector(':scope > .pfx-cv')?.remove();
@@ -8540,7 +8678,7 @@ function profSideHTML(n, u, { srv, preview } = {}) {
     <div class="pf-ban" style="${banStyle(n, u)}"></div>
     <div class="pf-in">
       <div class="pf-top">${pAv(n, u, 108, !preview || true)}<div class="pf-badges">${badgesHTML(u)}</div></div>
-      <h2 class="pf-dn">${esc(u?.displayName || n)}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${badge(r)}</h2>
+      <h2 class="pf-dn">${styledNameHTML(u?.displayName || n, u?.nameStyle)}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${badge(r)}</h2>
       <div class="pf-un">@${esc(n)}${u?.pronouns ? `<i>•</i>${esc(u.pronouns)}` : ''}</div>
       ${u?.status ? `<div class="pf-bubble">${esc(u.status)}</div>` : ''}
       <div class="pf-actslot"></div>
@@ -8723,7 +8861,7 @@ function voicePop(n, anchor, chId) {
     <div class="vp-head"><button class="vp-avw ${speaking.has(n) ? 'vp-spk' : ''}" id="vp-avb" aria-label="Tam profili aç">${pAv(n, u, 88)}<span class="vp-avh">${ic('user')}Profili<br>görüntüle</span></button>
       ${u.status ? `<div class="vp-bub" title="${esc(u.status)}"><span>${esc(u.status)}</span></div>` : ''}</div>
     <div class="vp-in">
-      <button class="vp-name" id="vp-nm">${esc(dn(n))}</button>
+      <button class="vp-name" id="vp-nm">${styledNameHTML(dn(n), u?.nameStyle)}</button>
       <div class="vp-un"><span>@${esc(n)}</span>${u.pronouns ? `<i>•</i><span>${esc(u.pronouns)}</span>` : ''}<i>•</i><span class="vp-st"><b style="background:${dotColor(n)}"></b>${esc(stTxt)}</span>${badge(roleOf(srv, n))}</div>
       ${hasB ? `<div class="vp-badges">${badgesHTML(u, 'sm')}</div>` : ''}
       ${tags ? `<div class="vp-tags">${tags}</div>` : ''}
