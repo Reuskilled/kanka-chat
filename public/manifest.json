@@ -2,7 +2,7 @@
   "name": "Kanka Chat",
   "short_name": "Kanka",
   "description": "Kankalarınla sohbet, sesli odalar ve daha fazlası",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#09090b",

@@ -3975,6 +3975,9 @@ const firstSrc = (() => { try {
   const o = { s: g('utm_source'), m: g('utm_medium'), c: g('utm_campaign'), t: g('utm_term'), g: QS.has('gclid') ? 1 : undefined, lp: QS.get('lp') || undefined, ref, at: Date.now() };
   if (o.s || o.g || o.ref || o.lp) { localStorage.setItem('kanka-src', JSON.stringify(o)); return o; } return null;
 } catch { return null; } })();
+// Adresler: /app uygulama, /login giriş, /register kayıt (kankahq.com ana sayfası tanıtım sayfası)
+const APP_PATH = '/app';
+if (location.pathname === '/register') authMode = 'register';
 if (authQ.kod || authQ.davet || authQ.kayit) authMode = 'register';
 if (authQ.sifirla) authMode = 'reset';
 const AUTH_IC = { user: 'user', mail: 'mail', lock: 'lock', code: 'ticket' };
@@ -4003,10 +4006,11 @@ const YAS_KEY = 'kanka-yas2', minorLocked = () => { const t = +store.get(YAS_KEY
 function renderAuth(mode = authMode, keep) {
   if (mode === 'register' && minorLocked()) mode = 'minor';
   authMode = mode;
+  if ($('#auth').style.display !== 'none' && (mode === 'login' || mode === 'register')) { const p = mode === 'login' ? '/login' : '/register'; if (location.pathname !== p) try { history.replaceState(null, '', p + location.search); } catch {} }
   const b = $('#auth-body'), v = keep ? Object.fromEntries([...b.querySelectorAll('input[id], select[id]')].map(i => [i.id, i.type === 'checkbox' ? i.checked : i.value])) : {};
   const beta = authBeta?.on, pill = beta ? `<div class="beta-pill"><i></i>Kapalı beta${authBeta.full ? ' · şu an dolu' : authBeta.left != null && authBeta.left < 1000 ? ` · ${authBeta.left} yer kaldı` : ''}</div>` : '';
   const tabs = `<div class="tabs"><button type="button" class="${mode === 'login' ? 'on' : ''}" data-m="login">Giriş yap</button><button type="button" class="${mode === 'register' ? 'on' : ''}" data-m="register">Kayıt ol</button></div>`;
-  const legal = '<a href="/kosullar" target="_blank">Kullanım Şartları</a> · <a href="/gizlilik" target="_blank">Gizlilik ve KVKK</a>';
+  const legal = (window.kankaDesktop ? '' : '<a href="/">Ana sayfa</a> · ') + '<a href="/kosullar" target="_blank">Kullanım Şartları</a> · <a href="/gizlilik" target="_blank">Gizlilik ve KVKK</a>';
   let h = '';
   if (mode === 'login') h = `${pill}<h1>Selam kanka!</h1><p>Hesabına gir ya da yeni hesap aç.</p>${tabs}
     ${afield('a-name', 'Kullanıcı adı ya da e-posta', 'user', 'text', 'maxlength="190" autocomplete="username"')}
@@ -4063,7 +4067,7 @@ function renderAuth(mode = authMode, keep) {
     $('#a-code').oninput = chk; chk();
   }
   if (mode === 'reset') socket.emit('checkReset', authQ.sifirla, r => { const w = $('#a-reset-who'); if (!w) return;
-    if (r.ok) w.innerHTML = `<b>${esc(r.name)}</b> hesabı için yeni bir şifre seç.`; else { w.innerHTML = `<span style="color:var(--red)">${esc(r.error)}</span>`; $('#auth-body').querySelectorAll('.afield').forEach(x => x.remove()); const bt = $('#a-btn'); bt.type = 'button'; bt.textContent = 'Yeni link iste'; bt.onclick = () => { history.replaceState(null, '', '/'); authQ.sifirla = null; renderAuth('forgot'); }; } });
+    if (r.ok) w.innerHTML = `<b>${esc(r.name)}</b> hesabı için yeni bir şifre seç.`; else { w.innerHTML = `<span style="color:var(--red)">${esc(r.error)}</span>`; $('#auth-body').querySelectorAll('.afield').forEach(x => x.remove()); const bt = $('#a-btn'); bt.type = 'button'; bt.textContent = 'Yeni link iste'; bt.onclick = () => { history.replaceState(null, '', APP_PATH); authQ.sifirla = null; renderAuth('forgot'); }; } });
   b.querySelectorAll('.afield input, .afield select, #a-terms').forEach(i => i.addEventListener('input', () => i.closest('.afield, .acheck')?.classList.remove('bad')));
 }
 function authErr(r) {
@@ -4097,7 +4101,7 @@ $('#auth-form').onsubmit = e => {
     const p1 = $('#a-pass').value, p2 = $('#a-pass2').value;
     if (p1.length < 6) return authErr({ error: 'Şifre en az 6 karakter olmalı.' });
     if (p1 !== p2) return authErr({ error: 'Şifreler aynı değil.' });
-    busy(true); E2E.pend(p1); socket.emit('resetPw', { token: authQ.sifirla, password: p1 }, r => { busy(false); if (r.error) return authErr(r); history.replaceState(null, '', '/'); authQ.sifirla = null; toast('Şifren yenilendi, hoş geldin!'); onAuth(r); });
+    busy(true); E2E.pend(p1); socket.emit('resetPw', { token: authQ.sifirla, password: p1 }, r => { busy(false); if (r.error) return authErr(r); history.replaceState(null, '', APP_PATH); authQ.sifirla = null; toast('Şifren yenilendi, hoş geldin!'); onAuth(r); });
   } else if (authMode === 'wait') {
     if (!val('a-wmail')) return authErr({ error: 'E-postanı yaz.' });
     busy(true); socket.emit('waitlist', { email: val('a-wmail'), ref: authQ.davet || null }, r => { busy(false); if (r.error) return authErr(r);
@@ -4257,6 +4261,7 @@ const tfaVal = () => $('#tfa-f')?.value.trim() || undefined;
 function onAuth(res) {
   hideBoot();
   if (res.error) { vcResume = null; store.set('kanka-token', null); showAuth(); return setTimeout(() => $('#auth-err') && authErr(res), 0); }
+  if (location.pathname !== APP_PATH) try { history.replaceState(null, '', APP_PATH + location.search); } catch {}
   if (vcResume) setTimeout(resumeVoice, 300);
   S.minor = !!res.minor; if (res.needVeli) setTimeout(veliGate, 1500);
   store.set('kanka-token', res.token);
@@ -4267,7 +4272,7 @@ function onAuth(res) {
   if (res.ageGate) return showAgeGate(res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
   if (res.ice?.length) ICE.iceServers = res.ice;
   S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff;
-  { const be = new URLSearchParams(location.search).get('botekle'); if (be) { const iz = new URLSearchParams(location.search).get('izin') || ''; history.replaceState(null, '', '/'); setTimeout(() => showBotAuthorize(be, iz.split(',').filter(Boolean)), 900); } }
+  { const be = new URLSearchParams(location.search).get('botekle'); if (be) { const iz = new URLSearchParams(location.search).get('izin') || ''; history.replaceState(null, '', APP_PATH); setTimeout(() => showBotAuthorize(be, iz.split(',').filter(Boolean)), 900); } }
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
   $('#auth').style.display = 'none'; $('#app').style.display = 'flex';
@@ -4275,7 +4280,7 @@ function onAuth(res) {
   S.myEmail = res.myEmail || null; setTimeout(remindEmail, 1500); S.tfa = !!res.tfa; S.siteAdmin = !!res.siteAdmin; S.staff = res.staff || null; if (res.warns?.length) setTimeout(() => showWarns(res.warns), 1200); S.rc = res.reportCounts || { site: 0, servers: {} }; S.beta = !!res.beta; setGifOn(res.gif);
   renderMe(); renderModPill();
   S.onb = res.onb || { done: true }; S.presets = res.presets || []; onbWon = ''; renderOnb();
-  if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', '/'); setTimeout(onbRestart, 400); }
+  if (new URLSearchParams(location.search).has('rehber')) { history.replaceState(null, '', APP_PATH); setTimeout(onbRestart, 400); }
   else if (!S.onb.seen && !S.onb.done && !S.onb.dismissed) setTimeout(showOnbWelcome, 650);
   if (res.prefs?.at) { applyServerPrefs(res.prefs); if (!res.prefs.emoji && (eFav.length || Object.keys(eUse).length)) syncPrefs(); } // emoji favorileri eski hesaba ilk kez taşınır
   else socket.emit('prefs', prefsNow()); // sunucuda yoksa bu cihazın ayarlarını yükle
@@ -4283,12 +4288,12 @@ function onAuth(res) {
   pushSync(); setTimeout(pushNudge, 4000); setTimeout(() => pullBackup(), 15000);
   socket.emit('vis', document.visibilityState === 'visible');
   { const ac = new URLSearchParams(location.search).get('ac'), kim = new URLSearchParams(location.search).get('kim');
-    if (ac) { history.replaceState(null, '', '/'); setTimeout(() => openFromNotif({ ch: ac === 'arkadaslar' ? null : ac, friend: ac === 'arkadaslar', from: kim, dm: /^(dm|g):/.test(ac) }), 300); } }
+    if (ac) { history.replaceState(null, '', APP_PATH); setTimeout(() => openFromNotif({ ch: ac === 'arkadaslar' ? null : ac, friend: ac === 'arkadaslar', from: kim, dm: /^(dm|g):/.test(ac) }), 300); } }
   const odaQ = new URLSearchParams(location.search).get('oda');
-  if (odaQ) { history.replaceState(null, '', '/'); const f = roomFind(odaQ); if (f && voiceLike(f.c.type)) { selectServer(f.sv.id); setTimeout(() => joinVoice(odaQ), 400); return; } if (f) return selectServer(f.sv.id, odaQ); toast('Bu odayı göremiyorsun'); }
-  if (authQ.kod) { authQ.kod = null; if (!QS.get('davet')) history.replaceState(null, '', '/'); }
+  if (odaQ) { history.replaceState(null, '', APP_PATH); const f = roomFind(odaQ); if (f && voiceLike(f.c.type)) { selectServer(f.sv.id); setTimeout(() => joinVoice(odaQ), 400); return; } if (f) return selectServer(f.sv.id, odaQ); toast('Bu odayı göremiyorsun'); }
+  if (authQ.kod) { authQ.kod = null; if (!QS.get('davet')) history.replaceState(null, '', APP_PATH); }
   const invite = new URLSearchParams(location.search).get('davet');
-  if (invite) { history.replaceState(null, '', '/'); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
+  if (invite) { history.replaceState(null, '', APP_PATH); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
   const last = S.view === 'dm' && S.channel ? null : S.server && S.servers.find(s => s.id === S.server.id);
   if (S.view === 'dm' && S.channel) openChat(S.channel.id, S.channel.with);
   else selectServer((last || S.servers[0]).id, S.channel?.id);
@@ -4316,7 +4321,7 @@ function resumeVoice() {
   muted = r.muted || r.deaf; deaf = r.deaf; deafWasMuted = r.deafWasMuted; applyDeaf(); applyMute();
   joinVoiceNow(r.ch, r).then(ok => { if (!ok) return toast('Sesli odaya geri bağlanılamadı, tekrar katıl'); if (r.reload) { toast('🎧 Sesli odaya geri döndün'); unlockAudio(); } });
 }
-async function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); await Promise.race([E2E.wipe(), new Promise(r => setTimeout(r, 800))]); location.reload(); }
+async function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); await Promise.race([E2E.wipe(), new Promise(r => setTimeout(r, 800))]); location.replace('/login'); }
 // Resim seç ve yükle. Büyük fotoğraflar küçültülür, telefonun HEIC/AVIF/BMP gibi biçimleri tarayıcı açabiliyorsa WebP'ye çevrilir.
 // (Eskiden 4,5 MB üstü resimler bağlantı sınırına takılıp hiçbir hata göstermeden yüklenmiyordu.)
 function readImageFile(f, max = 1920) {
@@ -11347,7 +11352,7 @@ function chMenu(s, c, x, y, lite) {
     items.push(nb('all', 'Tüm mesajlarda bildir'), nb('mentions', 'Sadece @bahsedilince'), nb('none', 'Odayı sessize al'), '-');
   }
   if (c.news) items.push({ t: 'Duyuruları takip et', icon: 'megaphone', act: () => showFollow(s, c) });
-  items.push({ t: 'Bağlantıyı kopyala', icon: 'link', act: () => navigator.clipboard?.writeText(`${PUB}/?oda=${c.id}`).then(() => toast('Bağlantı kopyalandı')) });
+  items.push({ t: 'Bağlantıyı kopyala', icon: 'link', act: () => navigator.clipboard?.writeText(`${PUB}/app?oda=${c.id}`).then(() => toast('Bağlantı kopyalandı')) });
   if (!lite) items.push('-', { t: 'Odayı sil', icon: 'trash', danger: true, act: () => askDeleteCh(s, c) });
   ctxMenu(x, y, items);
 }

@@ -2,6 +2,10 @@
 <html lang="tr">
 <head>
 <script>
+  // Ana ekrana eklenmiş (uygulama gibi açılan) Kanka doğrudan uygulamaya gitsin
+  try { if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) location.replace('/app'); } catch (e) {}
+</script>
+<script>
   // Reklam ölçümü (Google Tag Manager) sadece ziyaretçi çerezleri kabul ederse yüklenir
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -21,7 +25,7 @@
 <meta property="og:title" content="Takılmak için bir yer. Kanka Chat.">
 <meta property="og:description" content="Sesli odalar, ekran paylaşımı, sunucular. VPN'siz, ücretsiz, Türkçe.">
 <meta property="og:image" content="https://kankahq.com/marka/uygulama.jpg">
-<link rel="canonical" href="https://kankahq.com/sesli-sohbet">
+<link rel="canonical" href="https://kankahq.com/">
 <link rel="icon" href="/favicon.png">
 <style>
   :root { --bg:#09090b; --panel:#111114; --card:#18181c; --line:#27272e; --ink:#f4f4f5; --muted:#a1a1aa; --accent:#d4ff00; --accent2:#a3e635; --green:#3fcf8e; }
@@ -147,7 +151,7 @@
   <div class="wrap">
     <a class="brand" href="/"><img src="/icon-192.png" alt="">Kanka Chat</a>
     <div class="links"><a href="#sesli">Sesli odalar</a><a href="#sunucu">Sunucular</a><a href="#her-yerde">Her yerde</a><a href="#sss">SSS</a></div>
-    <a class="pill light" href="/">Giriş yap</a>
+    <a class="pill light" href="/login" data-login>Giriş yap</a>
   </div>
 </nav>
 
@@ -158,8 +162,8 @@
     <h1>Kankalarınla <em>takılacağın</em> yer</h1>
     <p class="lead">Arkadaş grubun, oyun ekibin ya da koca bir topluluk. Kanka Chat'te sesli odaya gir, ekranını paylaş, saatlerce sohbet et. Kurulum yok, VPN yok, ücret yok.</p>
     <div class="ctas">
-      <a class="pill hot big" data-cta href="/?kayit=1">Ücretsiz katıl →</a>
-      <a class="pill ghost big" href="/">Tarayıcıda aç</a>
+      <a class="pill hot big" data-cta href="/register">Ücretsiz katıl →</a>
+      <a class="pill ghost big" href="/app" data-open>Tarayıcıda aç</a>
     </div>
     <div class="note">Kart bilgisi istenmez · 30 saniyede hesap</div>
     <div class="stage">
@@ -241,7 +245,7 @@
     <img class="mark" src="/marka/hq-simge.png" alt="">
     <h2 class="reveal">Sohbete hazır mısın?</h2>
     <p class="reveal">Kankaların seni bekliyor. Hesap aç, sunucunu kur, linki paylaş.</p>
-    <a class="pill hot big" data-cta href="/?kayit=1">Ücretsiz katıl →</a>
+    <a class="pill hot big" data-cta href="/register">Ücretsiz katıl →</a>
   </div>
 </section>
 
@@ -257,8 +261,15 @@
 <script>
   // reklam ve kaynak bilgisini (utm, gclid) kayıt sayfasına taşı
   (function () {
-    var q = new URLSearchParams(location.search); q.set('kayit', '1'); q.set('lp', 'sesli-sohbet');
-    document.querySelectorAll('[data-cta]').forEach(function (a) { a.href = '/?' + q.toString(); });
+    var q = new URLSearchParams(location.search); q.set('lp', location.pathname === '/' ? 'ana' : location.pathname.replace(/^\//, ''));
+    document.querySelectorAll('[data-cta]').forEach(function (a) { a.href = '/register?' + q.toString(); });
+    // Zaten giriş yapmışsa: "Giriş yap" yerine uygulamayı aç
+    var t = null; try { t = localStorage.getItem('kanka-token'); } catch (e) {}
+    if (t) {
+      document.querySelectorAll('[data-login]').forEach(function (a) { a.textContent = "Kanka'yı aç"; a.href = '/app'; });
+      document.querySelectorAll('[data-cta]').forEach(function (a) { a.textContent = "Kanka'yı aç →"; a.href = '/app'; });
+      document.querySelectorAll('[data-open]').forEach(function (a) { a.hidden = true; });
+    }
   })();
   // menü kaydırınca koyulaşsın
   var nav = document.getElementById('nav');
