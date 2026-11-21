@@ -326,7 +326,8 @@ app.post('/api/dosya', express.raw({ type: () => true, limit: FILE_MAX + 1024 })
   // İçerikten tür doğrulama: resim diyorsa gerçekten resim olsun
   const sig = buf.subarray(0, 12).toString('hex');
   const realImg = sig.startsWith('89504e47') ? 'image/png' : sig.startsWith('ffd8ff') ? 'image/jpeg' : sig.startsWith('47494638') ? 'image/gif' : sig.startsWith('52494646') && buf.subarray(8, 12).toString() === 'WEBP' ? 'image/webp' : null;
-  if (mime.startsWith('image/')) mime = realImg || 'application/octet-stream';
+  if (realImg) mime = realImg; // tür başlığı boş/yanlış gelse de (bazı Android galerileri) içerik resimse resimdir
+  else if (mime.startsWith('image/')) mime = 'application/octet-stream';
   const kind = fileKind(mime, name), fid = crypto.randomBytes(12).toString('hex');
   fs.writeFileSync(path.join(FILES, fid), buf);
   u.upDay.b += buf.length;

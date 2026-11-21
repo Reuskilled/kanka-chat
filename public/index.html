@@ -7577,15 +7577,32 @@ const BAD_EXT_C = /\.(exe|msi|bat|cmd|com|scr|ps1|vbs|vbe|js|jse|wsf|wsh|hta|cpl
 let att = [], attSeq = 0;
 const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(n >= 10485760 ? 0 : 1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
 const extOf = n => (/\.([a-z0-9]{1,5})$/i.exec(n || '')?.[1] || '').toUpperCase();
+// Telefondan gelen fotoğraf: HEIC/HEIF/AVIF ya da çok büyükse cihazda JPG/WebP'ye küçültülür (hem her yerde açılsın hem mobil veride hızlı yüklensin)
+const IMG_EXT = /\.(jpe?g|png|gif|webp|heic|heif|avif|bmp)$/i;
+const isImgFile = f => /^image\//.test(f.type) || (!f.type && IMG_EXT.test(f.name || ''));
+async function prepImage(f) {
+  const heic = /^image\/(heic|heif|avif|bmp)$/i.test(f.type) || /\.(heic|heif|avif|bmp)$/i.test(f.name || '');
+  const plain = /^image\/(png|jpeg|webp)$/.test(f.type) || (!f.type && /\.(jpe?g|png|webp)$/i.test(f.name || ''));
+  if (!heic && !(plain && f.size > 6 * 1024 * 1024)) return f;
+  toast('Fotoğraf hazırlanıyor…');
+  let img; try { img = await createImageBitmap(f); } catch { try { img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(f); }); } catch { return f; } }
+  const k = Math.min(1, 2560 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  let blob = await new Promise(r => c.toBlob(r, 'image/webp', .88)); if (!blob || blob.type !== 'image/webp') blob = await new Promise(r => c.toBlob(r, 'image/jpeg', .88));
+  if (!blob) return f;
+  const ext = blob.type === 'image/webp' ? 'webp' : 'jpg', base = (f.name || 'foto').replace(/\.[^.]+$/, '') || 'foto';
+  return new File([blob], `${base}.${ext}`, { type: blob.type });
+}
 function addFiles(list) {
   if (S.channel?.canAttach === false) return toast('Bu odada dosya gönderemezsin');
   for (const f of [...list]) {
     if (att.length >= 10) { toast('Bir mesajda en çok 10 dosya gönderebilirsin'); break; }
-    if (f.size > 25 * 1024 * 1024) { toast(`${f.name}: dosya en fazla 25 MB olabilir`, null, false, { type: 'err' }); continue; }
+    if (f.size > (isImgFile(f) ? 80 : 25) * 1024 * 1024) { toast(`${f.name}: dosya en fazla 25 MB olabilir`, null, false, { type: 'err' }); continue; } // fotoğraflar önce küçültülür
     if (BAD_EXT_C.test(f.name)) { toast(`${f.name}: bu dosya türü güvenlik nedeniyle gönderilemez`, null, false, { type: 'err' }); continue; }
-    const a = { k: ++attSeq, f, name: f.name || 'resim.png', size: f.size, img: /^image\/(png|jpeg|gif|webp)$/.test(f.type), st: 'up', p: 0 };
-    if (a.img) a.prev = URL.createObjectURL(f);
-    att.push(a); uploadOne(a);
+    const a = { k: ++attSeq, f, name: f.name || 'foto.jpg', size: f.size, img: false, st: 'up', p: 0 };
+    att.push(a);
+    if (isImgFile(f)) prepImage(f).then(g => { if (g.size > 25 * 1024 * 1024) { a.st = 'err'; a.err = 'Fotoğraf çok büyük'; toast(`${a.name}: fotoğraf küçültülemedi, 25 MB'tan büyük`, null, false, { type: 'err' }); return renderAttach(); } a.f = g; a.name = g.name || a.name; a.size = g.size; a.img = /^image\/(png|jpeg|gif|webp)$/.test(g.type) || IMG_EXT.test(a.name); if (a.img) a.prev = URL.createObjectURL(g); renderAttach(); uploadOne(a); });
+    else uploadOne(a);
   }
   renderAttach(); $('#input').focus();
 }
@@ -7599,10 +7616,10 @@ function uploadOne(a) {
   x.setRequestHeader('Authorization', 'Bearer ' + store.get('kanka-token'));
   x.setRequestHeader('Content-Type', 'application/octet-stream');
   x.setRequestHeader('X-File-Name', encodeURIComponent(a.name));
-  x.setRequestHeader('X-File-Type', a.f.type || 'application/octet-stream');
+  x.setRequestHeader('X-File-Type', a.f.type || (IMG_EXT.test(a.name) ? 'image/jpeg' : 'application/octet-stream'));
   x.upload.onprogress = e => { if (e.lengthComputable) { a.p = e.loaded / e.total; const bar = document.querySelector(`#attach [data-k="${a.k}"] .at-bar i`); if (bar) bar.style.width = Math.round(a.p * 100) + '%'; } };
   x.onload = () => { let r = {}; try { r = JSON.parse(x.responseText); } catch {} if (x.status === 200 && r.ok) { a.st = 'ok'; a.id = r.id; } else { a.st = 'err'; a.err = r.error || 'Yüklenemedi'; toast(`${a.name}: ${a.err}`, null, false, { type: 'err' }); } renderAttach(); attWaiter?.(); };
-  x.onerror = () => { a.st = 'err'; a.err = 'Bağlantı hatası'; renderAttach(); attWaiter?.(); };
+  x.onerror = () => { a.st = 'err'; a.err = 'Bağlantı koptu, tekrar dene'; toast(`${a.name}: yüklenemedi, bağlantını kontrol edip tekrar dene`, null, false, { type: 'err' }); renderAttach(); attWaiter?.(); };
   x.send(a.f);
 }
 function removeAtt(k) { const a = att.find(x => x.k === k); if (!a) return; a.xhr?.abort(); if (a.prev) URL.revokeObjectURL(a.prev); att = att.filter(x => x.k !== k); renderAttach(); }
