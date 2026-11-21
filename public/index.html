@@ -2335,6 +2335,13 @@
   .frames button.lock { opacity: .55; cursor: not-allowed; }
   .frames button em { position: absolute; top: 6px; right: 6px; font-style: normal; font-size: 10.5px; font-weight: 900; padding: 2px 6px; border-radius: 99px; background: rgba(0,0,0,.4); color: var(--muted); }
   .frames .pav .av { border-width: 4px; }
+  .peffects { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
+  .peffects button { display: grid; justify-items: center; gap: 6px; padding: 7px 6px 8px; border-radius: 14px; background: var(--card); border: 1.5px solid var(--line); color: var(--ink); font-weight: 800; font-size: 11.5px; position: relative; transition: transform .14s, border-color .15s; }
+  .peffects button:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .peffects button.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .peffects .pe-pv { width: 100%; height: 48px; border-radius: 10px; display: grid; place-items: center; font-size: 19px; position: relative; overflow: hidden; }
+  .pe-tag { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 99px; background: var(--accent); color: var(--on-accent); font-size: 10px; font-weight: 900; letter-spacing: .04em; vertical-align: middle; }
+  .pfx-cv { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; border-radius: inherit; }
   .bnr { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .bnr .bprev { width: 180px; height: 60px; border-radius: 12px; border: 1px solid var(--line); }
   .socin { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -4379,8 +4386,8 @@ function showSettings(tab) {
   if (tab && !$('#modal').classList.contains('open')) msetDirect = true;
   tab ||= 'profile';
   const u = S.users[S.me];
-  const KEYS = ['avatar', 'status', 'bio', 'banner', 'color', 'birthday', 'music', 'displayName', 'pronouns', 'theme', 'bannerImg', 'frame', 'socials'];
-  const OBJ = { theme: null, socials: {}, frame: null, bannerImg: null, avatar: null, banner: null };
+  const KEYS = ['avatar', 'status', 'bio', 'banner', 'color', 'birthday', 'music', 'displayName', 'pronouns', 'theme', 'bannerImg', 'frame', 'effect', 'socials'];
+  const OBJ = { theme: null, socials: {}, frame: null, effect: null, bannerImg: null, avatar: null, banner: null };
   const initDraft = () => Object.fromEntries(KEYS.map(k => [k, k in OBJ ? (u[k] && typeof u[k] === 'object' ? JSON.parse(JSON.stringify(u[k])) : u[k] || OBJ[k]) : u[k] || '']));
   const draft = initDraft();
   const norm = (k, v) => JSON.stringify(k === 'socials' ? Object.fromEntries(Object.entries(v || {}).filter(([, x]) => x)) : v || (k in OBJ ? null : ''));
@@ -4394,6 +4401,7 @@ function showSettings(tab) {
     const pu = { ...u, ...draft };
     $('#st-card').innerHTML = profSideHTML(S.me, pu, { preview: true }) + `<div class="pf-prevabout">${pu.bio ? `<div class="pf-bio">${fmt(pu.bio)}</div>` : ''}${Object.values(pu.socials || {}).some(Boolean) ? `<div class="psocs">${socialsHTML({ socials: Object.fromEntries(Object.entries(pu.socials).filter(([, x]) => x)) })}</div>` : ''}</div>`;
     $('#st-card .pf-actslot').innerHTML = `<button class="btnp" tabindex="-1">${ic('chat')} Mesaj</button><button class="btns2" tabindex="-1">${ic('userplus')}</button>`;
+    mountProfileEffect($('#st-card .pf-side'), pu.effect);
     fillBars();
     if (!$('.st-save')?.classList.contains('saved')) $('.st-save')?.classList.toggle('dirty', dirty());
   };
@@ -4406,6 +4414,8 @@ function showSettings(tab) {
       <div class="st-sec">Görünüm</div>
       <div class="st-field"><label>Avatar çerçevesi</label><div class="frames">${FRAMES.map(f => { const open = frameOpen(u, f), on = (draft.frame || 'none') === f[0];
         return `<button type="button" data-fr="${f[0]}" class="${on ? 'on' : ''} ${open ? '' : 'lock'}" title="${open ? f[1] : f[2] < 0 ? 'İlk 100 kullanıcıya özel' : 'Genel seviyen ' + f[2] + ' olunca açılır (şu an ' + (u.level || 1) + '). Sunucu seviyeleri sayılmaz.'}">${pAv(S.me, { ...u, ...draft, frame: f[0] === 'none' ? null : f[0] }, 52, false)}<span>${f[1]}</span>${open ? '' : `<em>${f[2] < 0 ? '🔒' : 'Sv ' + f[2]}</em>`}</button>`; }).join('')}</div></div>
+      ${S.staff === 'owner' ? `<div class="st-field"><label>Profil efekti <span class="pe-tag">KURUCU</span></label><div class="peffects" id="st-peffects">${PEFFECTS.map(ef => { const on = (draft.effect || 'none') === ef[0];
+        return `<button type="button" data-ef="${ef[0]}" class="${on ? 'on' : ''}" title="${ef[1]}"><div class="pe-pv" style="background:${ef[3]};color:${ef[4]}">${ef[2]}</div><span>${ef[1]}</span></button>`; }).join('')}</div><p class="hint">Profil kartın açıldığında üstünde canlı oynar. Sadece Kurucu rütbesine özeldir.</p></div>` : ''}
       <div class="st-field"><label>Afiş</label><div class="bnr"><div class="bprev" style="${banStyle(S.me, { ...u, ...draft })}"></div><button class="btns2" id="st-bimg">${ic('image')} Resim / GIF yükle</button>${draft.bannerImg ? `<button class="btns2" id="st-brm">Resmi kaldır</button>` : ''}</div>${draft.bannerImg ? '' : '<div class="swatches" id="sw-banner" style="margin-top:10px"></div>'}</div>
       <div class="st-field"><label>Profil teması</label><div class="themes"><button type="button" class="none ${draft.theme ? '' : 'on'}" data-th="none" title="Tema yok">${ic('x')}</button>${PTHEMES.map((t, i) => `<button type="button" data-th="${i}" class="${JSON.stringify(draft.theme) === JSON.stringify(t) ? 'on' : ''}" style="background:linear-gradient(160deg, ${t[0]}, ${t[1]})"></button>`).join('')}
         <label>Özel <input type="color" id="th-a" value="${draft.theme?.[0] || '#ff8a4c'}"><input type="color" id="th-b" value="${draft.theme?.[1] || '#5b2a86'}"></label></div><p class="hint">Tema profil kartının tamamını boyar.</p></div>
@@ -4468,6 +4478,7 @@ function showSettings(tab) {
       $('#st-dn').oninput = e => { draft.displayName = e.target.value; preview(); };
       $('#st-pr').oninput = e => { draft.pronouns = e.target.value; preview(); };
       $('#st-main').querySelectorAll('[data-fr]').forEach(b => b.onclick = () => { if (b.classList.contains('lock')) return toast(b.title); draft.frame = b.dataset.fr === 'none' ? null : b.dataset.fr; open('profile'); preview(); });
+      $('#st-main').querySelectorAll('[data-ef]').forEach(b => b.onclick = () => { draft.effect = b.dataset.ef === 'none' ? null : b.dataset.ef; $('#st-main').querySelectorAll('[data-ef]').forEach(x => x.classList.toggle('on', x === b)); preview(); });
       $('#st-bimg').onclick = () => readImage(url => { draft.bannerImg = url; open('profile'); preview(); });
       if ($('#st-brm')) $('#st-brm').onclick = () => { draft.bannerImg = null; open('profile'); preview(); };
       $('#st-main').querySelectorAll('[data-th]').forEach(b => b.onclick = () => { draft.theme = b.dataset.th === 'none' ? null : [...PTHEMES[+b.dataset.th]]; open('profile'); preview(); });
@@ -4485,7 +4496,7 @@ function showSettings(tab) {
       $('#st-music').oninput = e => { draft.music = e.target.value.trim(); preview(); };
       $('#st-reset').onclick = () => { Object.assign(draft, initDraft()); open('profile'); preview(); };
       $('#st-saveb').onclick = () => socket.emit('updateProfile', { avatar: draft.avatar, status: draft.status, bio: draft.bio, banner: draft.banner || '', color: draft.color, birthday: draft.birthday || '', music: draft.music || '',
-        displayName: draft.displayName, pronouns: draft.pronouns, theme: draft.theme, bannerImg: draft.bannerImg, frame: draft.frame || 'none', socials: draft.socials }, r => {
+        displayName: draft.displayName, pronouns: draft.pronouns, theme: draft.theme, bannerImg: draft.bannerImg, frame: draft.frame || 'none', ...(S.staff === 'owner' ? { effect: draft.effect || 'none' } : {}), socials: draft.socials }, r => {
         if (r.error) return toast(r.error);
         const bar = $('.st-save'); flashSaved(bar); Object.assign(u, JSON.parse(JSON.stringify(draft))); setTimeout(preview, 1400); toast('Profilin kaydedildi');
       });
@@ -8193,6 +8204,170 @@ const SOCIAL_META = {
   spotify: ['Spotify', '#1ed760', h => `https://open.spotify.com/user/${h}`],
 };
 const PTHEMES = [['#ff8a4c', '#5b2a86'], ['#f6c445', '#e5484d'], ['#2fd3c3', '#4a3aff'], ['#ff6fae', '#7c5cff'], ['#4cc38a', '#1d4e89'], ['#1f1a17', '#5a3e2e'], ['#e7e9ea', '#8b6b5a'], ['#ff3d00', '#1a120c']];
+const PEFFECTS = [
+  ['none', 'Yok', '⊘', '#18181c', '#71717a'],
+  ['glitch', 'Siber Glitch', '▓', 'linear-gradient(135deg,#0d1404,#20060c)', '#d4ff00'],
+  ['matrix', 'Asit Akış', '⋮', 'linear-gradient(180deg,#091204,#142605)', '#d4ff00'],
+  ['starry', 'Yıldızlı', '✦', 'linear-gradient(135deg,#070b1a,#12224d)', '#93c5fd'],
+  ['embers', 'Kor Alev', '🔥', 'linear-gradient(180deg,#1a0a05,#3b1206)', '#ff6b2b'],
+  ['lightning', 'Şimşek', '⚡', 'linear-gradient(135deg,#061322,#0f2947)', '#38bdf8'],
+  ['snow', 'Kar Yağışı', '❄', 'linear-gradient(135deg,#0f172a,#1e293b)', '#e2e8f0'],
+  ['rain', 'Yağmur', '⛆', 'linear-gradient(180deg,#0a1220,#16253d)', '#60a5fa'],
+  ['sakura', 'Sakura', '✿', 'linear-gradient(135deg,#210d19,#3d162c)', '#f472b6'],
+  ['sparkles', 'Prizma', '✧', 'linear-gradient(135deg,#181429,#26240c)', '#fde047'],
+];
+function mountProfileEffect(el, fx) {
+  if (!el) return;
+  el.querySelector(':scope > .pfx-cv')?.remove();
+  if (!fx || fx === 'none' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv = document.createElement('canvas');
+  cv.className = 'pfx-cv';
+  cv.setAttribute('aria-hidden', 'true');
+  el.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  if (!ctx) return;
+  let W = Math.max(180, el.clientWidth || 300), H = Math.max(220, el.clientHeight || 400);
+  cv.width = W; cv.height = H;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  let pts = [], bolt = null, frame = 0;
+  if (fx === 'starry') {
+    for (let i = 0; i < 40; i++) pts.push({ x: rnd(0, W), y: rnd(0, H * 0.85), r: rnd(0.7, 1.8), ph: rnd(0, 6.28), sp: rnd(0.03, 0.08) });
+    pts.shoot = { x: W + 40, y: 20, vx: -5, vy: 2.5, life: 0 };
+  } else if (fx === 'snow') {
+    for (let i = 0; i < 36; i++) pts.push({ x: rnd(0, W), y: rnd(0, H), r: rnd(1.2, 3.1), vy: rnd(0.5, 1.45), vx: rnd(-0.4, 0.4), ph: rnd(0, 6.28) });
+  } else if (fx === 'embers') {
+    for (let i = 0; i < 34; i++) pts.push({ x: rnd(0, W), y: rnd(H * 0.4, H + 20), r: rnd(1.2, 3), vy: rnd(-1.8, -0.6), vx: rnd(-0.5, 0.5), life: rnd(0.2, 1) });
+  } else if (fx === 'rain') {
+    for (let i = 0; i < 46; i++) pts.push({ x: rnd(-20, W + 20), y: rnd(0, H), len: rnd(10, 20), vy: rnd(5.5, 9.5) });
+  } else if (fx === 'sakura') {
+    for (let i = 0; i < 18; i++) pts.push({ x: rnd(0, W), y: rnd(0, H), s: rnd(4, 7.5), vx: rnd(-0.8, -0.2), vy: rnd(0.8, 1.75), rot: rnd(0, 6.28), vr: rnd(-0.06, 0.06), c: Math.random() < 0.5 ? '#f472b6' : '#fbcfe8' });
+  } else if (fx === 'matrix') {
+    const cols = Math.max(10, Math.floor(W / 18));
+    for (let i = 0; i < cols; i++) pts.push({ x: i * 18 + 6, y: rnd(-120, H), vy: rnd(2.2, 4.5), len: rnd(4, 9) });
+  } else if (fx === 'sparkles') {
+    for (let i = 0; i < 24; i++) pts.push({ x: rnd(10, W - 10), y: rnd(10, H - 10), s: rnd(3, 8), ph: rnd(0, 6.28), sp: rnd(0.05, 0.11), c: ['#d4ff00', '#ffffff', '#00f0ff', '#fde047'][i % 4] });
+  }
+  const makeBolt = () => {
+    const segs = []; let x = rnd(W * 0.2, W * 0.8), y = 0;
+    while (y < H * 0.78) {
+      const nx = x + rnd(-22, 22), ny = y + rnd(18, 34);
+      segs.push([x, y, nx, ny, 2.2]);
+      if (Math.random() < 0.35) segs.push([nx, ny, nx + rnd(-26, 26), ny + rnd(16, 30), 1.1]);
+      x = nx; y = ny;
+    }
+    return { segs, life: 1 };
+  };
+  const star4 = (x, y, s, col, a) => {
+    ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = col; ctx.translate(x, y); ctx.beginPath();
+    ctx.moveTo(0, -s); ctx.quadraticCurveTo(0, 0, s, 0); ctx.quadraticCurveTo(0, 0, 0, s);
+    ctx.quadraticCurveTo(0, 0, -s, 0); ctx.quadraticCurveTo(0, 0, 0, -s); ctx.fill(); ctx.restore();
+  };
+  const tick = () => {
+    if (!cv.isConnected) return;
+    frame++;
+    if (frame % 30 === 0 && el.clientWidth > 60 && (Math.abs(el.clientWidth - W) > 8 || Math.abs(el.clientHeight - H) > 8)) {
+      W = cv.width = el.clientWidth; H = cv.height = el.clientHeight;
+    }
+    ctx.clearRect(0, 0, W, H);
+    if (fx === 'glitch') {
+      const scanY = (frame * 2.2) % H;
+      ctx.fillStyle = 'rgba(212,255,0,0.035)'; ctx.fillRect(0, scanY, W, 3);
+      ctx.fillStyle = 'rgba(212,255,0,0.22)'; ctx.fillRect(0, scanY, W, 1);
+      if (frame % 48 < 8) {
+        for (let i = 0; i < 4; i++) {
+          const gy = rnd(8, H - 18), gh = rnd(2, 7), gw = rnd(30, Math.min(140, W * 0.5)), gx = rnd(0, Math.max(1, W - gw));
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(212,255,0,0.55)' : 'rgba(255,30,66,0.55)';
+          ctx.fillRect(gx, gy, gw, gh);
+        }
+        ctx.strokeStyle = 'rgba(212,255,0,0.45)'; ctx.lineWidth = 2; ctx.strokeRect(1, 1, W - 2, H - 2);
+      }
+    } else if (fx === 'matrix') {
+      ctx.font = 'bold 11px ui-monospace, Consolas, monospace';
+      const chars = 'KANKA01HQ';
+      for (const p of pts) {
+        p.y += p.vy;
+        if (p.y - p.len * 13 > H) p.y = rnd(-60, -10);
+        for (let j = 0; j < p.len; j++) {
+          const cy = p.y - j * 13;
+          if (cy < -10 || cy > H + 10) continue;
+          const a = (1 - j / p.len) * 0.65;
+          ctx.fillStyle = j === 0 ? `rgba(255,255,255,${a + 0.25})` : `rgba(212,255,0,${a})`;
+          ctx.fillText(chars[(Math.floor(frame / 4) + j + Math.floor(p.x)) % chars.length], p.x, cy);
+        }
+      }
+    } else if (fx === 'starry') {
+      const g = ctx.createLinearGradient(0, 0, 0, 85);
+      g.addColorStop(0, 'rgba(59,130,246,0.22)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, 85);
+      for (const p of pts) {
+        p.ph += p.sp; const a = 0.25 + 0.75 * Math.abs(Math.sin(p.ph));
+        ctx.fillStyle = `rgba(224,242,254,${a})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      }
+      const s = pts.shoot;
+      if (s.life <= 0 && Math.random() < 0.015) { s.x = rnd(W * 0.4, W); s.y = rnd(8, 70); s.life = 1; }
+      if (s.life > 0) {
+        s.x += s.vx; s.y += s.vy; s.life -= 0.03;
+        const sg = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * 8, s.y - s.vy * 8);
+        sg.addColorStop(0, `rgba(255,255,255,${s.life})`); sg.addColorStop(1, 'rgba(147,197,253,0)');
+        ctx.strokeStyle = sg; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx * 8, s.y - s.vy * 8); ctx.stroke();
+      }
+    } else if (fx === 'embers') {
+      const eg = ctx.createLinearGradient(0, H, 0, H - 95);
+      eg.addColorStop(0, 'rgba(255,90,20,0.34)'); eg.addColorStop(1, 'rgba(255,90,20,0)');
+      ctx.fillStyle = eg; ctx.fillRect(0, H - 95, W, 95);
+      for (const p of pts) {
+        p.y += p.vy; p.x += p.vx + Math.sin(frame * 0.05 + p.y * 0.04) * 0.35; p.life -= 0.008;
+        if (p.y < -10 || p.life <= 0) { p.x = rnd(0, W); p.y = H + rnd(0, 20); p.life = rnd(0.6, 1); }
+        ctx.fillStyle = p.life > 0.5 ? `rgba(255,190,60,${p.life})` : `rgba(255,80,30,${p.life})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (fx === 'lightning') {
+      const tg = ctx.createLinearGradient(0, 0, 0, 70);
+      tg.addColorStop(0, 'rgba(56,189,248,0.22)'); tg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = tg; ctx.fillRect(0, 0, W, 70);
+      if (!bolt && Math.random() < 0.03) bolt = makeBolt();
+      if (bolt) {
+        if (bolt.life > 0.72) { ctx.fillStyle = `rgba(186,230,253,${(bolt.life - 0.72) * 0.7})`; ctx.fillRect(0, 0, W, H); }
+        ctx.save(); ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 12;
+        for (const [x1, y1, x2, y2, lw] of bolt.segs) {
+          ctx.strokeStyle = `rgba(224,242,254,${bolt.life})`; ctx.lineWidth = lw;
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        }
+        ctx.restore(); bolt.life -= 0.07; if (bolt.life <= 0) bolt = null;
+      }
+    } else if (fx === 'snow') {
+      for (const p of pts) {
+        p.y += p.vy; p.ph += 0.025; p.x += p.vx + Math.sin(p.ph) * 0.35;
+        if (p.y > H + 6) { p.y = -6; p.x = rnd(0, W); }
+        ctx.fillStyle = 'rgba(255,255,255,0.78)';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (fx === 'rain') {
+      ctx.strokeStyle = 'rgba(147,197,253,0.42)'; ctx.lineWidth = 1.2;
+      for (const p of pts) {
+        p.y += p.vy; p.x -= p.vy * 0.22;
+        if (p.y > H + 15) { p.y = -15; p.x = rnd(0, W + 50); }
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.len * 0.22, p.y + p.len); ctx.stroke();
+      }
+    } else if (fx === 'sakura') {
+      for (const p of pts) {
+        p.x += p.vx + Math.sin(frame * 0.03 + p.y * 0.02) * 0.45; p.y += p.vy; p.rot += p.vr;
+        if (p.y > H + 12 || p.x < -12) { p.x = rnd(20, W + 20); p.y = -10; }
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.c; ctx.globalAlpha = 0.85;
+        ctx.beginPath(); ctx.ellipse(0, 0, p.s, p.s * 0.52, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
+    } else if (fx === 'sparkles') {
+      for (const p of pts) {
+        p.ph += p.sp; const a = Math.max(0, Math.sin(p.ph));
+        if (a > 0.05) star4(p.x, p.y, p.s * a, p.c, a * 0.9);
+      }
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
 const themeOf = u => u?.theme?.length === 2 ? u.theme : null;
 const banStyle = (n, u) => u?.bannerImg ? `background:url('${esc(u.bannerImg)}') center/cover` : themeOf(u) ? `background:linear-gradient(135deg, ${u.theme[0]}, ${u.theme[1]})` : bannerBg(n, u);
 const dotColor = n => S.online.has(n) ? STATUS[stOf(n)][1] : '#80848e';
@@ -8235,6 +8410,7 @@ function showProfile(n, tab = 'about') {
   let mut = null;
   const tabs = () => [['about', 'Hakkında'], ['act', 'Aktivite'], ...(me ? [] : [['servers', `Ortak sunucular${mut ? ` · ${mut.servers.length}` : ''}`], ['friends', `Ortak arkadaşlar${mut ? ` · ${mut.friends.length}` : ''}`]])];
   modal(`<button class="pc-close" id="mx" aria-label="Kapat">${ic('x')}</button><div class="pf">${profSideHTML(n, u, { srv })}<div class="pf-main"><nav class="pf-tabs" id="pf-tabs"></nav><div class="pf-body" id="pf-body"></div></div></div>`, 'pcard2');
+  mountProfileEffect($('.pf .pf-side'), u.effect);
   $('.pf-actslot').innerHTML = me ? `<button class="btnp" id="pf-set">${ic('edit')} Profili düzenle</button>`
     : `<button class="btnp" id="pf-dm">${ic('chat')} Mesaj</button>${friendBtn(n)}<button class="btns2 pf-more" id="pf-more" aria-label="Daha fazla">${ic('more')}</button>`;
   const draw = () => {
@@ -8404,6 +8580,7 @@ function voicePop(n, anchor, chId) {
       ${(live && myVoice === chId && !me) || me || inVc ? `<div class="vp-acts">${live && myVoice === chId && !me ? `<button class="btnp" id="vp-watch">${ic('screen')} Yayını izle</button>` : ''}
         ${me ? `<button class="btnp" id="vp-edit">${ic('edit')} Profili düzenle</button>` : inVc ? `<button class="btns2" id="vp-dm">${ic('chat')} Mesaj</button>` : ''}</div>` : ''}</div>`;
   document.body.appendChild(p);
+  mountProfileEffect(p, u.effect);
   const r = anchor.getBoundingClientRect(), W = innerWidth, H = innerHeight, pw = p.offsetWidth, ph = p.offsetHeight;
   if (W < 760) { p.classList.add('sheet'); }
   else { const left = r.right + 12 + pw > W - 10 ? r.left - pw - 12 : r.right + 12; p.style.left = Math.max(10, left) + 'px'; p.style.top = Math.max(10, Math.min(r.top + r.height / 2 - 70, H - ph - 10)) + 'px'; }

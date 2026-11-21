@@ -913,11 +913,13 @@ function srvXp(s, name, n, chId) {
 }
 // Profil: çerçeveler (seviyeyle açılır) ve sosyal bağlantılar
 const FRAMES = { halka: 2, gokkusagi: 5, ates: 10, neon: 15, altin: 25, kurucu: 0 };
+const PEFFECTS = ['glitch', 'matrix', 'starry', 'embers', 'lightning', 'snow', 'rain', 'sakura', 'sparkles'];
 const SOCIALS = ['instagram', 'tiktok', 'youtube', 'x', 'twitch', 'steam', 'spotify'];
 const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (u.createdAt || 0)).length < 100;
 const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
+const effectOk = (u, ef) => !ef || ef === 'none' || (PEFFECTS.includes(ef) && staffRank(u.name) === 'owner');
 const HEX = /^#[0-9a-f]{6}$/i;
-const pubUser = u => ({ displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
+const pubUser = u => ({ displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: staffRank(u.name) === 'owner' ? (u.effect || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
@@ -4330,7 +4332,7 @@ io.on('connection', socket => {
   });
 
   // ----- Profil -----
-  socket.on('updateProfile', ({ avatar, status, bio, banner, color, birthday, music, displayName, pronouns, theme, bannerImg, frame, socials } = {}, cb = () => {}) => {
+  socket.on('updateProfile', ({ avatar, status, bio, banner, color, birthday, music, displayName, pronouns, theme, bannerImg, frame, effect, socials } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
     if (avatar === null) u.avatar = null;
     else if (avatar !== undefined) { if (!AVATAR_OK(avatar)) return cb({ error: 'Geçersiz resim' }); u.avatar = avatar; }
@@ -4345,6 +4347,7 @@ io.on('connection', socket => {
     if (theme !== undefined) u.theme = Array.isArray(theme) && theme.length === 2 && theme.every(c => HEX.test(c)) ? theme : null;
     if (bannerImg !== undefined) u.bannerImg = bannerImg && UPLOAD_RE.test(bannerImg) ? bannerImg : null;
     if (frame !== undefined) { if (frame && !frameOk(u, frame)) return cb({ error: 'Bu çerçeve henüz açılmadı' }); u.frame = frame && frame !== 'none' ? frame : null; }
+    if (effect !== undefined) { if (effect && !effectOk(u, effect)) return cb({ error: 'Profil efektleri sadece Kurucu rütbesine özeldir' }); u.effect = effect && effect !== 'none' ? effect : null; }
     if (socials !== undefined) { const o = {}; for (const k of SOCIALS) { const v = clean(socials?.[k], 60).replace(/^https?:\/\/\S+\//, '').replace(/^@/, ''); if (v && /^[\w.\-]{1,40}$/.test(v)) o[k] = v; } u.socials = o; }
     if (u.bio || u.status) onbFlag(me, 'profile');
     save(); io.emit('users', allUsers()); cb({ ok: true });
