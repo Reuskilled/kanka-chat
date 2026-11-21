@@ -4428,6 +4428,7 @@ function showSettings(tab) {
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'turuncu') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
       <div class="pc-sec" style="margin-top:18px"><label class="switch">Yeni arayüz<input type="checkbox" id="p-ui2" ${uiNew() ? 'checked' : ''}></label>
       <label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
+      <label class="switch">:) ;) :D gibi ifadeleri emojiye çevir<input type="checkbox" id="p-emo" ${emoOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
     notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Ses cihazları</label><div class="devbox" id="st-dev"></div><button class="btns2" id="st-mic" style="margin-top:10px">${ic('mic')} Mikrofonu test et</button></div><div class="st-field"><label>Başlangıç rehberi</label><button class="btns2" id="st-onb">${ic('sprout')} Rehberi baştan göster</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
         <label class="switch">Bilgisayar açılınca Kanka Chat'i başlat<input type="checkbox" id="as-on"></label>
@@ -4507,6 +4508,7 @@ function showSettings(tab) {
       $('#st-main').querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { store.set('kanka-theme', b.dataset.theme); applyTheme(); open('look'); });
       $('#st-main').querySelectorAll('[data-acc]').forEach(b => b.onclick = () => { store.set('kanka-accent', b.dataset.acc); applyTheme(); open('look'); preview(); });
       $('#p-ui2').onchange = e => { store.set('kanka-ui', e.target.checked ? null : '1'); applyUI(); toast(e.target.checked ? 'Yeni arayüz açık. Beğenmezsen buradan kapatabilirsin.' : 'Eski arayüze dönüldü'); };
+      $('#p-emo').onchange = e => { store.set('kanka-emoticon', e.target.checked ? null : 'off'); toast(e.target.checked ? 'İfadeler emojiye çevrilecek 🙂' : 'İfadeler olduğu gibi gönderilecek :)'); };
       $('#p-snd').onchange = e => { store.set('kanka-sound', e.target.checked ? null : 'off'); if (e.target.checked) playSound('mention'); };
       $('#p-ptt').onchange = e => { store.set('kanka-ptt', e.target.checked ? 'on' : null); applyMute(); };
     }
@@ -7527,7 +7529,15 @@ socket.on('remove', ({ channelId, msgId }) => {
 socket.on('playlist', ({ channelId, playlist }) => { if (channelId === S.channel?.id) S.playlist = playlist; });
 
 // ================= Yazma alanı =================
+// :) ;) :D gibi ifadeler gönderilirken emojiye çevrilir (Ayarlar > Görünüm'den kapatılabilir). Kod blokları, `kod`, bağlantılar ve /komutlar dokunulmaz.
+const EMOTICONS = [[":'(", '😢'], ['>:(', '😠'], [':-)', '🙂'], [':)', '🙂'], [':-(', '🙁'], [':(', '🙁'], [';-)', '😉'], [';)', '😉'], [':-D', '😄'], [':D', '😄'], ['xD', '😆'], ['XD', '😆'], [':-P', '😛'], [':P', '😛'], [':p', '😛'], [':-O', '😮'], [':O', '😮'], [':o', '😮'], [':|', '😐'], [':/', '😕'], [':*', '😘'], ['<3', '❤️'], ['</3', '💔'], ['B)', '😎'], ['^^', '😊'], [':3', '😺']];
+const emoOn = () => store.get('kanka-emoticon') !== 'off';
+function emoticonize(t) {
+  if (!t || t.startsWith('/')) return t;
+  return t.split(/(```[\s\S]*?```|`[^`\n]*`|https?:\/\/\S+)/).map((part, i) => i % 2 ? part : part.replace(/(^|\s)(\S+)(?=\s|$)/g, (m, pre, tok) => { const e = EMOTICONS.find(x => x[0] === tok); return e ? pre + e[1] : m; })).join('');
+}
 function send(payload, retried) {
+  if (!retried && emoOn() && typeof payload.text === 'string' && (payload.kind || 'text') === 'text') payload.text = emoticonize(payload.text);
   if (S.replyTo) payload.replyTo = S.replyTo.id;
   const chId = S.channel?.id;
   if (E2E.want(chId) && (payload.kind || 'text') === 'text') return E2E.seal(chId, E2E.inner(payload)).then(sv => {
