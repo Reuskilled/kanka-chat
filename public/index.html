@@ -5812,7 +5812,7 @@ function showServerSettings(s, tab, focus) {
     },
     template: () => {
       main.innerHTML = `<div class="st-page"><h3>Şablon</h3><p class="hint">Bir sunucunun kategori, oda, rol ve izin düzenini bu sunucuya taşırsın. Uygularken hiçbir şey silinmez; mesajlar ve üyelerin rolleri korunur.</p>
-        <div class="acc-tpl"><span><b>Şablon uygula</b>Discord şablon linkini ya da şablon kodunu yapıştır; kategori, oda, rol ve izinler bu sunucuya eklenir. Adı aynı olanlar yeniden açılmaz, izin ve ayarları şablondakiyle güncellenir.</span><button class="btns2" id="sv-tpl">Şablon uygula</button></div>
+        <div class="acc-tpl"><span><b>Şablon uygula</b>Şablon linkini ya da kodunu yapıştır; kategori, oda, rol ve izinler bu sunucuya eklenir. Adı aynı olanlar yeniden açılmaz, izin ve ayarları şablondakiyle güncellenir.</span><button class="btns2" id="sv-tpl">Şablon uygula</button></div>
         ${s.tplUndo ? `<div class="acc-tpl"><span><b>Son şablonu geri al</b>Şablonla eklenen ${s.tplUndo.channels} oda, ${s.tplUndo.categories} kategori ve ${s.tplUndo.roles} rol kaldırılır, güncellenenlerin eski hali geri gelir. ${new Date(s.tplUndo.t + 864e5).toLocaleString('tr', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} saatine kadar.</span><button class="btns2" id="sv-tplu">Geri al</button></div>` : ''}
         <div class="st-sec">Nasıl çalışır?</div>
         <p class="hint" style="margin:0">Şablon uygulanınca odalar ve roller sunucuya eklenir; aynı adlı olanların izin ve ayarları güncellenir. Uygulamadan sonra 24 saat içinde geri alabilirsin; içine mesaj yazılmış odalar silinmez.</p></div>`;
