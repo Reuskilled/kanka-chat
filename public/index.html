@@ -3876,10 +3876,13 @@ function chByName(tok) {
   const best = sv => { let r = null; for (const c of sv.channels) { if (voiceLike(c.type)) continue; const en = esc(c.name);
     if (!tl.startsWith(en.toLocaleLowerCase('tr')) || /^[\p{L}\p{N}_-]/u.test(tok.slice(en.length))) continue;
     if (!r || en.length > r.t.length) r = { s: sv, c, t: tok.slice(0, en.length) }; } return r; };
+  // Sadece mesajın yazıldığı sunucunun odaları: başka sunucuda aynı adlı oda varsa oraya atlamasın
   const cur = S.view === 'server' && S.server; if (cur) { const r = best(cur); if (r) return r; }
-  for (const sv of S.servers || []) { const r = best(sv); if (r) return r; }
   return null;
 }
+// Etiket olarak gösterilecek kişi: var olan kullanıcı ve (özel sunucudaysak) hâlâ o sunucunun üyesi. Atılan/ayrılan kişi düz metin kalır.
+const mentionable = n => !!S.users[n] && !(S.view === 'server' && S.server && !S.server.public && Array.isArray(S.server.members) && !S.server.members.includes(n));
+document.addEventListener('click', e => { const a = e.target.closest?.('a.fcard.risky'); if (a && !confirm('Bu bir SVG dosyası. SVG dosyaları içinde kod barındırabilir; sadece güvendiğin kişilerden gelenleri aç. İndirilsin mi?')) e.preventDefault(); }, true);
 function inlineFmt(t) {
   const codes = [];
   let h = esc(t)
@@ -3888,7 +3891,7 @@ function inlineFmt(t) {
   h = h.replace(/@kanka\s?bot\b/gi, () => `\u0000${codes.push('<span class="mention bot">@Kanka Bot</span>') - 1}\u0000`);
   // link önce yer tutucuya alınır: içindeki @ad, _ , * ve # biçimlendirmeye girmesin
   h = h.replace(/(https?:\/\/[^\s<]+)/g, u => `\u0000${codes.push(`<a href="${u}" target="_blank" rel="noopener">${u}</a>`) - 1}\u0000`)
-    .replace(/@([\p{L}\p{N}_.-]+)/gu, (m, n) => S.users[n] || /^(everyone|herkes)$/i.test(n) ? `<span class="mention${n === S.me || /^(everyone|herkes)$/i.test(n) ? ' me' : ''}"${S.users[n] ? ` data-u="${n}" role="button" tabindex="0"` : ''}>@${n}</span>` : (S.server?.customRoles || []).find(r => r.name === n) ? `<span class="mention" style="color:${(S.server.customRoles.find(r => r.name === n)).color}">@${n}</span>` : m)
+    .replace(/@([\p{L}\p{N}_.-]+)/gu, (m, n) => mentionable(n) || /^(everyone|herkes)$/i.test(n) ? `<span class="mention${n === S.me || /^(everyone|herkes)$/i.test(n) ? ' me' : ''}"${mentionable(n) ? ` data-u="${n}" role="button" tabindex="0"` : ''}>@${n}</span>` : (S.server?.customRoles || []).find(r => r.name === n) ? `<span class="mention" style="color:${(S.server.customRoles.find(r => r.name === n)).color}">@${n}</span>` : m)
     .replace(/(^|[\s(\[*_~>.,!?;])#([^\s<#\u0000]+)/gu, (m, pre, tok) => { const c = chByName(tok); return c ? `${pre}<a class="chref" data-goch="${c.c.id}" data-gosv="${c.s.id}"${c.s.id !== S.server?.id || S.view !== 'server' ? ` title="${esc(c.s.name)}"` : ''}>#${c.t}</a>${tok.slice(c.t.length)}` : m; })
     .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
     .replace(/(^|[^*\w])\*([^*\n]+)\*(?!\w)/g, '$1<i>$2</i>')
@@ -6886,7 +6889,8 @@ function filesHTML(files) {
   for (const f of rest) {
     if (f.enc && (!f.url || f.url === '#')) { h += `<span class="fcard e2e-wait"><span class="fc-ic">${ic('lock')}</span><span class="fc-t"><b>${esc(f.name)}</b><small>${f.url ? 'Açılamadı' : 'Şifre çözülüyor…'}</small></span></span>`; continue; }
     if (f.kind === 'video') h += `<div class="fvid"><video src="${esc(f.url)}" controls preload="metadata" playsinline></video><a class="fname" href="${esc(f.url)}" download="${esc(f.name)}">${ic('download')}${esc(f.name)} · ${fmtSize(f.size)}</a></div>`;
-    else h += `<a class="fcard" href="${esc(f.url)}" download="${esc(f.name)}" title="İndir"><span class="fc-ic">${ic('file')}<em>${esc(extOf(f.name) || 'DOSYA')}</em></span><span class="fc-t"><b>${esc(f.name)}</b><small>${fmtSize(f.size)}</small></span><span class="fc-d">${ic('download')}</span></a>`;
+    else { const risky = /\.svg$/i.test(f.name || ''); // SVG içinde kod olabilir: indirmeden önce uyar
+      h += `<a class="fcard${risky ? ' risky' : ''}" href="${esc(f.url)}" download="${esc(f.name)}" title="İndir"><span class="fc-ic">${ic('file')}<em>${esc(extOf(f.name) || 'DOSYA')}</em></span><span class="fc-t"><b>${esc(f.name)}</b><small>${fmtSize(f.size)}${risky ? ' · güvenilir olmayabilir' : ''}</small></span><span class="fc-d">${ic('download')}</span></a>`; }
   }
   return h;
 }
