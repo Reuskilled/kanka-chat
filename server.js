@@ -746,7 +746,7 @@ function srvXp(s, name, n, chId) {
   const mode = cfg.announce || 'same'; if (mode === 'off') return;
   const to = mode === 'channel' && s.channels.some(c => c.id === cfg.channel) ? cfg.channel : chId;
   if (!to || voiceLike(findChannel(to)?.c?.type)) return;
-  setTimeout(() => botPost(to, { title: `🎉 ${db.users[name]?.displayName || name} seviye ${a} oldu!`, text: got ? `Yeni rol kazandı: ${got.name}` : 'Sohbet etmeye devam, sıradaki seviye seni bekliyor.', tone: 'ok', fields: got ? [['Seviye', String(a)], ['Ödül', got.name]] : null }), 400);
+  setTimeout(() => botPost(to, { title: `🎉 ${db.users[name]?.displayName || name} bu sunucuda seviye ${a} oldu!`, text: got ? `Yeni rol kazandı: ${got.name}` : 'Sohbet etmeye devam, sıradaki seviye seni bekliyor.', tone: 'ok', fields: got ? [['Sunucu seviyesi', String(a)], ['Ödül', got.name]] : null }), 400);
 }
 // Profil: çerçeveler (seviyeyle açılır) ve sosyal bağlantılar
 const FRAMES = { halka: 2, gokkusagi: 5, ates: 10, neon: 15, altin: 25, kurucu: 0 };
