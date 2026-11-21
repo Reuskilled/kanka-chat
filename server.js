@@ -457,11 +457,19 @@ app.post('/api/webhooks/:id/:token', (req, res) => {
   io.to(c.id).emit('message', { channelId: c.id, msg });
   res.status(req.query.wait === 'true' ? 200 : 204); req.query.wait === 'true' ? res.json({ id: msg.id }) : res.end();
 });
+// Masaüstü uygulamasının anahtarından kullanıcıyı bul: her 10 saniyede gelen istekte tüm kullanıcıları taramamak için dizin
+const presIdx = new Map(); let presBuilt = 0;
+function presUser(key) {
+  let n = presIdx.get(key);
+  if (!n && Date.now() - presBuilt > 10e3) { presIdx.clear(); for (const x of Object.values(db.users)) if (x.presenceKey) presIdx.set(x.presenceKey, x.name); presBuilt = Date.now(); n = presIdx.get(key); }
+  const u = n && db.users[n];
+  return u && u.presenceKey === key ? u : null; // anahtar yenilendiyse ya da hesap silindiyse eski kayıt geçmez
+}
 app.post('/api/presence', express.json({ limit: '24kb' }), async (req, res) => {
   const { key, game, detail, music, rich } = req.body || {};
   const pip = 'presfail|' + reqIp(req);
   if ((limits.get(pip) || []).filter(t => Date.now() - t < 600e3).length >= 30) return res.status(429).json({ error: 'Çok fazla hatalı deneme' });
-  const u = typeof key === 'string' && key.length >= 16 && Object.values(db.users).find(x => x.presenceKey === key);
+  const u = typeof key === 'string' && key.length >= 16 && key.length <= 100 && presUser(key);
   if (!u) { limited(pip, 1e6, 600e3); return res.status(401).json({ error: 'Anahtar geçersiz' }); }
   if (Array.isArray(req.body.matches) && u.matchShare?.on !== false) {
     const seen = (u.matchKeys ||= []);
@@ -602,7 +610,7 @@ function backup(force) {
     fs.mkdirSync(BACKUPS, { recursive: true });
     const name = `data-${new Date().toISOString().slice(0, 10)}.json.gz`, f = path.join(BACKUPS, name);
     if (force || !fs.existsSync(f)) {
-      if (saveTimer) writeDbNow();
+      if (saveTimer || dbDirty || dbWriting) { writeDbNow(); dbDirty = false; }
       const gz = zlib.gzipSync(fs.readFileSync(DATA_FILE), { level: 9 });
       readDbFile(DATA_FILE); // bozuk veriyi yedeğe koyma
       fs.writeFileSync(f + '.tmp', gz); fs.renameSync(f + '.tmp', f);
@@ -678,7 +686,7 @@ async function startTurn() {
 startTurn();
 const iceServers = () => [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }, ...(turnInfo ? [turnInfo] : [])];
 
-let saveTimer = null, saveFails = 0;
+let saveTimer = null, saveFails = 0, syncGen = 0, dbDirty = false, dbWriting = false;
 // Atomik yazım: yarım kalan bir yazım asla data.json'u bozamaz
 function writeDbNow() {
   clearTimeout(saveTimer); saveTimer = null;
@@ -687,6 +695,7 @@ function writeDbNow() {
     const fd = fs.openSync(TMP_FILE, 'w');
     try { fs.writeSync(fd, txt); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
     if (fs.existsSync(DATA_FILE)) { try { fs.copyFileSync(DATA_FILE, BAK_FILE); } catch {} }
+    syncGen++; // süren bir asenkron yazım varsa artık eski: onu data.json'un üstüne koyma
     let tries = 0;
     for (;;) { try { fs.renameSync(TMP_FILE, DATA_FILE); break; } catch (e) { if (++tries > 5) throw e; const t = Date.now() + 40; while (Date.now() < t); } } // Windows'ta dosya anlık kilitli olabilir
     saveFails = 0;
@@ -701,14 +710,36 @@ function roomCheck() {
     sk.leave(c); sk.data.cur = null; sk.emit('roomLost', c);
   }
 }
+// Normal kayıt asenkron: diske yazarken sunucu donmaz (sesli sohbet, mesajlar takılmaz).
+// Yazım sürerken gelen değişiklikler bitince tek seferde yazılır; aynı anda iki yazım olmaz.
+const TMP_ASYNC = DATA_FILE + '.tmpa';
+async function writeDbAsync() {
+  saveTimer = null;
+  if (dbWriting) { dbDirty = true; return; }
+  dbWriting = true; dbDirty = false;
+  const gen = syncGen;
+  try {
+    const txt = JSON.stringify(db);
+    const fh = await fs.promises.open(TMP_ASYNC, 'w');
+    try { await fh.writeFile(txt); await fh.sync(); } finally { await fh.close(); }
+    // bu arada senkron (daha yeni) bir yazım olduysa bu eski kopyayı data.json'un üstüne koyma
+    if (gen === syncGen) { try { await fs.promises.copyFile(DATA_FILE, BAK_FILE); } catch {} }
+    for (let tries = 0; gen === syncGen; tries++) { try { await fs.promises.rename(TMP_ASYNC, DATA_FILE); break; } catch (e) { if (tries >= 5) throw e; await new Promise(r => setTimeout(r, 40)); } } // Windows'ta dosya anlık kilitli olabilir
+    saveFails = 0;
+  } catch (e) { saveFails++; dbDirty = true; console.error('Kayıt yazılamadı (' + saveFails + '):', e.message); await new Promise(r => setTimeout(r, Math.min(30e3, 1000 * saveFails))); }
+  finally { dbWriting = false; }
+  if (dbDirty && !saveTimer) saveTimer = setTimeout(writeDbAsync, 300);
+}
 function save() {
   if (!roomCheckQ) { roomCheckQ = true; setImmediate(roomCheck); }
-  if (saveTimer) return; // 300 ms içindeki tüm değişiklikler tek yazımda
-  saveTimer = setTimeout(writeDbNow, 300);
+  dbDirty = true;
+  if (saveTimer || dbWriting) return; // 300 ms içindeki tüm değişiklikler tek yazımda; yazım sürüyorsa bitince yazılır
+  saveTimer = setTimeout(writeDbAsync, 300);
 }
-// Kapanırken bekleyen değişiklikleri yaz
-for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) { try { process.on(sig, () => { if (saveTimer) writeDbNow(); process.exit(0); }); } catch {} }
-process.on('exit', () => { if (saveTimer) writeDbNow(); });
+// Kapanırken bekleyen değişiklikleri senkron yaz (süren asenkron yazım yarım kalsa da data.json hep sağlam kalır)
+const flushDb = () => { if (saveTimer || dbDirty || dbWriting) { writeDbNow(); dbDirty = false; } };
+for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) { try { process.on(sig, () => { flushDb(); process.exit(0); }); } catch {} }
+process.on('exit', flushDb);
 if (dbRecovered) { try { fs.unlinkSync(DATA_FILE); } catch {} writeDbNow(); } // kurtarılan veriyi hemen sağlam dosyaya yaz (bozuk kopya .bozuk-… olarak saklandı)
 setTimeout(() => backup(), 5000); setInterval(backup, 60 * 60e3);
 
@@ -720,6 +751,13 @@ const cleanMsg = s => String(s ?? '').trim().slice(0, MSG_MAX); // mesaj metinle
 const COLORS = ['#ff7a59', '#f6c445', '#4cc38a', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#ff9f43'];
 const NAME_RE = /^[\p{L}\p{N}_.-]{2,20}$/u;
 const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 32).toString('hex');
+// Girişte şifre kontrolü asenkron: scrypt iş parçacığında çalışır, çok sayıda giriş denemesi sunucuyu dondurmaz. Karşılaştırma sabit sürede.
+const hashPwAsync = (pw, salt) => new Promise((ok, no) => crypto.scrypt(pw, salt, 32, (e, k) => e ? no(e) : ok(k.toString('hex'))));
+const DUMMY_SALT = crypto.randomBytes(16).toString('hex');
+const pwOk = async (u, pw) => {
+  const h = await hashPwAsync(String(pw ?? ''), u?.salt || DUMMY_SALT); // kullanıcı yoksa da aynı süre: var/yok tahmin edilemesin
+  return !!u?.hash && h.length === u.hash.length && crypto.timingSafeEqual(Buffer.from(h), Buffer.from(u.hash));
+};
 const level = xp => Math.floor(Math.sqrt((xp || 0) / 5)) + 1;
 // ---- Adil XP ----
 // Mesaj: dakikada en fazla bir kez 3-6 XP (hızlı yazmak/spam avantaj değil); çok kısa ya da aynı mesaj XP vermez.
@@ -3105,14 +3143,21 @@ io.on('connection', socket => {
     save(); cb(start(u.name));
   });
 
-  socket.on('login', ({ name, password, code } = {}, cb) => {
-    const key = 'login|' + ip + '|' + clean(name, 190).toLowerCase(), now = Date.now();
-    const fails = (limits.get(key) || []).filter(t => now - t < 600e3);
+  socket.on('login', async ({ name, password, code } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    const key = 'login|' + ip + '|' + clean(name, 190).toLowerCase(), ipKey = 'loginip|' + ip, now = Date.now();
+    // Diziler yerinde güncellenir: aynı anda gelen denemeler birbirinin kaydını ezmesin
+    const live = (k, win) => { let a = limits.get(k); if (!a) limits.set(k, a = []); const keep = a.filter(t => now - t < win); a.length = 0; a.push(...keep); return a; };
+    const fails = live(key, 600e3), ipFails = live(ipKey, 900e3);
     if (fails.length >= 5) return cb({ error: `Çok fazla hatalı deneme. ${Math.ceil((600e3 - (now - fails[0])) / 60000)} dakika sonra tekrar dene.` });
-    const ipFails = (limits.get('loginip|' + ip) || []).filter(t => now - t < 900e3);
     if (ipFails.length >= 25) return cb({ error: 'Bu bağlantıdan çok fazla hatalı giriş denendi. 15 dakika sonra tekrar dene.' });
-    const u = findUserBy(name);
-    if (!u || hashPw(String(password ?? ''), u.salt) !== u.hash) { fails.push(now); limits.set(key, fails); ipFails.push(now); limits.set('loginip|' + ip, ipFails); if (ipFails.length === 25) secLog('giris-denemesi', 'ip:' + ip, '15 dakikada 25 hatalı giriş'); return cb({ error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Kullanıcı adı / e-posta ya da şifre yanlış.' }); }
+    // Şifre kontrolü bitene kadar deneme hatalı sayılır: aynı anda yüzlerce istek atıp sınırı aşmak mümkün olmasın
+    fails.push(now); ipFails.push(now);
+    let u = findUserBy(name);
+    const ok = await pwOk(u, password);
+    if (u && !db.users[u.name]) u = null; // beklerken hesap silindiyse
+    if (!u || !ok) { if (ipFails.length === 25) secLog('giris-denemesi', 'ip:' + ip, '15 dakikada 25 hatalı giriş'); return cb({ error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Kullanıcı adı / e-posta ya da şifre yanlış.' }); }
+    for (const a of [fails, ipFails]) { const i = a.lastIndexOf(now); if (i >= 0) a.splice(i, 1); } // şifre doğru: geçici kaydı geri al
     if (u.tfa?.on) {
       if (!code) return cb({ needTfa: true });
       if (!tfaPass(u, code)) { fails.push(now); limits.set(key, fails); return cb({ needTfa: true, error: fails.length >= 5 ? 'Çok fazla hatalı deneme, 10 dakika bekle.' : 'Doğrulama kodu yanlış. Uygulamadaki güncel 6 haneli kodu ya da bir yedek kodu yaz.' }); }
@@ -5065,7 +5110,7 @@ io.on('connection', socket => {
   // ----- Etkinlik -----
   socket.on('presenceKey', ({ renew } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
-    if (!u.presenceKey || renew) { u.presenceKey = crypto.randomBytes(18).toString('hex'); save(); }
+    if (!u.presenceKey || renew) { if (u.presenceKey) presIdx.delete(u.presenceKey); u.presenceKey = crypto.randomBytes(18).toString('hex'); presIdx.set(u.presenceKey, u.name); save(); }
     cb({ key: u.presenceKey, connected: !!(u.auto && Date.now() - u.auto.at < 45e3) });
   });
 

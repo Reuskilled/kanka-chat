@@ -24,17 +24,65 @@ const save = () => { fs.mkdirSync(path.dirname(STATE), { recursive: true }); fs.
 const log = m => { const l = `[${new Date().toLocaleString('tr-TR')}] ${m}`; console.log(l); try { fs.mkdirSync(path.dirname(LOG), { recursive: true }); fs.appendFileSync(LOG, l + '\n'); } catch {} };
 const hash = f => { try { return crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex'); } catch { return null; } };
 
-function syncPath(src, dst, changed) {
+// Değişen her dosyanın eski hâli BAK klasörüne kopyalanır; yeni sürüm açılmazsa geri konur
+const BAK = path.join(APP, 'veri', 'onceki-surum');
+function syncPath(src, dst, changed, created) {
   if (!fs.existsSync(src)) return;
   if (fs.statSync(src).isDirectory()) {
     fs.mkdirSync(dst, { recursive: true });
-    for (const n of fs.readdirSync(src)) syncPath(path.join(src, n), path.join(dst, n), changed);
+    for (const n of fs.readdirSync(src)) syncPath(path.join(src, n), path.join(dst, n), changed, created);
     return;
   }
   if (hash(src) === hash(dst)) return;
+  const rel = path.relative(APP, dst);
+  if (fs.existsSync(dst)) { const b = path.join(BAK, rel); fs.mkdirSync(path.dirname(b), { recursive: true }); fs.copyFileSync(dst, b); }
+  else created.push(rel);
   const tmp = dst + '.yeni';
   fs.copyFileSync(src, tmp); fs.renameSync(tmp, dst);
-  changed.push(path.relative(APP, dst));
+  changed.push(rel);
+}
+
+// Kurmadan önce kontrol: sözdizimi hatalı JS ya da bozuk package.json canlıya hiç gitmesin
+function validate(root) {
+  const errs = [];
+  const jsFiles = ['server.js', 'vds/guncelleyici.js'];
+  const walk = d => { if (!fs.existsSync(d)) return; for (const n of fs.readdirSync(d)) { const p = path.join(d, n); if (fs.statSync(p).isDirectory()) { if (n !== 'vendor') walk(p); } else if (/\.js$/.test(n)) jsFiles.push(path.relative(root, p)); } };
+  walk(path.join(root, 'public'));
+  for (const f of jsFiles) {
+    const p = path.join(root, f); if (!fs.existsSync(p)) { if (f === 'server.js') errs.push('server.js yok'); continue; }
+    try { execFileSync(process.execPath, ['--check', p], { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true, timeout: 60e3 }); }
+    catch (e) { errs.push(`${f}: ${String(e.stderr || e.message).split('\n').filter(Boolean).slice(0, 4).join(' | ').slice(0, 400)}`); }
+  }
+  for (const f of ['package.json', 'package-lock.json']) {
+    const p = path.join(root, f); if (!fs.existsSync(p)) continue;
+    try { JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { errs.push(`${f}: ${e.message}`); }
+  }
+  return errs;
+}
+
+// Yeni sunucu ayağa kalktı mı? /api/surum cevap vermeli ve yeniden başlatmadan sonra açılmış olmalı
+const PORT = process.env.PORT || 3000;
+async function healthy(since, waitMs = 90e3) {
+  const end = Date.now() + waitMs;
+  while (Date.now() < end) {
+    try {
+      const r = await fetch(`http://127.0.0.1:${PORT}/api/surum`, { signal: AbortSignal.timeout(5000) });
+      if (r.ok) { const j = await r.json(); if ((j.baslama || 0) >= since) return true; }
+    } catch {}
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  return false;
+}
+
+function rollback(p) {
+  for (const rel of p.changed) {
+    const b = path.join(BAK, rel), dst = path.join(APP, rel);
+    try {
+      if (p.created.includes(rel)) fs.rmSync(dst, { force: true });
+      else if (fs.existsSync(b)) { fs.copyFileSync(b, dst + '.yeni'); fs.renameSync(dst + '.yeni', dst); }
+    } catch (e) { log(`Geri alınamadı: ${rel} (${e.message})`); }
+  }
+  if (p.changed.some(f => /^package(-lock)?\.json$/.test(f))) st.needNpm = true; // eski paketleri geri kur
 }
 
 function ps(cmd) { return execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', cmd], { encoding: 'utf8', windowsHide: true }); }
@@ -45,10 +93,11 @@ function restartCaddy() {
   log('Https sunucusu yeni ayarla yeniden başlatıldı');
 }
 function restartServer() {
-  if (process.platform !== 'win32') return log('(test) sunucu yeniden başlatılacaktı');
+  if (process.platform !== 'win32') { log('(test) sunucu yeniden başlatılacaktı'); return false; }
   // calistir-uygulama.cmd döngüsü sunucuyu 3 saniye içinde yeniden açar
   ps("Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -like '*server.js*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }");
   log('Sunucu yeniden başlatıldı');
+  return true;
 }
 
 // En son commit: GitHub API saatte 60 istekle sınırlı (dakikada bir sorunca 403 veriyordu).
@@ -71,7 +120,7 @@ async function latestSha() {
 
 async function checkCode() {
   const j = await latestSha(); if (!j) return;
-  if (j.sha === st.sha) return;
+  if (j.sha === st.sha || j.sha === st.badSha) return; // hatalı sürüm bir sonraki commit'e kadar tekrar denenmez
   log(`Yeni sürüm bulundu ${j.sha.slice(0, 7)}${j.msg ? ': ' + j.msg : ''}`);
   const zr = await fetch(`https://codeload.github.com/${REPO}/zip/${j.sha}`, { headers: H, signal: AbortSignal.timeout(120000) });
   if (!zr.ok) throw new Error('Arşiv indirilemedi: ' + zr.status);
@@ -82,11 +131,14 @@ async function checkCode() {
     if (process.platform === 'win32') ps(`Expand-Archive -LiteralPath '${zip}' -DestinationPath '${path.join(tmp, 'x')}' -Force`);
     else execFileSync('unzip', ['-q', zip, '-d', path.join(tmp, 'x')]);
     const root = path.join(tmp, 'x', fs.readdirSync(path.join(tmp, 'x'))[0]);
-    const changed = [];
-    for (const [a, b] of SYNC) syncPath(path.join(root, a), path.join(APP, b), changed);
+    const errs = validate(root);
+    if (errs.length) { st.badSha = j.sha; save(); log(`KURULMADI ${j.sha.slice(0, 7)}: kod hatalı, canlı sürüm aynen çalışmaya devam ediyor. ${errs.join(' ; ')}`); return; }
+    const changed = [], created = [];
+    fs.rmSync(BAK, { recursive: true, force: true }); fs.mkdirSync(BAK, { recursive: true });
+    for (const [a, b] of SYNC) syncPath(path.join(root, a), path.join(APP, b), changed, created);
     if (changed.length) log('Güncellenen dosyalar: ' + changed.join(', '));
     if (changed.some(f => /^package(-lock)?\.json$/.test(f))) st.needNpm = true;
-    if (changed.some(f => f === 'server.js' || /^package/.test(f))) st.needRestart = true;
+    if (changed.some(f => f === 'server.js' || /^package/.test(f))) { st.needRestart = true; st.pending = { sha: j.sha, prevSha: st.sha, changed, created }; }
     if (changed.includes('Caddyfile')) st.needCaddy = true;
     st.sha = j.sha; save();
     await finishPending();
@@ -102,7 +154,21 @@ async function finishPending() {
     catch (e) { st.npmFail = (st.npmFail || 0) + 1; save(); log(`Paket kurulumu olmadı (${st.npmFail}. deneme): ${e.message} — ayrıntı: kayitlar\\npm-guncelleme.log`); }
   }
   // paket kurulamasa bile sunucu yeni koda geçsin; kurulum sonraki turlarda yeniden denenir
-  if (st.needRestart) { restartServer(); st.needRestart = false; save(); }
+  if (st.needRestart) {
+    const since = Date.now(); const did = restartServer(); st.needRestart = false; save();
+    const p = st.pending;
+    if (did && p) {
+      if (await healthy(since)) log(`Yeni sürüm ${p.sha.slice(0, 7)} sağlıklı çalışıyor`);
+      else {
+        log(`Yeni sürüm ${p.sha.slice(0, 7)} 90 saniyede açılmadı, önceki sürüme dönülüyor`);
+        rollback(p); st.badSha = p.sha; st.sha = p.prevSha; save();
+        if (st.needNpm) { try { npmInstall(); st.needNpm = false; save(); } catch (e) { log('Eski paketler kurulamadı: ' + e.message); } }
+        const since2 = Date.now(); restartServer();
+        log(await healthy(since2) ? 'Önceki sürüm geri geldi ve çalışıyor' : 'DİKKAT: önceki sürüm de açılmadı, elle bakılmalı');
+      }
+    }
+    st.pending = null; save();
+  }
   if (st.needCaddy) { restartCaddy(); st.needCaddy = false; save(); }
 }
 
