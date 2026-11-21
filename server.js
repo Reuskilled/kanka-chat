@@ -919,7 +919,38 @@ const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (
 const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
 const effectOk = (u, ef) => !ef || ef === 'none' || (PEFFECTS.includes(ef) && staffRank(u.name) === 'owner');
 const HEX = /^#[0-9a-f]{6}$/i;
-const pubUser = u => ({ displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: staffRank(u.name) === 'owner' ? (u.effect || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
+// ---- Kalıcı kullanıcı kimliği ----
+// Ad değişse de değişmeyen sayısal kimlik (Discord'daki gibi). Hesabın açıldığı zamandan türetilir: (ms - 2025-01-01) << 12 | sıra.
+// Botlar ve geliştiriciler kullanıcıyı bununla saklar; ad değişince bağ kopmaz.
+const UID_EPOCH = 1735689600000n;
+let uidSeq = 0, uidIdx = null;
+function uidIndex() { if (!uidIdx) { uidIdx = new Map(); for (const [n, u] of Object.entries(db.users)) if (u?.id) uidIdx.set(u.id, n); } return uidIdx; }
+function mkUid(t) {
+  const idx = uidIndex(), base = BigInt(Math.max(0, Math.floor(Number(t) || Date.now()))) - UID_EPOCH;
+  let v; do v = (((base < 0n ? 0n : base) << 12n) | BigInt(uidSeq++ & 4095)).toString(); while (idx.has(v));
+  return v;
+}
+function uidOf(u) {
+  if (!u) return null;
+  if (!u.id) { u.id = mkUid(u.createdAt); if (u.name) uidIndex().set(u.id, u.name); save(); }
+  return u.id;
+}
+const isUid = x => typeof x === 'string' && /^\d{12,20}$/.test(x);
+function userById(id) {
+  id = String(id || ''); if (!isUid(id)) return null;
+  let n = uidIndex().get(id);
+  if (n && db.users[n]?.id === id) return db.users[n];
+  uidIdx = null; n = uidIndex().get(id); // ad değişti ya da hesap silindi: dizini yeniden kur
+  return n && db.users[n]?.id === id ? db.users[n] : null;
+}
+// Kimlik ya da ad verilir, kullanıcı adı döner (önce kimlik denenir)
+const nameOfRef = ref => { ref = String(ref || ''); const byId = userById(ref); return byId ? byId.name : db.users[ref] ? ref : null; };
+function migrateUids() { // eski hesaplara, açılış sırasına göre kimlik ver
+  const miss = Object.entries(db.users).filter(([, u]) => u && !u.id).sort((a, b) => (a[1].createdAt || 0) - (b[1].createdAt || 0));
+  for (const [n, u] of miss) { u.name ||= n; u.id = mkUid(u.createdAt); uidIndex().set(u.id, n); }
+  if (miss.length) { save(); console.log(`Kullanıcı kimliği: ${miss.length} hesaba kalıcı kimlik verildi`); }
+}
+const pubUser = u => ({ id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: staffRank(u.name) === 'owner' ? (u.effect || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
@@ -2695,7 +2726,7 @@ function reachOf(a, extra) { const set = new Set(); for (const s of botServers(a
 const contentOk = a => !a.verified || !!a.contentOk; // küçük (doğrulanmamış) botlar içeriği görebilir; büyüyenler için onay gerekir
 function appView(a, full) {
   const u = db.users[a.bot] || {};
-  const v = { id: a.id, ad: a.bot, gorunenAd: u.displayName || a.name, aciklama: a.desc || '', avatar: u.avatar || null, sahip: a.owner, dogrulandi: !!a.verified, olusturuldu: a.createdAt, listede: !!(a.listed && a.verified) };
+  const v = { id: a.id, kullaniciId: uidOf(db.users[a.bot]), ad: a.bot, gorunenAd: u.displayName || a.name, aciklama: a.desc || '', avatar: u.avatar || null, sahip: a.owner, dogrulandi: !!a.verified, olusturuldu: a.createdAt, listede: !!(a.listed && a.verified) };
   if (!full) return v;
   return { ...v, tokenVar: !!a.tokenH, tokenAt: a.tokenAt || null, gizlilik: a.privacy || '', etkilesimUrl: a.interUrl || '', dmIzin: a.dmOk !== false, kapali: a.killed || null,
     erisim: reachOf(a), esik: REACH_MAX, sunucular: botServers(a).map(s => ({ id: s.id, ad: s.name, uye: humans(s.members).length })),
@@ -2747,7 +2778,8 @@ function cleanComps(rows) {
   }).filter(Boolean)).filter(r => r.length).filter(r => r.every(c => c.tur === 'buton') || r.length === 1);
 }
 function msgBody(b) { // REST gövdesinden mesaj alanları (Kanka ve alışık olunan İngilizce adlar)
-  const text = noPing(clean(b?.icerik ?? b?.content ?? '', MSG_MAX));
+  // <@kimlik> yazılırsa o kişinin güncel adıyla etiketlenir (bot adı değil kimliği saklar)
+  const text = noPing(clean(b?.icerik ?? b?.content ?? '', MSG_MAX).replace(/<@!?(\d{12,20})>/g, (m, id) => { const u = userById(id); return u ? '@' + u.name : m; }));
   return { text, embeds: cleanEmbeds(b?.kartlar ?? b?.embeds), comps: cleanComps(b?.bilesenler ?? b?.components) };
 }
 // ---- Bota giden mesaj görünümü ----
@@ -2756,7 +2788,7 @@ function msgForBot(a, chId, m, full) {
   const see = !!full || dm || mention || m.author === a.bot;
   const au = db.users[m.author];
   return { id: m.id, oda: chId, sunucu: f?.s.id || null, dm, zaman: m.time, duzenlendi: !!m.edited,
-    yazar: m.author ? { ad: m.author, gorunenAd: au?.displayName || m.author, bot: !!au?.bot || m.author === BOT_NAME, ...(m.author === BOT_NAME ? { sistem: true } : {}), ...(au?.bot ? { uygulama: db.apps?.[au.bot.app] ? appInfoOf(db.apps[au.bot.app]) : { id: au.bot.app } } : {}) } : null,
+    yazar: m.author ? { id: au ? uidOf(au) : null, ad: m.author, gorunenAd: au?.displayName || m.author, bot: !!au?.bot || m.author === BOT_NAME, ...(m.author === BOT_NAME ? { sistem: true } : {}), ...(au?.bot ? { uygulama: db.apps?.[au.bot.app] ? appInfoOf(db.apps[au.bot.app]) : { id: au.bot.app } } : {}) } : null,
     icerik: see ? (m.text || '') : '', kartlar: see ? (m.embeds || []) : [], bilesenler: m.comps || [], etiketlendi: mention,
     ekler: see ? (m.files || []).map(x => ({ ad: x.name, url: x.url, boyut: x.size, tur: x.kind })) : [], yanit: m.replyTo?.id || null, tepkiler: Object.fromEntries(Object.entries(m.reactions || {}).map(([e, us]) => [e, us.length])) };
 }
@@ -2821,7 +2853,7 @@ function botServerView(a, s) {
     odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => ({ id: c.id, ad: c.name, tur: c.type, konu: c.topic || '', kategori: c.cat || null, yazabilir: chPerm(s, c, a.bot, 'send') })),
     roller: (s.customRoles || []).map((r, i) => ({ id: r.id, ad: r.name, renk: r.color || null, sira: i, bot: r.managed || null })), izinler: [...permsOf(s, a.bot)] };
 }
-const memberView = (s, n) => { const u = db.users[n] || {}; return { ad: n, gorunenAd: u.displayName || n, bot: !!u.bot, avatar: u.avatar || null, roller: s.memberRoles?.[n] || [], katildi: s.joinedAt?.[n] || null, susturulduBitis: (s.timeouts?.[n] || 0) > Date.now() ? s.timeouts[n] : null }; };
+const memberView = (s, n) => { const u = db.users[n] || {}; return { id: db.users[n] ? uidOf(u) : null, ad: n, gorunenAd: u.displayName || n, bot: !!u.bot, avatar: u.avatar || null, roller: s.memberRoles?.[n] || [], katildi: s.joinedAt?.[n] || null, susturulduBitis: (s.timeouts?.[n] || 0) > Date.now() ? s.timeouts[n] : null }; };
 // Mesaj olaylarını botlara ilet: socket.io yayınlarına kanca (her yerden atılan mesaj, düzenleme ve silme yakalanır)
 const lastBotText = new Map();
 {
@@ -2857,7 +2889,7 @@ function botMember(s, name, kind) { // üye katıldı / ayrıldı / güncellendi
   if (kind === 'leave' && isBotUser(name)) { const a = appOf(name); if (a) { s.customRoles = (s.customRoles || []).filter(r => r.managed !== a.id); gwDispatch(a.id, 'SUNUCUDAN_CIKARILDI', { id: s.id, ad: s.name }); devStatsSync(a.owner); } return; }
   for (const n of s.members.filter(isBotUser)) { const a = appOf(n); if (!a || a.killed || n === name) continue;
     const t = kind === 'join' ? 'UYE_KATILDI' : kind === 'leave' ? 'UYE_AYRILDI' : 'UYE_GUNCELLENDI';
-    gwDispatch(a.id, t, { sunucu: s.id, uye: kind === 'leave' ? { ad: name } : memberView(s, name) }, c => c.intents.has('uyeler'));
+    gwDispatch(a.id, t, { sunucu: s.id, uye: kind === 'leave' ? { id: db.users[name] ? uidOf(db.users[name]) : null, ad: name } : memberView(s, name) }, c => c.intents.has('uyeler'));
     if (kind === 'join' && !a.verified) { const r = reachOf(a); if (r > REACH_MAX && !a.reachWarned) { a.reachWarned = Date.now(); botDm(a.owner, { title: `🤖 ${a.bot} ${REACH_MAX} kişiyi geçti`, tone: 'warn', text: `botun artık ${r} kişiye ulaşıyor. doğrulanmamış botlar yeni sunuculara eklenemez. Geliştirici Portalı'ndan doğrulama isteyebilirsin.` }); } }
   }
 }
@@ -2890,7 +2922,7 @@ function newInter(a, type, user, chId, data, msg) {
   inters.set(it.id, it);
   const u = db.users[user] || {};
   const payload = { id: it.id, token: it.token, tur: type, oda: chId, sunucu: it.sid, dm: chId.startsWith('dm:'),
-    kullanici: { ad: user, gorunenAd: u.displayName || user, avatar: u.avatar || null, roller: f ? f.s.memberRoles?.[user] || [] : [], izinler: f ? [...permsOf(f.s, user)] : [] },
+    kullanici: { id: db.users[user] ? uidOf(u) : null, ad: user, gorunenAd: u.displayName || user, avatar: u.avatar || null, roller: f ? f.s.memberRoles?.[user] || [] : [], izinler: f ? [...permsOf(f.s, user)] : [] },
     veri: data, mesaj: msg ? msgForBot(a, chId, msg, true) : null };
   setTimeout(() => { if (!it.done && !it.deferred) ephWhisper(user, chId, `${a.bot} cevap vermedi. Bot kapalı ya da yavaş olabilir.`); }, INTER_WAIT + 400);
   if (botConnsOf(a.id).length) gwDispatch(a.id, type === 'KOMUT' ? 'KOMUT' : type === 'FORM' ? 'FORM' : type === 'SECIM' ? 'SECIM' : 'BUTON', payload);
@@ -3026,6 +3058,14 @@ function botChan(a, cid, need = 'view') {
   return f;
 }
 const chanHits = new Map();
+// Kullanıcı yerine kalıcı kimliği de kabul et: /uyeler/123456789012345 ile /uyeler/ali aynı kişi
+api.param('ad', (req, res, next, val) => { const n = nameOfRef(val); if (n) req.params.ad = n; next(); });
+api.get('/kullanicilar/:ad', R((a, req) => {
+  const n = req.params.ad, u = db.users[n];
+  // Sadece botla ortak sunucusu olan ya da bota DM atmış kullanıcılar görülebilir
+  if (!u || !(botServers(a).some(s => s.members.includes(n)) || msgRaw[dmId(a.bot, n)]?.some(m => m.author === n))) return { error: 'Kullanıcı bulunamadı', code: 404 };
+  return { id: uidOf(u), ad: n, gorunenAd: u.displayName || n, avatar: u.avatar || null, bot: !!u.bot, olusturuldu: u.createdAt || null };
+}));
 api.get('/ben', R(a => ({ bot: appView(a), sunucuSayisi: botServers(a).length, erisim: reachOf(a), esik: REACH_MAX, dogrulandi: !!a.verified, icerikIzni: contentOk(a) })));
 api.get('/sunucular', R(a => ({ sunucular: botServers(a).map(s => botServerView(a, s)) })));
 api.get('/sunucular/:sid', R((a, req) => { const s = botSrv(a, req.params.sid); return s ? botServerView(a, s) : { error: 'Sunucu bulunamadı', code: 404 }; }));
@@ -3217,7 +3257,7 @@ io.on('connection', socket => {
     const w = limited('reg|' + ip, 5, 3600e3);
     if (w) return cb({ error: `Bu bağlantıdan çok fazla hesap açıldı. ${Math.ceil(w / 60)} dakika sonra tekrar dene.` });
     const salt = crypto.randomBytes(16).toString('hex');
-    db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} };
+    db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} }; uidOf(db.users[name]);
     const sr = cleanSrc(src); if (sr) db.users[name].src = sr;
     db.users[name].dob = String(dob); db.users[name].birthday = String(dob).slice(5); if (age < 18) db.users[name].guardian = { at: Date.now(), v: 1, where: 'kayit' }; // tam tarih gizli tutulur; profilde sadece gün-ay (istersen kaldırabilirsin)
     { const iv = clean(invite, 40).split(/[=/]/).pop(), sv = iv && db.servers.find(x => x.invite === iv); if (sv) db.users[name].via = { srv: sv.id, name: clean(sv.name, 40) }; else if (gate.code) db.users[name].via = { code: 1 }; } // hangi reklamdan / kelimeden geldi (ilk ziyaret)
@@ -4567,7 +4607,7 @@ io.on('connection', socket => {
     if (!NAME_RE.test(name)) return cb({ error: 'Bot adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin', field: 'name' });
     if (nameTaken(name) || /kanka|claude|admin|yönetim|yonetim|destek|resmi|official/i.test(name)) return cb({ error: 'Bu ad kullanılamaz ya da alınmış', field: 'name' });
     const aid = id() + id(), token = crypto.randomBytes(30).toString('base64url');
-    db.users[name] = { name, bot: { app: aid }, color: COLORS[crypto.randomInt(COLORS.length)], xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], displayName: name, bio: clean(desc, 190) };
+    db.users[name] = { name, bot: { app: aid }, color: COLORS[crypto.randomInt(COLORS.length)], xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], displayName: name, bio: clean(desc, 190) }; uidOf(db.users[name]);
     const a = (db.apps ||= {})[aid] = { id: aid, owner: me, bot: name, name, desc: clean(desc, 400), createdAt: Date.now(), tokenH: appTokH(token), tokenAt: Date.now(), secret: crypto.randomBytes(24).toString('hex'), cmds: [], dmOk: true, stats: {} };
     if (!mine.length) { // ilk botla birlikte bir deneme sunucusu: bot içinde hazır
       const s = { id: id(), name: `${name} deneme`, icon: '🤖', owner: me, members: [me], joinedAt: { [me]: Date.now() }, createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: newInviteCode(), template: 'bos', botTest: aid,
@@ -5569,4 +5609,5 @@ setInterval(() => {
   save();
 }, process.env.SCHED_MS ? +process.env.SCHED_MS : 10e3);
 
+migrateUids();
 server.listen(PORT, () => console.log(`Kanka Chat çalışıyor: http://localhost:${PORT}`));

@@ -4972,7 +4972,7 @@ function userMenu(n, x, y) {
         (mv && others.length ? `<button data-u="vmovesub" class="arr">Başka odaya taşı${ic('chevron')}</button><div class="sub" id="u-vmove">${others.map(c => `<button data-vmove="${c.id}">${esc(c.name)}</button>`).join('')}</div>` : '') +
         (mv ? b('vkick', 'Sesten çıkar', 'danger') : '');
     })() +
-    '<hr>' + b('copy', `<span>Kullanıcı adını kopyala</span>${ic('idcopy')}`);
+    '<hr>' + b('copy', `<span>Kullanıcı adını kopyala</span>${ic('idcopy')}`) + (S.users[n]?.id ? b('copyid', `<span>Kullanıcı kimliğini kopyala</span>${ic('idcopy')}`) : '');
   document.body.appendChild(m);
   const place = () => { const w = m.offsetWidth, h = m.offsetHeight; m.style.left = Math.max(8, x + w + 8 > innerWidth ? x - w : x) + 'px'; m.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + 'px'; };
   place();
@@ -5009,6 +5009,7 @@ function userMenu(n, x, y) {
     else if (a === 'kick') confirmBox(`${n} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: srv.id, name: n }, r => r.error ? toast(r.error) : toast(`${n} atıldı`)));
     else if (a === 'ban') askBan(srv, n);
     else if (a === 'copy') navigator.clipboard?.writeText(n).then(() => toast('Kopyalandı'));
+    else if (a === 'copyid') navigator.clipboard?.writeText(S.users[n]?.id || '').then(() => toast('Kullanıcı kimliği kopyalandı. Ad değişse de bu kimlik aynı kalır.'));
     else if (a === 'report') showReport({ kind: 'user', name: n, serverId: srv?.id });
   };
 }
@@ -8454,6 +8455,7 @@ function showProfile(n, tab = 'about') {
     e.stopPropagation(); const b = e.currentTarget.getBoundingClientRect(), blocked = S.social.blocked.includes(n), items = [];
     items.push({ t: uNotes[n] ? 'Notu düzenle' : 'Not ekle', icon: 'edit', act: () => form('Not', `${esc(n)} hakkında sadece senin göreceğin bir not.`, [{ k: 'note', p: 'Not', v: uNotes[n] || '' }], v => { v.note.trim() ? uNotes[n] = v.note.trim() : delete uNotes[n]; saveU(); showProfile(n, tab); }) });
     items.push({ t: 'Kullanıcı adını kopyala', icon: 'copy', act: () => navigator.clipboard?.writeText(n).then(() => toast('Kopyalandı')) });
+    if (S.users[n]?.id) items.push({ t: 'Kullanıcı kimliğini kopyala', icon: 'idcopy', act: () => navigator.clipboard?.writeText(S.users[n].id).then(() => toast('Kullanıcı kimliği kopyalandı')) });
     if (S.staff) { const hasA = (u?.badges || []).includes('avci');
       items.push({ t: hasA ? 'Hata Avcısı rozetini al' : 'Hata Avcısı rozeti ver', icon: 'bug', act: () => (hasA ? (f => confirmBox(`${n} kullanıcısının Hata Avcısı rozeti geri alınsın mı?`, f)) : (f => f()))(() => socket.emit('userAward', { name: n, badge: 'avci', on: !hasA }, x => x.error ? toast(x.error) : (toast(!hasA ? `🐞 ${n} artık Hata Avcısı` : 'Rozet geri alındı', null, false, { type: 'ok' }), setTimeout(() => showProfile(n, tab), 250)))) }); }
     if (srv && !srv.public && n !== srv.owner && !isAdmin(srv, n)) {

@@ -143,6 +143,7 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
       <tr><td><code>PATCH</code> / <code>DELETE /odalar/:id/mesajlar/:mid</code></td><td>Düzenle / sil (başkasınınkini silmek için "Mesajları yönet")</td></tr>
       <tr><td><code>PUT</code> / <code>DELETE /odalar/:id/mesajlar/:mid/tepkiler/:emoji</code></td><td>Tepki ekle / kaldır</td></tr>
       <tr><td><code>PUT</code> / <code>DELETE /odalar/:id/sabitler/:mid</code></td><td>Sabitle / kaldır</td></tr>
+      <tr><td><code>GET /kullanicilar/:ad</code></td><td>Kullanıcının kimliği, adı, görünen adı (ortak sunucu ya da DM gerekir)</td></tr>
       <tr><td><code>POST /kullanicilar/:ad/dm</code></td><td>Özel mesaj (ortak sunucu gerekir)</td></tr>
       <tr><td><code>PUT</code> / <code>DELETE /sunucular/:id/uyeler/:ad/roller/:rol</code></td><td>Rol ver / al (botun rolünden aşağıdakiler)</td></tr>
       <tr><td><code>POST /sunucular/:id/uyeler/:ad/sustur</code></td><td><code>{ dakika, sebep }</code> (0 = kaldır)</td></tr>
@@ -151,6 +152,11 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
       <tr><td><code>POST /etkilesim/:id/:token/cevap</code></td><td><code>{ tur: 'mesaj' | 'bekle' | 'guncelle' | 'form', ... }</code> (bot token'ı gerekmez)</td></tr>
       <tr><td><code>PATCH /etkilesim/:id/:token/mesaj</code>, <code>POST .../takip</code></td><td>"bekle"den sonra düzenle / ek mesaj</td></tr></table>
 
+    <h3 id="kimlik">Kullanıcı kimliği</h3>
+    <p>Her kullanıcının ad değişse de değişmeyen bir sayısal kimliği (<code>id</code>) var. Mesaj yazarında (<code>yazar.id</code>), etkileşimlerde (<code>kullanici.id</code>), üye bilgisinde (<code>uye.id</code>) ve <code>GET /ben</code> cevabında (<code>bot.kullaniciId</code>) gelir. Veritabanında kullanıcıyı <b>adla değil kimlikle sakla</b>: ad değiştiğinde seviye, bakiye, uyarı gibi verilerin kaybolmaz.</p>
+    <ul><li>Yolda <code>:ad</code> yazan her yere ad yerine kimlik de verebilirsin: <code>GET /sunucular/:id/uyeler/123456789012345678</code></li>
+      <li>Mesajda <code>&lt;@kimlik&gt;</code> yazarsan kişi güncel adıyla etiketlenir: <code>{ "icerik": "Tebrikler &lt;@123456789012345678&gt;!" }</code></li>
+      <li>Uygulamada kullanıcıya sağ tıklayıp <b>Kullanıcı kimliğini kopyala</b> ile kimliği alabilirsin.</li></ul>
     <h2 id="gateway">8. Gateway (kütüphane kullanmayanlar için)</h2>
     <p><code>wss://kankahq.com/bot/gateway</code> adresine bağlan. Her mesaj <code>{ op, d, t, s }</code> biçiminde JSON'dur.</p>
     <table><tr><th>op</th><th>Anlamı</th></tr>
