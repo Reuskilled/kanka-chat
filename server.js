@@ -768,6 +768,15 @@ async function startTurn() {
       catch { try { execFileSync('netsh', ['advfirewall', 'firewall', 'add', 'rule', 'name=Kanka Chat TURN', 'dir=in', 'action=allow', 'protocol=UDP', 'localport=3478,50000-50200'], { stdio: 'ignore' }); } catch {} }
     }
     const server = new Turn({ authMech: 'long-term', credentials: { [cfg.user]: cfg.pass }, realm: 'kanka', listeningPort: 3478, minPort: 50000, maxPort: 50200, externalIps: ip, debugLevel: 'OFF' });
+    // node-turn 0.0.6 hatası: yenileme (Refresh) isteği tanımsız ayar adlarını (defaultLifetime, maxAllocateTimeout) okuyor,
+    // süre NaN çıkıyor ve ayrılan röle 1 ms sonra siliniyor. Sonuç: TURN üzerinden giden sesli görüşme ilk yenilemede
+    // (birkaç dakika sonra) kopuyordu. Günlükteki "TimeoutNaNWarning" bundandı.
+    server.defaultLifetime = server.defaultAllocatetLifetime || 600;
+    server.maxAllocateTimeout = server.maxAllocateLifetime || 3600;
+    try { // Allocate tekrarında da süre verilmeden çağrılıyor: mevcut süreyi kullan
+      const Alloc = require('node-turn/lib/allocation'), upd = Alloc.prototype.update;
+      if (!upd.kankaFix) { Alloc.prototype.update = function (l) { return upd.call(this, l === 0 ? 0 : Number.isFinite(+l) && +l > 0 ? +l : this.lifetime); }; Alloc.prototype.update.kankaFix = true; }
+    } catch (e) { console.error('TURN yaması uygulanamadı:', e.message); }
     server.start();
     turnInfo = { urls: [`turn:${ip}:3478?transport=udp`], username: cfg.user, credential: cfg.pass };
     console.log('TURN sunucusu çalışıyor:', ip + ':3478');
