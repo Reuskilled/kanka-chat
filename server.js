@@ -539,13 +539,13 @@ function readDbFile(f) {
   if (!j || typeof j !== 'object' || typeof j.users !== 'object' || !Array.isArray(j.servers)) throw new Error('beklenen alanlar yok');
   return j;
 }
-let dbRecovered = null;
+let dbRecovered = null, dbLoadedFrom = null;
 function loadDb() {
   const backups = fs.existsSync(BACKUPS) ? fs.readdirSync(BACKUPS).filter(n => BACKUP_RE.test(n)).sort().reverse().map(n => path.join(BACKUPS, n)) : [];
   for (const f of [DATA_FILE, BAK_FILE, TMP_FILE, ...backups]) {
     if (!fs.existsSync(f)) continue;
     try {
-      const j = readDbFile(f);
+      const j = readDbFile(f); dbLoadedFrom = f;
       if (f !== DATA_FILE) {
         dbRecovered = path.basename(f);
         console.error(`!!! data.json okunamadı, ${dbRecovered} dosyasından kurtarıldı`);
@@ -565,10 +565,99 @@ if (fs.existsSync(RESET_FLAG)) {
   db = { users: {}, sessions: {}, servers: [], messages: {}, playlists: {} };
   for (const f of fs.readdirSync(UPLOADS)) { try { fs.unlinkSync(path.join(UPLOADS, f)); } catch {} }
   fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
+  for (const x of ['', '-wal', '-shm']) try { fs.rmSync(path.join(DATA_DIR, 'mesajlar.db' + x), { force: true }); } catch {}
   fs.unlinkSync(RESET_FLAG);
   console.log('Tüm veriler sıfırlandı.');
 }
 for (const k of ['users', 'sessions', 'messages', 'playlists']) db[k] ||= {};
+
+// ---------- Mesaj deposu (SQLite) ----------
+// Mesajlar bellekte eskisi gibi db.messages içinde durur; kod aynen çalışır. Değişen kanallar her kayıtta
+// mesajlar.db'ye (SQLite) anında ve tek tek yazılır. data.json'a ise mesajların tam görüntüsü 10 dakikada bir
+// alınır; arada data.json'a son görüntü aynen eklenir. Böylece her kayıtta 5+ MB'lık JSON üretilmez,
+// zorla kapatmada mesaj kaybolmaz ve data.json her zaman tek başına eksiksiz bir yedek olarak kalır
+// (eski sürüme dönülse en fazla 10 dakikalık mesaj değişikliği data.json'da eksik olur).
+// Kapatmak için: KANKA_SQLITE=0 (data.json eskisi gibi her kayıtta tam yazılır).
+const MSG_DB_FILE = path.join(DATA_DIR, 'mesajlar.db');
+const MSG_SNAP_EVERY = 10 * 60e3, MSG_TOUCH_KEEP = 60e3;
+const msgRaw = db.messages; // gerçek nesne (Proxy'siz)
+const msgTouched = new Map(), msgDeleted = new Set(); // kanal -> son erişim zamanı · silinen kanallar
+let msgDb = null, msgQ = null, msgSnapJson = null, msgSnapAt = 0, lastStamp = 0;
+{
+  const snapAt = +db.msgSnapAt || 0, wrote = +db.msgWrittenAt || 0;
+  delete db.msgSnapAt; delete db.msgWrittenAt;
+  if (SQLITE_OK) try {
+    const { DatabaseSync } = require('node:sqlite');
+    const m = new DatabaseSync(MSG_DB_FILE);
+    m.exec('PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=2000;'
+      + 'CREATE TABLE IF NOT EXISTS kanal (ch TEXT PRIMARY KEY, data TEXT NOT NULL, at INTEGER NOT NULL);'
+      + 'CREATE TABLE IF NOT EXISTS silinen (ch TEXT PRIMARY KEY, at INTEGER NOT NULL);'
+      + 'CREATE TABLE IF NOT EXISTS bilgi (k TEXT PRIMARY KEY, v TEXT NOT NULL);');
+    // data.json'u en son bu sürüm mü yazdı? Her yazımdan sonra dosyanın boyutu ve zamanı SQLite'a not edilir.
+    // Eski bir sürüm (geri dönüş yapılmış) sonradan yazdıysa bunlar tutmaz: data.json daha yenidir, SQLite'taki kopyalar atılır.
+    let st = null; try { st = fs.statSync(dbLoadedFrom || DATA_FILE); } catch {}
+    const mark = (() => { try { return JSON.parse(m.prepare("SELECT v FROM bilgi WHERE k = 'json'").get()?.v || 'null'); } catch { return null; } })();
+    const same = !!st && !!mark && mark.size === st.size && Math.abs(mark.mtime - st.mtimeMs) < 1;
+    // data.json bozulup .bak/yedekten kurtarıldıysa SQLite'taki daha yeni kopyalar tam tersine çok değerli: hepsi üstüne konur.
+    // Yazımla not arasında kapanılmışsa dosyadaki damga nottakinden yenidir (eski sürüm damgaya dokunmaz, olduğu gibi bırakır).
+    const ours = dbLoadedFrom && dbLoadedFrom !== DATA_FILE ? true : same || (!!wrote && !!mark && wrote > (mark.stamp || 0));
+    if (!ours && (m.prepare('SELECT COUNT(*) n FROM kanal').get().n || m.prepare('SELECT COUNT(*) n FROM silinen').get().n)) {
+      console.log('mesajlar.db: data.json başka bir sürümce yazılmış, SQLite kopyası yenileniyor');
+      m.exec('DELETE FROM kanal; DELETE FROM silinen;');
+    } else if (ours) {
+      let n = 0, d = 0;
+      for (const r of m.prepare('SELECT ch, data FROM kanal WHERE at > ?').all(snapAt)) { try { msgRaw[r.ch] = JSON.parse(r.data); n++; } catch (e) { console.error('mesajlar.db okunamadı:', r.ch, e.message); } }
+      for (const r of m.prepare('SELECT ch FROM silinen WHERE at > ?').all(snapAt)) { delete msgRaw[r.ch]; d++; }
+      if (n || d) console.log(`mesajlar.db: ${n} kanal güncellendi, ${d} kanal silindi (data.json görüntüsünden sonraki değişiklikler)`);
+    }
+    if (process.env.KANKA_SQLITE !== '0') {
+      msgDb = m;
+      msgQ = {
+        up: m.prepare('INSERT INTO kanal (ch, data, at) VALUES (?, ?, ?) ON CONFLICT(ch) DO UPDATE SET data = excluded.data, at = excluded.at'),
+        unTomb: m.prepare('DELETE FROM silinen WHERE ch = ?'),
+        del: m.prepare('DELETE FROM kanal WHERE ch = ?'),
+        tomb: m.prepare('INSERT INTO silinen (ch, at) VALUES (?, ?) ON CONFLICT(ch) DO UPDATE SET at = excluded.at'),
+        mark: m.prepare("INSERT INTO bilgi (k, v) VALUES ('json', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v"),
+      };
+      // Eski kayıtları temizle: tam görüntüye girmiş silme işaretleri artık gereksiz
+      m.prepare('DELETE FROM silinen WHERE at < ?').run(Date.now() - 7 * 864e5);
+    } else m.close();
+  } catch (e) { console.error('mesajlar.db açılamadı, sadece data.json kullanılacak:', e.message); msgDb = null; }
+  if (msgDb) db.messages = new Proxy(msgRaw, {
+    get(t, k) { if (typeof k === 'string' && Object.hasOwn(t, k)) msgTouched.set(k, Date.now()); return t[k]; },
+    set(t, k, v) { t[k] = v; if (typeof k === 'string') { msgTouched.set(k, Date.now()); msgDeleted.delete(k); } return true; },
+    deleteProperty(t, k) { delete t[k]; if (typeof k === 'string') { msgTouched.delete(k); msgDeleted.add(k); } return true; },
+  });
+}
+// Erişilen (ve muhtemelen değişen) kanalları SQLite'a yaz. Erişimden sonra 60 sn boyunca her kayıtta yeniden yazılır:
+// sonradan gelen değişiklikler (bağlantı önizlemesi vb.) de kaçmasın.
+function msgPersist() {
+  if (!msgDb || (!msgTouched.size && !msgDeleted.size)) return;
+  const now = Date.now();
+  msgDb.exec('BEGIN');
+  try {
+    for (const [ch, at] of msgTouched) {
+      const list = msgRaw[ch];
+      if (list) { msgQ.up.run(ch, JSON.stringify(list), now); msgQ.unTomb.run(ch); }
+      if (now - at > MSG_TOUCH_KEEP) msgTouched.delete(ch);
+    }
+    for (const ch of msgDeleted) { msgQ.del.run(ch); msgQ.tomb.run(ch, now); }
+    msgDb.exec('COMMIT');
+    msgDeleted.clear();
+  } catch (e) { try { msgDb.exec('ROLLBACK'); } catch {} throw e; }
+}
+// data.json yazıldıktan sonra: boyutunu ve zamanını not et (açılışta "bu dosyayı ben mi yazdım" kontrolü için)
+function msgMarkJson(stamp) { if (!msgDb) return; try { const st = fs.statSync(DATA_FILE); msgQ.mark.run(JSON.stringify({ size: st.size, mtime: st.mtimeMs, stamp })); } catch (e) { console.error('mesajlar.db notu:', e.message); } }
+// data.json metni: SQLite açıksa mesajlar en fazla 10 dakikada bir yeniden JSON'a çevrilir, arada son görüntü eklenir
+function dbJson(full) {
+  if (!msgDb) return JSON.stringify(db);
+  const now = Date.now();
+  if (full || msgSnapJson === null || now - msgSnapAt > MSG_SNAP_EVERY) { msgSnapAt = now; msgSnapJson = JSON.stringify(msgRaw); }
+  const { messages, ...rest } = db;
+  lastStamp = Math.max(Date.now(), lastStamp + 1); // her yazımın damgası farklı ve artan
+  const head = JSON.stringify({ ...rest, msgSnapAt, msgWrittenAt: lastStamp });
+  return head.slice(0, -1) + (head.length > 2 ? ',' : '') + '"messages":' + msgSnapJson + '}';
+}
 // Oturum ve şifre sıfırlama anahtarları veritabanında açık değil, özet (SHA-256) olarak saklanır:
 // yedek dosyası bir yere sızsa bile içindeki anahtarlarla kimsenin hesabına girilemez.
 const tokH = t => crypto.createHash('sha256').update(String(t)).digest('hex');
@@ -611,7 +700,7 @@ function backup(force) {
     fs.mkdirSync(BACKUPS, { recursive: true });
     const name = `data-${new Date().toISOString().slice(0, 10)}.json.gz`, f = path.join(BACKUPS, name);
     if (force || !fs.existsSync(f)) {
-      if (saveTimer || dbDirty || dbWriting) { writeDbNow(); dbDirty = false; }
+      if (saveTimer || dbDirty || dbWriting || msgDb) { writeDbNow(); dbDirty = false; }
       const gz = zlib.gzipSync(fs.readFileSync(DATA_FILE), { level: 9 });
       readDbFile(DATA_FILE); // bozuk veriyi yedeğe koyma
       fs.writeFileSync(f + '.tmp', gz); fs.renameSync(f + '.tmp', f);
@@ -692,13 +781,15 @@ let saveTimer = null, saveFails = 0, syncGen = 0, dbDirty = false, dbWriting = f
 function writeDbNow() {
   clearTimeout(saveTimer); saveTimer = null;
   try {
-    const txt = JSON.stringify(db);
+    try { msgPersist(); } catch (e) { console.error('mesajlar.db yazılamadı:', e.message); }
+    const txt = dbJson(true), stamp = lastStamp;
     const fd = fs.openSync(TMP_FILE, 'w');
     try { fs.writeSync(fd, txt); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
     if (fs.existsSync(DATA_FILE)) { try { fs.copyFileSync(DATA_FILE, BAK_FILE); } catch {} }
     syncGen++; // süren bir asenkron yazım varsa artık eski: onu data.json'un üstüne koyma
     let tries = 0;
     for (;;) { try { fs.renameSync(TMP_FILE, DATA_FILE); break; } catch (e) { if (++tries > 5) throw e; const t = Date.now() + 40; while (Date.now() < t); } } // Windows'ta dosya anlık kilitli olabilir
+    msgMarkJson(stamp);
     saveFails = 0;
   } catch (e) { saveFails++; console.error('Kayıt yazılamadı (' + saveFails + '):', e.message); setTimeout(save, Math.min(30e3, 1000 * saveFails)); }
 }
@@ -720,12 +811,13 @@ async function writeDbAsync() {
   dbWriting = true; dbDirty = false;
   const gen = syncGen;
   try {
-    const txt = JSON.stringify(db);
+    try { msgPersist(); } catch (e) { console.error('mesajlar.db yazılamadı:', e.message); }
+    const txt = dbJson(false), stamp = lastStamp;
     const fh = await fs.promises.open(TMP_ASYNC, 'w');
     try { await fh.writeFile(txt); await fh.sync(); } finally { await fh.close(); }
     // bu arada senkron (daha yeni) bir yazım olduysa bu eski kopyayı data.json'un üstüne koyma
     if (gen === syncGen) { try { await fs.promises.copyFile(DATA_FILE, BAK_FILE); } catch {} }
-    for (let tries = 0; gen === syncGen; tries++) { try { await fs.promises.rename(TMP_ASYNC, DATA_FILE); break; } catch (e) { if (tries >= 5) throw e; await new Promise(r => setTimeout(r, 40)); } } // Windows'ta dosya anlık kilitli olabilir
+    for (let tries = 0; gen === syncGen; tries++) { try { await fs.promises.rename(TMP_ASYNC, DATA_FILE); msgMarkJson(stamp); break; } catch (e) { if (tries >= 5) throw e; await new Promise(r => setTimeout(r, 40)); } } // Windows'ta dosya anlık kilitli olabilir
     saveFails = 0;
   } catch (e) { saveFails++; dbDirty = true; console.error('Kayıt yazılamadı (' + saveFails + '):', e.message); await new Promise(r => setTimeout(r, Math.min(30e3, 1000 * saveFails))); }
   finally { dbWriting = false; }
