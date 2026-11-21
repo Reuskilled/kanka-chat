@@ -4442,7 +4442,8 @@ function showSettings(tab) {
       <div class="pc-sec" style="margin-top:18px"><label class="switch">Yeni arayüz<input type="checkbox" id="p-ui2" ${uiNew() ? 'checked' : ''}></label>
       <label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">:) ;) :D gibi ifadeleri emojiye çevir<input type="checkbox" id="p-emo" ${emoOn() ? 'checked' : ''}></label>
-      <label class="switch">Bas-konuş (sesli odada V tuşuna basılı tut)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label></div></div>`,
+      <label class="switch">Bas-konuş (sesli odada tuşa basılı tutunca konuşursun)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label>
+      <div class="st-row" style="display:flex;align-items:center;gap:10px;margin-top:6px"><span>Bas-konuş tuşu</span><button class="btns2" id="p-pttkey">${esc(pttKeyName())}</button><small class="muted">${window.kankaDesktop ? 'Uygulama arka plandayken (oyunda) da çalışır' : 'Tarayıcıda sadece Kanka sekmesi açıkken çalışır'}</small></div></div></div>`,
     notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Ses cihazları</label><div class="devbox" id="st-dev"></div><button class="btns2" id="st-mic" style="margin-top:10px">${ic('mic')} Mikrofonu test et</button></div><div class="st-field"><label>Başlangıç rehberi</label><button class="btns2" id="st-onb">${ic('sprout')} Rehberi baştan göster</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
         <label class="switch">Bilgisayar açılınca Kanka Chat'i başlat<input type="checkbox" id="as-on"></label>
         <label class="switch">Açılışta simge durumunda başlasın (saatin yanında)<input type="checkbox" id="as-hid"></label>
@@ -4525,6 +4526,13 @@ function showSettings(tab) {
       $('#p-emo').onchange = e => { store.set('kanka-emoticon', e.target.checked ? null : 'off'); toast(e.target.checked ? 'İfadeler emojiye çevrilecek 🙂' : 'İfadeler olduğu gibi gönderilecek :)'); };
       $('#p-snd').onchange = e => { store.set('kanka-sound', e.target.checked ? null : 'off'); if (e.target.checked) playSound('mention'); };
       $('#p-ptt').onchange = e => { store.set('kanka-ptt', e.target.checked ? 'on' : null); applyMute(); };
+      $('#p-pttkey').onclick = e => { // sıradaki tuşa ya da farenin yan tuşuna basınca o tuş olur; Esc vazgeçer
+        const b = e.currentTarget; b.textContent = 'Bir tuşa bas…'; pttPicking = true;
+        const done = code => { pttPicking = false; document.removeEventListener('keydown', kd, true); document.removeEventListener('mousedown', md, true); if (code) { store.set('kanka-pttkey', code); applyMute(); } b.textContent = pttKeyName(); };
+        const kd = ev => { ev.preventDefault(); ev.stopPropagation(); done(ev.code === 'Escape' ? null : codeToVk(ev.code) ? ev.code : null); };
+        const md = ev => { if (ev.button === 3 || ev.button === 4) { ev.preventDefault(); done(ev.button === 3 ? 'Mouse4' : 'Mouse5'); } };
+        setTimeout(() => { document.addEventListener('keydown', kd, true); document.addEventListener('mousedown', md, true); }, 0);
+      };
     }
     if (t === 'notif') {
       wireOverlaySettings();
@@ -4600,7 +4608,12 @@ function renderRail() {
   $('#disc-srv').onclick = () => showDiscover();
   $('#disc-srv').classList.toggle('hint', !S.servers.some(s => s.id !== 's1') && S.view !== 'discover');
   renderOnb();
-  $('#home').onclick = openDMHome;
+  // DM açıkken sunucuya geçip logoya basınca en son açık DM'e dön (Discord gibi); DM yoksa Yuva
+  $('#home').onclick = () => {
+    const l = lastDM; lastDM = null;
+    if (S.view !== 'dm' && l && (l.id.startsWith('g:') ? S.dms.some(d => d.id === l.id) : true)) { S.unreadDM = false; return openChat(l.id, l.with); }
+    openDMHome();
+  };
   $('#rail').querySelectorAll('.srv[data-id]').forEach(b => b.onclick = () => { if (railDragged) return; selectServer(b.dataset.id); });
   $('#add-srv').onclick = () => showTemplates();
   $('#join-srv').onclick = () => form('Sunucuya katıl', 'Arkadaşının gönderdiği davet linkini ya da kodunu yapıştır.', [{ k: 'code', p: 'Davet linki ya da kodu' }], v => joinInvite(v.code));
@@ -4783,7 +4796,9 @@ function showWelcome(s, force) {
 }
 
 // ================= Sunucu görünümü =================
+let lastDM = null; // sunucuya geçmeden önce açık olan özel sohbet
 function selectServer(id, channelId) {
+  if (S.view === 'dm') lastDM = S.channel?.id && (S.channel.dm || S.channel.id.startsWith('g:') || S.channel.id.startsWith('dm:')) ? { id: S.channel.id, with: S.channel.with } : null;
   $('#callbar')?.remove();
   closeSrvMenu(); document.body.classList.remove('discover');
   S.view = 'server';
@@ -4917,7 +4932,7 @@ document.addEventListener('keydown', e => {
   if (typingTarget(e) || document.activeElement?.isContentEditable) return;
   if ($('#modal').classList.contains('open') || $('.umenu') || $('#statusmenu') || $('#srvmenu')) return;
   if ($('#compose').style.display === 'none' || !inp.offsetParent) return;
-  if (myVoice && pttOn() && e.code === 'KeyV') return;                 // bas-konuş tuşu yazıya dönüşmesin
+  if (myVoice && pttOn() && e.code === pttKey()) return;               // bas-konuş tuşu yazıya dönüşmesin
   inp.focus();                                                          // tuş, odak değiştikten sonra kutuya yazılır
 }, true);
 
@@ -8784,7 +8799,7 @@ function sysNotify(title, n) {
   const data = { ch: n.channelId || null, from: n.from || null, dm: !!n.dm, friend: !!n.friend }, u = S.users[n.from] || {};
   const icon = /^(\/uploads\/|https:\/\/)/.test(u.avatar || '') ? u.avatar : '/icon-192.png', tag = data.ch || (n.friend ? 'friends' : 'kanka');
   try {
-    if (window.kankaDesktop || !navigator.serviceWorker?.controller) { const x = new Notification(title, { body, icon, tag, renotify: true, silent: true }); x.onclick = () => { window.focus(); openFromNotif(data); x.close(); }; }
+    if (window.kankaDesktop || !navigator.serviceWorker?.controller) { const x = new Notification(title, { body, icon, tag, renotify: true, silent: true }); x.onclick = e => { e?.preventDefault?.(); window.kankaDesktop?.show?.(); window.focus(); openFromNotif(data); x.close(); }; }
     else navigator.serviceWorker.ready.then(r => r.showNotification(title, { body, icon, badge: '/icon-192.png', tag, renotify: true, silent: true, data })).catch(() => {});
     return true;
   } catch { return false; }
@@ -9271,7 +9286,7 @@ socket.on('voiceLeft', sid => {
     leaveVoice(false); renderStage();
   }
 });
-function cleanupVoice(keepState) { Object.keys(peers).forEach(closePeer); myVoice = null; myVoiceAt = 0; dmCallMin = false; dmCallSig = ''; dmCallEver = false; if (deaf && !keepState) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
+function cleanupVoice(keepState) { Object.keys(peers).forEach(closePeer); myVoice = null; pttPageDown = pttHookDown = pttDown = false; pttSync(); myVoiceAt = 0; dmCallMin = false; dmCallSig = ''; dmCallEver = false; if (deaf && !keepState) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
@@ -9548,6 +9563,40 @@ function setSpeaking(name, sid, on) {
 
 // --- Bas-konuş ve susturma ---
 const pttOn = () => store.get('kanka-ptt') === 'on';
+const pttKey = () => store.get('kanka-pttkey') || 'KeyV';
+let pttPicking = false, pttHookVk = 0, pttHookDown = false, pttPageDown = false;
+// Tarayıcı tuş kodu -> Windows tuş kodu (masaüstü uygulaması arka planda tuşu bununla dinler)
+function codeToVk(c) {
+  let m;
+  if ((m = /^Key([A-Z])$/.exec(c))) return m[1].charCodeAt(0);
+  if ((m = /^Digit(\d)$/.exec(c))) return 48 + +m[1];
+  if ((m = /^Numpad(\d)$/.exec(c))) return 96 + +m[1];
+  if ((m = /^F(\d{1,2})$/.exec(c)) && +m[1] >= 1 && +m[1] <= 24) return 111 + +m[1];
+  return { Mouse4: 5, Mouse5: 6, Space: 32, Tab: 9, CapsLock: 20, ShiftLeft: 160, ShiftRight: 161, ControlLeft: 162, ControlRight: 163, AltLeft: 164, AltRight: 165,
+    Backquote: 192, Minus: 189, Equal: 187, BracketLeft: 219, BracketRight: 221, Backslash: 220, Semicolon: 186, Quote: 222, Comma: 188, Period: 190, Slash: 191, IntlBackslash: 226,
+    Insert: 45, Delete: 46, Home: 36, End: 35, PageUp: 33, PageDown: 34, Pause: 19, ScrollLock: 145, NumpadAdd: 107, NumpadSubtract: 109, NumpadMultiply: 106, NumpadDivide: 111, NumpadDecimal: 110,
+    ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39 }[c] || 0;
+}
+function pttKeyName(c = pttKey()) {
+  let m;
+  if ((m = /^Key([A-Z])$/.exec(c)) || (m = /^Digit(\d)$/.exec(c))) return m[1];
+  if ((m = /^Numpad(\d)$/.exec(c))) return 'Num ' + m[1];
+  return { Mouse4: 'Fare yan tuşu 1', Mouse5: 'Fare yan tuşu 2', Space: 'Boşluk', CapsLock: 'Caps Lock', ShiftLeft: 'Sol Shift', ShiftRight: 'Sağ Shift', ControlLeft: 'Sol Ctrl', ControlRight: 'Sağ Ctrl', AltLeft: 'Sol Alt', AltRight: 'Alt Gr', Backquote: '"' }[c] || c;
+}
+// Harf/rakam gibi yazı tuşları yazı kutusundayken yazıya gider; diğerleri (F tuşları, Caps Lock, fare yan tuşu...) her yerde çalışır
+const pttTyping = c => /^(Key|Digit|Space$|Minus$|Equal$|Bracket|Backslash$|Semicolon$|Quote$|Comma$|Period$|Slash$|Backquote$|IntlBackslash$)/.test(c);
+function pttSet(page, hook) {
+  if (page !== undefined) pttPageDown = page; if (hook !== undefined) pttHookDown = hook;
+  const d = !!(myVoice && pttOn() && (pttPageDown || pttHookDown));
+  if (d !== pttDown) { pttDown = d; applyMute(); }
+}
+function pttSync() { // masaüstünde: sesli odadayken ve bas-konuş açıkken arka plan dinleyicisini aç, değilse kapat
+  if (!window.kankaDesktop?.ptt) return;
+  const want = myVoice && pttOn() ? codeToVk(pttKey()) : 0;
+  if (want === pttHookVk) return; pttHookVk = want; pttHookDown = false;
+  window.kankaDesktop.ptt(want).catch(() => {});
+}
+window.kankaDesktop?.onPtt?.(d => pttSet(undefined, d));
 const micLive = () => !muted && (!pttOn() || pttDown) && canSpeakNow();
 // Hoparlörü kapat (sağırlaştır): kimseyi duymazsın, mikrofonun da kapanır; açınca eski haline döner
 let deaf = false, deafWasMuted = false;
@@ -9567,7 +9616,8 @@ function applyMute() {
   if (bgRaw) { const r = rawTrack(); if (r) r.enabled = micLive(); }
   try { navigator.mediaSession?.setMicrophoneActive?.(micLive()); } catch {}
   $('#mute').innerHTML = ic(muted ? 'micoff' : pttOn() && !pttDown ? 'keyboard' : 'mic') + CARET('in');
-  $('#mute').title = muted ? 'Sesi aç' : pttOn() ? 'Bas-konuş: V tuşuna basılı tut' : 'Sustur';
+  $('#mute').title = muted ? 'Sesi aç' : pttOn() ? `Bas-konuş: ${pttKeyName()} tuşuna basılı tut` : 'Sustur';
+  pttSync();
   $('#mute').classList.toggle('off', muted);
   if (!muted && deaf) { deaf = false; applyDeaf(); } // mikrofonu açınca hoparlör de açılır
   if (myVoice) socket.emit('vflags', { m: muted || !canSpeakNow(), d: deaf });
@@ -9575,9 +9625,16 @@ function applyMute() {
   pushOverlay();
 }
 const typingTarget = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
-document.addEventListener('keydown', e => { if (myVoice && pttOn() && e.code === 'KeyV' && !typingTarget(e) && !pttDown) { pttDown = true; applyMute(); } });
-document.addEventListener('keyup', e => { if (e.code === 'KeyV' && pttDown) { pttDown = false; applyMute(); } });
-window.addEventListener('blur', () => { if (pttDown) { pttDown = false; applyMute(); } });
+document.addEventListener('keydown', e => {
+  if (pttPicking || !myVoice || !pttOn() || e.code !== pttKey()) return;
+  if (typingTarget(e) && pttTyping(e.code)) return;
+  if (typingTarget(e) || e.code === 'Space' || e.code === 'Tab') e.preventDefault();
+  if (!e.repeat) pttSet(true);
+}, true);
+document.addEventListener('keyup', e => { if (e.code === pttKey()) pttSet(false); }, true);
+document.addEventListener('mousedown', e => { if (!pttPicking && myVoice && pttOn() && (e.button === 3 || e.button === 4) && pttKey() === (e.button === 3 ? 'Mouse4' : 'Mouse5')) { e.preventDefault(); pttSet(true); } }, true);
+document.addEventListener('mouseup', e => { if ((e.button === 3 || e.button === 4) && pttKey() === (e.button === 3 ? 'Mouse4' : 'Mouse5')) { e.preventDefault(); pttSet(false); } }, true);
+window.addEventListener('blur', () => pttSet(false)); // sayfa odağı gidince sayfa tuşu bırakılmış say; masaüstü dinleyicisi ayrıca devam eder
 $('#mute').onclick = () => { if (!canSpeakNow()) return toast(srvMutedNow ? 'Bir yetkili seni seste susturdu, kaldırana kadar konuşamazsın' : vch()?.c.type === 'stage' ? 'Sahnede konuşmak için ✋ el kaldır' : 'Bu odada konuşma iznin yok'); muted = !muted; applyMute(); };
 $('#vleave').onclick = () => leaveVoice(false);
 const streamOk = k => { const c = vch()?.c; if (k === 'cam' ? (c?.canVideo ?? c?.canStream) === false : c?.canStream === false) { toast(k === 'cam' ? 'Bu odada kamera açma iznin yok' : 'Bu odada ekran paylaşma iznin yok'); return false; } return true; };
@@ -10982,7 +11039,7 @@ function wireEmpty(box) {
 
 // ================= Odalar: kategoriler, sürükle-bırak, izinler =================
 const canManageCh = s => !!s && perm(s, 'manageChannels');
-const canAddCh = s => !!s && (!(s.customRoles?.length) || perm(s, 'manageChannels'));
+const canAddCh = s => !!s && ((!(s.customRoles?.length) && !s.lockChannels) || perm(s, 'manageChannels'));
 const catsOf = s => s.categories || [];
 const topChs = s => s.channels.filter(c => !c.cat || !catsOf(s).some(k => k.id === c.cat));
 const chIcon = c => roomIcon(c);
@@ -12124,8 +12181,9 @@ function admDev(B) {
 // ================= Kanka yönetimi (site yöneticisi) =================
 function adminPanel(el, sub = 'overview') {
   const R = S.staff, A = ['owner', 'admin'].includes(R);
-  const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['team', 'Moderasyon ekibi', 'shield'], ['dev', 'Bot geliştiriciler', 'code'], ['apps', 'Botlar', 'shield'], ['srvapps', 'Sunucu rozetleri', 'check'], ['log', 'Kayıtlar', 'clock'],
-    ...(A ? [['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
+  // Her rütbe sadece işlem yapabildiği bölümleri görür (moderatör ve destek botları, rozetleri, ekibi düzenleyemez)
+  const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['dev', 'Bot geliştiriciler', 'code'], ['log', 'Kayıtlar', 'clock'],
+    ...(A ? [['team', 'Moderasyon ekibi', 'shield'], ['apps', 'Botlar', 'shield'], ['srvapps', 'Sunucu rozetleri', 'check'], ['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
   if (!subs.some(x => x[0] === sub)) sub = 'overview';
   el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
     <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;

@@ -22,4 +22,9 @@ contextBridge.exposeInMainWorld('kankaDesktop', {
   // Kanka yönetimi: sunucu yedeğini bu bilgisayara indir (Belgeler/Kanka Yedekleri)
   saveBackup: token => ipcRenderer.invoke('kanka:saveBackup', token),
   openBackups: () => ipcRenderer.invoke('kanka:openBackups'),
+  // Bas-konuş: Windows tuş kodu (vk) verilince uygulama arka plandayken de tuşu dinler; 0 verilince durur
+  ptt: vk => ipcRenderer.invoke('kanka:ptt', vk || 0),
+  onPtt: cb => { ipcRenderer.removeAllListeners('kanka:ptt-state'); ipcRenderer.on('kanka:ptt-state', (e, down) => cb(!!down)); },
+  // Bildirime tıklanınca gizli/küçük pencereyi öne getir
+  show: () => ipcRenderer.send('kanka:show'),
 });
