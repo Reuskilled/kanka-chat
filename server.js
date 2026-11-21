@@ -34,6 +34,15 @@ app.use((req, res, next) => {
   next();
 });
 app.use('/uploads', express.static(UPLOADS, { maxAge: '30d', setHeaders: res => res.set('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'; sandbox") }));
+// Masaüstü sürüm dağılımı: uygulamalar 10 dakikada bir /indir/RELEASES?localVersion=x.y.z sorar.
+// Son 48 saatte hangi sürümden kaç farklı bağlantı sordu, /api/surum'da görünür (güncellemelerin kullanıcılara ulaştığını görmek için).
+// IP saklanmaz, sadece sayım için tuzlu özeti bellekte tutulur.
+const deskSeen = new Map(), DESK_SALT = crypto.randomBytes(16);
+app.use('/indir', (req, res, next) => {
+  if (/^\/releases$/i.test(req.path)) { const v = String(req.query.localVersion || req.query.localversion || '').slice(0, 20); if (/^\d+\.\d+\.\d+$/.test(v)) deskSeen.set(crypto.createHmac('sha256', DESK_SALT).update(reqIp(req)).digest('hex').slice(0, 16), { v, at: Date.now() }); }
+  next();
+});
+const deskVersions = () => { const now = Date.now(), o = {}; for (const [k, x] of deskSeen) { if (now - x.at > 48 * 3600e3) { deskSeen.delete(k); continue; } o[x.v] = (o[x.v] || 0) + 1; } return o; };
 app.use('/indir', express.static(path.join(__dirname, 'indir'), { setHeaders: res => res.set('Content-Disposition', 'attachment') }));
 app.use(express.json({ limit: '8kb' }));
 
@@ -349,7 +358,7 @@ const SQLITE_OK = (() => { try { require('node:sqlite'); return true; } catch { 
 app.get('/api/surum', (req, res) => {
   let sha = null;
   try { sha = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'guncelleme.json'), 'utf8')).sha; } catch {}
-  res.json({ surum: sha ? sha.slice(0, 7) : 'yerel', baslama: STARTED, node: process.version, sqlite: SQLITE_OK, kayit: saveSummary() });
+  res.json({ surum: sha ? sha.slice(0, 7) : 'yerel', baslama: STARTED, node: process.version, sqlite: SQLITE_OK, kayit: saveSummary(), masaustu: { sunulan: (() => { try { return fs.readFileSync(path.join(__dirname, 'indir', '.surum'), 'utf8').trim(); } catch { return null; } })(), kullanilan48s: deskVersions() } });
 });
 const artCache = new Map();
 async function albumArt(title, artist) {
