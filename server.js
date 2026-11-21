@@ -580,7 +580,7 @@ for (const k of ['users', 'sessions', 'messages', 'playlists']) db[k] ||= {};
 // Kapatmak için: KANKA_SQLITE=0 (data.json eskisi gibi her kayıtta tam yazılır).
 const MSG_DB_FILE = path.join(DATA_DIR, 'mesajlar.db');
 const MSG_SNAP_EVERY = 10 * 60e3, MSG_TOUCH_KEEP = 60e3;
-const msgRaw = db.messages; // gerçek nesne (Proxy'siz)
+const msgRaw = db.messages; // gerçek nesne (Proxy'siz). Sadece OKUYAN toplu işler (okunmamış sayacı, DM listesi, istatistik, dışa aktarma) bunu kullanır; yazan kod db.messages kullanmalı ki değişiklik SQLite'a gitsin
 const msgTouched = new Map(), msgDeleted = new Set(); // kanal -> son erişim zamanı · silinen kanallar
 let msgDb = null, msgQ = null, msgSnapJson = null, msgSnapAt = 0, lastStamp = 0;
 {
@@ -1465,22 +1465,22 @@ function canAccess(name, chId) {
 }
 // Mesaj silinince/temizlenince okunmamış sayaçlarını geri al: silinenlerin zamanları + kanalda kalan son mesajın zamanı
 function unActivity(chId, gone) {
-  const times = (gone || []).map(m => m?.time || 0), last = (db.messages[chId] || []).at(-1)?.time || 0;
+  const times = (gone || []).map(m => m?.time || 0), last = (msgRaw[chId] || []).at(-1)?.time || 0;
   if (!times.length) return;
   const to = isPrivateChat(chId) ? chatMembers(chId) : (() => { const f = findChannel(chId); return f ? membersOf(f.s).filter(n => canAccess(n, chId)) : []; })();
   for (const n of to) io.to('user:' + n).emit('chanUnact', { channelId: chId, last, times });
 }
 function dmsFor(name) {
-  const dms = Object.keys(db.messages)
-    .filter(k => k.startsWith('dm:') && dmPeers(k).includes(name) && db.messages[k].length)
-    .map(k => ({ id: k, with: dmPeers(k).find(n => n !== name) || name, last: db.messages[k].at(-1).time }));
+  const dms = Object.keys(msgRaw)
+    .filter(k => k.startsWith('dm:') && dmPeers(k).includes(name) && msgRaw[k].length)
+    .map(k => ({ id: k, with: dmPeers(k).find(n => n !== name) || name, last: msgRaw[k].at(-1).time }));
   const groups = Object.values(db.groups || {}).filter(g => g.members.includes(name))
-    .map(g => ({ id: 'g:' + g.id, group: true, name: g.name, members: g.members, owner: g.owner, last: db.messages['g:' + g.id]?.at(-1)?.time || g.created }));
+    .map(g => ({ id: 'g:' + g.id, group: true, name: g.name, members: g.members, owner: g.owner, last: msgRaw['g:' + g.id]?.at(-1)?.time || g.created }));
   return [...dms, ...groups].sort((a, b) => b.last - a.last);
 }
 // Her odanın, kullanıcı dışındaki biri tarafından yazılmış son mesajının zamanı (okunmamış noktaları için)
 function lastMsgTimes(name) {
-  const o = {}, lastOther = ch => { const l = db.messages[ch]; if (!l) return 0; for (let i = l.length - 1; i >= Math.max(0, l.length - 50); i--) if (l[i].author && l[i].author !== name) return l[i].time; return 0; };
+  const o = {}, lastOther = ch => { const l = msgRaw[ch]; if (!l) return 0; for (let i = l.length - 1; i >= Math.max(0, l.length - 50); i--) if (l[i].author && l[i].author !== name) return l[i].time; return 0; };
   for (const sv of serversFor(name)) for (const c of sv.channels) if (!voiceLike(c.type) && seesChannel(sv, c, name)) { const t = lastOther(c.id); if (t) o[c.id] = t; }
   for (const d of dmsFor(name)) { const t = lastOther(d.id); if (t) o[d.id] = t; }
   return o;
@@ -1903,7 +1903,7 @@ setInterval(() => { // açık kalan bağlantılar da yeni günü saysın
 setTimeout(() => { try {
   if (db.anFill1) return;
   const days = {}, first = {}, add = (n, d) => (days[n] ||= new Set()).add(d);
-  for (const list of Object.values(db.messages)) for (const m of list || []) if (m.author && m.time) { add(m.author, ymd(new Date(m.time))); if (!first[m.author] || m.time < first[m.author]) first[m.author] = m.time; }
+  for (const list of Object.values(msgRaw)) for (const m of list || []) if (m.author && m.time) { add(m.author, ymd(new Date(m.time))); if (!first[m.author] || m.time < first[m.author]) first[m.author] = m.time; }
   try { for (const f of fs.readdirSync(BACKUPS).filter(n => BACKUP_RE.test(n))) { const j = readDbFile(path.join(BACKUPS, f)); for (const [n, u] of Object.entries(j.users || {})) if (u.streak?.last) add(n, u.streak.last); } } catch {}
   for (const u of Object.values(db.users)) {
     const d = days[u.name] ||= new Set(); if (u.createdAt) d.add(ymd(new Date(u.createdAt))); for (const k of Object.keys(u.vmin || {})) d.add(k); if (u.streak?.last) d.add(u.streak.last);
@@ -1922,7 +1922,7 @@ setTimeout(() => { try {
   try { for (const f of fs.readdirSync(BACKUPS).filter(n => BACKUP_RE.test(n))) { const j = readDbFile(path.join(BACKUPS, f));
     for (const [n, u] of Object.entries(j.users || {})) { const st = u.streak; if (!st?.last) continue; let c = new Date(st.last + 'T12:00:00Z');
       for (let i = 0; i < Math.min(st.count || 1, 400); i++) { (days[n] ||= new Set()).add(c.toISOString().slice(0, 10)); c = new Date(+c - 864e5); } } } } catch (e) { console.error('seri yedek', e.message); }
-  for (const list of Object.values(db.messages)) for (const m of list || []) if (m.author && m.time) (days[m.author] ||= new Set()).add(ymd(new Date(m.time)));
+  for (const list of Object.values(msgRaw)) for (const m of list || []) if (m.author && m.time) (days[m.author] ||= new Set()).add(ymd(new Date(m.time)));
   const today = ymd(), yest = ymd(new Date(Date.now() - 864e5)); let fixed = 0;
   for (const u of Object.values(db.users)) {
     const d = days[u.name] ||= new Set(); if (u.streak?.last) { let c = new Date(u.streak.last + 'T12:00:00Z'); for (let i = 0; i < Math.min(u.streak.count || 1, 400); i++) { d.add(c.toISOString().slice(0, 10)); c = new Date(+c - 864e5); } }
@@ -3326,7 +3326,7 @@ io.on('connection', socket => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     if (limited('export|' + me, 3, 3600e3)) return cb({ error: 'Saatte en fazla 3 kez indirebilirsin' });
     const { salt, hash, ...profile } = u, msgs = [];
-    for (const [k, list] of Object.entries(db.messages)) for (const m of list) if (m.author === me)
+    for (const [k, list] of Object.entries(msgRaw)) for (const m of list) if (m.author === me)
       msgs.push({ yer: k.startsWith('dm:') ? 'DM: ' + dmPeers(k).filter(n => n !== me).join(', ') : (findChannel(k) ? findChannel(k).s.name + ' #' + findChannel(k).c.name : k), zaman: new Date(m.time).toISOString(), tur: m.kind, metin: m.text || '', resim: m.image || null });
     cb({ ok: true, data: { aciklama: 'Kanka Chat hesabında hakkında tuttuğumuz veriler (KVKK md. 11)', indirilme: new Date().toISOString(), profil: profile, sunucular: serversFor(me).filter(s => !s.public).map(s => ({ ad: s.name, sahip: s.owner === me, katilim: s.joinedAt?.[me] ? new Date(s.joinedAt[me]).toISOString() : null })), mesajlar: msgs } });
   });
@@ -3630,7 +3630,7 @@ io.on('connection', socket => {
   socket.on('adminStats', (cb = () => {}) => {
     if (!SM(cb)) return;
     const now = Date.now(), us = Object.values(db.users), day = now - 864e5, on = onlineNames();
-    let msgsToday = 0; for (const l of Object.values(db.messages)) for (let i = l.length - 1; i >= 0 && l[i].time > day; i--) msgsToday++;
+    let msgsToday = 0; for (const l of Object.values(msgRaw)) for (let i = l.length - 1; i >= 0 && l[i].time > day; i--) msgsToday++;
     const inVoice = new Set(); for (const [, m] of voice) for (const n of m.values()) inVoice.add(n);
     const newest = [...us].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 8).map(u => ({ name: u.name, at: u.createdAt || 0, invitedBy: u.invitedBy || null }));
     cb({ ok: true, users: us.length, online: on.length, new1: us.filter(u => (u.createdAt || 0) > day).length, new7: us.filter(u => (u.createdAt || 0) > now - 7 * 864e5).length,

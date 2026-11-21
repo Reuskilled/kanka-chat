@@ -1,5 +1,5 @@
 // SQLite mesaj deposu senaryo testleri
-// Çalıştırma: npm i --no-save socket.io-client && node test/sqlite-mesaj-testi.js <yeni-kod-klasörü> <eski-server.js-klasörü>
+// Çalıştırma: npm i --no-save socket.io-client && node test/sqlite-mesaj-testi.js <yeni-kod-klasörü> <SQLite öncesi (2ba8b41) server.js klasörü>
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), c = require('crypto');
 const { io } = require('socket.io-client');
 const APP = process.argv[2], OLD = process.argv[3]; // yeni ve eski server.js klasörleri
