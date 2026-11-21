@@ -1378,13 +1378,16 @@ function dcMerge(s, c) {
 // ---- Kanka ekibi: rütbeler ----
 // owner: Kanka HQ sahibi (her şey + ekibi yönetir) · admin: yönetim (her şey, ekip hariç) · mod: şikayet, uyarı, askıya alma · destek: şikayetleri görür, uyarır
 const STAFF_RANKS = { owner: 'Kurucu', admin: 'Yönetici', mod: 'Moderatör', destek: 'Destek' };
-const staffRank = n => !n || !db.users?.[n] ? null : db.servers.find(x => x.id === 's1')?.owner === n ? 'owner' : db.staff?.[n]?.rank || ((db.siteAdmins || []).includes(n) ? 'admin' : null);
+const CO_OWNERS = new Set(['babayim']);
+const isCoOwner = n => !!n && CO_OWNERS.has(String(n).toLowerCase());
+const coOwnerNames = () => Object.keys(db.users || {}).filter(isCoOwner);
+const staffRank = n => !n || !db.users?.[n] ? null : (db.servers.find(x => x.id === 's1')?.owner === n || isCoOwner(n)) ? 'owner' : db.staff?.[n]?.rank || ((db.siteAdmins || []).includes(n) ? 'admin' : null);
 const siteAdmin = n => ['owner', 'admin'].includes(staffRank(n));
 const siteMod = n => !!staffRank(n);
 const ALL_STAFF = ['owner', 'admin', 'mod', 'destek'];
 const STAFF_CAN = { warn: ALL_STAFF, reports: ALL_STAFF, lookup: ALL_STAFF, suspend: ['owner', 'admin', 'mod'], ban: ['owner', 'admin'], del: ['owner', 'admin'], email: ['owner', 'admin'], reset: ['owner', 'admin'] };
 const canStaff = (n, act) => (STAFF_CAN[act] || []).includes(staffRank(n));
-const staffList = () => [...new Set([db.servers.find(x => x.id === 's1')?.owner, ...Object.keys(db.staff || {}), ...(db.siteAdmins || [])])].filter(n => n && db.users[n] && staffRank(n));
+const staffList = () => [...new Set([db.servers.find(x => x.id === 's1')?.owner, ...coOwnerNames(), ...Object.keys(db.staff || {}), ...(db.siteAdmins || [])])].filter(n => n && db.users[n] && staffRank(n));
 function staffLog(by, action, target, detail) { (db.staffLog ||= []).unshift({ at: Date.now(), by, action, target: target || null, detail: String(detail || '').slice(0, 200) }); if (db.staffLog.length > 1500) db.staffLog.length = 1500; }
 const isBanned = u => { if (!u?.siteBan) return false; if (u.siteBan.until && u.siteBan.until < Date.now()) { delete u.siteBan; save(); return false; } return true; };
 // Yıldız: kademelerin sonu (şartlı başvuru). Partner: ekibin elle seçtiği iş birlikleri (şartsız). Partner, Yıldız'ın tüm ayrıcalıklarını da alır.
@@ -2618,7 +2621,7 @@ async function sendInviteMail(email, code) {
 
 // ---------- Şikayetler ----------
 const REPORT_REASONS = { spam: 'Spam ya da reklam', taciz: 'Taciz veya zorbalık', nefret: 'Nefret söylemi', cinsel: 'Cinsel içerik', siddet: 'Şiddet ya da tehdit', dolandir: 'Dolandırıcılık', cocuk: 'Çocuk güvenliği', taklit: 'Başkasını taklit', diger: 'Diğer' };
-const siteAdmins = () => { const s1 = db.servers.find(x => x.id === 's1')?.owner; return [...new Set([s1, ...(db.siteAdmins || [])].filter(Boolean))]; };
+const siteAdmins = () => { const s1 = db.servers.find(x => x.id === 's1')?.owner; return [...new Set([s1, ...coOwnerNames(), ...Object.keys(db.staff || {}).filter(n => db.staff[n]?.rank === 'owner'), ...(db.siteAdmins || [])].filter(Boolean))]; };
 const srvOf = id => id && db.servers.find(x => x.id === id);
 const reportVisible = (r, n) => siteMod(n) || (!!r.serverId && !!srvOf(r.serverId) && isMod(srvOf(r.serverId), n));
 function reportCounts(n) {
@@ -3846,9 +3849,10 @@ io.on('connection', socket => {
     const my = staffRank(me); if (!['owner', 'admin'].includes(my)) return cb({ error: 'Ekibi sadece kurucu ve yöneticiler düzenleyebilir' });
     const u = findUserBy(name); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
     if (u.name === me) return cb({ error: 'Kendi rütbeni değiştiremezsin' });
-    const cur = staffRank(u.name); if (cur === 'owner') return cb({ error: 'Kurucunun rütbesi değişmez' });
-    if (rank && !['admin', 'mod', 'destek'].includes(rank)) return cb({ error: 'Geçersiz rütbe' });
-    if (my !== 'owner' && (rank === 'admin' || cur === 'admin')) return cb({ error: 'Yönetici rütbesini sadece kurucu verebilir ya da alabilir' });
+    const cur = staffRank(u.name), isMainOwner = db.servers.find(x => x.id === 's1')?.owner === u.name;
+    if (isMainOwner || (cur === 'owner' && my !== 'owner')) return cb({ error: 'Kurucunun rütbesi değişmez' });
+    if (rank && !['owner', 'admin', 'mod', 'destek'].includes(rank)) return cb({ error: 'Geçersiz rütbe' });
+    if (my !== 'owner' && ['owner', 'admin'].includes(rank || cur)) return cb({ error: 'Bu rütbeyi sadece kurucu verebilir ya da alabilir' });
     if (rank && isBanned(u)) return cb({ error: 'Kapatılmış bir hesap ekibe alınamaz' });
     db.staff ||= {}; db.siteAdmins = (db.siteAdmins || []).filter(n => n !== u.name);
     if (rank) db.staff[u.name] = { rank, at: db.staff[u.name]?.at || Date.now(), by: me }; else delete db.staff[u.name];
