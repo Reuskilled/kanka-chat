@@ -172,7 +172,7 @@ if (istek.tur === 'PING') return res.json({ tur: 'PONG' }); // adresi kaydederke
     <h2 id="sinirlar">10. Sınırlar ve kurallar</h2>
     <ul>
       <li><b>Erişim sınırı:</b> doğrulanmamış bir bot en fazla <b>50 farklı kişiye</b> ulaşabilir (botun olduğu sunuculardaki farklı insanlar). Bu sınırı geçecek bir sunucuya eklenemez. 2 sunucuda 50 kişi de olsa, 5 sunucuda 30 kişi de olsa sayılan, kaç farklı kişiye ulaştığıdır. Portaldan doğrulama iste; Kanka ekibi botu inceleyip onaylarsa sınır kalkar ve adının yanında tik çıkar.</li>
-      <li><b>Hız:</b> bot başına saniyede 10 istek; oda başına 5 saniyede 5 mesaj; dakikada 30 DM. Aşarsan <code>429</code> ve <code>tekrarDene</code> (saniye) döner. Sürekli aşan bot 1 saat durur.</li>
+      <li><b>Hız:</b> bot başına saniyede 10 istek; oda başına 5 saniyede 10 mesaj; dakikada 30 DM. Aşarsan <code>429</code> ve <code>tekrarDene</code> (saniye) döner. Sürekli aşan bot 1 saat durur.</li>
       <li><b>Özel mesaj:</b> bot sadece ortak bir sunucusu olan ve "Botlar bana özel mesaj atabilsin" ayarını kapatmamış kişilere yazabilir. Bot DM'leri uçtan uca şifreli değildir; kullanıcının kendi şifreli DM'lerini botlar asla göremez.</li>
       <li>Bir sunucuda en fazla 25 bot olur; herkese açık sunuculara bot eklenmez.</li>
       <li>Kullanıcıları kandırma, spam yapma, izinsiz veri toplama. Kurallara uymayan botları Kanka ekibi durdurabilir.</li>

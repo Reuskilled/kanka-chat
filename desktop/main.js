@@ -207,6 +207,7 @@ try {
 } catch {}`);
 const PS_LOL = enc(`(Get-CimInstance Win32_Process -Filter "Name='LeagueClientUx.exe'" -ErrorAction SilentlyContinue | Select-Object -First 1).CommandLine`);
 // Listede olmayan oyunlar: Steam / Epic / Xbox oyun klasöründen çalışan ve penceresi olan program oyun sayılır, adı klasörden gelir
+const PS_WIN = enc('Get-Process | Where-Object { $_.MainWindowHandle -ne 0 } | ForEach-Object { $_.ProcessName }'); // penceresi olan işlemler
 const PS_LIB = enc(`[Console]::OutputEncoding=[Text.Encoding]::UTF8
 Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 -and $_.Path -match '\\\\(steamapps\\\\common|Epic Games|XboxGames)\\\\' } | ForEach-Object { $_.Path }`);
 const LIB_SKIP = /(launcher|crash|setup|redist|anticheat|easyanticheat|battleye|unins|updater|helper|bootstrap|report|vcredist|dxsetup|overlay)/i;
@@ -240,13 +241,22 @@ async function detect() {
   if (process.platform !== 'win32') return { game: null, detail: '', music: null };
   const lines = (await run('tasklist', ['/fo', 'csv', '/nh'])).split(/\r?\n/);
   let best = 0, game = null, detail = '';
+  const cands = [];
   for (const l of lines) {
     const name = (csvRow(l)[0] || '').replace(/\.exe$/i, '');
     const hit = games[name] || Object.entries(games).find(([k]) => k.toLowerCase() === name.toLowerCase())?.[1];
-    if (!hit) continue;
-    const score = ['Lobide', 'Açılıyor', 'Başlatıcıda'].includes(hit[1]) ? 1 : 2;
-    if (score > best) { best = score; game = hit[0]; detail = hit[1] || ''; }
-    if (best === 2) break;
+    if (hit) cands.push([name, hit]);
+  }
+  // Sadece penceresi açık olan oyun sayılır: kapatılan oyunların arka planda kalan işlemi
+  // (ör. RobloxPlayerBeta) saatlerce "oynuyor" gösteriyordu.
+  if (cands.length) {
+    const withWin = new Set((await ps(PS_WIN)).split(/\r?\n/).map(x => x.trim().toLowerCase()).filter(Boolean));
+    for (const [name, hit] of cands) {
+      if (withWin.size && !withWin.has(name.toLowerCase())) continue;
+      const score = ['Lobide', 'Açılıyor', 'Başlatıcıda'].includes(hit[1]) ? 1 : 2;
+      if (score > best) { best = score; game = hit[0]; detail = hit[1] || ''; }
+      if (best === 2) break;
+    }
   }
   if (!game) { const g = libGame(await ps(PS_LIB)); if (g) { game = g; detail = ''; } }
   const names = new Map(lines.map(l => { const r = csvRow(l); return [(r[0] || '').toLowerCase(), r[1]]; }));

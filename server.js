@@ -317,7 +317,7 @@ async function linkPreview(url) {
 // ---------- Dosya yükleme: resim, video, PDF, zip, belge… (en çok 25 MB, günde 300 MB) ----------
 const FILES = path.join(DATA_DIR, 'uploads', 'f'); fs.mkdirSync(FILES, { recursive: true });
 const FILE_MAX = 25 * 1024 * 1024, FILE_DAY = 300 * 1024 * 1024;
-const BAD_EXT = /\.(exe|msi|bat|cmd|com|scr|ps1|vbs|vbe|js|jse|wsf|wsh|hta|cpl|jar|lnk|reg|dll|sys|html?|xhtml|svg|xml|php|apk|app|dmg|pkg|iso)$/i;
+const BAD_EXT = /\.(exe|msi|bat|cmd|com|scr|ps1|vbs|vbe|js|jse|wsf|wsh|hta|cpl|jar|lnk|reg|dll|sys|html?|xhtml|xml|php|apk|app|dmg|pkg|iso)$/i;
 const fileKind = (mime, name) => /^image\/(png|jpeg|gif|webp)$/.test(mime) ? 'image' : /^video\/(mp4|webm|quicktime)$/.test(mime) || /\.(mp4|webm|mov)$/i.test(name) ? 'video' : /^audio\//.test(mime) ? 'audio' : 'file';
 const safeName = n => String(n || 'dosya').normalize('NFC').replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').replace(/^\.+/, '').slice(-120) || 'dosya';
 app.post('/api/dosya', express.raw({ type: () => true, limit: FILE_MAX + 1024 }), (req, res) => {
@@ -374,6 +374,7 @@ async function albumArt(title, artist) {
 }
 function activitiesOf(u) {
   if (u.presence === 'invisible') return null; // görünmez: oyun/müzik de "çevrimiçiyim" diye ele vermesin
+  if (!isOnlineName(u.name)) return null; // çevrimdışıyken masaüstü uygulaması açık kalsa da "oynuyor" görünmesin
   const auto = u.auto && Date.now() - u.auto.at < 45e3 ? u.auto : null;
   return auto && (auto.game || auto.music) ? { game: auto.game, music: auto.music, auto: true } : null;
 }
@@ -905,7 +906,7 @@ function srvXp(s, name, n, chId) {
     if (cfg.stack === false) for (const r of rw) if (r !== top) l.delete(r.role);
     for (const r of cfg.stack === false ? [top] : rw) if (!l.has(r.role)) { l.add(r.role); if (r.level === a || r === top) got = s.customRoles.find(x => x.id === r.role); }
     s.memberRoles[name] = [...l]; setTimeout(() => pushServers(membersOf(s)), 50); }
-  const mode = cfg.announce || 'same'; if (mode === 'off') return;
+  const mode = cfg.announce || 'same'; if (mode === 'off' || !s.bot?.added) return; // duyuruyu Kanka Bot yapar: sunucuya eklenmemişse sessiz
   const to = mode === 'channel' && s.channels.some(c => c.id === cfg.channel) ? cfg.channel : chId;
   if (!to || voiceLike(findChannel(to)?.c?.type)) return;
   setTimeout(() => botPost(to, { title: `🎉 ${db.users[name]?.displayName || name} bu sunucuda seviye ${a} oldu!`, text: got ? `Yeni rol kazandı: ${got.name}` : 'Sohbet etmeye devam, sıradaki seviye seni bekliyor.', tone: 'ok', fields: got ? [['Sunucu seviyesi', String(a)], ['Ödül', got.name]] : null }), 400);
@@ -1985,10 +1986,11 @@ function betaNoOf(u) {
   const i = betaOrderCache.list.indexOf(u.name); return i >= 0 && i < 300 ? i + 1 : undefined;
 }
 function badgesOf(u) {
-  const order = joinOrder();
+  if (u.bot) return AWARDS.filter(k => u.awards?.[k]); // botlar otomatik rozet almaz, sadece ekibin elle verdikleri
+  const order = joinOrder(), idx = order.indexOf(u.name);
   const b = [];
-  if (order.indexOf(u.name) < 100) b.push('erken');
-  if (order.indexOf(u.name) < 300) b.push('beta');
+  if (idx >= 0 && idx < 100) b.push('erken');
+  if (idx >= 0 && idx < 300) b.push('beta');
   if (u.night) b.push('gece');
   if ((u.msgs || u.xp || 0) >= 100) b.push('sohbet');
   if ((u.msgs || u.xp || 0) >= 1000) b.push('efsane');
@@ -2022,6 +2024,8 @@ const online = new Map();            // socket.id -> kullanıcı adı
 const voice = new Map();             // kanal id -> Map(socket.id -> ad)
 const voicePass = new Map();         // socket.id -> { ch, until }: yetkili taşımasıyla kilitli odaya geçici giriş izni
 const onlineNames = () => [...new Set(online.values())];
+let onSetCache = { t: 0, set: new Set() }; // listelerde her kişi için tüm bağlantıları taramamak için kısa önbellek
+function isOnlineName(n) { if (Date.now() - onSetCache.t > 1000) onSetCache = { t: Date.now(), set: new Set(online.values()) }; return onSetCache.set.has(n); }
 const idleSockets = new Set();
 // Telefondan bağlı oturumlar: kişinin bütün açık oturumları telefondaysa durum noktası telefon simgesi olur
 const mobileSockets = new Set();
@@ -3031,7 +3035,7 @@ api.get('/odalar/:cid/mesajlar/:mid', R((a, req) => { const f = botChan(a, req.p
 api.post('/odalar/:cid/mesajlar', R((a, req) => {
   const cid = req.params.cid, f = botChan(a, cid, 'send'); if (f.error) return f;
   const now = Date.now(), k = a.id + '|' + cid, h = (chanHits.get(k) || []).filter(t => now - t < 5000);
-  if (h.length >= 5) return { error: 'Bu odaya çok hızlı yazıyorsun: 5 saniyede en fazla 5 mesaj', code: 429 };
+  if (h.length >= 10) return { error: 'Bu odaya çok hızlı yazıyorsun: 5 saniyede en fazla 10 mesaj', code: 429 }; // botun genel sınırı (saniyede 10 istek) ayrıca geçerli
   h.push(now); chanHits.set(k, h);
   if (!f.dm && timedOut(f.s, a.bot)) return { error: 'Bot bu sunucuda susturulmuş', code: 403 };
   const body = msgBody(req.body || {}); let extra = {};
@@ -3175,7 +3179,7 @@ io.on('connection', socket => {
     { const u0 = db.users[name]; if (u0 && !u0.bot) { seenAdd(u0, dH, iH); save(); } }
     me = name;
     socket.join('user:' + name);
-    online.set(socket.id, name); if (isMobileUA(socket.handshake.headers['user-agent'])) mobileSockets.add(socket.id);
+    online.set(socket.id, name); onSetCache.t = 0; if (isMobileUA(socket.handshake.headers['user-agent'])) mobileSockets.add(socket.id);
     pushPresence();
     { const ua = String(socket.handshake.headers['user-agent'] || ''), pf = /Electron\//.test(ua) ? 'app' : /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Android/.test(ua) ? 'android' : /Mobi/.test(ua) ? 'mob' : 'web';
       const u0 = db.users[name]; if (u0) { (u0.plat ||= {})[pf] = (u0.plat[pf] || 0) + 1; u0.plat1 ||= pf; } }
@@ -5532,7 +5536,7 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     leaveVoice();
-    online.delete(socket.id); idleSockets.delete(socket.id); visibleSockets.delete(socket.id); mobileSockets.delete(socket.id); voicePass.delete(socket.id);
+    online.delete(socket.id); onSetCache.t = 0; idleSockets.delete(socket.id); visibleSockets.delete(socket.id); mobileSockets.delete(socket.id); voicePass.delete(socket.id);
     pushPresence();
   });
 });
