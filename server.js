@@ -156,15 +156,30 @@ function cleanSrc(x) {
   return Object.keys(o).some(k => k !== 'at') ? o : null;
 }
 const srcLabel = s => !s ? 'Doğrudan / bilinmiyor' : s.g || /google/i.test(s.s || '') && /cpc|ads|ppc|paid/i.test(s.m || 'cpc') ? `Google reklam${s.t ? ' · ' + s.t : s.c ? ' · ' + s.c : ''}` : s.s ? `${s.s}${s.c ? ' · ' + s.c : ''}${s.t ? ' · ' + s.t : ''}` : s.ref ? s.ref : s.lp ? 'Sayfa: ' + s.lp : 'Doğrudan / bilinmiyor';
+// ---- Adresler: kankahq.com tanıtım sayfası, /app uygulama, /login giriş, /register kayıt ----
+const PAGE = f => path.join(__dirname, 'public', f);
+const APP_QS = ['ac', 'kim', 'oda', 'davet', 'botekle', 'izin', 'rehber', 'arayuz'];
+const qsOf = req => (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '');
+app.get('/', (req, res) => {
+  const q = req.query || {};
+  // Eski linkler (davet, bildirim, şifre sıfırlama, masaüstü uygulaması) uygulamaya gitmeye devam etsin
+  if (q.kayit !== undefined || q.kod) return res.redirect(302, '/register' + qsOf(req));
+  if (q.sifirla) return res.redirect(302, '/login' + qsOf(req));
+  if (APP_QS.some(k => q[k] !== undefined) || /Electron\//.test(req.get('user-agent') || '')) return res.redirect(302, '/app' + qsOf(req));
+  res.set('Cache-Control', 'no-store'); res.sendFile(PAGE('sesli-sohbet.html'));
+});
+for (const p of ['/app', '/login', '/register']) app.get(p, (req, res) => { res.set('Cache-Control', 'no-store'); res.sendFile(PAGE('index.html')); });
+app.get(['/giris', '/giris-yap'], (req, res) => res.redirect(301, '/login' + qsOf(req)));
+app.get(['/kayit', '/kayit-ol', '/signup'], (req, res) => res.redirect(301, '/register' + qsOf(req)));
 app.get('/discord-alternatifi', (req, res) => res.redirect(301, '/sesli-sohbet' + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '')));
-app.get('/davet/:code', (req, res) => res.redirect('/?davet=' + encodeURIComponent(req.params.code)));
+app.get('/davet/:code', (req, res) => res.redirect('/app?davet=' + encodeURIComponent(req.params.code)));
 // Partner sunucuların özel linki: kankahq.com/s/isim
-app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && isStar(x)); res.redirect(s ? '/?davet=' + encodeURIComponent(s.invite) : '/'); });
+app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && isStar(x)); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/'); });
 // İzlenen kısa link: kankahq.com/r/youtube-rozet → kaynak "youtube", kampanya "rozet" (video açıklamalarına koymak için)
 app.get('/r/:tag', (req, res) => { const t = String(req.params.tag).toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 60); const [src, ...rest] = t.split('-'); res.redirect('/?utm_source=' + encodeURIComponent(src || 'link') + (rest.length ? '&utm_campaign=' + encodeURIComponent(rest.join('-')) : '') + '&utm_medium=kisalink'); });
-app.get('/bot-ekle/:id', (req, res) => res.redirect('/?botekle=' + encodeURIComponent(String(req.params.id).slice(0, 40)) + (req.query.izin ? '&izin=' + encodeURIComponent(String(req.query.izin).slice(0, 300)) : '')));
+app.get('/bot-ekle/:id', (req, res) => res.redirect('/app?botekle=' + encodeURIComponent(String(req.params.id).slice(0, 40)) + (req.query.izin ? '&izin=' + encodeURIComponent(String(req.query.izin).slice(0, 300)) : '')));
 app.get('/gelistirici', (req, res) => res.sendFile(path.join(__dirname, 'public', 'gelistirici.html')));
-app.get('/kod/:code', (req, res) => res.redirect('/?kod=' + encodeURIComponent(req.params.code)));
+app.get('/kod/:code', (req, res) => res.redirect('/register?kod=' + encodeURIComponent(req.params.code)));
 // İndirme güvenliği: sunulan kurulum dosyasının SHA-256'sı (VirusTotal raporu bu özetle açılır)
 let exeHash = { at: 0, mtime: 0, v: null };
 function exeInfo() {
@@ -3297,7 +3312,7 @@ io.on('connection', socket => {
     const u = findUserBy(who);
     if (u?.email && !u.siteBan && !limited('forgotU|' + u.name, 5, 3600e3)) {
       const t = resetToken(u.name, 1);
-      const ok = await sendMail(u.email, 'Kanka Chat şifre sıfırlama', mailHtml('Şifreni sıfırla', `Selam <b>${u.name}</b>, şifreni sıfırlamak için bir istek aldık. Link <b>1 saat</b> geçerli.<br><br>Buton çalışmazsa bu adresi tarayıcına yapıştır:<br><span style="word-break:break-all;color:#ffb38a">${baseUrl()}/?sifirla=${t}</span>`, 'Yeni şifre belirle', `${baseUrl()}/?sifirla=${t}`), null, 'şifre');
+      const ok = await sendMail(u.email, 'Kanka Chat şifre sıfırlama', mailHtml('Şifreni sıfırla', `Selam <b>${u.name}</b>, şifreni sıfırlamak için bir istek aldık. Link <b>1 saat</b> geçerli.<br><br>Buton çalışmazsa bu adresi tarayıcına yapıştır:<br><span style="word-break:break-all;color:#ffb38a">${baseUrl()}/login?sifirla=${t}</span>`, 'Yeni şifre belirle', `${baseUrl()}/login?sifirla=${t}`), null, 'şifre');
       if (!ok) return cb(DOWN); // gönderim sunucu genelinde bozuksa herkese aynı cevap gider, hesap varlığı belli olmaz
     } else if (mailDown()) return cb(DOWN);
     cb({ ok: true }); // hesabın var olup olmadığını belli etme
@@ -3679,7 +3694,7 @@ io.on('connection', socket => {
     const u = findUserBy(name); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
     const deny = () => cb({ error: 'Bunun için yetkin yok' });
     if (action && u.name !== me && staffRank(u.name) === 'owner') return cb({ error: 'Kurucuya işlem yapılamaz' });
-    if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); if (staffRank(u.name) && u.name !== me && staffRank(me) !== 'owner') return cb({ error: 'Ekipten birinin şifre linkini sadece kurucu oluşturabilir' }); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/?sifirla=${resetToken(u.name, 24)}` }); }
+    if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); if (staffRank(u.name) && u.name !== me && staffRank(me) !== 'owner') return cb({ error: 'Ekipten birinin şifre linkini sadece kurucu oluşturabilir' }); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/login?sifirla=${resetToken(u.name, 24)}` }); }
     if (action === 'ageReset') { if (!canStaff(me, 'ban')) return deny(); delete u.ageLock; delete u.dob; staffLog(me, 'Yaş kilidini kaldırdı', u.name); save(); io.to('user:' + u.name).emit('ageGate', { locked: false }); return cb({ ok: true, user: userCard(u) }); }
     if (action === 'streak') { if (!canStaff(me, 'ban')) return deny(); const n = Math.min(Math.max(parseInt(days) || 0, 0), 3650); u.streak = { last: ymd(), count: n, best: Math.max(n, u.streak?.best || 0) }; staffLog(me, 'Seriyi düzeltti', u.name, n + ' gün'); save(); io.emit('users', allUsers()); }
     if (action === 'warn') { if (!canStaff(me, 'warn')) return deny(); if (u.name === me) return cb({ error: 'Kendini uyaramazsın' }); siteWarnUser(u.name, me, reason); }

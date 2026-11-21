@@ -1,6 +1,6 @@
 // Kanka Chat service worker: uygulama kabuğunu önbellekte tutar, çevrimdışıyken de açılır
-const CACHE = 'kanka-v163';
-const SHELL = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
+const CACHE = 'kanka-v164';
+const SHELL = ['/app', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
@@ -15,7 +15,7 @@ self.addEventListener('fetch', e => {
   e.respondWith(fetch(e.request).then(res => { // diğerleri: önce ağ, olmazsa önbellek
     if (res.ok) { const c = res.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); }
     return res;
-  }).catch(() => caches.match(e.request).then(r => r || caches.match('/'))));
+  }).catch(() => caches.match(e.request).then(r => r || (e.request.mode === 'navigate' ? caches.match('/app') : undefined))));
 });
 // Telefona bildirim: uygulama kapalıyken sunucudan gelir
 // Uçtan uca şifreli mesaj: sunucu içeriği bilmez; önizleme bu cihazda kayıtlı sohbet anahtarıyla burada açılır
@@ -48,11 +48,11 @@ self.addEventListener('notificationclick', e => {
   const d = e.notification.data || {}, q = d.friend ? '?ac=arkadaslar' : d.ch ? `?ac=${encodeURIComponent(d.ch)}${d.from ? '&kim=' + encodeURIComponent(d.from) : ''}` : '';
   // Açık Kanka sekmesi varsa yenisini açma: o sekmeyi öne getir ve sohbeti orada aç
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async cs => {
-    cs = cs.filter(c => new URL(c.url).origin === self.location.origin);
+    cs = cs.filter(c => { const u = new URL(c.url); return u.origin === self.location.origin && u.pathname === '/app'; }); // tanıtım sayfası sekmesi sohbet açamaz
     const c = cs.find(c => c.focused) || cs.find(c => c.visibilityState === 'visible') || cs[0];
-    if (!c) return self.clients.openWindow('/' + q);
+    if (!c) return self.clients.openWindow('/app' + q);
     c.postMessage({ kankaOpen: d });
     try { return await c.focus(); }
-    catch { try { const n = await c.navigate('/' + q); return n?.focus(); } catch { return self.clients.openWindow('/' + q); } }
+    catch { try { const n = await c.navigate('/app' + q); return n?.focus(); } catch { return self.clients.openWindow('/app' + q); } }
   }));
 });
