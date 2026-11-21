@@ -143,6 +143,10 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
       <tr><td><code>PATCH</code> / <code>DELETE /odalar/:id/mesajlar/:mid</code></td><td>Düzenle / sil (başkasınınkini silmek için "Mesajları yönet")</td></tr>
       <tr><td><code>PUT</code> / <code>DELETE /odalar/:id/mesajlar/:mid/tepkiler/:emoji</code></td><td>Tepki ekle / kaldır</td></tr>
       <tr><td><code>PUT</code> / <code>DELETE /odalar/:id/sabitler/:mid</code></td><td>Sabitle / kaldır</td></tr>
+      <tr><td><code>POST /dosyalar</code></td><td>Dosya/resim yükle (gövde: dosyanın kendisi, ad: <code>X-Dosya-Adi</code> başlığı, en fazla 25 MB). Dönen <code>id</code>'yi mesajda <code>ekler: [id]</code> ile gönder</td></tr>
+      <tr><td><code>GET /emojiler</code>, <code>PUT</code> / <code>DELETE /emojiler/:ad</code></td><td>Botun kendi emojileri (en fazla 50, PNG/JPG/GIF/WEBP, 512 KB). Mesajda <code>:ad:</code> yazınca her sunucuda ve DM'de görünür</td></tr>
+      <tr><td><code>POST /odalar/:id/yaziyor</code></td><td>"yazıyor…" göster (yaklaşık 8 sn; uzun işlerde tekrar gönder)</td></tr>
+      <tr><td><code>PATCH /ben/durum</code></td><td><code>{ durum: 'cevrimici' | 'bosta' | 'rahatsizetme' | 'gorunmez', yazi: 'Oynuyor: /yardim' }</code></td></tr>
       <tr><td><code>GET /kullanicilar/:ad</code></td><td>Kullanıcının kimliği, adı, görünen adı (ortak sunucu ya da DM gerekir)</td></tr>
       <tr><td><code>POST /kullanicilar/:ad/dm</code></td><td>Özel mesaj (ortak sunucu gerekir)</td></tr>
       <tr><td><code>PUT</code> / <code>DELETE /sunucular/:id/uyeler/:ad/roller/:rol</code></td><td>Rol ver / al (botun rolünden aşağıdakiler)</td></tr>
@@ -152,6 +156,12 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
       <tr><td><code>POST /etkilesim/:id/:token/cevap</code></td><td><code>{ tur: 'mesaj' | 'bekle' | 'guncelle' | 'form', ... }</code> (bot token'ı gerekmez)</td></tr>
       <tr><td><code>PATCH /etkilesim/:id/:token/mesaj</code>, <code>POST .../takip</code></td><td>"bekle"den sonra düzenle / ek mesaj</td></tr></table>
 
+    <h3 id="zaman">Zaman etiketi</h3>
+    <p>Mesajda <code>&lt;t:1767225600:R&gt;</code> yazarsan herkes kendi saatine göre görür. Sayı Unix zamanı (saniye). Biçimler: <code>t</code> 21:30 · <code>T</code> 21:30:00 · <code>d</code> 01.01.2026 · <code>D</code> 1 Ocak 2026 · <code>f</code> 1 Ocak 2026 21:30 (varsayılan) · <code>F</code> gün adıyla · <code>R</code> "3 saat sonra". Kullanıcılar da yazabilir.</p>
+    <pre>await bot.yaziyor(oda);                       // "yazıyor…"
+const d = await bot.dosyaYukle(fs.readFileSync('kart.png'), 'kart.png');
+await bot.gonder(oda, { icerik: 'Turnuva &lt;t:1767225600:R&gt; başlıyor :kupa:', ekler: [d.id] });
+await bot.durum('cevrimici', 'Oynuyor: /yardim');</pre>
     <h3 id="kimlik">Kullanıcı kimliği</h3>
     <p>Her kullanıcının ad değişse de değişmeyen bir sayısal kimliği (<code>id</code>) var. Mesaj yazarında (<code>yazar.id</code>), etkileşimlerde (<code>kullanici.id</code>), üye bilgisinde (<code>uye.id</code>) ve <code>GET /ben</code> cevabında (<code>bot.kullaniciId</code>) gelir. Veritabanında kullanıcıyı <b>adla değil kimlikle sakla</b>: ad değiştiğinde seviye, bakiye, uyarı gibi verilerin kaybolmaz.</p>
     <ul><li>Yolda <code>:ad</code> yazan her yere ad yerine kimlik de verebilirsin: <code>GET /sunucular/:id/uyeler/123456789012345678</code></li>

@@ -346,6 +346,8 @@
   .row.mine .bubble a { color: var(--on-accent); text-decoration: underline; }
   .bubble .mention, .bembed .mention { background: var(--accent-soft); color: var(--accent); border-radius: 6px; padding: 0 4px; font-weight: 800; }
   .row.mine .bubble .mention { background: rgba(0,0,0,.18); color: var(--on-accent); }
+  .tstag { background: var(--card, rgba(255,255,255,.06)); border-radius: 5px; padding: 0 4px; white-space: nowrap; cursor: default; }
+  .row.mine .bubble .tstag { background: rgba(0,0,0,.18); }
   .bubble img { display: block; max-width: 100%; max-height: 280px; border-radius: 12px; margin: 2px -8px 4px; cursor: zoom-in; }
   .bubble.only-img { padding: 6px; background: transparent !important; }
   .bubble.only-img img { margin: 0; }
@@ -3867,7 +3869,8 @@ const notifOn = () => store.get('kanka-notif') !== 'off';
 const PUB = /sslip\.io$|^\d+\.\d+\.\d+\.\d+$/.test(location.hostname) ? 'https://kankahq.com' : location.origin;
 const ownHost = h => h === location.host || h === 'kankahq.com' || h === 'www.kankahq.com';
 const ytId = u => (/(?:youtu\.be\/|[?&]v=|shorts\/|embed\/)([\w-]{11})/.exec(u) || [])[1];
-const serverEmojis = () => (S.view === 'server' && S.server?.emojis) || {};
+let fmtEmo = null; // o an çizilen bot mesajının kendi emojileri
+const serverEmojis = () => fmtEmo ? { ...((S.view === 'server' && S.server?.emojis) || {}), ...fmtEmo } : (S.view === 'server' && S.server?.emojis) || {};
 const EMOJI_TOKEN = /^:([a-z0-9_]{2,24}):$/;
 const EMOJI_RUN = /(?:\p{Regional_Indicator}{2}|[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0F|[\u{1F3FB}-\u{1F3FF}])?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|[\u{1F3FB}-\u{1F3FF}])?)*)+/gu;
 const EMOJI_SEG = (() => { try { return new Intl.Segmenter('tr', { granularity: 'grapheme' }); } catch { return null; } })();
@@ -3890,6 +3893,17 @@ function chByName(tok) {
 // Etiket olarak gösterilecek kişi: var olan kullanıcı ve (özel sunucudaysak) hâlâ o sunucunun üyesi. Atılan/ayrılan kişi düz metin kalır.
 const mentionable = n => !!S.users[n] && !(S.view === 'server' && S.server && !S.server.public && Array.isArray(S.server.members) && !S.server.members.includes(n));
 document.addEventListener('click', e => { const a = e.target.closest?.('a.fcard.risky'); if (a && !confirm('Bu bir SVG dosyası. SVG dosyaları içinde kod barındırabilir; sadece güvendiğin kişilerden gelenleri aç. İndirilsin mi?')) e.preventDefault(); }, true);
+function tsTag(n, st) {
+  const d = new Date(Math.abs(n) > 1e11 ? n : n * 1000); if (isNaN(d)) return '';
+  const o = { t: { hour: '2-digit', minute: '2-digit' }, T: { hour: '2-digit', minute: '2-digit', second: '2-digit' }, d: { day: '2-digit', month: '2-digit', year: 'numeric' }, D: { day: 'numeric', month: 'long', year: 'numeric' },
+    f: { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }, F: { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' } };
+  const full = d.toLocaleString('tr-TR', o.F);
+  let txt;
+  if (st === 'R') { const s = Math.round((d - Date.now()) / 1000), a = Math.abs(s), u = a < 45 ? [s, 'second'] : a < 3570 ? [Math.round(s / 60), 'minute'] : a < 84600 ? [Math.round(s / 3600), 'hour'] : a < 2592000 ? [Math.round(s / 86400), 'day'] : a < 31536000 ? [Math.round(s / 2592000), 'month'] : [Math.round(s / 31536000), 'year'];
+    try { txt = new Intl.RelativeTimeFormat('tr', { numeric: 'auto' }).format(u[0], u[1]); } catch { txt = full; } }
+  else txt = d.toLocaleString('tr-TR', o[st] || o.f);
+  return `<time class="tstag" datetime="${d.toISOString()}" title="${esc(full)}">${esc(txt)}</time>`;
+}
 function inlineFmt(t) {
   const codes = [];
   let h = esc(t)
@@ -3905,6 +3919,8 @@ function inlineFmt(t) {
     .replace(/(^|[^_\w])_([^_\n]+)_(?!\w)/g, '$1<i>$2</i>')
     .replace(/~~([^~\n]+)~~/g, '<s>$1</s>')
     .replace(/\|\|([^|\n]+)\|\|/g, '<span class="spoiler" title="Görmek için tıkla">$1</span>');
+  // Zaman etiketi <t:1700000000:R> — herkes kendi saatine göre görür (bot ve kullanıcılar yazabilir)
+  h = h.replace(/&lt;t:(-?\d{1,13})(?::([tTdDfFR]))?&gt;/g, (m, n, st) => { const v = tsTag(+n, st || 'f'); return v ? `\u0000${codes.push(v) - 1}\u0000` : m; });
   const em = serverEmojis();
   h = h.replace(/:([a-z0-9_]{2,24}):/g, (m, n) => em[n] ? `<img class="cemoji" src="${esc(em[n])}" alt=":${n}:" title=":${n}:">` : m);
   h = h.replace(EMOJI_RUN, m => splitEmojiKey(m).map(e => `<span class="uemoji">${e}</span>`).join(''));
@@ -4444,7 +4460,7 @@ function showSettings(tab) {
       <div class="st-field"><label>Tema</label><div class="themes apthemes">${Object.entries(THEMES).map(([k, t]) => { const v = { ...{ '--bg': '#09090b', '--panel': '#111114', '--card': '#18181c' }, ...t.v };
         return `<button data-theme="${k}" class="${(store.get('kanka-theme') || 'noir') === k ? 'on' : ''}" style="background:${v['--panel']};color:${t.light ? '#09090b' : '#f4f4f5'}"><div class="pv" style="background:${v['--bg']}"><i style="background:${v['--card']}"></i><i style="background:${v['--card']}"></i></div>${t.name}</button>`; }).join('')}</div></div>
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'asit') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
-      <div class="pc-sec" style="margin-top:18px"><label class="switch">Yeni arayüz<input type="checkbox" id="p-ui2" ${uiNew() ? 'checked' : ''}></label>
+      <div class="pc-sec" style="margin-top:18px"><label class="switch" hidden>Yeni arayüz<input type="checkbox" id="p-ui2" ${uiNew() ? 'checked' : ''}></label>
       <label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
       <label class="switch">:) ;) :D gibi ifadeleri emojiye çevir<input type="checkbox" id="p-emo" ${emoOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada tuşa basılı tutunca konuşursun)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label>
@@ -6942,9 +6958,12 @@ function compHTML(m, c) {
   return '';
 }
 function appBodyHTML(m) {
+  fmtEmo = m.emo || null; try { return appBodyInner(m); } finally { fmtEmo = null; }
+}
+function appBodyInner(m) {
   const txt = m.loading ? `<div class="bubble app-think"><span class="dots"><i></i><i></i><i></i></span>${esc(dn(m.author))} düşünüyor…</div>` : m.text ? `<div class="bubble">${fmt(m.text)}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>` : '';
   const rows = (m.comps || []).map(r => `<div class="acomp-row">${r.map(c => compHTML(m, c)).join('')}</div>`).join('');
-  return txt + (m.embeds || []).map(embedHTML).join('') + (rows ? `<div class="acomps">${rows}</div>` : '') + (m.ephemeral ? `<div class="eph-f">${ic('eye')}Sadece sen görüyorsun · <button type="button" class="alink" data-ephx="${esc(m.id)}">Kapat</button><button type="button" class="eph-x" data-ephx="${esc(m.id)}" title="Kapat" aria-label="Kapat">${ic('x')}</button></div>` : '');
+  return txt + (m.files?.length ? filesHTML(m.files) : '') + (m.embeds || []).map(embedHTML).join('') + (rows ? `<div class="acomps">${rows}</div>` : '') + (m.ephemeral ? `<div class="eph-f">${ic('eye')}Sadece sen görüyorsun · <button type="button" class="alink" data-ephx="${esc(m.id)}">Kapat</button><button type="button" class="eph-x" data-ephx="${esc(m.id)}" title="Kapat" aria-label="Kapat">${ic('x')}</button></div>` : '');
 }
 function appComp(el, values) {
   const mid = el.dataset.acomp, cid = el.dataset.cid; el.classList.add('busy'); setTimeout(() => el.classList.remove('busy'), 1200);
@@ -7824,10 +7843,10 @@ function renderTyping() {
   $('#typing').innerHTML = !names.length ? '' : `<span class="typing-dots"><i></i><i></i><i></i></span><b>${esc(names.slice(0, 3).join(', '))}</b> ${names.length > 1 ? 'yazıyorlar' : 'yazıyor'}`;
   memTyping();
 }
-socket.on('typing', ({ channelId, name }) => {
+socket.on('typing', ({ channelId, name, long }) => {
   if (channelId !== S.channel?.id) return;
   clearTimeout(typers.get(name));
-  typers.set(name, setTimeout(() => { typers.delete(name); renderTyping(); }, 3000));
+  typers.set(name, setTimeout(() => { typers.delete(name); renderTyping(); }, long ? 8000 : 3000));
   renderTyping();
 });
 
@@ -10608,7 +10627,8 @@ const ACCENTS = {
   mor: ['#a77bff', '#c9a8ff', '#7c4dff', '#a77bff', '#ffffff'],
   yesil: ['#3ecf8e', '#8ef0c0', '#1fa971', '#3ecf8e', '#09090b'],
 };
-const uiNew = () => store.get('kanka-ui') !== '1'; // yeni arayüz varsayılan; '1' = eski arayüzü seçti
+const uiNew = () => true; // eski arayüz kaldırıldı: herkes yeni arayüzü görür
+store.set('kanka-ui', null);
 function applyUI() { document.body.classList.toggle('ui2', uiNew()); if (S.me) { if (S.view === 'server' && S.server) renderSide(); renderRail(); renderMe(); } }
 { const q = new URLSearchParams(location.search).get('arayuz'); if (q === 'yeni' || q === 'eski') { store.set('kanka-ui', q === 'yeni' ? null : '1'); history.replaceState(null, '', location.pathname + location.search.replace(/[?&]arayuz=[^&]*/, '').replace(/^&/, '?') + location.hash); } }
 document.body.classList.toggle('ui2', uiNew());

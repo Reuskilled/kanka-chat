@@ -343,10 +343,16 @@ app.post('/api/dosya', express.raw({ type: () => true, limit: FILE_MAX + 1024 })
   const buf = req.body; if (!Buffer.isBuffer(buf) || !buf.length) return res.status(400).json({ error: 'Boş dosya' });
   if (buf.length > FILE_MAX) return res.status(413).json({ error: 'Dosya en fazla 25 MB olabilir' });
   if (BAD_EXT.test(name)) return res.status(400).json({ error: 'Bu dosya türü güvenlik nedeniyle gönderilemez (.exe, .bat, .html gibi)' });
+  const r = storeFile(me, name, req.headers['x-file-type'], buf);
+  if (r.error) return res.status(r.code || 400).json({ error: r.error });
+  res.json({ ok: true, ...r });
+});
+// Kullanıcı ya da bot için dosyayı kaydet (tür içerikten doğrulanır, günlük sınır uygulanır)
+function storeFile(me, name, typeHdr, buf) {
   const u = db.users[me], day = new Date().toISOString().slice(0, 10);
   if (u.upDay?.d !== day) u.upDay = { d: day, b: 0 };
-  if (u.upDay.b + buf.length > FILE_DAY) return res.status(429).json({ error: 'Bugünkü yükleme sınırına ulaştın (300 MB). Yarın tekrar dene.' });
-  let mime = String(req.headers['x-file-type'] || 'application/octet-stream').split(';')[0].toLowerCase().slice(0, 80); // gövde hep octet-stream gelir (json ayrıştırıcısına takılmasın)
+  if (u.upDay.b + buf.length > FILE_DAY) return { error: 'Bugünkü yükleme sınırına ulaşıldı (300 MB). Yarın tekrar dene.', code: 429 };
+  let mime = String(typeHdr || 'application/octet-stream').split(';')[0].toLowerCase().slice(0, 80); // gövde hep octet-stream gelir (json ayrıştırıcısına takılmasın)
   // İçerikten tür doğrulama: resim diyorsa gerçekten resim olsun
   const sig = buf.subarray(0, 12).toString('hex');
   const realImg = sig.startsWith('89504e47') ? 'image/png' : sig.startsWith('ffd8ff') ? 'image/jpeg' : sig.startsWith('47494638') ? 'image/gif' : sig.startsWith('52494646') && buf.subarray(8, 12).toString() === 'WEBP' ? 'image/webp' : null;
@@ -357,8 +363,8 @@ app.post('/api/dosya', express.raw({ type: () => true, limit: FILE_MAX + 1024 })
   u.upDay.b += buf.length;
   (db.files ||= {})[fid] = { owner: me, name, size: buf.length, mime, kind, at: Date.now() };
   save();
-  res.json({ ok: true, id: fid, name, size: buf.length, kind, url: `/dosya/${fid}/${encodeURIComponent(name)}` });
-});
+  return { id: fid, name, size: buf.length, kind, url: `/dosya/${fid}/${encodeURIComponent(name)}` };
+}
 app.get('/dosya/:id/:name?', (req, res) => {
   const f = /^[a-f0-9]{24}$/.test(req.params.id) && db.files?.[req.params.id];
   if (!f) return res.status(404).send('Dosya bulunamadı');
@@ -2167,7 +2173,7 @@ function notifyUser(name, n) {
     e: n.e && n.e.enc.ct.length <= 2400 ? n.e : undefined }); // bildirim boyutu sınırlı: kısa şifreli mesaj telefonda çözülüp gösterilir
 }
 const presenceList = () => [...onlineNames().map(n => { const st = statusOf(n); return st && onMobile(n) ? [n, st, 'm'] : [n, st]; }).filter(x => x[1]),
-  ...botsOnline().map(n => [n, 'online'])]; // geliştirici botları: ağ geçidine bağlıyken çevrimiçi
+  ...botsOnline().map(n => [n, db.users[n]?.presence || 'online']).filter(x => x[1] !== 'invisible')]; // geliştirici botları: ağ geçidine bağlıyken çevrimiçi
 function botsOnline() { const out = []; try { for (const [appId, set] of botConns) if ([...set].some(c => c.ready) && db.apps?.[appId]?.bot) out.push(db.apps[appId].bot); } catch {} return out; }
 // Odadaki sohbet ne zamandır sürüyor: oda boşken doluya geçince başlar, tamamen boşalınca sıfırlanır
 // Seste geçen süre (kişi başı, gün gün): Yuva'daki "Bu hafta seste" grafiği için. Dakikada bir sayılır, 21 gün tutulur.
@@ -2795,7 +2801,16 @@ function cleanComps(rows) {
 function msgBody(b) { // REST gövdesinden mesaj alanları (Kanka ve alışık olunan İngilizce adlar)
   // <@kimlik> yazılırsa o kişinin güncel adıyla etiketlenir (bot adı değil kimliği saklar)
   const text = noPing(clean(b?.icerik ?? b?.content ?? '', MSG_MAX).replace(/<@!?(\d{12,20})>/g, (m, id) => { const u = userById(id); return u ? '@' + u.name : m; }));
-  return { text, embeds: cleanEmbeds(b?.kartlar ?? b?.embeds), comps: cleanComps(b?.bilesenler ?? b?.components) };
+  const ek = b?.ekler ?? b?.attachments, files = Array.isArray(ek) ? ek.slice(0, 10).map(x => typeof x === 'string' ? x : x?.id).filter(x => typeof x === 'string' && /^[a-f0-9]{24}$/.test(x)) : [];
+  return { text, embeds: cleanEmbeds(b?.kartlar ?? b?.embeds), comps: cleanComps(b?.bilesenler ?? b?.components), files };
+}
+// Botun yüklediği dosyalar (POST /dosyalar) mesaja eklenir; başkasının dosyası eklenemez
+const botFiles = (a, ids) => (ids || []).filter(x => db.files?.[x]?.owner === a.bot).map(x => { const f = db.files[x]; return { id: x, name: f.name, size: f.size, kind: f.kind, url: `/dosya/${x}/${encodeURIComponent(f.name)}` }; });
+// Botun kendi emojileri: mesajda :ad: geçiyorsa resmi mesajla birlikte gider (her sunucuda ve DM'de görünür)
+function appEmo(a, text, embeds) {
+  const em = a.emojis || {}, src = [text || '', ...(embeds || []).flatMap(e => [e.baslik, e.aciklama, ...(e.alanlar || []).flatMap(f => [f.ad, f.deger])])].join(' ');
+  const used = {}; for (const [, n] of src.matchAll(/:([a-z0-9_]{2,24}):/g)) if (em[n]) used[n] = em[n];
+  return Object.keys(used).length ? used : undefined;
 }
 // ---- Bota giden mesaj görünümü ----
 function msgForBot(a, chId, m, full) {
@@ -2913,8 +2928,9 @@ function botMember(s, name, kind) { // üye katıldı / ayrıldı / güncellendi
 const appInfoOf = a => ({ id: a.id, ad: a.bot, gorunenAd: db.users[a.bot]?.displayName || a.name || a.bot, dogrulandi: !!a.verified, sahip: a.owner || null });
 function appPost(a, chId, body, extra = {}) {
   const u = db.users[a.bot];
-  const msg = { id: id(), author: a.bot, color: u.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, appInfo: appInfoOf(a), text: body.text || '', ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
-  if (!msg.text && !msg.embeds && !msg.comps && !msg.loading) return { error: 'Boş mesaj: icerik, kartlar ya da bilesenler gerekli' };
+  const files = botFiles(a, body.files), emo = appEmo(a, body.text, body.embeds);
+  const msg = { id: id(), author: a.bot, color: u.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, appInfo: appInfoOf(a), text: body.text || '', ...(files.length ? { files } : {}), ...(emo ? { emo } : {}), ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
+  if (!msg.text && !msg.embeds && !msg.comps && !msg.files && !msg.loading) return { error: 'Boş mesaj: icerik, kartlar, ekler ya da bilesenler gerekli' };
   const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
   save(); io.to(chId).emit('message', { channelId: chId, msg });
   if (chId.startsWith('dm:')) for (const n of dmPeers(chId)) { io.to('user:' + n).emit('dms', dmsFor(n)); if (n !== a.bot) notifyUser(n, { from: a.bot, text: msg.text || msg.embeds?.[0]?.baslik || 'Yeni mesaj', channelId: chId, where: 'özel mesaj', dm: true }); }
@@ -2923,7 +2939,8 @@ function appPost(a, chId, body, extra = {}) {
   return { msg };
 }
 function ephPost(a, chId, user, body, extra = {}) { // sadece tek kişinin göreceği mesaj (kaydedilmez)
-  const msg = { id: 'e' + id(), author: a.bot, color: db.users[a.bot]?.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, appInfo: appInfoOf(a), ephemeral: true, text: body.text || '', ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
+  const emo = appEmo(a, body.text, body.embeds), files = botFiles(a, body.files);
+  const msg = { id: 'e' + id(), author: a.bot, color: db.users[a.bot]?.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, appInfo: appInfoOf(a), ephemeral: true, text: body.text || '', ...(emo ? { emo } : {}), ...(files.length ? { files } : {}), ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
   ephMsgs.set(msg.id, { msg, chId, user, at: Date.now() }); if (ephMsgs.size > 5000) ephMsgs.delete(ephMsgs.keys().next().value);
   io.to('user:' + user).emit('message', { channelId: chId, msg });
   return msg;
@@ -2996,7 +3013,7 @@ function editAppMsg(a, chId, msgId, b, user) {
     io.to('user:' + e.user).emit('update', { channelId: e.chId, msg: m }); return { ok: true }; }
   const m = findMsg(chId, msgId); if (!m || m.author !== a.bot) return { error: 'Mesaj bulunamadı ya da botun değil', code: 404 };
   if (!body.text && !body.embeds.length && !body.comps.length && !Array.isArray(b?.bilesenler ?? b?.components)) return { error: 'Boş mesaj', code: 400 };
-  m.text = body.text; if (body.embeds.length || Array.isArray(b?.kartlar ?? b?.embeds)) m.embeds = body.embeds; if (Array.isArray(b?.bilesenler ?? b?.components)) m.comps = body.comps;
+  m.text = body.text; m.emo = appEmo(a, body.text, body.embeds); if (body.embeds.length || Array.isArray(b?.kartlar ?? b?.embeds)) m.embeds = body.embeds; if (Array.isArray(b?.bilesenler ?? b?.components)) m.comps = body.comps;
   if (!m.loading) m.edited = true; m.loading = false; save(); io.to(chId).emit('update', { channelId: chId, msg: m });
   return { ok: true };
 }
@@ -3080,6 +3097,56 @@ api.get('/kullanicilar/:ad', R((a, req) => {
   // Sadece botla ortak sunucusu olan ya da bota DM atmış kullanıcılar görülebilir
   if (!u || !(botServers(a).some(s => s.members.includes(n)) || msgRaw[dmId(a.bot, n)]?.some(m => m.author === n))) return { error: 'Kullanıcı bulunamadı', code: 404 };
   return { id: uidOf(u), ad: n, gorunenAd: u.displayName || n, avatar: u.avatar || null, bot: !!u.bot, olusturuldu: u.createdAt || null };
+}));
+// ---- Dosya yükleme: gövde ham dosya, adı X-Dosya-Adi başlığında. Dönen id mesajda ekler: [id] ile kullanılır ----
+const rawBody = express.raw({ type: () => true, limit: FILE_MAX + 1024 });
+api.post('/dosyalar', rawBody, R((a, req) => {
+  if (limited('botdosya|' + a.id, 30, 60e3)) return { error: 'Çok fazla dosya: dakikada en fazla 30', code: 429 };
+  const buf = req.body; if (!Buffer.isBuffer(buf) || !buf.length) return { error: 'Boş dosya. Gövdeye dosyanın kendisini koy (Content-Type: application/octet-stream)', code: 400 };
+  if (buf.length > FILE_MAX) return { error: 'Dosya en fazla 25 MB olabilir', code: 413 };
+  let name; try { name = safeName(decodeURIComponent(String(req.headers['x-dosya-adi'] || req.headers['x-file-name'] || 'dosya'))); } catch { name = 'dosya'; }
+  if (BAD_EXT.test(name)) return { error: 'Bu dosya türü güvenlik nedeniyle gönderilemez', code: 400 };
+  const r = storeFile(a.bot, name, req.headers['x-dosya-turu'] || req.headers['x-file-type'], buf);
+  return r.error ? r : { id: r.id, ad: r.name, boyut: r.size, tur: r.kind, url: r.url };
+}));
+// ---- Botun kendi emojileri (en fazla 50): mesajda :ad: yazınca her yerde görünür ----
+const APP_EMOJI_MAX = 50;
+api.get('/emojiler', R(a => ({ emojiler: Object.entries(a.emojis || {}).map(([ad, url]) => ({ ad, url })) })));
+api.put('/emojiler/:emoji', rawBody, R((a, req) => {
+  const ad = String(req.params.emoji || '').toLowerCase();
+  if (!/^[a-z0-9_]{2,24}$/.test(ad)) return { error: 'Emoji adı 2-24 karakter olmalı (a-z, 0-9, _)', code: 400 };
+  a.emojis ||= {};
+  if (!a.emojis[ad] && Object.keys(a.emojis).length >= APP_EMOJI_MAX) return { error: `En fazla ${APP_EMOJI_MAX} emoji eklenebilir`, code: 400 };
+  if (limited('botemo|' + a.id, 20, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 20 emoji', code: 429 };
+  let buf = req.body; if (!Buffer.isBuffer(buf) || !buf.length) return { error: 'Gövdeye resmin kendisini koy (PNG, JPG, GIF ya da WEBP)', code: 400 };
+  if (buf.length > 512 * 1024) return { error: 'Emoji en fazla 512 KB olabilir', code: 413 };
+  const h = buf.subarray(0, 12).toString('hex'), ext = h.startsWith('89504e47') ? 'png' : h.startsWith('ffd8ff') ? 'jpg' : h.startsWith('47494638') ? 'gif' : h.startsWith('52494646') && buf.subarray(8, 12).toString() === 'WEBP' ? 'webp' : null;
+  if (!ext) return { error: 'Sadece PNG, JPG, GIF ya da WEBP', code: 400 };
+  if (ext === 'gif') buf = gifLoopForever(buf);
+  const file = crypto.randomBytes(12).toString('hex') + '.' + ext;
+  fs.writeFileSync(path.join(UPLOADS, file), buf);
+  a.emojis[ad] = '/uploads/' + file; save();
+  return { ad, url: a.emojis[ad] };
+}));
+api.delete('/emojiler/:emoji', R((a, req) => { const ad = String(req.params.emoji || '').toLowerCase(); if (!a.emojis?.[ad]) return { error: 'Böyle bir emoji yok', code: 404 }; delete a.emojis[ad]; save(); return { ok: true }; }));
+// ---- "yazıyor..." göstergesi (yaklaşık 8 saniye görünür; uzun işlerde tekrar gönder) ----
+api.post('/odalar/:cid/yaziyor', R((a, req) => {
+  const f = botChan(a, req.params.cid, 'send'); if (f.error) return f;
+  if (limited('bottyp|' + a.id + '|' + req.params.cid, 10, 10e3)) return { ok: true };
+  io.to(req.params.cid).emit('typing', { channelId: req.params.cid, name: a.bot, long: true });
+  return { ok: true };
+}));
+// ---- Botun durumu: çevrimiçi / boşta / rahatsız etmeyin / görünmez ve durum yazısı ----
+api.patch('/ben/durum', R((a, req) => {
+  const b = req.body || {}, u = db.users[a.bot]; if (!u) return { error: 'Bot hesabı yok', code: 404 };
+  const st = { cevrimici: 'online', online: 'online', bosta: 'idle', idle: 'idle', rahatsizetme: 'dnd', dnd: 'dnd', gorunmez: 'invisible', invisible: 'invisible' }[String(b.durum ?? b.status ?? '').toLowerCase().replace(/[^a-z]/g, '')];
+  if (b.durum !== undefined && !st) return { error: 'durum: cevrimici, bosta, rahatsizetme ya da gorunmez', code: 400 };
+  if (limited('botdurum|' + a.id, 10, 60e3)) return { error: 'Durumu dakikada en fazla 10 kez değiştirebilirsin', code: 429 };
+  let prof = false;
+  if (st) u.presence = st;
+  const yazi = b.yazi ?? b.text; if (yazi !== undefined) { const t = noPing(clean(yazi, 60)); if (t !== (u.status || '')) { u.status = t; prof = true; } }
+  save(); pushPresence(); if (prof) io.emit('users', allUsers());
+  return { durum: u.presence || 'online', yazi: u.status || '' };
 }));
 api.get('/ben', R(a => ({ bot: appView(a), sunucuSayisi: botServers(a).length, erisim: reachOf(a), esik: REACH_MAX, dogrulandi: !!a.verified, icerikIzni: contentOk(a) })));
 api.get('/sunucular', R(a => ({ sunucular: botServers(a).map(s => botServerView(a, s)) })));

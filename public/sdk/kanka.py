@@ -14,7 +14,7 @@ Belgeler: https://kankahq.com/gelistirici
 import asyncio, hashlib, hmac, json, re, time
 import aiohttp
 
-SURUM = "1.0.0"
+SURUM = "1.1.0"
 
 
 class KankaHata(Exception):
@@ -127,6 +127,27 @@ class Bot:
         raise KankaHata("Hız sınırı", 429)
     async def gonder(self, oda, icerik):
         return Mesaj(self, (await self.api("POST", f"/odalar/{oda}/mesajlar", _govde(icerik)))["mesaj"])
+    async def _ham(self, yontem, yol, veri, basliklar=None):
+        h = {"Authorization": "Bot " + self.token, "User-Agent": "kanka.py/" + SURUM, "Content-Type": "application/octet-stream", **(basliklar or {})}
+        async with self._oturum.request(yontem, f"{self.adres}/api/v1{yol}", data=veri, headers=h) as r:
+            j = await r.json(content_type=None)
+            if r.status >= 400: raise KankaHata((j or {}).get("hata", f"HTTP {r.status}"), r.status, j)
+            return j
+    async def dosya_yukle(self, veri, ad="dosya"):
+        """veri: bytes. Dönen id'yi mesajda kullan: await bot.gonder(oda, {"icerik": "al", "ekler": [d["id"]]})"""
+        from urllib.parse import quote
+        return await self._ham("POST", "/dosyalar", veri, {"X-Dosya-Adi": quote(ad)})
+    async def emoji_yukle(self, ad, veri):
+        """Botun kendi emojisi: mesajda :ad: yazınca her yerde görünür (en fazla 50)."""
+        return await self._ham("PUT", f"/emojiler/{ad}", veri)
+    async def emoji_sil(self, ad): return await self.api("DELETE", f"/emojiler/{ad}")
+    async def emojiler(self): return (await self.api("GET", "/emojiler"))["emojiler"]
+    async def yaziyor(self, oda):
+        """Odada "yazıyor…" göster (yaklaşık 8 saniye)."""
+        return await self.api("POST", f"/odalar/{oda}/yaziyor")
+    async def durum(self, durum=None, yazi=None):
+        """durum: "cevrimici" | "bosta" | "rahatsizetme" | "gorunmez"; yazi: durum yazısı"""
+        return await self.api("PATCH", "/ben/durum", {**({"durum": durum} if durum else {}), **({"yazi": yazi} if yazi is not None else {})})
     async def dm(self, kullanici, icerik):
         return Mesaj(self, (await self.api("POST", f"/kullanicilar/{kullanici}/dm", _govde(icerik)))["mesaj"])
     async def duzenle(self, oda, mesaj, icerik): return await self.api("PATCH", f"/odalar/{oda}/mesajlar/{mesaj}", _govde(icerik))
