@@ -5,16 +5,16 @@
 <style>
   html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; -webkit-user-select: none; user-select: none; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; -webkit-app-region: drag; }
-  .card { position: absolute; inset: 8px; border-radius: 14px; background: #1c1512; box-shadow: 0 8px 28px rgba(0,0,0,.45); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #f4e6d8; }
-  .logo { width: 84px; height: 84px; border-radius: 24px; background: linear-gradient(160deg, #f26b3a, #ff8f5a); display: flex; align-items: center; justify-content: center; animation: bob 1.8s ease-in-out infinite; box-shadow: 0 10px 24px rgba(242,107,58,.28); }
+  .card { position: absolute; inset: 8px; border-radius: 16px; background: #09090b; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 12px 32px rgba(0,0,0,.65); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #f4f4f5; }
+  .logo { width: 84px; height: 84px; border-radius: 24px; background: #09090b; display: flex; align-items: center; justify-content: center; animation: bob 1.8s ease-in-out infinite; box-shadow: 0 10px 24px rgba(212,255,0,.18); }
   .logo svg { width: 50px; height: 50px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .eyes { animation: blink 3.6s infinite; transform-origin: 12px 10px; }
-  .shadow { width: 64px; height: 8px; border-radius: 50%; background: #120d0b; margin-top: 14px; animation: shadow 1.8s ease-in-out infinite; }
-  .anim { display: block; margin-top: -6px; }
-  .status { margin-top: 4px; font-size: 14px; font-weight: 600; letter-spacing: .2px; min-height: 20px; transition: opacity .2s; }
-  .sub { margin-top: 6px; font-size: 11.5px; color: #b49c89; min-height: 16px; }
-  .bar { width: 150px; height: 4px; border-radius: 4px; background: #33271f; margin-top: 18px; overflow: hidden; position: relative; }
-  .bar i { position: absolute; top: 0; bottom: 0; width: 40%; border-radius: 4px; background: #ff8a4c; animation: slide 1.2s ease-in-out infinite; }
+  .shadow { width: 64px; height: 8px; border-radius: 50%; background: #000000; margin-top: 14px; animation: shadow 1.8s ease-in-out infinite; }
+  .anim { display: block; margin-top: -6px; border-radius: 16px; }
+  .status { margin-top: 4px; font-size: 14px; font-weight: 700; letter-spacing: .3px; min-height: 20px; transition: opacity .2s; }
+  .sub { margin-top: 6px; font-size: 11.5px; color: #a1a1aa; min-height: 16px; }
+  .bar { width: 150px; height: 4px; border-radius: 4px; background: #222228; margin-top: 18px; overflow: hidden; position: relative; }
+  .bar i { position: absolute; top: 0; bottom: 0; width: 40%; border-radius: 4px; background: #d4ff00; animation: slide 1.2s ease-in-out infinite; }
   .bar.det i { animation: none; left: 0; transition: width .2s; }
   @keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
   @keyframes shadow { 0%, 100% { transform: scaleX(1); opacity: .9; } 50% { transform: scaleX(.75); opacity: .6; } }

@@ -92,9 +92,9 @@ ipcMain.handle('kanka:update-pending', () => updateReady);
 function createWindow() {
   win = new BrowserWindow({
     width: 1280, height: 820, minWidth: 420, minHeight: 560,
-    backgroundColor: '#17110e', title: 'Kanka Chat', icon: ICON, show: false, autoHideMenuBar: true,
+    backgroundColor: '#09090b', title: 'Kanka Chat', icon: ICON, show: false, autoHideMenuBar: true,
     // Windows'un açık renkli başlık çubuğu yerine temaya uyan koyu çubuk (butonlar Windows'un kendi butonları)
-    titleBarStyle: 'hidden', titleBarOverlay: { color: config.tbColor || '#17110e', symbolColor: config.tbSymbol || '#b49c89', height: 34 },
+    titleBarStyle: 'hidden', titleBarOverlay: { color: config.tbColor || '#09090b', symbolColor: config.tbSymbol || '#a1a1aa', height: 34 },
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, spellcheck: false },
   });
   win.removeMenu();

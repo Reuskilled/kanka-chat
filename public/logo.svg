@@ -1,10 +1,5 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="28" fill="#F2652F"/><g transform="translate(14 12) scale(.72)"><defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-<rect x="0" y="0" width="100" height="100" fill="#000"/>
-<g transform="rotate(0 26 30)"><path d="M18 46 L20 17 C20.4 12.6 24.6 10.8 28 13.4 L44 28 Z" fill="#fff"/></g>
-<g transform="rotate(0 74 30)"><path d="M82 46 L80 17 C79.6 12.6 75.4 10.8 72 13.4 L56 28 Z" fill="#fff"/></g>
-<path d="M50 25 C72 25 86 37 89 53 L95 61 L88.5 63.5 C86 78 70 87 50 87 C30 87 14 78 11.5 63.5 L5 61 L11 53 C14 37 28 25 50 25 Z" fill="#fff"/>
-<path d="M50 31 L53.2 45 L46.8 45 Z" fill="#000"/>
-<path d="M15 56 C21 46 36 44.5 46 52 L50 55 L54 52 C64 44.5 79 46 85 56 C81 66.5 67 70.5 57.5 64.5 L50 60.5 L42.5 64.5 C33 70.5 19 66.5 15 56 Z" fill="#000"/>
-<ellipse cx="33.5" cy="56" rx="5.2" ry="5.2" fill="#fff"/><ellipse cx="66.5" cy="56" rx="5.2" ry="5.2" fill="#fff"/>
-<path d="M44.5 70 L55.5 70 C55.5 74.2 52.4 77.2 50 77.2 C47.6 77.2 44.5 74.2 44.5 70 Z" fill="#000"/>
-</mask></defs><rect x="0" y="0" width="100" height="100" fill="#fff" mask="url(#m)"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect x="2" y="2" width="196" height="196" rx="44" fill="#09090B"/>
+  <path fill="#FFFFFF" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/>
+  <path fill="#D4FF00" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/>
+</svg>
