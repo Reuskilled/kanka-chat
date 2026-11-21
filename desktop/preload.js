@@ -27,4 +27,7 @@ contextBridge.exposeInMainWorld('kankaDesktop', {
   onPtt: cb => { ipcRenderer.removeAllListeners('kanka:ptt-state'); ipcRenderer.on('kanka:ptt-state', (e, down) => cb(!!down)); },
   // Bildirime tıklanınca gizli/küçük pencereyi öne getir
   show: () => ipcRenderer.send('kanka:show'),
+  // Sistem bildirimi (tıklanınca pencere açılır ve onNotifOpen ile hangi sohbet olduğu gelir)
+  notify: n => ipcRenderer.invoke('kanka:notify', n),
+  onNotifOpen: cb => { ipcRenderer.removeAllListeners('kanka:notif-open'); ipcRenderer.on('kanka:notif-open', (e, d) => cb(d || {})); },
 });

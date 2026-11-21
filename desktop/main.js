@@ -454,6 +454,20 @@ $p = $false; while ($true) { $d = ([KC.K]::GetAsyncKeyState(${vk}) -band 0x8000)
   pr.on('exit', () => { if (pttProc === pr) { pttProc = null; pttVk = 0; } });
   return true;
 });
+// Mesaj bildirimleri ana süreçte gösterilir: sayfanın kendi bildirimi Windows'ta tıklanınca çoğu zaman hiçbir şey yapmıyordu
+// (bildirim nesnesi çöpe gidince tıklama olayı kayboluyor). Burada referansı tutup tıklanınca pencereyi açıp sohbete götürüyoruz.
+const liveNotifs = new Map();
+ipcMain.handle('kanka:notify', (e, n) => {
+  if (!n || !Notification.isSupported()) return false;
+  const tag = String(n.tag || 'kanka').slice(0, 80);
+  try { liveNotifs.get(tag)?.close(); } catch {}
+  const x = new Notification({ title: String(n.title || 'Kanka Chat').slice(0, 120), body: String(n.body || '').slice(0, 300), icon: ICON, silent: true });
+  const data = n.data && typeof n.data === 'object' ? { ch: typeof n.data.ch === 'string' ? n.data.ch.slice(0, 120) : null, from: typeof n.data.from === 'string' ? n.data.from.slice(0, 40) : null, dm: !!n.data.dm, friend: !!n.data.friend } : {};
+  x.on('click', () => { showWindow(); setTimeout(() => { if (win && !win.isDestroyed()) win.webContents.send('kanka:notif-open', data); }, 150); liveNotifs.delete(tag); });
+  x.on('close', () => { if (liveNotifs.get(tag) === x) liveNotifs.delete(tag); });
+  liveNotifs.set(tag, x); x.show();
+  return true;
+});
 ipcMain.on('kanka:show', () => showWindow());
 ipcMain.handle('kanka:idle', () => { try { return screenLocked ? -1 : powerMonitor.getSystemIdleTime(); } catch { return null; } });
 app.whenReady().then(() => { try { powerMonitor.on('lock-screen', () => { screenLocked = true; }); powerMonitor.on('unlock-screen', () => { screenLocked = false; }); powerMonitor.on('suspend', () => { screenLocked = true; }); powerMonitor.on('resume', () => { screenLocked = false; }); } catch {} });
