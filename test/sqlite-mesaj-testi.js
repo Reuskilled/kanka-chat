@@ -4,7 +4,8 @@ const { spawn } = require('child_process'), fs = require('fs'), path = require('
 const { io } = require('socket.io-client');
 const APP = process.argv[2], OLD = process.argv[3]; // yeni ve eski server.js klasörleri
 const D = fs.mkdtempSync(path.join(require('os').tmpdir(), 'sq.'));
-const WIN = process.platform === 'win32'; // Windows'ta SIGTERM de zorla kapatır (VDS'teki gibi): kapanış kaydı çalışmaz const PORT = 3998, U = 'http://localhost:' + PORT;
+const WIN = process.platform === 'win32'; // Windows'ta SIGTERM de zorla kapatır (VDS'teki gibi): kapanış kaydı çalışmaz
+const PORT = 3998, U = 'http://localhost:' + PORT;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let proc;
 async function start(dir = APP, env = {}) {
