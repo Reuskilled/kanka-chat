@@ -1076,7 +1076,7 @@ for (const s of db.servers) migrateCats(s);
   // Kurallar ve nasıl kullanılır odalarına ilk mesajlar (oda boşsa)
   const owner = s.owner && db.users[s.owner];
   const post = (name, text) => {
-    const c = s.channels.find(x => x.name === name); if (!c || !owner || (db.messages[c.id] || []).length) return;
+    const c = s.channels.find(x => x.name === name); if (!c || !owner || (msgRaw[c.id] || []).length) return;
     (db.messages[c.id] ||= []).push({ id: id(), author: owner.name, color: owner.color, time: Date.now(), kind: 'text', text, reactions: {} });
   };
   post('kurallar', [
@@ -1425,7 +1425,7 @@ const activeCache = new Map();
 function activeWeek(s) {
   const c = activeCache.get(s.id); if (c && Date.now() - c.t < 300e3) return c.n;
   const since = Date.now() - 7 * 864e5, who = new Set();
-  for (const ch of s.channels || []) { const l = db.messages[ch.id]; if (!l) continue;
+  for (const ch of s.channels || []) { const l = msgRaw[ch.id]; if (!l) continue;
     for (let i = l.length - 1; i >= 0 && l[i].time > since; i--) { const a = l[i].author; if (a && a !== BOT_NAME && a !== 'Claude' && db.users[a] && !db.users[a].bot) who.add(a); } }
   activeCache.set(s.id, { t: Date.now(), n: who.size }); return who.size;
 }
@@ -3056,7 +3056,7 @@ api.post('/kullanicilar/:ad/dm', R((a, req) => {
   if (a.dmOk === false) return { error: 'Bu uygulamada DM kapalı (Geliştirici Portalı)', code: 403 };
   if (u.botDmOff) return { error: 'Bu kişi botlardan özel mesaj almıyor', code: 403 };
   if (u.blocked?.includes(a.bot)) return { error: 'Bu kişi botu engellemiş', code: 403 };
-  if (!botServers(a).some(s => s.members.includes(n)) && !db.messages[dmId(a.bot, n)]?.some(m => m.author === n)) return { error: 'Bot ile bu kişinin ortak bir sunucusu yok', code: 403 };
+  if (!botServers(a).some(s => s.members.includes(n)) && !msgRaw[dmId(a.bot, n)]?.some(m => m.author === n)) return { error: 'Bot ile bu kişinin ortak bir sunucusu yok', code: 403 };
   if (limited('botdm|' + a.id, 30, 60e3) || limited('botdm1|' + a.id + '|' + n, 5, 60e3)) return { error: 'Çok fazla DM: dakikada en fazla 30 (kişi başı 5)', code: 429 };
   const cid = dmId(a.bot, n), r = appPost(a, cid, msgBody(req.body || {})); return r.error ? r : { oda: cid, mesaj: msgForBot(a, cid, r.msg, true) };
 }));
@@ -5342,7 +5342,7 @@ io.on('connection', socket => {
     const now = new Set(s.channels.map(ch => ch.id)), oldIds = new Set(u.channels.map(ch => ch.id));
     const oldC = u.channels.filter(ch => now.has(ch.id)); // sonradan silinen oda geri gelmez, mesajları gitti
     // Şablonla eklenen odalardan içine mesaj yazılmış olanlar kalır
-    const gone = s.channels.filter(ch => addedCh.has(ch.id) && !(db.messages[ch.id] || []).length);
+    const gone = s.channels.filter(ch => addedCh.has(ch.id) && !(msgRaw[ch.id] || []).length);
     if (!oldC.some(ch => ch.type === 'text')) { const i = gone.findIndex(ch => ch.type === 'text'); if (i >= 0) gone.splice(i, 1); }
     const extra = s.channels.filter(ch => !oldIds.has(ch.id) && !gone.includes(ch));
     const curK = new Map(s.categories.map(k => [k.id, k])), oldK = new Set(u.categories.map(k => k.id));
