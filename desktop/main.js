@@ -8,7 +8,7 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell, dialog, Not
   const h = ipcMain.handle.bind(ipcMain), o = ipcMain.on.bind(ipcMain);
   ipcMain.handle = (ch, fn) => h(ch, (e, ...a) => trusted(e) ? fn(e, ...a) : null);
   ipcMain.on = (ch, fn) => o(ch, (e, ...a) => { if (trusted(e)) fn(e, ...a); }); }
-const { execFile } = require('child_process');
+const { execFile, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 // Ana süreçte beklenmeyen bir hata olursa kullanıcıya çirkin hata kutusu gösterme, sadece kaydet
@@ -437,6 +437,24 @@ ipcMain.handle('kanka:saveBackup', async (e, token) => {
 ipcMain.handle('kanka:openBackups', () => { const d = backupDir(); try { fs.mkdirSync(d, { recursive: true }); } catch {} return shell.openPath(d); });
 // Gerçek boşta süresi: Windows'un kendi sayacı (oyunda klavye/fare kullanmak da sayılır), ekran kilitliyse hemen boşta
 let screenLocked = false;
+// Bas-konuş: pencere odakta değilken de (oyundayken) tuşu yakala. Tek bir gizli PowerShell tuşun durumunu 25 ms'de bir okur,
+// sadece basılma/bırakılma anında satır yazar. Ek yerel modül gerekmez.
+let pttProc = null, pttVk = 0;
+function stopPtt() { try { pttProc?.kill(); } catch {} pttProc = null; pttVk = 0; }
+ipcMain.handle('kanka:ptt', (e, vk) => {
+  vk = Number(vk) | 0;
+  if (process.platform !== 'win32' || vk < 1 || vk > 254) { stopPtt(); return false; }
+  if (pttProc && pttVk === vk) return true;
+  stopPtt(); pttVk = vk;
+  const src = `Add-Type -Name K -Namespace KC -MemberDefinition '[DllImport("user32.dll")] public static extern short GetAsyncKeyState(int v);'
+$p = $false; while ($true) { $d = ([KC.K]::GetAsyncKeyState(${vk}) -band 0x8000) -ne 0; if ($d -ne $p) { $p = $d; [Console]::Out.WriteLine([int]$d); [Console]::Out.Flush() }; Start-Sleep -Milliseconds 25 }`;
+  const pr = spawn('powershell', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', enc(src)], { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+  pttProc = pr; let buf = '';
+  pr.stdout.on('data', d => { buf += d; let i; while ((i = buf.indexOf('\n')) >= 0) { const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if ((l === '1' || l === '0') && win && !win.isDestroyed()) win.webContents.send('kanka:ptt-state', l === '1'); } });
+  pr.on('exit', () => { if (pttProc === pr) { pttProc = null; pttVk = 0; } });
+  return true;
+});
+ipcMain.on('kanka:show', () => showWindow());
 ipcMain.handle('kanka:idle', () => { try { return screenLocked ? -1 : powerMonitor.getSystemIdleTime(); } catch { return null; } });
 app.whenReady().then(() => { try { powerMonitor.on('lock-screen', () => { screenLocked = true; }); powerMonitor.on('unlock-screen', () => { screenLocked = false; }); powerMonitor.on('suspend', () => { screenLocked = true; }); powerMonitor.on('resume', () => { screenLocked = false; }); } catch {} });
 ipcMain.on('kanka:badge', (e, n) => { if (win && process.platform === 'win32') win.setOverlayIcon(n ? nativeImage.createFromPath(path.join(__dirname, 'dot.png')) : null, n ? `${n} okunmamış` : ''); win?.flashFrame(!!n && !win.isFocused()); });
@@ -464,5 +482,5 @@ app.on('before-quit', () => {
   // Kapanış bir yerde takılırsa süreç arkada asılı kalmasın (yoksa uygulama bir daha açılmıyor)
   setTimeout(() => app.exit(0), 6000).unref?.();
 });
-app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch {} });
+app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch {} stopPtt(); });
 app.on('window-all-closed', e => e.preventDefault());

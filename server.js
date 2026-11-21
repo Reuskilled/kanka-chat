@@ -1460,7 +1460,7 @@ const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s
     .map(k => ({ id: k.id, name: k.name, ...(viewer && can(s, viewer, 'manageChannels') ? { perms: k.perms || {} } : {}) })), members: s.public ? Object.keys(db.users) : s.members,
   customRoles: s.customRoles, memberRoles: s.memberRoles, timeouts: Object.fromEntries(Object.entries(s.timeouts || {}).filter(([, t]) => t > Date.now())),
   bans: viewer && (s.owner === viewer || can(s, viewer, 'ban')) ? s.bans : {}, myPerms: viewer ? [...permsOf(s, viewer)] : [],
-  badges: srvBadges(s), createdAt: s.createdAt || null, siteAdmin: siteAdmin(viewer),
+  badges: srvBadges(s), createdAt: s.createdAt || null, siteAdmin: siteAdmin(viewer), lockChannels: !!s.lockChannels,
   discoverable: !!s.discoverable, description: s.description || '', category: s.category || null,
   setup: viewer && s.owner === viewer ? setupOf(s) : null,
   afk: s.afk || null,
@@ -2029,6 +2029,7 @@ function isOnlineName(n) { if (Date.now() - onSetCache.t > 1000) onSetCache = { 
 const idleSockets = new Set();
 // Telefondan bağlı oturumlar: kişinin bütün açık oturumları telefondaysa durum noktası telefon simgesi olur
 const mobileSockets = new Set();
+const desktopSockets = new Set();         // masaüstü uygulamasından bağlananlar (bildirimi kendisi gösterir)
 const isMobileUA = ua => /Android|iPhone|iPod|iPad|Mobile/i.test(ua || '') && !/Electron|KankaChat/i.test(ua || '');
 const onMobile = name => { const socks = [...online].filter(([, n]) => n === name).map(([sid]) => sid); return socks.length > 0 && socks.every(sid => mobileSockets.has(sid)); };
 function statusOf(name) {
@@ -2100,7 +2101,11 @@ function sendPush(name, payload) {
   if (!pushAllowed(u, payload)) return;
   if ([...online].some(([sid, n]) => n === name && visibleSockets.has(sid))) return; // şu an Kanka'ya bakıyor
   const body = JSON.stringify(payload);
+  // Masaüstü uygulaması açıksa bildirimi o zaten gösteriyor: bilgisayardaki tarayıcıya da gönderirsek tıklayınca Chrome açılıyordu.
+  // O durumda sadece telefonlara gönder.
+  const desk = [...online].some(([sid, n]) => n === name && desktopSockets.has(sid));
   for (const sub of [...u.push]) {
+    if (desk && !sub.mob) continue;
     webpush.sendNotification(sub, body, { TTL: 3600, urgency: 'high', topic: (payload.tag || 'kanka').replace(/[^\w-]/g, '').slice(0, 32) || undefined }).catch(err => {
       if (err?.statusCode === 404 || err?.statusCode === 410) { u.push = (u.push || []).filter(x => x.endpoint !== sub.endpoint); save(); }
     });
@@ -3179,7 +3184,7 @@ io.on('connection', socket => {
     { const u0 = db.users[name]; if (u0 && !u0.bot) { seenAdd(u0, dH, iH); save(); } }
     me = name;
     socket.join('user:' + name);
-    online.set(socket.id, name); onSetCache.t = 0; if (isMobileUA(socket.handshake.headers['user-agent'])) mobileSockets.add(socket.id);
+    online.set(socket.id, name); onSetCache.t = 0; if (isMobileUA(socket.handshake.headers['user-agent'])) mobileSockets.add(socket.id); if (/Electron\//.test(socket.handshake.headers['user-agent'] || '')) desktopSockets.add(socket.id);
     pushPresence();
     { const ua = String(socket.handshake.headers['user-agent'] || ''), pf = /Electron\//.test(ua) ? 'app' : /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Android/.test(ua) ? 'android' : /Mobi/.test(ua) ? 'mob' : 'web';
       const u0 = db.users[name]; if (u0) { (u0.plat ||= {})[pf] = (u0.plat[pf] || 0) + 1; u0.plat1 ||= pf; } }
@@ -3790,7 +3795,7 @@ io.on('connection', socket => {
   socket.on('pushSub', (sub, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     if (!sub || typeof sub.endpoint !== 'string' || !/^https:\/\//.test(sub.endpoint) || sub.endpoint.length > 600 || typeof sub.keys?.p256dh !== 'string' || typeof sub.keys?.auth !== 'string') return cb({ error: 'Geçersiz abonelik' });
-    const clean = { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh.slice(0, 200), auth: sub.keys.auth.slice(0, 100) }, at: Date.now() };
+    const clean = { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh.slice(0, 200), auth: sub.keys.auth.slice(0, 100) }, at: Date.now(), mob: mobileSockets.has(socket.id) };
     u.push = [clean, ...(u.push || []).filter(x => x.endpoint !== clean.endpoint)].slice(0, 6); save(); cb({ ok: true });
   });
   socket.on('pushOff', (endpoint, cb = () => {}) => { const u = db.users[me]; if (!u) return; u.push = (u.push || []).filter(x => x.endpoint !== endpoint); save(); cb({ ok: true }); });
@@ -5536,7 +5541,7 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     leaveVoice();
-    online.delete(socket.id); onSetCache.t = 0; idleSockets.delete(socket.id); visibleSockets.delete(socket.id); mobileSockets.delete(socket.id); voicePass.delete(socket.id);
+    online.delete(socket.id); onSetCache.t = 0; desktopSockets.delete(socket.id); idleSockets.delete(socket.id); visibleSockets.delete(socket.id); mobileSockets.delete(socket.id); voicePass.delete(socket.id);
     pushPresence();
   });
 });

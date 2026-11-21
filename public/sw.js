@@ -1,5 +1,5 @@
 // Kanka Chat service worker: uygulama kabuğunu önbellekte tutar, çevrimdışıyken de açılır
-const CACHE = 'kanka-v162';
+const CACHE = 'kanka-v163';
 const SHELL = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
@@ -46,9 +46,13 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const d = e.notification.data || {}, q = d.friend ? '?ac=arkadaslar' : d.ch ? `?ac=${encodeURIComponent(d.ch)}${d.from ? '&kim=' + encodeURIComponent(d.from) : ''}` : '';
-  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
-    const c = cs[0];
-    if (c) { c.postMessage({ kankaOpen: d }); return c.focus(); }
-    return self.clients.openWindow('/' + q);
+  // Açık Kanka sekmesi varsa yenisini açma: o sekmeyi öne getir ve sohbeti orada aç
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async cs => {
+    cs = cs.filter(c => new URL(c.url).origin === self.location.origin);
+    const c = cs.find(c => c.focused) || cs.find(c => c.visibilityState === 'visible') || cs[0];
+    if (!c) return self.clients.openWindow('/' + q);
+    c.postMessage({ kankaOpen: d });
+    try { return await c.focus(); }
+    catch { try { const n = await c.navigate('/' + q); return n?.focus(); } catch { return self.clients.openWindow('/' + q); } }
   }));
 });
