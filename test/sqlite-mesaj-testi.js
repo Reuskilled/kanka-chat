@@ -3,7 +3,8 @@
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), c = require('crypto');
 const { io } = require('socket.io-client');
 const APP = process.argv[2], OLD = process.argv[3]; // yeni ve eski server.js klasörleri
-const D = fs.mkdtempSync('/tmp/sq.'); const PORT = 3998, U = 'http://localhost:' + PORT;
+const D = fs.mkdtempSync(path.join(require('os').tmpdir(), 'sq.'));
+const WIN = process.platform === 'win32'; // Windows'ta SIGTERM de zorla kapatır (VDS'teki gibi): kapanış kaydı çalışmaz const PORT = 3998, U = 'http://localhost:' + PORT;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let proc;
 async function start(dir = APP, env = {}) {
@@ -52,7 +53,7 @@ const ok = (cond, msg) => { console.log((cond ? 'GEÇTİ  ' : 'HATALI ') + msg);
   const del = s.hist.find(m => m.text === 'yeni-2').id; s.emit('delete', del); await sleep(600); s.close();
   await stop('SIGTERM');
   j = JSON.parse(fs.readFileSync(path.join(D, 'data.json'), 'utf8'));
-  ok(j.messages.c1.some(m => m.text === 'kill-oncesi') && !j.messages.c1.some(m => m.id === del), 'C: normal kapanışta data.json tam görüntüyle yazıldı');
+  if (!WIN) ok(j.messages.c1.some(m => m.text === 'kill-oncesi') && !j.messages.c1.some(m => m.id === del), 'C: normal kapanışta data.json tam görüntüyle yazıldı');
   await start(); t = await texts();
   ok(!t.includes('yeni-2') && t.includes('yeni-3'), 'C: silinen mesaj geri gelmedi');
 
