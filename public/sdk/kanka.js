@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.0.0';
+const SURUM = '1.1.0';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -39,6 +39,21 @@ class Kanka extends EventEmitter {
     throw new KankaHata('Hız sınırı: istek tekrar tekrar reddedildi', 429);
   }
   gonder(oda, icerik) { return this.api('POST', `/odalar/${oda}/mesajlar`, govde(icerik)).then(r => this._mesaj(r.mesaj)); }
+  // Ham gövdeli istek (dosya, emoji)
+  async _ham(yontem, yol, veri, basliklar = {}) {
+    const r = await fetch(this.adres + '/api/v1' + yol, { method: yontem, headers: { Authorization: 'Bot ' + this.token, 'Content-Type': 'application/octet-stream', 'User-Agent': 'kanka.js/' + SURUM, ...basliklar }, body: veri });
+    const j = await r.json().catch(() => null); if (!r.ok) throw new KankaHata((j && j.hata) || `HTTP ${r.status}`, r.status, j); return j;
+  }
+  /** Dosya yükle (Buffer). Dönen id'yi mesajda kullan: bot.gonder(oda, { icerik: 'al', ekler: [d.id] }) */
+  dosyaYukle(veri, ad = 'dosya') { return this._ham('POST', '/dosyalar', veri, { 'X-Dosya-Adi': encodeURIComponent(ad) }); }
+  /** Botun kendi emojisi: mesajda :ad: yazınca her yerde görünür (en fazla 50) */
+  emojiYukle(ad, veri) { return this._ham('PUT', `/emojiler/${encodeURIComponent(ad)}`, veri); }
+  emojiSil(ad) { return this.api('DELETE', `/emojiler/${encodeURIComponent(ad)}`); }
+  emojiler() { return this.api('GET', '/emojiler').then(r => r.emojiler); }
+  /** Odada "yazıyor…" göster (yaklaşık 8 sn) */
+  yaziyor(oda) { return this.api('POST', `/odalar/${oda}/yaziyor`); }
+  /** durum: 'cevrimici' | 'bosta' | 'rahatsizetme' | 'gorunmez', yazi: durum yazısı */
+  durum(durum, yazi) { return this.api('PATCH', '/ben/durum', { ...(durum ? { durum } : {}), ...(yazi !== undefined ? { yazi } : {}) }); }
   dm(kullanici, icerik) { return this.api('POST', `/kullanicilar/${encodeURIComponent(kullanici)}/dm`, govde(icerik)).then(r => this._mesaj(r.mesaj)); }
   duzenle(oda, mesaj, icerik) { return this.api('PATCH', `/odalar/${oda}/mesajlar/${mesaj}`, govde(icerik)); }
   sil(oda, mesaj) { return this.api('DELETE', `/odalar/${oda}/mesajlar/${mesaj}`); }
