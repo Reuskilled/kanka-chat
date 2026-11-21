@@ -1,0 +1,24 @@
+# SQLite mesaj deposu testini Windows'ta (VDS ile aynı işletim sistemi ve Node sürümü) çalıştırır
+name: SQLite testi (Windows)
+on:
+  push:
+    branches: ['sqlite/**']
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: eski
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - run: node -v
+      - run: npm ci --omit=dev --no-audit --no-fund
+      - run: npm ci --omit=dev --no-audit --no-fund
+        working-directory: eski
+      - run: npm i --no-save --no-audit --no-fund socket.io-client@4
+      - run: node test/sqlite-mesaj-testi.js . eski
