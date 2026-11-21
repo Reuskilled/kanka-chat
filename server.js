@@ -2364,6 +2364,9 @@ function renameUser(old, nw) {
 }
 // ---------- Yaş kontrolü (kayıtta doğum tarihi zorunlu, 13 yaş altı hesap açamaz) ----------
 const needAge = u => !!u && (!u.dob || !!u.ageLock);
+// 18 yaş altı: kayıtta ve sonradan bir kez "velimin bilgisi ve izniyle kullanıyorum" onayı alınır, tarihiyle saklanır
+const isMinor = u => { const a = ageOf(u?.dob); return a !== null && a < 18; };
+const needVeli = u => isMinor(u) && !u.guardian;
 const AGE_FREE = new Set(['disconnect', 'auth', 'login', 'logout', 'setDob', 'vis', 'register', 'resetPw', 'forgot', 'checkReset', 'betaInfo', 'checkCode', 'waitlist']);
 function ageOf(dob) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dob || '')); if (!m) return null;
@@ -3020,11 +3023,11 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: seenBy(flagsState(), name), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: seenBy(voiceState(), name), voiceAge: seenBy(voiceAges(), name), calls: callsFor(name), live: seenBy(liveState(), name), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
+      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 
-  socket.on('register', ({ name, password, email, code, invite, terms, src, dob } = {}, cb = () => {}) => {
+  socket.on('register', ({ name, password, email, code, invite, terms, src, dob, veli } = {}, cb = () => {}) => {
     name = clean(name, 20); password = String(password ?? ''); email = clean(email, 190).toLowerCase();
     if (!NAME_RE.test(name)) return cb({ error: 'Kullanıcı adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin.' });
     const age = ageOf(dob);
@@ -3033,6 +3036,7 @@ io.on('connection', socket => {
     if (password.length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
     if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz. Şifreni unutursan buraya link göndeririz.', field: 'email' });
     if (!terms) return cb({ error: 'Devam etmek için kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
+    if (age < 18 && veli !== true) return cb({ error: '18 yaşından küçüksen velinin bilgisi ve izniyle kullandığını onaylamalısın.', field: 'veli' });
     if (nameTaken(name)) return cb({ error: 'Bu kullanıcı adı alınmış.', field: 'name' });
     { const ev = evasionOf(dH, iH, null); if (ev) { secLog('yan-hesap', name, `kayıt engellendi, askıdaki ${ev.u.name} (${ev.by === 'dev' ? 'cihaz' : 'bağlantı'})`); return cb({ error: evadeText(ev.u, ev.by) }); } }
     if (Object.values(db.users).some(u => u.email === email || (u.email && mailKey(u.email) === mailKey(email)))) return cb({ error: 'Bu e-posta ile zaten bir hesap var. Şifreni unuttuysan giriş ekranından sıfırlayabilirsin.', field: 'email' });
@@ -3042,7 +3046,7 @@ io.on('connection', socket => {
     const salt = crypto.randomBytes(16).toString('hex');
     db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} };
     const sr = cleanSrc(src); if (sr) db.users[name].src = sr;
-    db.users[name].dob = String(dob); db.users[name].birthday = String(dob).slice(5); // tam tarih gizli tutulur; profilde sadece gün-ay (istersen kaldırabilirsin)
+    db.users[name].dob = String(dob); db.users[name].birthday = String(dob).slice(5); if (age < 18) db.users[name].guardian = { at: Date.now(), v: 1, where: 'kayit' }; // tam tarih gizli tutulur; profilde sadece gün-ay (istersen kaldırabilirsin)
     { const iv = clean(invite, 40).split(/[=/]/).pop(), sv = iv && db.servers.find(x => x.invite === iv); if (sv) db.users[name].via = { srv: sv.id, name: clean(sv.name, 40) }; else if (gate.code) db.users[name].via = { code: 1 }; } // hangi reklamdan / kelimeden geldi (ilk ziyaret)
     if (gate.code) {
       const c = db.codes[gate.code]; c.usedBy = name; c.usedAt = Date.now(); db.users[name].invitedBy = c.by;
@@ -4211,6 +4215,7 @@ io.on('connection', socket => {
     cb({ matches: (o.matches || []).slice(0, 8), servers: n === me ? [] : servers, friends, joined: Object.fromEntries(db.servers.filter(s => s.members.includes(n) && s.joinedAt?.[n]).map(s => [s.id, s.joinedAt[n]])) });
   });
   // Eski hesaplar için bir kereye mahsus doğum tarihi
+  socket.on('veliOnay', (_ = {}, cb = () => {}) => { const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' }); if (isMinor(u) && !u.guardian) { u.guardian = { at: Date.now(), v: 1, where: 'sonradan' }; save(); } cb({ ok: true }); });
   socket.on('setDob', (dob, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     if (u.ageLock) return cb({ error: 'Kanka Chat\'i kullanabilmek için en az 13 yaşında olmalısın.', locked: true });
@@ -4270,11 +4275,12 @@ io.on('connection', socket => {
     if (!me) return cb({ error: 'Giriş yap' });
     if (db.devBetaOpen === false) return cb({ error: 'Başvurular şu an kapalı' });
     if (limited('dev|' + me, 3, 3600e3)) return cb({ error: 'Biraz bekleyip tekrar dene' });
+    if (isMinor(db.users[me]) && f.veli !== true) return cb({ error: '18 yaşından küçüksen velinin bilgisi ve izniyle başvurduğunu onaylamalısın' });
     const cur = devApp(me); if (cur && cur.status !== 'rejected') return cb({ error: cur.status === 'accepted' ? 'Başvurun zaten kabul edildi' : 'Başvurun zaten değerlendiriliyor' });
     const t = (v, n) => String(v || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
     const LANGS = ['JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'Go', 'Rust', 'PHP', 'Diğer'];
     const app = { langs: (Array.isArray(f.langs) ? f.langs : []).filter(x => LANGS.includes(x)).slice(0, 5), exp: ['yok', 'az', 'cok'].includes(f.exp) ? f.exp : 'yok',
-      link: t(f.link, 200), idea: t(f.idea, 600), hours: ['1-3', '4-8', '8+'].includes(f.hours) ? f.hours : '1-3', contact: t(f.contact, 120), at: Date.now(), status: 'pending' };
+      link: t(f.link, 200), idea: t(f.idea, 600), hours: ['1-3', '4-8', '8+'].includes(f.hours) ? f.hours : '1-3', contact: t(f.contact, 120), at: Date.now(), status: 'pending', ...(isMinor(db.users[me]) ? { veliAt: Date.now() } : {}) };
     if (!app.langs.length) return cb({ error: 'En az bir dil seç' });
     if (app.idea.length < 20) return cb({ error: 'Bot fikrini biraz daha anlat (en az 20 karakter)' });
     if (app.link && !/^https?:\/\/\S+$/i.test(app.link)) return cb({ error: 'Bağlantı http:// ya da https:// ile başlamalı' });

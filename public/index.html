@@ -3975,6 +3975,20 @@ const dobField = (pf = 'a') => { const y = new Date().getFullYear();
     <select id="${pf}-dd" aria-label="Gün"><option value="">Gün</option>${Array.from({ length: 31 }, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join('')}</select>
     <select id="${pf}-dm" aria-label="Ay"><option value="">Ay</option>${AYLAR.map((a, i) => `<option value="${String(i + 1).padStart(2, '0')}">${a}</option>`).join('')}</select>
     <select id="${pf}-dy" aria-label="Yıl"><option value="">Yıl</option>${Array.from({ length: 100 }, (_, i) => `<option>${y - i}</option>`).join('')}</select></div>`; };
+const yasOf = dob => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob || ''); if (!m) return null; const n = new Date(), a = n.getFullYear() - +m[1] - ((n.getMonth() + 1 < +m[2] || (n.getMonth() + 1 === +m[2] && n.getDate() < +m[3])) ? 1 : 0); return a >= 0 && a < 130 ? a : null; };
+// kayıt formunda doğum tarihi seçilince 18 altıysa veli onayı kutusu görünür
+document.addEventListener('change', e => { if (!/^a-d[dmy]$/.test(e.target.id || '')) return; const v = $('#af-a-veli'); if (!v) return; const a = yasOf(`${$('#a-dy').value}-${$('#a-dm').value}-${$('#a-dd').value}`); v.hidden = !(a !== null && a >= 13 && a < 18); });
+// mevcut 18 altı kullanıcılara bir kerelik veli onayı
+function veliGate() {
+  if (document.querySelector('#modal.open .veli-gate')) return;
+  modal(`<div class="veli-gate"><h3>${ic('shield')}Bir şey soracağız</h3><p class="hint" style="margin-top:6px">Doğum tarihine göre 18 yaşından küçüksün. Kanka'yı kullanmaya devam etmek için velinin bunu bildiğini onaylaman gerekiyor.</p>
+    <label class="chk" style="margin:14px 0 4px"><input type="checkbox" id="veli-chk"><span><b>Velimin bilgisi ve izniyle</b> Kanka'yı kullanıyorum. <a href="/kosullar" target="_blank">Kullanım Şartları</a>'nı okudum.</span></label>
+    <p class="hint" style="font-size:12.5px">Kanka ücretsizdir; hiçbir özellik için para istemez. Bot ya da sunucu için para harcaman gerekmez.</p>
+    <div class="rowb"><button id="veli-out">Çıkış yap</button><button class="primary" id="veli-ok" disabled>Onaylıyorum</button></div></div>`);
+  $('#veli-chk').onchange = e => $('#veli-ok').disabled = !e.target.checked;
+  $('#veli-out').onclick = () => logout();
+  $('#veli-ok').onclick = () => socket.emit('veliOnay', {}, r => { if (r?.error) return toast(r.error); closeModal(); toast('Teşekkürler 🙏', null, false, { type: 'ok' }); });
+}
 const YAS_KEY = 'kanka-yas2', minorLocked = () => { const t = +store.get(YAS_KEY) || 0; return t && Date.now() - t < 30 * 864e5; };
 function renderAuth(mode = authMode, keep) {
   if (mode === 'register' && minorLocked()) mode = 'minor';
@@ -3998,6 +4012,7 @@ function renderAuth(mode = authMode, keep) {
       ${afield('a-pass', 'Şifre (en az 6 karakter)', 'lock', 'password', 'autocomplete="new-password"')}
       ${dobField()}
       <label class="acheck" id="af-a-terms"><input type="checkbox" id="a-terms"><span class="box2"></span><span><a href="/kosullar" target="_blank">Kullanım Şartları</a>'nı ve <a href="/gizlilik" target="_blank">Gizlilik Politikası / KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum. En az 13 yaşında olduğumu beyan ediyorum.</span></label>
+      <label class="acheck" id="af-a-veli" hidden><input type="checkbox" id="a-veli"><span class="box2"></span><span><b>18 yaşından küçüğüm.</b> Kanka'yı velimin bilgisi ve izniyle kullanıyorum.</span></label>
       <button class="primary" type="submit" id="a-btn">Hesabı oluştur</button><div id="auth-err"></div>
       ${needCode ? `<div class="await"><span>Kodun yok mu?</span><button type="button" class="alink" id="a-wait">Bekleme listesine katıl →</button></div>` : ''}`;
   }
@@ -4044,7 +4059,7 @@ function renderAuth(mode = authMode, keep) {
 function authErr(r) {
   $('#auth-err').textContent = r.error || '';
   document.querySelectorAll('#auth-body .bad').forEach(x => x.classList.remove('bad'));
-  const map = { email: 'af-a-mail', name: 'af-a-name', code: 'af-a-code', terms: 'af-a-terms', dob: 'af-a-dob' };
+  const map = { email: 'af-a-mail', name: 'af-a-name', code: 'af-a-code', terms: 'af-a-terms', dob: 'af-a-dob', veli: 'af-a-veli' };
   if (r.field && map[r.field]) $('#' + map[r.field])?.classList.add('bad');
   if (r.full) { authQ.full = true; }
 }
@@ -4063,7 +4078,8 @@ $('#auth-form').onsubmit = e => {
     const dob = `${$('#a-dy').value}-${$('#a-dm').value}-${$('#a-dd').value}`;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return authErr({ error: 'Doğum tarihini seç.', field: 'dob' });
     if (!$('#a-terms').checked) return authErr({ error: 'Kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
-    busy(true); E2E.pend($('#a-pass').value); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true, src: firstSrc, dob }, r => { busy(false); if (r.minor) { store.set(YAS_KEY, String(Date.now())); return renderAuth('minor'); } r.error ? authErr(r) : onAuth(r); });
+    const yas = yasOf(dob); if (yas !== null && yas >= 13 && yas < 18 && !$('#a-veli').checked) return authErr({ error: '18 yaşından küçüksen velinin bilgisi ve izniyle kullandığını onaylamalısın.', field: 'veli' });
+    busy(true); E2E.pend($('#a-pass').value); socket.emit('register', { name: val('a-name'), password: $('#a-pass').value, email: val('a-mail'), code: val('a-code'), invite: authQ.davet, terms: true, src: firstSrc, dob, veli: $('#a-veli').checked }, r => { busy(false); if (r.minor) { store.set(YAS_KEY, String(Date.now())); return renderAuth('minor'); } r.error ? authErr(r) : onAuth(r); });
   } else if (authMode === 'forgot') {
     if (!val('a-who')) return authErr({ error: 'Kullanıcı adını ya da e-postanı yaz.' });
     busy(true); socket.emit('forgot', val('a-who'), r => { busy(false); if (r.error) return authErr(r); renderAuth('sent'); const rb = $('#a-resend'); if (rb) { let n = 60; rb.disabled = true; const tk = () => { if (!rb.isConnected) return; if (--n <= 0) { rb.disabled = false; rb.textContent = 'Tekrar gönder'; return; } rb.textContent = `Tekrar gönder (${n} sn)`; setTimeout(tk, 1000); }; tk(); } });
@@ -4232,6 +4248,7 @@ function onAuth(res) {
   hideBoot();
   if (res.error) { vcResume = null; store.set('kanka-token', null); showAuth(); return setTimeout(() => $('#auth-err') && authErr(res), 0); }
   if (vcResume) setTimeout(resumeVoice, 300);
+  S.minor = !!res.minor; if (res.needVeli) setTimeout(veliGate, 1500);
   store.set('kanka-token', res.token);
   S.me = res.user.name;
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
@@ -11859,11 +11876,12 @@ function devPage(root) {
       <div class="st-field"><label>Kanka'da nasıl bir bot yapmak istiyorsun?</label><textarea class="field" name="idea" maxlength="600" rows="4" placeholder="Örn. Valorant maç istatistiklerini gösteren, sunucuya rütbe rolü veren bir bot"></textarea><div class="st-count" id="dv-cnt">0/600</div></div>
       <div class="st-field"><label>Haftada ne kadar zaman ayırabilirsin?</label><div class="dv-opts row">${[['1-3', '1-3 saat'], ['4-8', '4-8 saat'], ['8+', '8 saatten fazla']].map(([k, t], i) => `<label class="dv-opt"><input type="radio" name="hours" value="${k}" ${i ? '' : 'checked'}><span>${t}</span></label>`).join('')}</div></div>
       <div class="st-field"><label>Sana nereden ulaşalım? <small style="text-transform:none;letter-spacing:0">(isteğe bağlı)</small></label><input class="field" name="contact" maxlength="120" placeholder="Kanka'dan özel mesaj yeterliyse boş bırak"></div>
+      ${S.minor ? `<label class="chk" style="margin:4px 0 10px"><input type="checkbox" name="veli"><span><b>18 yaşından küçüğüm</b>, velimin bilgisi ve izniyle başvuruyorum. Bot yapmak ücretsizdir; bunun için para harcamam gerekmediğini biliyorum.</span></label>` : ''}
       <button class="primary" style="width:auto;padding:12px 22px">${ic('send')} Başvur</button></form>`;
     const f = $('#dv-f');
     f.idea.oninput = () => $('#dv-cnt').textContent = `${f.idea.value.length}/600`;
     f.onsubmit = e => { e.preventDefault(); const b = f.querySelector('button.primary'); b.disabled = true;
-      socket.emit('devApply', { langs: [...f.querySelectorAll('[name=lang]:checked')].map(x => x.value), exp: f.exp.value, link: f.link.value, idea: f.idea.value, hours: f.hours.value, contact: f.contact.value }, x => {
+      socket.emit('devApply', { langs: [...f.querySelectorAll('[name=lang]:checked')].map(x => x.value), exp: f.exp.value, link: f.link.value, idea: f.idea.value, hours: f.hours.value, contact: f.contact.value, veli: !!f.veli?.checked }, x => {
         b.disabled = false; if (x.error) return toast(x.error); toast('Başvurun alındı! Sonuç çıkınca haber vereceğiz', null, false, { type: 'ok' }); devPage(root); }); };
   });
 }
