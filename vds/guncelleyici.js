@@ -179,7 +179,8 @@ function npmInstall() {
     if (process.platform === 'win32') {
       if (process.env.APPDATA) fs.mkdirSync(path.join(process.env.APPDATA, 'npm'), { recursive: true });
       const npm = path.join(path.dirname(process.execPath), 'npm.cmd');
-      execFileSync('cmd.exe', ['/d', '/s', '/c', `"${fs.existsSync(npm) ? npm : 'npm'}" install --omit=dev --no-audit --no-fund`], { cwd: APP, stdio: ['ignore', out, out], windowsHide: true, windowsVerbatimArguments: true, timeout: 10 * 60e3 });
+      // /s ile cmd komutun ilk ve son tırnağını atar: bütün komut ayrıca tırnağa alınmazsa "C:\Program Files" boşlukta bölünür ve kurulum hiç çalışmaz
+      execFileSync('cmd.exe', ['/d', '/s', '/c', `""${fs.existsSync(npm) ? npm : 'npm'}" install --omit=dev --no-audit --no-fund"`], { cwd: APP, stdio: ['ignore', out, out], windowsHide: true, windowsVerbatimArguments: true, timeout: 10 * 60e3 });
     } else execFileSync('npm', ['install', '--omit=dev', '--no-audit', '--no-fund'], { cwd: APP, stdio: ['ignore', out, out], timeout: 10 * 60e3 });
   } finally { fs.closeSync(out); }
 }
