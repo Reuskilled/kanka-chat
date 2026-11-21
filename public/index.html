@@ -8792,6 +8792,7 @@ socket.on('chanActivity', ({ channelId, serverId }) => {
   renderRail(); if (S.view === 'server') renderSide(); refreshHome();
 });
 // Bildirim izni varsa bilgisayarda Kanka içi kutu yerine sistemin kendi bildirimi (Windows'ta sağ altta) çıkar
+const liveNotifs = new Set();
 function sysNotify(title, n) {
   if (isMobileDev || !('Notification' in window) || Notification.permission !== 'granted') return false;
   if (document.visibilityState !== 'visible' && pushActive && !window.kankaDesktop) return true; // sekme arka plandaysa sunucunun gönderdiği bildirim zaten çıkıyor
@@ -8799,7 +8800,11 @@ function sysNotify(title, n) {
   const data = { ch: n.channelId || null, from: n.from || null, dm: !!n.dm, friend: !!n.friend }, u = S.users[n.from] || {};
   const icon = /^(\/uploads\/|https:\/\/)/.test(u.avatar || '') ? u.avatar : '/icon-192.png', tag = data.ch || (n.friend ? 'friends' : 'kanka');
   try {
-    if (window.kankaDesktop || !navigator.serviceWorker?.controller) { const x = new Notification(title, { body, icon, tag, renotify: true, silent: true }); x.onclick = e => { e?.preventDefault?.(); window.kankaDesktop?.show?.(); window.focus(); openFromNotif(data); x.close(); }; }
+    if (window.kankaDesktop?.notify) window.kankaDesktop.notify({ title, body, tag, data });
+    else if (window.kankaDesktop || !navigator.serviceWorker?.controller) { // eski masaüstü sürümü ya da servis çalışanı olmayan tarayıcı
+      const x = new Notification(title, { body, icon, tag, renotify: true, silent: true }); liveNotifs.add(x);
+      const drop = () => liveNotifs.delete(x); x.onclose = drop; setTimeout(drop, 10 * 60e3); // referans tutulmazsa tıklama olayı kayboluyor
+      x.onclick = e => { e?.preventDefault?.(); window.kankaDesktop?.show?.(); window.focus(); openFromNotif(data); x.close(); drop(); }; }
     else navigator.serviceWorker.ready.then(r => r.showNotification(title, { body, icon, badge: '/icon-192.png', tag, renotify: true, silent: true, data })).catch(() => {});
     return true;
   } catch { return false; }
@@ -8880,6 +8885,8 @@ function openFromNotif(d) {
   const s = S.servers.find(s => s.channels.some(c => c.id === d.ch)); if (s) selectServer(s.id, d.ch);
 }
 navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.kankaOpen) openFromNotif(e.data.kankaOpen); });
+try { navigator.serviceWorker?.startMessages?.(); } catch {} // servis çalışanından gelen "şu sohbeti aç" mesajları beklemede kalmasın
+window.kankaDesktop?.onNotifOpen?.(d => { closeModal?.(); openFromNotif(d); });
 document.addEventListener('visibilitychange', () => { if (S.me) socket.emit('vis', document.visibilityState === 'visible'); });
 function pushSettingsHTML() {
   if (window.kankaDesktop) return '';
