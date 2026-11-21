@@ -349,7 +349,7 @@ const SQLITE_OK = (() => { try { require('node:sqlite'); return true; } catch { 
 app.get('/api/surum', (req, res) => {
   let sha = null;
   try { sha = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'guncelleme.json'), 'utf8')).sha; } catch {}
-  res.json({ surum: sha ? sha.slice(0, 7) : 'yerel', baslama: STARTED, node: process.version, sqlite: SQLITE_OK });
+  res.json({ surum: sha ? sha.slice(0, 7) : 'yerel', baslama: STARTED, node: process.version, sqlite: SQLITE_OK, kayit: saveSummary() });
 });
 const artCache = new Map();
 async function albumArt(title, artist) {
@@ -646,6 +646,16 @@ function msgPersist() {
     msgDeleted.clear();
   } catch (e) { try { msgDb.exec('ROLLBACK'); } catch {} throw e; }
 }
+// Kayıt ölçümü: her kayıtta sunucunun ne kadar donduğu (SQLite yazımı + JSON üretimi, ms). /api/surum'da görünür.
+const saveStats = [];
+function saveStat(x) { saveStats.push(x); if (saveStats.length > 200) saveStats.shift(); }
+function saveSummary() {
+  if (!saveStats.length) return null;
+  const r = n => Math.round(n * 10) / 10, tot = saveStats.map(x => x.sqlite + x.json), part = saveStats.filter(x => !x.tam);
+  const avg = a => a.length ? a.reduce((p, c) => p + c, 0) / a.length : 0;
+  return { adet: saveStats.length, ortMs: r(avg(tot)), maxMs: r(Math.max(...tot)), ortSqliteMs: r(avg(saveStats.map(x => x.sqlite))), ortJsonMs: r(avg(part.map(x => x.json))),
+    tamGoruntuMs: r(avg(saveStats.filter(x => x.tam).map(x => x.json))), ortKanal: r(avg(saveStats.map(x => x.kanal))), dosyaMB: r(saveStats.at(-1).mb) };
+}
 // data.json yazıldıktan sonra: boyutunu ve zamanını not et (açılışta "bu dosyayı ben mi yazdım" kontrolü için)
 function msgMarkJson(stamp) { if (!msgDb) return; try { const st = fs.statSync(DATA_FILE); msgQ.mark.run(JSON.stringify({ size: st.size, mtime: st.mtimeMs, stamp })); } catch (e) { console.error('mesajlar.db notu:', e.message); } }
 // data.json metni: SQLite açıksa mesajlar en fazla 10 dakikada bir yeniden JSON'a çevrilir, arada son görüntü eklenir
@@ -820,8 +830,11 @@ async function writeDbAsync() {
   dbWriting = true; dbDirty = false;
   const gen = syncGen;
   try {
+    const t0 = performance.now(), nCh = msgTouched.size;
     try { msgPersist(); } catch (e) { console.error('mesajlar.db yazılamadı:', e.message); }
+    const t1 = performance.now(), snap0 = msgSnapAt;
     const txt = dbJson(false), stamp = lastStamp;
+    saveStat({ sqlite: t1 - t0, json: performance.now() - t1, kanal: nCh, mb: txt.length / 1e6, tam: msgSnapAt !== snap0 });
     const fh = await fs.promises.open(TMP_ASYNC, 'w');
     try { await fh.writeFile(txt); await fh.sync(); } finally { await fh.close(); }
     // bu arada senkron (daha yeni) bir yazım olduysa bu eski kopyayı data.json'un üstüne koyma
