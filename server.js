@@ -345,10 +345,11 @@ app.get('/dosya/:id/:name?', (req, res) => {
     'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(f.name)}` });
   res.sendFile(path.join(FILES, req.params.id), { acceptRanges: true });
 });
+const SQLITE_OK = (() => { try { require('node:sqlite'); return true; } catch { return false; } })(); // SQLite'a geçiş için: sunucudaki Node bunu destekliyor mu
 app.get('/api/surum', (req, res) => {
   let sha = null;
   try { sha = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'guncelleme.json'), 'utf8')).sha; } catch {}
-  res.json({ surum: sha ? sha.slice(0, 7) : 'yerel', baslama: STARTED });
+  res.json({ surum: sha ? sha.slice(0, 7) : 'yerel', baslama: STARTED, node: process.version, sqlite: SQLITE_OK });
 });
 const artCache = new Map();
 async function albumArt(title, artist) {
