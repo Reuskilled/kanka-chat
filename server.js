@@ -4361,7 +4361,7 @@ io.on('connection', socket => {
       for (const x of users) for (const k of shownBadges(x)) (holders[k] ||= []).push(x.name);
       badgeStatsCache = { t: now, holders, total: users.length };
     }
-    const list = badgeStatsCache.holders[badge] || [], fr = new Set(db.users[me]?.friends || []);
+    const list = (badgeStatsCache.holders[badge] || []).filter(n => db.users[n]), fr = new Set(db.users[me]?.friends || []); // önbellek 1 dk: bu arada silinen/adı değişen hesaplar listede kalmasın
     const sample = [...list.filter(n => fr.has(n) && n !== owner), ...list.filter(n => !fr.has(n) && n !== owner && n !== me).sort((a, b) => (db.users[b].lastSeen || 0) - (db.users[a].lastSeen || 0))].slice(0, 3);
     const o = db.users[owner]; let earned = null;
     if (o) earned = o.awards?.[badge]?.time || (badge === 'dev' ? db.devApps?.[owner]?.decidedAt : null) || (['beta', 'erken'].includes(badge) ? o.createdAt : null) || o.badgeAt?.[badge] || null;
