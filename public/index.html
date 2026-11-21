@@ -3595,6 +3595,23 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
 .lv-rw{display:flex;align-items:center;gap:8px;margin-bottom:8px}.lv-rw>span{font-size:13px;color:var(--muted);flex:none}.lv-rw .lv-l{width:84px;flex:none}.lv-rw .lv-r{flex:1;min-width:0}
 .lv-x{width:34px;height:34px;flex:none;border-radius:10px;border:1px solid var(--line,#3a2e27);background:none;color:var(--muted);display:grid;place-items:center;cursor:pointer}.lv-x svg{width:14px;height:14px}
 .lb-row.lb-me{border-top:1px dashed var(--line,#3a2e27);margin-top:6px;padding-top:10px}.lb-n{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);font-size:12px}
+
+  /* Ses paneli (sade): 2 satır + 4 tuş; mikrofon ve kulaklık kullanıcı kartında */
+  #voicebar .vt { display: flex; align-items: center; }
+  #voicebar .vtime { display: none; }
+  #voicebar .vq { margin-left: auto; color: #3fcf8e; padding: 2px; }
+  #voicebar .vq svg { width: 16px; height: 14px; fill: currentColor; display: block; }
+  #voicebar .vq.mid { color: #f0b232; } #voicebar .vq.bad { color: #ff5a5f; animation: pulse 1s infinite; }
+  #voicebar .vq em, #voicebar .vq i { display: none; }
+  #voicebar .vc { margin-bottom: 10px; }
+  #voicebar .btns button { min-height: 36px; display: grid; place-items: center; }
+  #voicebar .btns button[hidden] { display: none; }
+  #voicebar .vb-chat2 { background: var(--hover); }
+  #me .mebtn { position: relative; flex: none; }
+  #me .mebtn.off { color: #ff6b6f; background: rgba(255,90,95,.12); }
+  #me #mute.ns-on::after { content: ''; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #3fcf8e; box-shadow: 0 0 0 2px var(--panel); }
+  #me .row1 { gap: 6px; } #me .row1 > div:nth-child(2) { margin-left: 4px; }
+  .dv-ns b { color: var(--muted); } .dv-ns.on b { color: #3fcf8e; }
 </style>
 </head>
 <body>
@@ -3616,10 +3633,10 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
     <div class="shead" id="side-head"></div>
     <div id="side-list"></div>
     <div id="me">
-      <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vtime" class="vtime"></span><span id="vq" class="vq" hidden><i></i><em></em></span></div><div class="vc" id="vname"></div><button type="button" class="vb-chat" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>Oda sohbeti</button>
-        <div class="btns"><button id="deaf" title="Hoparlörü kapat" aria-label="Hoparlörü kapat"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/></svg><span class="vcar" data-dev="out" title="Ses çıkışı ayarları"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></button><button id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="vns" title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button></div></div>
+      <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vtime" class="vtime"></span><span id="vq" class="vq" hidden><svg viewBox="0 0 16 14" aria-hidden="true"><rect x="0" y="9" width="3.4" height="5" rx="1"/><rect x="6.3" y="5" width="3.4" height="9" rx="1"/><rect x="12.6" y="0" width="3.4" height="14" rx="1"/></svg><em></em></span></div><div class="vc" id="vname"></div>
+        <div class="btns"><button type="button" class="vb-chat2" aria-label="Oda sohbeti" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button><button id="vns" hidden title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button></div></div>
       <div class="row1"><div id="me-av"></div><div><div class="n" id="me-name"></div><div class="s" id="me-lvl"></div></div>
-        <button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
+        <button class="ibtn mebtn" id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="ibtn mebtn" id="deaf" title="Hoparlörü kapat" aria-label="Hoparlörü kapat"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/></svg></button><button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
     </div>
   </aside>
   <main id="chat" class="panel">
@@ -5556,6 +5573,7 @@ $('#head-more').onclick = e => {
     $('#vd-sub').textContent = `${who ? who + ' kişi · ' : ''}${f ? f.s.name : 'Özel arama'} · odayı aç`;
   };
   new MutationObserver(sync).observe($('#voicebar'), { attributes: true, childList: true, subtree: true, characterData: true });
+  new MutationObserver(sync).observe($('#mute'), { attributes: true, childList: true, subtree: true });
   setInterval(() => { if (B.classList.contains('invoice')) sync(); }, 2000);
   $('#vd-mute').onclick = () => { $('#mute').click(); buzz(8); setTimeout(sync, 50); };
   $('#vd-cam').onclick = () => { $('#vcam').click(); setTimeout(sync, 300); };
@@ -8851,7 +8869,7 @@ function renderMe() {
   { let x = $('#me-xp'); if (!x) { $('#me .row1').insertAdjacentHTML('afterend', '<div id="me-xp" title=""><i></i></div>'); x = $('#me-xp'); }
     const lo = lvlFloor(u.level), hi = lvlFloor(u.level + 1), pct = Math.max(2, Math.min(100, Math.round((u.xp - lo) / (hi - lo) * 100)));
     x.firstChild.style.width = pct + '%'; x.title = `Seviye ${u.level} · ${u.xp} / ${hi} XP`; }
-  $('#me-lvl').innerHTML = actLine(S.me) || (u.status ? esc(u.status) : '') || `Seviye ${u.level}${u.streak ? ` · <span class="streak">${ic('fire')} ${u.streak} gün</span>` : ''}`;
+  $('#me-lvl').innerHTML = actLine(S.me) || (u.status ? esc(u.status) : '') || `<span title="Seviye ${u.level}${u.streak ? ` · ${u.streak} günlük seri` : ''}">Sv ${u.level}${u.streak ? ` · <span class="streak">${ic('fire')} ${u.streak}</span>` : ''}</span>`;
 }
 function setPresence(list) {
   const pairs = (list || []).map(x => Array.isArray(x) ? x : [x, 'online']);
@@ -9153,7 +9171,7 @@ function setNS(mode) {
   rawStream?.getAudioTracks().forEach(t => t.applyConstraints({ echoCancellation: true, noiseSuppression: mode !== 'off', autoGainControl: true }).catch(() => {}));
   renderNSBtn();
 }
-function renderNSBtn() { const b = $('#vns'); if (!b) return; const on = !!NS_AI[nsMode()]; b.classList.toggle('off', !on); b.title = on ? 'Gürültü engelleme: açık' : 'Gürültü engelleme: kapalı'; }
+function renderNSBtn() { const b = $('#vns'); if (!b) return; const on = !!NS_AI[nsMode()]; $('#mute')?.classList.toggle('ns-on', on); b.classList.toggle('off', !on); b.title = on ? 'Gürültü engelleme: açık' : 'Gürültü engelleme: kapalı'; }
 
 // ── Ses cihazları: mikrofon ve kulaklık butonlarındaki ok / sağ tık ile hızlı seçim ──
 const CARET = k => `<span class="vcar" data-dev="${k}" title="${k === 'in' ? 'Mikrofon ayarları' : 'Ses çıkışı ayarları'}">${ic('chevron')}</span>`;
@@ -9182,6 +9200,7 @@ async function devPanel(el, kinds, foot) {
     (kinds.includes('in') && kinds.includes('out') ? '<div class="dv-sep"></div>' : '') +
     (kinds.includes('out') ? `<div class="dv-h">${ic('headset')} Çıkış cihazı</div>${canSink() ? (outs.length ? list(outs, curOut, 'spk', 'Hoparlör') : list([], '', 'spk', '')) : `<div class="dv-note">Bu tarayıcı çıkış cihazı seçmeyi desteklemiyor. Chrome, Edge ya da Kanka Windows uygulamasında seçebilirsin; şimdilik bilgisayarın ses ayarından değiştir.</div>`}
       <div class="dv-s"><label>Çıkış sesi <b data-pv="out">%${pOut}</b></label><input type="range" class="krange" data-r="out" min="0" max="1" step="0.05" value="${ovol()}"></div>` : '') +
+    (kinds.includes('in') ? `<button class="dv-more dv-ns${NS_AI[nsMode()] ? ' on' : ''}" data-ns>${ic('sparkle')} Gürültü engelleme: <b>${NS_AI[nsMode()] ? 'açık' : 'kapalı'}</b></button>` : '') +
     (foot ? `<button class="dv-more" data-more>${ic('gear')} Ses ayarları</button>` : '');
   el.onclick = async e => {
     e.stopPropagation();
@@ -9189,6 +9208,7 @@ async function devPanel(el, kinds, foot) {
     if (m) { await switchMic(m.dataset.mic); return devPanel(el, kinds, foot); }
     if (sp) { setSpk(sp.dataset.spk); toast(sp.dataset.spk ? 'Ses çıkışı değişti' : 'Ses çıkışı: sistem varsayılanı'); return devPanel(el, kinds, foot); }
     if (e.target.closest('[data-perm]')) { try { (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach(t => t.stop()); } catch {} return devPanel(el, kinds, foot); }
+    if (e.target.closest('[data-ns]')) { $('#vns').click(); return devPanel(el, kinds, foot); }
     if (e.target.closest('[data-more]')) { closeUMenu(); showSettings('notif'); }
   };
   el.querySelectorAll('input[data-r]').forEach(r => r.oninput = () => { const v = +r.value; el.querySelector(`[data-pv="${r.dataset.r}"]`).textContent = '%' + Math.round(v * 100); r.dataset.r === 'in' ? setInGain(v) : setOutVol(v); });
@@ -9210,6 +9230,11 @@ function devPop(kind, anchor) {
   devPanel(m, [kind], true).then(place); place();
 }
 document.addEventListener('click', e => { const c = e.target.closest('.vcar'); if (!c) return; e.stopPropagation(); e.preventDefault(); const b = c.closest('button') || c; document.querySelector('.devpop') ? closeUMenu() : devPop(c.dataset.dev, b); }, true);
+{ let lp = null; // dokunmatik: mikrofon/kulaklığa basılı tutunca cihaz menüsü
+  document.addEventListener('pointerdown', e => { const b = e.target.closest('#mute, #deaf'); if (!b || e.pointerType === 'mouse') return; lp = setTimeout(() => { lp = 'done'; devPop(b.id === 'mute' ? 'in' : 'out', b); buzz?.(10); }, 500); }, true);
+  const end = e => { if (lp === 'done') { e.preventDefault?.(); e.stopPropagation?.(); } else clearTimeout(lp); };
+  document.addEventListener('pointerup', end, true); document.addEventListener('pointercancel', () => clearTimeout(lp), true);
+  document.addEventListener('click', e => { if (lp === 'done' && e.target.closest('#mute, #deaf')) { lp = null; e.preventDefault(); e.stopImmediatePropagation(); } }, true); }
 document.addEventListener('contextmenu', e => { const b = e.target.closest('#mute, #deaf'); if (!b) return; e.preventDefault(); devPop(b.id === 'mute' ? 'in' : 'out', b); });
 navigator.mediaDevices?.addEventListener?.('devicechange', () => { const p = document.querySelector('.devpop'); if (p && !p.querySelector('input:active')) devPanel(p, [p.querySelector('[data-mic]') ? 'in' : 'out'], true); });
 // Seste geçen süre: odanın sohbeti ne zamandır sürüyor (yan menü) ve senin ne zamandır orada olduğun (alttaki ses çubuğu)
@@ -9220,6 +9245,7 @@ function tickVoiceTimes() {
   const now = Date.now();
   document.querySelectorAll('.vtm[data-vt]').forEach(e => { const t = voiceSince[e.dataset.vt]; e.textContent = t ? vDur(now - t) : ''; });
   const v = $('#vtime'); if (v) { v.textContent = myVoice && myVoiceAt ? vDur(now - myVoiceAt) : ''; v.title = myVoice ? 'Bu sesli odada geçirdiğin süre' : ''; }
+  { const q = $('#vq'); if (q) q.title = (myVoice && myVoiceAt ? `Seste ${vDur(now - myVoiceAt)}\n` : '') + (q.dataset.base || ''); } // ping ve süre sinyal simgesinin üstüne gelince görünür
   const dct = $('#dc-tm'); if (dct) dct.textContent = myVoiceAt ? vDur(now - myVoiceAt) : '0:00';
 }
 setInterval(tickVoiceTimes, 1000);
@@ -9263,7 +9289,7 @@ async function vqTick() {
   const el = $('#vq'); if (!el) return;
   if (!myVoice) { el.hidden = true; return; }
   const list = Object.entries(peers); el.hidden = false;
-  if (!list.length) { el.className = 'vq good'; el.querySelector('em').textContent = ''; el.title = 'Odada şimdilik yalnızsın'; return; }
+  if (!list.length) { el.className = 'vq good'; el.querySelector('em').textContent = ''; el.dataset.base = 'Odada şimdilik yalnızsın'; return; }
   let lost = 0, recv = 0, bad = 0; const per = [];
   for (const [sid, pc] of list) {
     if (['failed', 'disconnected'].includes(pc.connectionState)) bad++;
@@ -9291,7 +9317,7 @@ async function vqTick() {
   el.className = 'vq ' + lvl;
   el.querySelector('em').textContent = bad ? 'yeniden bağlanıyor…' : ms ? ms + ' ms' : '';
   const why = worst && ms > 150 ? (worst.relay ? `\n${worst.name} ile bağlantı Kanka sunucusu üzerinden gidiyor (doğrudan bağlanılamadı), bu gecikmeyi artırır.` : videoKind === 'screen' && watchers.size ? '\nYayın açıkken yükleme hattın doluyor; gecikme artarsa yayın kalitesini düşür.' : `\nGecikme büyük ihtimalle ${worst.name} tarafının internetinden.`) : '';
-  el.title = bad ? 'Bağlantı koptu, kendiliğinden yeniden bağlanıyor' : `${per.map(p => `${p.name}: ${p.ms} ms${p.relay ? ' (sunucu üzerinden)' : ''}`).join('\n')}\nPaket kaybı %${loss.toFixed(1)}${lvl === 'good' ? ' · bağlantı iyi' : lvl === 'mid' ? ' · bağlantı orta' : ' · bağlantı zayıf'}${why}`;
+  el.dataset.base = bad ? 'Bağlantı koptu, kendiliğinden yeniden bağlanıyor' : `${per.map(p => `${p.name}: ${p.ms} ms${p.relay ? ' (sunucu üzerinden)' : ''}`).join('\n')}\nPaket kaybı %${loss.toFixed(1)}${lvl === 'good' ? ' · bağlantı iyi' : lvl === 'mid' ? ' · bağlantı orta' : ' · bağlantı zayıf'}${why}`;
 }
 function vqStart() { clearInterval(vqT); vqPrev = {}; vqT = setInterval(vqTick, 3000); vqTick(); }
 // Mikrofon çıkarılır ya da değişirse kendiliğinden yenisine geç
@@ -9736,7 +9762,7 @@ let deaf = false, deafWasMuted = false;
 const deafOn = () => deaf;
 function applyDeaf() {
   document.querySelectorAll('audio[id^="a-"], audio[id^="as-"], video').forEach(a => { if (deaf) { a.dataset.dm = a.muted ? '1' : ''; a.muted = true; } else if ('dm' in a.dataset) { a.muted = a.dataset.dm === '1'; delete a.dataset.dm; } });
-  const b = $('#deaf'); if (b) { b.innerHTML = ic(deaf ? 'headsetoff' : 'headset') + CARET('out'); b.classList.toggle('off', deaf); b.title = deaf ? 'Hoparlörü aç' : 'Hoparlörü kapat'; }
+  const b = $('#deaf'); if (b) { b.innerHTML = ic(deaf ? 'headsetoff' : 'headset'); b.classList.toggle('off', deaf); b.title = deaf ? 'Hoparlörü aç' : 'Hoparlörü kapat'; }
 }
 function toggleDeaf(on = !deaf) {
   if (on === deaf) return; deaf = on;
@@ -9748,7 +9774,7 @@ function applyMute() {
   localStream?.getAudioTracks().forEach(t => t.enabled = micLive());
   if (bgRaw) { const r = rawTrack(); if (r) r.enabled = micLive(); }
   try { navigator.mediaSession?.setMicrophoneActive?.(micLive()); } catch {}
-  $('#mute').innerHTML = ic(muted ? 'micoff' : pttOn() && !pttDown ? 'keyboard' : 'mic') + CARET('in');
+  $('#mute').innerHTML = ic(muted ? 'micoff' : pttOn() && !pttDown ? 'keyboard' : 'mic');
   $('#mute').title = muted ? 'Sesi aç' : pttOn() ? `Bas-konuş: ${pttKeyName()} tuşuna basılı tut` : 'Sustur';
   pttSync();
   $('#mute').classList.toggle('off', muted);
