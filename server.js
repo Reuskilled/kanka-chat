@@ -1587,12 +1587,12 @@ const isAdmin = (s, n) => s.owner === n || roleOf(s, n) === 'admin';
 const isMod = (s, n) => isAdmin(s, n) || roleOf(s, n) === 'mod' || can(s, n, 'manageChannels');
 const serverOf = chId => chId && !isPrivateChat(chId) ? findChannel(chId)?.s : null;
 const UPLOAD_RE = /^\/uploads\/[a-f0-9]+\.(png|jpe?g|gif|webp)$/;
-// Hazır profil avatarları (public/avatar) — eski rakun seti kaldırıldı, yeni set hazırlanıyor
-const PRESET_AV = [];
+// Hazır K6 Noir Monogram profil avatarları (public/avatar)
+const PRESET_AV = ['asit', 'turkuaz', 'kizil', 'mor', 'altin', 'buzul', 'zumrut', 'pembe', 'turuncu', 'indigo', 'krom', 'ters-asit'].map(k => `/avatar/k6-${k}.svg`);
 const pickPresetAv = () => PRESET_AV.length ? PRESET_AV[crypto.randomInt(PRESET_AV.length)] : null;
 const AVATAR_OK = a => UPLOAD_RE.test(a) || PRESET_AV.includes(a);
-// Eski kaldırılan rakun avatarlarını kullanan hesapları temiz baş harf avatarına döndür
-for (const u of Object.values(db.users || {})) { if (typeof u?.avatar === 'string' && u.avatar.startsWith('/avatar/rakun-')) u.avatar = null; }
+// Eski kaldırılan rakun avatarlarını kullanan hesapları yeni K6 Noir setine geçir
+for (const u of Object.values(db.users || {})) { if (typeof u?.avatar === 'string' && u.avatar.startsWith('/avatar/rakun-')) u.avatar = pickPresetAv(); }
 // Başlangıç rehberi: bu tarihten önce açılmış hesaplara gösterilmez
 const ONB_SINCE = Date.parse('2026-11-11T15:00:00Z');
 const onbPush = (name, ob) => io.to('user:' + name).emit('onb', ob);
