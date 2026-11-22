@@ -100,6 +100,14 @@ function createWindow() {
   win.removeMenu();
   win.loadURL(config.server).catch(() => showOffline());
   win.webContents.on('did-fail-load', (e, code, desc, url, isMain) => { if (isMain && code !== -3) showOffline(); });
+  // Sunucu güncellenirken (birkaç saniye kapalı) yenilenirse 502/503 boş sayfası gelir: karanlık ekranda kalma, kendiliğinden tekrar dene
+  win.webContents.on('did-navigate', (e, url, code) => { if (/^https?:/.test(url) && code >= 500) showOffline(true); else if (/^https?:/.test(url)) offlineTries = 0; });
+  // Sayfa çöktü ya da dondu: boş pencere bırakma, yeniden yükle
+  win.webContents.on('render-process-gone', (e, d) => { if (d.reason !== 'clean-exit') setTimeout(() => win && !win.isDestroyed() && win.loadURL(appUrl()).catch(() => showOffline()), 800); });
+  win.on('unresponsive', () => { clearTimeout(win._hang); win._hang = setTimeout(() => { if (win && !win.isDestroyed()) win.webContents.reload(); }, 8000); });
+  win.on('responsive', () => clearTimeout(win?._hang));
+  // Bazı ekran kartlarında yenilemeden sonra pencere karanlık kalıyordu: her yüklemede bir kez yeniden çizdir
+  win.webContents.on('did-finish-load', () => { for (const t of [300, 1200]) setTimeout(() => { try { if (win && !win.isDestroyed()) win.webContents.invalidate(); } catch {} }, t); });
   win.webContents.once('did-finish-load', finishSplash);
   win.webContents.once('did-fail-load', () => setTimeout(finishSplash, 500));
   // Dış linkleri tarayıcıda aç
@@ -150,13 +158,22 @@ function pickSource(sources, cb) {
     .then(r => { const s = sources[r.response]; s ? cb({ video: s }) : cb({}); });
 }
 
-function showOffline() {
-  const html = `<html><body style="margin:0;height:100vh;-webkit-app-region:drag;display:flex;align-items:center;justify-content:center;background:#17110e;color:#f4e6d8;font-family:Segoe UI,sans-serif;text-align:center">
+let offlineTries = 0, offlineT = null;
+const appUrl = () => config.server.replace(/\/$/, '') + '/app';
+function showOffline(updating) {
+  if (!win || win.isDestroyed()) return;
+  offlineTries++; clearTimeout(offlineT);
+  const wait = Math.min(3000 * offlineTries, 15000); // 3, 6, 9… en çok 15 sn
+  offlineT = setTimeout(() => win && !win.isDestroyed() && win.loadURL(appUrl()).catch(() => {}), wait);
+  if (updating && offlineTries < 4) { // güncelleme sırasında kısa kesinti: sade bir bekleme ekranı
+    const w = `<html><body style="margin:0;height:100vh;-webkit-app-region:drag;display:flex;align-items:center;justify-content:center;background:#09090b;color:#a1a1aa;font-family:Segoe UI,sans-serif">Kanka Chat güncelleniyor, birkaç saniye…</body></html>`;
+    return win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(w)).catch(() => {});
+  }
+  const html = `<html><body style="margin:0;height:100vh;-webkit-app-region:drag;display:flex;align-items:center;justify-content:center;background:#09090b;color:#f4f4f5;font-family:Segoe UI,sans-serif;text-align:center">
     <div><div style="font-size:22px;font-weight:800;margin-bottom:8px">Kanka Chat'e bağlanılamadı</div>
-    <div style="color:#b49c89;margin-bottom:18px">Sunucu: ${config.server}<br>İnternetini kontrol et ya da sunucu adresini değiştir.</div>
-    <a href="#" onclick="location.reload()" style="color:#ff8a4c;font-weight:800;-webkit-app-region:no-drag">Tekrar dene</a></div></body></html>`;
-  win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
-  setTimeout(() => win && !win.isDestroyed() && win.loadURL(config.server).catch(() => {}), 15000);
+    <div style="color:#a1a1aa;margin-bottom:18px">Sunucu: ${config.server}<br>İnternetini kontrol et. ${Math.round(wait / 1000)} saniye içinde kendiliğinden tekrar denenecek.</div>
+    <a href="${appUrl()}" style="color:#d4ff00;font-weight:800;-webkit-app-region:no-drag">Şimdi tekrar dene</a></div></body></html>`;
+  win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html)).catch(() => {});
 }
 
 function buildTray() {

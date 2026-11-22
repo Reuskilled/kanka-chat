@@ -2740,7 +2740,7 @@ const readBuild = () => { try { return crypto.createHash('sha1').update(fs.readF
 build = readBuild();
 let buildTimer = null;
 try {
-  fs.watch(path.dirname(INDEX), (ev, file) => { if (file && file !== 'index.html') return; clearTimeout(buildTimer); buildTimer = setTimeout(() => { const b = readBuild(); if (b && b !== build) { build = b; io.emit('build', build); } }, 1500); });
+  fs.watch(path.dirname(INDEX), (ev, file) => { if (file && file !== 'index.html') return; clearTimeout(buildTimer); buildTimer = setTimeout(() => { const b = readBuild(); if (b && b !== build) { build = b; io.emit('build', build); } }, 25000); }); // güncelleyici dosyaları yazıp sunucuyu yeniden başlatır: "yenile" uyarısı yeni sunucu açıldıktan sonra (yeniden bağlanınca) gelsin, kapanırken basılıp boş ekranda kalınmasın
 } catch {}
 
 // =====================================================================
