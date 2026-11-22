@@ -108,32 +108,71 @@
   body.ui2 #members { width: 270px; padding: 6px 12px; }
   @media (max-width: 760px) { body.ui2 #app { padding: 0; gap: 0; } body.ui2 .panel { border-radius: 0; } }
 
-  /* ---------- Giriş ---------- */
-  #auth { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(circle at 20% 20%, rgba(212,255,0,.10) 0, transparent 40%), radial-gradient(circle at 80% 80%, rgba(255,30,66,.08) 0, transparent 40%), var(--bg); }
-  #auth.sky { background: radial-gradient(120% 90% at 85% 110%, rgba(212,255,0,.12) 0, transparent 55%), radial-gradient(90% 70% at 10% -10%, rgba(255,30,66,.12) 0, transparent 60%), linear-gradient(160deg, #070709 0%, #0d0d11 45%, #111116 100%); }
-  #auth.sky .sky-cv { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-  #auth.sky .sky-neb { position: fixed; overflow: hidden; inset: -20%; z-index: 0; pointer-events: none; }
-  #auth.sky .sky-neb i { position: absolute; border-radius: 50%; opacity: .45; animation: nebDrift 38s ease-in-out infinite alternate; }
-  #auth.sky .sky-neb i:nth-child(1) { width: 46vw; height: 46vw; left: 8%; top: 18%; background: radial-gradient(circle, rgba(212,255,0,.16), transparent 70%); }
-  #auth.sky .sky-neb i:nth-child(2) { width: 52vw; height: 40vw; right: 4%; bottom: 8%; background: radial-gradient(circle, rgba(255,30,66,.16), transparent 70%); animation-duration: 46s; animation-delay: -12s; }
-  #auth.sky .sky-neb i:nth-child(3) { width: 34vw; height: 34vw; left: 46%; top: 4%; background: radial-gradient(circle, rgba(0,240,255,.12), transparent 70%); animation-duration: 54s; animation-delay: -25s; }
-  @keyframes nebDrift { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(4vw, -3vh) scale(1.08); } 100% { transform: translate(-3vw, 2vh) scale(.95); } }
-  @media (prefers-reduced-motion: reduce) { #auth.sky .sky-neb i { animation: none; } }
-  #auth.sky .card { position: relative; z-index: 1; background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 30px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.06); }
-  #auth .card { background: var(--panel); width: 400px; padding: 36px; border-radius: 28px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.55); border: 1px solid var(--line); }
-  .logo { width: 76px; height: 76px; margin: 0 auto 14px; border-radius: 22px; background: #09090b; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 10px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(212,255,0,.18); color: #fff; display: flex; align-items: center; justify-content: center; }
-  .logo .klogo { width: 58px; height: 58px; }
+  /* ---------- Giriş (Noir Siber & Asit Neon — 0 idle CPU) ---------- */
+  #auth {
+    position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(820px 420px at 50% -6%, rgba(212,255,0,.13), transparent 64%),
+      radial-gradient(560px 380px at 88% 88%, rgba(34,211,238,.07), transparent 60%),
+      radial-gradient(560px 380px at 12% 82%, rgba(168,85,247,.06), transparent 60%),
+      #070709;
+  }
+  #auth::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 42%, #000 15%, transparent 78%);
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 42%, #000 15%, transparent 78%);
+  }
+  .auth-home {
+    position: fixed; top: 20px; left: 20px; z-index: 3;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: rgba(18,18,24,.78); border: 1px solid rgba(255,255,255,.1);
+    color: #d4d4dc; font-size: 13px; font-weight: 700; text-decoration: none;
+    transition: transform .15s, border-color .15s, color .15s, background .15s;
+  }
+  .auth-home:hover { color: #fff; border-color: rgba(212,255,0,.4); background: rgba(24,24,32,.92); transform: translateX(-2px); }
+  .auth-home svg { width: 15px; height: 15px; }
+  html.kdesk .auth-home { display: none; }
+  #auth .card {
+    position: relative; z-index: 1;
+    background: linear-gradient(180deg, rgba(255,255,255,.032) 0%, rgba(255,255,255,0) 100%), #0e0e13;
+    width: min(428px, 100%); padding: 34px 32px 28px; border-radius: 24px; text-align: center;
+    box-shadow: 0 32px 84px rgba(0,0,0,.78), inset 0 1px 0 rgba(255,255,255,.09);
+    border: 1px solid rgba(255,255,255,.1);
+  }
+  #auth .card::before {
+    content: ''; position: absolute; top: -1px; left: 18%; right: 18%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,255,0,.55), transparent);
+    pointer-events: none;
+  }
+  .logo {
+    width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 18px;
+    background: #0a0a0e; border: 1px solid rgba(255,255,255,.11);
+    box-shadow: 0 12px 28px rgba(0,0,0,.5), 0 0 0 1px rgba(212,255,0,.16);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+  }
+  .logo .klogo { width: 46px; height: 46px; }
   .ic.klogo { stroke: none; }
-  #auth h1 { font-size: 28px; font-weight: 800; }
-  #auth p { color: var(--muted); margin: 6px 0 20px; }
-  .tabs { display: flex; background: var(--card); border-radius: 14px; padding: 4px; margin-bottom: 16px; }
-  .tabs button { flex: 1; padding: 10px; border-radius: 10px; font-weight: 800; color: var(--muted); }
-  .tabs button.on { background: var(--accent); color: var(--on-accent); }
-  .field { width: 100%; padding: 13px 16px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); outline: none; font-size: 15px; margin-bottom: 10px; }
+  #auth h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; color: #f4f4f6; }
+  #auth p { color: var(--muted); margin: 6px 0 18px; font-size: 14.5px; }
+  .tabs { display: flex; background: #09090c; border: 1px solid rgba(255,255,255,.07); border-radius: 13px; padding: 4px; margin-bottom: 16px; gap: 4px; }
+  .tabs button { flex: 1; padding: 9px 10px; border-radius: 9px; font-weight: 800; font-size: 14px; color: var(--muted); transition: all .15s; }
+  .tabs button:hover:not(.on) { color: var(--ink); background: rgba(255,255,255,.03); }
+  .tabs button.on { background: linear-gradient(135deg, var(--accent), #9ef01a); color: #070902; box-shadow: 0 4px 14px rgba(212,255,0,.2); }
+  .field { width: 100%; padding: 13px 16px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); outline: none; font-size: 15px; margin-bottom: 10px; }
   .field:focus { border-color: var(--accent); }
-  .primary { width: 100%; padding: 13px; border-radius: 14px; background: var(--mine); color: var(--on-accent); font-weight: 800; font-size: 16px; margin-top: 4px; }
-  #auth-err { color: var(--red); font-weight: 700; min-height: 22px; margin-top: 10px; font-size: 14px; }
+  .primary { width: 100%; padding: 13px; border-radius: 14px; background: var(--mine); color: var(--on-accent); font-weight: 800; font-size: 15.5px; margin-top: 4px; }
+  #auth .primary {
+    background: linear-gradient(135deg, var(--accent), #9ef01a); color: #070902;
+    box-shadow: 0 8px 24px rgba(212,255,0,.2);
+    transition: transform .15s, box-shadow .18s, filter .15s;
+  }
+  #auth .primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(212,255,0,.32); }
+  #auth-err { color: var(--red); font-weight: 700; min-height: 20px; margin-top: 10px; font-size: 13.5px; }
 
   /* ---------- Yerleşim ---------- */
   #app { display: flex; height: 100vh; padding: 16px; gap: 16px; overflow: hidden; }
@@ -2584,15 +2623,14 @@
   @media (prefers-reduced-motion: reduce) { .mcard.got.r3::after, .medal * { animation: none !important; } }
 
   /* ---------- Giriş 2: beta, e-posta, sıfırlama, bekleme listesi ---------- */
-  #auth { overflow-y: auto; padding: 24px 12px; }
-  #auth .card { width: min(420px, 100%); margin: auto; }
-  #auth-body > * { animation: abIn .35s var(--ease-out) both; }
-  @keyframes abIn { from { opacity: 0; transform: translateY(6px); } }
-  .beta-pill { display: inline-flex; align-items: center; gap: 8px; margin: -2px auto 12px; padding: 6px 12px 6px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 800; color: #ffcf9e; background: rgba(255,138,76,.12); border: 1px solid rgba(255,138,76,.32); }
-  .beta-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(255,138,76,.6); animation: bpulse 1.8s infinite; }
-  @keyframes bpulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
-  .afield { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); margin-bottom: 10px; transition: border-color .15s, box-shadow .15s; text-align: left; }
-  #agegate { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 20px; background: radial-gradient(ellipse at top, #2a1a12, var(--bg, #120c09) 70%); overflow-y: auto; }
+  #auth { overflow-y: auto; padding: 24px 14px; }
+  #auth .card { width: min(428px, 100%); margin: auto; }
+  #auth-body > * { animation: abIn .32s var(--ease-out) both; }
+  @keyframes abIn { from { opacity: 0; transform: translateY(5px); } }
+  .beta-pill { display: inline-flex; align-items: center; gap: 8px; margin: -2px auto 12px; padding: 5px 12px 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; color: var(--accent); background: rgba(212,255,0,.1); border: 1px solid rgba(212,255,0,.28); }
+  .beta-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(63,207,142,.2); }
+  .afield { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 13px; border: 1.5px solid rgba(255,255,255,.09); background: #0a0a0e; margin-bottom: 10px; transition: border-color .16s, box-shadow .16s, background .16s; text-align: left; }
+  #agegate { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 20px; background: radial-gradient(ellipse at top, rgba(212,255,0,.1), #070709 70%); overflow-y: auto; }
   #agegate .ag-card { width: 100%; max-width: 420px; padding: 30px 26px 22px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); text-align: center; box-shadow: 0 30px 80px #0008; }
   #agegate .ag-ico { width: 64px; height: 64px; margin: 0 auto 14px; display: grid; place-items: center; border-radius: 20px; background: var(--accent-soft); color: var(--accent); }
   #agegate .ag-ico.no { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red); }
@@ -2607,15 +2645,15 @@
   .un-st { display: block; min-height: 16px; margin-top: 5px; font-size: 12px; color: var(--muted); }
   .un-st.ok { color: var(--green); } .un-st.no { color: var(--red); }
   .adob { gap: 6px; padding-right: 8px; }
-  .adob .adob-l { flex: 1; min-width: 0; font-size: 15px; color: var(--muted); white-space: nowrap; }
-  .adob select { flex: none; padding: 9px 6px; margin: 4px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
+  .adob .adob-l { flex: 1; min-width: 0; font-size: 14.5px; color: var(--muted); white-space: nowrap; }
+  .adob select { flex: none; padding: 8px 6px; margin: 4px 0; border-radius: 9px; border: 1px solid rgba(255,255,255,.09); background: #121218; color: var(--ink); font: inherit; font-size: 13.5px; cursor: pointer; }
   .adob select:focus { outline: none; border-color: var(--accent); }
   .adob { flex-wrap: wrap; padding: 6px 12px 8px; } .adob .adob-l { flex-basis: calc(100% - 30px); padding-top: 6px; } .adob select { flex: 1; }
-  .afield > .ic { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
-  .afield input { flex: 1; min-width: 0; padding: 13px 0; background: none; border: 0; outline: none; font-size: 15px; color: var(--text); }
-  .afield:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255,138,76,.12); }
+  .afield > .ic { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; transition: color .15s; }
+  .afield input { flex: 1; min-width: 0; padding: 13px 0; background: none; border: 0; outline: none; font-size: 14.5px; color: var(--ink); }
+  .afield:focus-within { border-color: var(--accent); background: #0f0f15; box-shadow: 0 0 0 3px rgba(212,255,0,.13); }
   .afield:focus-within > .ic { color: var(--accent); }
-  .afield.bad { border-color: var(--red); box-shadow: 0 0 0 4px rgba(229,72,77,.12); }
+  .afield.bad { border-color: var(--red); box-shadow: 0 0 0 3px rgba(229,72,77,.14); }
   .afield.good { border-color: var(--green); }
   .afield.good > .ic { color: var(--green); }
   .afield .peek { color: var(--muted); padding: 6px; margin-right: -6px; border-radius: 8px; display: flex; }
@@ -2623,25 +2661,28 @@
   .acode-ok { font-size: 13px; font-weight: 700; color: var(--green); text-align: left; margin: -4px 4px 10px; display: flex; align-items: center; gap: 6px; min-height: 0; }
   .acode-ok:empty { display: none; } .acode-ok .ic { width: 15px; height: 15px; } .acode-ok .no { color: var(--red); }
   .arow { display: flex; justify-content: space-between; margin: -2px 2px 12px; }
-  .alink { color: var(--accent); font-weight: 800; font-size: 13.5px; background: none; padding: 2px; }
+  .alink { color: var(--accent); font-weight: 800; font-size: 13px; background: none; padding: 2px; }
   .alink:hover { text-decoration: underline; }
   .aback { display: block; margin: 14px auto 0; color: var(--muted); }
-  .acheck { display: flex; gap: 10px; align-items: flex-start; text-align: left; font-size: 13px; line-height: 1.45; color: var(--muted); margin: 4px 2px 14px; cursor: pointer; border-radius: 10px; padding: 4px; }
+  .acheck { display: flex; gap: 10px; align-items: flex-start; text-align: left; font-size: 12.5px; line-height: 1.45; color: var(--muted); margin: 4px 2px 14px; cursor: pointer; border-radius: 10px; padding: 4px; }
   .acheck input { position: absolute; opacity: 0; pointer-events: none; }
-  .acheck .box2 { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: .15s; }
+  .acheck .box2 { width: 19px; height: 19px; border-radius: 6px; border: 1.5px solid rgba(255,255,255,.24); background: #0a0a0e; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: .15s; }
   .acheck input:checked + .box2 { background: var(--accent); border-color: var(--accent); }
-  .acheck input:checked + .box2::after { content: ''; width: 5px; height: 10px; border: solid #1a120c; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) translate(-1px,-1px); }
-  .acheck input:focus-visible + .box2 { box-shadow: 0 0 0 3px rgba(255,138,76,.35); }
+  .acheck input:checked + .box2::after { content: ''; width: 5px; height: 9px; border: solid #070902; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) translate(-1px,-1px); }
+  .acheck input:focus-visible + .box2 { box-shadow: 0 0 0 3px rgba(212,255,0,.28); }
   .acheck.bad { background: rgba(229,72,77,.1); } .acheck.bad .box2 { border-color: var(--red); }
-  .acheck a, .alegal a { color: var(--text); font-weight: 700; }
-  .alegal { margin-top: 14px; font-size: 12px; color: var(--muted); }
-  .alegal a { color: var(--muted); }
+  .acheck a, .alegal a { color: var(--ink); font-weight: 700; }
+  .atrust { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.06); font-size: 11.5px; font-weight: 700; color: #7e818c; }
+  .atrust span { display: inline-flex; align-items: center; gap: 4px; }
+  .atrust i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); opacity: .75; }
+  .alegal { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .alegal a { color: var(--muted); } .alegal a:hover { color: var(--ink); }
   .await { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 13.5px; color: var(--muted); flex-wrap: wrap; }
-  .abig { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(255,138,76,.14); color: var(--accent); }
-  .abig .ic { width: 30px; height: 30px; }
+  .abig { width: 62px; height: 62px; margin: 0 auto 12px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: rgba(212,255,0,.12); border: 1px solid rgba(212,255,0,.24); color: var(--accent); }
+  .abig .ic { width: 28px; height: 28px; }
   #auth-body.am-login .abig, #auth-body.am-register .abig { display: none; }
   #auth .card:has(#auth-body:not(.am-login):not(.am-register)) .logo { display: none; }
-  .wpos { margin: 0 auto 14px; width: 150px; padding: 16px 10px; border-radius: 22px; background: linear-gradient(160deg, rgba(255,138,76,.22), rgba(255,138,76,.05)); border: 1px solid rgba(255,138,76,.35); display: flex; flex-direction: column; }
+  .wpos { margin: 0 auto 14px; width: 150px; padding: 16px 10px; border-radius: 22px; background: linear-gradient(160deg, rgba(212,255,0,.18), rgba(212,255,0,.04)); border: 1px solid rgba(212,255,0,.32); display: flex; flex-direction: column; }
   .wpos small { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
   .wpos b { font-size: 40px; font-weight: 900; color: var(--accent); line-height: 1.1; }
   .wpos span { font-size: 12px; color: var(--muted); font-weight: 700; }
@@ -3815,10 +3856,11 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
 <div id="titlebar"><span class="tb-logo"><svg class="ic klogo" viewBox="0 0 200 200" aria-hidden="true"><path fill="currentColor" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="var(--accent,#d4ff00)" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></svg></span>Kanka Chat<span class="tb-where" id="tb-where"></span></div>
 <div id="boot" role="status" aria-live="polite"><img src="/yukleniyor.gif" width="160" height="160" alt=""><div id="boot-t">Bağlanılıyor…</div></div>
 <div id="auth">
+  <a class="auth-home" href="/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>kankahq.com</a>
   <form class="card" id="auth-form">
     <div class="logo"><svg class="ic klogo" viewBox="0 0 200 200" aria-hidden="true"><path fill="currentColor" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="var(--accent,#d4ff00)" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></svg></div>
     <div id="auth-body"></div>
-    <a id="get-app" href="/indir/KankaChat-Kurulum.exe" download style="display:none;margin-top:14px;font-weight:800;font-size:14px;text-decoration:none">Windows uygulamasını indir →</a>
+    <a id="get-app" href="/indir/KankaChat-Kurulum.exe" download style="display:none;margin-top:14px;font-weight:800;font-size:13.5px;color:var(--accent);text-decoration:none">Windows uygulamasını indir →</a>
   </form>
 </div>
 
@@ -4292,13 +4334,14 @@ function renderAuth(mode = authMode, keep) {
   const b = $('#auth-body'), v = keep ? Object.fromEntries([...b.querySelectorAll('input[id], select[id]')].map(i => [i.id, i.type === 'checkbox' ? i.checked : i.value])) : {};
   const beta = authBeta?.on, pill = beta ? `<div class="beta-pill"><i></i>Kapalı beta${authBeta.full ? ' · şu an dolu' : authBeta.left != null && authBeta.left < 1000 ? ` · ${authBeta.left} yer kaldı` : ''}</div>` : '';
   const tabs = `<div class="tabs"><button type="button" class="${mode === 'login' ? 'on' : ''}" data-m="login">Giriş yap</button><button type="button" class="${mode === 'register' ? 'on' : ''}" data-m="register">Kayıt ol</button></div>`;
+  const trust = `<div class="atrust"><span><i></i>VPN'siz</span><span><i></i>Şifreli DM</span><span><i></i>Ücretsiz</span></div>`;
   const legal = (window.kankaDesktop ? '' : '<a href="/">Ana sayfa</a> · ') + '<a href="/kosullar" target="_blank">Kullanım Şartları</a> · <a href="/gizlilik" target="_blank">Gizlilik ve KVKK</a>';
   let h = '';
-  if (mode === 'login') h = `${pill}<h1>Selam kanka!</h1><p>Hesabına gir ya da yeni hesap aç.</p>${tabs}
+  if (mode === 'login') h = `${pill}<h1>Tekrar hoş geldin</h1><p>Kankaların içeride seni bekliyor.</p>${tabs}
     ${afield('a-name', 'Kullanıcı adı ya da e-posta', 'user', 'text', 'maxlength="190" autocomplete="username"')}
     ${afield('a-pass', 'Şifre', 'lock', 'password', 'autocomplete="current-password"')}
     <div class="arow"><span></span><button type="button" class="alink" id="a-forgot">Şifremi unuttum</button></div>
-    <button class="primary" type="submit" id="a-btn">Giriş yap</button><div id="auth-err"></div><div class="alegal">${legal}</div>`;
+    <button class="primary" type="submit" id="a-btn">Giriş yap →</button><div id="auth-err"></div>${trust}<div class="alegal">${legal}</div>`;
   else if (mode === 'register') {
     const viaInvite = !!authQ.davet, needCode = beta && !viaInvite;
     h = `${pill}<h1>${needCode ? 'Betaya hoş geldin!' : 'Aramıza katıl'}</h1><p>${needCode ? 'Kanka şu an davetle açılıyor. Kodun varsa hemen başla.' : viaInvite ? 'Bir arkadaşın seni sunucusuna davet etti 🎉' : 'Bir dakikada hesabını aç.'}</p>${tabs}
@@ -4391,74 +4434,8 @@ $('#auth-form').onsubmit = e => {
       Object.assign(authQ, { pos: r.pos, total: r.total, wmail: val('a-wmail') }); renderAuth('waited'); });
   }
 };
-// ================= Giriş / kayıt ekranı: süzülen minik rakunlar (sadece tarayıcıda) =================
-// Kanka'nın kendi gece manzarası: sıcak mor-turuncu gökyüzü, tane tane süzülen rakun logoları ve yıldız kıvılcımları.
-const AuthSky = (() => {
-  const LOGO = c => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><path fill="${c}" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="${c}" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></svg>`;
-  const COLORS = ['#d4ff00', '#ffffff', '#ff1e42', '#00f0ff', '#a1a1aa'];
-  let cv, ctx, W = 0, H = 0, dpr = 1, raf = 0, last = 0, sprites = [], coons = [], stars = [], mx = 0, my = 0, tx = 0, ty = 0, still = false, ready = false;
-  const rnd = (a, b) => a + Math.random() * (b - a);
-  // Her renk için bir kez çiz: yakın (büyük) rakunlar hafif bulanık, uzaktakiler net
-  function makeSprites() {
-    return Promise.all(COLORS.map(c => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(LOGO(c)); })))
-      .then(ims => { sprites = ims.filter(Boolean).map(im => [0, 2.5].map(bl => { const o = document.createElement('canvas'); o.width = o.height = 160; const g = o.getContext('2d'); if (bl) g.filter = `blur(${bl}px)`; g.drawImage(im, 16, 16, 128, 128); return o; })); });
-  }
-  function seed() {
-    const area = W * H, n = Math.round(Math.min(34, Math.max(12, area / 52000))), ns = Math.round(Math.min(140, area / 11000));
-    coons = Array.from({ length: n }, () => newCoon(true));
-    stars = Array.from({ length: ns }, () => ({ x: rnd(0, W), y: rnd(0, H), s: rnd(1, 2.6), k: Math.random() < .14 ? 'plus' : Math.random() < .5 ? 'sq' : 'dot', c: COLORS[Math.random() * COLORS.length | 0], p: rnd(0, 6.28), sp: rnd(.6, 1.8), z: rnd(.2, .6) }));
-  }
-  function newCoon(anyY) {
-    const z = Math.random() ** 1.6, size = 12 + z * 40; // z: 0 uzak, 1 yakın
-    return { x: rnd(-40, W + 40), y: anyY ? rnd(-40, H + 40) : H + 60, z, size, vy: -(6 + z * 16), sway: rnd(8, 26), sp: rnd(.15, .45), ph: rnd(0, 6.28), rot: rnd(-.25, .25), vr: rnd(-.08, .08), a: .22 + z * .5, sprite: sprites[Math.random() * sprites.length | 0], blur: z > .78 ? 1 : 0, tw: rnd(0, 6.28) };
-  }
-  function resize() { dpr = Math.min(devicePixelRatio || 1, 1.5); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); if (ready) seed(); }
-  function frame(t) {
-    raf = 0;
-    const host = cv?.parentElement; if (!host || host.style.display === 'none' || !host.isConnected) return; // giriş ekranı kapandı: dur
-    if (document.hidden) { raf = requestAnimationFrame(frame); return; }
-    const dt = Math.min((t - (last || t)) / 1000, .05); last = t;
-    tx += (mx - tx) * .04; ty += (my - ty) * .04;
-    ctx.clearRect(0, 0, W, H);
-    for (const s of stars) { // kıvılcımlar: yerinde göz kırpar
-      s.p += dt * s.sp; const a = .25 + .55 * (.5 + .5 * Math.sin(s.p)), x = s.x + tx * s.z * 14, y = s.y + ty * s.z * 14;
-      ctx.globalAlpha = a; ctx.fillStyle = s.c;
-      if (s.k === 'plus') { const r = s.s * 3.2; ctx.fillRect(x - r, y - .6, r * 2, 1.2); ctx.fillRect(x - .6, y - r, 1.2, r * 2); ctx.globalAlpha = a * .9; ctx.fillRect(x - 1.2, y - 1.2, 2.4, 2.4); }
-      else if (s.k === 'sq') ctx.fillRect(x - s.s / 2, y - s.s / 2, s.s, s.s);
-      else { ctx.beginPath(); ctx.arc(x, y, s.s * .45, 0, 6.29); ctx.fill(); }
-    }
-    coons.sort((a, b) => a.z - b.z);
-    for (let i = 0; i < coons.length; i++) {
-      const c = coons[i];
-      if (!still) { c.y += c.vy * dt; c.ph += c.sp * dt; c.rot += c.vr * dt; c.tw += dt * 1.3; }
-      if (c.y < -70) { coons[i] = newCoon(false); continue; }
-      const x = c.x + Math.sin(c.ph) * c.sway + tx * (8 + c.z * 30), y = c.y + ty * (8 + c.z * 30), sz = c.size;
-      ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(c.ph * .8) * .22 + c.rot);
-      ctx.globalAlpha = c.a * (.85 + .15 * Math.sin(c.tw));
-      ctx.drawImage(c.sprite[c.blur], -sz * .625, -sz * .625, sz * 1.25, sz * 1.25);
-      ctx.restore();
-    }
-    ctx.globalAlpha = 1;
-    if (!still) raf = requestAnimationFrame(frame);
-  }
-  function start() {
-    if (window.kankaDesktop) return; // masaüstü uygulamasında sade kalır
-    const host = $('#auth'); if (!host) return;
-    if (!cv) {
-      host.classList.add('sky');
-      host.insertAdjacentHTML('afterbegin', '<div class="sky-neb" aria-hidden="true"><i></i><i></i><i></i></div><canvas class="sky-cv" aria-hidden="true"></canvas>');
-      cv = host.querySelector('.sky-cv'); ctx = cv.getContext('2d');
-      still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      addEventListener('resize', () => { if (cv && host.style.display !== 'none') resize(); });
-      host.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { mx = e.clientX / W - .5; my = e.clientY / H - .5; } });
-      document.addEventListener('visibilitychange', () => { if (!document.hidden && !raf) { last = 0; raf = requestAnimationFrame(frame); } });
-      makeSprites().then(() => { ready = true; resize(); if (!raf) raf = requestAnimationFrame(frame); });
-      return;
-    }
-    if (ready && !raf) { resize(); last = 0; raf = requestAnimationFrame(frame); }
-  }
-  return { start };
-})();
+// ================= Giriş / kayıt ekranı arka planı (Sıfır CPU Noir Siber) =================
+const AuthSky = { start() {} };
 function showAuth() {
   $('#auth').style.display = 'flex'; AuthSky.start();
   if (!$('#auth-body').innerHTML) renderAuth();
