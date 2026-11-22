@@ -357,7 +357,7 @@
   .xox button .ic { width: 28px; height: 28px; }
   .sys .ic { width: 14px; height: 14px; margin-right: 6px; }
   #head small { color: var(--muted); font-weight: 600; }
-  #messages { flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 2px; }
+  #messages { flex: 1; overflow-y: auto; overflow-x: hidden; overscroll-behavior-x: none; padding: 16px 24px; display: flex; flex-direction: column; gap: 2px; }
   .hello { text-align: center; color: var(--muted); margin: 20px 0 24px; }
   .hello .big { font-size: 44px; }
   .hello b { color: var(--ink); display: block; font-size: 18px; margin: 4px 0; }
@@ -3792,6 +3792,7 @@
   /* kaydırarak yanıtla */
   .row .swr { position: absolute; left: 10px; top: 50%; width: 34px; height: 34px; margin-top: -17px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; opacity: 0; transform: scale(.5); pointer-events: none; }
   .row .swr .ic { width: 18px; height: 18px; } .row .swr.go { background: var(--accent); color: #1a0f0a; }
+  @media (pointer: coarse) { #messages .row { touch-action: pan-y pinch-zoom; } } /* yatay hareket tarayıcıya değil 'kaydırarak yanıtla'ya gitsin: sohbet yana kaymasın */
   .row.swiping > .col, .row.swiping > .av { transition: none !important; } .row.swback > .col, .row.swback > .av { transition: transform .22s cubic-bezier(.2,.8,.2,1); }
   /* uzun basma menüsü */
   #msheet { position: fixed; inset: 0; z-index: 60; display: none; }
@@ -6195,6 +6196,7 @@ addEventListener('blur', closeMsgCtx);
     const fast = Math.abs(g.dx) > 36 && Math.abs(g.dx) / Math.max(1, Date.now() - g.t0) > .45; // hızlı fiske ama gerçekten kaydırılmış olsun
     if (g.mode === 'reply') {
       const ok = g.dx > 64, row = g.row;
+      { const mb = $('#messages'); if (mb.scrollLeft) mb.scrollLeft = 0; }
       row.classList.remove('swiping'); row.classList.add('swback');
       for (const el of row.querySelectorAll(':scope > .col, :scope > .av')) el.style.transform = '';
       const ico = row.querySelector('.swr'); if (ico) { ico.style.opacity = 0; ico.style.transform = 'scale(.5)'; }
