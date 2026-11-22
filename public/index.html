@@ -4283,10 +4283,68 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .ar-wait { display: flex; gap: 8px; align-items: center; color: #8b92a1; font-size: 13.5px; flex: 1; } .ar-wait .ic { width: 16px; height: 16px; }
   .ar-hint { display: flex; gap: 8px; color: #7c8392; font-size: 12.5px; margin: 4px 0 0; } .ar-hint .ic { width: 15px; height: 15px; flex: none; }
   .ar-load { color: #8b92a1; padding: 30px; text-align: center; }
-  .ar-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; } .ar-chips button { flex: none; display: flex; gap: 5px; align-items: center; padding: 7px 12px; border-radius: 8px; background: #151820; border: 1px solid rgba(255,255,255,.07); font-size: 12.5px; font-weight: 600; color: #9ba3b4; } .ar-chips button.on { background: var(--accent); border-color: var(--accent); color: #0b0c10; font-weight: 800; } .ar-chips .ic { width: 14px; height: 14px; }
-  .ar-mine { margin: 4px 0 10px; padding: 12px 14px; border-radius: 10px; background: #13161e; border: 1px solid rgba(255,255,255,.08); font-size: 13px; color: #9ba3b4; } .ar-mine b { color: #f5f6f8; }
-  .ar-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; } .ar-tbl th { text-align: left; color: #7c8392; font-weight: 600; font-size: 12px; padding: 8px; } .ar-tbl td { padding: 8px; border-top: 1px solid rgba(255,255,255,.06); } .ar-tbl tr.me td { background: rgba(200,255,0,.06); }
-  .ar-tn { display: flex; align-items: center; gap: 8px; cursor: pointer; } .ar-tn > :first-child { width: 26px !important; height: 26px !important; }
+  /* Sıralama (Studio v2) */
+  .ar-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; flex-shrink: 0; }
+  .ar-chips button { flex: none; display: inline-flex; gap: 7px; align-items: center; padding: 6px 11px; border-radius: 9px; background: #141720; border: 1px solid rgba(255,255,255,.075); font-size: 12.5px; font-weight: 600; color: #9ba3b4; transition: border-color .14s, background .14s, color .14s; }
+  .ar-chips button:hover { background: #1a1e2a; border-color: rgba(255,255,255,.16); color: #f2f3f5; }
+  .ar-chips button.on { background: var(--accent); border-color: var(--accent); color: #0b0c10; font-weight: 800; }
+  .ar-chips .ic { width: 14px; height: 14px; }
+  .ar-chip-img { width: 22px; height: 15px; border-radius: 4px; object-fit: cover; border: 1px solid rgba(255,255,255,.14); flex-shrink: 0; }
+  .ar-chips button.on .ar-chip-img { border-color: rgba(0,0,0,.28); }
+  .ar-mine-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; border-radius: 14px; background: #13161e; border: 1px solid rgba(255,255,255,.08); flex-wrap: wrap; }
+  .ar-mine-l { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .ar-mine-l > :first-child { width: 38px !important; height: 38px !important; flex: none; }
+  .ar-mine-t { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .ar-mine-t b { font-size: 14.5px; font-weight: 700; color: #f5f6f8; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .ar-mine-t small { font-size: 12.5px; color: #8b92a1; }
+  .ar-champ { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; background: rgba(245,196,69,.14); border: 1px solid rgba(245,196,69,.32); color: #f6c445; }
+  .ar-champ .ic { width: 11px; height: 11px; }
+  .ar-mine-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ar-stat { min-width: 82px; padding: 7px 12px; border-radius: 9px; background: #0e1016; border: 1px solid rgba(255,255,255,.065); display: flex; flex-direction: column; gap: 1px; }
+  .ar-stat span { font-size: 10.5px; font-weight: 600; color: #7c8392; text-transform: uppercase; letter-spacing: .05em; }
+  .ar-stat strong { font-size: 15px; font-weight: 800; color: #f5f6f8; font-variant-numeric: tabular-nums; }
+  .ar-stat strong.acc { color: var(--accent); }
+  .ar-podium { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .ar-pod { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 14px; background: #13161e; border: 1px solid rgba(255,255,255,.08); cursor: pointer; transition: transform .18s, border-color .18s, background .18s; overflow: hidden; }
+  .ar-pod::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: rgba(255,255,255,.12); }
+  .ar-pod.r1::before { background: linear-gradient(90deg, #f6c445, rgba(246,196,69,.2)); }
+  .ar-pod.r2::before { background: linear-gradient(90deg, #cbd5e1, rgba(203,213,225,.2)); }
+  .ar-pod.r3::before { background: linear-gradient(90deg, #d98a52, rgba(217,138,82,.2)); }
+  .ar-pod:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.18); background: #161a24; }
+  .ar-pod-top { display: flex; align-items: center; gap: 11px; }
+  .ar-pod-top > :nth-child(2) { width: 38px !important; height: 38px !important; flex: none; }
+  .ar-pod-who { flex: 1; min-width: 0; }
+  .ar-pod-who b { display: block; font-size: 14.5px; font-weight: 700; color: #f5f6f8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ar-pod-who small { display: block; font-size: 11.5px; color: #838a98; margin-top: 2px; }
+  .ar-pod-pts { text-align: right; font-variant-numeric: tabular-nums; }
+  .ar-pod-pts strong { display: block; font-size: 20px; font-weight: 800; letter-spacing: -.02em; color: #f5f6f8; line-height: 1.1; }
+  .ar-pod-pts strong.neg { color: #f87171; }
+  .ar-pod-pts span { font-size: 10.5px; font-weight: 600; color: #7c8392; text-transform: uppercase; letter-spacing: .05em; }
+  .ar-pod-bar { display: flex; align-items: center; gap: 9px; font-size: 11.5px; color: #8b92a1; font-variant-numeric: tabular-nums; }
+  .ar-wbar { flex: 1; height: 5px; border-radius: 99px; background: #0a0c10; overflow: hidden; }
+  .ar-wbar i { display: block; height: 100%; border-radius: 99px; background: #94a3b8; }
+  .ar-pod.r1 .ar-wbar i { background: #f6c445; }
+  .ar-pod.me .ar-wbar i { background: var(--accent); }
+  .ar-rk { width: 26px; height: 26px; border-radius: 7px; display: inline-grid; place-items: center; font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; background: #1a1e28; color: #9ba3b4; border: 1px solid rgba(255,255,255,.07); flex-shrink: 0; }
+  .ar-rk.r1 { background: rgba(246,196,69,.14); color: #f6c445; border-color: rgba(246,196,69,.36); }
+  .ar-rk.r2 { background: rgba(203,213,225,.14); color: #e2e8f0; border-color: rgba(203,213,225,.3); }
+  .ar-rk.r3 { background: rgba(217,138,82,.15); color: #e29b64; border-color: rgba(217,138,82,.34); }
+  .ar-lb-card { border-radius: 14px; background: #13161e; border: 1px solid rgba(255,255,255,.08); overflow: hidden; }
+  .ar-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .ar-tbl th { text-align: left; color: #7c8392; font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 11px 14px; background: #10121a; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .ar-tbl td { padding: 11px 14px; border-top: 1px solid rgba(255,255,255,.055); color: #cbd5e1; vertical-align: middle; }
+  .ar-tbl tbody tr { transition: background .14s; }
+  .ar-tbl tbody tr:hover td { background: rgba(255,255,255,.025); }
+  .ar-tbl tr.me td { background: rgba(200,255,0,.055); }
+  .ar-tbl th.num, .ar-tbl td.num { text-align: right; }
+  .ar-pts { font-weight: 800; color: #f5f6f8; }
+  .ar-pts.neg { color: #f87171; }
+  .ar-tn { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+  .ar-tn > :first-child { width: 28px !important; height: 28px !important; flex: none; }
+  .ar-tn b { color: #f5f6f8; font-weight: 700; }
+  .ar-tn-me { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(200,255,0,.15); color: var(--accent); text-transform: uppercase; letter-spacing: .05em; }
+  .ar-wr-cell { display: inline-flex; align-items: center; gap: 8px; min-width: 96px; justify-content: flex-end; }
+  .ar-wr-cell .ar-wbar { width: 52px; flex: none; }
   @media (max-width: 980px) { .ar-games { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 740px) {
     .ar-head { flex-wrap: wrap; gap: 8px; padding: 10px 12px; padding-top: max(10px, env(safe-area-inset-top)); }
@@ -4296,6 +4354,8 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
     .ar-strip-bg { width: 100%; opacity: .22; mask-image: linear-gradient(180deg, #000 0%, transparent 100%); -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 100%); }
     .ar-games { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .ar-lobbies { grid-template-columns: 1fr; }
+    .ar-mine-card { padding: 12px 14px; }
+    .ar-tbl th.hide-sm, .ar-tbl td.hide-sm { display: none; }
   }
   @media (max-width: 500px) {
     .ar-uinfo { display: none; } .ar-user { padding: 3px; }
@@ -11221,12 +11281,47 @@ function arTop() {
   const g = AR.topGame;
   socket.emit('arenaTop', { game: g || undefined }, r => {
     const el = $('#ar-top'); if (!el || r?.error) return;
-    const chips = `<div class="ar-chips"><button class="${!g ? 'on' : ''}" data-tg="">${ic('trophy')}Genel</button>${Object.entries(AR_INFO).map(([k, [e, n]]) => `<button class="${g === k ? 'on' : ''}" data-tg="${k}">${e} ${n}</button>`).join('')}</div>`;
-    const rows = (r.list || []).map((x, i) => `<tr class="${x.name === S.me ? 'me' : ''}"><td>${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</td><td><span class="ar-tn" data-prof="${esc(x.name)}">${av(x.name)}<b>${esc(dn(x.name))}</b>${!g && i < 10 && x.pts > 0 ? '<i title="Arena Şampiyonu">🏆</i>' : ''}</span></td><td><b>${g ? x.r : x.pts}</b></td><td>${x.w}${g ? ` / ${x.l}` : ''}</td><td>${x.p}</td></tr>`).join('');
-    const mine = g ? r.me : null;
-    el.innerHTML = chips + `<div class="ar-mine">${g ? (mine ? `<b>${mine.r}</b> puan · ${mine.w} galibiyet · ${mine.l} yenilgi${mine.d ? ` · ${mine.d} berabere` : ''}${r.myRank ? ` · ${r.myRank}. sıradasın` : ''}` : 'Bu oyunu henüz oynamadın')
-      : r.myRank ? `Genel sıralamada <b>${r.myRank}.</b> sıradasın${r.myRank <= 10 ? ' · Arena Şampiyonu rozetin var 🏆' : ` · ilk 10'a girersen <b>Arena Şampiyonu</b> rozeti alırsın`}` : `En az 3 maç oyna, genel sıralamaya gir. İlk 10'a girenler <b>Arena Şampiyonu</b> rozeti alır.`}</div>
-      ${rows ? `<table class="ar-tbl"><thead><tr><th>#</th><th>Oyuncu</th><th>${g ? 'Puan' : 'Arena puanı'}</th><th>${g ? 'G / M' : 'Galibiyet'}</th><th>Maç</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="ar-load">Henüz kimse oynamadı. İlk sen ol!</div>'}`;
+    const list = r.list || [];
+    const chips = `<div class="ar-chips"><button class="${!g ? 'on' : ''}" data-tg="">${ic('trophy')}Genel</button>${Object.entries(AR_INFO).map(([k, [, n]]) => `<button class="${g === k ? 'on' : ''}" data-tg="${k}"><img class="ar-chip-img" src="${AR_ART(k)}" alt="">${n}</button>`).join('')}</div>`;
+    const myRow = g ? r.me : list.find(x => x.name === S.me);
+    const hasChamp = !g && r.myRank && r.myRank <= 10;
+    const mySub = g
+      ? (myRow ? `${AR_INFO[g][1]} sıralaması${r.myRank ? ` · #${r.myRank}` : ''}${myRow.d ? ` · ${myRow.d} berabere` : ''}` : `${AR_INFO[g][1]} oyununu henüz oynamadın`)
+      : (r.myRank ? `Genel sıralamada ${r.myRank}. sıradasın${r.myRank <= 10 ? '' : ' · İlk 10 Arena Şampiyonu rozeti alır'}` : 'En az 3 maç oyna, genel sıralamaya gir ve Arena Şampiyonu rozeti kazan.');
+    const myPts = myRow ? (g ? myRow.r : myRow.pts) : null;
+    const myWr = myRow && myRow.p ? Math.round((myRow.w / myRow.p) * 100) : null;
+    const mineCard = `<div class="ar-mine-card"><div class="ar-mine-l">${av(S.me, true)}<div class="ar-mine-t"><b>${esc(dn(S.me))}${hasChamp ? `<span class="ar-champ">${ic('trophy')}Arena Şampiyonu</span>` : ''}</b><small>${mySub}</small></div></div>
+      ${myRow ? `<div class="ar-mine-stats">
+        <div class="ar-stat"><span>Sıra</span><strong class="acc">${r.myRank ? '#' + r.myRank : '—'}</strong></div>
+        <div class="ar-stat"><span>${g ? 'Puan' : 'Arena Puanı'}</span><strong>${myPts}</strong></div>
+        <div class="ar-stat"><span>${g ? 'G / M' : 'Galibiyet'}</span><strong>${g ? `${myRow.w} / ${myRow.l}` : `${myRow.w} / ${myRow.p}`}</strong></div>
+        ${myWr !== null ? `<div class="ar-stat"><span>Kazanma</span><strong>%${myWr}</strong></div>` : ''}
+      </div>` : ''}</div>`;
+
+    const podItems = list.slice(0, 3);
+    const podium = podItems.length ? `<div class="ar-podium">${podItems.map((x, i) => {
+      const pts = g ? x.r : x.pts, wr = x.p ? Math.round((x.w / x.p) * 100) : 0, rk = i + 1;
+      return `<div class="ar-pod r${rk} ${x.name === S.me ? 'me' : ''}" data-prof="${esc(x.name)}">
+        <div class="ar-pod-top"><span class="ar-rk r${rk}">#${rk}</span>${av(x.name)}<div class="ar-pod-who"><b>${esc(dn(x.name))}</b><small>${g ? `${x.w}G · ${x.l}M` : `${x.w} galibiyet · ${x.p} maç`}</small></div>
+        <div class="ar-pod-pts"><strong class="${pts < 0 ? 'neg' : ''}">${pts}</strong><span>Puan</span></div></div>
+        <div class="ar-pod-bar"><div class="ar-wbar"><i style="width:${wr}%"></i></div><span>%${wr} kazanma</span></div>
+      </div>`;
+    }).join('')}</div>` : '';
+
+    const rows = list.map((x, i) => {
+      const pts = g ? x.r : x.pts, wr = x.p ? Math.round((x.w / x.p) * 100) : 0, rk = i + 1;
+      const isChamp = !g && i < 10 && x.pts > 0;
+      return `<tr class="${x.name === S.me ? 'me' : ''}"><td><span class="ar-rk ${rk <= 3 ? 'r' + rk : ''}">${rk}</span></td>
+        <td><span class="ar-tn" data-prof="${esc(x.name)}">${av(x.name)}<b>${esc(dn(x.name))}</b>${x.name === S.me ? '<span class="ar-tn-me">Sen</span>' : ''}${isChamp ? `<span class="ar-champ" title="Arena Şampiyonu">${ic('trophy')}</span>` : ''}</span></td>
+        <td class="num"><span class="ar-pts ${pts < 0 ? 'neg' : ''}">${pts}</span></td>
+        <td class="num">${x.w}${g ? ` / ${x.l}` : ''}</td>
+        <td class="num">${x.p}</td>
+        <td class="num hide-sm"><span class="ar-wr-cell"><span class="ar-wbar"><i style="width:${wr}%"></i></span>${wr}%</span></td></tr>`;
+    }).join('');
+
+    el.innerHTML = chips + mineCard + podium + (rows
+      ? `<div class="ar-lb-card"><table class="ar-tbl"><thead><tr><th style="width:52px">#</th><th>Oyuncu</th><th class="num">${g ? 'Puan' : 'Arena puanı'}</th><th class="num">${g ? 'G / M' : 'Galibiyet'}</th><th class="num">Maç</th><th class="num hide-sm">Oran</th></tr></thead><tbody>${rows}</tbody></table></div>`
+      : '<div class="ar-load">Henüz kimse oynamadı. İlk sen ol!</div>');
     el.querySelectorAll('[data-tg]').forEach(b => b.onclick = () => { AR.topGame = b.dataset.tg; arTop(); });
     el.querySelectorAll('[data-prof]').forEach(b => b.onclick = () => showProfile(b.dataset.prof));
   });
