@@ -4800,9 +4800,12 @@ function onAuth(res) {
   if (authQ.kod) { authQ.kod = null; if (!QS.get('davet')) history.replaceState(null, '', APP_PATH); }
   const invite = new URLSearchParams(location.search).get('davet');
   if (invite) { history.replaceState(null, '', APP_PATH); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
-  const last = S.view === 'dm' && S.channel ? null : S.server && S.servers.find(s => s.id === S.server.id);
+  const last = S.view === 'dm' ? null : S.server && S.servers.find(s => s.id === S.server.id);
   if (S.view === 'dm' && S.channel) openChat(S.channel.id, S.channel.with);
-  else selectServer((last || S.servers[0]).id, S.channel?.id);
+  else if (S.view === 'dm') showFriends(friendTab);
+  else if (S.view === 'discover') showDiscover();
+  else if (last || S.servers[0]) selectServer((last || S.servers[0]).id, S.channel?.id);
+  else openDMHome();
 }
 socket.on('connect', () => {
   const t = store.get('kanka-token');
@@ -5445,8 +5448,8 @@ const discCard = (o, preview) => `<div class="dc-card">${srvArt(o, 'cb')}${srvIc
   ${preview ? '' : `<button class="cj ${o.joined ? 'joined' : ''}" data-dj="${esc(o.invite)}" data-did="${esc(o.id)}">${o.joined ? 'Sunucuyu aç' : 'Katıl'}</button>`}</div></div>`;
 function showDiscover() {
   hideSuggest(); $('#cmdhint').style.display = 'none';
-  S.view = 'discover'; document.body.classList.add('discover'); document.body.classList.remove('vview', 'drawer'); renderPip?.();
-  S.channel = null; renderRail();
+  S.view = 'discover'; document.body.classList.add('discover'); document.body.classList.remove('vview', 'drawer', 'forumv'); renderPip?.();
+  S.channel = null; draftFor = null; roomLoading = null; joinSeq++; renderRail();
   setHeader(`${ic('compass')} Sunucuları keşfet`, 'Yeni kankalar, yeni topluluklar', false); $('#head-actions').innerHTML = '';
   $('#side-head').className = 'shead'; $('#side-head').style.backgroundImage = ''; $('#side-head').onclick = null;
   $('#side-head').innerHTML = '<h3>Keşfet</h3>';
@@ -5500,14 +5503,22 @@ let lastDM = null; // sunucuya geçmeden önce açık olan özel sohbet
 function selectServer(id, channelId) {
   if (S.view === 'dm') lastDM = S.channel?.id && (S.channel.dm || S.channel.id.startsWith('g:') || S.channel.id.startsWith('dm:')) ? { id: S.channel.id, with: S.channel.with } : null;
   $('#callbar')?.remove();
-  closeSrvMenu(); document.body.classList.remove('discover');
+  closeSrvMenu(); document.body.classList.remove('discover', 'vview');
   S.view = 'server';
   S.server = S.servers.find(s => s.id === id) || S.servers[0];
+  if (!S.server) return openDMHome();
   S.unreadServers.delete(S.server.id);
   const text = S.server.channels.filter(c => !voiceLike(c.type));
-  const ch = text.find(c => c.id === channelId) || text.find(c => c.id === lastCh[S.server.id]) || text[0];
+  const ch = S.server.channels.find(c => c.id === channelId) || text.find(c => c.id === lastCh[S.server.id]) || text[0] || S.server.channels[0];
   renderRail(); renderMembers();
-  if (ch) selectChannel(ch.id); else renderSide();
+  if (ch) selectChannel(ch.id);
+  else {
+    S.channel = null; draftFor = null; roomLoading = null; joinSeq++;
+    document.body.classList.remove('forumv');
+    renderSide();
+    $('#compose').style.display = 'none';
+    $('#messages').innerHTML = '<div class="loadmore">Bu sunucuda henüz erişebileceğin bir oda yok.</div>';
+  }
   if (S.server.welcome?.enabled && !S.server.accepted && !welcomeShown.has(S.server.id)) setTimeout(() => showWelcome(S.server), 200);
 }
 // Yeni arayüz: odalar listesinin en üstünde "Şu an canlı" (seste olan odalar, süre, yayın)
@@ -6246,8 +6257,8 @@ function botProfile() {
 }
 function showBots() {
   hideSuggest(); $('#cmdhint').style.display = 'none';
-  S.view = 'discover'; document.body.classList.add('discover'); document.body.classList.remove('vview', 'drawer');
-  S.channel = null; renderRail();
+  S.view = 'discover'; document.body.classList.add('discover'); document.body.classList.remove('vview', 'drawer', 'forumv');
+  S.channel = null; draftFor = null; roomLoading = null; joinSeq++; renderRail();
   setHeader(`${ic('shield')} Botlar`, 'Sunucuna tek tıkla ekle', false); $('#head-actions').innerHTML = '';
   $('#side-head').className = 'shead'; $('#side-head').style.backgroundImage = ''; $('#side-head').onclick = null; $('#side-head').innerHTML = '<h3>Keşfet</h3>';
   $('#side-list').innerHTML = `<div class="room" data-dsv><div class="ico">${ic('compass')}</div>Sunucular</div><div class="room active"><div class="ico">${ic('shield')}</div>Botlar</div>`;
@@ -6874,10 +6885,14 @@ document.addEventListener('click', e => {
   if (document.body.classList.contains('mdrawer') && !e.target.closest('#members, #mem-btn, #modal, .umenu, .vpop, #msheet')) closeMembers();
 });
 function selectChannel(id) {
+  if (!S.server) return;
+  const ch = S.server.channels.find(c => c.id === id);
+  if (!ch) return;
   if (++chSwitches === 5 && matchMedia('(pointer: fine)').matches) setTimeout(() => tip('ctrlk', '#side-head', 'Hızlı geçiş ⚡', '<kbd>Ctrl</kbd> + <kbd>K</kbd> ile istediğin odaya ya da kişiye anında atla.', 'right'), 600);
-  document.body.classList.remove('vview'); renderPip();
-  document.body.classList.remove('drawer');
-  S.channel = S.server.channels.find(c => c.id === id);
+  S.view = 'server';
+  document.body.classList.remove('discover', 'vview', 'drawer'); renderPip();
+  $('#compose')?.classList.remove('ro-bot');
+  S.channel = ch;
   S.unread.delete(id); updTitle(); renderMembers();
   setHeader(`${roomIcon(S.channel)} ${esc(S.channel.name)}`, S.channel.topic || S.server.name, true);
   $('#follow-btn')?.remove();
@@ -6897,10 +6912,10 @@ function openDMHome() {
 let friendTab = 'home';
 function showFriends(tab = friendTab) {
   hideSuggest(); $('#cmdhint').style.display = 'none';
-  document.body.classList.remove('discover');
-  document.body.classList.remove('vview'); renderPip();
+  document.body.classList.remove('discover', 'vview', 'forumv'); renderPip();
+  $('#compose')?.classList.remove('ro-bot');
   friendTab = tab;
-  S.view = 'dm'; S.channel = null; renderRail(); renderDMSide(); renderMembers();
+  S.view = 'dm'; S.channel = null; draftFor = null; roomLoading = null; joinSeq++; renderRail(); renderDMSide(); renderMembers();
   setWatch(null);
   if (tab === 'home') setHeader(`${ic('home')} Yuva`, `${S.social.friends.length} arkadaş · ${S.social.friends.filter(n => S.online.has(n)).length} çevrimiçi`, false);
   else setHeader(`${ic('users')} Arkadaşlar`, `${S.social.friends.length} arkadaş`, false);
@@ -7104,9 +7119,7 @@ function openChat(id, other) {
   openDMChannel(id, other || id.slice(3).split('|').find(n => n !== S.me) || S.me);
 }
 function openDMChannel(id, other) {
-  document.body.classList.remove('discover');
-  document.body.classList.remove('vview'); renderPip();
-  document.body.classList.remove('drawer');
+  document.body.classList.remove('discover', 'vview', 'drawer', 'forumv'); renderPip();
   S.view = 'dm';
   S.channel = { id, with: other, dm: true };
   S.unread.delete(id); delete dmCnt[id]; if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; updTitle();
@@ -7124,10 +7137,10 @@ function openDMChannel(id, other) {
 }
 const groupName = g => g.name || g.members.filter(n => n !== S.me).slice(0, 3).join(', ') + (g.members.length > 4 ? '…' : '');
 function openGroup(id) {
-  document.body.classList.remove('discover');
-  document.body.classList.remove('vview'); renderPip();
+  document.body.classList.remove('discover', 'vview', 'forumv'); renderPip();
   const g = S.dms.find(d => d.id === id); if (!g) return;
   document.body.classList.remove('drawer');
+  $('#compose')?.classList.remove('ro-bot');
   S.view = 'dm';
   S.channel = { id, group: true, name: groupName(g), members: g.members, owner: g.owner };
   S.unread.delete(id); delete dmCnt[id]; if (!S.dms.some(d => S.unread.has(d.id))) S.unreadDM = false; updTitle();
@@ -7512,9 +7525,11 @@ function initReadState(res) {
 }
 let histMore = false, histBusy = false, newLineAt = null;
 const drafts = {};
-let draftFor = null;
+let draftFor = null, joinSeq = 0, joinTimer = null;
 const lastCh = JSON.parse(store.get('kanka-lastch') || '{}');
-function enterRoom(id, placeholder, hello) {
+function enterRoom(id, placeholder, hello, isRetry) {
+  const seq = ++joinSeq;
+  clearTimeout(joinTimer);
   if (draftFor !== id) { forumPostId = null; forumNewOpen = false; forumMenuOpen = false; forumRulesOpen = false; forumQ = ''; forumDraftTitle = ''; forumDraftBody = ''; forumReplyDraft = ''; }
   setTimeout(() => S.channel?.id === id && renderCallBar(), 0);
   if (draftFor && draftFor !== id) { const v = $('#input').value; v.trim() && !/^\/\S*$/.test(v.trim()) ? drafts[draftFor] = v : delete drafts[draftFor]; }
@@ -7531,11 +7546,19 @@ function enterRoom(id, placeholder, hello) {
   $('#e2e-bar')?.remove(); setTimeout(() => E2E.enter(id), 0); // şifreli sohbet: kilit simgesi, anahtar ve eski mesajların şifrelenmesi
   // yeni oda yüklenene kadar eski odanın mesajları/boş ekranı görünmesin
   S.msgs = []; histMore = false; roomLoading = id; $('#messages').innerHTML = '<div class="loadmore">Mesajlar yükleniyor…</div>';
+  joinTimer = setTimeout(() => {
+    if (seq !== joinSeq || roomLoading !== id) return;
+    if (!isRetry && socket.connected) return enterRoom(id, placeholder, hello, true);
+    roomLoading = null;
+    $('#messages').innerHTML = `<div class="loadmore">Mesajlar gecikti. <button type="button" class="btns2" id="retry-join" style="margin-left:8px;padding:5px 12px">Yeniden dene</button></div>`;
+    const rb = $('#retry-join'); if (rb) rb.onclick = () => enterRoom(id, placeholder, hello, true);
+  }, 9000);
   socket.emit('join', id, async r => {
-    if (draftFor !== id) { if (roomLoading === id) roomLoading = null; return; } // bu arada başka odaya geçildiyse eski cevabı yok say
-    if (r?.messages?.some(m => m.enc)) await E2E.prep(id, r.messages).catch(() => {});
-    if (roomLoading === id) roomLoading = null;
-    if (draftFor !== id) return;
+    if (seq !== joinSeq || draftFor !== id || S.channel?.id !== id) { if (roomLoading === id && seq === joinSeq) roomLoading = null; return; }
+    clearTimeout(joinTimer);
+    if (r?.messages?.some(m => m.enc)) await Promise.race([E2E.prep(id, r.messages).catch(() => {}), new Promise(res => setTimeout(res, 6000))]);
+    if (seq !== joinSeq || draftFor !== id || S.channel?.id !== id) { if (roomLoading === id && seq === joinSeq) roomLoading = null; return; }
+    roomLoading = null;
     if (!r || r.error) { $('#messages').innerHTML = `<div class="loadmore">${esc(r?.error || 'Mesajlar yüklenemedi, sayfayı yenile')}</div>`; return r && toast(r.error); }
     S.msgs = r.messages; S.playlist = r.playlist;
     histMore = !r.noHistory && r.messages.length >= 150; S.noHistory = !!r.noHistory;
@@ -8157,7 +8180,7 @@ let pop = null;
 function closePop() { pop?.remove(); pop = null; document.querySelector('.row.hl')?.classList.remove('hl'); }
 function openPop(btn, cls, html, onClick) {
   closePop();
-  btn.closest('.row').classList.add('hl');
+  btn.closest('.row')?.classList.add('hl');
   pop = document.createElement('div'); pop.className = 'pop ' + cls; pop.innerHTML = html;
   document.body.appendChild(pop);
   const r = btn.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
@@ -8259,9 +8282,17 @@ $('#viewer').addEventListener('pointerdown', e => { vwX = e.clientX; vwSwiped = 
 $('#viewer').addEventListener('pointerup', e => { if (vwX == null) return; const dx = e.clientX - vwX; vwX = null; if (Math.abs(dx) > 50 && VW.list.length > 1) { vwSwiped = true; vwStep(dx < 0 ? 1 : -1); } });
 
 let msgQ = Promise.resolve();
-const viaE2E = fn => d => { msgQ = msgQ.then(() => d?.msg?.enc && d.channelId === S.channel?.id ? E2E.prep(d.channelId, [d.msg], S.msgs) : 0).catch(() => {}).then(() => fn(d)); };
+const viaE2E = fn => d => {
+  msgQ = msgQ
+    .then(() => d?.msg?.enc && d.channelId === S.channel?.id ? Promise.race([E2E.prep(d.channelId, [d.msg], S.msgs), new Promise(res => setTimeout(res, 5000))]) : 0)
+    .catch(() => {})
+    .then(() => fn(d))
+    .catch(e => console.error('Canlı mesaj işlenemedi', e));
+};
 socket.on('message', viaE2E(({ channelId, msg }) => {
   if (channelId !== S.channel?.id) return;
+  if (roomLoading === channelId) return; // oda henüz yükleniyor, join cevabı tüm mesajları getirecek
+  if (msg?.id && S.msgs.some(x => x.id === msg.id)) return; // tekrar mesajı önle
   if (msg.author && msg.author !== S.me && !document.hasFocus() && !isDnd() && !(S.view === 'server' && mutedServers.has(S.server?.id))) playSound('msg');
   typers.delete(msg.author); renderTyping();
   S.msgs.push(msg);
@@ -8270,7 +8301,7 @@ socket.on('message', viaE2E(({ channelId, msg }) => {
   if (document.hasFocus()) markRead(channelId);
   const box = $('#messages');
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
-  box.insertAdjacentHTML('beforeend', msgHTML(msg, S.msgs[S.msgs.length - 2]));
+  try { box.insertAdjacentHTML('beforeend', msgHTML(msg, S.msgs[S.msgs.length - 2])); } catch (e) { console.error('Mesaj çizilemedi', msg?.id, e); return; }
   if (msg.kind === 'call' && msg.call?.state !== 'start') {
     box.querySelectorAll(`.calllog[data-callstate="start"][data-callby="${CSS.escape(msg.call?.by || '')}"]`).forEach(x => x.remove());
     if (ringing?.chatId === channelId) stopRing();
@@ -9627,8 +9658,23 @@ socket.on('servers', list => {
   if (myVoice && !String(myVoice).startsWith('call:') && !list.some(s => s.channels.some(c => c.id === myVoice))) { leaveVoice(false); toast('Bulunduğun ses odası artık yok'); }
   if (ssOpen && !list.some(x => x.id === ssOpen.id)) { ssOpen = null; closeModal(); }
   if (S.view === 'server') {
-    S.server = S.servers.find(s => s.id === S.server?.id) || S.servers[0];
-    renderRail(); renderMembers(); renderSide();
+    const prevSid = S.server?.id;
+    S.server = S.servers.find(s => s.id === prevSid) || S.servers[0];
+    if (!S.server) return openDMHome();
+    if (S.server.id !== prevSid) return selectServer(S.server.id);
+    const updCh = S.channel && S.server.channels.find(c => c.id === S.channel.id);
+    if (updCh) {
+      const typeChanged = updCh.type !== S.channel.type;
+      S.channel = updCh;
+      renderRail(); renderMembers(); renderSide(); renderChanExtras();
+      if (typeChanged) renderMessages();
+    } else if (S.channel) {
+      const next = S.server.channels.find(c => !voiceLike(c.type)) || S.server.channels[0];
+      if (next) selectChannel(next.id);
+      else selectServer(S.server.id);
+    } else {
+      renderRail(); renderMembers(); renderSide();
+    }
   } else renderRail();
 });
 socket.on('dms', list => {
