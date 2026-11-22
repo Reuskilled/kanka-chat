@@ -44,7 +44,12 @@ app.use('/indir', (req, res, next) => {
 });
 const deskVersions = () => { const now = Date.now(), o = {}; for (const [k, x] of deskSeen) { if (now - x.at > 48 * 3600e3) { deskSeen.delete(k); continue; } o[x.v] = (o[x.v] || 0) + 1; } return o; };
 app.use('/indir', express.static(path.join(__dirname, 'indir'), { setHeaders: res => res.set('Content-Disposition', 'attachment') }));
-app.use(express.json({ limit: '8kb' }));
+// Genel gövde sınırı 8 KB. Bot API'si (/api/v1, 128 KB) ve masaüstü etkinlik bildirimi (/api/presence, 24 KB) kendi sınırlarıyla
+// okur: genel okuyucu önce çalışınca 8 KB'ı aşan bot mesajları ve oyun listeleri "request entity too large" ile düşüyordu.
+const json8 = express.json({ limit: '8kb' });
+app.use((req, res, next) => (req.path.startsWith('/api/v1/') || req.path === '/api/presence') ? next() : json8(req, res, next));
+// Bozuk / çok büyük gövde: kayıtları yığın izleriyle doldurmadan kısa bir JSON hata dön
+app.use((err, req, res, next) => { if (err?.type === 'entity.too.large') return res.status(413).json({ hata: 'İstek çok büyük' }); if (err?.type === 'entity.parse.failed' || err?.type === 'encoding.unsupported' || err?.type === 'request.aborted') return res.status(400).json({ hata: 'Geçersiz istek' }); next(err); });
 
 // ---------- Etkinlik (oyun / müzik) ----------
 // İşlem adı -> [oyun adı, durum]. Kanka Durum bu listeyi buradan indirir; yeni oyun eklemek için buraya yazmak yeter.
@@ -522,7 +527,7 @@ function presUser(key) {
   const u = n && db.users[n];
   return u && u.presenceKey === key ? u : null; // anahtar yenilendiyse ya da hesap silindiyse eski kayıt geçmez
 }
-app.post('/api/presence', express.json({ limit: '24kb' }), async (req, res) => {
+app.post('/api/presence', express.json({ limit: '64kb' }), async (req, res) => {
   const { key, game, detail, music, rich } = req.body || {};
   const pip = 'presfail|' + reqIp(req);
   if ((limits.get(pip) || []).filter(t => Date.now() - t < 600e3).length >= 30) return res.status(429).json({ error: 'Çok fazla hatalı deneme' });

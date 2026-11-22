@@ -229,7 +229,7 @@
   .rl-row[hidden], .rl-perm[hidden], .rl-pg[hidden], .rl-none[hidden] { display: none !important; } .rl-side .rl-list { overflow-x: hidden; }
   /* Roller sayfası geniş çalışır: sağdaki sunucu önizlemesi küçülür, sadece kapat düğmesi kalır */
   @media (min-width: 1101px) { #modal .box.settings:has(.rl-page) { grid-template-columns: minmax(250px, 1fr) minmax(0, 1120px) minmax(110px, 1fr); }
-    #modal .box.settings:has(.rl-page) .st-prev > :not(.prev-head) { display: none; } #modal .box.settings:has(.rl-page) .st-prev .prev-head h4 { visibility: hidden; } } .rl-page h3 { display: flex; align-items: center; gap: 8px; } .rl-cnt { font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 99px; background: var(--hover); color: var(--muted); }
+    #modal .box.settings:has(.rl-page) .st-prev > :not(.prev-head) { display: none; } #modal .box.settings:has(.rl-page) .st-prev .prev-head h4 { display: none; } #modal .box.settings:has(.rl-page) .st-prev { padding-left: 10px; padding-right: 14px; align-items: flex-end; } #modal .box.settings:has(.rl-page) .st-prev .prev-head { width: 100%; justify-content: flex-end; } } .rl-page h3 { display: flex; align-items: center; gap: 8px; } .rl-cnt { font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 99px; background: var(--hover); color: var(--muted); }
   .rl-split { display: grid; grid-template-columns: minmax(230px, 280px) 1fr; gap: 16px; align-items: start; }
   .rl-side { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 170px); min-height: 280px; padding: 10px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
   .rl-side-top { display: flex; gap: 6px; } .rl-side-top #r-new { width: auto; padding: 0 12px; display: flex; align-items: center; gap: 4px; font-size: 13px; flex-shrink: 0; margin: 0; } .rl-side-top #r-new .ic { width: 16px; height: 16px; }
@@ -6775,7 +6775,7 @@ function showServerSettings(s, tab, focus) {
         $('#iv-body').innerHTML = `<div class="iv-new"><h4>Yeni davet linki</h4>
             <div class="iv-row"><label>Geçerlilik süresi<select class="field" id="iv-exp">${EXP.map(([v, t]) => `<option value="${v}" ${v === 86400 ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
             <label>Kullanım sınırı<select class="field" id="iv-max">${MAX.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></label></div>
-            <label class="switch">Geçici üyelik <small class="hint" style="display:block;margin:2px 0 0">Bu linkle gelen kişi, rol verilmezse bağlantısı kopunca sunucudan çıkar</small><input type="checkbox" id="iv-temp"></label>
+            <label class="switch"><span style="flex:1;min-width:0">Geçici üyelik<small class="hint" style="display:block;margin:2px 0 0;font-weight:500">Bu linkle gelen kişi, rol verilmezse bağlantısı kopunca sunucudan çıkar</small></span><input type="checkbox" id="iv-temp"></label>
             <button class="primary" id="iv-make" style="width:auto;padding:10px 20px;margin-top:10px">${ic('plus')} Link oluştur</button></div>
           <h4 style="margin-top:22px">Linkler</h4>
           <div class="iv-list">
@@ -6799,7 +6799,7 @@ function showServerSettings(s, tab, focus) {
           <h4 style="margin-top:22px">Sunucu kapısı</h4>
           <div class="st-field"><label>Katılım soruları (${qs.length}/3)</label>${qs.map((q, i) => `<div class="rule-ed"><input class="field" data-qi="${i}" maxlength="150" value="${esc(q)}" placeholder="Örn. Bizi nereden buldun?"><button type="button" data-qd="${i}" aria-label="Soruyu sil">${ic('x')}</button></div>`).join('')}
             ${qs.length < 3 ? `<button class="lrow" id="sec-addq" style="margin:0">${ic('plus')}Soru ekle</button>` : ''}<p class="hint" style="margin-top:6px">Sorular hoş geldin ekranında, kuralların altında sorulur. Cevaplar Başvurular sayfasında görünür.</p></div>
-          <div class="st-field"><label class="switch">Onaylı katılım <small class="hint" style="display:block;margin:2px 0 0">Yeni gelen, bir yetkili onaylayana kadar yazamaz. Başvurular sayfasından onaylar ya da reddedersin.</small><input type="checkbox" id="sec-appr" ${g.approval ? 'checked' : ''}></label></div>
+          <div class="st-field"><label class="switch"><span style="flex:1;min-width:0">Onaylı katılım<small class="hint" style="display:block;margin:2px 0 0;font-weight:500">Yeni gelen, bir yetkili onaylayana kadar yazamaz. Başvurular sayfasından onaylar ya da reddedersin.</small></span><input type="checkbox" id="sec-appr" ${g.approval ? 'checked' : ''}></label></div>
           ${(qs.length || g.approval) && !s.welcome?.enabled ? '<p class="hint">Kaydedince hoş geldin ekranı da açılır (sorular ve onay orada gösterilir).</p>' : ''}
           <div class="st-field"><button class="primary" id="sec-save" style="width:auto;padding:11px 22px">Kaydet</button></div></div>`;
         const sync = () => { main.querySelectorAll('[data-qi]').forEach(x => qs[+x.dataset.qi] = x.value); };
