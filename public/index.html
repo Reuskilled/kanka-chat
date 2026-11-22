@@ -1935,45 +1935,54 @@
   #compose.attn { animation: attn 1.2s ease-out 2; }
   @keyframes attn { 0% { box-shadow: 0 0 0 0 rgba(212,255,0,.55); } 100% { box-shadow: 0 0 0 14px rgba(212,255,0,0); } }
 
-  #modal .box.invm { width: min(470px, 94vw); padding: 0; overflow: hidden; background: var(--panel); border: 1px solid rgba(212,255,0,.22); border-radius: 22px; box-shadow: 0 28px 72px rgba(0,0,0,.7); }
-  .inv-top { position: relative; padding: 20px 22px 18px; display: flex; gap: 14px; align-items: center; border-bottom: 1px solid var(--line); background: radial-gradient(360px 140px at 18% 0%, rgba(212,255,0,.13), transparent 72%), linear-gradient(rgba(212,255,0,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(212,255,0,.03) 1px, transparent 1px), #0c0c10; background-size: 100% 100%, 24px 24px, 24px 24px, 100% 100%; }
-  .invico { width: 52px; height: 52px; border-radius: 16px; background: #14151c; border: 1.5px solid rgba(212,255,0,.38); display: grid; place-items: center; font-weight: 900; font-size: 22px; color: var(--ink); overflow: hidden; flex-shrink: 0; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
-  .invico img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .inv-top-t { flex: 1; min-width: 0; }
-  .inv-top-t h3 { font-size: 18px; font-weight: 900; letter-spacing: -.015em; margin: 0; line-height: 1.2; }
-  .inv-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 5px; font-size: 12.5px; color: var(--muted); font-weight: 700; }
-  .inv-meta .inv-on { display: inline-flex; align-items: center; gap: 5px; color: #4ade80; }
-  .inv-meta .inv-on i { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; }
-  .inv-x { width: 32px; height: 32px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--muted); display: grid; place-items: center; cursor: pointer; flex-shrink: 0; align-self: flex-start; transition: color .14s, border-color .14s, background .14s; }
-  .inv-x:hover { color: var(--ink); border-color: rgba(255,255,255,.22); background: var(--card); }
-  .inv-x .ic { width: 15px; height: 15px; }
-  .inv-body { padding: 18px 22px 20px; display: grid; gap: 16px; }
-  .inv-lbl { font-size: 11px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .inv-reset { display: inline-flex; align-items: center; gap: 5px; background: none; border: 0; padding: 0; color: var(--muted); font: inherit; font-size: 11.5px; font-weight: 700; text-transform: none; letter-spacing: 0; cursor: pointer; transition: color .14s; }
-  .inv-reset:hover { color: var(--accent); }
-  .inv-reset .ic { width: 13px; height: 13px; }
-  .invbox { display: flex; gap: 8px; padding: 6px 6px 6px 13px; border-radius: 14px; background: var(--bg); border: 1.5px solid var(--line); align-items: center; transition: border-color .15s, box-shadow .15s; }
-  .invbox:focus-within { border-color: rgba(212,255,0,.6); box-shadow: 0 0 0 3px rgba(212,255,0,.1); }
-  .invbox .inv-lic { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
-  .invbox input { flex: 1; min-width: 0; background: none; border: 0; color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; font-size: 13.5px; outline: none; }
-  .invbox .inv-cp { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 10px; border: 0; background: var(--accent); color: #09090b; font: inherit; font-size: 13.5px; font-weight: 900; cursor: pointer; flex-shrink: 0; transition: filter .14s, background .18s, color .18s; }
+  #modal .box.invm { width: min(476px, 94vw); max-height: min(680px, 90vh); padding: 0; overflow: hidden; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 28px 72px rgba(0,0,0,.72); }
+  .inv-top { padding: 18px 20px 14px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+  .inv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .inv-head h3 { font-size: 17.5px; font-weight: 900; letter-spacing: -.015em; margin: 0; line-height: 1.25; color: var(--ink); }
+  .inv-subhead { display: flex; align-items: center; gap: 6px; margin-top: 5px; font-size: 13px; color: var(--muted); font-weight: 600; flex-wrap: wrap; }
+  .inv-subhead .ic { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+  .inv-subhead b { color: var(--ink); font-weight: 800; }
+  .inv-x { width: 30px; height: 30px; border-radius: 9px; background: transparent; border: 0; color: var(--muted); display: grid; place-items: center; cursor: pointer; flex-shrink: 0; transition: color .14s, background .14s; }
+  .inv-x:hover { color: var(--ink); background: var(--card); }
+  .inv-x .ic { width: 17px; height: 17px; }
+  .inv-srch { display: flex; align-items: center; gap: 9px; padding: 0 12px; height: 40px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); transition: border-color .14s; }
+  .inv-srch:focus-within { border-color: rgba(212,255,0,.55); }
+  .inv-srch svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+  .inv-srch input { flex: 1; min-width: 0; background: none; border: 0; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600; outline: none; }
+  .inv-srch input::placeholder { color: var(--muted); font-weight: 500; }
+  .inv-list { flex: 1; min-height: 120px; max-height: 360px; overflow-y: auto; padding: 0 12px 10px; display: flex; flex-direction: column; gap: 2px; }
+  .inv-row { display: flex; align-items: center; gap: 11px; padding: 7px 8px; border-radius: 10px; transition: background .12s; }
+  .inv-row:hover { background: rgba(255,255,255,.04); }
+  .inv-row .av { width: 36px; height: 36px; font-size: 14px; flex-shrink: 0; }
+  .inv-u { flex: 1; min-width: 0; }
+  .inv-u b { display: block; font-size: 14px; font-weight: 800; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .inv-u small { display: block; font-size: 12px; color: var(--muted); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .inv-send { padding: 7px 14px; border-radius: 9px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; flex-shrink: 0; transition: border-color .14s, background .14s, color .14s; min-width: 84px; text-align: center; }
+  .inv-send:hover:not(:disabled) { border-color: var(--accent); background: rgba(212,255,0,.12); color: var(--accent); }
+  .inv-send.sent { border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.12); color: #4ade80; cursor: default; }
+  .inv-send.in { border-color: transparent; background: transparent; color: var(--muted); cursor: default; font-weight: 700; }
+  .inv-empty { padding: 28px 16px; text-align: center; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .inv-bot { padding: 14px 20px 16px; border-top: 1px solid var(--line); background: rgba(9,9,11,.5); display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+  .inv-bot-t { font-size: 13px; font-weight: 800; color: var(--ink); }
+  .invbox { display: flex; gap: 8px; padding: 5px 5px 5px 13px; border-radius: 11px; background: var(--bg); border: 1px solid var(--line); align-items: center; transition: border-color .15s; }
+  .invbox:focus-within { border-color: rgba(212,255,0,.55); }
+  .invbox input { flex: 1; min-width: 0; background: none; border: 0; color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; font-size: 13px; outline: none; }
+  .invbox .inv-cp { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 16px; border-radius: 8px; border: 0; background: var(--accent); color: #09090b; font: inherit; font-size: 13px; font-weight: 900; cursor: pointer; flex-shrink: 0; min-width: 88px; transition: filter .14s, background .18s; }
   .invbox .inv-cp:hover { filter: brightness(1.06); }
-  .invbox .inv-cp .ic { width: 15px; height: 15px; color: #09090b; }
   .invbox .inv-cp.ok { background: #22c55e; color: #051209; }
-  .invbox .inv-cp.ok .ic { color: #051209; }
-  .invshare { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; }
-  .invshare a, .invshare button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); color: var(--ink); font: inherit; font-weight: 800; font-size: 13px; text-decoration: none; cursor: pointer; transition: border-color .14s, transform .14s, background .14s; }
-  .invshare a:hover, .invshare button:hover { border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--bg)); transform: translateY(-1px); }
-  .invshare svg { width: 16px; height: 16px; color: var(--c); flex-shrink: 0; }
-  .inv-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 22px; border-top: 1px solid var(--line); background: rgba(9,9,11,.55); }
-  .invnote { display: flex; gap: 7px; align-items: center; color: var(--muted); font-size: 12px; font-weight: 600; margin: 0; }
-  .invnote .ic { width: 14px; height: 14px; flex-shrink: 0; color: var(--accent); opacity: .85; }
-  .inv-foot .btns2 { padding: 8px 16px; border-radius: 10px; font-size: 13px; }
+  .inv-sub { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 11.5px; color: var(--muted); flex-wrap: wrap; }
+  .inv-sub-l { flex: 1; min-width: 0; line-height: 1.4; }
+  .inv-reset { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; margin-left: 4px; }
+  .inv-reset:hover { text-decoration: underline; }
+  .inv-sico { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .inv-sico a, .inv-sico button { width: 28px; height: 28px; border-radius: 8px; background: var(--card); border: 1px solid var(--line); color: var(--muted); display: grid; place-items: center; text-decoration: none; cursor: pointer; transition: color .14s, border-color .14s; }
+  .inv-sico a:hover, .inv-sico button:hover { color: var(--c); border-color: var(--c); }
+  .inv-sico svg { width: 14px; height: 14px; }
   @media (max-width: 760px) {
-    #modal .box.invm { padding: 0 !important; }
-    .inv-top { padding: 16px 16px 14px; }
-    .inv-body { padding: 14px 16px 16px; gap: 14px; }
-    .inv-foot { padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); }
+    #modal .box.invm { padding: 0 !important; max-height: 88vh; }
+    .inv-top { padding: 14px 16px 12px; }
+    .inv-list { padding: 0 8px 8px; }
+    .inv-bot { padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); }
   }
 
   body:has(#modal.open) .ktip { display: none; }
@@ -13066,43 +13075,82 @@ function tip(key, sel, title, text, place = 'top', tries = 0) {
   setTimeout(() => t.isConnected && close(), 14000);
 }
 
-// --- Davet penceresi (Noir Siber & Asit Neon) ---
+// --- Davet penceresi (Discord tarzı arkadaş listesi + tek tıkla DM davet + hızlı link) ---
 function showInvite(s) {
   if (!s?.invite) return toast('Bu sunucunun davet linki yok.');
   const link = s.vanity ? `${PUB}/s/${s.vanity}` : `${PUB}/davet/${s.invite}`, text = `${s.name} sunucusuna gel, Kanka Chat'te buluşalım!`;
   const mark = () => socket.emit('onbMark', { k: 'invite', serverId: s.id }, () => {});
-  const enc = encodeURIComponent, mems = s.members || [], cnt = mems.length, onCnt = mems.filter(n => S.online.has(n)).length;
+  const enc = encodeURIComponent, memSet = new Set(s.members || []);
+  const curCh = S.view === 'server' && S.server?.id === s.id ? S.channel : null;
+  const peers = [...new Set([
+    ...(S.social?.friends || []),
+    ...(S.dms || []).filter(d => !d.group && d.with && d.with !== 'Kanka Bot' && !S.users[d.with]?.bot).map(d => d.with),
+  ])].filter(n => n && n !== S.me && S.users[n] && !S.users[n].bot);
+  peers.sort((a, b) => (+memSet.has(a) - +memSet.has(b)) || (+S.online.has(b) - +S.online.has(a)) || dn(a).localeCompare(dn(b), 'tr'));
+  const sent = new Set();
+
   const share = [
     ['wa', 'WhatsApp', '#25d366', `https://wa.me/?text=${enc(text + ' ' + link)}`, '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2a9.94 9.94 0 0 0-8.6 14.92L2 22l5.25-1.38A9.96 9.96 0 1 0 12.04 2Zm5.8 14.12c-.24.68-1.42 1.3-1.95 1.38-.5.08-1.13.11-1.82-.11-.42-.13-.96-.31-1.66-.61-2.92-1.26-4.82-4.21-4.96-4.4-.15-.19-1.18-1.57-1.18-3s.75-2.13 1.01-2.42c.27-.29.58-.36.78-.36h.56c.18 0 .42-.07.66.5.24.58.83 2.02.9 2.17.07.15.12.32.02.51-.1.2-.15.32-.29.49-.15.17-.31.38-.44.51-.15.15-.3.31-.13.61.17.3.76 1.25 1.63 2.03 1.12 1 2.07 1.31 2.36 1.46.3.15.47.12.64-.07.17-.2.74-.86.94-1.16.2-.29.39-.24.66-.15.27.1 1.72.81 2.01.96.3.15.49.22.56.34.08.13.08.72-.16 1.4Z"/></svg>'],
     ['tg', 'Telegram', '#2aabee', `https://t.me/share/url?url=${enc(link)}&text=${enc(text)}`, '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 4.2 18.3 19.3c-.24 1.08-.88 1.35-1.78.84l-4.92-3.63-2.37 2.28c-.26.26-.48.48-.99.48l.35-5.01 9.12-8.24c.4-.35-.09-.55-.62-.2L6.82 12.9l-4.86-1.52c-1.06-.33-1.08-1.06.22-1.57L20.1 2.9c.88-.32 1.65.21 1.4 1.3Z"/></svg>'],
     ['x', 'X', '#f4f4f5', `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(link)}`, '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.24 2.25h3.31l-7.23 8.26L22.82 21.75h-6.66l-5.21-6.82-5.97 6.82H1.67l7.73-8.84L1.25 2.25h6.83l4.71 6.23 5.45-6.23Zm-1.16 17.52h1.83L7.08 4.13H5.11l11.97 15.64Z"/></svg>'],
   ];
   const shareSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
+
   modal(`<div class="inv-top">
-      <div class="invico">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</div>
-      <div class="inv-top-t">
-        <h3>Arkadaşlarını davet et</h3>
-        <div class="inv-meta"><span>${esc(s.name)}</span>${onCnt ? `<span class="inv-on"><i></i>${onCnt} çevrimiçi</span>` : ''}<span>· ${cnt} üye</span></div>
+      <div class="inv-head">
+        <div>
+          <h3>Arkadaşlarını ${esc(s.name)} sunucusuna davet et</h3>
+          <div class="inv-subhead">${curCh ? `<span>Alıcılar</span>${roomIcon(curCh)}<b>${esc(curCh.name)}</b><span>konumuna gelecek</span>` : `<span>${esc(s.name)} · ${(s.members || []).length} üye</span>`}</div>
+        </div>
+        <button type="button" class="inv-x" id="inv-x" aria-label="Kapat">${ic('x')}</button>
       </div>
-      <button type="button" class="inv-x" id="inv-x" aria-label="Kapat">${ic('x')}</button>
-    </div>
-    <div class="inv-body">
-      <div>
-        <div class="inv-lbl"><span>Davet linki</span>${!s.public && perm(s, 'manageServer') ? `<button type="button" class="inv-reset" id="inv-reset" title="Eski linki geçersiz kılıp yeni kod üret">${ic('refresh')} Linki yenile</button>` : ''}</div>
-        <div class="invbox"><svg class="inv-lic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg><input id="inv" value="${esc(link)}" readonly aria-label="Davet linki"><button type="button" class="inv-cp" id="copy">${ic('copy')}<span>Kopyala</span></button></div>
-      </div>
-      <div>
-        <div class="inv-lbl"><span>Hızlı paylaş</span></div>
-        <div class="invshare">${share.map(([k, n, c, u, svg]) => `<a href="${esc(u)}" target="_blank" rel="noopener" data-sh="${k}" style="--c:${c}">${svg}<span>${n}</span></a>`).join('')}${navigator.share ? `<button type="button" data-sh="native" style="--c:var(--accent)">${shareSvg}<span>Diğer</span></button>` : ''}</div>
+      <div class="inv-srch">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="inv-q" placeholder="Arkadaşlarını ara" autocomplete="off">
       </div>
     </div>
-    <div class="inv-foot">
-      <p class="invnote">${ic('shield')} Linki açan kişi giriş yapınca sunucuna katılır.</p>
-      <button type="button" class="btns2" id="mx">Kapat</button>
+    <div class="inv-list" id="inv-list"></div>
+    <div class="inv-bot">
+      <div class="inv-bot-t">Veya bir arkadaşına sunucu daveti bağlantısı yolla</div>
+      <div class="invbox"><input id="inv" value="${esc(link)}" readonly aria-label="Davet linki"><button type="button" class="inv-cp" id="copy">Kopyala</button></div>
+      <div class="inv-sub">
+        <span class="inv-sub-l">Linki açan kişi giriş yapınca sunucuna katılır.${!s.public && perm(s, 'manageServer') ? `<button type="button" class="inv-reset" id="inv-reset">Davet bağlantısını yenile.</button>` : ''}</span>
+        <span class="inv-sico">${share.map(([k, n, c, u, svg]) => `<a href="${esc(u)}" target="_blank" rel="noopener" data-sh="${k}" title="${n} ile paylaş" style="--c:${c}">${svg}</a>`).join('')}${navigator.share ? `<button type="button" data-sh="native" title="Paylaş" style="--c:var(--accent)">${shareSvg}</button>` : ''}</span>
+      </div>
     </div>`, 'invm');
+
+  const drawList = () => {
+    const q = ($('#inv-q')?.value || '').trim().toLocaleLowerCase('tr');
+    const list = peers.filter(n => !q || dn(n).toLocaleLowerCase('tr').includes(q) || n.toLocaleLowerCase('tr').includes(q));
+    const box = $('#inv-list'); if (!box) return;
+    if (!list.length) {
+      box.innerHTML = `<div class="inv-empty">${peers.length ? 'Eşleşen arkadaş bulunamadı.' : 'Henüz arkadaşın yok — aşağıdaki davet bağlantısını kopyalayıp paylaşabilirsin.'}</div>`;
+      return;
+    }
+    box.innerHTML = list.map(n => {
+      const inSrv = memSet.has(n), isSent = sent.has(n);
+      const nm = styledNameHTML(dn(n), S.users[n]?.nameStyle);
+      return `<div class="inv-row">
+        ${av(n, S.online.has(n))}
+        <div class="inv-u"><b>${nm}</b><small>${esc(n)}</small></div>
+        <button type="button" class="inv-send ${inSrv ? 'in' : isSent ? 'sent' : ''}" data-invto="${esc(n)}" ${inSrv || isSent ? 'disabled' : ''}>${inSrv ? 'Sunucuda' : isSent ? 'Gönderildi' : 'Davet et'}</button>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('[data-invto]').forEach(b => b.onclick = () => {
+      const to = b.dataset.invto; if (!to || sent.has(to)) return;
+      b.disabled = true; b.textContent = '…';
+      socket.emit('quickDM', { to, text: link }, r => {
+        if (r?.error) { b.disabled = false; b.textContent = 'Davet et'; return toast(r.error); }
+        sent.add(to); b.classList.add('sent'); b.textContent = 'Gönderildi';
+        mark();
+      });
+    });
+  };
+  drawList();
+  $('#inv-q').oninput = drawList;
   $('#inv').onclick = e => e.target.select();
   $('#copy').onclick = () => {
-    const done = () => { const b = $('#copy'); if (!b) return; b.classList.add('ok'); b.innerHTML = `${ic('check')}<span>Kopyalandı</span>`; setTimeout(() => { if (!b.isConnected) return; b.classList.remove('ok'); b.innerHTML = `${ic('copy')}<span>Kopyala</span>`; }, 2000); };
+    const done = () => { const b = $('#copy'); if (!b) return; b.classList.add('ok'); b.textContent = 'Kopyalandı'; setTimeout(() => { if (!b.isConnected) return; b.classList.remove('ok'); b.textContent = 'Kopyala'; }, 2000); };
     (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(done, () => { $('#inv').select(); document.execCommand?.('copy'); done(); });
     mark();
   };
@@ -13112,7 +13160,6 @@ function showInvite(s) {
     if (r.error) return toast(r.error, null, false, { type: 'err' });
     s.invite = r.invite; const sv = S.servers.find(x => x.id === s.id); if (sv) sv.invite = r.invite; toast('Yeni davet linki hazır', null, false, { type: 'ok' }); showInvite(s);
   })));
-  $('#mx').onclick = closeModal;
   $('#inv-x').onclick = closeModal;
 }
 
