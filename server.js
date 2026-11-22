@@ -3318,84 +3318,145 @@ const DART = {
   view(st) { return { score: st.score, turn: st.ps[st.turn], dart: st.dart, round: Math.min(st.round, DART.ROUNDS), rounds: DART.ROUNDS, hits: st.hits, ev: st.ev }; },
   leave(st, p) { if (st.ps.length <= 2) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; return; } const i = st.ps.indexOf(p); st.ps.splice(i, 1); delete st.score[p]; if (st.turn === i) { st.turn = (i - 1 + st.ps.length) % st.ps.length; DART.nextTurn(st); } else if (st.turn > i) st.turn--; },
 };
-// ---------- Bilardo (8 top, sadeleştirilmiş kurallar) ----------
-// Masa 2 x 1 birim. Atış sunucuda baştan sona hesaplanır; istemciler kareleri oynatır.
-const BIL = { W: 2, H: 1, R: 0.028, POCKET: 0.062, DECEL: 0.95, CUSH: 0.78, BB: 0.96 };
-const BIL_POCKETS = [[0, 0], [1, -0.012], [2, 0], [0, 1], [1, 1.012], [2, 1]];
-function bilRack() {
-  const b = [{ n: 0, x: 0.5, y: 0.5, in: false }], R = BIL.R, dx = R * 2 * 0.866 + 0.0005;
-  // 1. sıra en önde; 8 numara 3. sıranın ortasında; köşelerde biri düz biri çizgili
-  const rest = shuffle([1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15]); const order = [];
-  const corners = [rest.find(n => n < 8), rest.find(n => n > 8)]; let pool = rest.filter(n => !corners.includes(n));
+// ---------- Bilardo (8 Ball Pool kuralları ve fiziği) ----------
+// Gerçek ölçüler (metre): 8 ayak masa 2,24 x 1,12, top çapı 57,15 mm. Atış sunucuda baştan sona hesaplanır; istemci kareleri oynatır.
+// Fizik: kayma → yuvarlanma geçişi (falso, çekme, takip), yan falso (bantta etkisi), cep ağızlarında çene bantları, top-top ve bant sekmeleri.
+const PB = { W: 2.24, H: 1.12, R: 0.028575, G: 9.81, MUS: 0.15, MUR: 0.025, MUSP: 0.045, E_BALL: 0.96, E_RAIL: 0.8, MU_RAIL: 0.18, VMAX: 7.4, DT: 1 / 480 };
+const PB_POCKETS = (() => { const { W, H } = PB, c = 0.019, s = 0.034; return [[-c, -c, 0.07], [W / 2, -s, 0.063], [W + c, -c, 0.07], [-c, H + c, 0.07], [W / 2, H + s, 0.063], [W + c, H + c, 0.07]]; })();
+const PB_SEGS = (() => {
+  const { W, H } = PB, CM = 0.087, SM = 0.064, J = 0.042, segs = [];
+  const add = (x1, y1, x2, y2) => segs.push([x1, y1, x2, y2]);
+  // uzun bantlar (üst ve alt), ortada yan cep boşluğu
+  for (const y of [0, H]) { const o = y ? 1 : -1;
+    add(CM, y, W / 2 - SM, y); add(W / 2 + SM, y, W - CM, y);
+    add(CM, y, CM - J * 0.7, y + o * J); add(W - CM, y, W - CM + J * 0.7, y + o * J); // köşe çeneleri
+    add(W / 2 - SM, y, W / 2 - SM + 0.012, y + o * J); add(W / 2 + SM, y, W / 2 + SM - 0.012, y + o * J); } // yan cep çeneleri
+  for (const x of [0, W]) { const o = x ? 1 : -1;
+    add(x, CM, x, H - CM); add(x, CM, x + o * J, CM - J * 0.7); add(x, H - CM, x + o * J, H - CM + J * 0.7); }
+  return segs;
+})();
+function poolRack() {
+  const { W, H, R } = PB, b = [{ n: 0, x: W * 0.25, y: H / 2, in: false }], dx = R * 2 * Math.sqrt(3) / 2 + 0.0001, dy = R * 2 + 0.0001;
+  const solids = shuffle([1, 2, 3, 4, 5, 6, 7]), stripes = shuffle([9, 10, 11, 12, 13, 14, 15]);
+  const cornerA = solids.pop(), cornerB = stripes.pop(), rest = shuffle([...solids, ...stripes]);
   for (let row = 0; row < 5; row++) for (let k = 0; k <= row; k++) {
-    let n; if (row === 2 && k === 1) n = 8; else if (row === 4 && k === 0) n = corners[0]; else if (row === 4 && k === 4) n = corners[1]; else n = pool.shift();
-    order.push({ n, x: 1.5 + row * dx, y: 0.5 + (k - row / 2) * (R * 2 + 0.0005) });
+    const n = row === 2 && k === 1 ? 8 : row === 4 && k === 0 ? cornerA : row === 4 && k === 4 ? cornerB : rest.pop();
+    b.push({ n, x: W * 0.75 + row * dx, y: H / 2 + (k - row / 2) * dy, in: false });
   }
-  for (const o of order) b.push({ ...o, in: false });
   return b.sort((a, c) => a.n - c.n);
 }
-function bilSim(balls, ang, speed) {
-  const B = balls.map(b => ({ ...b, vx: 0, vy: 0 })), cue = B[0]; cue.vx = Math.cos(ang) * speed; cue.vy = Math.sin(ang) * speed;
-  const R = BIL.R, dt = 1 / 240, frames = [], potted = [], rail = new Set(); let first = null, t = 0, fi = 0;
-  const snap = () => frames.push(B.map(b => b.in ? null : [r3(b.x), r3(b.y)]));
+// Bir atışı baştan sona hesapla. sp: [yan, dikey] (-1..1, dikey > 0 = üstten vuruş / takip)
+function poolSim(balls, ang, power, sp = [0, 0]) {
+  const { R, G, MUS, MUR, MUSP, DT } = PB;
+  const B = balls.map(b => ({ ...b, vx: 0, vy: 0, wx: 0, wy: 0, wz: 0, ox: b.x, oy: b.y }));
+  const V = 0.25 + Math.pow(power, 1.6) * (PB.VMAX - 0.25), sx = Math.max(-1, Math.min(1, sp[0] || 0)), sy = Math.max(-1, Math.min(1, sp[1] || 0));
+  const a = ang - sx * 0.012 * power; // yan falsoda beyaz hafif sapar
+  const dx = Math.cos(a), dy = Math.sin(a), cue = B[0], spin = 2.1 * V / R; // oyun hissi için gerçeğinden biraz güçlü falso
+  cue.vx = dx * V; cue.vy = dy * V; cue.wx = -dy * spin * sy * 0.5 * 2; cue.wy = dx * spin * sy * 0.5 * 2; cue.wz = -spin * sx * 0.5 * 2;
+  // (sy=0.4 doğal yuvarlanmaya yakın; sy<0 çekme)
+  const frames = [], events = [], potted = [], rails = new Set(); let first = null, t = 0, step = 0, contact = false;
+  const FR = 16; // her 16 adımda bir kare (30 kare/sn)
+  const snap = () => { const f = []; for (let i = 0; i < B.length; i++) { const b = B[i]; if (b.in) continue; const X = Math.round(b.x * 1000), Y = Math.round(b.y * 1000); if (X !== b.lx || Y !== b.ly || !frames.length) { f.push(i, X, Y); b.lx = X; b.ly = Y; } } frames.push(f); };
+  const ev = (type, s) => { if (s > 0.02) events.push([frames.length, type, Math.round(Math.min(1, s) * 100) / 100]); };
   snap();
-  while (t < 14) {
+  while (t < 20) {
     let moving = false;
-    for (const b of B) { if (b.in) continue; const v = Math.hypot(b.vx, b.vy); if (v < 0.004) { b.vx = b.vy = 0; continue; } moving = true; const nv = Math.max(0, v - BIL.DECEL * dt); b.vx *= nv / v; b.vy *= nv / v; b.x += b.vx * dt; b.y += b.vy * dt; }
+    for (const b of B) {
+      if (b.in) continue;
+      const ux = b.vx - R * b.wy, uy = b.vy + R * b.wx, us = Math.hypot(ux, uy), sp2 = Math.hypot(b.vx, b.vy);
+      if (us > 0.002) { // kayıyor
+        const k = MUS * G * DT, ax = -ux / us, ay = -uy / us;
+        if (us <= 3.5 * k) { b.vx -= ux * 2 / 7; b.vy -= uy * 2 / 7; b.wx = -b.vy / R; b.wy = b.vx / R; } // tam bu adımda yuvarlanmaya geçer
+        else { b.vx += ax * k; b.vy += ay * k; b.wx += 2.5 * ay * k / R; b.wy -= 2.5 * ax * k / R; }
+        moving = true;
+      } else if (sp2 > 0.003) { // yuvarlanıyor
+        const ns = Math.max(0, sp2 - MUR * G * DT * (sp2 < 0.15 ? 1.6 : 1)); b.vx *= ns / sp2; b.vy *= ns / sp2; b.wx = -b.vy / R; b.wy = b.vx / R; moving = true;
+      } else { b.vx = b.vy = b.wx = b.wy = 0; }
+      if (b.wz) { const d = 2.5 * MUSP * G / R * DT; b.wz = Math.abs(b.wz) <= d ? 0 : b.wz - Math.sign(b.wz) * d; }
+      b.x += b.vx * DT; b.y += b.vy * DT;
+    }
     if (!moving) break;
-    for (let i = 0; i < B.length; i++) { const a = B[i]; if (a.in) continue;
-      for (let j = i + 1; j < B.length; j++) { const c = B[j]; if (c.in) continue;
-        const dx = c.x - a.x, dy = c.y - a.y, d = Math.hypot(dx, dy); if (d >= 2 * R || d === 0) continue;
-        const nx = dx / d, ny = dy / d, ov = 2 * R - d; a.x -= nx * ov / 2; a.y -= ny * ov / 2; c.x += nx * ov / 2; c.y += ny * ov / 2;
-        const rv = (a.vx - c.vx) * nx + (a.vy - c.vy) * ny; if (rv <= 0) continue;
-        const imp = rv * (1 + BIL.BB) / 2; a.vx -= imp * nx; a.vy -= imp * ny; c.vx += imp * nx; c.vy += imp * ny;
-        if (first === null && (a.n === 0 || c.n === 0)) first = a.n === 0 ? c.n : a.n;
+    // top-top
+    for (let i = 0; i < B.length; i++) { const p = B[i]; if (p.in) continue;
+      for (let j = i + 1; j < B.length; j++) { const q = B[j]; if (q.in) continue;
+        const ddx = q.x - p.x, ddy = q.y - p.y; if (Math.abs(ddx) > 2 * R || Math.abs(ddy) > 2 * R) continue;
+        const d = Math.hypot(ddx, ddy); if (d >= 2 * R || d === 0) continue;
+        const nx = ddx / d, ny = ddy / d, ov = 2 * R - d; p.x -= nx * ov / 2; p.y -= ny * ov / 2; q.x += nx * ov / 2; q.y += ny * ov / 2;
+        const rv = (p.vx - q.vx) * nx + (p.vy - q.vy) * ny; if (rv <= 0) continue;
+        const J = rv * (1 + PB.E_BALL) / 2; p.vx -= J * nx; p.vy -= J * ny; q.vx += J * nx; q.vy += J * ny;
+        // atma (throw): kesik vuruşta hedef top beyazın kayma yönüne hafif çekilir
+        const tx = -ny, ty = nx, rel = (p.vx - q.vx) * tx + (p.vy - q.vy) * ty, th = Math.max(-0.035, Math.min(0.035, rel * 0.02)) * J; q.vx += tx * th; q.vy += ty * th;
+        if (first === null && (p.n === 0 || q.n === 0)) first = p.n === 0 ? q.n : p.n;
+        contact = true; ev(0, J / 3);
       } }
+    // bantlar ve çeneler
     for (const b of B) { if (b.in) continue;
-      if (BIL_POCKETS.some(([px, py]) => Math.hypot(b.x - px, b.y - py) < BIL.POCKET)) { b.in = true; b.vx = b.vy = 0; potted.push(b.n); continue; }
-      const nearPocket = BIL_POCKETS.some(([px, py]) => Math.hypot(b.x - px, b.y - py) < BIL.POCKET * 1.9);
-      if (nearPocket) continue; // cep ağzında bant yok, top içeri kayabilsin
-      if (b.x < R) { b.x = R; b.vx = Math.abs(b.vx) * BIL.CUSH; rail.add(b.n); } if (b.x > BIL.W - R) { b.x = BIL.W - R; b.vx = -Math.abs(b.vx) * BIL.CUSH; rail.add(b.n); }
-      if (b.y < R) { b.y = R; b.vy = Math.abs(b.vy) * BIL.CUSH; rail.add(b.n); } if (b.y > BIL.H - R) { b.y = BIL.H - R; b.vy = -Math.abs(b.vy) * BIL.CUSH; rail.add(b.n); } }
-    for (const b of B) if (!b.in && (b.x < -0.05 || b.x > BIL.W + 0.05 || b.y < -0.05 || b.y > BIL.H + 0.05)) { b.in = true; potted.push(b.n); }
-    t += dt; if (++fi % 8 === 0) snap(); // 30 kare/sn
+      if (b.x > 0.1 && b.x < PB.W - 0.1 && b.y > 0.1 && b.y < PB.H - 0.1) continue;
+      for (const [x1, y1, x2, y2] of PB_SEGS) {
+        const sx2 = x2 - x1, sy2 = y2 - y1, L2 = sx2 * sx2 + sy2 * sy2, tt = Math.max(0, Math.min(1, ((b.x - x1) * sx2 + (b.y - y1) * sy2) / L2));
+        const qx = x1 + sx2 * tt, qy = y1 + sy2 * tt, ddx = b.x - qx, ddy = b.y - qy, d = Math.hypot(ddx, ddy); if (d >= R || d === 0) continue;
+        const nx = ddx / d, ny = ddy / d, vn = b.vx * nx + b.vy * ny; b.x = qx + nx * R; b.y = qy + ny * R; if (vn >= 0) continue;
+        const tx = -ny, ty = nx; let vt = b.vx * tx + b.vy * ty;
+        const vnNew = -vn * PB.E_RAIL, slip = vt - b.wz * R, Jt = -Math.sign(slip) * Math.min(Math.abs(slip) / 3.5, PB.MU_RAIL * (1 + PB.E_RAIL) * -vn);
+        vt += Jt; b.wz -= 2.5 * Jt / R;
+        // üst/alt falsonun bantla gelen kısmı kısmen tersine döner
+        let rvx = R * b.wy, rvy = -R * b.wx; const rvn = rvx * nx + rvy * ny; rvx -= 1.45 * rvn * nx; rvy -= 1.45 * rvn * ny; b.wx = -rvy / R; b.wy = rvx / R;
+        b.vx = tx * vt + nx * vnNew; b.vy = ty * vt + ny * vnNew;
+        if (contact || b.n !== 0) rails.add(b.n); ev(1, -vn / 4);
+      } }
+    // cepler
+    for (const b of B) { if (b.in) continue;
+      for (let k = 0; k < PB_POCKETS.length; k++) { const [px, py, pr] = PB_POCKETS[k]; if (Math.hypot(b.x - px, b.y - py) < pr) { b.in = true; b.pk = k; potted.push([b.n, k]); events.push([frames.length, 2, Math.round(Math.min(1, 0.3 + Math.hypot(b.vx, b.vy) / 4) * 100) / 100, b.n, k]); b.vx = b.vy = 0; break; } }
+      if (!b.in && (b.x < -0.08 || b.x > PB.W + 0.08 || b.y < -0.08 || b.y > PB.H + 0.08)) { b.in = true; potted.push([b.n, -1]); events.push([frames.length, 2, 0.5, b.n, -1]); }
+    }
+    t += DT; if (++step % FR === 0) snap();
   }
   snap();
-  return { balls: B.map(({ n, x, y, in: i }) => ({ n, x: r3(x), y: r3(y), in: i })), frames, potted, first };
+  return { balls: B.map(({ n, x, y, in: i }) => ({ n, x: r3(x), y: r3(y), in: i })), frames, events, potted, first, rails: rails.size, contact };
 }
 const BILARDO = {
-  ad: 'Bilardo', emoji: '🎱', min: 2, max: 2, turnSec: 60,
-  init(ps) { return { ps, balls: bilRack(), turn: 0, groups: null, hand: false, shot: 0, last: null, ev: null, brk: true }; },
+  ad: 'Bilardo', emoji: '🎱', min: 2, max: 2, turnSec: 45,
+  init(ps) { return { ps, balls: poolRack(), turn: 0, groups: null, hand: 'kitchen', brk: true, shot: 0, ev: null, msg: null }; },
   cur: st => st.ps[st.turn],
-  groupOf: (st, p) => st.groups ? st.groups[p] : null,
+  own: (st, p, n) => { const g = st.groups?.[p]; return g ? (g === 'duz' ? n >= 1 && n <= 7 : n >= 9 && n <= 15) : n !== 8 && n !== 0; },
   left(st, p) { const g = st.groups?.[p]; if (!g) return 7; return st.balls.filter(b => !b.in && (g === 'duz' ? b.n >= 1 && b.n <= 7 : b.n >= 9)).length; },
-  free(st, x, y) { return x > BIL.R && x < BIL.W - BIL.R && y > BIL.R && y < BIL.H - BIL.R && st.balls.every(b => b.in || b.n === 0 || Math.hypot(b.x - x, b.y - y) > 2 * BIL.R + 0.002); },
+  onEight: (st, p) => !!st.groups && BILARDO.left(st, p) === 0,
+  free(st, x, y, kitchen) { const R = PB.R; return x > R && x <= (kitchen ? PB.W * 0.25 + 1e-6 : PB.W - R) && y > R && y < PB.H - R && st.balls.every(b => b.in || b.n === 0 || Math.hypot(b.x - x, b.y - y) > 2 * R + 0.001); },
   move(st, p, mv) {
     if (st.ps[st.turn] !== p) return 'Sıra sende değil';
-    const ang = +mv?.a, pw = Math.max(0.05, Math.min(1, +mv?.p || 0)); if (!isFinite(ang)) return 'Geçersiz atış';
-    const cue = st.balls[0];
-    if (st.hand) { const x = +mv.cx, y = +mv.cy; if (!isFinite(x) || !isFinite(y) || !BILARDO.free(st, x, y)) return 'Beyaz topu boş bir yere koy'; cue.x = x; cue.y = y; cue.in = false; }
-    const before = BILARDO.left(st, p), opp = st.ps[1 - st.turn];
-    const sim = bilSim(st.balls, ang, 0.35 + pw * 3.6);
-    st.balls = sim.balls; st.shot++;
-    const own = n => { const g = st.groups?.[p]; return g ? (g === 'duz' ? n >= 1 && n <= 7 : n >= 9) : n !== 8 && n !== 0; };
+    const ang = +mv?.a, pw = Math.max(0.02, Math.min(1, +mv?.p || 0)); if (!isFinite(ang)) return 'Geçersiz atış';
+    const sp = Array.isArray(mv.s) ? [+mv.s[0] || 0, +mv.s[1] || 0] : [0, 0]; if (Math.hypot(sp[0], sp[1]) > 1.01) return 'Geçersiz falso';
+    const cue = st.balls[0], opp = st.ps[1 - st.turn], eight = BILARDO.onEight(st, p);
+    if (st.hand) { const x = +mv.cx, y = +mv.cy; if (isFinite(x) && isFinite(y)) { if (!BILARDO.free(st, x, y, st.hand === 'kitchen')) return st.hand === 'kitchen' ? 'Açılışta beyaz top sol çeyrekte olmalı' : 'Beyaz topu boş bir yere koy'; cue.x = x; cue.y = y; } cue.in = false; }
+    let call = null; if (eight) { call = +mv.pc; if (!Number.isInteger(call) || call < 0 || call > 5) return '8 numara için bir cep seç'; }
+    const brk = st.brk, sim = poolSim(st.balls, ang, pw, sp);
+    st.balls = sim.balls; st.shot++; st.brk = false;
+    const pots = sim.potted.map(x => x[0]), cueIn = pots.includes(0), eightIn = pots.includes(8), objs = pots.filter(n => n && n !== 8);
     let foul = null;
-    if (sim.potted.includes(0)) foul = 'Beyaz top cebe girdi';
-    else if (sim.first === null) foul = 'Hiçbir topa değmedi';
-    else if (st.groups && before > 0 && !own(sim.first)) foul = sim.first === 8 ? 'Önce 8 numaraya vurdu' : 'Önce rakibin topuna vurdu';
-    const pottedObj = sim.potted.filter(n => n !== 0 && n !== 8);
-    if (!st.groups && pottedObj.length && !st.brk) { const g0 = pottedObj[0] < 8 ? 'duz' : 'cizgili'; st.groups = { [p]: g0, [opp]: g0 === 'duz' ? 'cizgili' : 'duz' }; }
-    st.ev = { by: p, potted: sim.potted, foul, frames: sim.frames, seq: st.shot };
-    if (sim.potted.includes(8)) {
-      const win = !foul && before === 0 && st.groups;
-      st.over = { rank: win ? [p, opp] : [opp, p], why: win ? '8 numarayı soktu' : (before > 0 || !st.groups ? '8 numara erken girdi' : 'Faulle 8 numara') }; st.ev.end = st.over.why; return;
+    if (sim.first === null) foul = 'Hiçbir topa değmedi';
+    else if (cueIn) foul = 'Beyaz top cebe girdi';
+    else if (!brk && st.groups && !eight && !BILARDO.own(st, p, sim.first)) foul = sim.first === 8 ? 'Önce 8 numaraya vurdu' : 'Önce rakibin topuna vurdu';
+    else if (!brk && st.groups && eight && sim.first !== 8) foul = 'Önce 8 numaraya vurmalıydı';
+    else if (!brk && !st.groups && sim.first === 8) foul = 'Açık masada önce 8 numaraya vurdu';
+    else if (!brk && !pots.length && sim.rails === 0) foul = 'Temastan sonra hiçbir top banda gitmedi';
+    st.ev = { by: p, frames: sim.frames, events: sim.events, potted: sim.potted, foul, seq: st.shot, a: r3(ang), p: r3(pw), s: sp.map(r3), from: [r3(cue.x), r3(cue.y)], call };
+    if (eightIn) {
+      if (brk) { // açılışta 8 girerse masa yeniden dizilir, aynı oyuncu yeniden açar
+        Object.assign(st, { balls: poolRack(), hand: 'kitchen', brk: true, groups: null }); st.ev.msg = '8 numara açılışta girdi, masa yeniden dizildi'; return; }
+      const pk = sim.potted.find(x => x[0] === 8)[1], win = eight && !foul && !cueIn && pk === call;
+      st.over = { rank: win ? [p, opp] : [opp, p], why: win ? '8 numarayı söylediği cebe soktu' : !eight ? '8 numara erken girdi' : cueIn ? '8 numarayla birlikte beyaz da girdi' : pk !== call ? '8 numara yanlış cebe girdi' : 'Faulle 8 numara' }; st.ev.end = st.over.why; return;
     }
-    st.brk = false;
-    const keep = !foul && sim.potted.some(n => own(n));
-    st.hand = !!foul; if (!keep) st.turn = 1 - st.turn;
-    if (foul) { const c = st.balls[0]; c.in = false; c.x = 0.5; c.y = 0.5; for (let k = 0; k < 12 && !BILARDO.free(st, c.x, c.y); k++) { c.x = 0.15 + rint(30) / 100; c.y = 0.15 + rint(70) / 100; } } // rakip istediği yere koyabilir
+    if (!st.groups && !brk && !foul && objs.length) { const g0 = objs[0] < 8 ? 'duz' : 'cizgili'; st.groups = { [p]: g0, [opp]: g0 === 'duz' ? 'cizgili' : 'duz' }; st.ev.groups = true; }
+    const keep = !foul && objs.some(n => brk || !st.groups || BILARDO.own(st, p, n));
+    st.hand = foul ? 'any' : false;
+    if (!keep) st.turn = 1 - st.turn;
+    if (cueIn || foul) { const c = st.balls[0]; c.in = false; if (cueIn) { c.x = PB.W * 0.25; c.y = PB.H / 2; for (let k = 0; k < 20 && !BILARDO.free(st, c.x, c.y); k++) { c.x = 0.2 + rint(160) / 100; c.y = 0.1 + rint(90) / 100; } } }
   },
-  view(st) { return { balls: st.balls, turn: st.ps[st.turn], groups: st.groups, hand: st.hand, ev: st.ev, left: Object.fromEntries(st.ps.map(p => [p, BILARDO.left(st, p)])) }; },
+  view(st, me) {
+    const p = st.ps[st.turn];
+    return { balls: st.balls, turn: p, groups: st.groups, hand: st.hand, brk: st.brk, ev: st.ev, eight: BILARDO.onEight(st, p),
+      left: Object.fromEntries(st.ps.map(x => [x, BILARDO.left(st, x)])) };
+  },
   leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
 };
 // ---------- Bilek güreşi (gerçek zamanlı: hızlı bas) ----------
