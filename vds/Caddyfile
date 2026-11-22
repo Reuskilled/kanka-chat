@@ -1,3 +1,10 @@
+{
+	# HTTP/3 (QUIC) kapalı: bazı mobil operatörlerde UDP bağlantısı sessizce takılıyor, telefondan dosya/fotoğraf
+	# yüklemesi "bağlantı koptu" diye düşüyordu. Tarayıcılar TCP (HTTP/2) ile bağlanır.
+	servers {
+		protocols h1 h2
+	}
+}
 kankahq.com, 185-208-172-60.sslip.io {
 	encode gzip
 	reverse_proxy 127.0.0.1:3000

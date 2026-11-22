@@ -11201,6 +11201,7 @@ function arGameOf(ch) {
   const g = l.find(x => x.state === 'play') || l[0], info = AR_INFO[g.game] || [g.emoji || '🎮', g.ad || 'Oyun'];
   return { e: info[0], t: `${info[1]} ${g.state === 'play' ? 'oynanıyor' : 'lobisi açık'}${l.length > 1 ? ` · ${l.length} lobi` : ''}` };
 }
+socket.on('ice', l => { if (Array.isArray(l) && l.length) ICE.iceServers = l; });
 socket.on('arenaRoom', ({ ch, g }) => {
   if (g?.length) S.arenaRooms[ch] = g; else delete S.arenaRooms[ch];
   if (S.view === 'server') renderSide(); if (myVoice === ch && vview()) { const b = $('#stage .vv-bar b'), gm = arGameOf(ch); if (b) b.innerHTML = `${gm ? `<span class="vv-game" title="${esc(gm.t)}">${gm.e}</span>` : ic('volume')}${esc($('#vname')?.textContent || 'Sesli oda')}`; }
