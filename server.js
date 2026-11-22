@@ -759,6 +759,7 @@ for (const s of db.servers) {
   for (const c of s.channels) c.type ||= 'text';
   if (s.id === 's1' && !s.channels.some(c => c.type === 'voice')) s.channels.push({ id: 'v1', name: 'Sohbet', type: 'voice' });
   // Resmi sunucunun afişi ve simgesi (bir kez uygulanır; yönetici sonra değiştirebilir)
+  if (s.id === 's1' && !s.tagV1) { s.tag ||= { t: 'KHQ', i: '🦝', c: '#c8ff00', on: true, at: 0, by: null }; s.tagV1 = true; } // sunucu etiketi testi
   if (s.id === 's1' && !s.brandV1) { s.banner ||= '/marka/hq-afis.png'; s.iconImg ||= '/marka/hq-simge.png'; s.brandV1 = true; }
   if (s.id === 's1' && !s.brandV2) { if (s.banner === '/marka/hq-afis.png') s.banner = '/marka/hq-afis.gif'; if (s.iconImg === '/marka/hq-simge.png') s.iconImg = '/marka/hq-simge.gif'; s.brandV2 = true; } // hareketli sürüm
 }
@@ -1029,8 +1030,25 @@ function migrateUids() { // eski hesaplara, açılış sırasına göre kimlik v
   for (const [n, u] of miss) { u.name ||= n; u.id = mkUid(u.createdAt); uidIndex().set(u.id, n); }
   if (miss.length) { save(); console.log(`Kullanıcı kimliği: ${miss.length} hesaba kalıcı kimlik verildi`); }
 }
+// ---------- Sunucu etiketi (Discord'daki gibi isim yanında küçük etiket) ----------
+// Test aşamasında: sadece TAG.cfg.servers listesindeki sunucular etiket açabilir (başta Kanka HQ),
+// TAG.cfg.who = 'ekip' ise sadece Kanka ekibi, 'uye' ise o sunucunun tüm üyeleri takabilir. Ayar site yöneticisinde.
+// Sunucu: s.tag = { t: 'KHQ', i: '🦝', c: '#c8ff00', on: true, at, by } · Kullanıcı: u.tag = sunucu id
+const TAG_ICONS = ['🦝', '🔥', '⚡', '🎮', '👑', '💎', '🌙', '⭐', '🍀', '🐺', '🦊', '🐉', '🎧', '🎯', '🏆', '🚀', '💀', '❤️', '🌊', '🍕', '🎵', '🌸', '🛡️', '⚔️'];
+const TAG_COLORS = ['#c8ff00', '#ff7a59', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#f6c445', '#4cc38a', '#e5484d', '#e4e4e7'];
+const TAG_RESERVED = ['ADMN', 'ADMIN', 'KNKA', 'EKIP', 'EKİP', 'MOD', 'RESMI', 'RESMİ', 'KHQ', 'STAF', 'DEV'];
+const TAG = {
+  cfg() { return (db.tagCfg ||= { servers: ['s1'], who: 'ekip' }); },
+  allowedServer: s => !!s && TAG.cfg().servers.includes(s.id),
+  defOf(s) { return s && TAG.allowedServer(s) && s.tag?.on && s.tag.t ? { t: s.tag.t, i: s.tag.i, c: s.tag.c, ad: s.name, simge: s.icon || null, simgeImg: s.iconImg || null } : null; },
+  defs() { const o = {}; for (const s of db.servers) { const d = TAG.defOf(s); if (d) o[s.id] = d; } return o; },
+  canUse(n, s) { const u = db.users[n]; if (!u || u.bot || !s || !TAG.defOf(s)) return false; if (!(s.public || s.members.includes(n)) || s.bans?.[n]) return false; return TAG.cfg().who === 'uye' || !!staffRank(n); },
+  canList: n => db.servers.filter(s => TAG.canUse(n, s)).map(s => s.id),
+  of(u) { if (!u?.tag) return null; const s = db.servers.find(x => x.id === u.tag); return TAG.canUse(u.name, s) ? s.id : null; },
+  push() { const d = TAG.defs(); io.emit('tagDefs', d); for (const [sid, n] of online) io.to(sid).emit('tagCan', TAG.canList(n)); io.emit('users', allUsers()); },
+};
 const pubUser = u => ({ id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect || null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
-  birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
+  birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), tg: u.bot ? null : TAG.of(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
 const allUsers = () => Object.values(db.users).map(pubUser);
@@ -1569,7 +1587,7 @@ function srvBadges(s) {
 }
 const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
   id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, vanity: isStar(s) ? s.vanity || null : null, public: s.public, roles: s.roles,
-  emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, sounds: s.sounds || [], sbAll: s.sbAll !== false, filter: !!s.filter, slow: s.slow || 0,
+  emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, sounds: s.sounds || [], tag: s.tag || null, tagAllowed: TAG.allowedServer(s), sbAll: s.sbAll !== false, filter: !!s.filter, slow: s.slow || 0,
   channels: (viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels).map(c => chView(s, c, viewer, viewer && can(s, viewer, 'manageChannels'))),
   categories: (s.categories || []).filter(k => !viewer || can(s, viewer, 'manageChannels') || s.channels.some(c => c.cat === k.id && seesChannel(s, c, viewer)))
     .map(k => ({ id: k.id, name: k.name, ...(viewer && can(s, viewer, 'manageChannels') ? { perms: k.perms || {} } : {}) })), members: s.public ? Object.keys(db.users) : s.members,
@@ -1633,6 +1651,7 @@ const isAdmin = (s, n) => s.owner === n || roleOf(s, n) === 'admin';
 // Üye sunucudan çıkınca (ayrılma, atılma, yasak, geçici üyelik, ret) sunucudaki rolleri ve kabul bilgisi silinir;
 // geri gelirse yeni üye gibi başlar. Susturma (kaçmak için çık-gir yapılmasın) ve seviye (XP) korunur.
 function wipeMember(s, n) {
+  if (db.users[n]?.tag === s.id) delete db.users[n].tag; // sunucudan çıkan etiketini de bırakır
   delete s.roles?.[n]; delete s.memberRoles?.[n]; delete s.joinedAt?.[n]; delete s.accepted?.[n]; delete s.temp?.[n];
   if (s.applications?.[n]?.st !== 'ret') delete s.applications?.[n];
   if (s.bot?.autorole?.pending) delete s.bot.autorole.pending[n];
@@ -4241,7 +4260,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: seenBy(flagsState(), name), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: seenBy(voiceState(), name), voiceAge: seenBy(voiceAges(), name), calls: callsFor(name), live: seenBy(liveState(), name), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, arenaRooms: arenaRoomsFor(name), entrySound: db.users[name].entrySound || null, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
+      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, tagDefs: TAG.defs(), tagCan: TAG.canList(name), tagCfg: siteAdmin(name) ? TAG.cfg() : null, arenaRooms: arenaRoomsFor(name), entrySound: db.users[name].entrySound || null, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 
@@ -6863,6 +6882,42 @@ io.on('connection', socket => {
     cb({ list: all.slice(0, 50), me: mine, myRank: i >= 0 ? i + 1 : null, champs: [...arenaChampions()] });
   });
   socket.on('disconnect', () => { arenaSocks.delete(socket.id); });
+  // ----- Sunucu etiketi -----
+  socket.on('tagSet', (sid, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (limited('tagset|' + me, 15, 3600e3)) return cb({ error: 'Etiketini çok sık değiştirdin, biraz bekle' });
+    if (sid == null) { delete u.tag; save(); io.emit('users', allUsers()); return cb({ ok: true, tag: null }); }
+    const s = db.servers.find(x => x.id === sid); if (!TAG.canUse(me, s)) return cb({ error: 'Bu sunucunun etiketini takamazsın' });
+    u.tag = s.id; (db.tagStats ||= {})[s.id] = (db.tagStats[s.id] || 0) + 1; save(); io.emit('users', allUsers()); cb({ ok: true, tag: s.id });
+  });
+  socket.on('srvTagSave', ({ serverId, t, i, c, on } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const s = db.servers.find(x => x.id === serverId);
+    if (!me || !s || !(s.owner === me || can(s, me, 'manageServer') || (s.public && siteAdmin(me)))) return cb({ error: 'Yetkin yok' });
+    if (!TAG.allowedServer(s)) return cb({ error: 'Sunucu etiketi şimdilik test aşamasında, sadece Kanka HQ\'da açık' });
+    const txt = String(t ?? s.tag?.t ?? '').trim().toLocaleUpperCase('tr').replace(/\s+/g, '');
+    if (!/^[A-Z0-9ÇĞİÖŞÜ]{2,4}$/u.test(txt)) return cb({ error: 'Etiket 2-4 harf ya da rakam olmalı' });
+    BAD_RE.lastIndex = 0; const bad = BAD_RE.test(txt); BAD_RE.lastIndex = 0; if (bad) return cb({ error: 'Bu etiket uygun değil' });
+    if (s.id !== 's1' && TAG_RESERVED.includes(txt)) return cb({ error: 'Bu etiket Kanka\'ya ayrılmış' });
+    const icon = TAG_ICONS.includes(i) ? i : s.tag?.i || TAG_ICONS[0], col = TAG_COLORS.includes(c) ? c : s.tag?.c || TAG_COLORS[0];
+    const changed = !s.tag || s.tag.t !== txt || s.tag.i !== icon || s.tag.c !== col;
+    if (changed && s.tag?.at && Date.now() - s.tag.at < 864e5 && !siteAdmin(me)) return cb({ error: 'Etiketi günde bir kez değiştirebilirsin' });
+    s.tag = { t: txt, i: icon, c: col, on: on === undefined ? s.tag?.on ?? true : !!on, at: changed ? Date.now() : s.tag?.at || Date.now(), by: me };
+    audit(s, me, 'Sunucu etiketini değiştirdi', `${icon} ${txt}${s.tag.on ? '' : ' (kapalı)'}`);
+    save(); pushServers(membersOf(s)); TAG.push(); cb({ ok: true, tag: s.tag });
+  });
+  // Etikete tıklayınca açılan kart
+  socket.on('tagInfo', (sid, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const s = db.servers.find(x => x.id === sid), d = TAG.defOf(s); if (!d) return cb(null);
+    const users = Object.values(db.users).filter(u => TAG.of(u) === s.id);
+    cb({ ...d, id: s.id, uye: humans(s.members).length || Object.keys(db.users).length, takan: users.length, member: s.public || s.members.includes(me), canUse: TAG.canUse(me, s), mine: db.users[me]?.tag === s.id, public: !!s.public,
+      ...(siteAdmin(me) ? { tiklama: db.tagStats?.[s.id] || 0 } : {}) });
+  });
+  // Test ayarı (site yöneticisi): kimler takabilir
+  socket.on('tagCfgSet', ({ who } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; if (!siteAdmin(me)) return cb({ error: 'Yetkin yok' });
+    if (!['ekip', 'uye'].includes(who)) return cb({ error: 'Geçersiz' });
+    TAG.cfg().who = who; save(); TAG.push(); cb({ ok: true, cfg: TAG.cfg() });
+  });
   // ----- Ses paneli -----
   const sbServer = (serverId, cb) => { const s = db.servers.find(x => x.id === serverId); if (!me || !s || !s.members.includes(me)) { cb({ error: 'Sunucu bulunamadı' }); return null; } return s; };
   socket.on('sbAdd', ({ serverId, data, name, emoji, vol } = {}, cb = () => {}) => {
