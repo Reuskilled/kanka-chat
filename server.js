@@ -831,14 +831,16 @@ setInterval(() => { const now = Date.now(); for (const [k, v] of limits) if (!v.
 // ---------- TURN: farklı ağlardaki kişiler sesli odada birbirini duysun ----------
 const TURN_FILE = path.join(DATA_DIR, 'turn.json');
 let turnInfo = null;
-async function startTurn() {
+async function startTurn(attempt = 1) {
   if (process.env.TURN === 'off' || (process.platform !== 'win32' && process.env.TURN !== 'on')) return;
   try {
     const Turn = require('node-turn');
     let cfg = {}; try { cfg = JSON.parse(fs.readFileSync(TURN_FILE, 'utf8')); } catch {}
     if (!cfg.pass) { cfg = { user: 'kanka', pass: crypto.randomBytes(16).toString('hex') }; fs.writeFileSync(TURN_FILE, JSON.stringify(cfg)); }
     let ip = process.env.PUBLIC_IP;
-    if (!ip) { const r = await fetch('https://api.ipify.org', { signal: AbortSignal.timeout(8000) }); ip = (await r.text()).trim(); }
+    // Genel IP: bulunamazsa (açılışta internet geç gelebilir) son bilinen IP kullanılır
+    if (!ip) { try { const r = await fetch('https://api.ipify.org', { signal: AbortSignal.timeout(8000) }); ip = (await r.text()).trim(); } catch (e) { if (!cfg.ip) throw e; ip = cfg.ip; console.log('TURN: genel IP alınamadı, son bilinen kullanılıyor'); } }
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(ip) && cfg.ip !== ip) { cfg.ip = ip; try { fs.writeFileSync(TURN_FILE, JSON.stringify(cfg)); } catch {} }
     if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) throw new Error('Genel IP bulunamadı');
     if (process.platform === 'win32') { // güvenlik duvarında TURN portlarını aç (bir kez)
       const { execFileSync } = require('child_process');
@@ -858,7 +860,12 @@ async function startTurn() {
     server.start();
     turnInfo = { urls: [`turn:${ip}:3478?transport=udp`], username: cfg.user, credential: cfg.pass };
     console.log('TURN sunucusu çalışıyor:', ip + ':3478');
-  } catch (e) { console.error('TURN başlatılamadı:', e.message); }
+    if (attempt > 1) try { io.emit('ice', iceServers()); } catch {} // geç açıldıysa bağlı olanlara da bildir
+  } catch (e) {
+    console.error('TURN başlatılamadı:', e.message);
+    // farklı ağlardaki kişiler birbirini duyamaz; birkaç kez yeniden dene (bilgisayar yeni açıldıysa internet geç gelebilir)
+    if (attempt < 6) setTimeout(() => startTurn(attempt + 1), Math.min(300e3, 20e3 * attempt));
+  }
 }
 startTurn();
 const iceServers = () => [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }, ...(turnInfo ? [turnInfo] : [])];
