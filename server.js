@@ -5629,12 +5629,13 @@ io.on('connection', socket => {
     for (const code of codes.slice(0, 10)) {
       if (typeof code !== 'string' || code.length > 40) continue;
       if (blockedUntil('u:' + me) || blockedUntil('ip:' + ip) || limited('peek|' + me, 120, 600e3)) { out[code] = null; continue; }
-      const sv = db.servers.find(x => x.invite === code);
+      const vs = /^s:([a-z0-9-]{2,40})$/.exec(code); // özel link: kankahq.com/s/isim
+      const sv = vs ? db.servers.find(x => x.vanity === vs[1] && isStar(x)) : db.servers.find(x => x.invite === code);
       inviteGuard('u:' + me, !!sv); inviteGuard('ip:' + ip, !!sv);
       if (!sv || sv.bans?.[me]) { out[code] = null; continue; }
       const mem = membersOf(sv);
       out[code] = { id: sv.id, name: sv.name, icon: sv.icon, iconImg: sv.iconImg || null, banner: sv.banner || null, bannerColor: sv.bannerColor || null, badges: srvBadges(sv),
-        description: (sv.description || '').slice(0, 140), members: mem.length, online: mem.filter(n => on.has(n)).length, joined: !!sv.public || sv.members.includes(me) };
+        description: (sv.description || '').slice(0, 140), invite: sv.invite, members: mem.length, online: mem.filter(n => on.has(n)).length, joined: !!sv.public || sv.members.includes(me) };
     }
     cb(out);
   });
