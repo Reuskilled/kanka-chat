@@ -2312,6 +2312,8 @@ const STAT = (() => {
     me(n, k, v = 1) { if (!off(n)) add(n, k, v); },
     top(u, y, prefix, lim = 10) { if (!sdb) return []; flush(); _top ||= qTop(); return _top.all(y, u, prefix, prefix + '￿', lim).map(r => ({ k: r.k.slice(prefix.length), v: r.v })); },
     all(u, y) { if (!sdb) return {}; flush(); _all ||= qAll(); const o = {}; for (const r of _all.all(y, u)) o[r.k] = r.v; return o; },
+    // bu değerden fazlasına sahip olanların oranı (yüzde, küçük = daha iyi)
+    rankPct(y, k, v) { if (!sdb || !v) return null; flush(); const t = sdb.prepare("SELECT COUNT(*) n FROM sayac WHERE y = ? AND k = ? AND u NOT LIKE '#%'").get(y, k).n, a = sdb.prepare("SELECT COUNT(*) n FROM sayac WHERE y = ? AND k = ? AND v > ? AND u NOT LIKE '#%'").get(y, k, v).n; return t ? Math.max(1, Math.ceil((a + 1) / t * 100)) : null; },
     wipe(u) { if (!sdb) return; for (const k of [...pend.keys()]) if (k.startsWith(u + '\u0001')) pend.delete(k); try { sdb.prepare('DELETE FROM sayac WHERE u = ?').run(u); } catch {} },
     close() { try { flush(); sdb?.close(); } catch {} },
   };
@@ -6567,6 +6569,48 @@ io.on('connection', socket => {
     if (f && srvMuted.has(f.s.id + '|' + me)) socket.emit('srvMute', { on: true });
   }
   socket.on('voiceLeave', leaveVoice);
+  // ----- Kanka Wrapped (yıl özeti) -----
+  // Yıl sonunda (31 Aralık, Türkiye saati) herkese açılır; site yöneticileri "şimdiye kadar" önizlemesini her zaman görebilir.
+  socket.on('wrapped', ({ year, server } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (!STAT.on()) return cb({ error: 'Yıl özeti şu an hazırlanamıyor' });
+    if (limited('wr|' + me, 20, 60e3)) return cb({ error: 'Biraz bekle' });
+    const now = new Date(Date.now() + 3 * 3600e3), cy = now.getUTCFullYear(), y = Number.isInteger(year) ? year : cy;
+    const open = y < cy || (now.getUTCMonth() === 11 && now.getUTCDate() >= 31), preview = !open && siteAdmin(me);
+    if (y > cy || y < 2026 || (!open && !preview)) return cb({ error: `${y} özetin 31 Aralık'ta açılacak`, opensAt: `${y}-12-31` });
+    const A = STAT.all(server ? '#' + server : me, y), top = (pre, n = 5, f = x => x) => Object.entries(A).filter(([k]) => k.startsWith(pre)).map(([k, v]) => ({ k: k.slice(pre.length), v: Math.round(v) })).sort((a, b) => b.v - a.v).map(f).filter(Boolean).slice(0, n);
+    const chName = id => { const f = findChannel(id); return f ? { id, ad: f.c.name, sv: f.s.name } : null; };
+    const svName = id => { const s = db.servers.find(x => x.id === id); return s && s.members.includes(me) ? { id, ad: s.name, simge: s.icon || null, simgeImg: s.iconImg || null } : null; };
+    const hours = Array.from({ length: 24 }, (_, h) => Math.round(A[(server ? 'h:' : 'msgh:') + h] || 0));
+    const peak = hours.indexOf(Math.max(...hours)), totalH = hours.reduce((a, b) => a + b, 0), night = totalH ? Math.round(hours.slice(0, 5).reduce((a, b) => a + b, 0) / totalH * 100) : 0;
+    if (server) {
+      const s = db.servers.find(x => x.id === server); if (!s || !s.members.includes(me) || s.public) return cb({ error: 'Bu sunucunun özetini göremezsin' });
+      const mem = {}; for (const [k, v] of Object.entries(A)) { const m = /^(m|v):(.+)$/.exec(k); if (m && s.members.includes(m[2])) mem[m[2]] = (mem[m[2]] || 0) + (m[1] === 'm' ? v * 2 : v); }
+      return cb({ ok: true, year: y, preview, server: { id: s.id, ad: s.name, simge: s.icon || null, simgeImg: s.iconImg || null, uye: humans(s.members).length },
+        msg: Math.round(A.msg || 0), ses: Math.round((A.vs || 0) / 60), peak, hours,
+        uyeler: Object.entries(mem).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([n]) => n),
+        odalar: top('ch:', 3, x => { const c = chName(x.k); return c && { ...c, v: x.v }; }), sesOdalari: top('vch:', 3, x => { const c = chName(x.k); return c && { ...c, v: Math.round(x.v / 60) }; }),
+        emoji: top('em:', 5) });
+    }
+    const vsMin = A.vs || 0;
+    const kanka = {}; for (const [k, v] of Object.entries(A)) { const m = /^(vk|dm):(.+)$/.exec(k); if (m && db.users[m[2]] && !db.users[m[2]].bot) kanka[m[2]] = (kanka[m[2]] || 0) + (m[1] === 'vk' ? v : v * 3); }
+    const arena = top('ar:', 20).filter(x => x.k.endsWith(':o')).map(x => ({ oyun: x.k.slice(0, -2), oynadi: x.v, kazandi: Math.round(A['ar:' + x.k.slice(0, -2) + ':w'] || 0) }));
+    const pct = STAT.rankPct(y, 'vs', vsMin);
+    const d = { ok: true, year: y, preview, me: { ad: me, gorunen: u.displayName || me },
+      ses: Math.round(vsMin / 60 * 10) / 10, sesDk: Math.round(vsMin), sesYuzde: pct,
+      kankalar: Object.entries(kanka).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([n, v]) => ({ ad: n, dk: Math.round(A['vk:' + n] || 0), msg: Math.round(A['dm:' + n] || 0) })),
+      odalar: top('vch:', 3, x => { const c = chName(x.k); return c && { ...c, dk: x.v }; }),
+      sunucular: (() => { const m = {}; for (const [k, v] of Object.entries(A)) { const r = /^(vsv|msgsv):(.+)$/.exec(k); if (r) m[r[2]] = (m[r[2]] || 0) + (r[1] === 'vsv' ? v : v * 2); } return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([id]) => svName(id)).filter(Boolean).slice(0, 3); })(),
+      muzikDk: Math.round(A.mz || 0), sanatcilar: top('ma:', 5), sarkilar: top('ms:', 5, x => { const i = x.k.indexOf(' — '); return { sanatci: x.k.slice(0, i), ad: x.k.slice(i + 3), dk: x.v }; }),
+      oyunDk: Math.round(A.oy || 0), oyunlar: top('og:', 5), arena, arenaGalibiyet: arena.reduce((a, b) => a + b.kazandi, 0),
+      emoji: top('em:', 5), msg: Math.round(A.msg || 0), peak, hours, night, gun: Math.round(A.gun || 0), seri: u.streak?.best || 0 };
+    // Yılın kişiliği
+    const P = [[d.night >= 25 && d.msg >= 50, ['🦉', 'Gece Kuşu', 'Herkes uyurken sen sohbetin ortasındaydın']], [pct != null && pct <= 10 && vsMin >= 600, ['🎧', 'Ses Canavarı', 'Seste en çok kalanların arasındasın']],
+      [d.arenaGalibiyet >= 10, ['🏆', 'Arena Efsanesi', 'Arena\'da rakip tanımadın']], [d.muzikDk >= 1200 && d.muzikDk >= d.oyunDk, ['🎵', 'Kankaların DJ\'i', 'Müziksiz bir an bile geçirmedin']],
+      [d.oyunDk >= 1200, ['🎮', 'Oyun Kurdu', 'Bilgisayarın başından kalkmadın']], [d.msg >= 1000, ['💬', 'Geveze', 'Mesaj kutusu senden sorulur']], [d.kankalar.length >= 3, ['🤝', 'Sosyal Kelebek', 'Kankasız bir gün yok']], [true, ['🌱', 'Yeni Kanka', 'Bu daha başlangıç, seneye daha çok']]];
+    d.kisilik = P.find(([c]) => c)[1];
+    cb(d);
+  });
   // ----- Kanka Arena -----
   let arWatchCh = null;
   const arLeaveRoom = () => { const cur = arenaSocks.get(socket.id); if (cur) { socket.leave('ar:' + cur); arenaSocks.delete(socket.id); } };
