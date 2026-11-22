@@ -11215,7 +11215,13 @@ socket.on('arena', v => {
   if (v.state === 'play' && !v.rt && v.g?.turn === S.me && prev.g?.turn !== S.me) { playSound('mention'); buzz(15); }
   arRender();
 });
-socket.on('arT', d => { if (AR.lobby?.id === d.id) { AR.rt = d.g; AR.rtAt = performance.now(); } });
+socket.on('arT', d => {
+  if (AR.lobby?.id !== d.id) return; AR.rt = d.g; AR.rtAt = performance.now();
+  // gerçek zamanlı oyunlarda üstteki oyuncu kartlarındaki skor da güncellensin (saniyede en çok 2 kez)
+  const now = Date.now(); if (now - (AR.plAt || 0) < 500) return; AR.plAt = now;
+  const L = AR.lobby; L.g = d.g; const sc = arScores(L), box = $('#ar-pl'); if (!box) return;
+  box.querySelectorAll('.ar-p').forEach((el, i) => { const n = (L.ps || L.players)[i], sm = el.querySelector('small'); if (n && sm && sm.textContent !== (sc[n] || '')) sm.textContent = sc[n] || ''; });
+});
 socket.on('arenaGone', d => { if (AR.lobby?.id === d.id) { toast(d.why || 'Lobi kapandı'); AR.lobby = null; AR.view = 'hub'; arRender(); } });
 socket.on('arenaNote', d => toast(esc(d.text)));
 function arKey(e) {
@@ -11377,7 +11383,7 @@ function arLobbyWire(box) {
 function arScores(L) {
   const g = L.g || {}, o = {};
   for (const n of L.ps || []) o[n] = L.game === 'pisti' ? `${g.score?.[n] ?? 0} puan` : L.game === 'kart' ? `${g.counts?.[n] ?? 0} kart` : L.game === 'asmaca' ? `${g.scores?.[n] ?? 0} puan` : L.game === 'dart' ? `${g.score?.[n] ?? ''}`
-    : L.game === 'bilardo' ? (g.groups ? `${g.groups[n] === 'duz' ? 'Düz' : 'Çizgili'} · ${g.left?.[n]} kaldı` : 'Masa açık') : L.game === 'bilek' ? `${g.wins?.[n] ?? 0} tur` : L.game === 'hokey' ? '' : '';
+    : L.game === 'bilardo' ? (g.groups ? `${g.groups[n] === 'duz' ? 'Düz' : 'Çizgili'} · ${g.left?.[n]} kaldı` : 'Masa açık') : L.game === 'bilek' ? `${g.wins?.[n] ?? 0} tur` : L.game === 'hokey' ? `${g.sc?.[(L.ps || []).indexOf(n)] ?? 0} gol` : '';
   return o;
 }
 function arGameView(box) {
