@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&family=JetBrains+Mono:wght@700&family=Nunito:wght@400;600;700;800&family=Pacifico&family=Playfair+Display:ital,wght@0,700;1,700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
-<style>
+<style id="kcss">
   :root {
     --bg: #09090b; --panel: #111114; --card: #18181c; --hover: #222228; --line: #27272e;
     --ink: #f4f4f5; --muted: #a1a1aa;
@@ -4112,6 +4112,26 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   /* Konuşma halkası anında yanıp sönsün: her konuşma başlangıcında gölge geçişi (ana iş parçacığında çizilir) saniyede onlarca kez yeniden hesaplatıyordu */
   .vuser .av, .vuser, #dmcall .av { transition: none !important; } .tile { transition-property: none !important; }
   /* Yazılamayan oda (salt okunur / susturulmuş): ekle, GIF, emoji, mikrofon, gönder gizli; yerine tek satırlık kilit notu */
+  #secbar { display: flex; align-items: flex-start; gap: 10px; margin: 0 16px 8px; padding: 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 10%, var(--card)); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); font-size: 13.5px; line-height: 1.45; }
+  #secbar .sb-i .ic { width: 18px; height: 18px; color: var(--accent); margin-top: 1px; } #secbar .sb-t { flex: 1; min-width: 0; }
+  #secbar .sb-k { display: inline-flex; align-items: center; gap: 6px; margin-right: 10px; } #secbar .sb-k i { color: var(--muted); font-style: normal; }
+  #secbar button { padding: 3px 10px; border-radius: 8px; background: var(--accent); color: var(--on-accent, #000); font-weight: 800; font-size: 12px; }
+  .iv-new { padding: 14px 16px; border-radius: 16px; background: var(--bg); border: 1px solid var(--line); } .iv-new h4 { margin: 0 0 10px; }
+  .iv-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; } .iv-row label { flex: 1 1 180px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+  .iv-list { display: flex; flex-direction: column; gap: 8px; } .iv-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); }
+  .iv-item.main { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); } .iv-item.dead { opacity: .5; }
+  .iv-c { flex: 1; min-width: 0; display: flex; flex-direction: column; } .iv-c b { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .iv-c small { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .iv-item .btns2 { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; } .iv-item .btns2 .ic { width: 14px; height: 14px; }
+  .sec-lv { display: flex; flex-direction: column; gap: 6px; } .sec-opt { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; }
+  .sec-opt input { position: absolute; opacity: 0; pointer-events: none; } .sec-opt.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg)); }
+  .sec-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--muted); flex-shrink: 0; } .sec-opt.on .sec-dot { border-color: var(--accent); background: radial-gradient(var(--accent) 45%, transparent 50%); }
+  .sec-opt b { display: block; font-size: 14px; } .sec-opt small { color: var(--muted); font-size: 12.5px; }
+  .ap-card { padding: 14px; border-radius: 16px; background: var(--bg); border: 1px solid var(--line); margin-bottom: 10px; } .ap-h { display: flex; align-items: center; gap: 10px; } .ap-h small { display: block; color: var(--muted); font-size: 12px; }
+  .ap-qa { margin-top: 10px; } .ap-qa span { font-size: 12px; font-weight: 800; color: var(--muted); } .ap-qa p { margin: 2px 0 0; white-space: pre-wrap; word-break: break-word; }
+  .ap-acts { display: flex; gap: 8px; margin-top: 12px; }
+  .wl-q { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; text-align: left; } .wl-q span { font-weight: 700; font-size: 13.5px; }
+  .wl-pend { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 14px 0 6px; padding: 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 10%, transparent); text-align: center; }
+  .wl-pend .ic { width: 22px; height: 22px; color: var(--accent); } .wl-pend span { color: var(--muted); font-size: 13px; }
   #compose.locked { justify-content: center; align-items: center; } #compose.locked::before { align-self: center; }
   #compose.locked :is(#plus, #gif-btn, #emo-btn, #mic-btn, #send) { display: none !important; }
   #compose.locked::before { content: ''; flex: none; width: 16px; height: 16px; margin-left: 6px; background: var(--muted); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center / contain no-repeat; }
@@ -5525,17 +5545,40 @@ function loadDiscover() {
 
 // ================= Hoş geldin ekranı =================
 const welcomeShown = new Set();
+// Sunucunun güvenlik şartları sağlanmadıysa yazma kutusunun üstünde ne eksik ve nasıl tamamlanır
+function renderSecBar(s, sec, pend) {
+  $('#secbar')?.remove(); clearTimeout(renderSecBar.t);
+  if (!sec?.length && !pend) return;
+  const el = document.createElement('div'); el.id = 'secbar';
+  const left = t => { const m = Math.ceil((t - Date.now()) / 60e3); return m < 60 ? `${m} dk` : m < 1440 ? `${Math.ceil(m / 60)} saat` : `${Math.ceil(m / 1440)} gün`; };
+  el.innerHTML = pend ? `<span class="sb-i">${ic('clock')}</span><span class="sb-t"><b>Başvurun inceleniyor.</b> Bir yetkili onaylayınca yazabileceksin.</span>`
+    : `<span class="sb-i">${ic('lock')}</span><span class="sb-t"><b>Bu sunucuda yazmak için:</b> ${sec.map(x => `<span class="sb-k">${esc(x.t)}${x.until ? ` <i>(${left(x.until)})</i>` : ''}${x.k === 'email' ? ' <button type="button" data-sb="email">E-posta ekle</button>' : x.k === 'tfa' ? ' <button type="button" data-sb="tfa">Aç</button>' : ''}</span>`).join('')}</span>`;
+  $('#compose').before(el);
+  el.querySelectorAll('[data-sb]').forEach(b => b.onclick = () => showSettings('account'));
+  const next = Math.min(...sec.filter(x => x.until).map(x => x.until));
+  if (isFinite(next)) renderSecBar.t = setTimeout(() => { if (S.view === 'server' && S.server?.id === s.id && S.channel && !voiceLike(S.channel.type)) selectServer(s.id, S.channel.id); }, Math.max(5e3, Math.min(next - Date.now() + 1500, 2 ** 31 - 1)));
+}
 function showWelcome(s, force) {
   const w = s?.welcome; if (!w?.enabled) return;
   welcomeShown.add(s.id);
-  const needs = !s.accepted;
+  const needs = !s.accepted, pend = needs && s.apply === 'bekliyor', qs = needs && !pend ? (s.gate?.questions || []).filter(Boolean) : [];
   modal(`${srvArt(s, 'wl-b')}${srvIco(s, 'wl-i')}<div class="wl-body"><h2>${badgeRow(s, 22)}${esc(s.name)}</h2><p>${esc(w.message || `${s.name} sunucusuna hoş geldin!`)}</p>
     ${(w.channels || []).length ? `<div class="wl-sec"><h4>BURADAN BAŞLA</h4>${w.channels.map(c => { const ch = s.channels.find(x => x.id === c.id); return ch ? `<button class="wl-ch" data-wch="${ch.id}">${roomIcon(ch)}<span>${esc(ch.name)}<small>${esc(c.desc || '')}</small></span></button>` : ''; }).join('')}</div>` : ''}
     ${(w.rules || []).length ? `<div class="wl-sec"><h4>SUNUCU KURALLARI</h4><ol class="wl-rules">${w.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ol></div>` : ''}
-    ${needs ? `${(w.rules || []).length ? `<label class="chk" style="justify-content:center;margin-top:10px"><input type="checkbox" id="wl-chk"><span>Kuralları okudum ve kabul ediyorum</span></label>` : ''}<button class="primary wl-ok" id="wl-ok" ${(w.rules || []).length ? 'disabled' : ''}>Sunucuya gir</button>` : `<button class="primary wl-ok" id="mx">Kapat</button>`}
+    ${qs.length ? `<div class="wl-sec"><h4>KATILIM SORULARI</h4>${qs.map((q, i) => `<label class="wl-q"><span>${esc(q)}</span><input class="field" data-wq="${i}" maxlength="300" autocomplete="off"></label>`).join('')}</div>` : ''}
+    ${pend ? `<div class="wl-pend">${ic('clock')}<b>Başvurun inceleniyor</b><span>Bir yetkili onaylayınca sana haber vereceğiz. O zamana kadar okuyabilirsin ama yazamazsın.</span></div><button class="primary wl-ok" id="mx">Tamam</button>`
+      : needs ? `${s.gate?.approval ? '<p class="hint" style="text-align:center;margin:10px 0 0">Bu sunucuya katılım yetkililerin onayıyla oluyor.</p>' : ''}${(w.rules || []).length ? `<label class="chk" style="justify-content:center;margin-top:10px"><input type="checkbox" id="wl-chk"><span>Kuralları okudum ve kabul ediyorum</span></label>` : ''}<button class="primary wl-ok" id="wl-ok" ${(w.rules || []).length ? 'disabled' : ''}>${s.gate?.approval ? 'Başvuruyu gönder' : 'Sunucuya gir'}</button>` : `<button class="primary wl-ok" id="mx">Kapat</button>`}
     </div>`, 'welcome');
   if ($('#mx')) $('#mx').onclick = closeModal;
-  const go = after => socket.emit('acceptRules', s.id, r => { if (r.error) return toast(r.error); s.accepted = true; closeModal(); toast(`Hoş geldin! Artık ${s.name} sunucusunda yazabilirsin.`); after?.(); });
+  const go = after => {
+    const answers = [...$('#modal-box').querySelectorAll('[data-wq]')].map(x => x.value.trim());
+    if (answers.some(a => !a)) { toast('Önce soruları cevapla'); $('#modal-box').querySelector('[data-wq]:placeholder-shown, [data-wq]')?.focus(); return; }
+    socket.emit('acceptRules', { serverId: s.id, answers }, r => {
+      if (r.error) return toast(r.error);
+      if (r.pending) { s.apply = 'bekliyor'; closeModal(); toast('📝 Başvurun gönderildi. Onaylanınca haber vereceğiz.'); return; }
+      s.accepted = true; closeModal(); toast(`Hoş geldin! Artık ${s.name} sunucusunda yazabilirsin.`); after?.();
+    });
+  };
   if ($('#wl-chk')) $('#wl-chk').onchange = e => $('#wl-ok').disabled = !e.target.checked;
   if ($('#wl-ok')) $('#wl-ok').onclick = () => go();
   $('#modal-box').querySelectorAll('[data-wch]').forEach(b => b.onclick = () => {
@@ -6337,7 +6380,7 @@ function showServerSettings(s, tab, focus) {
   s = S.servers.find(x => x.id === s.id) || s;
   const P = p => perm(s, p), mod = isMod(s, S.me);
   const tabs = [['general', 'Genel', 'gear', P('manageServer')], ['roles', 'Roller', 'tag', P('manageRoles')], ['channels', 'Odalar', 'hash', mod], ['members', 'Üyeler', 'users', !s.public && (P('manageRoles') || P('kick') || P('ban') || P('timeout'))],
-    ['bot', 'Kanka Bot', 'shield', P('manageServer')], ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
+    ['bot', 'Kanka Bot', 'shield', P('manageServer')], ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['invites', 'Davetler', 'link', !s.public && P('manageServer')], ['security', 'Katılım güvenliği', 'lock', !s.public && P('manageServer')], ['apps', `Başvurular${s.appsWaiting ? ` · ${s.appsWaiting}` : ''}`, 'users', !s.public && mod && (!!s.gate?.approval || s.appsWaiting > 0)], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
     ['template', 'Şablon', 'file', s.owner === S.me && P('manageServer')],
     ['badges', 'Rozetler', 'check', s.owner === S.me && !s.public && s.id !== 's1'],
     ['levels', 'Seviyeler', 'trophy', !s.public && P('manageServer')],
@@ -6720,6 +6763,64 @@ function showServerSettings(s, tab, focus) {
       main.querySelectorAll('[data-kick]').forEach(b => b.onclick = () => confirmBox(`${b.dataset.kick} sunucudan atılsın mı?`, () => socket.emit('kick', { serverId: s.id, name: b.dataset.kick }, r => { if (r.error) return toast(r.error); toast('Atıldı'); showServerSettings(s, 'members'); })));
       main.querySelectorAll('[data-ban]').forEach(b => b.onclick = () => askBan(s, b.dataset.ban, () => showServerSettings(s, 'members')));
     },
+    invites: () => {
+      const EXP = [[1800, '30 dakika'], [3600, '1 saat'], [21600, '6 saat'], [43200, '12 saat'], [86400, '1 gün'], [604800, '7 gün'], [0, 'Süresiz']];
+      const MAX = [[0, 'Sınırsız'], [1, '1 kişi'], [5, '5 kişi'], [10, '10 kişi'], [25, '25 kişi'], [50, '50 kişi'], [100, '100 kişi']];
+      const link = c => `${PUB}/davet/${c}`, left = t => { const m = Math.round((t - Date.now()) / 60e3); return m <= 0 ? 'süresi doldu' : m < 60 ? `${m} dk kaldı` : m < 1440 ? `${Math.round(m / 60)} saat kaldı` : `${Math.round(m / 1440)} gün kaldı`; };
+      main.innerHTML = `<div class="st-page"><h3>Davetler</h3><p class="hint">Ana link hep çalışır. Belirli bir süre ya da kişi sayısı için ayrı linkler oluşturabilir, istediğini tek tek iptal edebilirsin.</p><div id="iv-body"><p class="hint">Yükleniyor…</p></div></div>`;
+      socket.emit('invList', s.id, r => {
+        if (!$('#iv-body')) return; if (r.error) { $('#iv-body').innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
+        $('#iv-body').innerHTML = `<div class="iv-new"><h4>Yeni davet linki</h4>
+            <div class="iv-row"><label>Geçerlilik süresi<select class="field" id="iv-exp">${EXP.map(([v, t]) => `<option value="${v}" ${v === 86400 ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+            <label>Kullanım sınırı<select class="field" id="iv-max">${MAX.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></label></div>
+            <label class="switch">Geçici üyelik <small class="hint" style="display:block;margin:2px 0 0">Bu linkle gelen kişi, rol verilmezse bağlantısı kopunca sunucudan çıkar</small><input type="checkbox" id="iv-temp"></label>
+            <button class="primary" id="iv-make" style="width:auto;padding:10px 20px;margin-top:10px">${ic('plus')} Link oluştur</button></div>
+          <h4 style="margin-top:22px">Linkler</h4>
+          <div class="iv-list">
+            <div class="iv-item main"><div class="iv-c"><b>${esc(link(r.main.code))}</b><small>Ana link · süresiz · ${r.main.uses} kişi bununla katıldı</small></div><button class="btns2" data-cp="${esc(r.main.code)}">${ic('copy')}Kopyala</button></div>
+            ${r.list.map(i => `<div class="iv-item ${i.ok ? '' : 'dead'}"><div class="iv-c"><b>${esc(link(i.code))}</b><small>${[i.ok ? (i.exp ? left(i.exp) : 'süresiz') : 'geçersiz', i.max ? `${i.uses}/${i.max} kullanıldı` : `${i.uses} kişi katıldı`, i.temp ? 'geçici üyelik' : '', `${esc(i.by)} oluşturdu`].filter(Boolean).join(' · ')}</small></div>
+              ${i.ok ? `<button class="btns2" data-cp="${esc(i.code)}">${ic('copy')}Kopyala</button><button class="btns2 danger-t" data-rv="${esc(i.code)}">İptal et</button>` : ''}</div>`).join('') || ''}
+          </div>${r.list.length ? '' : '<p class="hint">Henüz ek link yok.</p>'}`;
+        $('#iv-make').onclick = () => socket.emit('invCreate', { serverId: s.id, exp: +$('#iv-exp').value, max: +$('#iv-max').value, temp: $('#iv-temp').checked }, x => {
+          if (x.error) return toast(x.error); navigator.clipboard?.writeText(link(x.inv.code)).catch(() => {}); toast('Link oluşturuldu ve kopyalandı'); again(); });
+        main.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(link(b.dataset.cp)).then(() => toast('Link kopyalandı')));
+        main.querySelectorAll('[data-rv]').forEach(b => b.onclick = () => confirmBox('Bu davet linki iptal edilsin mi? Linke tıklayanlar artık katılamaz.', () => socket.emit('invRevoke', { serverId: s.id, code: b.dataset.rv }, done('Link iptal edildi'))));
+      });
+    },
+    security: () => {
+      const LV = [['Yok', 'Herkes yazabilir.'], ['Düşük', 'Hesabına e-posta eklemiş olmalı.'], ['Orta', 'E-posta + hesap en az 1 günlük olmalı.'], ['Yüksek', 'E-posta + hesap en az 7 günlük + sunucuda 10 dakika beklemiş olmalı.'], ['En yüksek', 'Yüksek seviye + iki adımlı doğrulama açık olmalı.']];
+      const g = s.gate || {}, qs = [...(g.questions || [])]; let lv = s.secLevel || 0;
+      const draw = () => {
+        main.innerHTML = `<div class="st-page"><h3>Katılım güvenliği</h3><p class="hint">Yeni gelenler üç aşamadan geçer: <b>davet linki</b> (Davetler sayfası), <b>hesap şartları</b> ve <b>sunucu kapısı</b> (kurallar, sorular, onay). Rolü olan üyeler ve yetkililer hesap şartlarından muaftır.</p>
+          <h4>Hesap şartları</h4><div class="sec-lv">${LV.map(([t, d], i) => `<label class="sec-opt ${i === lv ? 'on' : ''}"><input type="radio" name="sec-lv" value="${i}" ${i === lv ? 'checked' : ''}><span class="sec-dot"></span><span><b>${t}</b><small>${d}</small></span></label>`).join('')}</div>
+          <p class="hint">Şartları sağlamayan kişi sunucuya girer, okuyabilir ama yazamaz ve sese giremez; ekranında neyin eksik olduğu yazar.</p>
+          <h4 style="margin-top:22px">Sunucu kapısı</h4>
+          <div class="st-field"><label>Katılım soruları (${qs.length}/3)</label>${qs.map((q, i) => `<div class="rule-ed"><input class="field" data-qi="${i}" maxlength="150" value="${esc(q)}" placeholder="Örn. Bizi nereden buldun?"><button type="button" data-qd="${i}" aria-label="Soruyu sil">${ic('x')}</button></div>`).join('')}
+            ${qs.length < 3 ? `<button class="lrow" id="sec-addq" style="margin:0">${ic('plus')}Soru ekle</button>` : ''}<p class="hint" style="margin-top:6px">Sorular hoş geldin ekranında, kuralların altında sorulur. Cevaplar Başvurular sayfasında görünür.</p></div>
+          <div class="st-field"><label class="switch">Onaylı katılım <small class="hint" style="display:block;margin:2px 0 0">Yeni gelen, bir yetkili onaylayana kadar yazamaz. Başvurular sayfasından onaylar ya da reddedersin.</small><input type="checkbox" id="sec-appr" ${g.approval ? 'checked' : ''}></label></div>
+          ${(qs.length || g.approval) && !s.welcome?.enabled ? '<p class="hint">Kaydedince hoş geldin ekranı da açılır (sorular ve onay orada gösterilir).</p>' : ''}
+          <div class="st-field"><button class="primary" id="sec-save" style="width:auto;padding:11px 22px">Kaydet</button></div></div>`;
+        const sync = () => { main.querySelectorAll('[data-qi]').forEach(x => qs[+x.dataset.qi] = x.value); };
+        main.querySelectorAll('[name="sec-lv"]').forEach(r => r.onchange = () => { sync(); lv = +r.value; draw(); });
+        if ($('#sec-addq')) $('#sec-addq').onclick = () => { sync(); qs.push(''); draw(); main.querySelector(`[data-qi="${qs.length - 1}"]`)?.focus(); };
+        main.querySelectorAll('[data-qd]').forEach(b => b.onclick = () => { sync(); qs.splice(+b.dataset.qd, 1); draw(); });
+        $('#sec-save').onclick = () => { sync(); socket.emit('secSave', { serverId: s.id, level: lv, questions: qs, approval: $('#sec-appr').checked }, done('Katılım güvenliği kaydedildi')); };
+      };
+      draw();
+    },
+    apps: () => {
+      main.innerHTML = `<div class="st-page"><h3>Başvurular</h3><p class="hint">Onaylı katılım açıkken yeni gelenler burada bekler. Onaylanan kişi yazmaya başlar, reddedilen sunucudan çıkarılır.</p><div id="ap-body"><p class="hint">Yükleniyor…</p></div></div>`;
+      socket.emit('joinApps', s.id, r => {
+        if (!$('#ap-body')) return; if (r.error) { $('#ap-body').innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
+        const age = t => { if (!t) return 'bilinmiyor'; const d = Math.floor((Date.now() - t) / 864e5); return d < 1 ? 'bugün açılmış' : `${d} günlük hesap`; };
+        $('#ap-body').innerHTML = r.list.length ? r.list.map(a => `<div class="ap-card"><div class="ap-h">${av(a.name)}<div><b>${esc(dn(a.name))}</b><small>@${esc(a.name)} · ${age(a.createdAt)}${a.email ? ' · e-posta var' : ''}${a.tfa ? ' · 2FA açık' : ''} · ${new Date(a.at).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></div></div>
+            ${(a.q || []).map((q, i) => `<div class="ap-qa"><span>${esc(q)}</span><p>${esc(a.a?.[i] || '')}</p></div>`).join('')}
+            <div class="ap-acts"><button class="primary" data-ok="${esc(a.name)}" style="width:auto;padding:9px 18px">${ic('check')} Onayla</button><button class="btns2 danger-t" data-no="${esc(a.name)}">Reddet</button></div></div>`).join('')
+          : `<div class="pf-empty">${ic('check')}<b>Bekleyen başvuru yok</b><span>Yeni biri başvurunca burada görünür ve sana bildirim gelir.</span></div>`;
+        main.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => socket.emit('joinDecide', { serverId: s.id, name: b.dataset.ok, ok: true }, done('Onaylandı')));
+        main.querySelectorAll('[data-no]').forEach(b => b.onclick = () => { const note = prompt('Reddetme sebebi (isteğe bağlı, kişiye gösterilir):', ''); if (note === null) return; socket.emit('joinDecide', { serverId: s.id, name: b.dataset.no, ok: false, note }, done('Reddedildi')); });
+      });
+    },
     welcome: () => {
       const w = s.welcome || { enabled: false, message: '', rules: [], channels: [] }, txt = s.channels.filter(c => !voiceLike(c.type));
       const draft = { rules: [...(w.rules || [])], channels: (w.channels || []).map(c => ({ ...c })) };
@@ -6946,7 +7047,9 @@ function selectChannel(id) {
   $('#follow-btn')?.remove();
   if (S.channel.news) { const fb = document.createElement('button'); fb.id = 'follow-btn'; fb.className = 'followb'; fb.innerHTML = `${ic('megaphone')}<span>Takip et</span>`; fb.onclick = () => showFollow(S.server, S.channel); $('#head-actions').prepend(fb); }
   const ro = S.channel.readonly && !perm(S.server, 'manageMessages'), to = timedOutLeft(S.server, S.me);
-  enterRoom(id, to ? `Susturuldun · ${Math.ceil(to / 60000)} dakika sonra yazabilirsin` : ro ? 'Bu oda salt okunur. Sadece yetkililer yazabilir.' : `${S.channel.name} odasına bir şeyler yaz... (@ ile etiketle)`,
+  const sec = (S.server.sec || []).filter(x => !x.until || x.until > Date.now()), pend = S.server.apply === 'bekliyor' && !S.server.accepted;
+  renderSecBar(S.server, sec, pend);
+  enterRoom(id, to ? `Susturuldun · ${Math.ceil(to / 60000)} dakika sonra yazabilirsin` : pend ? 'Başvurun onay bekliyor: onaylanınca yazabilirsin' : sec.length ? `Güvenlik: ${sec[0].t}` : ro ? 'Bu oda salt okunur. Sadece yetkililer yazabilir.' : `${S.channel.name} odasına bir şeyler yaz... (@ ile etiketle)`,
     `<div class="hello"><div class="big">${roomIcon(S.channel)}</div><b>${esc(S.channel.name)} odasına hoş geldin!</b>${S.channel.topic ? esc(S.channel.topic) : voiceLike(S.channel.type) ? 'Seste konuşurken link, resim ve notları burada paylaşın. Sesten çıkınca da yazılanlar burada kalır.' : 'İlk mesajı sen at, ortam ısınsın.'}</div>`);
   renderSide(); renderChanExtras();
 }
@@ -7576,6 +7679,8 @@ const drafts = {};
 let draftFor = null, joinSeq = 0, joinTimer = null;
 const lastCh = JSON.parse(store.get('kanka-lastch') || '{}');
 function enterRoom(id, placeholder, hello, isRetry) {
+  if (!isRetry && draftFor !== id && draftFor && navReload()) return;
+  if (S.view !== 'server') { $('#secbar')?.remove(); clearTimeout(renderSecBar.t); }
   const seq = ++joinSeq;
   clearTimeout(joinTimer);
   if (draftFor !== id) { forumPostId = null; forumNewOpen = false; forumMenuOpen = false; forumRulesOpen = false; forumQ = ''; forumDraftTitle = ''; forumDraftBody = ''; forumReplyDraft = ''; }
@@ -7590,7 +7695,7 @@ function enterRoom(id, placeholder, hello, isRetry) {
   helloHTML = hello; if (!soft) cancelReply();
   $('#compose').style.display = 'flex';
   $('#input').dataset.ph = placeholder; $('#input').placeholder = shortPh(placeholder);
-  $('#input').disabled = /^(Susturuldun|Bu oda salt okunur)/.test(placeholder);
+  $('#input').disabled = /^(Susturuldun|Bu oda salt okunur|Güvenlik:|Başvurun onay)/.test(placeholder);
   $('#compose').classList.toggle('locked', $('#input').disabled); // yazılamayan oda: düğmeler gizlenir, tek satır kilit notu
   typers.clear(); renderTyping();
   $('#e2e-bar')?.remove(); setTimeout(() => E2E.enter(id), 0); // şifreli sohbet: kilit simgesi, anahtar ve eski mesajların şifrelenmesi
@@ -9746,6 +9851,7 @@ socket.on('ticketClosed', ({ channelId, goCh }) => {
   first ? selectChannel(first.id) : showFriends();
 });
 socket.on('servers', list => {
+  const gateSig = x => x ? JSON.stringify([x.accepted, x.apply, (x.sec || []).map(y => y.k)]) : '', prevGate = S.view === 'server' ? gateSig(S.server) : '';
   S.servers = list;
   // Bulunduğun ses odası artık yoksa (silindi / erişim kalktı) bağlantıyı kapat
   if (myVoice && !String(myVoice).startsWith('call:') && !list.some(s => s.channels.some(c => c.id === myVoice))) { leaveVoice(false); toast('Bulunduğun ses odası artık yok'); }
@@ -9761,6 +9867,8 @@ socket.on('servers', list => {
       S.channel = updCh;
       renderRail(); renderMembers(); renderSide(); renderChanExtras();
       if (typeChanged) renderMessages();
+      // onay geldi / güvenlik şartı tamamlandı: yazma kutusu kilidini güncelle (mesajlar yeniden yüklenmez)
+      if (gateSig(S.server) !== prevGate && !voiceLike(S.channel.type)) { softUntil = Date.now() + 3000; selectChannel(S.channel.id); }
     } else if (S.channel) {
       const next = S.server.channels.find(c => !voiceLike(c.type)) || S.server.channels[0];
       if (next) selectChannel(next.id);
@@ -11682,7 +11790,28 @@ setInterval(async () => {
   }
   if (Date.now() - pendingAt > 45 * 60e3) showUpdate('web', true);
 }, 5000);
-socket.on('build', b => { if (!b) return; if (myBuild === null) myBuild = b; else if (b !== myBuild) { if (!pendingBuild) pendingAt = Date.now(); pendingBuild = b; } });
+// Sunucu sürümü iki parça bildirir: görünüm (css) ve kod (js). Sadece görünüm değiştiyse stiller yerinde değişir, kimse fark etmez.
+let myParts = null, cssBusy = false;
+async function swapCss(want) {
+  if (cssBusy) return; cssBusy = true;
+  try {
+    const t = await (await fetch(APP_PATH, { cache: 'no-store' })).text(), m = t.match(/<style[^>]*>([\s\S]*?)<\/style>/), el = $('#kcss');
+    if (m && el) { el.textContent = m[1]; myParts.css = want; }
+  } catch {} finally { cssBusy = false; }
+}
+socket.on('buildParts', p => {
+  if (!p?.b) return;
+  if (!myParts) { myParts = { ...p }; myBuild = p.b; return; }
+  if (p.css !== myParts.css) swapCss(p.css);
+  if (p.js !== myParts.js) { if (!pendingBuild) pendingAt = Date.now(); pendingBuild = p.b; }
+});
+socket.on('build', b => { if (!b || myParts) return; if (myBuild === null) myBuild = b; else if (b !== myBuild) { if (!pendingBuild) pendingAt = Date.now(); pendingBuild = b; } });
+// Kod güncellemesi bekliyorsa: sohbet/sunucu değiştirirken (ekran zaten değişiyor) geçişi yenileyerek yap
+function navReload() {
+  if (!pendingBuild || updKind || myVoice || vcResume || !authed) return false;
+  if ($('#input')?.value.trim() || Object.values(drafts).some(v => v && v.trim()) || document.querySelector('#attach:not([hidden])')) return false;
+  saveView(); location.reload(); return true;
+}
 window.kankaDesktop?.onUpdateReady?.(() => showUpdate('app'));
 
 // ================= Sesler =================

@@ -122,10 +122,35 @@ function inviteGuard(key, valid) {
 }
 const blockedUntil = key => { const b = limits.get('invblock|' + key)?.[0]; return b && b > Date.now() ? b : 0; };
 const newInviteCode = () => { const A = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; const b = crypto.randomBytes(12); for (const x of b) c += A[x % A.length]; return c.slice(0, 10); };
+// ---------- Davet linkleri: ana link (kalıcı) + süreli / kullanım sınırlı / geçici üyelik linkleri ----------
+const invValid = i => !!i && !i.revoked && (!i.exp || i.exp > Date.now()) && (!i.max || (i.uses || 0) < i.max);
+function findInvite(code) {
+  if (!code || typeof code !== 'string') return null;
+  for (const s of db.servers) {
+    if (s.invite === code) return { s, inv: null };
+    const inv = s.invites?.find(i => i.code === code); if (inv) return invValid(inv) ? { s, inv } : null;
+  }
+  return null;
+}
+const invOut = i => ({ code: i.code, by: i.by, at: i.at, exp: i.exp || null, max: i.max || 0, uses: i.uses || 0, temp: !!i.temp, ok: invValid(i) });
+// ---------- Güvenlik seviyesi: sunucuda yazmak / sese girmek için hesap şartları ----------
+const SEC_LEVELS = ['Yok', 'Düşük', 'Orta', 'Yüksek', 'En yüksek'];
+function secMissing(s, n) {
+  const L = s?.secLevel || 0, u = db.users[n]; if (!L || !u || u.bot || s.owner === n || s.public) return [];
+  if ((s.memberRoles?.[n] || []).length || isMod(s, n)) return []; // rolü olan (yetkililerin onayladığı) kişiler muaf
+  const miss = [], now = Date.now(), age = now - (u.createdAt || 0), inSrv = now - (s.joinedAt?.[n] || 0);
+  if (L >= 1 && !u.email) miss.push({ k: 'email', t: 'Hesabına e-posta ekle' });
+  if (L >= 2 && L < 3 && age < 864e5) miss.push({ k: 'age', t: 'Hesabın en az 1 günlük olmalı', until: (u.createdAt || 0) + 864e5 });
+  if (L >= 3 && age < 7 * 864e5) miss.push({ k: 'age', t: 'Hesabın en az 7 günlük olmalı', until: (u.createdAt || 0) + 7 * 864e5 });
+  if (L >= 3 && inSrv < 10 * 60e3) miss.push({ k: 'wait', t: 'Sunucuda 10 dakika beklemelisin', until: (s.joinedAt?.[n] || 0) + 10 * 60e3 });
+  if (L >= 4 && !u.tfa?.on) miss.push({ k: 'tfa', t: 'İki adımlı doğrulamayı aç' });
+  return miss;
+}
+const secBlock = (s, n) => { const m = secMissing(s, n); return m.length ? `Bu sunucunun güvenlik seviyesi için: ${m.map(x => x.t.toLocaleLowerCase('tr')).join(', ')}` : null; };
 app.get('/api/davet/:code', (req, res) => {
   const ipk = 'ip:' + reqIp(req);
   if (blockedUntil(ipk) || limited('davetapi|' + ipk, 40, 600e3)) return res.status(429).json({ error: 'Çok fazla deneme, biraz sonra tekrar dene' });
-  const s = db.servers.find(x => x.invite === req.params.code);
+  const s = findInvite(req.params.code)?.s;
   inviteGuard(ipk, !!s);
   if (!s) return res.status(404).json({ error: 'Davet geçersiz ya da süresi dolmuş' });
   const mem = membersOf(s), on = new Set(onlineNames());
@@ -1538,7 +1563,9 @@ const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s
   tplUndo: viewer && s.owner === viewer && s.tplUndo && Date.now() - s.tplUndo.t < TPL_UNDO_MS ? { t: s.tplUndo.t, channels: s.tplUndo.added.channels.length, categories: s.tplUndo.added.categories.length, roles: s.tplUndo.added.roles.length } : null,
   bot: viewer && can(s, viewer, 'manageServer') ? botCfg(s) : { added: !!s.bot?.added, mod: { on: botOn(s, 'mod') }, welcome: { on: botOn(s, 'welcome') }, ticket: { on: botOn(s, 'ticket'), askReason: s.bot?.ticket?.askReason !== false } },
   myTicketStaff: viewer ? isTicketStaff(s, viewer) : false, appCmds: cmdsFor(s, viewer),
-  welcome: s.welcome || null, accepted: !s.welcome?.enabled || !!s.accepted?.[viewer] || s.owner === viewer
+  welcome: s.welcome || null, accepted: !s.welcome?.enabled || !!s.accepted?.[viewer] || s.owner === viewer,
+  secLevel: s.secLevel || 0, sec: viewer ? secMissing(s, viewer) : [], gate: s.gate || null, apply: viewer ? s.applications?.[viewer]?.st || null : null,
+  appsWaiting: viewer && isMod(s, viewer) ? Object.values(s.applications || {}).filter(a => a.st === 'bekliyor').length : 0, temp: !!s.temp?.[viewer]
 });
 const findChannel = chId => {
   for (const s of db.servers) { const c = s.channels.find(c => c.id === chId); if (c) return { s, c }; }
@@ -2315,7 +2342,8 @@ function postGate(me, chId, text) {
     if (db.users[other]?.blocked?.includes(me)) return 'Bu kişi sana mesaj alımını kapattı';
   }
   const f = isPrivateChat(chId) ? null : findChannel(chId); if (!f) return null;
-  if (f.s.welcome?.enabled && f.s.owner !== me && !f.s.accepted?.[me]) return 'Önce sunucu kurallarını kabul etmelisin';
+  if (f.s.welcome?.enabled && f.s.owner !== me && !f.s.accepted?.[me]) return f.s.applications?.[me]?.st === 'bekliyor' ? 'Katılım başvurun yetkililerin onayını bekliyor' : 'Önce sunucu kurallarını kabul etmelisin';
+  { const sb = secBlock(f.s, me); if (sb) return sb; }
   if (timedOut(f.s, me)) return 'Susturuldun';
   if (!chPerm(f.s, f.c, me, 'send')) return 'Bu odaya yazma iznin yok';
   if (/@(everyone|herkes)\b/i.test(text || '') && !chPerm(f.s, f.c, me, 'mention')) return '@herkes etiketleme iznin yok';
@@ -2454,7 +2482,7 @@ function betaGate(code, invite) {
   const c = code && normCode(code);
   if (c && codeFree(c)) return { ok: true, code: c };
   if (c) return { error: db.codes[c] ? 'Bu davet kodu daha önce kullanılmış.' : 'Davet kodu geçersiz. Büyük harflerle tekrar dene.' };
-  if (invite && db.servers.some(s => s.invite === invite && !s.public)) return { ok: true, via: 'invite' };
+  if (invite && (f => f && !f.s.public)(findInvite(invite))) return { ok: true, via: 'invite' };
   return { error: 'Kanka şu an kapalı betada. Kayıt için davet kodu gerekli.', needCode: true };
 }
 function myCodes(name) {
@@ -2741,9 +2769,13 @@ let build = '';
 // böylece sadece uygulamanın kendisi değişince "yenile" uyarısı çıkar (karşılama sayfası vb. değişince çıkmaz)
 const readBuild = () => { try { return crypto.createHash('sha1').update(fs.readFileSync(INDEX)).digest('hex').slice(0, 12); } catch { return ''; } };
 build = readBuild();
+// Görünüm (stil) ve kod ayrı özetlenir: sadece stil değiştiyse açık sayfalar yenilenmeden yeni görünümü alır
+const sh = x => crypto.createHash('sha1').update(x).digest('hex').slice(0, 12);
+const readParts = () => { try { const t = fs.readFileSync(INDEX, 'utf8'), m = t.match(/<style[^>]*>([\s\S]*?)<\/style>/); return { b: sh(t), css: sh(m ? m[1] : ''), js: sh(m ? t.replace(m[0], '') : t) }; } catch { return null; } };
+let buildParts = readParts();
 let buildTimer = null;
 try {
-  fs.watch(path.dirname(INDEX), (ev, file) => { if (file && file !== 'index.html') return; clearTimeout(buildTimer); buildTimer = setTimeout(() => { const b = readBuild(); if (b && b !== build) { build = b; io.emit('build', build); } }, 25000); }); // güncelleyici dosyaları yazıp sunucuyu yeniden başlatır: "yenile" uyarısı yeni sunucu açıldıktan sonra (yeniden bağlanınca) gelsin, kapanırken basılıp boş ekranda kalınmasın
+  fs.watch(path.dirname(INDEX), (ev, file) => { if (file && file !== 'index.html') return; clearTimeout(buildTimer); buildTimer = setTimeout(() => { const b = readBuild(); if (b && b !== build) { build = b; buildParts = readParts(); io.emit('build', build); if (buildParts) io.emit('buildParts', buildParts); } }, 25000); }); // güncelleyici dosyaları yazıp sunucuyu yeniden başlatır: "yenile" uyarısı yeni sunucu açıldıktan sonra (yeniden bağlanınca) gelsin, kapanırken basılıp boş ekranda kalınmasın
 } catch {}
 
 // =====================================================================
@@ -3353,7 +3385,7 @@ io.on('connection', socket => {
   // Tek bir bağlantıdan olağandışı yoğunlukta istek gelirse (betik/saldırı) bağlantıyı kes
   { let n = 0, t0 = Date.now();
     socket.onAny(() => { const now = Date.now(); if (now - t0 > 10e3) { n = 0; t0 = now; } if (++n === 400) { secLog('istek-seli', socket.data?.me || 'bağlantı', '10 saniyede 400+ istek, bağlantı kesildi'); socket.disconnect(true); } }); }
-  socket.emit('build', build);
+  socket.emit('build', build); if (buildParts) socket.emit('buildParts', buildParts);
   const ip = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']);
   const devRaw = socket.handshake.auth?.d, dH = typeof devRaw === 'string' && /^[a-z0-9-]{16,64}$/i.test(devRaw) ? idH('d|' + devRaw) : null, iH = ip && ip !== 'bilinmiyor' ? idH('i|' + ip) : null;
   let me = null, cur = null, myVoice = null;
@@ -3397,7 +3429,7 @@ io.on('connection', socket => {
     db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: pickPresetAv(), onb: {} }; uidOf(db.users[name]);
     const sr = cleanSrc(src); if (sr) db.users[name].src = sr;
     db.users[name].dob = String(dob); db.users[name].birthday = String(dob).slice(5); if (age < 18) db.users[name].guardian = { at: Date.now(), v: 1, where: 'kayit' }; // tam tarih gizli tutulur; profilde sadece gün-ay (istersen kaldırabilirsin)
-    { const iv = clean(invite, 40).split(/[=/]/).pop(), sv = iv && db.servers.find(x => x.invite === iv); if (sv) db.users[name].via = { srv: sv.id, name: clean(sv.name, 40) }; else if (gate.code) db.users[name].via = { code: 1 }; } // hangi reklamdan / kelimeden geldi (ilk ziyaret)
+    { const iv = clean(invite, 40).split(/[=/]/).pop(), sv = iv && findInvite(iv)?.s; if (sv) db.users[name].via = { srv: sv.id, name: clean(sv.name, 40) }; else if (gate.code) db.users[name].via = { code: 1 }; } // hangi reklamdan / kelimeden geldi (ilk ziyaret)
     if (gate.code) {
       const c = db.codes[gate.code]; c.usedBy = name; c.usedAt = Date.now(); db.users[name].invitedBy = c.by;
       const inv = db.users[c.by];
@@ -4078,7 +4110,8 @@ io.on('connection', socket => {
       if (o?.blocked?.includes(me)) return cb({ error: 'Bu kişi sana mesaj alımını kapattı.' });
     }
     const srv = serverOf(cur);
-    if (srv?.welcome?.enabled && srv.owner !== me && !srv.accepted?.[me]) return cb({ error: 'Önce sunucu kurallarını kabul etmelisin', needRules: srv.id });
+    if (srv?.welcome?.enabled && srv.owner !== me && !srv.accepted?.[me]) return cb({ error: srv.applications?.[me]?.st === 'bekliyor' ? 'Katılım başvurun yetkililerin onayını bekliyor' : 'Önce sunucu kurallarını kabul etmelisin', needRules: srv.id });
+    { const sb = srv && secBlock(srv, me); if (sb) return cb({ error: sb, needSec: srv.id }); }
     if (srv && /^\/\S/.test(p.text || '') && (!p.kind || p.kind === 'text') && botCommand(srv, p.text.trim())) return cb({ ok: true, bot: true });
     if (srv && timedOut(srv, me)) return cb({ error: `Susturuldun. ${Math.ceil((srv.timeouts[me] - Date.now()) / 60000)} dakika sonra yazabilirsin.` });
     if (srv && !chPerm(srv, findChannel(cur).c, me, 'send')) return cb({ error: 'Bu odaya yazma iznin yok' });
@@ -5643,12 +5676,76 @@ io.on('connection', socket => {
       .sort((a, b) => b._w - a._w || b.online - a.online || b.members - a.members).slice(0, 60);
     cb({ list, cats: CATS });
   });
-  socket.on('acceptRules', (serverId, cb = () => {}) => {
+  socket.on('acceptRules', (serverId, cb = () => {}, answers) => {
+    if (typeof serverId === 'object' && serverId) { answers = serverId.answers; serverId = serverId.serverId; }
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || !membersOf(s).includes(me)) return cb({ error: 'Geçersiz' });
+    if (s.accepted?.[me]) return cb({ ok: true });
+    const g = s.gate || {}, qs = (g.questions || []).filter(Boolean);
+    if (s.owner !== me && (qs.length || g.approval)) {
+      const ans = qs.map((q, i) => clean(Array.isArray(answers) ? answers[i] : '', 300));
+      if (ans.some(a => !a)) return cb({ error: 'Tüm soruları cevapla', needAnswers: true });
+      if (g.approval && !isMod(s, me)) {
+        if (s.applications?.[me]?.st === 'bekliyor') return cb({ ok: true, pending: true });
+        if (limited('basvuru|' + me + '|' + s.id, 3, 3600e3)) return cb({ error: 'Çok fazla başvuru yaptın, biraz bekle' });
+        (s.applications ||= {})[me] = { st: 'bekliyor', at: Date.now(), q: qs, a: ans, via: s.joinVia?.[me] || null };
+        save(); pushServers([me, ...membersOf(s).filter(n => isMod(s, n))]);
+        for (const n of membersOf(s).filter(n => isMod(s, n) && n !== me)) io.to('user:' + n).emit('toast', `📝 ${me}, ${s.name} sunucusuna katılmak için başvurdu`);
+        return cb({ ok: true, pending: true });
+      }
+      if (qs.length) (s.applications ||= {})[me] = { st: 'onay', at: Date.now(), q: qs, a: ans, auto: true };
+    }
     (s.accepted ||= {})[me] = Date.now();
     if (botOn(s, 'autorole') && s.bot.autorole.when === 'rules') autoRoleGive(s, me);
     save(); pushServers([me]); cb({ ok: true });
+  });
+  // ----- Davet linkleri -----
+  socket.on('invList', (serverId, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Yetkin yok' });
+    s.invites = (s.invites || []).filter(i => invValid(i) || Date.now() - (i.exp || i.at) < 7 * 864e5); // bitenler 7 gün listede kalır
+    const via = Object.values(s.joinVia || {}).filter(v => v === 'ana').length;
+    cb({ main: { code: s.invite, uses: via }, list: s.invites.map(invOut).reverse() });
+  });
+  socket.on('invCreate', ({ serverId, exp, max, temp } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Yetkin yok' });
+    if (limited('invc|' + me, 30, 3600e3)) return cb({ error: 'Çok fazla link oluşturdun, biraz bekle' });
+    if ((s.invites || []).filter(invValid).length >= 50) return cb({ error: 'En fazla 50 aktif davet linki olabilir; eskileri iptal et' });
+    const E = [0, 1800, 3600, 21600, 43200, 86400, 604800], M = [0, 1, 5, 10, 25, 50, 100];
+    const i = { code: newInviteCode(), by: me, at: Date.now(), exp: E.includes(+exp) && +exp ? Date.now() + exp * 1000 : null, max: M.includes(+max) ? +max : 0, uses: 0, temp: !!temp };
+    (s.invites ||= []).push(i); audit(s, me, 'Davet linki oluşturdu', `${i.exp ? 'süreli' : 'süresiz'}${i.max ? `, ${i.max} kullanım` : ''}${i.temp ? ', geçici üyelik' : ''}`); save();
+    cb({ ok: true, inv: invOut(i) });
+  });
+  socket.on('invRevoke', ({ serverId, code } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Yetkin yok' });
+    const i = s.invites?.find(x => x.code === code); if (!i) return cb({ error: 'Link bulunamadı' });
+    i.revoked = Date.now(); audit(s, me, 'Davet linkini iptal etti', code); save(); cb({ ok: true });
+  });
+  // ----- Güvenlik seviyesi ve katılım kapısı -----
+  socket.on('secSave', ({ serverId, level, questions, approval } = {}, cb = () => {}) => {
+    const s = permServer(serverId, 'manageServer'); if (!s || s.public) return cb({ error: 'Yetkin yok' });
+    const L = Math.max(0, Math.min(4, +level || 0)), qs = (Array.isArray(questions) ? questions : []).map(q => clean(q, 150)).filter(Boolean).slice(0, 3);
+    s.secLevel = L; s.gate = qs.length || approval ? { questions: qs, approval: !!approval } : null;
+    if (s.gate && !s.welcome?.enabled) s.welcome = { ...(s.welcome || { rules: [], channels: [] }), enabled: true, message: s.welcome?.message || `${s.name} sunucusuna hoş geldin!` };
+    audit(s, me, 'Katılım güvenliğini değiştirdi', `seviye: ${SEC_LEVELS[L]}${qs.length ? `, ${qs.length} soru` : ''}${approval ? ', onaylı katılım' : ''}`);
+    save(); pushServers(membersOf(s)); cb({ ok: true });
+  });
+  socket.on('joinApps', (serverId, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId); if (!s || !me || !isMod(s, me)) return cb({ error: 'Yetkin yok' });
+    cb({ list: Object.entries(s.applications || {}).filter(([n, a]) => a.st === 'bekliyor' && s.members.includes(n)).map(([n, a]) => ({ name: n, at: a.at, q: a.q, a: a.a, via: a.via,
+      createdAt: db.users[n]?.createdAt || null, email: !!db.users[n]?.email, tfa: !!db.users[n]?.tfa?.on })).sort((x, y) => x.at - y.at) });
+  });
+  socket.on('joinDecide', ({ serverId, name, ok, note } = {}, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId); if (!s || !me || !isMod(s, me)) return cb({ error: 'Yetkin yok' });
+    const a = s.applications?.[name]; if (!a || a.st !== 'bekliyor') return cb({ error: 'Başvuru bulunamadı' });
+    note = clean(note, 200); Object.assign(a, { st: ok ? 'onay' : 'ret', by: me, decidedAt: Date.now(), note });
+    if (ok) {
+      (s.accepted ||= {})[name] = Date.now(); if (botOn(s, 'autorole') && s.bot.autorole.when === 'rules') autoRoleGive(s, name);
+      audit(s, me, 'Katılım başvurusunu onayladı', name); io.to('user:' + name).emit('toast', `✅ ${s.name} sunucusuna katılım başvurun onaylandı, artık yazabilirsin!`);
+    } else {
+      s.members = s.members.filter(n => n !== name); delete s.joinedAt?.[name]; delete s.temp?.[name]; voiceKick(s.channels.map(c => c.id), name, 'Başvurun reddedildi');
+      audit(s, me, 'Katılım başvurusunu reddetti', name + (note ? ': ' + note : '')); io.to('user:' + name).emit('toast', `${s.name} sunucusuna katılım başvurun kabul edilmedi${note ? ': ' + note : ''}`);
+    }
+    save(); pushServers([name, ...membersOf(s)]); cb({ ok: true });
   });
   socket.on('welcomeSave', ({ serverId, enabled, message, rules, channels } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
@@ -5670,12 +5767,12 @@ io.on('connection', socket => {
       if (typeof code !== 'string' || code.length > 40) continue;
       if (blockedUntil('u:' + me) || blockedUntil('ip:' + ip) || limited('peek|' + me, 120, 600e3)) { out[code] = null; continue; }
       const vs = /^s:([a-z0-9-]{2,40})$/.exec(code); // özel link: kankahq.com/s/isim
-      const sv = vs ? db.servers.find(x => x.vanity === vs[1] && isStar(x)) : db.servers.find(x => x.invite === code);
+      const sv = vs ? db.servers.find(x => x.vanity === vs[1] && isStar(x)) : findInvite(code)?.s;
       inviteGuard('u:' + me, !!sv); inviteGuard('ip:' + ip, !!sv);
       if (!sv || sv.bans?.[me]) { out[code] = null; continue; }
       const mem = membersOf(sv);
       out[code] = { id: sv.id, name: sv.name, icon: sv.icon, iconImg: sv.iconImg || null, banner: sv.banner || null, bannerColor: sv.bannerColor || null, badges: srvBadges(sv),
-        description: (sv.description || '').slice(0, 140), invite: sv.invite, members: mem.length, online: mem.filter(n => on.has(n)).length, joined: !!sv.public || sv.members.includes(me) };
+        description: (sv.description || '').slice(0, 140), invite: code, members: mem.length, online: mem.filter(n => on.has(n)).length, joined: !!sv.public || sv.members.includes(me) };
     }
     cb(out);
   });
@@ -5692,11 +5789,11 @@ io.on('connection', socket => {
     if (!me) return cb({ error: 'Giriş yapmalısın' });
     if (blockedUntil('u:' + me) || blockedUntil('ip:' + ip)) return cb({ error: 'Çok fazla geçersiz davet denedin. Bir saat sonra tekrar dene.' });
     if (limited('join|' + me, 15, 600e3)) return cb({ error: 'Çok hızlı sunucuya katılıyorsun, biraz bekle' });
-    const s = db.servers.find(x => x.invite === code);
+    const fi = findInvite(code), s = fi?.s, inv = fi?.inv;
     inviteGuard('u:' + me, !!s); inviteGuard('ip:' + ip, !!s);
-    if (!s) return cb({ error: 'Davet kodu geçersiz' });
+    if (!s) return cb({ error: s === undefined && db.servers.some(x => x.invites?.some(i => i.code === code)) ? 'Bu davetin süresi dolmuş ya da kullanım sınırına ulaşmış' : 'Davet kodu geçersiz' });
     if (s.bans?.[me]) return cb({ error: 'Bu sunucudan yasaklandın' });
-    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); const ar = autoRoleOnJoin(s, me); if (s.id === db.devServer) devRoleSync(me); save(); pushServers(s.members); botWelcome(s, me, ar); botMember(s, me, 'join'); }
+    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); if (inv) { inv.uses = (inv.uses || 0) + 1; if (inv.temp) (s.temp ||= {})[me] = Date.now(); } (s.joinVia ||= {})[me] = inv ? inv.code : 'ana'; const ar = autoRoleOnJoin(s, me); if (s.id === db.devServer) devRoleSync(me); save(); pushServers(s.members); botWelcome(s, me, ar); botMember(s, me, 'join'); }
     cb(serverView(s, me));
   });
 
@@ -5738,6 +5835,8 @@ io.on('connection', socket => {
       voicePass.delete(socket.id);
     }
     if (f && timedOut(f.s, me)) return cb({ error: 'Susturulduğun için sesli odalara giremezsin' });
+    if (f && !f.s.public && f.s.welcome?.enabled && f.s.owner !== me && !f.s.accepted?.[me]) return cb({ error: f.s.applications?.[me]?.st === 'bekliyor' ? 'Katılım başvurun onay bekliyor' : 'Önce sunucu kurallarını kabul etmelisin' });
+    { const sb = f && secBlock(f.s, me); if (sb) return cb({ error: sb }); }
     if (f?.c.limit && myVoice !== chId && (voice.get(chId)?.size || 0) >= f.c.limit && !can(f.s, me, 'manageChannels') && f.s.owner !== me) return cb({ error: `Oda dolu (${f.c.limit}/${f.c.limit})` });
     leaveVoice();
     const room = voice.get(chId) || new Map();
@@ -5844,5 +5943,21 @@ function devRoleSync(name) {
 }
 app.get('/gelistirici-topluluk', (req, res) => { const s = db.devServer && db.servers.find(x => x.id === db.devServer); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/gelistirici'); });
 ensureDevServer();
+// Geçici üyelik: geçici davetle gelen kişi bağlantısı kopunca (ve kendisine rol verilmemişse) sunucudan çıkarılır
+setInterval(() => {
+  const on = new Set(onlineNames()); let ch = false;
+  for (const s of db.servers) {
+    if (!s.temp) continue;
+    for (const n of Object.keys(s.temp)) {
+      if (!s.members.includes(n) || (s.memberRoles?.[n] || []).length) { delete s.temp[n]; ch = true; continue; }
+      if (on.has(n) || Date.now() - s.temp[n] < 60e3) continue;
+      if ([...voice.values()].some(m => [...m.values()].includes(n))) continue;
+      s.members = s.members.filter(x => x !== n); delete s.temp[n]; delete s.joinedAt?.[n]; delete s.accepted?.[n]; ch = true;
+      try { pushServers([n, ...s.members]); } catch {}
+    }
+    if (!Object.keys(s.temp).length) delete s.temp;
+  }
+  if (ch) save();
+}, 60e3);
 migrateUids();
 server.listen(PORT, () => console.log(`Kanka Chat çalışıyor: http://localhost:${PORT}`));
