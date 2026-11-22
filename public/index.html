@@ -4096,6 +4096,12 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   body.lowfx { --blur: 0px; } body.lowfx * { backdrop-filter: none !important; }
   /* Konuşma halkası anında yanıp sönsün: her konuşma başlangıcında gölge geçişi (ana iş parçacığında çizilir) saniyede onlarca kez yeniden hesaplatıyordu */
   .vuser .av, .vuser, #dmcall .av { transition: none !important; } .tile { transition-property: none !important; }
+  /* Yazılamayan oda (salt okunur / susturulmuş): ekle, GIF, emoji, mikrofon, gönder gizli; yerine tek satırlık kilit notu */
+  #compose.locked { justify-content: center; align-items: center; } #compose.locked::before { align-self: center; }
+  #compose.locked :is(#plus, #gif-btn, #emo-btn, #mic-btn, #send) { display: none !important; }
+  #compose.locked::before { content: ''; flex: none; width: 16px; height: 16px; margin-left: 6px; background: var(--muted); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center / contain no-repeat; }
+  #compose.locked #input { white-space: nowrap; overflow: hidden; resize: none; height: auto !important; min-height: 0; cursor: not-allowed; }
+  #compose.locked #input::placeholder { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -5827,6 +5833,7 @@ const shortPh = p => {
   if (!narrow()) return p;
   let m = /^(.+?) odasına bir şeyler yaz/.exec(p); if (m) return `Mesaj · #${m[1]}`;
   m = /^(.+?) kişisine mesaj yaz/.exec(p); if (m) return `Mesaj · @${m[1]}`;
+  if (/^Bu oda salt okunur/.test(p)) return 'Salt okunur · sadece yetkililer yazar';
   return p.replace(/\s*\(@ ile etiketle\)/, '');
 };
 const buzz = (ms = 10) => { try { navigator.vibrate?.(ms); } catch (e) {} };
@@ -7542,6 +7549,7 @@ function enterRoom(id, placeholder, hello, isRetry) {
   $('#compose').style.display = 'flex';
   $('#input').dataset.ph = placeholder; $('#input').placeholder = shortPh(placeholder);
   $('#input').disabled = /^(Susturuldun|Bu oda salt okunur)/.test(placeholder);
+  $('#compose').classList.toggle('locked', $('#input').disabled); // yazılamayan oda: düğmeler gizlenir, tek satır kilit notu
   typers.clear(); renderTyping();
   $('#e2e-bar')?.remove(); setTimeout(() => E2E.enter(id), 0); // şifreli sohbet: kilit simgesi, anahtar ve eski mesajların şifrelenmesi
   // yeni oda yüklenene kadar eski odanın mesajları/boş ekranı görünmesin
