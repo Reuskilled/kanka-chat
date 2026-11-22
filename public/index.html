@@ -1726,83 +1726,88 @@
   .btns2 { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font: inherit; font-weight: 800; font-size: 14px; cursor: pointer; transition: background .15s, border-color .15s, transform .15s; }
   .btns2:hover { background: var(--hover); border-color: #4d3a2f; }
 
-  #onb { margin: 0 10px; border-radius: 18px; background: linear-gradient(165deg, #3a251a 0%, #2b211c 55%); border: 1px solid #4a3426; box-shadow: 0 10px 28px rgba(0,0,0,.28); overflow: hidden; position: relative; animation: onbIn .5s var(--ease-out) both; }
+  #onb { margin: 0 10px; border-radius: 16px; background: linear-gradient(165deg, rgba(212,255,0,.08) 0%, var(--panel) 52%); border: 1px solid rgba(212,255,0,.24); box-shadow: 0 10px 28px rgba(0,0,0,.32); overflow: hidden; position: relative; animation: onbIn .35s var(--ease-out) both; }
   #onb[hidden] { display: none; }
-  #onb.out { animation: onbOut .45s var(--ease-out) forwards; }
-  @keyframes onbIn { from { opacity: 0; transform: translateY(14px) scale(.97); } }
-  @keyframes onbOut { to { opacity: 0; transform: translateY(14px) scale(.96); margin-top: -40px; } }
+  #onb.out { animation: onbOut .35s var(--ease-out) forwards; }
+  @keyframes onbIn { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+  @keyframes onbOut { to { opacity: 0; transform: translateY(10px) scale(.97); margin-top: -40px; } }
   #onb .oh { display: flex; align-items: center; gap: 9px; padding: 11px 8px 9px 11px; cursor: pointer; user-select: none; }
   .oring { width: 38px; height: 38px; flex-shrink: 0; position: relative; }
   .oring svg { width: 38px; height: 38px; transform: rotate(-90deg); }
   .oring circle { fill: none; stroke-width: 4; }
   .oring .bgc { stroke: rgba(255,255,255,.08); }
-  .oring .fg { stroke: url(#onbgrad); stroke-linecap: round; transition: stroke-dashoffset .7s var(--ease-out); }
+  .oring .fg { stroke: url(#onbgrad); stroke-linecap: round; transition: stroke-dashoffset .6s var(--ease-out); }
   .oring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11.5px; font-weight: 900; }
   #onb .ot { flex: 1; min-width: 0; }
-  #onb .ot b { display: block; font-size: 14px; font-weight: 900; }
-  #onb .ot small { color: var(--muted); font-size: 12px; }
+  #onb .ot b { display: block; font-size: 13.5px; font-weight: 900; }
+  #onb .ot small { color: var(--muted); font-size: 11.5px; }
   #onb .ox { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); background: none; border: 0; cursor: pointer; flex-shrink: 0; }
   #onb .ox:hover { background: rgba(255,255,255,.07); color: var(--ink); }
   #onb .ox .ic { width: 15px; height: 15px; }
-  #onb .chev { transition: transform .25s var(--ease-out); }
+  #onb .chev { transition: transform .22s var(--ease-out); }
   #onb.closed .chev { transform: rotate(180deg); }
   #onb .ol { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 0 8px 9px; }
   #onb.closed .ol { display: none; }
-  .ostep { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 9px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid transparent; color: var(--ink); font: inherit; cursor: pointer; min-width: 0; transition: background .15s, border-color .15s, transform .18s var(--ease-out); animation: fadeUp .35s var(--ease-out) both; }
-  .ostep:nth-child(2) { animation-delay: .05s; } .ostep:nth-child(3) { animation-delay: .1s; }
-  .ostep:hover { background: rgba(255,138,76,.09); border-color: rgba(255,138,76,.28); transform: translateX(2px); }
-  .ostep .oi { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex-shrink: 0; transition: background .3s, color .3s; }
-  .ostep .oi .ic { width: 16px; height: 16px; }
+  .ostep { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 9px; border-radius: 11px; background: rgba(255,255,255,.025); border: 1px solid transparent; color: var(--ink); font: inherit; cursor: pointer; min-width: 0; transition: background .14s, border-color .14s, transform .14s; }
+  .ostep:hover { background: rgba(212,255,0,.07); border-color: rgba(212,255,0,.28); transform: translateX(2px); }
+  .ostep .oi { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(212,255,0,.12); color: var(--accent); flex-shrink: 0; }
+  .ostep .oi .ic { width: 15px; height: 15px; }
   .ostep span { flex: 1; min-width: 0; }
-  .ostep span b { display: block; font-size: 13px; font-weight: 800; }
-  .ostep span small { display: block; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ostep .ock { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #5a4335; flex-shrink: 0; display: grid; place-items: center; transition: background .25s, border-color .25s; }
-  .ostep .ock .ic { width: 12px; height: 12px; stroke-width: 3.5; color: #10241a; opacity: 0; }
+  .ostep span b { display: block; font-size: 12.5px; font-weight: 800; }
+  .ostep span small { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ostep .ock { width: 19px; height: 19px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0; display: grid; place-items: center; transition: background .2s, border-color .2s; }
+  .ostep .ock .ic { width: 11px; height: 11px; stroke-width: 3.5; color: #09090b; opacity: 0; }
   .ostep.done { cursor: default; }
-  .ostep.done:hover { transform: none; background: rgba(255,255,255,.03); border-color: transparent; }
-  .ostep.done span b { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(255,255,255,.3); }
-  .ostep.done .oi { background: rgba(111,211,155,.14); color: var(--green); }
-  .ostep.done .ock { background: var(--green); border-color: var(--green); animation: bump .4s var(--ease-out); }
+  .ostep.done:hover { transform: none; background: rgba(255,255,255,.025); border-color: transparent; }
+  .ostep.done span b { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(255,255,255,.28); }
+  .ostep.done .oi { background: rgba(34,197,94,.14); color: #22c55e; }
+  .ostep.done .ock { background: #22c55e; border-color: #22c55e; }
   .ostep.done .ock .ic { opacity: 1; }
   #onb .owin { padding: 2px 14px 14px; text-align: center; }
-  #onb .owin .big { font-size: 30px; animation: bump .6s var(--ease-out); }
+  #onb .owin .big { font-size: 30px; animation: bump .5s var(--ease-out); }
   #onb .owin b { display: block; font-size: 15px; font-weight: 900; margin-top: 2px; }
   #onb .owin small { color: var(--muted); font-size: 12.5px; }
   .confetti { position: fixed; pointer-events: none; z-index: 60; width: 8px; height: 12px; border-radius: 2px; animation: conf 1.3s cubic-bezier(.2,.7,.4,1) forwards; }
   @keyframes conf { 0% { transform: translate(0,0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
 
-  #modal .box.onbw { width: min(640px, 94vw); padding: 0; overflow: hidden auto; max-height: 92vh; }
-  .onbw .ohero { position: relative; padding: 34px 30px 26px; text-align: center; background: radial-gradient(520px 200px at 50% -10%, rgba(255,138,76,.38), transparent 70%), linear-gradient(180deg, #2f2017, var(--panel)); border-bottom: 1px solid var(--line); overflow: hidden; }
-  .onbw .ohero .spark { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); opacity: .5; animation: twinkle 3s ease-in-out infinite; }
-  @keyframes twinkle { 0%, 100% { opacity: .15; transform: scale(.6); } 50% { opacity: .8; transform: scale(1); } }
-  .onbw .ologo { width: 88px; height: 88px; margin: 0 auto 16px; border-radius: 28px; display: grid; place-items: center; background: linear-gradient(145deg, #ff9a5c, #e8552a); box-shadow: 0 16px 40px rgba(242,101,47,.45), inset 0 1px 0 rgba(255,255,255,.35); animation: obob 3.2s ease-in-out infinite, popIn .5s var(--ease-out) both; overflow: hidden; }
-  .onbw .ologo img { width: 100%; height: 100%; }
-  @keyframes obob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
-  .onbw h2 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; line-height: 1.15; }
-  .onbw h2 em { font-style: normal; background: linear-gradient(90deg, #ffb347, #ff8a4c); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .onbw .ohero p { color: var(--muted); margin-top: 8px; font-size: 15px; }
-  .onbw .osec { padding: 20px 28px 4px; }
-  .onbw .osec h4 { font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 900; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-  .onbw .osec h4 button { text-transform: none; letter-spacing: 0; font-size: 12.5px; background: none; border: 0; color: var(--accent-2); font-weight: 800; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
-  .onbw .osec h4 button .ic { width: 14px; height: 14px; }
-  .avgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  /* --- Hoş Geldin & Başlangıç Rehberi Modalı (Noir Siber & Asit Neon) --- */
+  #modal .box.onbw { width: min(680px, 94vw); padding: 0; overflow: hidden auto; max-height: 92vh; background: var(--panel); border: 1px solid rgba(212,255,0,.22); border-radius: 22px; box-shadow: 0 28px 80px rgba(0,0,0,.72); }
+  .onbw .ohero { position: relative; padding: 26px 26px 22px; text-align: center; background: radial-gradient(480px 180px at 50% -20%, rgba(212,255,0,.17), transparent 72%), linear-gradient(rgba(212,255,0,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(212,255,0,.035) 1px, transparent 1px), #0c0c10; background-size: 100% 100%, 28px 28px, 28px 28px, 100% 100%; border-bottom: 1px solid var(--line); overflow: hidden; }
+  .onbw .obadge { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 99px; background: rgba(212,255,0,.1); border: 1px solid rgba(212,255,0,.3); color: var(--accent); font-size: 10.5px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 14px; }
+  .onbw .obadge i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .onbw .ologo-wrap { position: relative; width: 88px; height: 88px; margin: 0 auto 14px; }
+  .onbw .ologo { width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; background: #111116; border: 2px solid rgba(212,255,0,.7); box-shadow: 0 0 0 5px rgba(212,255,0,.1), 0 14px 36px rgba(0,0,0,.55); overflow: hidden; }
+  .onbw .ologo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .onbw .ologo-st { position: absolute; right: 2px; bottom: 2px; width: 18px; height: 18px; border-radius: 50%; background: #22c55e; border: 3px solid #0c0c10; }
+  .onbw h2 { font-size: 25px; font-weight: 900; letter-spacing: -.025em; line-height: 1.15; margin: 0; }
+  .onbw h2 em { font-style: normal; color: var(--accent); }
+  .onbw .ohero p { color: var(--muted); margin-top: 7px; font-size: 14px; max-width: 440px; margin-inline: auto; line-height: 1.45; }
+  .onbw .obody { padding: 18px 24px 16px; display: grid; gap: 14px; }
+  .onbw .osec { padding: 14px 16px; border-radius: 16px; background: var(--bg); border: 1px solid var(--line); }
+  .onbw .osec h4 { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 900; margin: 0 0 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .onbw .osec h4 button { text-transform: none; letter-spacing: 0; font-size: 12px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font-weight: 800; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; padding: 5px 10px; border-radius: 9px; transition: border-color .14s, color .14s; }
+  .onbw .osec h4 button:hover { border-color: var(--accent); color: var(--accent); }
+  .onbw .osec h4 button .ic { width: 14px; height: 14px; color: var(--accent); }
+  .avgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
   .avgrid.sm { grid-template-columns: repeat(6, 44px); gap: 10px; margin-top: 12px; }
-  .avopt { position: relative; aspect-ratio: 1; border-radius: 50%; padding: 0; border: 0; background: none; cursor: pointer; transition: transform .2s var(--ease-out); animation: popIn .35s var(--ease-out) both; }
-  .avopt img { width: 100%; height: 100%; border-radius: 50%; display: block; box-shadow: 0 0 0 3px var(--panel), 0 0 0 3px transparent; transition: box-shadow .2s var(--ease-out); }
-  .avopt:hover { transform: translateY(-3px) scale(1.05); }
-  .avopt.on img { box-shadow: 0 0 0 3px var(--panel), 0 0 0 6px var(--accent); }
-  .avopt.on::after { content: ''; position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--panel); background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 12px no-repeat; animation: bump .35s var(--ease-out); }
+  .avopt { position: relative; aspect-ratio: 1; border-radius: 50%; padding: 0; border: 0; background: none; cursor: pointer; transition: transform .16s var(--ease-out); }
+  .avopt img { width: 100%; height: 100%; border-radius: 50%; display: block; box-shadow: 0 0 0 2px var(--bg), 0 0 0 2px transparent; transition: box-shadow .16s var(--ease-out); }
+  .avopt:hover { transform: translateY(-2px) scale(1.04); }
+  .avopt.on img { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--accent); }
+  .avopt.on::after { content: ''; position: absolute; right: -2px; bottom: -2px; width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid var(--bg); background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2309090b' stroke-width='3.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 11px no-repeat; }
   .avgrid.sm .avopt.on::after { width: 18px; height: 18px; border-width: 2px; background-size: 10px; }
   .ocards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .ocard { padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); animation: fadeUp .45s var(--ease-out) both; }
-  .ocard:nth-child(2) { animation-delay: .07s; } .ocard:nth-child(3) { animation-delay: .14s; }
+  .ocard { padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
   .ocard .n { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 10px; }
   .ocard .n .ic { width: 18px; height: 18px; }
   .ocard b { display: block; font-size: 14px; font-weight: 900; margin-bottom: 3px; }
   .ocard small { color: var(--muted); font-size: 12.5px; line-height: 1.4; display: block; }
-  .onbw .ofoot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 22px 28px 24px; }
-  .onbw .ofoot .ghost { background: none; border: 0; color: var(--muted); font: inherit; font-weight: 800; cursor: pointer; padding: 10px 4px; }
-  .onbw .ofoot .ghost:hover { color: var(--ink); }
+  .onbw .ofoot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 24px 18px; border-top: 1px solid var(--line); background: rgba(9,9,11,.65); }
+  .onbw .ofoot .ghost { background: none; border: 1px solid transparent; border-radius: 10px; color: var(--muted); font: inherit; font-size: 13.5px; font-weight: 800; cursor: pointer; padding: 9px 12px; transition: color .14s, background .14s; }
+  .onbw .ofoot .ghost:hover { color: var(--ink); background: var(--card); }
+  .onbw .ofoot .ow-go { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 12px; background: var(--accent); color: #09090b; border: 0; font: inherit; font-size: 14px; font-weight: 900; cursor: pointer; transition: filter .14s, transform .14s; box-shadow: 0 8px 24px rgba(212,255,0,.22); }
+  .onbw .ofoot .ow-go:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .onbw .ofoot .ow-go .ic { width: 15px; height: 15px; color: #09090b; }
 
   #modal .box.mict { width: min(480px, 94vw); padding: 24px; }
   .mict .mh { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; }
@@ -1862,32 +1867,31 @@
   .estate .eacts { margin-top: 18px; }
   .srv.dash.hint { color: var(--accent); animation: discPulse 2.2s ease-out infinite; }
   @keyframes discPulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
-  @media (max-width: 560px) { .avgrid { grid-template-columns: repeat(4, 1fr); } .ocards { grid-template-columns: 1fr; } .onbw .osec, .onbw .ofoot { padding-left: 18px; padding-right: 18px; } }
+  @media (max-width: 560px) { .avgrid { grid-template-columns: repeat(4, 1fr); } .ocards { grid-template-columns: 1fr; } .onbw .obody { padding: 14px; } .onbw .ofoot { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); } }
   @media (prefers-reduced-motion: reduce) { .onbw .ologo, .estate .eart .disc, .estate .eart .wv, .estate .eart .orb, .srv.dash.hint { animation: none; } }
-  /* --- rehber v2 --- */
-  #onb .orw { color: var(--accent-2); font-weight: 900; }
+  /* --- rehber v2 (Noir Siber & Asit Neon) --- */
+  #onb .orw { color: var(--accent); font-weight: 900; }
   #onb .ol { max-height: 46vh; overflow-y: auto; scrollbar-width: none; }
   #onb .ol::-webkit-scrollbar { display: none; }
   .ostep { padding: 7px 9px; }
   .ostep .obar { display: block; height: 4px; border-radius: 2px; background: rgba(255,255,255,.08); margin-top: 5px; overflow: hidden; }
-  .ostep .obar u { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #ffb347, #ff6b3d); transition: width .6s var(--ease-out); }
+  .ostep .obar u { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), #22c55e); transition: width .5s var(--ease-out); }
   #onb.win .owin { padding-top: 0; }
   .orewards { display: flex; justify-content: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-  .orewards span { padding: 5px 10px; border-radius: 99px; background: rgba(255,179,71,.14); border: 1px solid rgba(255,179,71,.3); color: var(--accent-2); font-weight: 900; font-size: 12px; animation: popIn .4s var(--ease-out) both; }
-  .orewards span:nth-child(2) { animation-delay: .12s; }
+  .orewards span { padding: 5px 10px; border-radius: 99px; background: rgba(212,255,0,.12); border: 1px solid rgba(212,255,0,.32); color: var(--accent); font-weight: 900; font-size: 12px; }
   #onbm { display: none; }
   @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
     #onb { display: none; }
-    #onbm { display: flex; align-items: center; gap: 10px; margin: 8px 10px 0; padding: 8px 12px 8px 8px; border-radius: 16px; background: linear-gradient(165deg, #3a251a, #2b211c 60%); border: 1px solid #4a3426; color: var(--ink); font: inherit; text-align: left; cursor: pointer; animation: onbIn .45s var(--ease-out) both; flex-shrink: 0; }
-    #onbm > span { flex: 1; min-width: 0; } #onbm > span b { display: block; font-size: 14px; font-weight: 900; } #onbm > span small { color: var(--muted); font-size: 12px; }
+    #onbm { display: flex; align-items: center; gap: 10px; margin: 8px 10px 0; padding: 8px 12px 8px 8px; border-radius: 14px; background: linear-gradient(165deg, rgba(212,255,0,.09), var(--panel) 60%); border: 1px solid rgba(212,255,0,.25); color: var(--ink); font: inherit; text-align: left; cursor: pointer; flex-shrink: 0; }
+    #onbm > span { flex: 1; min-width: 0; } #onbm > span b { display: block; font-size: 13.5px; font-weight: 900; } #onbm > span small { color: var(--muted); font-size: 11.5px; }
     #onbm > .ic { width: 18px; height: 18px; color: var(--muted); transform: rotate(-90deg); }
-    #onbm.out { animation: onbOut .45s var(--ease-out) forwards; }
+    #onbm.out { animation: onbOut .35s var(--ease-out) forwards; }
     #onbm .oring b { font-size: 9.5px; }
-    #modal .box.onbsheet, #modal .box.invm, #modal .box.mict { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; max-width: none; max-height: 88vh; border-radius: 26px 26px 0 0; padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); }
-    #modal.open .box.onbsheet, #modal.open .box.invm, #modal.open .box.mict { animation: sheetUp .32s var(--ease-out); }
-    #modal .box.onbw { max-height: 94vh; }
-    .onbw .ohero { padding: 26px 18px 20px; } .onbw h2 { font-size: 22px; } .onbw .ologo { width: 72px; height: 72px; border-radius: 22px; }
-    .ostep { padding: 10px; } .ostep span b { font-size: 14px; } .ostep span small { font-size: 12.5px; }
+    #modal .box.onbsheet, #modal .box.invm, #modal .box.mict { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; max-width: none; max-height: 88vh; border-radius: 24px 24px 0 0; padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); }
+    #modal.open .box.onbsheet, #modal.open .box.invm, #modal.open .box.mict { animation: sheetUp .28s var(--ease-out); }
+    #modal .box.onbw { max-height: 94vh; border-radius: 18px; }
+    .onbw .ohero { padding: 20px 16px 16px; } .onbw h2 { font-size: 21px; } .onbw .ologo-wrap, .onbw .ologo { width: 72px; height: 72px; }
+    .ostep { padding: 10px; } .ostep span b { font-size: 13.5px; } .ostep span small { font-size: 12px; }
   }
 
   #onb .ot small, .ostep span b, .ostep span small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1895,29 +1899,41 @@
   #onbm .oring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 9.5px; }
   @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
     #modal .box.onbsheet, #modal .box.invm, #modal .box.mict { width: 100% !important; }
-    .onbw .avgrid { grid-template-columns: repeat(6, 1fr); gap: 8px; }
-    .onbw .osec { padding-top: 16px; }
-    .onbw .osteps { grid-template-columns: 1fr 1fr; gap: 6px; }
-    .onbw .ostp { padding: 8px 10px; } .onbw .ostp small { display: none; } .onbw .ostp b { font-size: 12.5px; }
-    .onbw .ostp i { width: 22px; height: 22px; font-size: 12px; }
-    .onbw .ofoot { position: sticky; bottom: 0; background: var(--panel); border-top: 1px solid var(--line); padding: 14px 18px calc(14px + env(safe-area-inset-bottom)); }
-    .onbw .osec h4 { flex-wrap: wrap; gap: 6px; }
+    .onbw .avgrid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .onbw .obody { padding: 12px 14px; gap: 10px; }
+    .onbw .osec { padding: 12px; }
+    .onbw .ofoot { position: sticky; bottom: 0; background: var(--panel); border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
   }
-  @keyframes sheetUp { from { transform: translateY(40px); opacity: .4; } }
-  .sh-grip { width: 40px; height: 4px; border-radius: 2px; background: #4a3a31; margin: 2px auto 14px; }
+  @keyframes sheetUp { from { transform: translateY(32px); opacity: .4; } }
+  .sh-grip { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 2px auto 14px; }
   .sh-head { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
-  .sh-head h3 { font-size: 19px; font-weight: 900; } .sh-head p { color: var(--muted); font-size: 13.5px; margin-top: 3px; line-height: 1.4; } .sh-head p b { color: var(--accent-2); }
+  .sh-head h3 { font-size: 19px; font-weight: 900; } .sh-head p { color: var(--muted); font-size: 13.5px; margin-top: 3px; line-height: 1.4; } .sh-head p b { color: var(--accent); }
   #modal .box.onbsheet { width: min(440px, 94vw); }
   #modal .box.onbsheet .ol { display: grid; gap: 6px; }
-  .onbw .orew { text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--accent-2); background: rgba(255,179,71,.12); border: 1px solid rgba(255,179,71,.28); padding: 4px 10px; border-radius: 99px; }
-  .osteps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .ostp { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); animation: fadeUp .4s var(--ease-out) both; }
-  .ostp:last-child:nth-child(odd) { grid-column: 1 / -1; }
-  .ostp i { width: 26px; height: 26px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: 13px; flex-shrink: 0; }
-  .ostp b { display: block; font-size: 13.5px; font-weight: 900; } .ostp small { color: var(--muted); font-size: 12px; }
-  @media (max-width: 560px) { .osteps { grid-template-columns: 1fr; } }
+  .onbw .orew { text-transform: none; letter-spacing: 0; font-size: 11.5px; font-weight: 800; color: var(--accent); background: rgba(212,255,0,.1); border: 1px solid rgba(212,255,0,.3); padding: 3px 10px; border-radius: 99px; display: inline-flex; align-items: center; gap: 5px; }
+  .osteps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .ostp { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 11px 10px; border-radius: 13px; background: var(--card); border: 1px solid var(--line); position: relative; transition: border-color .14s; }
+  .ostp:hover { border-color: rgba(212,255,0,.35); }
+  .ostp.done { border-color: rgba(34,197,94,.38); background: rgba(34,197,94,.06); }
+  .ostp-top { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .ostp .ostp-ico { width: 28px; height: 28px; border-radius: 9px; background: rgba(212,255,0,.12); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+  .ostp.done .ostp-ico { background: rgba(34,197,94,.18); color: #22c55e; }
+  .ostp .ostp-ico .ic { width: 14px; height: 14px; }
+  .ostp .ostp-num { font-size: 10px; font-weight: 900; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+  .ostp.done .ostp-num { color: #22c55e; }
+  .ostp b { display: block; font-size: 12px; font-weight: 800; line-height: 1.25; color: var(--ink); }
+  .ostp small { display: block; color: var(--muted); font-size: 10.5px; line-height: 1.3; }
+  @media (max-width: 640px) {
+    .osteps { grid-template-columns: 1fr; gap: 6px; }
+    .ostp { flex-direction: row; align-items: center; padding: 9px 11px; gap: 10px; }
+    .ostp-top { width: auto; }
+    .ostp .ostp-num { display: none; }
+    .ostp span { flex: 1; min-width: 0; }
+    .ostp b { font-size: 13px; }
+    .ostp small { font-size: 11.5px; }
+  }
   #compose.attn { animation: attn 1.2s ease-out 2; }
-  @keyframes attn { 0% { box-shadow: 0 0 0 0 rgba(255,138,76,.6); } 100% { box-shadow: 0 0 0 14px rgba(255,138,76,0); } }
+  @keyframes attn { 0% { box-shadow: 0 0 0 0 rgba(212,255,0,.55); } 100% { box-shadow: 0 0 0 14px rgba(212,255,0,0); } }
 
   #modal .box.invm { width: min(480px, 94vw); padding: 24px; }
   .invh { display: flex; gap: 14px; align-items: center; }
@@ -11652,7 +11668,7 @@ function onbModel() {
   }
   return null;
 }
-const onbRing = (n, total, size = 38) => { const r = size / 2 - 4, C = 2 * Math.PI * r; return `<div class="oring" style="width:${size}px;height:${size}px"><svg viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px"><defs><linearGradient id="onbgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6b3d"/></linearGradient></defs><circle class="bgc" cx="${size / 2}" cy="${size / 2}" r="${r}"/><circle class="fg" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - n / total)}"/></svg><b>${n}/${total}</b></div>`; };
+const onbRing = (n, total, size = 38) => { const r = size / 2 - 4, C = 2 * Math.PI * r; return `<div class="oring" style="width:${size}px;height:${size}px"><svg viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px"><defs><linearGradient id="onbgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#d4ff00"/><stop offset="100%" stop-color="#22c55e"/></linearGradient></defs><circle class="bgc" cx="${size / 2}" cy="${size / 2}" r="${r}"/><circle class="fg" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - n / total)}"/></svg><b>${n}/${total}</b></div>`; };
 const onbStepsHTML = m => m.steps.map(s => `<button class="ostep ${s.done ? 'done' : ''}" data-k="${s.k}"><i class="oi">${ic(s.done ? 'check' : s.icon)}</i><span><b>${s.t}</b><small>${s.d}</small>${s.k === 'members' && !s.done ? `<em class="obar"><u style="width:${Math.min(100, (m.extra || 0) / 3 * 100)}%"></u></em>` : ''}</span><i class="ock">${ic('check')}</i></button>`).join('');
 function renderOnb() {
   const m = onbModel();
@@ -11839,21 +11855,38 @@ function onbRestart() {
   });
 }
 
-// --- İlk giriş karşılaması + avatar seçimi ---
+// --- İlk giriş karşılaması + avatar seçimi (Noir Siber & Asit Neon) ---
 function showOnbWelcome() {
   const presets = S.presets || [], cur = S.users[S.me]?.avatar;
   let pick = presets.includes(cur) ? cur : cur || presets[0] || '/icon-192.png';
-  const sparks = Array.from({ length: 9 }, (_, i) => `<i class="spark" style="left:${8 + i * 10.5}%;top:${12 + (i * 37) % 70}%;animation-delay:${-i * .4}s"></i>`).join('');
+  const st = onbState();
   const draw = () => {
-    modal(`<div class="ohero">${sparks}<div class="ologo"><img src="${esc(pick)}" alt=""></div><h2>Hoş geldin, <em>${esc(S.me)}</em>!</h2><p>Seni aramızda görmek güzel. Bir dakikada her şeyi hazırlayalım.</p></div>
-      <div class="osec"><h4>Avatarını seç <button id="ow-up">${ic('camera')} Kendi fotoğrafını yükle</button></h4>
-        ${presets.length ? `<div class="avgrid">${presets.map((u, i) => `<button class="avopt ${u === pick ? 'on' : ''}" data-av="${esc(u)}" style="animation-delay:${i * .025}s" aria-label="Avatar ${i + 1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : ''}</div>
-      <div class="osec"><h4>5 adımda başla <span class="orew">🎁 +100 XP · 🐣 Çaylak rozeti</span></h4><div class="osteps">${ONB_STEPS.map((s, i) => `<div class="ostp" style="animation-delay:${i * .05}s"><i>${i + 1}</i><span><b>${s.t}</b><small>${s.d}</small></span></div>`).join('')}</div></div>
-      <div class="ofoot"><button class="ghost" id="ow-later">Sonra bakarım</button><button class="btnp" id="ow-go">Başlayalım ${ic('send')}</button></div>`, 'onbw');
+    modal(`<div class="ohero">
+        <div class="obadge"><i></i>Kanka Chat'e Hoş Geldin</div>
+        <div class="ologo-wrap"><div class="ologo"><img src="${esc(pick)}" alt=""></div><span class="ologo-st" title="Çevrimiçi"></span></div>
+        <h2>Hoş geldin, <em>${esc(dn(S.me))}</em>!</h2>
+        <p>Avatarını seç, 1 dakikada profilini hazırla ve sohbete atıl.</p>
+      </div>
+      <div class="obody">
+        <div class="osec">
+          <h4><span>Avatarını seç</span><button type="button" id="ow-up">${ic('camera')} Kendi fotoğrafını yükle</button></h4>
+          ${presets.length ? `<div class="avgrid">${presets.map((u, i) => `<button type="button" class="avopt ${u === pick ? 'on' : ''}" data-av="${esc(u)}" aria-label="Avatar ${i + 1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : ''}
+        </div>
+        <div class="osec">
+          <h4><span>5 adımda başla</span><span class="orew">⚡ +100 XP · Çaylak rozeti</span></h4>
+          <div class="osteps">${ONB_STEPS.map((s, i) => { const ok = !!st[s.k];
+            return `<div class="ostp ${ok ? 'done' : ''}">
+              <div class="ostp-top"><span class="ostp-ico">${ic(ok ? 'check' : s.icon)}</span><span class="ostp-num">${ok ? '✓' : '0' + (i + 1)}</span></div>
+              <span><b>${s.t}</b><small>${s.d}</small></span>
+            </div>`; }).join('')}</div>
+        </div>
+      </div>
+      <div class="ofoot"><button type="button" class="ghost" id="ow-later">Sonra bakarım</button><button type="button" class="ow-go" id="ow-go">Başlayalım ${ic('send')}</button></div>`, 'onbw');
     document.querySelectorAll('.onbw [data-av]').forEach(b => b.onclick = () => {
       pick = b.dataset.av;
       document.querySelectorAll('.onbw .avopt').forEach(x => x.classList.toggle('on', x === b));
-      const img = $('.onbw .ologo img'); img.src = pick; $('.onbw .ologo').animate([{ transform: 'scale(.85)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      const img = $('.onbw .ologo img'); img.src = pick;
+      $('.onbw .ologo').animate([{ transform: 'scale(.9)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
     });
     $('#ow-up').onclick = () => readImage(url => { pick = url; draw(); });
     const finish = save => {
