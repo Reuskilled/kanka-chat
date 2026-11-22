@@ -41,7 +41,9 @@ function syncPath(src, dst, changed, created) {
   if (fs.existsSync(dst)) { const b = path.join(BAK, rel); fs.mkdirSync(path.dirname(b), { recursive: true }); fs.copyFileSync(dst, b); }
   else created.push(rel);
   const tmp = dst + '.yeni';
-  fs.copyFileSync(src, tmp); fs.renameSync(tmp, dst);
+  fs.copyFileSync(src, tmp);
+  // Windows'ta dosya o an okunuyorsa (sunucu, virüs tarayıcı) yeniden adlandırma EPERM verebiliyor: kısa aralıklarla tekrar dene
+  for (let i = 0; ; i++) { try { fs.renameSync(tmp, dst); break; } catch (e) { if (i >= 9 || !/EPERM|EBUSY|EACCES/.test(e.code || '')) throw e; Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300); } }
   changed.push(rel);
 }
 
@@ -166,7 +168,8 @@ async function checkCode() {
     const root = path.join(tmp, 'x', fs.readdirSync(path.join(tmp, 'x'))[0]);
     const errs = validate(root);
     if (errs.length) { st.badSha = j.sha; save(); log(`KURULMADI ${j.sha.slice(0, 7)}: kod hatalı, canlı sürüm aynen çalışmaya devam ediyor. ${errs.join(' ; ')}`); return; }
-    if (needsRestart(root)) {
+    const restartNeeded = needsRestart(root);
+    if (restartNeeded) {
       if (st.waitSha !== j.sha) { if (!st.waitSha) st.waitFirst = Date.now(); st.waitSha = j.sha; st.waitSeen = Date.now(); save(); log(`${j.sha.slice(0, 7)} sunucuyu yeniden başlatacak; sakin bir an bekleniyor`); }
       const now = Date.now(), lv = await liveStatus();
       const quiet = now - st.waitSeen >= QUIET, calm = !lv || !lv.ses, late = now - (st.waitFirst || now) >= MAX_WAIT;
@@ -174,12 +177,13 @@ async function checkCode() {
       log(`Kuruluyor (${late && !calm ? 'en uzun bekleme doldu' : 'sakin an'}${lv ? `, seste ${lv.ses}, bağlı ${lv.bagli}` : ''})`);
     }
     st.waitSha = null; st.waitFirst = null;
+    if (restartNeeded) { st.needRestart = true; save(); } // kurulum yarıda kalsa bile sunucu yeni koda geçsin
     const changed = [], created = [];
     fs.rmSync(BAK, { recursive: true, force: true }); fs.mkdirSync(BAK, { recursive: true });
     for (const [a, b] of SYNC) syncPath(path.join(root, a), path.join(APP, b), changed, created);
     if (changed.length) log('Güncellenen dosyalar: ' + changed.join(', '));
     if (changed.some(f => /^package(-lock)?\.json$/.test(f))) st.needNpm = true;
-    if (changed.some(f => f === 'server.js' || /^package/.test(f))) { st.needRestart = true; st.pending = { sha: j.sha, prevSha: st.sha, changed, created }; }
+    if (restartNeeded || changed.some(f => f === 'server.js' || /^package/.test(f))) { st.needRestart = true; st.pending = { sha: j.sha, prevSha: st.sha, changed, created }; }
     if (changed.includes('Caddyfile')) st.needCaddy = true;
     st.sha = j.sha; save();
     await finishPending();
@@ -275,9 +279,20 @@ async function checkDesktopBranch() {
   log(`Masaüstü sürümü hazır: ${man.version}`);
 }
 
+// Diskteki server.js çalışan sunucudan yeniyse (ör. önceki kurulum yarıda kaldı) sakin bir anda yeniden başlat
+async function healStale() {
+  if (st.needRestart || st.waitSha || process.platform !== 'win32') return;
+  let j; try { const r = await fetch(`http://127.0.0.1:${PORT}/api/surum`, { signal: AbortSignal.timeout(5000) }); if (!r.ok) return; j = await r.json(); } catch { return; }
+  const mt = fs.statSync(path.join(APP, 'server.js')).mtimeMs; if (!j.baslama || mt <= j.baslama + 2000) { st.staleAt = null; return; }
+  if (!st.staleAt) { st.staleAt = Date.now(); save(); log('Çalışan sunucu diskteki koddan eski; sakin bir anda yeniden başlatılacak'); }
+  const lv = await liveStatus();
+  if ((lv && lv.ses) && Date.now() - st.staleAt < MAX_WAIT) return;
+  st.staleAt = null; st.needRestart = true; st.pending = null; save();
+}
 let busy = false, n = 0;
 async function tick() {
   if (busy) return; busy = true;
+  try { await healStale(); } catch (e) { log('Hata (eski sunucu): ' + e.message); }
   try { await finishPending(); } catch (e) { log('Hata (bekleyen iş): ' + e.message); }
   try { await checkCode(); } catch (e) { log('Hata (kod): ' + e.message); }
   if (n++ % 30 === 0) { try { await checkDesktop(); } catch (e) { log('Hata (masaüstü): ' + e.message); } // GitHub API sınırı için 30 dakikada bir
