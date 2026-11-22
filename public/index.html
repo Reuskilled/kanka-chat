@@ -3759,6 +3759,10 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .dp-em.add { justify-content: center; color: var(--accent); border-style: dashed; cursor: pointer; font-size: 12px; font-weight: 800; } .dp-em.add .ic { width: 22px; height: 22px; }
   @media (hover: none) { .dp-em button { opacity: 1; } }
   .dp-emrow[hidden] { display: none; } .dp-emrow { display: flex; align-items: center; gap: 6px; margin: 4px 0 10px; flex-wrap: wrap; } .dp-emrow img { width: 36px; height: 36px; object-fit: contain; border-radius: 8px; background: var(--hover); padding: 3px; } .dp-emrow .field { width: 160px; } .dp-emc { color: var(--muted); font-weight: 800; }
+
+  .ctx-vol { padding: 8px 12px 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  .ctx-vol label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; margin-bottom: 8px; } .ctx-vol label .ic { width: 16px; height: 16px; } .ctx-vol label b { margin-left: auto; color: var(--accent); font-size: 12px; }
+  .ctx-vol input { width: 100%; }
 </style>
 </head>
 <body>
@@ -9641,7 +9645,7 @@ function makePeer(sid) {
     if (e.track.kind === 'audio' && e.streams[0] && (e.streams[0].id === peerMedia[sid]?.streamId || (mic?.srcObject && mic.srcObject.id !== e.streams[0].id))) {
       let a = document.getElementById('as-' + sid);
       if (!a) { a = document.createElement('audio'); a.id = 'as-' + sid; a.autoplay = true; document.body.appendChild(a); }
-      a.srcObject = new MediaStream([e.track]); applySink(a); a.volume = Math.min(1, (svol[peerNames[sid]] ?? 1) * ovol()); a.muted = watching !== sid;
+      a.srcObject = new MediaStream([e.track]); applySink(a); a.volume = Math.min(1, (svol[peerNames[sid]] ?? 1) * ovol()); a.muted = watching !== sid || smuted.has(peerNames[sid]);
     } else if (e.track.kind === 'audio') {
       let a = document.getElementById('a-' + sid);
       if (!a) { a = document.createElement('audio'); a.id = 'a-' + sid; a.autoplay = true; document.body.appendChild(a); }
@@ -9720,6 +9724,7 @@ socket.on('media', ({ sid, name, cam, screen, streamId, viewers, q, audio }) => 
   renderStage();
 });
 const svol = JSON.parse(store.get('kanka-svol') || '{}');
+const smuted = new Set(JSON.parse(store.get('kanka-smute') || '[]')); // sesi kapatılan yayınlar (yayıncının adı)
 function closePeer(sid) {
   peers[sid]?.close(); delete peers[sid]; delete peerMedia[sid]; delete peerVideo[sid];
   watchers.delete(sid); if (watching === sid) watching = null; if (focusSid === sid) focusSid = null;
@@ -9953,7 +9958,7 @@ function watchStream(sid, on = true) {
   if (on) { watching = sid; focusSid = sid; } else { if (watching === sid) watching = null; if (focusSid === sid) focusSid = null; }
   socket.emit('streamWatch', { to: sid, on });
   if (on) [800, 2500, 6000].forEach(ms => setTimeout(() => watching === sid && smoothRecv(sid), ms));
-  const a = document.getElementById('as-' + sid); if (a) a.muted = !on;
+  const a = document.getElementById('as-' + sid); if (a) a.muted = !on || smuted.has(peerNames[sid]);
   renderStage();
 }
 socket.on('streamWatch', ({ from, name, on }) => {
@@ -10212,6 +10217,41 @@ function zoomAt(el, e) {
   if (k2 === 1) z.x = z.y = 0; else zClamp(el);
   zApply(el);
 }
+// Sahnedeki kutuya sağ tık: yayını izle / bırak, yayın sesini kapat, ses seviyesi, tam ekran, profil
+$('#stage').addEventListener('contextmenu', e => {
+  const el = e.target.closest('.tile[data-sid]'); if (!el) return;
+  const sid = el.dataset.sid, me = sid === 'me', name = me ? S.me : peerNames[sid]; if (!name) return;
+  e.preventDefault();
+  const live = !!el.querySelector('.tbadge .red'), watch = watching === sid, a = document.getElementById('as-' + sid), muted = smuted.has(name);
+  if (!live && !watch) return me ? undefined : userMenu(name, e.clientX, e.clientY); // yayın yoksa kişinin normal menüsü (ses seviyesi, sustur...)
+  const fs = () => document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.();
+  const items = [];
+  if (me && live) items.push({ t: 'Yayını bitir', icon: 'x', danger: true, act: () => stopVideo() });
+  else if (live && !watch) items.push({ t: 'Yayını izle', icon: 'eye', act: () => watchStream(sid) });
+  else if (watch) {
+    if (a) items.push({ t: muted ? 'Yayının sesini aç' : 'Yayının sesini kapat', icon: 'volume', on: muted, act: () => {
+      muted ? smuted.delete(name) : smuted.add(name); store.set('kanka-smute', JSON.stringify([...smuted]));
+      a.muted = !watch || smuted.has(name); toast(muted ? `${dn(name)} yayınının sesi açıldı` : `${dn(name)} yayınının sesi kapatıldı`); } });
+    items.push({ t: document.fullscreenElement ? 'Tam ekrandan çık' : 'Tam ekran', icon: 'expand', act: fs });
+    items.push({ t: 'Yayını izlemeyi bırak', icon: 'x', danger: true, act: () => watchStream(sid, false) });
+  }
+  if (!me) { if (items.length) items.push('-'); items.push({ t: 'Profili gör', icon: 'user', act: () => showProfile(name) }); }
+  if (!items.length) return userMenu(name, e.clientX, e.clientY);
+  ctxMenu(e.clientX, e.clientY, items, `${live ? '<span style="color:#ff5a5f">●</span> ' : ''}${esc(dn(name))}${live ? ' · yayın' : ''}`);
+  // izlenen yayının sesi varsa menünün başına ses seviyesi kaydırıcısı
+  if (watch && a) {
+    const m = document.querySelector('.umenu.ctxm'), v = svol[name] ?? 1;
+    const row = document.createElement('div'); row.className = 'ctx-vol';
+    row.innerHTML = `<label>${ic('volume')}<span>Yayın sesi</span><b>%${Math.round(v * 100)}</b></label><input type="range" class="krange" min="0" max="1" step="0.05" value="${v}" aria-label="Yayın sesi">`;
+    const t = m.querySelector('.ctx-title'); t ? t.after(row) : m.prepend(row);
+    const r = row.querySelector('input');
+    r.oninput = () => { const x = +r.value; svol[name] = x; store.set('kanka-svol', JSON.stringify(svol)); a.volume = Math.min(1, x * ovol());
+      if (x > 0 && smuted.has(name)) { smuted.delete(name); store.set('kanka-smute', JSON.stringify([...smuted])); a.muted = false; }
+      row.querySelector('b').textContent = '%' + Math.round(x * 100); const ti = el.querySelector('.tctl input'); if (ti) ti.value = x; };
+    r.onclick = ev => ev.stopPropagation();
+    const H = innerHeight, h = m.offsetHeight; if (m.offsetTop + h > H - 8) m.style.top = Math.max(8, H - h - 8) + 'px';
+  }
+});
 $('#stage').addEventListener('wheel', e => {
   if (!vview() || e.ctrlKey) return; // ctrl+tekerlek sayfa yakınlaştırmasıdır, karışma
   const el = e.target.closest('.tile'), v = el?.querySelector('video');
