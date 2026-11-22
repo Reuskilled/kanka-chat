@@ -2114,6 +2114,7 @@ const BADGES = {
   dev: ['🤖', 'Bot Geliştirici', 'Kanka bot sisteminin beta geliştiricisi'],
   partner: ['🤝', 'Kanka Partner', 'Kanka\'nın iş birliği yaptığı bir sunucunun sahibi'],
   yildiz: ['⭐', 'Yıldız Sunucu', 'Yıldız kademesine ulaşmış bir sunucunun sahibi'],
+  arena: ['🏆', 'Arena Şampiyonu', 'Kanka Arena genel sıralamasında ilk 10'],
 };
 // Elle verilen rozetler (Kanka ekibi verir): u.awards = { avci: { by, time } }
 const AWARDS = ['avci'];
@@ -2145,7 +2146,8 @@ function badgesOf(u) {
   if (u.onb?.rewarded) b.push('caylak');
   if (staffRank(u.name)) b.unshift('ekip');
   for (const k of AWARDS) if (u.awards?.[k]) b.push(k);
-  if (u.devEarned) b.push('dev'); // rozet: bot gerçekten kullanılınca (kabul edilmek yetmez)
+  if (u.devEarned) b.push('dev');
+  try { if (arenaChampions().has(u.name)) b.push('arena'); } catch {} // rozet: bot gerçekten kullanılınca (kabul edilmek yetmez)
   if (db.users[u.name] === u) { const first = !u.badgeAt; u.badgeAt ||= {}; let ch = first; for (const k of b) if (!(k in u.badgeAt)) { u.badgeAt[k] = first ? 0 : Date.now(); ch = true; } if (ch) save(); } // ilk geçişte eski rozetlerin tarihi bilinmiyor (0)
   return b;
 }
@@ -3121,6 +3123,437 @@ try {
   fs.unlinkSync(GW_SESS_FILE);
 } catch {}
 let shuttingDown = false;
+// =================== Kanka Arena ===================
+// Sesli odalarda oyun lobileri. Lobiler bellekte durur (sunucu güncellenirken sıra tabanlı oyunlar arena.json'a yazılıp geri yüklenir).
+// Her oyun bir "motor": init(oyuncular) → durum, move(durum, oyuncu, hamle) → hata yazısı | undefined, view(durum, bakan) → gönderilecek görüntü.
+// Gerçek zamanlı oyunlar (masa hokeyi, bilek güreşi) ayrıca tick(durum, dt) ve input(durum, oyuncu, girdi) kullanır.
+// Puan: oyun başına Elo (1000'den başlar). Genel sıralamada ilk 10 "Arena Şampiyonu" rozeti alır.
+const ARENA_FILE = path.join(DATA_DIR, 'arena.json');
+const arenas = new Map();            // lobi id -> lobi
+const arenaSocks = new Map();        // socket.id -> izlenen lobi id
+const rint = n => crypto.randomInt(n);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rint(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+const r3 = x => Math.round(x * 1000) / 1000;
+// ---------- Pişti ----------
+const SUITS = ['S', 'H', 'D', 'C'], RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const cRank = c => c.slice(0, -1);
+const PISTI = {
+  ad: 'Pişti', emoji: '🃏', min: 2, max: 2, turnSec: 45,
+  init(ps) {
+    const deck = shuffle(SUITS.flatMap(s => RANKS.map(r => r + s)));
+    let table = deck.splice(0, 4); while (cRank(table[3]) === 'J') { deck.push(table.pop()); shuffle(deck); table.push(deck.shift()); } // açık kart vale olmasın
+    const st = { ps, deck, table, hands: {}, caps: {}, pis: {}, turn: 0, last: null, ev: null };
+    for (const p of ps) { st.hands[p] = deck.splice(0, 4); st.caps[p] = []; st.pis[p] = 0; }
+    return st;
+  },
+  cur: st => st.ps[st.turn],
+  move(st, p, mv) {
+    if (st.ps[st.turn] !== p) return 'Sıra sende değil';
+    const h = st.hands[p], i = h.indexOf(mv?.card); if (i < 0) return 'Bu kart elinde yok';
+    const card = h.splice(i, 1)[0], top = st.table[st.table.length - 1];
+    st.ev = { by: p, card, cap: false, pisti: 0 };
+    if (top && (cRank(card) === cRank(top) || cRank(card) === 'J')) {
+      if (st.table.length === 1 && cRank(card) === cRank(top)) { const pts = cRank(card) === 'J' ? 20 : 10; st.pis[p] += pts; st.ev.pisti = pts; }
+      st.caps[p].push(...st.table, card); st.table = []; st.last = p; st.ev.cap = true;
+    } else st.table.push(card);
+    st.turn = (st.turn + 1) % st.ps.length;
+    if (st.ps.every(x => !st.hands[x].length)) {
+      if (st.deck.length) for (const x of st.ps) st.hands[x] = st.deck.splice(0, 4);
+      else {
+        if (st.table.length && st.last) { st.caps[st.last].push(...st.table); st.table = []; }
+        const sc = PISTI.score(st); st.final = sc;
+        const [a, b] = st.ps; st.over = sc[a] === sc[b] ? { draw: true, rank: [a, b] } : { rank: [...st.ps].sort((x, y) => sc[y] - sc[x]) };
+      }
+    }
+  },
+  score(st) {
+    const o = {}, n = Object.fromEntries(st.ps.map(p => [p, st.caps[p].length])), most = Math.max(...Object.values(n));
+    for (const p of st.ps) {
+      let s = st.pis[p];
+      for (const c of st.caps[p]) { if (c === '2C') s += 2; if (c === '10D') s += 3; if (['A', 'J'].includes(cRank(c))) s += 1; }
+      if (n[p] === most && Object.values(n).filter(v => v === most).length === 1) s += 3;
+      o[p] = s;
+    }
+    return o;
+  },
+  view(st, me) {
+    return { hand: st.hands[me] || null, counts: Object.fromEntries(st.ps.map(p => [p, st.hands[p].length])), top: st.table[st.table.length - 1] || null, under: st.table[st.table.length - 2] || null, tableN: st.table.length,
+      deck: st.deck.length, caps: Object.fromEntries(st.ps.map(p => [p, st.caps[p].length])), pis: st.pis, turn: st.ps[st.turn], ev: st.ev, final: st.final || null, score: PISTI.score(st) };
+  },
+  leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
+};
+// ---------- Kanka Kart (UNO benzeri) ----------
+// kart: renk (r,y,g,b) + değer (0-9, s=atla, r=yön, d=+2) ya da w (renk seç), w4 (+4)
+const KK_COLORS = ['r', 'y', 'g', 'b'];
+const KART = {
+  ad: 'Kanka Kart', emoji: '🌈', min: 2, max: 6, turnSec: 40,
+  deck() { const d = []; for (const c of KK_COLORS) { d.push(c + '0'); for (const v of ['1', '2', '3', '4', '5', '6', '7', '8', '9', 's', 'r', 'd']) d.push(c + v, c + v); } for (let i = 0; i < 4; i++) d.push('w', 'w4'); return shuffle(d); },
+  init(ps) {
+    const deck = KART.deck(), st = { ps, deck, pile: [], hands: {}, turn: 0, dir: 1, color: null, drew: false, ev: null, out: [] };
+    for (const p of ps) st.hands[p] = deck.splice(0, 7);
+    let top; while (true) { top = deck.shift(); if (/^[rygb][0-9]$/.test(top)) break; deck.push(top); }
+    st.pile.push(top); st.color = top[0]; return st;
+  },
+  cur: st => st.ps[st.turn],
+  isWild: c => c[0] === 'w',
+  ok(st, c) { const top = st.pile[st.pile.length - 1]; return KART.isWild(c) || c[0] === st.color || (!KART.isWild(top) && c.slice(1) === top.slice(1)); },
+  draw(st, p, n) { for (let i = 0; i < n; i++) { if (!st.deck.length) { const top = st.pile.pop(); st.deck = shuffle(st.pile); st.pile = [top]; } if (!st.deck.length) break; st.hands[p].push(st.deck.shift()); } },
+  next(st, k = 1) { const n = st.ps.length; st.turn = ((st.turn + st.dir * k) % n + n) % n; st.drew = false; },
+  move(st, p, mv) {
+    if (st.ps[st.turn] !== p) return 'Sıra sende değil';
+    const h = st.hands[p];
+    if (mv?.draw) { if (st.drew) return 'Zaten kart çektin'; KART.draw(st, p, 1); st.drew = true; st.ev = { by: p, draw: 1 }; if (!h.some(c => KART.ok(st, c))) { st.ev.pass = true; KART.next(st); } return; }
+    if (mv?.pass) { if (!st.drew) return 'Önce kart çek'; st.ev = { by: p, pass: true }; KART.next(st); return; }
+    const i = +mv?.i; if (!Number.isInteger(i) || !h[i]) return 'Geçersiz kart';
+    const c = h[i]; if (!KART.ok(st, c)) return 'Bu kart oynanamaz';
+    if (st.drew && i !== h.length - 1) return 'Kart çektikten sonra sadece çektiğin kartı oynayabilirsin';
+    if (KART.isWild(c) && !KK_COLORS.includes(mv.color)) return 'Bir renk seç';
+    h.splice(i, 1); st.pile.push(c); st.color = KART.isWild(c) ? mv.color : c[0];
+    st.ev = { by: p, card: c, color: st.color, kanka: h.length === 1 };
+    if (!h.length) {
+      const left = st.ps.filter(x => x !== p).sort((a, b) => st.hands[a].length - st.hands[b].length);
+      st.over = { rank: [p, ...left] }; return;
+    }
+    const v = c.slice(1), n = st.ps.length;
+    if (v === 's') KART.next(st, 2);
+    else if (v === 'r') { if (n === 2) KART.next(st, 2); else { st.dir *= -1; KART.next(st); } }
+    else if (v === 'd' || c === 'w4') { KART.next(st); const victim = st.ps[st.turn]; KART.draw(st, victim, v === 'd' ? 2 : 4); st.ev.hit = { who: victim, n: v === 'd' ? 2 : 4 }; KART.next(st); }
+    else KART.next(st);
+  },
+  view(st, me) {
+    return { hand: st.hands[me] || null, counts: Object.fromEntries(st.ps.map(p => [p, st.hands[p].length])), top: st.pile[st.pile.length - 1], color: st.color, dir: st.dir, deck: st.deck.length,
+      turn: st.ps[st.turn], drew: st.ps[st.turn] === me && st.drew, ev: st.ev, playable: st.hands[me] && st.ps[st.turn] === me ? st.hands[me].map(c => KART.ok(st, c) && (!st.drew || c === st.hands[me][st.hands[me].length - 1])) : null };
+  },
+  leave(st, p) {
+    const i = st.ps.indexOf(p); if (i < 0) return;
+    if (st.ps.length <= 2) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; return; }
+    st.out.push(p); st.deck.push(...st.hands[p]); shuffle(st.deck); delete st.hands[p];
+    const wasTurn = st.turn === i; st.ps.splice(i, 1); if (st.turn > i || st.turn >= st.ps.length) st.turn = (st.turn - (st.turn > i ? 1 : 0)) % st.ps.length; if (wasTurn) st.drew = false;
+    st.ev = { left: p };
+  },
+};
+// ---------- Adam asmaca (harf tahmin) ----------
+const KELIMELER = {
+  Hayvan: ['ZÜRAFA', 'PENGUEN', 'TİMSAH', 'KAPLUMBAĞA', 'ÇİTA', 'SİNCAP', 'KARINCA', 'YUNUS', 'KANGURU', 'BAYKUŞ', 'ARMADİLLO', 'GERGEDAN', 'ÖRDEK', 'KELEBEK', 'AHTAPOT', 'FLAMİNGO', 'KİRPİ', 'TAVŞAN', 'PAPAĞAN', 'ÇEKİRGE'],
+  Yiyecek: ['LAHMACUN', 'MANTI', 'BAKLAVA', 'İSKENDER', 'KÜNEFE', 'MENEMEN', 'SUCUK', 'PİDE', 'KARPUZ', 'ANANAS', 'BÖREK', 'DÖNER', 'SİMİT', 'KOKOREÇ', 'ÇİĞ KÖFTE', 'LOKUM', 'AYRAN', 'PATLICAN', 'MANDALİNA', 'HAMBURGER'],
+  Şehir: ['İSTANBUL', 'ANKARA', 'İZMİR', 'TRABZON', 'ESKİŞEHİR', 'GAZİANTEP', 'MARDİN', 'ANTALYA', 'ERZURUM', 'KAPADOKYA', 'ÇANAKKALE', 'MUĞLA', 'DİYARBAKIR', 'SAMSUN', 'BURSA', 'KONYA', 'RİZE', 'EDİRNE', 'ŞANLIURFA', 'ADANA'],
+  Meslek: ['ASTRONOT', 'ECZACI', 'MİMAR', 'İTFAİYECİ', 'GARSON', 'BERBER', 'PİLOT', 'YAZILIMCI', 'AŞÇI', 'VETERİNER', 'AVUKAT', 'FOTOĞRAFÇI', 'ÖĞRETMEN', 'MÜHENDİS', 'TERZİ', 'POSTACI', 'ARKEOLOG', 'DİŞ HEKİMİ', 'KAPTAN', 'HAKEM'],
+  Eşya: ['KULAKLIK', 'ŞEMSİYE', 'BUZDOLABI', 'KLAVYE', 'MERDİVEN', 'YASTIK', 'TELESKOP', 'PUSULA', 'ÇAYDANLIK', 'MİKROFON', 'BİLGİSAYAR', 'MAKAS', 'AYNA', 'SAAT', 'KUMANDA', 'ŞARJ ALETİ', 'CÜZDAN', 'GÖZLÜK', 'MASA LAMBASI', 'ÇEKİÇ'],
+  Oyun: ['SATRANÇ', 'TAVLA', 'OKEY', 'MİNECRAFT', 'VALORANT', 'TETRİS', 'SAKLAMBAÇ', 'MONOPOLY', 'DOMİNO', 'BİLARDO', 'LANGIRT', 'PİŞTİ', 'BOWLİNG', 'YAKAN TOP', 'SEK SEK', 'MANGALA', 'ZEKA KÜPÜ', 'BİNGO', 'DART', 'AMONG US'],
+  Spor: ['BASKETBOL', 'VOLEYBOL', 'GÜREŞ', 'OKÇULUK', 'YÜZME', 'TENİS', 'HENTBOL', 'KAYAK', 'BOKS', 'ESKRİM', 'KÜREK', 'JİMNASTİK', 'MARATON', 'SÖRF', 'KARATE', 'BİSİKLET', 'DALIŞ', 'PATEN', 'RUGBY', 'GOLF'],
+  Ülke: ['JAPONYA', 'BREZİLYA', 'MEKSİKA', 'NORVEÇ', 'MISIR', 'ARJANTİN', 'KANADA', 'İTALYA', 'HİNDİSTAN', 'AVUSTRALYA', 'İZLANDA', 'PORTEKİZ', 'GÜNEY KORE', 'FAS', 'ŞİLİ', 'YUNANİSTAN', 'İSVEÇ', 'KÜBA', 'PERU', 'ENDONEZYA'],
+};
+const TR_ALPHA = 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ';
+const ASMACA = {
+  ad: 'Harf Tahmin', emoji: '🔤', min: 2, max: 8, turnSec: 35, maxMiss: 7,
+  pick(st) { const cats = Object.keys(KELIMELER), cat = cats[rint(cats.length)], l = KELIMELER[cat].filter(w => !st.used.includes(w)); const w = l[rint(l.length)]; st.used.push(w); return { cat, word: w }; },
+  init(ps) { const st = { ps, scores: Object.fromEntries(ps.map(p => [p, 0])), round: 0, rounds: Math.min(6, Math.max(3, ps.length)), used: [], turn: 0, ev: null }; ASMACA.newRound(st); return st; },
+  newRound(st) { const { cat, word } = ASMACA.pick(st); Object.assign(st, { cat, word, got: [], wrong: [], miss: 0, roundOver: null }); st.round++; st.turn = (st.round - 1) % st.ps.length; },
+  cur: st => st.ps[st.turn],
+  solved: st => [...st.word].every(ch => ch === ' ' || st.got.includes(ch)),
+  endRound(st, why) {
+    st.roundOver = { word: st.word, why };
+    if (st.round >= st.rounds) { st.over = { rank: [...st.ps].sort((a, b) => st.scores[b] - st.scores[a]) }; const top = st.scores[st.over.rank[0]]; if (st.ps.filter(p => st.scores[p] === top).length > 1 && st.ps.length === 2) st.over.draw = true; }
+    else { const keep = st.roundOver; ASMACA.newRound(st); st.prev = keep; }
+  },
+  move(st, p, mv) {
+    if (st.ps[st.turn] !== p) return 'Sıra sende değil';
+    st.prev = null;
+    const pass = () => { st.turn = (st.turn + 1) % st.ps.length; };
+    if (typeof mv?.word === 'string') {
+      const g = mv.word.toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(); if (!g) return 'Bir kelime yaz';
+      if (g === st.word) { const hidden = [...new Set([...st.word].filter(ch => ch !== ' ' && !st.got.includes(ch)))].length; st.scores[p] += 20 + hidden * 5; st.ev = { by: p, word: g, ok: true, pts: 20 + hidden * 5 }; ASMACA.endRound(st, p + ' bildi'); return; }
+      st.scores[p] = Math.max(0, st.scores[p] - 5); st.miss++; st.ev = { by: p, word: g, ok: false };
+      if (st.miss >= ASMACA.maxMiss) return ASMACA.endRound(st, 'Adam asıldı');
+      return pass();
+    }
+    const L = String(mv?.letter || '').toLocaleUpperCase('tr'); if (L.length !== 1 || !TR_ALPHA.includes(L)) return 'Geçersiz harf';
+    if (st.got.includes(L) || st.wrong.includes(L)) return 'Bu harf denendi';
+    const n = [...st.word].filter(ch => ch === L).length;
+    if (n) { st.got.push(L); st.scores[p] += 10 * n; st.ev = { by: p, letter: L, n }; if (ASMACA.solved(st)) { st.scores[p] += 15; ASMACA.endRound(st, p + ' tamamladı'); } return; }
+    st.wrong.push(L); st.miss++; st.ev = { by: p, letter: L, n: 0 };
+    if (st.miss >= ASMACA.maxMiss) return ASMACA.endRound(st, 'Adam asıldı');
+    pass();
+  },
+  view(st) {
+    return { cat: st.cat, mask: [...st.word].map(ch => ch === ' ' ? ' ' : st.got.includes(ch) || st.over ? ch : '_').join(''), got: st.got, wrong: st.wrong, miss: st.miss, maxMiss: ASMACA.maxMiss, turn: st.ps[st.turn],
+      scores: st.scores, round: st.round, rounds: st.rounds, ev: st.ev, prev: st.prev || null, word: st.over ? st.word : null };
+  },
+  leave(st, p) {
+    if (st.ps.length <= 2) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; return; }
+    const i = st.ps.indexOf(p); st.ps.splice(i, 1); delete st.scores[p]; if (st.turn >= st.ps.length || st.turn > i) st.turn = Math.max(0, st.turn - (st.turn > i ? 1 : 0)) % st.ps.length; st.ev = { left: p };
+  },
+};
+// ---------- Dart (301) ----------
+const DART_ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+function dartScore(x, y) { // tahta yarıçapı 1 (çift halkanın dış kenarı)
+  const r = Math.hypot(x, y); if (r > 1) return { pts: 0, label: 'Dışarı' };
+  if (r <= 6.35 / 170) return { pts: 50, label: 'Bull' };
+  if (r <= 15.9 / 170) return { pts: 25, label: '25' };
+  const deg = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360, n = DART_ORDER[Math.floor(((deg + 9) % 360) / 18)];
+  if (r >= 162 / 170) return { pts: n * 2, label: 'Çift ' + n };
+  if (r >= 99 / 170 && r <= 107 / 170) return { pts: n * 3, label: 'Üçlü ' + n };
+  return { pts: n, label: String(n) };
+}
+const DART = {
+  ad: 'Dart', emoji: '🎯', min: 2, max: 4, turnSec: 40, START: 301, ROUNDS: 10,
+  init(ps) { return { ps, score: Object.fromEntries(ps.map(p => [p, DART.START])), turn: 0, dart: 0, from: DART.START, round: 1, hits: [], ev: null }; },
+  cur: st => st.ps[st.turn],
+  nextTurn(st) { st.turn = (st.turn + 1) % st.ps.length; st.dart = 0; st.hits = []; if (st.turn === 0) st.round++; st.from = st.score[st.ps[st.turn]];
+    if (st.round > DART.ROUNDS) st.over = { rank: [...st.ps].sort((a, b) => st.score[a] - st.score[b]) }; },
+  move(st, p, mv) {
+    if (st.ps[st.turn] !== p) return 'Sıra sende değil';
+    let x = +mv?.x, y = +mv?.y; if (!isFinite(x) || !isFinite(y) || Math.abs(x) > 1.6 || Math.abs(y) > 1.6) return 'Geçersiz atış';
+    x += gauss() * 0.035; y += gauss() * 0.035; // el titremesi
+    const s = dartScore(x, y), left = st.score[p] - s.pts, hit = { x: r3(x), y: r3(y), ...s };
+    st.hits.push(hit); st.ev = { by: p, ...hit };
+    if (left < 0) { st.score[p] = st.from; st.ev.bust = true; return DART.nextTurn(st); }
+    st.score[p] = left;
+    if (left === 0) { st.over = { rank: [p, ...st.ps.filter(q => q !== p).sort((a, b) => st.score[a] - st.score[b])] }; return; }
+    if (++st.dart >= 3) DART.nextTurn(st);
+  },
+  view(st) { return { score: st.score, turn: st.ps[st.turn], dart: st.dart, round: Math.min(st.round, DART.ROUNDS), rounds: DART.ROUNDS, hits: st.hits, ev: st.ev }; },
+  leave(st, p) { if (st.ps.length <= 2) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; return; } const i = st.ps.indexOf(p); st.ps.splice(i, 1); delete st.score[p]; if (st.turn === i) { st.turn = (i - 1 + st.ps.length) % st.ps.length; DART.nextTurn(st); } else if (st.turn > i) st.turn--; },
+};
+// ---------- Bilardo (8 top, sadeleştirilmiş kurallar) ----------
+// Masa 2 x 1 birim. Atış sunucuda baştan sona hesaplanır; istemciler kareleri oynatır.
+const BIL = { W: 2, H: 1, R: 0.028, POCKET: 0.062, DECEL: 0.95, CUSH: 0.78, BB: 0.96 };
+const BIL_POCKETS = [[0, 0], [1, -0.012], [2, 0], [0, 1], [1, 1.012], [2, 1]];
+function bilRack() {
+  const b = [{ n: 0, x: 0.5, y: 0.5, in: false }], R = BIL.R, dx = R * 2 * 0.866 + 0.0005;
+  // 1. sıra en önde; 8 numara 3. sıranın ortasında; köşelerde biri düz biri çizgili
+  const rest = shuffle([1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15]); const order = [];
+  const corners = [rest.find(n => n < 8), rest.find(n => n > 8)]; let pool = rest.filter(n => !corners.includes(n));
+  for (let row = 0; row < 5; row++) for (let k = 0; k <= row; k++) {
+    let n; if (row === 2 && k === 1) n = 8; else if (row === 4 && k === 0) n = corners[0]; else if (row === 4 && k === 4) n = corners[1]; else n = pool.shift();
+    order.push({ n, x: 1.5 + row * dx, y: 0.5 + (k - row / 2) * (R * 2 + 0.0005) });
+  }
+  for (const o of order) b.push({ ...o, in: false });
+  return b.sort((a, c) => a.n - c.n);
+}
+function bilSim(balls, ang, speed) {
+  const B = balls.map(b => ({ ...b, vx: 0, vy: 0 })), cue = B[0]; cue.vx = Math.cos(ang) * speed; cue.vy = Math.sin(ang) * speed;
+  const R = BIL.R, dt = 1 / 240, frames = [], potted = [], rail = new Set(); let first = null, t = 0, fi = 0;
+  const snap = () => frames.push(B.map(b => b.in ? null : [r3(b.x), r3(b.y)]));
+  snap();
+  while (t < 14) {
+    let moving = false;
+    for (const b of B) { if (b.in) continue; const v = Math.hypot(b.vx, b.vy); if (v < 0.004) { b.vx = b.vy = 0; continue; } moving = true; const nv = Math.max(0, v - BIL.DECEL * dt); b.vx *= nv / v; b.vy *= nv / v; b.x += b.vx * dt; b.y += b.vy * dt; }
+    if (!moving) break;
+    for (let i = 0; i < B.length; i++) { const a = B[i]; if (a.in) continue;
+      for (let j = i + 1; j < B.length; j++) { const c = B[j]; if (c.in) continue;
+        const dx = c.x - a.x, dy = c.y - a.y, d = Math.hypot(dx, dy); if (d >= 2 * R || d === 0) continue;
+        const nx = dx / d, ny = dy / d, ov = 2 * R - d; a.x -= nx * ov / 2; a.y -= ny * ov / 2; c.x += nx * ov / 2; c.y += ny * ov / 2;
+        const rv = (a.vx - c.vx) * nx + (a.vy - c.vy) * ny; if (rv <= 0) continue;
+        const imp = rv * (1 + BIL.BB) / 2; a.vx -= imp * nx; a.vy -= imp * ny; c.vx += imp * nx; c.vy += imp * ny;
+        if (first === null && (a.n === 0 || c.n === 0)) first = a.n === 0 ? c.n : a.n;
+      } }
+    for (const b of B) { if (b.in) continue;
+      if (BIL_POCKETS.some(([px, py]) => Math.hypot(b.x - px, b.y - py) < BIL.POCKET)) { b.in = true; b.vx = b.vy = 0; potted.push(b.n); continue; }
+      const nearPocket = BIL_POCKETS.some(([px, py]) => Math.hypot(b.x - px, b.y - py) < BIL.POCKET * 1.9);
+      if (nearPocket) continue; // cep ağzında bant yok, top içeri kayabilsin
+      if (b.x < R) { b.x = R; b.vx = Math.abs(b.vx) * BIL.CUSH; rail.add(b.n); } if (b.x > BIL.W - R) { b.x = BIL.W - R; b.vx = -Math.abs(b.vx) * BIL.CUSH; rail.add(b.n); }
+      if (b.y < R) { b.y = R; b.vy = Math.abs(b.vy) * BIL.CUSH; rail.add(b.n); } if (b.y > BIL.H - R) { b.y = BIL.H - R; b.vy = -Math.abs(b.vy) * BIL.CUSH; rail.add(b.n); } }
+    for (const b of B) if (!b.in && (b.x < -0.05 || b.x > BIL.W + 0.05 || b.y < -0.05 || b.y > BIL.H + 0.05)) { b.in = true; potted.push(b.n); }
+    t += dt; if (++fi % 8 === 0) snap(); // 30 kare/sn
+  }
+  snap();
+  return { balls: B.map(({ n, x, y, in: i }) => ({ n, x: r3(x), y: r3(y), in: i })), frames, potted, first };
+}
+const BILARDO = {
+  ad: 'Bilardo', emoji: '🎱', min: 2, max: 2, turnSec: 60,
+  init(ps) { return { ps, balls: bilRack(), turn: 0, groups: null, hand: false, shot: 0, last: null, ev: null, brk: true }; },
+  cur: st => st.ps[st.turn],
+  groupOf: (st, p) => st.groups ? st.groups[p] : null,
+  left(st, p) { const g = st.groups?.[p]; if (!g) return 7; return st.balls.filter(b => !b.in && (g === 'duz' ? b.n >= 1 && b.n <= 7 : b.n >= 9)).length; },
+  free(st, x, y) { return x > BIL.R && x < BIL.W - BIL.R && y > BIL.R && y < BIL.H - BIL.R && st.balls.every(b => b.in || b.n === 0 || Math.hypot(b.x - x, b.y - y) > 2 * BIL.R + 0.002); },
+  move(st, p, mv) {
+    if (st.ps[st.turn] !== p) return 'Sıra sende değil';
+    const ang = +mv?.a, pw = Math.max(0.05, Math.min(1, +mv?.p || 0)); if (!isFinite(ang)) return 'Geçersiz atış';
+    const cue = st.balls[0];
+    if (st.hand) { const x = +mv.cx, y = +mv.cy; if (!isFinite(x) || !isFinite(y) || !BILARDO.free(st, x, y)) return 'Beyaz topu boş bir yere koy'; cue.x = x; cue.y = y; cue.in = false; }
+    const before = BILARDO.left(st, p), opp = st.ps[1 - st.turn];
+    const sim = bilSim(st.balls, ang, 0.35 + pw * 3.6);
+    st.balls = sim.balls; st.shot++;
+    const own = n => { const g = st.groups?.[p]; return g ? (g === 'duz' ? n >= 1 && n <= 7 : n >= 9) : n !== 8 && n !== 0; };
+    let foul = null;
+    if (sim.potted.includes(0)) foul = 'Beyaz top cebe girdi';
+    else if (sim.first === null) foul = 'Hiçbir topa değmedi';
+    else if (st.groups && before > 0 && !own(sim.first)) foul = sim.first === 8 ? 'Önce 8 numaraya vurdu' : 'Önce rakibin topuna vurdu';
+    const pottedObj = sim.potted.filter(n => n !== 0 && n !== 8);
+    if (!st.groups && pottedObj.length && !st.brk) { const g0 = pottedObj[0] < 8 ? 'duz' : 'cizgili'; st.groups = { [p]: g0, [opp]: g0 === 'duz' ? 'cizgili' : 'duz' }; }
+    st.ev = { by: p, potted: sim.potted, foul, frames: sim.frames, seq: st.shot };
+    if (sim.potted.includes(8)) {
+      const win = !foul && before === 0 && st.groups;
+      st.over = { rank: win ? [p, opp] : [opp, p], why: win ? '8 numarayı soktu' : (before > 0 || !st.groups ? '8 numara erken girdi' : 'Faulle 8 numara') }; st.ev.end = st.over.why; return;
+    }
+    st.brk = false;
+    const keep = !foul && sim.potted.some(n => own(n));
+    st.hand = !!foul; if (!keep) st.turn = 1 - st.turn;
+    if (foul) { const c = st.balls[0]; c.in = false; c.x = 0.5; c.y = 0.5; for (let k = 0; k < 12 && !BILARDO.free(st, c.x, c.y); k++) { c.x = 0.15 + rint(30) / 100; c.y = 0.15 + rint(70) / 100; } } // rakip istediği yere koyabilir
+  },
+  view(st) { return { balls: st.balls, turn: st.ps[st.turn], groups: st.groups, hand: st.hand, ev: st.ev, left: Object.fromEntries(st.ps.map(p => [p, BILARDO.left(st, p)])) }; },
+  leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
+};
+// ---------- Bilek güreşi (gerçek zamanlı: hızlı bas) ----------
+const BILEK = {
+  ad: 'Bilek Güreşi', emoji: '💪', min: 2, max: 2, rt: true, hz: 10,
+  init(ps) { return { ps, pos: 0, wins: Object.fromEntries(ps.map(p => [p, 0])), taps: Object.fromEntries(ps.map(p => [p, 0])), tot: Object.fromEntries(ps.map(p => [p, 0])), phase: 'cd', t: 3, round: 1 }; },
+  input(st, p, inp) { if (st.phase !== 'go' || !(p in st.taps)) return; const n = Math.max(0, Math.min(6, +inp?.t || 0)); st.taps[p] += n; },
+  tick(st, dt) {
+    if (st.phase === 'cd' || st.phase === 'pause') { st.t -= dt; if (st.t <= 0) { if (st.phase === 'pause') { st.pos = 0; st.round++; } st.phase = 'go'; st.t = 0; } return true; }
+    if (st.phase !== 'go') return false;
+    const [a, b] = st.ps, ta = Math.min(st.taps[a], 3), tb = Math.min(st.taps[b], 3); st.taps[a] = st.taps[b] = 0; // saniyede en çok ~30 basış sayılır
+    st.tot[a] += ta; st.tot[b] += tb;
+    st.pos += (ta - tb) * 0.026 - Math.sign(st.pos) * 0.002; // ortaya doğru hafif direnç
+    if (Math.abs(st.pos) >= 1) { const w = st.pos > 0 ? a : b; st.wins[w]++; st.last = w;
+      if (st.wins[w] >= 2) { st.over = { rank: [w, w === a ? b : a] }; st.phase = 'end'; } else { st.phase = 'pause'; st.t = 2.5; } }
+    return true;
+  },
+  view(st) { return { pos: r3(st.pos), wins: st.wins, phase: st.phase, t: Math.ceil(st.t), round: st.round, last: st.last || null }; },
+  leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
+};
+// ---------- Masa hokeyi (gerçek zamanlı) ----------
+// Masa 1 x 1.6; ilk oyuncu altta, ikinci üstte. İstemci kendi tarafını hep altta görür (ikinci oyuncu için çevrilir).
+const HOK = { W: 1, H: 1.6, PR: 0.075, KR: 0.042, GOAL: 0.36, MAXV: 3.2, PADV: 5, WIN: 7 };
+const HOKEY = {
+  ad: 'Masa Hokeyi', emoji: '🏒', min: 2, max: 2, rt: true, hz: 30,
+  init(ps) { return { ps, k: { x: 0.5, y: 1.05, vx: 0, vy: 0 }, pd: [{ x: 0.5, y: 1.4, tx: 0.5, ty: 1.4, vx: 0, vy: 0 }, { x: 0.5, y: 0.2, tx: 0.5, ty: 0.2, vx: 0, vy: 0 }], sc: [0, 0], pause: 2, serve: 0, last: null }; },
+  input(st, p, inp) { const i = st.ps.indexOf(p); if (i < 0) return; let x = +inp?.x, y = +inp?.y; if (!isFinite(x) || !isFinite(y)) return;
+    if (i === 1) { x = HOK.W - x; y = HOK.H - y; } // ikinci oyuncu masayı ters görür
+    const pd = st.pd[i]; pd.tx = Math.max(HOK.PR, Math.min(HOK.W - HOK.PR, x)); pd.ty = i === 0 ? Math.max(HOK.H / 2 + HOK.PR, Math.min(HOK.H - HOK.PR, y)) : Math.max(HOK.PR, Math.min(HOK.H / 2 - HOK.PR, y)); },
+  tick(st, dt) {
+    if (st.over) return false;
+    const steps = 4, h = dt / steps, k = st.k;
+    for (let s = 0; s < steps; s++) {
+      for (const pd of st.pd) { const dx = pd.tx - pd.x, dy = pd.ty - pd.y, d = Math.hypot(dx, dy), m = Math.min(d, HOK.PADV * h); const ox = pd.x, oy = pd.y; if (d > 0) { pd.x += dx / d * m; pd.y += dy / d * m; } pd.vx = (pd.x - ox) / h; pd.vy = (pd.y - oy) / h; }
+      if (st.pause > 0) { st.pause -= h; continue; }
+      k.x += k.vx * h; k.y += k.vy * h; k.vx *= 0.9985; k.vy *= 0.9985;
+      if (Math.abs(k.y - HOK.H / 2) < HOK.PR && Math.hypot(k.vx, k.vy) < 0.08) { st.stuck = (st.stuck || 0) + h; if (st.stuck > 2) { k.vy = (Math.random() < 0.5 ? -1 : 1) * 0.5; st.stuck = 0; } } else st.stuck = 0; // orta çizgide kalan pak
+      if (k.x < HOK.KR) { k.x = HOK.KR; k.vx = Math.abs(k.vx) * 0.9; } if (k.x > HOK.W - HOK.KR) { k.x = HOK.W - HOK.KR; k.vx = -Math.abs(k.vx) * 0.9; }
+      const inGoal = Math.abs(k.x - HOK.W / 2) < HOK.GOAL / 2;
+      if (k.y < HOK.KR && !inGoal) { k.y = HOK.KR; k.vy = Math.abs(k.vy) * 0.9; } if (k.y > HOK.H - HOK.KR && !inGoal) { k.y = HOK.H - HOK.KR; k.vy = -Math.abs(k.vy) * 0.9; }
+      if (k.y < -HOK.KR || k.y > HOK.H + HOK.KR) { const scorer = k.y < 0 ? 0 : 1; st.sc[scorer]++; st.last = st.ps[scorer]; st.goalAt = Date.now();
+        if (st.sc[scorer] >= HOK.WIN) { st.over = { rank: [st.ps[scorer], st.ps[1 - scorer]] }; return true; }
+        Object.assign(k, { x: 0.5, y: scorer === 0 ? 0.55 : 1.05, vx: 0, vy: 0 }); st.pause = 1.2; break; }
+      for (const pd of st.pd) { const dx = k.x - pd.x, dy = k.y - pd.y, d = Math.hypot(dx, dy), md = HOK.PR + HOK.KR; if (d >= md || d === 0) continue;
+        const nx = dx / d, ny = dy / d; k.x = pd.x + nx * md; k.y = pd.y + ny * md;
+        const rvx = k.vx - pd.vx, rvy = k.vy - pd.vy, rv = rvx * nx + rvy * ny; if (rv < 0) { k.vx -= 1.9 * rv * nx; k.vy -= 1.9 * rv * ny; }
+        const v = Math.hypot(k.vx, k.vy); if (v > HOK.MAXV) { k.vx *= HOK.MAXV / v; k.vy *= HOK.MAXV / v; } }
+    }
+    return true;
+  },
+  view(st) { const k = st.k; return { k: [r3(k.x), r3(k.y)], p: st.pd.map(pd => [r3(pd.x), r3(pd.y)]), sc: st.sc, pause: st.pause > 0, last: st.last, win: HOK.WIN }; },
+  leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
+};
+const ARENA_GAMES = { bilardo: BILARDO, dart: DART, pisti: PISTI, kart: KART, bilek: BILEK, hokey: HOKEY, asmaca: ASMACA };
+// ---------- Lobi yönetimi ----------
+const arenaInVoice = (ch, n) => [...(voice.get(ch)?.values() || [])].includes(n);
+function arenaView(L, viewer) {
+  const E = ARENA_GAMES[L.game];
+  return { id: L.id, ch: L.ch, sv: L.sv, game: L.game, ad: E.ad, emoji: E.emoji, min: E.min, max: E.max, rt: !!E.rt, host: L.host, players: L.players, state: L.state, at: L.at,
+    watchers: io.sockets.adapter.rooms.get('ar:' + L.id)?.size || 0, g: L.st ? E.view(L.st, viewer) : null, ps: L.st?.ps || null, res: L.res || null, rematch: L.rematch || [], turnAt: L.turnAt || null, turnSec: E.turnSec || null, seq: L.seq };
+}
+const arenaSummary = L => ({ id: L.id, game: L.game, ad: ARENA_GAMES[L.game].ad, emoji: ARENA_GAMES[L.game].emoji, host: L.host, players: L.players, max: ARENA_GAMES[L.game].max, state: L.state });
+function arenaPushCh(ch) {
+  const list = [...arenas.values()].filter(L => L.ch === ch).map(arenaSummary);
+  io.to('v:' + ch).to('arch:' + ch).emit('arenaCh', { ch, lobbies: list });
+}
+function arenaPush(L) {
+  L.seq = (L.seq || 0) + 1;
+  for (const sid of io.sockets.adapter.rooms.get('ar:' + L.id) || []) io.to(sid).emit('arena', arenaView(L, online.get(sid)));
+}
+function arenaCardUpdate(L) {
+  const list = db.messages[L.ch]; const m = L.msg && list?.find(x => x.id === L.msg); if (!m) return;
+  m.arena = { ...m.arena, state: L.state, players: L.res && L.state !== 'play' && L.state !== 'lobby' ? [...L.res.rank] : [...L.players], winner: L.res?.rank?.[0] || null, draw: !!L.res?.draw, gone: !arenas.has(L.id) };
+  save(); io.to(L.ch).emit('update', { channelId: L.ch, msg: m });
+}
+// Elo: sıralamadaki her ikili karşılaştırma ayrı maç sayılır
+function arenaRate(game, rank, draw) {
+  const R = n => { const u = db.users[n]; const a = ((u.arena ||= {})[game] ||= { r: 1000, w: 0, l: 0, d: 0, p: 0 }); return a; };
+  const before = Object.fromEntries(rank.map(n => [n, R(n).r])), delta = Object.fromEntries(rank.map(n => [n, 0])), K = 32 / Math.max(1, rank.length - 1);
+  for (let i = 0; i < rank.length; i++) for (let j = i + 1; j < rank.length; j++) {
+    const a = rank[i], b = rank[j], ea = 1 / (1 + 10 ** ((before[b] - before[a]) / 400)), sa = draw ? 0.5 : 1;
+    delta[a] += K * (sa - ea); delta[b] -= K * (sa - ea);
+  }
+  for (const n of rank) { const a = R(n); a.r = Math.max(100, Math.round(a.r + delta[n])); a.p++; delta[n] = Math.round(delta[n]); }
+  if (draw) for (const n of rank) R(n).d++; else { R(rank[0]).w++; for (const n of rank.slice(1)) R(n).l++; }
+  arenaTopCache = null; return delta;
+}
+function arenaFinish(L) {
+  const E = ARENA_GAMES[L.game], o = L.st.over, rank = o.rank.filter(n => db.users[n]);
+  const delta = rank.length >= 2 ? arenaRate(L.game, rank, !!o.draw) : {};
+  for (const n of rank) { addXp(n, n === rank[0] && !o.draw ? 30 : 10, 'arena', null, null); STAT.me(n, 'ar:' + E.ad + ':o'); if (n === rank[0] && !o.draw) STAT.me(n, 'ar:' + E.ad + ':w'); }
+  L.state = 'end'; L.res = { rank, draw: !!o.draw, delta, forfeit: o.forfeit || null, why: o.why || null }; L.rematch = []; L.endAt = Date.now();
+  save(); arenaPush(L); arenaPushCh(L.ch); arenaCardUpdate(L);
+  for (const n of rank) io.to('user:' + n).emit('users', allUsers());
+}
+function arenaStart(L) {
+  const E = ARENA_GAMES[L.game];
+  L.st = E.init(shuffle([...L.players])); L.state = 'play'; L.res = null; L.rematch = []; L.turnAt = Date.now(); L.away = {};
+  arenaPush(L); arenaPushCh(L.ch); arenaCardUpdate(L);
+}
+function arenaMove(L, n, mv) {
+  const E = ARENA_GAMES[L.game]; if (L.state !== 'play' || !L.st.ps.includes(n)) return 'Bu oyunda değilsin';
+  const err = E.move(L.st, n, mv); if (err) return err;
+  L.turnAt = Date.now();
+  if (L.st.over) arenaFinish(L); else arenaPush(L);
+}
+function arenaDrop(L, n, why) {
+  const E = ARENA_GAMES[L.game];
+  if (L.state === 'play' && L.st.ps.includes(n)) { E.leave(L.st, n); L.players = L.players.filter(x => x !== n); if (L.st.over) { L.st.over.forfeit ||= n; arenaFinish(L); } else { L.turnAt = Date.now(); arenaPush(L); } }
+  else { L.players = L.players.filter(x => x !== n); L.rematch = (L.rematch || []).filter(x => x !== n); }
+  if (L.host === n) L.host = L.players[0] || null;
+  if (!L.players.length && L.state !== 'play') { arenas.delete(L.id); io.to('ar:' + L.id).emit('arenaGone', { id: L.id, why: why || 'Lobi kapandı' }); arenaCardUpdate({ ...L, state: L.res ? 'end' : 'closed' }); }
+  else { arenaPush(L); arenaCardUpdate(L); }
+  arenaPushCh(L.ch);
+}
+// Saniyede bir: odadan çıkanlar (45 sn içinde dönmezse oyundan düşer), sırasını bekletenler, eski lobiler
+setInterval(() => {
+  const now = Date.now();
+  for (const L of [...arenas.values()]) {
+    if (!findChannel(L.ch)) { arenas.delete(L.id); continue; }
+    for (const n of [...L.players]) {
+      if (arenaInVoice(L.ch, n)) { if (L.away?.[n]) delete L.away[n]; continue; }
+      if (L.state !== 'play') { arenaDrop(L, n, 'Odadan ayrıldı'); continue; }
+      (L.away ||= {})[n] ||= now; if (now - L.away[n] > 45e3) arenaDrop(L, n, 'Odadan ayrıldı');
+    }
+    if (!arenas.has(L.id)) continue;
+    const E = ARENA_GAMES[L.game];
+    if (L.state === 'play' && !E.rt && E.turnSec && now - (L.turnAt || now) > (E.turnSec + 15) * 1000) { const c = E.cur(L.st); if (c) { io.to('ar:' + L.id).emit('arenaNote', { id: L.id, text: `${c} uzun süre oynamadı, oyundan düştü` }); arenaDrop(L, c, 'Süre doldu'); } }
+    if (L.state === 'end' && now - L.endAt > 10 * 60e3) { for (const n of [...L.players]) arenaDrop(L, n, 'Lobi kapandı'); arenas.delete(L.id); }
+    if (L.state === 'lobby' && now - L.at > 60 * 60e3) { for (const n of [...L.players]) arenaDrop(L, n, 'Lobi uzun süre başlamadı'); }
+  }
+}, 1000);
+// Gerçek zamanlı oyunlar
+{ let lastRt = Date.now(), acc10 = 0;
+  setInterval(() => {
+    const now = Date.now(), dt = Math.min(0.1, (now - lastRt) / 1000); lastRt = now; acc10 += dt; const slow = acc10 >= 0.1; if (slow) acc10 = 0;
+    for (const L of arenas.values()) {
+      const E = ARENA_GAMES[L.game]; if (!E.rt || L.state !== 'play') continue;
+      if (E.hz === 10 && !slow) continue;
+      E.tick(L.st, E.hz === 10 ? 0.1 : dt);
+      io.to('ar:' + L.id).volatile.emit('arT', { id: L.id, g: E.view(L.st) });
+      if (L.st.over) arenaFinish(L);
+    }
+  }, 33);
+}
+// Genel sıralama: her oyundaki (puan - 1000) toplamı + oynanan maç başına 2 (en az 3 maç oynamış olanlar)
+let arenaTopCache = null;
+function arenaOverall() {
+  if (arenaTopCache && Date.now() - arenaTopCache.t < 60e3) return arenaTopCache.list;
+  const list = Object.values(db.users).filter(u => u.arena && !u.bot).map(u => { let pts = 0, p = 0, w = 0; for (const a of Object.values(u.arena)) { pts += a.r - 1000; p += a.p; w += a.w; } return { name: u.name, pts: Math.round(pts + p * 2), p, w }; })
+    .filter(x => x.p >= 3).sort((a, b) => b.pts - a.pts || b.w - a.w);
+  arenaTopCache = { t: Date.now(), list }; return list;
+}
+const arenaChampions = () => new Set(arenaOverall().slice(0, 10).filter(x => x.pts > 0).map(x => x.name));
+// Güncelleme sırasında sıra tabanlı oyunlar kaybolmasın
+function arenaSave() {
+  try { const o = [...arenas.values()].filter(L => !ARENA_GAMES[L.game].rt || L.state !== 'play').map(L => ({ ...L, away: {} })); fs.writeFileSync(ARENA_FILE, JSON.stringify({ at: Date.now(), l: o })); } catch (e) { console.error('arena kaydı', e.message); }
+}
+try { const j = JSON.parse(fs.readFileSync(ARENA_FILE, 'utf8')); if (Date.now() - j.at < 15 * 60e3) for (const L of j.l) { if (ARENA_GAMES[L.game]) { L.turnAt = Date.now(); arenas.set(L.id, L); } } fs.unlinkSync(ARENA_FILE); } catch {}
+
 function gracefulShutdown(why = 'güncelleme') {
   if (shuttingDown) return; shuttingDown = true;
   console.log('Sunucu düzgün kapanıyor:', why);
@@ -3130,7 +3563,7 @@ function gracefulShutdown(why = 'güncelleme') {
   // Botlara: op 7 = yeniden bağlan (oturum korunur), 1012 = sunucu yeniden başlıyor
   for (const set of botConns.values()) for (const conn of set) { gwSend(conn, { op: 7, d: { bekle: 4000, sebep: 'Sunucu güncelleniyor' } }); try { conn.ws.close(1012, 'Sunucu güncelleniyor, birkaç saniye sonra yeniden bağlan'); } catch {} }
   try { flushDb(); } catch (e) { console.error('Kapanışta kayıt:', e.message); }
-  STAT.close();
+  STAT.close(); arenaSave();
   setTimeout(() => process.exit(0), 700);
 }
 // Güncelleyici sunucuyu öldürmeden önce bunu çağırır (sadece bu bilgisayardan, anahtarla)
@@ -6134,6 +6567,94 @@ io.on('connection', socket => {
     if (f && srvMuted.has(f.s.id + '|' + me)) socket.emit('srvMute', { on: true });
   }
   socket.on('voiceLeave', leaveVoice);
+  // ----- Kanka Arena -----
+  let arWatchCh = null;
+  const arLeaveRoom = () => { const cur = arenaSocks.get(socket.id); if (cur) { socket.leave('ar:' + cur); arenaSocks.delete(socket.id); } };
+  socket.on('arenaWatch', ({ ch } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') cb = () => {};
+    if (arWatchCh) socket.leave('arch:' + arWatchCh); arWatchCh = null;
+    const f = typeof ch === 'string' ? findChannel(ch) : null; if (!me || !f || !voiceLike(f.c.type) || !seesChannel(f.s, f.c, me) || !(f.s.public || f.s.members.includes(me))) return cb({ lobbies: [] });
+    arWatchCh = ch; socket.join('arch:' + ch);
+    cb({ lobbies: [...arenas.values()].filter(L => L.ch === ch).map(arenaSummary) });
+  });
+  socket.on('arenaCreate', ({ game } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const E = ARENA_GAMES[game];
+    if (!me || !E) return cb({ error: 'Böyle bir oyun yok' });
+    const f = myVoice && !myVoice.startsWith('call:') ? findChannel(myVoice) : null;
+    if (!f) return cb({ error: 'Arena lobisi açmak için bir sunucunun sesli odasına katıl' });
+    if (!chPerm(f.s, f.c, me, 'apps') || timedOut(f.s, me)) return cb({ error: 'Bu odada oyun açma iznin yok' });
+    if (limited('arc|' + me, 8, 300e3)) return cb({ error: 'Çok hızlı lobi açıyorsun, biraz bekle' });
+    if ([...arenas.values()].filter(L => L.ch === f.c.id).length >= 8) return cb({ error: 'Bu odada çok fazla lobi var. Birine katıl ya da bitmesini bekle.' });
+    for (const L of [...arenas.values()]) if (L.players.includes(me) && L.state !== 'play') arenaDrop(L, me);
+    if ([...arenas.values()].some(L => L.state === 'play' && L.st.ps.includes(me))) return cb({ error: 'Zaten bir oyundasın' });
+    const L = { id: id(), ch: f.c.id, sv: f.s.id, game, host: me, players: [me], state: 'lobby', at: Date.now() };
+    arenas.set(L.id, L);
+    // odanın sohbetine davet kartı
+    const u = db.users[me], list = (db.messages[L.ch] ||= []);
+    const msg = { id: id(), author: me, color: u.color, time: Date.now(), kind: 'arena', reactions: {}, arena: { id: L.id, game, ad: E.ad, emoji: E.emoji, max: E.max, min: E.min, state: 'lobby', players: [me] } };
+    list.push(msg); if (list.length > 2000) list.shift(); L.msg = msg.id; save();
+    io.to(L.ch).emit('message', { channelId: L.ch, msg });
+    arLeaveRoom(); socket.join('ar:' + L.id); arenaSocks.set(socket.id, L.id);
+    arenaPush(L); arenaPushCh(L.ch); cb({ ok: true, lobby: arenaView(L, me) });
+  });
+  socket.on('arenaOpen', ({ id: lid } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const L = arenas.get(lid); if (!me || !L) return cb({ error: 'Bu lobi kapanmış' });
+    const f = findChannel(L.ch); if (!f || !seesChannel(f.s, f.c, me) || !(f.s.public || f.s.members.includes(me))) return cb({ error: 'Bu lobiyi göremezsin' });
+    arLeaveRoom(); socket.join('ar:' + L.id); arenaSocks.set(socket.id, L.id);
+    cb({ ok: true, lobby: arenaView(L, me) }); setTimeout(() => arenaPush(L), 50); // izleyici sayısı güncellensin
+  });
+  socket.on('arenaClose', () => { const lid = arenaSocks.get(socket.id); arLeaveRoom(); const L = arenas.get(lid); if (L) arenaPush(L); });
+  socket.on('arenaJoin', ({ id: lid } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const L = arenas.get(lid); if (!me || !L) return cb({ error: 'Bu lobi kapanmış' });
+    const E = ARENA_GAMES[L.game];
+    if (L.players.includes(me)) return cb({ ok: true });
+    if (L.state === 'play') return cb({ error: 'Oyun başladı, bitince katılabilirsin. Şimdilik izleyebilirsin.' });
+    if (myVoice !== L.ch) return cb({ error: 'Katılmak için önce bu sesli odaya gir', needVoice: L.ch });
+    if (L.players.length >= E.max) return cb({ error: 'Lobi dolu' });
+    if ([...arenas.values()].some(x => x.state === 'play' && x.st.ps.includes(me))) return cb({ error: 'Zaten bir oyundasın' });
+    for (const x of [...arenas.values()]) if (x !== L && x.players.includes(me)) arenaDrop(x, me);
+    L.players.push(me); arLeaveRoom(); socket.join('ar:' + L.id); arenaSocks.set(socket.id, L.id);
+    arenaPush(L); arenaPushCh(L.ch); arenaCardUpdate(L); cb({ ok: true });
+  });
+  socket.on('arenaLeave', ({ id: lid } = {}, cb = () => {}) => { const L = arenas.get(lid); if (L && me && L.players.includes(me)) arenaDrop(L, me, 'Ayrıldı'); typeof cb === 'function' && cb({ ok: true }); });
+  socket.on('arenaKick', ({ id: lid, name } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const L = arenas.get(lid); if (!L || L.host !== me || name === me || L.state === 'play' || !L.players.includes(name)) return cb({ error: 'Yapılamadı' });
+    arenaDrop(L, name, 'Lobiden çıkarıldı'); io.to('user:' + name).emit('arenaNote', { id: L.id, text: 'Lobiden çıkarıldın' }); cb({ ok: true });
+  });
+  socket.on('arenaStart', ({ id: lid } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const L = arenas.get(lid); if (!L || L.host !== me) return cb({ error: 'Sadece lobiyi açan başlatabilir' });
+    const E = ARENA_GAMES[L.game]; if (L.state === 'play') return cb({ error: 'Oyun zaten başladı' });
+    if (L.players.length < E.min) return cb({ error: `En az ${E.min} oyuncu gerekli` });
+    arenaStart(L); cb({ ok: true });
+  });
+  socket.on('arenaMove', ({ id: lid, mv } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') cb = () => {};
+    const L = arenas.get(lid); if (!L || !me) return cb({ error: 'Lobi bulunamadı' });
+    if (limited('arm|' + me, 12, 3e3)) return cb({ error: 'Çok hızlı' });
+    const err = arenaMove(L, me, mv && typeof mv === 'object' ? mv : {}); cb(err ? { error: err } : { ok: true });
+  });
+  socket.on('arenaIn', ({ id: lid, ...inp } = {}) => { const L = arenas.get(lid); if (!L || L.state !== 'play' || !me) return; const E = ARENA_GAMES[L.game]; if (E.rt) E.input(L.st, me, inp); });
+  socket.on('arenaRematch', ({ id: lid } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') cb = () => {};
+    const L = arenas.get(lid); if (!L || L.state !== 'end' || !me) return cb({ error: 'Rövanş yapılamaz' });
+    if (!L.players.includes(me)) { if (myVoice !== L.ch) return cb({ error: 'Önce bu sesli odaya gir', needVoice: L.ch }); if (L.players.length >= ARENA_GAMES[L.game].max) return cb({ error: 'Lobi dolu' }); L.players.push(me); arLeaveRoom(); socket.join('ar:' + L.id); arenaSocks.set(socket.id, L.id); }
+    L.rematch = [...new Set([...(L.rematch || []), me])];
+    const E = ARENA_GAMES[L.game], ready = L.players.filter(n => arenaInVoice(L.ch, n));
+    if (ready.length >= E.min && ready.every(n => L.rematch.includes(n))) { L.players = ready; arenaStart(L); } else { arenaPush(L); arenaPushCh(L.ch); }
+    cb({ ok: true });
+  });
+  socket.on('arenaTop', ({ game } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; if (!me) return cb({ error: 'Giriş yap' });
+    const mine = db.users[me]?.arena || {};
+    if (game && ARENA_GAMES[game]) {
+      const list = Object.values(db.users).filter(u => u.arena?.[game]?.p && !u.bot).map(u => ({ name: u.name, ...u.arena[game] })).sort((a, b) => b.r - a.r || b.w - a.w);
+      const i = list.findIndex(x => x.name === me);
+      return cb({ game, list: list.slice(0, 50), me: mine[game] || null, myRank: i >= 0 ? i + 1 : null });
+    }
+    const all = arenaOverall(), i = all.findIndex(x => x.name === me);
+    cb({ list: all.slice(0, 50), me: mine, myRank: i >= 0 ? i + 1 : null, champs: [...arenaChampions()] });
+  });
+  socket.on('disconnect', () => { arenaSocks.delete(socket.id); });
   // ----- Ses paneli -----
   const sbServer = (serverId, cb) => { const s = db.servers.find(x => x.id === serverId); if (!me || !s || !s.members.includes(me)) { cb({ error: 'Sunucu bulunamadı' }); return null; } return s; };
   socket.on('sbAdd', ({ serverId, data, name, emoji, vol } = {}, cb = () => {}) => {
