@@ -13527,7 +13527,7 @@ function devPortal(root, openId) {
     if (r.error) { root.innerHTML = `<p class="hint">${esc(r.error)}</p>`; return; }
     const ds = r.devStats || {}, g = r.hedef || { servers: 3, cmds: 50 };
     const bar = (v, max) => `<span class="dp-bar"><i style="width:${Math.min(100, Math.round(v / max * 100))}%"></i></span>`;
-    const head = `<div class="dp-head"><div><h3>${ic('code')}Geliştirici Portalı</h3><p class="hint" style="margin:2px 0 0">Botlarını buradan yönet. Nasıl yazılır: <a href="/gelistirici" target="_blank" rel="noopener">belgeler ve örnekler</a></p></div>
+    const head = `<div class="dp-head"><div><h3>${ic('code')}Geliştirici Portalı</h3><p class="hint" style="margin:2px 0 0">Botlarını buradan yönet. Nasıl yazılır: <a href="/gelistirici" target="_blank" rel="noopener">belgeler ve örnekler</a>${r.topluluk ? ` · Takıldın mı? <a href="#" id="dp-comm">${r.topluluk.uye ? 'Geliştirici sunucusuna git' : 'Geliştirici sunucusuna katıl'}</a>` : ''}</p></div>
       ${r.apps.length < r.max ? `<button class="btnp" id="dp-new">${ic('plus')} Yeni bot</button>` : ''}</div>
       <div class="dp-badge ${r.rozet ? 'ok' : ''}"><span class="dp-bi">${ic(r.rozet ? 'check' : 'code')}</span><div><b>${r.rozet ? 'Bot Geliştirici rozeti senin' : 'Bot Geliştirici rozetine doğru'}</b>
         <small>Botların başkalarının ${g.servers} sunucusunda kullanılsın ve ${g.cmds} komut çalıştırılsın (kendi sunucuların ve kendi denemelerin sayılmaz).</small>
@@ -13538,6 +13538,7 @@ function devPortal(root, openId) {
     if (open) return appDetail(root, open, r);
     root.innerHTML = head + (r.apps.length ? `<div class="dp-list">${r.apps.map(card).join('')}</div>` : `<div class="dp-empty">${ic('code')}<b>Henüz botun yok</b><span>İlk botunu oluştur; senin için bir deneme sunucusu da açılır, bot içinde hazır bekler.</span></div>`) + `<p class="hint" style="font-size:12px">En fazla ${r.max} bot. Doğrulanmamış bir bot en fazla ${r.esik} farklı kişiye ulaşabilir; daha fazlası için botun sayfasından doğrulama iste.</p>`;
     root.querySelectorAll('[data-app]').forEach(b => b.onclick = () => devPortal(root, b.dataset.app));
+    $('#dp-comm') && ($('#dp-comm').onclick = e => { e.preventDefault(); const t = r.topluluk; closeModal(); if (S.servers.some(x => x.id === t.id)) selectServer(t.id); else joinInviteNow(t.davet); });
     $('#dp-new') && ($('#dp-new').onclick = () => form(`${ic('code')}Yeni bot`, 'Bot adı kullanıcı adı gibidir: 2-20 karakter, harf, rakam, _ . -', [{ k: 'name', p: 'Bot adı (örn. ZarBot)' }, { k: 'desc', p: 'Ne yapıyor? (kısa açıklama)', opt: true }], v => socket.emit('appCreate', v, x => {
       if (x.error) return toast(x.error, null, false, { type: 'err' });
       showToken(x.app.ad, x.token, x.sir, true); devPortal(root, x.app.id);
