@@ -4508,33 +4508,51 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .hk-board { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; cursor: none; }
   @media (hover: none) { .hk-board { cursor: default; } }
   @media (max-width: 700px) { .hk-hud { padding: 5px 9px; gap: 6px; } .hk-side span { font-size: 11.5px; } .hk-side b { font-size: 17px; } .hk-mid { font-size: 10px; padding: 3px 8px; } }
-  .bk2 { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 10px; padding: 10px 6px; }
-  .bk2-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; font-weight: 800; font-size: 14px; }
-  .bk2-top .l { color: #7fb2ff; } .bk2-top .r { color: #ffad6b; text-align: right; } .bk2-top .c { color: var(--muted); font-size: 11.5px; letter-spacing: .12em; }
-  .bk2-top b { font-size: 11px; letter-spacing: 2px; margin: 0 4px; color: var(--ink); } .bk2-top em { font-style: normal; font-size: 10.5px; color: var(--muted); letter-spacing: .08em; margin-left: 4px; }
-  .bk2-bar { position: relative; height: 30px; border-radius: 99px; background: linear-gradient(180deg, #ff9d4d, #e86a1c); box-shadow: inset 0 2px 0 rgba(255,255,255,.25), inset 0 -3px 0 rgba(0,0,0,.25), 0 6px 18px rgba(0,0,0,.4); }
-  .bk2-bar .bl { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; border-radius: 99px 0 0 99px; background: linear-gradient(180deg, #4d8ef0, #1f5bc2); box-shadow: inset 0 2px 0 rgba(255,255,255,.25), inset 0 -3px 0 rgba(0,0,0,.25); }
-  .bk2-bar .mid { position: absolute; left: 50%; top: 6px; bottom: 6px; width: 2px; background: rgba(255,255,255,.5); }
-  .bk2-bar .knob { position: absolute; top: 50%; width: 18px; height: 38px; margin: -19px 0 0 -9px; border-radius: 9px; background: #fff; box-shadow: 0 0 0 3px rgba(0,0,0,.35), 0 4px 10px rgba(0,0,0,.5); }
-  .bk2-pw { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; } .bk2-pw > span { font-size: 10.5px; font-weight: 900; letter-spacing: .12em; color: var(--muted); }
-  .bk2-pw .side { position: relative; height: 6px; border-radius: 9px; background: rgba(255,255,255,.08); } .bk2-pw .side i { position: absolute; top: 0; bottom: 0; border-radius: 9px; background: #5fd38a; transition: width .1s linear; }
-  .bk2-pw .side.l i { left: 0; } .bk2-pw .side.r i { right: 0; } .bk2-pw .side em { position: absolute; top: -3px; bottom: -3px; width: 2px; background: rgba(255,255,255,.55); }
-  .bk2-arena { position: relative; min-height: 240px; display: grid; place-items: center; }
-  .bk2-big { font-size: 34px; font-weight: 900; color: var(--accent); opacity: 0; transition: opacity .2s; } .bk2-big.on { opacity: 1; }
-  .bk2-q { position: absolute; right: 18%; top: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; animation: popIn .2s; }
-  .bk2-q svg { width: 72px; height: 200px; overflow: visible; filter: drop-shadow(0 0 10px rgba(95,211,138,.45)); }
-  .bk2-q path { fill: none; stroke-linecap: round; } .bk2-q .bg { stroke: #1b1b22; stroke-width: 18; } .bk2-q .zone { stroke: #5fd38a; stroke-width: 14; }
-  .bk2-q .mk { fill: #fff; stroke: rgba(0,0,0,.5); stroke-width: 2; } .bk2-q .mk.in { fill: #d4ff00; filter: drop-shadow(0 0 6px #d4ff00); }
-  .bk2-q small { font-weight: 900; font-size: 13px; color: var(--accent); letter-spacing: .06em; } .bk2-q.done { opacity: .6; transition: opacity .4s; }
-  .bk2-fb { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-weight: 800; color: var(--muted); font-size: 13.5px; }
-  .bk2-keys { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; font-weight: 700; } .bk2-keys i { width: 1px; height: 18px; background: var(--line); margin: 0 6px; }
-  .bk2-keys kbd { min-width: 34px; height: 30px; padding: 0 8px; display: inline-grid; place-items: center; border-radius: 8px; background: #1c1c22; border: 1px solid var(--line); border-bottom-width: 3px; color: var(--ink); font: 800 13px/1 inherit; transition: background .1s, color .1s; } .bk2-keys kbd.wide { min-width: 80px; }
-  .bk2-keys kbd.next, .bk2-pad button.next { background: #ffad6b; color: #1a0f0a; border-color: #ffad6b; } .bk2-keys kbd.hit, .bk2-pad button.hit { transform: translateY(2px); }
-  .bk2-pad { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; }
-  .bk2-pad button { height: 96px; border-radius: 20px; background: #1c1c22; border: 1px solid var(--line); border-bottom-width: 5px; font-size: 34px; font-weight: 900; color: var(--ink); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
-  .bk2-pad .sp { grid-column: 1 / -1; height: 64px; font-size: 20px; background: #5fd38a; color: #08210f; border-color: #3aa866; animation: popIn .15s; }
-  .bk2-hint { text-align: center; color: var(--muted); font-size: 12px; }
-  @media (max-width: 560px) { .bk2-q { right: 6%; } .bk2-q svg { width: 56px; height: 160px; } .bk2-arena { min-height: 190px; } }
+  .bk2 { width: 100%; max-width: 760px; height: 100%; display: flex; flex-direction: column; gap: 9px; padding: 4px 6px 2px; justify-content: center; min-height: 0; }
+  .bk2-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; font-weight: 700; font-size: 13.5px; }
+  .bk2-top .l { color: #93c5fd; display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .bk2-top .r { color: var(--accent); display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; }
+  .bk2-top .c { color: #8b92a1; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 7px; background: #13161e; border: 1px solid rgba(255,255,255,.08); white-space: nowrap; }
+  .bk2-top b { font-size: 11px; letter-spacing: 3px; color: #f5f6f8; }
+  .bk2-top em { font-style: normal; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(200,255,0,.14); color: var(--accent); letter-spacing: .06em; }
+  .bk2-bar { position: relative; height: 22px; border-radius: 99px; background: linear-gradient(180deg, #98c915, #5e820a); border: 1px solid rgba(255,255,255,.12); box-shadow: inset 0 2px 6px rgba(0,0,0,.45), 0 6px 18px rgba(0,0,0,.4); flex-shrink: 0; }
+  .bk2-bar .bl { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; border-radius: 99px 0 0 99px; background: linear-gradient(180deg, #3b82f6, #1d4ed8); box-shadow: inset 0 2px 4px rgba(255,255,255,.22); }
+  .bk2-bar .mid { position: absolute; left: 50%; top: 3px; bottom: 3px; width: 2px; background: rgba(255,255,255,.45); transform: translateX(-50%); }
+  .bk2-bar .knob { position: absolute; top: 50%; width: 14px; height: 30px; margin: -15px 0 0 -7px; border-radius: 7px; background: linear-gradient(180deg, #fff, #cbd5e1); box-shadow: 0 0 0 2.5px rgba(9,11,16,.85), 0 4px 12px rgba(0,0,0,.6); }
+  .bk2-pw { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; flex-shrink: 0; }
+  .bk2-pw > span { font-size: 10px; font-weight: 800; letter-spacing: .12em; color: #7c8392; }
+  .bk2-pw .side { position: relative; height: 7px; border-radius: 99px; background: #141720; border: 1px solid rgba(255,255,255,.07); overflow: visible; }
+  .bk2-pw .side i { position: absolute; top: 0; bottom: 0; border-radius: 99px; background: linear-gradient(90deg, #2563eb, #60a5fa); transition: width .08s linear, background .2s; }
+  .bk2-pw .side.l i { left: 0; }
+  .bk2-pw .side.r i { right: 0; background: linear-gradient(270deg, #a3e635, var(--accent)); }
+  .bk2-pw .side.tired i { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+  .bk2-pw .side em { position: absolute; top: -3px; bottom: -3px; width: 2px; border-radius: 2px; background: rgba(255,255,255,.72); }
+  .bk2-arena { position: relative; flex: 1; min-height: 230px; max-height: 360px; border-radius: 16px; background: #0c0e14; border: 1px solid rgba(255,255,255,.085); overflow: hidden; display: grid; place-items: center; box-shadow: inset 0 0 40px rgba(0,0,0,.55), 0 12px 30px rgba(0,0,0,.4); }
+  .bk2-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .bk2-big { position: relative; z-index: 3; font-size: 38px; font-weight: 900; letter-spacing: -.02em; color: var(--accent); text-shadow: 0 6px 24px rgba(0,0,0,.85); opacity: 0; transform: scale(.92); transition: opacity .18s, transform .18s; pointer-events: none; padding: 6px 18px; border-radius: 12px; background: rgba(9,11,16,.62); backdrop-filter: blur(6px); border: 1px solid rgba(200,255,0,.22); }
+  .bk2-big.on { opacity: 1; transform: scale(1); }
+  .bk2-q { position: absolute; right: 6%; top: 50%; transform: translateY(-50%); z-index: 4; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 14px; background: rgba(11,13,19,.82); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(8px); box-shadow: 0 12px 30px rgba(0,0,0,.6); animation: popIn .18s var(--ease-out); }
+  .bk2-q svg { width: 68px; height: 186px; overflow: visible; }
+  .bk2-q path { fill: none; stroke-linecap: round; }
+  .bk2-q .bg { stroke: #1a1e29; stroke-width: 16; }
+  .bk2-q .zone { stroke: #4ade80; stroke-width: 13; filter: drop-shadow(0 0 8px rgba(74,222,128,.45)); }
+  .bk2-q .mk { fill: #fff; stroke: rgba(9,11,16,.8); stroke-width: 2.5; }
+  .bk2-q .mk.in { fill: var(--accent); filter: drop-shadow(0 0 8px rgba(200,255,0,.85)); }
+  .bk2-q small { font-weight: 800; font-size: 11px; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+  .bk2-q.done { opacity: .65; transition: opacity .35s; }
+  .bk2-fb { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 3; font-weight: 800; color: #e2e8f0; font-size: 12.5px; padding: 4px 12px; border-radius: 8px; background: rgba(9,11,16,.76); border: 1px solid rgba(255,255,255,.1); backdrop-filter: blur(6px); white-space: nowrap; pointer-events: none; transition: opacity .2s; }
+  .bk2-fb:empty { opacity: 0; }
+  .bk2-keys { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; color: #8b92a1; font-size: 12px; font-weight: 600; flex-shrink: 0; padding: 2px 0; }
+  .bk2-keys i { width: 1px; height: 18px; background: rgba(255,255,255,.1); margin: 0 4px; }
+  .bk2-keys kbd { min-width: 36px; height: 32px; padding: 0 10px; display: inline-grid; place-items: center; border-radius: 8px; background: linear-gradient(180deg, #212533, #151822); border: 1px solid rgba(255,255,255,.13); border-bottom: 3px solid #090b10; color: #f2f3f5; font: 800 13px/1 inherit; box-shadow: 0 4px 10px rgba(0,0,0,.35); transition: transform .07s, background .1s, border-color .1s, color .1s; }
+  .bk2-keys kbd.wide { min-width: 86px; }
+  .bk2-keys kbd.next, .bk2-pad button.next { background: linear-gradient(180deg, #d8ff33, #a3d600); color: #090a0d; border-color: rgba(255,255,255,.35); border-bottom-color: #4d6b00; }
+  .bk2-keys kbd.hit, .bk2-pad button.hit { transform: translateY(2px); border-bottom-width: 1px; }
+  .bk2-pad { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; flex-shrink: 0; }
+  .bk2-pad button { height: 78px; border-radius: 14px; background: linear-gradient(180deg, #212533, #151822); border: 1px solid rgba(255,255,255,.12); border-bottom: 4px solid #090b10; font-size: 28px; font-weight: 900; color: #f5f6f8; touch-action: manipulation; user-select: none; -webkit-user-select: none; transition: transform .07s, background .1s; }
+  .bk2-pad .sp { grid-column: 1 / -1; height: 54px; font-size: 18px; background: linear-gradient(180deg, #4ade80, #22c55e); color: #06210f; border-color: rgba(255,255,255,.3); border-bottom-color: #15803d; animation: popIn .15s; }
+  .bk2-hint { text-align: center; color: #7c8392; font-size: 11.5px; }
+  @media (max-width: 560px) { .bk2-q { right: 8px; padding: 6px 7px; } .bk2-q svg { width: 52px; height: 148px; } .bk2-arena { min-height: 185px; } .bk2-big { font-size: 28px; } }
   .bk-wrap { width: 100%; max-width: 640px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
   .bk-names { width: 100%; display: flex; justify-content: space-between; font-weight: 800; } .bk-names b { color: var(--accent); font-size: 22px; margin: 0 6px; }
   .bk-track { position: relative; width: 100%; height: 70px; border-radius: 99px; background: linear-gradient(90deg, #2f6fe0 0, #18181d 30%, #18181d 70%, #e5484d 100%); border: 2px solid var(--line); }
@@ -11944,52 +11962,320 @@ AR_R.bilardo = {
   },
   unmount(st) { cancelAnimationFrame(st.raf); st.ro?.disconnect(); removeEventListener('keydown', st.key); st.bg = null; },
 };
-// ---- Bilek güreşi ----
+// ---- Bilek güreşi (3D Stüdyo Masa + Canlı İskeletli Kollar + WebAudio SFX) ----
+const BK_SFX = (() => {
+  let ctx;
+  const ac = () => (ctx ||= new (window.AudioContext || window.webkitAudioContext)());
+  const wake = () => { try { const a = ac(); if (a.state === 'suspended') a.resume(); } catch {} };
+  const tone = (f0, f1, dur, gain, type = 'triangle') => {
+    try {
+      const a = ac(), t = a.currentTime, o = a.createOscillator(), g = a.createGain();
+      o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t + dur);
+      g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+      o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.01);
+    } catch {}
+  };
+  return {
+    wake,
+    tap(isA, pw = 30) { const base = (isA ? 185 : 225) + pw * 1.4; tone(base, base * 0.52, 0.045, 0.09, 'triangle'); },
+    qtePop() { tone(587.3, 880, 0.09, 0.09, 'sine'); },
+    qteHit(acc) {
+      if (acc >= 0.8) { tone(523.25, 784, 0.14, 0.14, 'triangle'); setTimeout(() => tone(1046.5, 1046.5, 0.18, 0.12, 'sine'), 65); }
+      else if (acc > 0) tone(440, 587, 0.11, 0.10, 'triangle');
+      else tone(170, 82, 0.14, 0.13, 'sawtooth');
+    },
+    cd(go) { go ? (tone(587, 880, 0.18, 0.15, 'triangle'), tone(293.6, 220, 0.22, 0.12, 'sine')) : tone(420, 400, 0.08, 0.09, 'sine'); },
+    slam() { tone(140, 42, 0.28, 0.24, 'sawtooth'); tone(260, 95, 0.16, 0.14, 'triangle'); }
+  };
+})();
+
 AR_R.bilek = {
   // A ve D'ye sırayla bas: güç artar. Güç düşünce yay şeklinde bir zamanlama barı çıkar; işaret yeşil bölgedeyken boşluk.
+  drawStage(st, posL, PL, PR, phase, now) {
+    const c = st.cv; if (!c) return;
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const rw = Math.max(300, Math.round(c.clientWidth * dpr)), rh = Math.max(180, Math.round(c.clientHeight * dpr));
+    if (c.width !== rw || c.height !== rh) { c.width = rw; c.height = rh; }
+    const x = c.getContext('2d'), W = rw, H = rh;
+    x.clearRect(0, 0, W, H);
+
+    // Ekran sarsıntısı (vuruş / QTE / masa çarpma anında)
+    let shX = 0, shY = 0;
+    const strain = phase === 'go' ? (Math.min(1, (PL.pw + PR.pw) / 145) * 2.2) : 0;
+    if (st.shake > 0.05) { shX += (Math.random() - 0.5) * st.shake * dpr; shY += (Math.random() - 0.5) * st.shake * dpr; st.shake *= 0.86; }
+    if (strain > 0.2) { shX += Math.sin(now * 0.095) * strain * 0.45 * dpr; }
+
+    x.save();
+    x.translate(shX, shY);
+
+    // 1. Stüdyo karanlık arka plan + tavan spot hüzmesi
+    const bgG = x.createRadialGradient(W * 0.5, H * 0.12, W * 0.05, W * 0.5, H * 0.48, W * 0.72);
+    bgG.addColorStop(0, '#1d2434'); bgG.addColorStop(0.5, '#10141d'); bgG.addColorStop(1, '#080a0f');
+    x.fillStyle = bgG; x.fillRect(-12, -12, W + 24, H + 24);
+
+    // Tavan ışık konisi (hafif gerçekçi stüdyo ışığı)
+    const cone = x.createLinearGradient(0, 0, 0, H * 0.82);
+    cone.addColorStop(0, 'rgba(226,232,240,0.09)'); cone.addColorStop(1, 'rgba(226,232,240,0)');
+    x.fillStyle = cone;
+    x.beginPath(); x.moveTo(W * 0.34, 0); x.lineTo(W * 0.66, 0); x.lineTo(W * 0.86, H * 0.86); x.lineTo(W * 0.14, H * 0.86); x.closePath(); x.fill();
+
+    // 2. 3D Bilek Güreşi Yarışma Masası (perspektifli çelik yüzey + ön kalınlık)
+    const tTopY = H * 0.62, tBotY = H * 0.90, tEdgeY = H * 0.97;
+    const tTL = W * 0.12, tTR = W * 0.88, tBL = W * 0.03, tBR = W * 0.97;
+
+    // Masa ön kalınlığı (fırçalanmış koyu alüminyum kenar)
+    const edgeG = x.createLinearGradient(0, tBotY, 0, tEdgeY);
+    edgeG.addColorStop(0, '#272d3d'); edgeG.addColorStop(1, '#0a0c12');
+    x.fillStyle = edgeG;
+    x.beginPath(); x.moveTo(tBL, tBotY); x.lineTo(tBR, tBotY); x.lineTo(tBR, tEdgeY); x.lineTo(tBL, tEdgeY); x.closePath(); x.fill();
+
+    // Masa üst tablası
+    const topG = x.createLinearGradient(0, tTopY, 0, tBotY);
+    topG.addColorStop(0, '#171c27'); topG.addColorStop(0.55, '#202635'); topG.addColorStop(1, '#141822');
+    x.fillStyle = topG;
+    x.beginPath(); x.moveTo(tTL, tTopY); x.lineTo(tTR, tTopY); x.lineTo(tBR, tBotY); x.lineTo(tBL, tBotY); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,0.12)'; x.lineWidth = Math.max(1, dpr);
+    x.stroke();
+
+    // Merkez masa çizgisi
+    x.strokeStyle = 'rgba(255,255,255,0.07)'; x.setLineDash([5 * dpr, 5 * dpr]);
+    x.beginPath(); x.moveTo(W * 0.5, tTopY + 4 * dpr); x.lineTo(W * 0.5, tBotY - 4 * dpr); x.stroke(); x.setLineDash([]);
+
+    // 3. Sol & Sağ Pin Yastıkları (kolun değdiği kazanma yastıkları — yakınlaşınca parlar!)
+    const drawPinPad = (cx, danger, colRGB) => {
+      const pw = W * 0.135, ph = H * 0.085, py = tTopY + H * 0.075;
+      // Gölge
+      x.fillStyle = 'rgba(0,0,0,0.52)';
+      x.beginPath(); x.roundRect(cx - pw * 0.5, py + ph * 0.22, pw, ph, 7 * dpr); x.fill();
+      // Yastık yan gövdesi
+      x.fillStyle = '#3b0b14';
+      x.beginPath(); x.roundRect(cx - pw * 0.5, py + 4 * dpr, pw, ph, 7 * dpr); x.fill();
+      // Yastık üst yüzeyi (koyu bordo deri + yakınlaşınca sıcak uyarı ışığı)
+      const pg = x.createLinearGradient(cx, py, cx, py + ph);
+      pg.addColorStop(0, danger > 0.35 ? `rgba(${colRGB},${0.45 + danger * 0.45})` : '#7f1d28');
+      pg.addColorStop(1, '#430d15');
+      x.fillStyle = pg;
+      x.beginPath(); x.roundRect(cx - pw * 0.5, py, pw, ph * 0.86, 7 * dpr); x.fill();
+      x.strokeStyle = danger > 0.35 ? `rgba(${colRGB},0.9)` : 'rgba(255,255,255,0.16)';
+      x.lineWidth = Math.max(1.2, 1.4 * dpr); x.stroke();
+    };
+    const pinR = Math.max(0, (posL - 0.35) / 0.65);   // sol bastırıyor -> sağ pin tehlikede
+    const pinL = Math.max(0, (-posL - 0.35) / 0.65);  // sağ (sen) bastırıyor -> sol pin kazanmaya yakın!
+    drawPinPad(W * 0.225, pinL, '200,255,0');
+    drawPinPad(W * 0.775, pinR, '239,68,68');
+
+    // 4. Sol & Sağ Metalik Tutma Demirleri (taktik tırtıllı paslanmaz çelik + pirinç halka)
+    const drawPeg = px => {
+      const py = tTopY + H * 0.03, ph = H * 0.14, rw0 = 7.5 * dpr;
+      x.fillStyle = '#11141c'; x.beginPath(); x.ellipse(px, py + ph, rw0 * 1.8, rw0 * 0.75, 0, 0, 7); x.fill();
+      x.strokeStyle = '#c8a24e'; x.lineWidth = 2.2 * dpr; x.beginPath(); x.ellipse(px, py + ph - 2 * dpr, rw0 * 1.15, rw0 * 0.45, 0, 0, 7); x.stroke();
+      const sg = x.createLinearGradient(px - rw0, py, px + rw0, py);
+      sg.addColorStop(0, '#1e2430'); sg.addColorStop(0.38, '#94a3b8'); sg.addColorStop(0.7, '#334155'); sg.addColorStop(1, '#0f131a');
+      x.fillStyle = sg; x.beginPath(); x.roundRect(px - rw0, py, rw0 * 2, ph, 4 * dpr); x.fill();
+      x.fillStyle = '#cbd5e1'; x.beginPath(); x.ellipse(px, py + 2 * dpr, rw0, rw0 * 0.38, 0, 0, 7); x.fill();
+    };
+    drawPeg(W * 0.115);
+    drawPeg(W * 0.885);
+
+    // 5. Merkezi Dikişli Mat Siyah Deri Dirsek Yastığı
+    const elW = W * 0.25, elH = H * 0.12, elX = W * 0.5, elY = tTopY + H * 0.145;
+    x.fillStyle = 'rgba(0,0,0,0.58)';
+    x.beginPath(); x.roundRect(elX - elW * 0.5, elY + 5 * dpr, elW, elH, 10 * dpr); x.fill();
+    const padG = x.createLinearGradient(elX, elY - elH * 0.4, elX, elY + elH);
+    padG.addColorStop(0, '#2a303f'); padG.addColorStop(0.45, '#181c26'); padG.addColorStop(1, '#0d1017');
+    x.fillStyle = padG;
+    x.beginPath(); x.roundRect(elX - elW * 0.5, elY - elH * 0.22, elW, elH, 10 * dpr); x.fill();
+    x.strokeStyle = 'rgba(200,162,78,0.42)'; x.lineWidth = Math.max(1, 1.2 * dpr); x.setLineDash([4 * dpr, 3 * dpr]);
+    x.beginPath(); x.roundRect(elX - elW * 0.44, elY - elH * 0.12, elW * 0.88, elH * 0.76, 7 * dpr); x.stroke(); x.setLineDash([]);
+
+    // 6. Canlı 3D İskeletli Kollar & Kenetli Yumruklar!
+    // posL: -1 = sağ (sen) kazandı (sola yatırır), +1 = sol (rakip) kazandı (sağa yatırır)
+    const pivotX = W * 0.5, pivotY = elY + elH * 0.24;
+    const armLen = Math.min(W * 0.27, H * 0.44);
+    const maxAng = 1.24; // ~71 derece (tam pin yastığına kadar yatar!)
+    const tremble = phase === 'go' ? Math.sin(now * 0.082) * (0.012 + strain * 0.016) + (st.nudge || 0) : 0;
+    st.nudge = (st.nudge || 0) * 0.8;
+    const ang = Math.max(-maxAng, Math.min(maxAng, posL * maxAng + tremble));
+    const handX = pivotX + Math.sin(ang) * armLen;
+    const handY = pivotY - Math.cos(ang) * armLen;
+
+    // Masa üstüne düşen kol gölgesi
+    x.save();
+    x.strokeStyle = 'rgba(0,0,0,0.42)'; x.lineWidth = 22 * dpr; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(pivotX, pivotY + 6 * dpr); x.lineTo(pivotX + Math.sin(ang) * armLen * 0.92, pivotY + 6 * dpr); x.stroke();
+    x.restore();
+
+    // Yardımcı: 3D gölgeli kol segmenti + bilek bandı çizimi
+    const drawArm = (isRight, colMain, colHi, colDark, tapeCol) => {
+      const side = isRight ? 1 : -1;
+      const shX = pivotX + side * W * 0.34, shY = H * 0.44;
+      const elbX = pivotX + side * W * 0.042, elbY = pivotY - 2 * dpr;
+      const thick = Math.max(15, Math.min(26, W * 0.036));
+
+      // Üst kol (omuzdan dirseğe — arka planda hafif karanlık derinlik)
+      x.save();
+      const ug = x.createLinearGradient(shX, shY, elbX, elbY);
+      ug.addColorStop(0, '#10131c'); ug.addColorStop(0.55, colDark); ug.addColorStop(1, colMain);
+      x.strokeStyle = ug; x.lineWidth = thick * 1.25; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(shX, shY); x.quadraticCurveTo(pivotX + side * W * 0.22, pivotY - H * 0.03, elbX, elbY); x.stroke();
+
+      // Ön kol (dirsekten kenetli ele — canlı açılı 3D gölgeli)
+      const dx = handX - elbX, dy = handY - elbY, len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len, ny = dx / len;
+      const fg = x.createLinearGradient(elbX + nx * thick, elbY + ny * thick, elbX - nx * thick, elbY - ny * thick);
+      fg.addColorStop(0, colHi); fg.addColorStop(0.45, colMain); fg.addColorStop(1, colDark);
+      x.strokeStyle = fg; x.lineWidth = thick * 1.02; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(elbX, elbY); x.lineTo(handX, handY); x.stroke();
+
+      // Ön kol kas üst ışık şeridi
+      x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = thick * 0.22;
+      x.beginPath(); x.moveTo(elbX + dx * 0.14 + nx * thick * 0.22, elbY + dy * 0.14 + ny * thick * 0.22);
+      x.lineTo(elbX + dx * 0.72 + nx * thick * 0.16, elbY + dy * 0.72 + ny * thick * 0.16); x.stroke();
+
+      // Atletik bilek bandı (sol mavi / sağ Kanka lime!)
+      const wx = elbX + dx * 0.76, wy = elbY + dy * 0.76;
+      x.strokeStyle = tapeCol; x.lineWidth = thick * 0.94; x.lineCap = 'butt';
+      x.beginPath(); x.moveTo(wx - (dx / len) * 6 * dpr, wy - (dy / len) * 6 * dpr); x.lineTo(wx + (dx / len) * 6 * dpr, wy + (dy / len) * 6 * dpr); x.stroke();
+      x.restore();
+    };
+
+    // Sol kol (rakip: çelik-mavi vurgu) & Sağ kol (sen: Kanka lime vurgu)
+    drawArm(false, '#475569', '#94a3b8', '#1e293b', '#3b82f6');
+    drawArm(true, '#52525b', '#a1a1aa', '#27272a', '#c8ff00');
+
+    // 7. Kenetli 3D Yumruk Merkezi (dinamik parmak boğumları + gerilim parıltısı)
+    const fistR = Math.max(15, Math.min(24, W * 0.032));
+    x.save();
+    x.translate(handX, handY);
+    x.rotate(ang);
+    // Gerilim enerji halesi (güç arttıkça hafif parlar)
+    if (phase === 'go') {
+      const auraR = fistR * (1.8 + strain * 0.55);
+      const ag = x.createRadialGradient(0, 0, fistR * 0.4, 0, 0, auraR);
+      ag.addColorStop(0, posL < 0 ? `rgba(200,255,0,${0.12 + strain * 0.14})` : `rgba(59,130,246,${0.12 + strain * 0.14})`);
+      ag.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = ag; x.beginPath(); x.arc(0, 0, auraR, 0, 7); x.fill();
+    }
+    // Yumruk gövdesi
+    const knG = x.createRadialGradient(-fistR * 0.25, -fistR * 0.3, fistR * 0.1, 0, 0, fistR * 1.15);
+    knG.addColorStop(0, '#e2e8f0'); knG.addColorStop(0.5, '#64748b'); knG.addColorStop(1, '#1e293b');
+    x.fillStyle = knG;
+    x.beginPath(); x.ellipse(0, 0, fistR * 1.15, fistR * 0.92, 0, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,0.28)'; x.lineWidth = Math.max(1, 1.2 * dpr); x.stroke();
+    // Parmak boğumu çizgileri
+    x.strokeStyle = 'rgba(15,23,42,0.55)'; x.lineWidth = 1.6 * dpr;
+    for (const ox of [-0.45, -0.15, 0.15, 0.45]) {
+      x.beginPath(); x.moveTo(ox * fistR, -fistR * 0.42); x.lineTo(ox * fistR, fistR * 0.42); x.stroke();
+    }
+    x.restore();
+
+    // 8. Tebeşir tozu / darbe kıvılcımları (her A/D vuruşu ve QTE patlamasında!)
+    st.fx = (st.fx || []).filter(p => now - p.t0 < p.life);
+    for (const p of st.fx) {
+      const u = (now - p.t0) / p.life;
+      if (p.ring) {
+        x.strokeStyle = `rgba(${p.col},${(1 - u) * 0.78})`;
+        x.lineWidth = Math.max(1.5, 3 * (1 - u) * dpr);
+        x.beginPath(); x.arc(handX, handY, (fistR * 0.8 + u * p.maxR * dpr), 0, 7); x.stroke();
+      } else {
+        const px = handX + p.vx * u * dpr, py = handY + p.vy * u * dpr + 26 * u * u * dpr;
+        x.fillStyle = `rgba(${p.col},${(1 - u) * 0.85})`;
+        x.beginPath(); x.arc(px, py, Math.max(1, p.r * (1 - u * 0.5) * dpr), 0, 7); x.fill();
+      }
+    }
+    x.restore();
+  },
+  spawnFx(st, col, count = 6, ring = false, maxR = 46) {
+    const now = performance.now();
+    st.fx ||= [];
+    if (ring) st.fx.push({ ring: true, t0: now, life: 320, col, maxR });
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 28 + Math.random() * 68;
+      st.fx.push({ t0: now, life: 240 + Math.random() * 180, col, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 18, r: 1.8 + Math.random() * 2.2 });
+    }
+  },
   mount(el, st) {
     const touch = matchMedia('(pointer: coarse)').matches;
     el.innerHTML = `<div class="bk2"><div class="bk2-top"><span class="l" id="bk-l"></span><span class="c" id="bk-c">BİLEK GÜREŞİ</span><span class="r" id="bk-r"></span></div>
       <div class="bk2-bar"><i class="bl" id="bk-bl"></i><i class="mid"></i><b class="knob" id="bk-k"></b></div>
-      <div class="bk2-pw"><div class="side l"><i id="bk-pl"></i><em id="bk-pkl"></em></div><span>GÜÇ</span><div class="side r"><i id="bk-pr"></i><em id="bk-pkr"></em></div></div>
-      <div class="bk2-arena"><div class="bk2-big" id="bk-big"></div>
+      <div class="bk2-pw"><div class="side l" id="bk-sl"><i id="bk-pl"></i><em id="bk-pkl"></em></div><span>GÜÇ</span><div class="side r" id="bk-sr"><i id="bk-pr"></i><em id="bk-pkr"></em></div></div>
+      <div class="bk2-arena"><canvas class="bk2-cv" id="bk-cv"></canvas><div class="bk2-big" id="bk-big"></div>
         <div class="bk2-q" id="bk-q" hidden><svg viewBox="0 0 80 220"><path class="bg" d="M30 205 Q70 110 30 15"/><path class="zone" id="bk-z" d="M30 205 Q70 110 30 15"/><circle class="mk" id="bk-m" r="7" cx="30" cy="205"/></svg><small id="bk-qt">BOŞLUK!</small></div>
         <div class="bk2-fb" id="bk-fb"></div></div>
       ${touch ? `<div class="bk2-pad"><button class="sp" id="bk-sp" hidden>ŞİMDİ!</button><button id="bk-a">A</button><button id="bk-d">D</button></div><small class="bk2-hint">A ve D'ye sırayla dokun · bar çıkınca işaret yeşildeyken ŞİMDİ'ye bas</small>`
         : `<div class="bk2-keys"><kbd id="bk-ka">A</kbd><kbd id="bk-kd">D</kbd><span>Sırayla bas</span><i></i><kbd class="wide" id="bk-ks">BOŞLUK</kbd><span>Bar çıkınca, işaret yeşildeyken</span></div>`}</div>`;
-    st.k = 0; st.lastKey = null; st.sent = null;
+    st.cv = el.querySelector('#bk-cv');
+    st.k = 0; st.lastKey = null; st.sent = null; st.fx = []; st.shake = 0; st.nudge = 0; st.lastT = performance.now();
     // yay üzerindeki noktayı hesapla (ikinci dereceden Bezier)
     const arc = t => { const u = 1 - t; return [u * u * 30 + 2 * u * t * 70 + t * t * 30, u * u * 205 + 2 * u * t * 110 + t * t * 15]; };
     st.arc = arc; st.len = el.querySelector('#bk-z').getTotalLength();
     const press = key => {
+      BK_SFX.wake();
       if (!arMine() || AR.rt?.phase !== 'go') return;
-      if (key !== st.lastKey) { st.k++; st.lastKey = key; buzz(4); }
+      if (key !== st.lastKey) {
+        st.k++; st.lastKey = key; buzz(4);
+        const pw = AR.rt?.P?.[S.me]?.pw ?? 30;
+        BK_SFX.tap(key === 'A', pw);
+        st.nudge = -0.028; st.shake = Math.min(5, (st.shake || 0) + 1.4);
+        AR_R.bilek.spawnFx(st, '200,255,0', 3, false);
+      }
       const b = $(key === 'A' ? '#bk-a, #bk-ka' : '#bk-d, #bk-kd'); b?.classList.remove('hit'); void b?.offsetWidth; b?.classList.add('hit');
     };
     const space = () => {
+      BK_SFX.wake();
       const me = AR.rt?.P?.[S.me]; if (!arMine() || !me?.q || me.q.done || st.sentId === me.q.id || st.qid !== me.q.id) return;
       const t = (performance.now() - st.qStart) / 1000; st.sentId = me.q.id; st.frozen = AR_R.bilek.mark(t, AR.rt.per);
       socket.emit('arenaIn', { id: AR.lobby.id, q: +t.toFixed(3), qi: me.q.id }); buzz(20);
+      const dist = Math.abs(st.frozen - me.q.z), acc = Math.max(0, Math.min(1, 1 - dist / (2 * me.q.w)));
+      BK_SFX.qteHit(acc);
+      if (acc >= 0.4) { st.shake = 7; AR_R.bilek.spawnFx(st, acc >= 0.8 ? '200,255,0' : '74,222,128', 12, true, 70); }
     };
     st.key = e => { if (!AR.mounted || e.repeat || document.activeElement?.tagName === 'INPUT') return;
       if (e.code === 'KeyA') { e.preventDefault(); press('A'); } else if (e.code === 'KeyD') { e.preventDefault(); press('D'); } else if (e.code === 'Space') { e.preventDefault(); space(); } };
     addEventListener('keydown', st.key);
     if (touch) { $('#bk-a').onpointerdown = e => { e.preventDefault(); press('A'); }; $('#bk-d').onpointerdown = e => { e.preventDefault(); press('D'); }; $('#bk-sp').onpointerdown = e => { e.preventDefault(); space(); }; }
-    st.iv = setInterval(() => { if (st.k && AR.lobby) { socket.emit('arenaIn', { id: AR.lobby.id, k: Math.min(3, st.k) }); st.k = Math.max(0, st.k - 3); } }, 100);
+    st.iv = setInterval(() => { if (st.k && AR.lobby) { socket.emit('arenaIn', { id: AR.lobby.id, k: Math.min(3, st.k) }); st.k = Math.max(0, st.k - 3); } }, 85);
     const loop = () => { st.raf = requestAnimationFrame(loop); AR_R.bilek.draw(st); }; loop();
   },
   update(L, st) { if (!AR.rt && L.g) AR.rt = L.g; },
   mark(t, per = 2.4) { const u = (Math.max(0, t) / per) % 1; return u < 0.5 ? u * 2 : 2 - u * 2; }, // sunucudakiyle aynı: sabit hızla gidip gelir
   draw(st) {
     const g = AR.rt, L = AR.lobby; if (!g || !L?.ps || !g.P) return;
+    const now = performance.now(), dt = Math.min(0.05, Math.max(0.001, (now - (st.lastT || now)) / 1000));
+    st.lastT = now;
     const meI = arIdx(), right = meI >= 0 ? L.ps[meI] : L.ps[1], left = L.ps.find(n => n !== right), posL = left === L.ps[0] ? g.pos : -g.pos;
-    st.sm = (st.sm ?? 0) + (posL - (st.sm ?? 0)) * 0.25;
+    // Frame-rate bağımsız yumuşak çekişme interpolasyonu (60/120/144Hz aynı akıcılık)
+    const smA = 1 - Math.exp(-16 * dt);
+    st.sm = (st.sm ?? posL) + (posL - (st.sm ?? posL)) * smA;
+
+    // Faz geçiş sesleri (geri sayım / başla / tur sonu masa çarpma!)
+    const phKey = `${g.phase}|${g.t}|${g.round}`;
+    if (st.phKey !== phKey) {
+      if (st.phKey) {
+        if (g.phase === 'cd' && g.t > 0) BK_SFX.cd(false);
+        else if (g.phase === 'go') { BK_SFX.cd(true); st.shake = 5; }
+        else if (g.phase === 'pause' || g.phase === 'end') { BK_SFX.slam(); st.shake = 12; AR_R.bilek.spawnFx(st, '255,255,255', 16, true, 88); buzz(35); }
+      }
+      st.phKey = phKey;
+    }
+
     const pct = 50 + st.sm * 50; $('#bk-k').style.left = pct + '%'; $('#bk-bl').style.width = pct + '%';
-    $('#bk-l').innerHTML = `${esc(dn(left))} <b>${'●'.repeat(g.wins[left] || 0)}${'○'.repeat(2 - (g.wins[left] || 0))}</b>`;
-    $('#bk-r').innerHTML = `<b>${'●'.repeat(g.wins[right] || 0)}${'○'.repeat(2 - (g.wins[right] || 0))}</b> ${esc(dn(right))}${meI >= 0 ? ' <em>SEN</em>' : ''}`;
-    $('#bk-c').textContent = `BİLEK GÜREŞİ · TUR ${g.round}`;
+    const topKey = `${g.wins[left]}|${g.wins[right]}|${g.round}|${left}|${right}`;
+    if (st.topKey !== topKey) {
+      st.topKey = topKey;
+      $('#bk-l').innerHTML = `${esc(dn(left))} <b>${'●'.repeat(g.wins[left] || 0)}${'○'.repeat(2 - (g.wins[left] || 0))}</b>`;
+      $('#bk-r').innerHTML = `<b>${'●'.repeat(g.wins[right] || 0)}${'○'.repeat(2 - (g.wins[right] || 0))}</b> ${esc(dn(right))}${meI >= 0 ? ' <em>SEN</em>' : ''}`;
+      $('#bk-c').textContent = `BİLEK GÜREŞİ · TUR ${g.round}`;
+    }
     const PL = g.P[left], PR = g.P[right];
-    $('#bk-pl').style.width = PL.pw + '%'; $('#bk-pr').style.width = PR.pw + '%'; $('#bk-pkl').style.left = PL.peak + '%'; $('#bk-pkr').style.right = PR.peak + '%';
+    $('#bk-pl').style.width = PL.pw + '%'; $('#bk-pr').style.width = PR.pw + '%';
+    $('#bk-pkl').style.left = PL.peak + '%'; $('#bk-pkr').style.right = PR.peak + '%';
+    $('#bk-sl')?.classList.toggle('tired', (PL.fat || 0) > 0.5);
+    $('#bk-sr')?.classList.toggle('tired', (PR.fat || 0) > 0.5);
+
+    // 3D Masa + Canlı İskeletli Kollar çizimi
+    AR_R.bilek.drawStage(st, st.sm, PL, PR, g.phase, now);
+
     $('#bk-big').textContent = g.phase === 'cd' ? (g.t > 0 ? g.t : 'BAŞLA!') : g.phase === 'pause' ? `${dn(g.last)} turu aldı!` : '';
     $('#bk-big').className = 'bk2-big' + (g.phase === 'go' ? '' : ' on');
     // sıradaki tuş
@@ -12001,13 +12287,13 @@ AR_R.bilek = {
       const z = $('#bk-z'), Lz = st.len, a0 = Math.max(0, q.z - q.w), a1 = Math.min(1, q.z + q.w);
       z.style.strokeDasharray = `0 ${a0 * Lz} ${(a1 - a0) * Lz} ${Lz}`;
       // her bar için bir kez yerel saat kurulur; böylece işaret ağdan gelen paketlerle zıplamaz, akıcı ilerler
-      if (st.qid !== q.id) { st.qid = q.id; st.qStart = performance.now() - q.age * 1000; st.frozen = null; }
-      const v = st.sentId === q.id && st.frozen != null ? st.frozen : q.done ? (st.lastV ?? 0) : AR_R.bilek.mark((performance.now() - st.qStart) / 1000, g.per);
+      if (st.qid !== q.id) { st.qid = q.id; st.qStart = now - q.age * 1000; st.frozen = null; BK_SFX.qtePop(); }
+      const v = st.sentId === q.id && st.frozen != null ? st.frozen : q.done ? (st.lastV ?? 0) : AR_R.bilek.mark((now - st.qStart) / 1000, g.per);
       st.lastV = v; const [mx, my] = st.arc(v), m = $('#bk-m'); m.setAttribute('cx', mx); m.setAttribute('cy', my); m.classList.toggle('in', Math.abs(v - q.z) < q.w);
       $('#bk-qt').textContent = q.done ? (q.acc >= 0.8 ? 'MÜKEMMEL!' : q.acc >= 0.4 ? 'İYİ!' : q.acc > 0 ? 'İDARE EDER' : 'KAÇTI') : 'BOŞLUK!';
       box.classList.toggle('done', !!q.done);
     }
-    const fb = me?.last; $('#bk-fb').textContent = fb ? (fb.miss ? 'Kaçırdın, güç düştü' : fb.acc >= 0.8 ? '💥 Güç toplandı!' : fb.acc > 0 ? 'Biraz toparladın' : 'Kötü zamanlama') : '';
+    const fb = me?.last; $('#bk-fb').textContent = fb ? (fb.miss ? 'Kaçırdın, güç düştü' : fb.acc >= 0.8 ? 'Mükemmel zamanlama · Güç toplandı!' : fb.acc > 0 ? 'İyi zamanlama · Biraz toparladın' : 'Kötü zamanlama') : '';
   },
   unmount(st) { cancelAnimationFrame(st.raf); clearInterval(st.iv); removeEventListener('keydown', st.key); },
 };
