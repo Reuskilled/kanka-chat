@@ -11934,9 +11934,9 @@ AR_R.bilek = {
       const b = $(key === 'A' ? '#bk-a, #bk-ka' : '#bk-d, #bk-kd'); b?.classList.remove('hit'); void b?.offsetWidth; b?.classList.add('hit');
     };
     const space = () => {
-      const me = AR.rt?.P?.[S.me]; if (!arMine() || !me?.q || me.q.done || st.sent === me.q.z + ':' + me.q.age.toFixed(0)) return;
-      const age = me.q.age + (performance.now() - (AR.rtAt || performance.now())) / 1000, v = 0.5 - 0.5 * Math.cos(2 * Math.PI * Math.max(0, age) / (AR.rt.per || 1.1));
-      st.sent = me.q.z + ':' + me.q.age.toFixed(0); socket.emit('arenaIn', { id: AR.lobby.id, q: +v.toFixed(3) }); buzz(20);
+      const me = AR.rt?.P?.[S.me]; if (!arMine() || !me?.q || me.q.done || st.sentId === me.q.id || st.qid !== me.q.id) return;
+      const t = (performance.now() - st.qStart) / 1000; st.sentId = me.q.id; st.frozen = AR_R.bilek.mark(t, AR.rt.per);
+      socket.emit('arenaIn', { id: AR.lobby.id, q: +t.toFixed(3), qi: me.q.id }); buzz(20);
     };
     st.key = e => { if (!AR.mounted || e.repeat || document.activeElement?.tagName === 'INPUT') return;
       if (e.code === 'KeyA') { e.preventDefault(); press('A'); } else if (e.code === 'KeyD') { e.preventDefault(); press('D'); } else if (e.code === 'Space') { e.preventDefault(); space(); } };
@@ -11946,6 +11946,7 @@ AR_R.bilek = {
     const loop = () => { st.raf = requestAnimationFrame(loop); AR_R.bilek.draw(st); }; loop();
   },
   update(L, st) { if (!AR.rt && L.g) AR.rt = L.g; },
+  mark(t, per = 2.4) { const u = (Math.max(0, t) / per) % 1; return u < 0.5 ? u * 2 : 2 - u * 2; }, // sunucudakiyle aynı: sabit hızla gidip gelir
   draw(st) {
     const g = AR.rt, L = AR.lobby; if (!g || !L?.ps || !g.P) return;
     const meI = arIdx(), right = meI >= 0 ? L.ps[meI] : L.ps[1], left = L.ps.find(n => n !== right), posL = left === L.ps[0] ? g.pos : -g.pos;
@@ -11966,7 +11967,9 @@ AR_R.bilek = {
     if (q) {
       const z = $('#bk-z'), Lz = st.len, a0 = Math.max(0, q.z - q.w), a1 = Math.min(1, q.z + q.w);
       z.style.strokeDasharray = `0 ${a0 * Lz} ${(a1 - a0) * Lz} ${Lz}`;
-      const age = q.done ? null : q.age + (performance.now() - (AR.rtAt || performance.now())) / 1000, v = age == null ? (st.lastV ?? 0) : 0.5 - 0.5 * Math.cos(2 * Math.PI * Math.max(0, age) / (g.per || 1.1));
+      // her bar için bir kez yerel saat kurulur; böylece işaret ağdan gelen paketlerle zıplamaz, akıcı ilerler
+      if (st.qid !== q.id) { st.qid = q.id; st.qStart = performance.now() - q.age * 1000; st.frozen = null; }
+      const v = st.sentId === q.id && st.frozen != null ? st.frozen : q.done ? (st.lastV ?? 0) : AR_R.bilek.mark((performance.now() - st.qStart) / 1000, g.per);
       st.lastV = v; const [mx, my] = st.arc(v), m = $('#bk-m'); m.setAttribute('cx', mx); m.setAttribute('cy', my); m.classList.toggle('in', Math.abs(v - q.z) < q.w);
       $('#bk-qt').textContent = q.done ? (q.acc >= 0.8 ? 'MÜKEMMEL!' : q.acc >= 0.4 ? 'İYİ!' : q.acc > 0 ? 'İDARE EDER' : 'KAÇTI') : 'BOŞLUK!';
       box.classList.toggle('done', !!q.done);
