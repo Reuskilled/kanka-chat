@@ -354,7 +354,7 @@
 
   <div class="card">
     <h1>Kanka için bot yaz</h1>
-    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.0, kanka.py 1.0</div>
+    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.3, kanka.py 1.3</div>
     <a class="comm-cta" href="/gelistirici-topluluk"><b>💬 Kanka Geliştiriciler sunucusu</b><span>Soru sor, API duyurularını takip et, botunu tanıt. Katıl →</span></a>
 
     <!-- ===== CANLI İNTERAKTİF BOT PLAYGROUND ===== -->
@@ -410,7 +410,7 @@
         <li>Botunun yaptığından sen sorumlusun. Bot üzerinden para toplamak, premium satmak ve bahis/çekiliş yasak. Ayrıntılar: <a href="/kosullar">Kullanım Şartları, bölüm 6</a>.</li>
       </ul>
     </div>
-    <div class="toc"><a href="#baslangic">1. Başlangıç</a><a href="#komutlar">2. Komutlar</a><a href="#bilesenler">3. Butonlar &amp; Menüler</a><a href="#kartlar">4. Kartlar</a><a href="#formlar">5. Formlar</a><a href="#olaylar">6. Olaylar</a><a href="#rest">7. REST API</a><a href="#gateway">8. Gateway</a><a href="#http">9. HTTP Etkileşimleri</a><a href="#sinirlar">10. Sınırlar</a></div>
+    <div class="toc"><a href="#baslangic">1. Başlangıç</a><a href="#komutlar">2. Komutlar</a><a href="#bilesenler">3. Butonlar &amp; Menüler</a><a href="#kartlar">4. Kartlar</a><a href="#formlar">5. Formlar</a><a href="#olaylar">6. Olaylar</a><a href="#durum">Durum</a><a href="#kutuphane">Kütüphane rehberi</a><a href="#rest">7. REST API</a><a href="#gateway">8. Gateway</a><a href="#http">9. HTTP Etkileşimleri</a><a href="#sinirlar">10. Sınırlar</a></div>
 
     <h2 id="baslangic">1. Beş dakikada ilk bot</h2>
     <ol>
@@ -421,7 +421,7 @@
     <div class="tabs" data-g="ilk"><button class="on" data-t="js">JavaScript</button><button data-t="py">Python</button></div>
 <pre data-g="ilk" data-t="js">// Node.js 18+ · npm i ws (Node 22'de gerekmez)
 const { Kanka } = require('./kanka.js');
-const bot = new Kanka({ token: process.env.KANKA_TOKEN });
+const bot = new Kanka({ token: process.env.KANKA_TOKEN, durum: { durum: 'cevrimici', aktivite: { tur: 'oynuyor', ad: '/zar' } } });
 
 bot.komut('zar', { aciklama: 'Zar at', secenekler: [{ ad: 'yuz', tur: 'tamsayi', aciklama: 'Kaç yüzlü?' }] },
   k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * k.secenek('yuz', 6))}`));
@@ -431,7 +431,7 @@ bot.on('hazir', () => console.log(bot.ben.ad, 'hazır!'));
 bot.baglan();</pre>
 <pre data-g="ilk" data-t="py" hidden># Python 3.9+ · pip install aiohttp
 import os, random, kanka
-bot = kanka.Bot(token=os.environ["KANKA_TOKEN"])
+bot = kanka.Bot(token=os.environ["KANKA_TOKEN"], durum={"durum": "cevrimici", "aktivite": {"tur": "oynuyor", "ad": "/zar"}})
 
 @bot.komut("zar", aciklama="Zar at", secenekler=[kanka.Secenek("yuz", "tamsayi", "Kaç yüzlü?")])
 async def zar(k):
@@ -497,6 +497,63 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
       <tr><td><code>dm</code></td><td>Bota yazılan özel mesajlar</td></tr>
       <tr><td>(her zaman)</td><td><code>hazir</code>, <code>sunucuyaEklendi</code>, <code>sunucudanCikarildi</code>, komut ve bileşen etkileşimleri</td></tr></table>
     <div class="note">Doğrulanmamış botlar <code>icerik</code> niyetini serbestçe kullanabilir. Doğrulanan botlar için mesaj içeriği izni doğrulama sırasında ayrıca verilir.</div>
+    <p>Ek olaylar: <code>etkilesim</code> (her komut/buton/seçim/form), <code>durum</code> (durum değişince), <code>koptu</code> ve <code>devam</code> (bağlantı), <code>uyari</code> ve <code>hata</code>. Python'da adlar alt çizgili: <code>@bot.olay("uye_katildi")</code>.</p>
+
+    <h2 id="durum">Botun durumu ve etkinliği</h2>
+    <p>Botun yanındaki nokta (çevrimiçi / boşta / rahatsız etmeyin / görünmez) ve altındaki yazı ("Oynuyor: Minecraft") istediğin zaman değişir. En kolayı botu oluştururken vermek: bağlanınca kendiliğinden ayarlanır, bağlantı kopup gelse de korunur.</p>
+    <div class="tabs" data-g="durum"><button class="on" data-t="js">JavaScript</button><button data-t="py">Python</button></div>
+<pre data-g="durum" data-t="js">const bot = new Kanka({ token, durum: { durum: 'rahatsizetme', aktivite: { tur: 'dinliyor', ad: 'Spotify' } } });
+
+await bot.durum('bosta');                          // sadece nokta
+await bot.durum('cevrimici', 'Yardım için /yardim'); // nokta + serbest yazı
+await bot.aktivite('oynuyor', 'Minecraft');        // "Oynuyor: Minecraft"
+await bot.durum({ durum: 'gorunmez' });            // çevrimdışı görün
+console.log(await bot.durumuGetir());              // { durum, yazi, bagli }</pre>
+<pre data-g="durum" data-t="py" hidden>bot = kanka.Bot(token=TOKEN, durum={"durum": "rahatsizetme", "aktivite": {"tur": "dinliyor", "ad": "Spotify"}})
+
+await bot.durum("bosta")
+await bot.durum("cevrimici", "Yardım için /yardim")
+await bot.aktivite("oynuyor", "Minecraft")
+print(await bot.durumu_getir())</pre>
+    <table><tr><th>Durum</th><th>Kabul edilen yazımlar</th></tr>
+      <tr><td>Çevrimiçi</td><td><code>cevrimici</code>, <code>çevrimiçi</code>, <code>online</code></td></tr>
+      <tr><td>Boşta</td><td><code>bosta</code>, <code>boşta</code>, <code>idle</code></td></tr>
+      <tr><td>Rahatsız etmeyin</td><td><code>rahatsizetme</code>, <code>rahatsız etmeyin</code>, <code>mesgul</code>, <code>dnd</code></td></tr>
+      <tr><td>Görünmez</td><td><code>gorunmez</code>, <code>görünmez</code>, <code>invisible</code></td></tr></table>
+    <p>Etkinlik türleri: <code>oynuyor</code>, <code>dinliyor</code>, <code>izliyor</code>, <code>yayinda</code>, <code>yarisiyor</code>, <code>ozel</code> (önüne bir şey eklenmez). Yazı en fazla 80 karakter; durum dakikada en fazla 10 kez değişir. Durum ve yazı, bot ağ geçidine bağlıyken görünür; bağlı değilken bot çevrimdışı görünür.</p>
+    <p>Kütüphane kullanmıyorsan: <code>PATCH /api/v1/ben/durum</code> ile <code>{ "durum": "bosta", "aktivite": { "tur": "izliyor", "ad": "YouTube" } }</code>, ya da ağ geçidinde <code>{ "op": 3, "d": { ... } }</code> gönder (cevap olarak <code>DURUM_GUNCELLENDI</code> gelir). Tanıtırken (<code>op 2</code>) <code>d.durum</code> da verebilirsin. Discord'daki <code>{ status: 'dnd', activities: [{ name, type }] }</code> biçimi de kabul edilir.</p>
+
+    <h2 id="kutuphane">Kütüphane rehberi (kanka.js / kanka.py 1.3)</h2>
+    <p>Python'da adlar alt çizgilidir (<code>bot.topluSil</code> → <code>bot.toplu_sil</code>) ve hepsi <code>await</code> ile çağrılır.</p>
+    <table><tr><th>Ne</th><th>Nasıl (kanka.js)</th></tr>
+      <tr><td>Mesaj gönder / DM</td><td><code>bot.gonder(oda, 'selam')</code>, <code>bot.gonder(oda, new Kart().baslik('...'))</code>, <code>bot.dm('ahmet', '...')</code></td></tr>
+      <tr><td>Gelen mesajla</td><td><code>m.cevapla()</code>, <code>m.odayaYaz()</code>, <code>m.tepkiEkle('👍')</code>, <code>m.tepkiKaldir()</code>, <code>m.duzenle()</code>, <code>m.sil()</code>, <code>m.sabitle()</code>, <code>m.dmMi</code>, <code>m.etiketlendiMi</code></td></tr>
+      <tr><td>Okuma</td><td><code>bot.mesajlar(oda, { limit: 50 })</code>, <code>bot.mesaj(oda, id)</code>, <code>bot.sabitler(oda)</code>, <code>bot.oda(id)</code></td></tr>
+      <tr><td>Sunucu ve kişiler</td><td><code>bot.sunucuListesi()</code>, <code>bot.sunucu(id)</code>, <code>bot.uyeler(s)</code>, <code>bot.uye(s, 'ahmet')</code>, <code>bot.kullanici('ahmet' ya da kimlik)</code>, <code>bot.bilgi()</code></td></tr>
+      <tr><td>Moderasyon</td><td><code>bot.sustur(s, kisi, dakika, sebep)</code>, <code>bot.susturmaKaldir()</code>, <code>bot.at()</code>, <code>bot.yasakla()</code>, <code>bot.yasakKaldir()</code>, <code>bot.yasaklar(s)</code>, <code>bot.rolVer()</code>, <code>bot.rolAl()</code></td></tr>
+      <tr><td>Toplu silme</td><td><code>bot.topluSil(oda, 20)</code> son 20 · <code>bot.topluSil(oda, [id1, id2])</code> · <code>bot.topluSil(oda, 50, { kisi: 'ahmet' })</code> (en fazla 100, son 14 gün, "Mesajları yönet")</td></tr>
+      <tr><td>Bekleme (oyunlar, sorular)</td><td><code>await bot.mesajBekle(m =&gt; m.yazar.ad === 'ahmet', { sure: 30000 })</code>, <code>await bot.etkilesimBekle(e =&gt; e.veri.id === 'evet')</code>; süre dolarsa <code>null</code></td></tr>
+      <tr><td>"yazıyor…"</td><td><code>await bot.yaziyorKen(oda, async () =&gt; { ...uzun iş... })</code> (iş bitene kadar gösterir)</td></tr>
+      <tr><td>Etkileşim</td><td><code>k.cevapla()</code>, <code>k.gizliCevapla()</code>, <code>k.bekle()</code> + <code>k.duzenle()</code>, <code>k.guncelle()</code>, <code>k.formAc()</code>, <code>k.takip()</code></td></tr>
+      <tr><td>Bileşenler</td><td><code>bilesenler: [Satir(Buton('a', 'A'), Buton('b', 'B')), Satir(Secim('s', ['x', 'y']))]</code></td></tr>
+      <tr><td>Durum</td><td><code>bot.durum()</code>, <code>bot.aktivite()</code>, <code>bot.durumuGetir()</code></td></tr>
+      <tr><td>Hata ayıklama</td><td><code>new Kanka({ token, hataAyikla: true })</code> bağlantı olaylarını yazar; <code>bot.on('uyari', console.warn)</code></td></tr></table>
+<pre>// Örnek: tahmin oyunu (mesajBekle)
+bot.komut('tahmin', { aciklama: '1-10 arası sayı tut' }, async k =&gt; {
+  const sayi = 1 + Math.floor(Math.random() * 10);
+  await k.cevapla(`Bir sayı tuttum! @${bot.ben.ad} etiketleyip tahminini yaz (30 sn).`);
+  const m = await bot.mesajBekle(m =&gt; m.oda === k.oda &amp;&amp; m.yazar.ad === k.kullanici.ad &amp;&amp; m.etiketlendiMi, { sure: 30000 });
+  if (!m) return k.takip('⏰ Süre doldu!');
+  const t = parseInt(m.icerik.replace(/@\S+/g, ''));
+  m.cevapla(t === sayi ? '🎉 Bildin!' : `Olmadı, ${sayi} tutmuştum.`);
+});
+
+// Örnek: /temizle
+bot.komut('temizle', { aciklama: 'Son mesajları sil', secenekler: [{ ad: 'adet', tur: 'tamsayi', zorunlu: true }] }, async k =&gt; {
+  const n = await bot.topluSil(k.oda, Math.min(100, k.secenek('adet')));
+  k.gizliCevapla(`🧹 ${n} mesaj silindi`);
+});</pre>
+    <div class="note"><b>Başkalarının mesajlarını okumak:</b> mesaj içeriği DM'de, bot etiketlendiğinde ya da <code>icerik</code> niyeti/izni varken gelir. Bu yüzden "!ping" gibi önekli komutlar yerine <code>/</code> komutlarını kullan; her yerde, izin gerekmeden çalışır.</div>
 
     <h2 id="rest">7. REST API</h2>
     <p>Adres: <code>https://kankahq.com/api/v1</code> · Başlık: <code>Authorization: Bot &lt;token&gt;</code> · Gövde JSON. Hata olursa <code>{ "hata": "..." }</code> döner. Alışık olduğun adlar da kabul edilir: <code>content</code>, <code>embeds</code>, <code>components</code>.</p>
@@ -508,16 +565,18 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
       <tr><td><code>POST /odalar/:id/mesajlar</code></td><td>Mesaj gönder: <code>{ icerik, kartlar, bilesenler, yanit }</code></td></tr>
       <tr><td><code>PATCH</code> / <code>DELETE /odalar/:id/mesajlar/:mid</code></td><td>Düzenle / sil (başkasınınkini silmek için "Mesajları yönet")</td></tr>
       <tr><td><code>PUT</code> / <code>DELETE /odalar/:id/mesajlar/:mid/tepkiler/:emoji</code></td><td>Tepki ekle / kaldır</td></tr>
-      <tr><td><code>PUT</code> / <code>DELETE /odalar/:id/sabitler/:mid</code></td><td>Sabitle / kaldır</td></tr>
+      <tr><td><code>GET /odalar/:id/sabitler</code>, <code>PUT</code> / <code>DELETE /odalar/:id/sabitler/:mid</code></td><td>Sabitlenenler / sabitle / kaldır</td></tr>
+      <tr><td><code>POST /odalar/:id/mesajlar/toplu-sil</code></td><td><code>{ adet: 20 }</code> ya da <code>{ mesajlar: [id, ...] }</code>, isteğe bağlı <code>kisi</code>; en fazla 100, son 14 gün</td></tr>
       <tr><td><code>POST /dosyalar</code></td><td>Dosya/resim yükle (gövde: dosyanın kendisi, ad: <code>X-Dosya-Adi</code> başlığı, en fazla 25 MB). Dönen <code>id</code>'yi mesajda <code>ekler: [id]</code> ile gönder</td></tr>
       <tr><td><code>GET /emojiler</code>, <code>PUT</code> / <code>DELETE /emojiler/:ad</code></td><td>Botun kendi emojileri (en fazla 50, PNG/JPG/GIF/WEBP, 512 KB). Mesajda <code>:ad:</code> yazınca her sunucuda ve DM'de görünür</td></tr>
       <tr><td><code>POST /odalar/:id/yaziyor</code></td><td>"yazıyor…" göster (yaklaşık 8 sn; uzun işlerde tekrar gönder)</td></tr>
-      <tr><td><code>PATCH /ben/durum</code></td><td><code>{ durum: 'cevrimici' | 'bosta' | 'rahatsizetme' | 'gorunmez', yazi: 'Oynuyor: /yardim' }</code></td></tr>
+      <tr><td><code>GET</code> / <code>PATCH /ben/durum</code></td><td><code>{ durum: 'cevrimici' | 'bosta' | 'rahatsizetme' | 'gorunmez', yazi, aktivite: { tur, ad } }</code> (<a href="#durum">ayrıntı</a>)</td></tr>
       <tr><td><code>GET /kullanicilar/:ad</code></td><td>Kullanıcının kimliği, adı, görünen adı (ortak sunucu ya da DM gerekir)</td></tr>
       <tr><td><code>POST /kullanicilar/:ad/dm</code></td><td>Özel mesaj (ortak sunucu gerekir)</td></tr>
       <tr><td><code>PUT</code> / <code>DELETE /sunucular/:id/uyeler/:ad/roller/:rol</code></td><td>Rol ver / al (botun rolünden aşağıdakiler)</td></tr>
-      <tr><td><code>POST /sunucular/:id/uyeler/:ad/sustur</code></td><td><code>{ dakika, sebep }</code> (0 = kaldır)</td></tr>
-      <tr><td><code>DELETE /sunucular/:id/uyeler/:ad</code>, <code>PUT /sunucular/:id/yasaklar/:ad</code></td><td>At / yasakla</td></tr>
+      <tr><td><code>POST</code> / <code>DELETE /sunucular/:id/uyeler/:ad/sustur</code></td><td>Sustur <code>{ dakika, sebep }</code> / susturmayı kaldır</td></tr>
+      <tr><td><code>DELETE /sunucular/:id/uyeler/:ad</code></td><td>Sunucudan at</td></tr>
+      <tr><td><code>GET /sunucular/:id/yasaklar</code>, <code>PUT</code> / <code>DELETE /sunucular/:id/yasaklar/:ad</code></td><td>Yasaklılar / yasakla / yasağı kaldır</td></tr>
       <tr><td><code>GET</code> / <code>PUT /komutlar</code>, <code>/sunucular/:id/komutlar</code></td><td>Komut listesini oku / tamamen değiştir</td></tr>
       <tr><td><code>POST /etkilesim/:id/:token/cevap</code></td><td><code>{ tur: 'mesaj' | 'bekle' | 'guncelle' | 'form', ... }</code> (bot token'ı gerekmez)</td></tr>
       <tr><td><code>PATCH /etkilesim/:id/:token/mesaj</code>, <code>POST .../takip</code></td><td>"bekle"den sonra düzenle / ek mesaj</td></tr></table>
@@ -537,12 +596,13 @@ await bot.durum('cevrimici', 'Oynuyor: /yardim');</pre>
     <p><code>wss://kankahq.com/bot/gateway</code> adresine bağlan. Her mesaj <code>{ op, d, t, s }</code> biçiminde JSON'dur.</p>
     <table><tr><th>op</th><th>Anlamı</th></tr>
       <tr><td>10 MERHABA</td><td>Sunucu gönderir: <code>{ nabizAraligi: 30000 }</code></td></tr>
-      <tr><td>2 TANIT</td><td>Sen gönderirsin: <code>{ token, niyetler: [...] }</code></td></tr>
+      <tr><td>2 TANIT</td><td>Sen gönderirsin: <code>{ token, niyetler: [...], durum? }</code></td></tr>
+      <tr><td>3 DURUM</td><td>Sen gönderirsin: <code>{ durum, yazi, aktivite }</code>; cevap <code>DURUM_GUNCELLENDI</code> ya da <code>HATA</code></td></tr>
       <tr><td>1 NABIZ / 11 NABIZ_ALINDI</td><td>Her <code>nabizAraligi</code> ms'de bir 1 gönder; 75 saniye gelmezse bağlantı kapanır</td></tr>
       <tr><td>0 OLAY</td><td><code>t</code>: <code>HAZIR</code>, <code>MESAJ_GELDI</code>, <code>MESAJ_DUZENLENDI</code>, <code>MESAJ_SILINDI</code>, <code>KOMUT</code>, <code>BUTON</code>, <code>SECIM</code>, <code>FORM</code>, <code>UYE_KATILDI</code>, <code>UYE_AYRILDI</code>, <code>UYE_GUNCELLENDI</code>, <code>TEPKI_EKLENDI</code>, <code>TEPKI_KALDIRILDI</code>, <code>SUNUCUYA_EKLENDI</code>, <code>SUNUCUDAN_CIKARILDI</code>; <code>s</code> sıra numarası</td></tr>
       <tr><td>6 DEVAM</td><td>Koptuktan sonra 2 dakika içinde: <code>{ token, oturum, sira }</code>; kaçırdığın olaylar gelir. Sunucu güncellemesinden sonra da çalışır</td></tr>
       <tr><td>7 YENİDEN_BAĞLAN</td><td>Sunucu gönderir: <code>{ bekle: 4000 }</code>. Sunucu birkaç saniyeliğine güncelleniyor; <code>bekle</code> ms sonra yeniden bağlan ve <b>6 DEVAM</b> ile aynı oturuma dön</td></tr></table>
-    <p><b>Güncellemede kopma:</b> Kanka güncellenirken bağlantı <code>1012</code> koduyla kapanır ve REST birkaç saniye <code>502/503</code> dönebilir. Bağlantı kopunca her zaman yeniden bağlan (bekleme 1 sn'den başlayıp en çok 15 sn'ye çıksın), REST'te 502/503/504 gelirse 1-2 sn bekleyip tekrar dene. <code>kanka.js</code> ve <code>kanka.py</code> 1.2.0 bunların hepsini kendisi yapar; eski sürümü kullanıyorsan güncelle.</p>
+    <p><b>Güncellemede kopma:</b> Kanka güncellenirken bağlantı <code>1012</code> koduyla kapanır ve REST birkaç saniye <code>502/503</code> dönebilir. Bağlantı kopunca her zaman yeniden bağlan (bekleme 1 sn'den başlayıp en çok 15 sn'ye çıksın), REST'te 502/503/504 gelirse 1-2 sn bekleyip tekrar dene. <code>kanka.js</code> ve <code>kanka.py</code> (1.2.0 ve sonrası) bunların hepsini kendisi yapar; eski sürümü kullanıyorsan güncelle.</p>
     <p><b>Mesajı kim yazdı?</b> Her mesajda <code>yazar</code> alanı vardır: <code>{ ad, gorunenAd, bot }</code>. Yazar bir geliştirici botuysa <code>yazar.uygulama</code> da gelir: <code>{ id, ad, gorunenAd, dogrulandi, sahip }</code>. Kanka'nın kendi botunun mesajlarında <code>yazar.sistem: true</code> olur. Botların birbirine cevap verip döngüye girmemesi için <code>yazar.bot</code> doğruysa mesajı yok saymanı öneririz.</p>
     <p>Kapanış kodları: <code>4004</code> token geçersiz, <code>4005</code> zaten 2 bağlantı var, <code>4008</code> çok sık, <code>4014</code> bot durduruldu (4004 ve 4014 dışında her kapanışta yeniden bağlan), <code>1012</code> sunucu güncelleniyor.</p>
 
@@ -562,7 +622,7 @@ if (istek.tur === 'PING') return res.json({ tur: 'PONG' }); // adresi kaydederke
       <li>Kullanıcıları kandırma, spam yapma, izinsiz veri toplama. Kurallara uymayan botları Kanka ekibi durdurabilir.</li>
       <li><b>Bot Geliştirici rozeti:</b> botların başkalarının 3 sunucusunda kullanılsın ve 50 komut çalıştırılsın (kendi sunucuların ve kendi denemelerin sayılmaz). İlerlemeni portalda görürsün.</li>
     </ul>
-    <p>Sorun mu var? Kanka HQ'daki <b>#bot-gelistirici</b> odasına yaz.</p>
+    <p>Sorun mu var? <a href="/gelistirici-topluluk">Kanka Geliştiriciler</a> sunucusunda <b>#yardım</b> kanalına yaz.</p>
   </div>
   <div class="foot">Kanka Chat · <a href="/kosullar">Kullanım Şartları</a> · <a href="/gizlilik">Gizlilik ve KVKK</a></div>
 </div>
