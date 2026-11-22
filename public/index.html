@@ -4109,6 +4109,9 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   #compose.locked::before { content: ''; flex: none; width: 16px; height: 16px; margin-left: 6px; background: var(--muted); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center / contain no-repeat; }
   #compose.locked #input { white-space: nowrap; overflow: hidden; resize: none; height: auto !important; min-height: 0; cursor: not-allowed; }
   #compose.locked #input::placeholder { color: var(--muted); }
+  .md-q { border-left: 3px solid color-mix(in srgb, var(--muted) 55%, transparent); padding: 1px 0 1px 10px; margin: 2px 0; color: color-mix(in srgb, var(--ink, #fff) 86%, var(--muted)); }
+  .yt { aspect-ratio: 16 / 9; background: #0b0b0e center / 64px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 68 48'%3E%3Cpath fill='%23ff0033' d='M66.5 7.7A8.5 8.5 0 0 0 60.5 1.7C55.2.3 34 .3 34 .3S12.8.3 7.5 1.7A8.5 8.5 0 0 0 1.5 7.7C.1 13 .1 24 .1 24s0 11 1.4 16.3a8.5 8.5 0 0 0 6 6C12.8 47.7 34 47.7 34 47.7s21.2 0 26.5-1.4a8.5 8.5 0 0 0 6-6C67.9 35 67.9 24 67.9 24s0-11-1.4-16.3z'/%3E%3Cpath fill='%23fff' d='M45 24 27 14v20z'/%3E%3C/svg%3E"); }
+  .yt img { height: 100%; object-fit: cover; }
 </style>
 </head>
 <body>
@@ -4500,10 +4503,16 @@ const MD_HEAD = /^ {0,3}(#{1,3})[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*$/;
 const MD_UL = /^[ \t]*[-*+][ \t]+(\S.*)$/;
 const MD_OL = /^[ \t]*(\d{1,3})[.)][ \t]+(\S.*)$/;
 const MD_FENCE = /^ {0,3}(```|~~~)/;
+const quoteOf = l => { const m = /^>(?:[ \t](.*))?$/.exec(l); return m ? (m[1] ?? '') : null; };
+// Önizlemeler (mesaj menüsü, yanıt satırı, bildirim) için düz metin: biçim işaretleri silinir, spoiler gizli kalır
+function mdPlain(t) {
+  return String(t || '').replace(/\|\|[\s\S]*?\|\|/g, '▒▒▒').replace(/```[a-z]*\n?|```/gi, '').replace(/^ {0,3}(#{1,3}|>)[ \t]+/gm, '')
+    .replace(/(\*\*|__|~~)(.+?)\1/g, '$2').replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)\*(?!\w)/g, '$1$2').replace(/`([^`\n]+)`/g, '$1').replace(/\s+/g, ' ').trim();
+}
 function fmt(t) {
   const src = String(t ?? '').replace(/\r\n?/g, '\n'), lines = src.split('\n');
   // Blok sözdizimi yoksa çıktı eskisiyle birebir aynı kalır
-  if (!lines.some(l => MD_HEAD.test(l) || MD_UL.test(l) || MD_OL.test(l) || MD_FENCE.test(l))) return inlineFmt(src);
+  if (!lines.some(l => MD_HEAD.test(l) || MD_UL.test(l) || MD_OL.test(l) || MD_FENCE.test(l) || quoteOf(l) !== null)) return inlineFmt(src);
   const out = [], para = [];
   const flushP = () => {
     while (para.length && !para[0].trim()) para.shift();
@@ -4522,6 +4531,12 @@ function fmt(t) {
       for (; j < lines.length; j++) { if (lines[j].trim().startsWith(tok)) { closed = true; break; } body.push(lines[j]); }
       out.push(`<pre><code>${esc(body.join('\n'))}</code></pre>`);
       i = closed ? j + 1 : j;
+      continue;
+    }
+    if (quoteOf(ln) !== null) { // ardışık "> " satırları tek alıntı bloğu
+      flushP(); const q = [];
+      while (i < lines.length && quoteOf(lines[i]) !== null) { q.push(quoteOf(lines[i])); i++; }
+      out.push(`<div class="md-q">${inlineFmt(q.join('\n'))}</div>`);
       continue;
     }
     const hm = ln.match(MD_HEAD);
@@ -5908,7 +5923,7 @@ const QUICK_RE = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 const SHEET_EMO = ['😀', '😁', '🤣', '😊', '😍', '🥰', '😘', '😎', '🤩', '🥳', '🤔', '🙄', '😴', '😭', '😡', '🤯', '🥶', '😱', '🤝', '🙏', '👏', '🙌', '💪', '👀', '💀', '🤡', '🎉', '💯', '✅', '❌', '⭐', '💔'];
 function openMsgSheet(m) {
   const el = $('#msheet'), p = el.querySelector('.ms-p'), my = e => (m.reactions?.[e] || []).includes(S.me);
-  const txt = m.text || m.bot?.title || m.plan?.title || m.poll?.question || m.song?.title || (m.files?.length ? m.files.length + ' dosya' : m.image ? 'Resim' : m.gif ? 'GIF' : m.kind === 'match' ? 'Maç kartı' : '');
+  const txt = mdPlain(m.text) || m.bot?.title || m.plan?.title || m.poll?.question || m.song?.title || (m.files?.length ? m.files.length + ' dosya' : m.image ? 'Resim' : m.gif ? 'GIF' : m.kind === 'match' ? 'Maç kartı' : '');
   const who = m.kind === 'bot' ? 'Kanka Bot' : dn(m.author || '');
   p.innerHTML = `<div class="ms-grip"></div><div class="ms-prev">${m.kind === 'bot' ? '<div class="av" style="background:#f2652f;overflow:hidden"><img src="/icon-192.png" alt="" style="width:100%;height:100%"></div>' : av(m.author || '')}<div style="min-width:0"><b>${esc(who)}</b> <small style="color:var(--muted);font-weight:700">${hm(m.time)}</small><p>${esc(txt)}</p></div></div>
     ${m.ephemeral ? '' : `<div class="ms-re">${QUICK_RE.map(e => `<button class="${my(e) ? 'on' : ''}" data-qe="${e}" aria-label="${e} tepkisi">${e}</button>`).join('')}<button class="more" data-qmore aria-label="Diğer tepkiler">${ic('smile')}</button></div>
@@ -7910,7 +7925,7 @@ function msgHTML(m, prev) {
     const fimgs = (m.files || []).filter(f => f.kind === 'image');
     const onlyImg = (m.image || m.gif || (m.files?.length && fimgs.length === m.files.length)) && !m.text && !m.replyTo;
     const jumbo = !m.image && !m.audio && m.text && isJumbo(m.text);
-    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : m._auPend ? `<div class="e2e-ph sm">${ic('mic')}<span>Ses mesajı açılıyor…</span></div>` : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.gif ? gifHTML(m.gif) : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${invCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !invCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="YouTube önizlemesi"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
+    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : m._auPend ? `<div class="e2e-ph sm">${ic('mic')}<span>Ses mesajı açılıyor…</span></div>` : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.gif ? gifHTML(m.gif) : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${invCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !invCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener" aria-label="YouTube videosunu aç"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
   }
   if (m.thread?.length) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
@@ -7919,7 +7934,7 @@ function msgHTML(m, prev) {
   const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'own' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}<span class="gtime">${hm(m.time)}</span>
-    <div class="col">${m.inter ? interTag(m) : ''}${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${avInner(m.replyTo.author)}</span><b style="color:${(S.view === 'server' && roleColor(S.server, m.replyTo.author)) || userColor(m.replyTo.author)}">@${esc(dn(m.replyTo.author))}</b><span class="txt">${esc(m.replyTo.text)}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${styledNameHTML(dn(m.author), S.users[m.author]?.nameStyle)}</span>${botTag(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+    <div class="col">${m.inter ? interTag(m) : ''}${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${avInner(m.replyTo.author)}</span><b style="color:${(S.view === 'server' && roleColor(S.server, m.replyTo.author)) || userColor(m.replyTo.author)}">@${esc(dn(m.replyTo.author))}</b><span class="txt">${esc(mdPlain(m.replyTo.text))}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${styledNameHTML(dn(m.author), S.users[m.author]?.nameStyle)}</span>${botTag(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 // ================= Uçtan uca şifreleme (DM ve grup DM) =================
@@ -8411,7 +8426,7 @@ function startReply(m) {
   if (!m) return;
   S.replyTo = m;
   $('#reply-who').textContent = m.author;
-  $('#reply-text').textContent = (m.text || m.plan?.title || m.poll?.question || m.song?.title || 'görsel').slice(0, 60);
+  $('#reply-text').textContent = (mdPlain(m.text) || m.plan?.title || m.poll?.question || m.song?.title || 'görsel').slice(0, 60);
   $('#replybar').style.display = 'flex'; $('#input').focus();
 }
 function cancelReply() { S.replyTo = null; $('#replybar').style.display = 'none'; }
