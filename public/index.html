@@ -3405,6 +3405,7 @@
   .at-ic .ic, .fc-ic .ic { width: 26px; height: 26px; } .at-ic em, .fc-ic em { position: absolute; bottom: 6px; font-style: normal; font-size: 8.5px; font-weight: 900; letter-spacing: .02em; color: var(--accent); background: var(--card); padding: 0 3px; border-radius: 3px; }
   #attach .at-n { display: flex; flex-direction: column; min-width: 0; } #attach .at-n b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #attach .at-n small { font-size: 11.5px; color: var(--muted); }
   #attach .at-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.06); } #attach .at-bar i { display: block; height: 100%; background: var(--accent); transition: width .15s; }
+  #attach .at-x.at-re { right: 34px; color: #0b0f00; background: var(--accent); } #attach .at-x.at-re:hover { background: var(--accent); filter: brightness(1.1); color: #000; }
   #attach .at-x { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: var(--muted); background: rgba(0,0,0,.3); } #attach .at-x:hover { color: #fff; background: #ff5a5f; } #attach .at-x .ic { width: 14px; height: 14px; }
   #attach .at-hint { font-size: 12px; color: var(--muted); font-weight: 700; margin-left: 4px; }
   .fimgs { display: grid; gap: 4px; margin: 6px 0 2px; max-width: 440px; border-radius: 12px; overflow: hidden; }
@@ -8644,7 +8645,14 @@ function uploadOne(a) {
   x.setRequestHeader('X-File-Type', a.f.type || (IMG_EXT.test(a.name) ? 'image/jpeg' : 'application/octet-stream'));
   x.upload.onprogress = e => { if (e.lengthComputable) { a.p = e.loaded / e.total; const bar = document.querySelector(`#attach [data-k="${a.k}"] .at-bar i`); if (bar) bar.style.width = Math.round(a.p * 100) + '%'; } };
   x.onload = () => { let r = {}; try { r = JSON.parse(x.responseText); } catch {} if (x.status === 200 && r.ok) { a.st = 'ok'; a.id = r.id; } else { a.st = 'err'; a.err = r.error || 'Yüklenemedi'; toast(`${a.name}: ${a.err}`, null, false, { type: 'err' }); } renderAttach(); attWaiter?.(); };
-  x.onerror = () => { a.st = 'err'; a.err = 'Bağlantı koptu, tekrar dene'; toast(`${a.name}: yüklenemedi, bağlantını kontrol edip tekrar dene`, null, false, { type: 'err' }); renderAttach(); attWaiter?.(); };
+  // Ağ hatası (mobil veride bağlantı bir anlık koptu, sunucu o an yeniden başlıyordu…): kendiliğinden 3 kez daha dene
+  const fail = why => {
+    a.tries = (a.tries || 0) + 1;
+    if (a.tries <= 3 && att.includes(a)) { a.p = 0; const bar = document.querySelector(`#attach [data-k="${a.k}"] small`); if (bar) bar.textContent = `bağlantı koptu, yeniden deneniyor (${a.tries}/3)…`; setTimeout(() => att.includes(a) && uploadOne(a), 1200 * a.tries); return; }
+    a.st = 'err'; a.err = 'Yüklenemedi · tekrar dene'; toast(`${a.name}: yüklenemedi. Bağlantını kontrol edip fotoğrafa dokunarak tekrar dene.`, null, false, { type: 'err' }); renderAttach(); attWaiter?.();
+    try { navigator.sendBeacon('/api/istemci-hata', new Blob([JSON.stringify({ t: 'yukleme', why, size: a.f.size, type: a.f.type, tries: a.tries, net: navigator.connection?.effectiveType || null, online: navigator.onLine })], { type: 'text/plain' })); } catch {}
+  };
+  x.onerror = () => fail('ag'); x.ontimeout = () => fail('zamanasimi'); x.timeout = 180000;
   x.send(a.f);
 }
 function removeAtt(k) { const a = att.find(x => x.k === k); if (!a) return; a.xhr?.abort(); if (a.prev) URL.revokeObjectURL(a.prev); att = att.filter(x => x.k !== k); renderAttach(); }
@@ -8653,8 +8661,10 @@ function renderAttach() {
   const el = $('#attach'); el.hidden = !att.length;
   el.innerHTML = att.map(a => `<div class="at ${a.st}" data-k="${a.k}" title="${esc(a.err || a.name)}">${a.img ? `<img src="${a.prev}" alt="">` : `<span class="at-ic">${ic('file')}<em>${esc(extOf(a.name) || 'DOSYA')}</em></span>`}
     <span class="at-n"><b>${esc(a.name)}</b><small>${a.st === 'err' ? esc(a.err) : a.st === 'up' ? 'yükleniyor…' : fmtSize(a.size)}</small></span>${a.st === 'up' ? `<span class="at-bar"><i style="width:${Math.round(a.p * 100)}%"></i></span>` : ''}
-    <button type="button" class="at-x" data-rm="${a.k}" aria-label="Kaldır">${ic('x')}</button></div>`).join('') + (att.length ? `<span class="at-hint">${att.length} dosya · Enter ile gönder</span>` : '');
+    ${a.st === 'err' && a.f ? `<button type="button" class="at-x at-re" data-re="${a.k}" aria-label="Tekrar dene" title="Tekrar dene">${ic('refresh')}</button>` : ''}<button type="button" class="at-x" data-rm="${a.k}" aria-label="Kaldır">${ic('x')}</button></div>`).join('') + (att.length ? `<span class="at-hint">${att.length} dosya · Enter ile gönder</span>` : '');
   el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => removeAtt(+b.dataset.rm));
+  el.querySelectorAll('.at.err').forEach(c => c.onclick = e => { if (!e.target.closest('[data-rm]')) c.querySelector('[data-re]')?.click(); });
+  el.querySelectorAll('[data-re]').forEach(b => b.onclick = e => { e?.stopPropagation?.(); const a = att.find(x => x.k === +b.dataset.re); if (!a || a.st !== 'err') return; a.st = 'up'; a.err = ''; a.p = 0; a.tries = 0; renderAttach(); uploadOne(a); });
 }
 let attWaiter = null;
 async function sendWithFiles(text) {
