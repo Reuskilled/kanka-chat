@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="kanka-buyuk" content="2026-11-arena">
+<meta name="kanka-buyuk" content="2026-11-arena-2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Kanka Chat</title>
 <meta name="theme-color" content="#09090b">
@@ -12723,7 +12723,7 @@ function showUpdate(kind, quiet, big) {
   if (updKind === 'app') return; // masaüstü güncellemesi öncelikli
   updKind = kind;
   $('#upd-t').textContent = kind === 'app' ? 'Yeni Kanka Chat sürümü hazır' : big ? 'Büyük güncelleme geldi 🎉' : 'Kanka Chat güncellendi';
-  $('#upd-s').textContent = kind === 'app' ? 'Yeniden başlatınca birkaç saniyede kurulur' : big ? `Yeni özellikleri görmek için yenile${myVoice ? '. Sesli odaya kendiliğinden geri dönersin' : ''}` : 'Yeni özellikler ve düzeltmeler için yenile';
+  $('#upd-s').textContent = kind === 'app' ? 'Yeniden başlatınca birkaç saniyede kurulur' : `${big ? 'Yeni özellikleri görmek için yenile' : 'Yeni özellikler ve düzeltmeler için yenile'}${myVoice ? '. Sesli odaya kendiliğinden geri dönersin' : ''}`;
   $('#upd-go').textContent = kind === 'app' ? 'Şimdi yeniden başlat' : 'Yenile';
   $('#updbar').classList.add('on'); if (!quiet) playSound('join');
 }
@@ -12792,10 +12792,11 @@ socket.on('buildParts', p => {
   if (!myParts) { myParts = { ...p }; myBuild = p.b; return; }
   if (p.css !== myParts.css) swapCss(p.css);
   if (p.js !== myParts.js) { if (!pendingBuild) pendingAt = Date.now(); pendingBuild = p.b; }
-  // Büyük güncelleme (yeni özellikler): sessizce beklemek yerine hemen "Yenile" göster, seste olsan bile
-  if (p.major && p.major !== myParts.major && p.js !== myParts.js && !updKind) setTimeout(() => showUpdate('web', false, true), 1500);
+  // Kod güncellendiyse hemen "Yenile" düğmesi çıkar (seste olsan bile; yenileyince sese geri dönülür).
+  // "Sonra" denirse uygun bir anda (sekme arka plandayken, seste değilken) sessizce yenilenir.
+  if (p.js !== myParts.js && !updKind) setTimeout(() => showUpdate('web', false, !!p.major && p.major !== myParts.major), 1500);
 });
-socket.on('build', b => { if (!b || myParts) return; if (myBuild === null) myBuild = b; else if (b !== myBuild) { if (!pendingBuild) pendingAt = Date.now(); pendingBuild = b; } });
+socket.on('build', b => { if (!b || myParts) return; if (myBuild === null) myBuild = b; else if (b !== myBuild) { if (!pendingBuild) pendingAt = Date.now(); pendingBuild = b; if (!updKind) showUpdate('web', false); } });
 // Kod güncellemesi bekliyorsa: sohbet/sunucu değiştirirken (ekran zaten değişiyor) geçişi yenileyerek yap
 function navReload() {
   if (!pendingBuild || updKind || myVoice || vcResume || !authed) return false;
