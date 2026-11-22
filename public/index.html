@@ -12003,191 +12003,310 @@ AR_R.bilek = {
     const dpr = Math.min(2, devicePixelRatio || 1);
     const rw = Math.max(300, Math.round(c.clientWidth * dpr)), rh = Math.max(180, Math.round(c.clientHeight * dpr));
     if (c.width !== rw || c.height !== rh) { c.width = rw; c.height = rh; }
-    const x = c.getContext('2d'), W = rw, H = rh;
+    const x = c.getContext('2d'), W = rw, H = rh, sc = Math.min(W / 760, H / 380);
     x.clearRect(0, 0, W, H);
 
-    // Ekran sarsıntısı (vuruş / QTE / masa çarpma anında)
+    // Gerilim & vuruş ekran sarsıntısı
     let shX = 0, shY = 0;
     const strain = phase === 'go' ? (Math.min(1, (PL.pw + PR.pw) / 145) * 2.2) : 0;
     if (st.shake > 0.05) { shX += (Math.random() - 0.5) * st.shake * dpr; shY += (Math.random() - 0.5) * st.shake * dpr; st.shake *= 0.86; }
-    if (strain > 0.2) { shX += Math.sin(now * 0.095) * strain * 0.45 * dpr; }
+    if (strain > 0.2) shX += Math.sin(now * 0.095) * strain * 0.45 * dpr;
 
     x.save();
     x.translate(shX, shY);
 
-    // 1. Stüdyo karanlık arka plan + tavan spot hüzmesi
-    const bgG = x.createRadialGradient(W * 0.5, H * 0.12, W * 0.05, W * 0.5, H * 0.48, W * 0.72);
-    bgG.addColorStop(0, '#1d2434'); bgG.addColorStop(0.5, '#10141d'); bgG.addColorStop(1, '#080a0f');
-    x.fillStyle = bgG; x.fillRect(-12, -12, W + 24, H + 24);
+    // 1. Sinematik karanlık arena stüdyo ışığı (sert kenar yok, yumuşak tavan spotu)
+    const bgG = x.createRadialGradient(W * 0.5, H * 0.04, W * 0.02, W * 0.5, H * 0.46, W * 0.68);
+    bgG.addColorStop(0, '#272d3d'); bgG.addColorStop(0.32, '#171b26'); bgG.addColorStop(0.68, '#0c0f16'); bgG.addColorStop(1, '#06070b');
+    x.fillStyle = bgG; x.fillRect(-14, -14, W + 28, H + 28);
 
-    // Tavan ışık konisi (hafif gerçekçi stüdyo ışığı)
-    const cone = x.createLinearGradient(0, 0, 0, H * 0.82);
-    cone.addColorStop(0, 'rgba(226,232,240,0.09)'); cone.addColorStop(1, 'rgba(226,232,240,0)');
-    x.fillStyle = cone;
-    x.beginPath(); x.moveTo(W * 0.34, 0); x.lineTo(W * 0.66, 0); x.lineTo(W * 0.86, H * 0.86); x.lineTo(W * 0.14, H * 0.86); x.closePath(); x.fill();
+    const keyHalo = x.createRadialGradient(W * 0.5, H * 0.34, 12 * sc, W * 0.5, H * 0.42, W * 0.42);
+    keyHalo.addColorStop(0, 'rgba(255,238,214,0.11)'); keyHalo.addColorStop(0.5, 'rgba(180,198,224,0.035)'); keyHalo.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = keyHalo; x.fillRect(0, 0, W, H);
 
-    // 2. 3D Bilek Güreşi Yarışma Masası (perspektifli çelik yüzey + ön kalınlık)
-    const tTopY = H * 0.62, tBotY = H * 0.90, tEdgeY = H * 0.97;
-    const tTL = W * 0.12, tTR = W * 0.88, tBL = W * 0.03, tBR = W * 0.97;
+    // 2. 3D Perspektif Yarışma Masası (fırçalanmış koyu çelik + kalın ön kenar)
+    const tTopY = H * 0.64, tBotY = H * 0.91, tEdgeY = H * 0.99;
+    const tTL = W * 0.09, tTR = W * 0.91, tBL = W * 0.005, tBR = W * 0.995;
 
-    // Masa ön kalınlığı (fırçalanmış koyu alüminyum kenar)
     const edgeG = x.createLinearGradient(0, tBotY, 0, tEdgeY);
-    edgeG.addColorStop(0, '#272d3d'); edgeG.addColorStop(1, '#0a0c12');
+    edgeG.addColorStop(0, '#2a3040'); edgeG.addColorStop(0.45, '#151922'); edgeG.addColorStop(1, '#07090e');
     x.fillStyle = edgeG;
     x.beginPath(); x.moveTo(tBL, tBotY); x.lineTo(tBR, tBotY); x.lineTo(tBR, tEdgeY); x.lineTo(tBL, tEdgeY); x.closePath(); x.fill();
 
-    // Masa üst tablası
     const topG = x.createLinearGradient(0, tTopY, 0, tBotY);
-    topG.addColorStop(0, '#171c27'); topG.addColorStop(0.55, '#202635'); topG.addColorStop(1, '#141822');
+    topG.addColorStop(0, '#121620'); topG.addColorStop(0.48, '#1b2130'); topG.addColorStop(1, '#10141d');
     x.fillStyle = topG;
     x.beginPath(); x.moveTo(tTL, tTopY); x.lineTo(tTR, tTopY); x.lineTo(tBR, tBotY); x.lineTo(tBL, tBotY); x.closePath(); x.fill();
-    x.strokeStyle = 'rgba(255,255,255,0.12)'; x.lineWidth = Math.max(1, dpr);
-    x.stroke();
+    x.strokeStyle = 'rgba(255,255,255,0.12)'; x.lineWidth = Math.max(1, 1.2 * dpr); x.stroke();
 
-    // Merkez masa çizgisi
+    const tblRef = x.createRadialGradient(W * 0.5, tTopY + H * 0.12, 10, W * 0.5, tTopY + H * 0.15, W * 0.42);
+    tblRef.addColorStop(0, 'rgba(255,255,255,0.06)'); tblRef.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = tblRef;
+    x.beginPath(); x.moveTo(tTL, tTopY); x.lineTo(tTR, tTopY); x.lineTo(tBR, tBotY); x.lineTo(tBL, tBotY); x.closePath(); x.fill();
+
     x.strokeStyle = 'rgba(255,255,255,0.07)'; x.setLineDash([5 * dpr, 5 * dpr]);
-    x.beginPath(); x.moveTo(W * 0.5, tTopY + 4 * dpr); x.lineTo(W * 0.5, tBotY - 4 * dpr); x.stroke(); x.setLineDash([]);
+    x.beginPath(); x.moveTo(W * 0.5, tTopY + 5 * dpr); x.lineTo(W * 0.5, tBotY - 5 * dpr); x.stroke(); x.setLineDash([]);
 
-    // 3. Sol & Sağ Pin Yastıkları (kolun değdiği kazanma yastıkları — yakınlaşınca parlar!)
-    const drawPinPad = (cx, danger, colRGB) => {
-      const pw = W * 0.135, ph = H * 0.085, py = tTopY + H * 0.075;
-      // Gölge
-      x.fillStyle = 'rgba(0,0,0,0.52)';
-      x.beginPath(); x.roundRect(cx - pw * 0.5, py + ph * 0.22, pw, ph, 7 * dpr); x.fill();
-      // Yastık yan gövdesi
-      x.fillStyle = '#3b0b14';
-      x.beginPath(); x.roundRect(cx - pw * 0.5, py + 4 * dpr, pw, ph, 7 * dpr); x.fill();
-      // Yastık üst yüzeyi (koyu bordo deri + yakınlaşınca sıcak uyarı ışığı)
+    // 3. Sol & Sağ Bordo Deri Pin Yastıkları (kol yatmaya yaklaşınca parlar)
+    const drawPinPad = (cx, danger, glowRGB) => {
+      const pw = W * 0.15, ph = H * 0.092, py = tTopY + H * 0.065;
+      x.fillStyle = 'rgba(0,0,0,0.60)';
+      x.beginPath(); x.roundRect(cx - pw * 0.52, py + ph * 0.25, pw * 1.04, ph * 0.92, 8 * dpr); x.fill();
+      x.fillStyle = '#380912';
+      x.beginPath(); x.roundRect(cx - pw * 0.5, py + 5 * dpr, pw, ph, 8 * dpr); x.fill();
       const pg = x.createLinearGradient(cx, py, cx, py + ph);
-      pg.addColorStop(0, danger > 0.35 ? `rgba(${colRGB},${0.45 + danger * 0.45})` : '#7f1d28');
-      pg.addColorStop(1, '#430d15');
+      pg.addColorStop(0, danger > 0.3 ? `rgba(${glowRGB},${0.5 + danger * 0.45})` : '#881b28');
+      pg.addColorStop(0.55, '#59101a'); pg.addColorStop(1, '#360910');
       x.fillStyle = pg;
-      x.beginPath(); x.roundRect(cx - pw * 0.5, py, pw, ph * 0.86, 7 * dpr); x.fill();
-      x.strokeStyle = danger > 0.35 ? `rgba(${colRGB},0.9)` : 'rgba(255,255,255,0.16)';
-      x.lineWidth = Math.max(1.2, 1.4 * dpr); x.stroke();
+      x.beginPath(); x.roundRect(cx - pw * 0.5, py, pw, ph * 0.82, 8 * dpr); x.fill();
+      x.strokeStyle = danger > 0.3 ? `rgba(${glowRGB},0.85)` : 'rgba(255,255,255,0.16)';
+      x.lineWidth = Math.max(1, 1.2 * dpr); x.stroke();
+      x.fillStyle = 'rgba(255,255,255,0.08)';
+      x.beginPath(); x.roundRect(cx - pw * 0.42, py + 3 * dpr, pw * 0.84, ph * 0.26, 4 * dpr); x.fill();
     };
-    const pinR = Math.max(0, (posL - 0.35) / 0.65);   // sol bastırıyor -> sağ pin tehlikede
-    const pinL = Math.max(0, (-posL - 0.35) / 0.65);  // sağ (sen) bastırıyor -> sol pin kazanmaya yakın!
-    drawPinPad(W * 0.225, pinL, '200,255,0');
-    drawPinPad(W * 0.775, pinR, '239,68,68');
+    drawPinPad(W * 0.215, Math.max(0, (-posL - 0.32) / 0.68), '200,255,0');
+    drawPinPad(W * 0.785, Math.max(0, (posL - 0.32) / 0.68), '239,68,68');
 
-    // 4. Sol & Sağ Metalik Tutma Demirleri (taktik tırtıllı paslanmaz çelik + pirinç halka)
+    // 4. Tırtıllı Paslanmaz Çelik Tutma Demirleri (pirinç halkalı)
     const drawPeg = px => {
-      const py = tTopY + H * 0.03, ph = H * 0.14, rw0 = 7.5 * dpr;
-      x.fillStyle = '#11141c'; x.beginPath(); x.ellipse(px, py + ph, rw0 * 1.8, rw0 * 0.75, 0, 0, 7); x.fill();
-      x.strokeStyle = '#c8a24e'; x.lineWidth = 2.2 * dpr; x.beginPath(); x.ellipse(px, py + ph - 2 * dpr, rw0 * 1.15, rw0 * 0.45, 0, 0, 7); x.stroke();
+      const py = tTopY + H * 0.012, ph = H * 0.152, rw0 = 7.5 * dpr;
+      x.fillStyle = 'rgba(0,0,0,0.55)'; x.beginPath(); x.ellipse(px + 2 * dpr, py + ph + 3 * dpr, rw0 * 2.1, rw0 * 0.85, 0, 0, 7); x.fill();
+      x.fillStyle = '#141822'; x.beginPath(); x.ellipse(px, py + ph, rw0 * 1.85, rw0 * 0.72, 0, 0, 7); x.fill();
+      x.strokeStyle = '#c8a24e'; x.lineWidth = 2.3 * dpr; x.beginPath(); x.ellipse(px, py + ph - 2 * dpr, rw0 * 1.18, rw0 * 0.44, 0, 0, 7); x.stroke();
       const sg = x.createLinearGradient(px - rw0, py, px + rw0, py);
-      sg.addColorStop(0, '#1e2430'); sg.addColorStop(0.38, '#94a3b8'); sg.addColorStop(0.7, '#334155'); sg.addColorStop(1, '#0f131a');
+      sg.addColorStop(0, '#1e2430'); sg.addColorStop(0.32, '#cbd5e1'); sg.addColorStop(0.58, '#64748b'); sg.addColorStop(1, '#0f131a');
       x.fillStyle = sg; x.beginPath(); x.roundRect(px - rw0, py, rw0 * 2, ph, 4 * dpr); x.fill();
-      x.fillStyle = '#cbd5e1'; x.beginPath(); x.ellipse(px, py + 2 * dpr, rw0, rw0 * 0.38, 0, 0, 7); x.fill();
+      x.strokeStyle = 'rgba(15,23,42,0.35)'; x.lineWidth = Math.max(0.8, dpr);
+      for (let ky = py + 8 * dpr; ky < py + ph - 8 * dpr; ky += 5 * dpr) {
+        x.beginPath(); x.moveTo(px - rw0 * 0.85, ky); x.lineTo(px + rw0 * 0.85, ky + 3 * dpr); x.stroke();
+      }
+      x.fillStyle = '#e2e8f0'; x.beginPath(); x.ellipse(px, py + 2 * dpr, rw0, rw0 * 0.36, 0, 0, 7); x.fill();
     };
-    drawPeg(W * 0.115);
-    drawPeg(W * 0.885);
+    drawPeg(W * 0.095);
+    drawPeg(W * 0.905);
 
     // 5. Merkezi Dikişli Mat Siyah Deri Dirsek Yastığı
-    const elW = W * 0.25, elH = H * 0.12, elX = W * 0.5, elY = tTopY + H * 0.145;
-    x.fillStyle = 'rgba(0,0,0,0.58)';
-    x.beginPath(); x.roundRect(elX - elW * 0.5, elY + 5 * dpr, elW, elH, 10 * dpr); x.fill();
-    const padG = x.createLinearGradient(elX, elY - elH * 0.4, elX, elY + elH);
-    padG.addColorStop(0, '#2a303f'); padG.addColorStop(0.45, '#181c26'); padG.addColorStop(1, '#0d1017');
+    const elW = W * 0.27, elH = H * 0.13, elX = W * 0.5, elY = tTopY + H * 0.128;
+    x.fillStyle = 'rgba(0,0,0,0.62)';
+    x.beginPath(); x.roundRect(elX - elW * 0.52, elY + 7 * dpr, elW * 1.04, elH, 11 * dpr); x.fill();
+    x.fillStyle = '#0e1118';
+    x.beginPath(); x.roundRect(elX - elW * 0.5, elY + 4 * dpr, elW, elH, 10 * dpr); x.fill();
+    const padG = x.createLinearGradient(elX, elY - elH * 0.3, elX, elY + elH);
+    padG.addColorStop(0, '#2c3242'); padG.addColorStop(0.42, '#181c26'); padG.addColorStop(1, '#0d1017');
     x.fillStyle = padG;
-    x.beginPath(); x.roundRect(elX - elW * 0.5, elY - elH * 0.22, elW, elH, 10 * dpr); x.fill();
-    x.strokeStyle = 'rgba(200,162,78,0.42)'; x.lineWidth = Math.max(1, 1.2 * dpr); x.setLineDash([4 * dpr, 3 * dpr]);
-    x.beginPath(); x.roundRect(elX - elW * 0.44, elY - elH * 0.12, elW * 0.88, elH * 0.76, 7 * dpr); x.stroke(); x.setLineDash([]);
+    x.beginPath(); x.roundRect(elX - elW * 0.5, elY - elH * 0.18, elW, elH * 0.96, 10 * dpr); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,0.10)'; x.lineWidth = Math.max(1, dpr); x.stroke();
+    x.strokeStyle = 'rgba(202,165,86,0.48)'; x.lineWidth = Math.max(1, 1.2 * dpr); x.setLineDash([4.5 * dpr, 3 * dpr]);
+    x.beginPath(); x.roundRect(elX - elW * 0.44, elY - elH * 0.08, elW * 0.88, elH * 0.74, 7 * dpr); x.stroke(); x.setLineDash([]);
 
-    // 6. Canlı 3D İskeletli Kollar & Kenetli Yumruklar!
-    // posL: -1 = sağ (sen) kazandı (sola yatırır), +1 = sol (rakip) kazandı (sağa yatırır)
-    const pivotX = W * 0.5, pivotY = elY + elH * 0.24;
-    const armLen = Math.min(W * 0.27, H * 0.44);
-    const maxAng = 1.24; // ~71 derece (tam pin yastığına kadar yatar!)
-    const tremble = phase === 'go' ? Math.sin(now * 0.082) * (0.012 + strain * 0.016) + (st.nudge || 0) : 0;
+    // 6. ANATOMİK İNSAN KOLLARI + KENETLİ PARMAKLI ELLER
+    const pivotX = W * 0.5, pivotY = elY + elH * 0.30;
+    const armLen = Math.min(W * 0.29, H * 0.48);
+    const maxAng = 1.20;
+    const tremble = phase === 'go' ? Math.sin(now * 0.082) * (0.011 + strain * 0.015) + (st.nudge || 0) : 0;
     st.nudge = (st.nudge || 0) * 0.8;
     const ang = Math.max(-maxAng, Math.min(maxAng, posL * maxAng + tremble));
     const handX = pivotX + Math.sin(ang) * armLen;
     const handY = pivotY - Math.cos(ang) * armLen;
 
-    // Masa üstüne düşen kol gölgesi
+    // Masa üstü yumuşak kol gölgesi
     x.save();
-    x.strokeStyle = 'rgba(0,0,0,0.42)'; x.lineWidth = 22 * dpr; x.lineCap = 'round';
-    x.beginPath(); x.moveTo(pivotX, pivotY + 6 * dpr); x.lineTo(pivotX + Math.sin(ang) * armLen * 0.92, pivotY + 6 * dpr); x.stroke();
+    x.fillStyle = 'rgba(0,0,0,0.42)';
+    x.beginPath(); x.ellipse(pivotX + Math.sin(ang) * armLen * 0.44, pivotY + 7 * sc, armLen * 0.58, 15 * sc, 0, 0, 7); x.fill();
     x.restore();
 
-    // Yardımcı: 3D gölgeli kol segmenti + bilek bandı çizimi
-    const drawArm = (isRight, colMain, colHi, colDark, tapeCol) => {
-      const side = isRight ? 1 : -1;
-      const shX = pivotX + side * W * 0.34, shY = H * 0.44;
-      const elbX = pivotX + side * W * 0.042, elbY = pivotY - 2 * dpr;
-      const thick = Math.max(15, Math.min(26, W * 0.036));
+    const drawHumanArm = (isRight, skin, sleeveCol, wrapCol, accentCol, pw) => {
+      const s = isRight ? 1 : -1;
+      const shX = isRight ? W * 1.06 : -W * 0.06, shY = H * 0.30;
+      const elbX = pivotX + s * 10 * sc, elbY = pivotY + (isRight ? 2 : -4) * sc;
+      const wX = handX + s * 3 * sc - Math.sin(ang) * 16 * sc;
+      const wY = handY + Math.cos(ang) * 16 * sc;
 
-      // Üst kol (omuzdan dirseğe — arka planda hafif karanlık derinlik)
+      const udx = elbX - shX, udy = elbY - shY, ulen = Math.hypot(udx, udy) || 1;
+      let unx = -udy / ulen, uny = udx / ulen;
+      if (uny > 0) { unx = -unx; uny = -uny; }
+      const pU = (t, off) => [shX + udx * t + unx * off * sc, shY + udy * t + uny * off * sc];
+
+      const fdx = wX - elbX, fdy = wY - elbY, flen = Math.hypot(fdx, fdy) || 1;
+      let fnx = -fdy / flen, fny = fdx / flen;
+      if (fnx * s < 0) { fnx = -fnx; fny = -fny; }
+      const pF = (t, off) => [elbX + fdx * t + fnx * off * sc, elbY + fdy * t + fny * off * sc];
+
+      // A) Üst Kol (Omuz + Biceps/Triceps + Spor Forma Kolu)
       x.save();
-      const ug = x.createLinearGradient(shX, shY, elbX, elbY);
-      ug.addColorStop(0, '#10131c'); ug.addColorStop(0.55, colDark); ug.addColorStop(1, colMain);
-      x.strokeStyle = ug; x.lineWidth = thick * 1.25; x.lineCap = 'round';
-      x.beginPath(); x.moveTo(shX, shY); x.quadraticCurveTo(pivotX + side * W * 0.22, pivotY - H * 0.03, elbX, elbY); x.stroke();
+      x.beginPath();
+      x.moveTo(...pU(0.0, 44));
+      x.bezierCurveTo(...pU(0.32, 48), ...pU(0.62, 44), ...pU(0.84, 24));
+      x.quadraticCurveTo(...pU(0.95, 16), ...pU(1.03, 12));
+      x.bezierCurveTo(...pU(1.07, -8), ...pU(0.98, -24), ...pU(0.84, -25));
+      x.bezierCurveTo(...pU(0.56, -32), ...pU(0.24, -36), ...pU(0.0, -34));
+      x.closePath();
 
-      // Ön kol (dirsekten kenetli ele — canlı açılı 3D gölgeli)
-      const dx = handX - elbX, dy = handY - elbY, len = Math.hypot(dx, dy) || 1;
-      const nx = -dy / len, ny = dx / len;
-      const fg = x.createLinearGradient(elbX + nx * thick, elbY + ny * thick, elbX - nx * thick, elbY - ny * thick);
-      fg.addColorStop(0, colHi); fg.addColorStop(0.45, colMain); fg.addColorStop(1, colDark);
-      x.strokeStyle = fg; x.lineWidth = thick * 1.02; x.lineCap = 'round';
-      x.beginPath(); x.moveTo(elbX, elbY); x.lineTo(handX, handY); x.stroke();
+      const midU = pU(0.55, 0);
+      const uGrad = x.createLinearGradient(midU[0] + unx * 46 * sc, midU[1] + uny * 46 * sc, midU[0] - unx * 36 * sc, midU[1] - uny * 36 * sc);
+      uGrad.addColorStop(0, skin.spec); uGrad.addColorStop(0.24, skin.hi); uGrad.addColorStop(0.62, skin.mid); uGrad.addColorStop(0.88, skin.sh); uGrad.addColorStop(1, skin.deep);
+      x.fillStyle = uGrad; x.fill();
 
-      // Ön kol kas üst ışık şeridi
-      x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = thick * 0.22;
-      x.beginPath(); x.moveTo(elbX + dx * 0.14 + nx * thick * 0.22, elbY + dy * 0.14 + ny * thick * 0.22);
-      x.lineTo(elbX + dx * 0.72 + nx * thick * 0.16, elbY + dy * 0.72 + ny * thick * 0.16); x.stroke();
+      x.save(); x.clip();
+      x.strokeStyle = skin.groove; x.lineWidth = 6 * sc; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(...pU(0.38, 4)); x.quadraticCurveTo(...pU(0.64, -1), ...pU(0.88, 6)); x.stroke();
+      x.strokeStyle = 'rgba(255,244,232,0.22)'; x.lineWidth = 8 * sc;
+      x.beginPath(); x.moveTo(...pU(0.36, 30)); x.quadraticCurveTo(...pU(0.60, 32), ...pU(0.80, 20)); x.stroke();
+      const slG = x.createLinearGradient(...pU(0.0, 48), ...pU(0.46, -38));
+      slG.addColorStop(0, '#090b10'); slG.addColorStop(0.45, sleeveCol); slG.addColorStop(1, '#0c0f17');
+      x.fillStyle = slG;
+      x.beginPath(); x.moveTo(...pU(-0.05, 58)); x.lineTo(...pU(0.43, 54)); x.quadraticCurveTo(...pU(0.47, 0), ...pU(0.39, -46)); x.lineTo(...pU(-0.05, -46)); x.closePath(); x.fill();
+      x.strokeStyle = accentCol; x.lineWidth = 2.8 * sc;
+      x.beginPath(); x.moveTo(...pU(0.415, 50)); x.quadraticCurveTo(...pU(0.455, 0), ...pU(0.375, -42)); x.stroke();
+      const edgeFade = x.createLinearGradient(isRight ? W : 0, 0, isRight ? W * 0.72 : W * 0.28, 0);
+      edgeFade.addColorStop(0, 'rgba(6,7,11,0.88)'); edgeFade.addColorStop(1, 'rgba(6,7,11,0)');
+      x.fillStyle = edgeFade; x.fillRect(0, 0, W, H);
+      x.restore();
+      x.strokeStyle = 'rgba(24,12,8,0.36)'; x.lineWidth = 1.1 * sc; x.stroke();
+      x.restore();
 
-      // Atletik bilek bandı (sol mavi / sağ Kanka lime!)
-      const wx = elbX + dx * 0.76, wy = elbY + dy * 0.76;
-      x.strokeStyle = tapeCol; x.lineWidth = thick * 0.94; x.lineCap = 'butt';
-      x.beginPath(); x.moveTo(wx - (dx / len) * 6 * dpr, wy - (dy / len) * 6 * dpr); x.lineTo(wx + (dx / len) * 6 * dpr, wy + (dy / len) * 6 * dpr); x.stroke();
+      // Dirsek temas gölgesi
+      x.fillStyle = 'rgba(0,0,0,0.45)';
+      x.beginPath(); x.ellipse(elbX, elbY + 13 * sc, 24 * sc, 7 * sc, 0, 0, 7); x.fill();
+
+      // B) Ön Kol (Kaslı brachioradialis, incelen bilek, güç arttıkça belirginleşen tendon/damar + bilek bandı)
+      x.save();
+      x.beginPath();
+      x.moveTo(...pF(-0.02, 16));
+      x.bezierCurveTo(...pF(0.18, 26.5), ...pF(0.46, 22), ...pF(0.74, 14.5));
+      x.lineTo(...pF(1.03, 13.5)); x.lineTo(...pF(1.03, -13.5)); x.lineTo(...pF(0.72, -14));
+      x.bezierCurveTo(...pF(0.44, -24.5), ...pF(0.18, -25.5), ...pF(-0.02, -16));
+      x.quadraticCurveTo(...pF(-0.10, 0), ...pF(-0.02, 16));
+      x.closePath();
+
+      const mF = pF(0.45, 0), ld = fnx * -0.32 + fny * -0.95 >= 0 ? 1 : -1;
+      const litGrad = x.createLinearGradient(mF[0] + fnx * ld * 26 * sc, mF[1] + fny * ld * 26 * sc, mF[0] - fnx * ld * 26 * sc, mF[1] - fny * ld * 26 * sc);
+      litGrad.addColorStop(0, skin.spec); litGrad.addColorStop(0.24, skin.hi); litGrad.addColorStop(0.58, skin.mid); litGrad.addColorStop(0.86, skin.sh); litGrad.addColorStop(1, skin.deep);
+      x.fillStyle = litGrad; x.fill();
+
+      x.save(); x.clip();
+      const flexAlpha = Math.max(0.16, Math.min(0.65, ((pw || 30) - 20) / 82));
+      const crG = x.createRadialGradient(...pF(0.04, 0), 2 * sc, ...pF(0.04, 0), 26 * sc);
+      crG.addColorStop(0, 'rgba(54,26,14,0.32)'); crG.addColorStop(1, 'rgba(54,26,14,0)');
+      x.fillStyle = crG; x.fillRect(elbX - 40 * sc, elbY - 40 * sc, 80 * sc, 80 * sc);
+
+      x.strokeStyle = skin.groove; x.lineWidth = 4.6 * sc; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(...pF(0.12, -7)); x.quadraticCurveTo(...pF(0.42, -10), ...pF(0.74, -4.5)); x.stroke();
+
+      x.strokeStyle = `rgba(88,45,25,${flexAlpha * 0.52})`; x.lineWidth = 1.6 * sc;
+      x.beginPath();
+      x.moveTo(...pF(0.32, 4.5)); x.quadraticCurveTo(...pF(0.58, 2.5), ...pF(0.84, 3.2));
+      x.moveTo(...pF(0.36, -1)); x.quadraticCurveTo(...pF(0.62, -2), ...pF(0.86, -1));
+      x.stroke();
+
+      if ((pw || 0) > 38) {
+        x.strokeStyle = `rgba(74,92,110,${flexAlpha * 0.42})`; x.lineWidth = 1.8 * sc;
+        x.beginPath(); x.moveTo(...pF(0.20, -2)); x.bezierCurveTo(...pF(0.38, 3.5), ...pF(0.54, -4.5), ...pF(0.75, 1)); x.stroke();
+        x.strokeStyle = `rgba(255,236,220,${flexAlpha * 0.28})`; x.lineWidth = 1.0 * sc;
+        x.beginPath(); x.moveTo(...pF(0.21, -3)); x.bezierCurveTo(...pF(0.39, 2.5), ...pF(0.55, -5.5), ...pF(0.76, 0)); x.stroke();
+      }
+
+      x.strokeStyle = 'rgba(255,245,235,0.26)'; x.lineWidth = 6 * sc;
+      x.beginPath(); x.moveTo(...pF(0.16, ld * 12.5)); x.quadraticCurveTo(...pF(0.45, ld * 11.5), ...pF(0.74, ld * 7.5)); x.stroke();
+
+      const wrG = x.createLinearGradient(...pF(0.84, 18), ...pF(0.84, -18));
+      wrG.addColorStop(0, '#0f121a'); wrG.addColorStop(0.45, wrapCol); wrG.addColorStop(1, '#080a0f');
+      x.fillStyle = wrG;
+      x.beginPath(); x.moveTo(...pF(0.78, 18)); x.lineTo(...pF(0.93, 18)); x.lineTo(...pF(0.93, -18)); x.lineTo(...pF(0.78, -18)); x.closePath(); x.fill();
+      x.strokeStyle = accentCol; x.lineWidth = 2.6 * sc;
+      x.beginPath(); x.moveTo(...pF(0.855, 17)); x.lineTo(...pF(0.855, -17)); x.stroke();
+      x.restore();
+      x.strokeStyle = 'rgba(24,12,8,0.40)'; x.lineWidth = 1.1 * sc; x.stroke();
       x.restore();
     };
 
-    // Sol kol (rakip: çelik-mavi vurgu) & Sağ kol (sen: Kanka lime vurgu)
-    drawArm(false, '#475569', '#94a3b8', '#1e293b', '#3b82f6');
-    drawArm(true, '#52525b', '#a1a1aa', '#27272a', '#c8ff00');
+    const skinLeft = { spec: '#e4b38d', hi: '#d19870', mid: '#ae744e', sh: '#734429', deep: '#412214', groove: 'rgba(62,32,16,0.34)' };
+    const skinRight = { spec: '#f7d1b4', hi: '#e7b58f', mid: '#c68b64', sh: '#865335', deep: '#4d2b19', groove: 'rgba(76,40,20,0.32)' };
 
-    // 7. Kenetli 3D Yumruk Merkezi (dinamik parmak boğumları + gerilim parıltısı)
-    const fistR = Math.max(15, Math.min(24, W * 0.032));
+    drawHumanArm(false, skinLeft, '#172033', '#1c2638', '#3b82f6', PL.pw);
+    drawHumanArm(true, skinRight, '#1a1d24', '#181b22', '#c8ff00', PR.pw);
+
+    // 7. Kenetli Gerçekçi İnsan Elleri (avuç içi, başparmak kilidi, 4 ayrı parmak ve tırnak detayı)
     x.save();
     x.translate(handX, handY);
     x.rotate(ang);
-    // Gerilim enerji halesi (güç arttıkça hafif parlar)
-    if (phase === 'go') {
-      const auraR = fistR * (1.8 + strain * 0.55);
-      const ag = x.createRadialGradient(0, 0, fistR * 0.4, 0, 0, auraR);
-      ag.addColorStop(0, posL < 0 ? `rgba(200,255,0,${0.12 + strain * 0.14})` : `rgba(59,130,246,${0.12 + strain * 0.14})`);
+    const hs = sc * 1.24;
+
+    if (phase === 'go' && strain > 0.35) {
+      const ag = x.createRadialGradient(0, 0, 12 * hs, 0, 0, 44 * hs);
+      ag.addColorStop(0, posL < 0 ? `rgba(200,255,0,${strain * 0.09})` : `rgba(59,130,246,${strain * 0.09})`);
       ag.addColorStop(1, 'rgba(0,0,0,0)');
-      x.fillStyle = ag; x.beginPath(); x.arc(0, 0, auraR, 0, 7); x.fill();
+      x.fillStyle = ag; x.beginPath(); x.arc(0, 0, 44 * hs, 0, 7); x.fill();
     }
-    // Yumruk gövdesi
-    const knG = x.createRadialGradient(-fistR * 0.25, -fistR * 0.3, fistR * 0.1, 0, 0, fistR * 1.15);
-    knG.addColorStop(0, '#e2e8f0'); knG.addColorStop(0.5, '#64748b'); knG.addColorStop(1, '#1e293b');
-    x.fillStyle = knG;
-    x.beginPath(); x.ellipse(0, 0, fistR * 1.15, fistR * 0.92, 0, 0, 7); x.fill();
-    x.strokeStyle = 'rgba(255,255,255,0.28)'; x.lineWidth = Math.max(1, 1.2 * dpr); x.stroke();
-    // Parmak boğumu çizgileri
-    x.strokeStyle = 'rgba(15,23,42,0.55)'; x.lineWidth = 1.6 * dpr;
-    for (const ox of [-0.45, -0.15, 0.15, 0.45]) {
-      x.beginPath(); x.moveTo(ox * fistR, -fistR * 0.42); x.lineTo(ox * fistR, fistR * 0.42); x.stroke();
+
+    const backPalmG = x.createRadialGradient(-8 * hs, -6 * hs, 2 * hs, -4 * hs, 2 * hs, 26 * hs);
+    backPalmG.addColorStop(0, skinLeft.hi); backPalmG.addColorStop(0.55, skinLeft.mid); backPalmG.addColorStop(1, skinLeft.deep);
+    x.fillStyle = backPalmG; x.beginPath(); x.ellipse(-7 * hs, 2 * hs, 18 * hs, 16 * hs, -0.18, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(28,14,8,0.5)'; x.lineWidth = 1 * hs; x.stroke();
+
+    const frontPalmG = x.createRadialGradient(8 * hs, -5 * hs, 2 * hs, 6 * hs, 3 * hs, 26 * hs);
+    frontPalmG.addColorStop(0, skinRight.spec); frontPalmG.addColorStop(0.45, skinRight.hi); frontPalmG.addColorStop(0.8, skinRight.mid); frontPalmG.addColorStop(1, skinRight.sh);
+    x.fillStyle = frontPalmG; x.beginPath(); x.ellipse(8 * hs, 4 * hs, 17 * hs, 15.5 * hs, 0.22, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(28,14,8,0.48)'; x.lineWidth = 1 * hs; x.stroke();
+
+    const ltG = x.createLinearGradient(-14 * hs, -18 * hs, 4 * hs, -4 * hs);
+    ltG.addColorStop(0, skinLeft.spec); ltG.addColorStop(0.6, skinLeft.mid); ltG.addColorStop(1, skinLeft.sh);
+    x.fillStyle = ltG; x.beginPath(); x.roundRect(-14 * hs, -17 * hs, 18 * hs, 10 * hs, 5 * hs); x.fill();
+    x.strokeStyle = 'rgba(28,14,8,0.48)'; x.lineWidth = 0.95 * hs; x.stroke();
+
+    for (const f of [
+      { y: -11.5, w: 16.5, h: 6.8, rot: 0.08 },
+      { y: -5.0,  w: 18.0, h: 7.0, rot: 0.04 },
+      { y:  1.6,  w: 17.2, h: 6.7, rot: -0.02 },
+      { y:  7.8,  w: 14.5, h: 6.0, rot: -0.08 },
+    ]) {
+      x.save(); x.translate(1.5 * hs, f.y * hs); x.rotate(f.rot);
+      x.fillStyle = 'rgba(30,14,8,0.45)';
+      x.beginPath(); x.roundRect(-f.w * 0.5 * hs, -f.h * 0.32 * hs + 1.8 * hs, f.w * hs, f.h * hs, 3.4 * hs); x.fill();
+      const fg = x.createLinearGradient(-f.w * 0.5 * hs, -f.h * 0.5 * hs, f.w * 0.5 * hs, f.h * 0.5 * hs);
+      fg.addColorStop(0, skinLeft.sh); fg.addColorStop(0.28, skinLeft.spec); fg.addColorStop(0.68, skinLeft.mid); fg.addColorStop(1, skinLeft.deep);
+      x.fillStyle = fg; x.beginPath(); x.roundRect(-f.w * 0.5 * hs, -f.h * 0.5 * hs, f.w * hs, f.h * hs, 3.4 * hs); x.fill();
+      x.strokeStyle = 'rgba(28,14,8,0.52)'; x.lineWidth = 0.85 * hs; x.stroke();
+      x.strokeStyle = 'rgba(85,44,24,0.38)'; x.lineWidth = 0.75 * hs;
+      x.beginPath(); x.moveTo(-1.5 * hs, -f.h * 0.34 * hs); x.lineTo(-1.5 * hs, f.h * 0.34 * hs); x.stroke();
+      x.fillStyle = 'rgba(248,225,212,0.48)';
+      x.beginPath(); x.roundRect((f.w * 0.5 - 4.2) * hs, -f.h * 0.3 * hs, 3.2 * hs, f.h * 0.6 * hs, 1.5 * hs); x.fill();
+      x.restore();
+    }
+
+    x.save(); x.translate(4 * hs, -13.5 * hs); x.rotate(-0.34);
+    x.fillStyle = 'rgba(24,12,6,0.48)';
+    x.beginPath(); x.roundRect(-13 * hs, -3.5 * hs + 2 * hs, 21 * hs, 9.5 * hs, 4.8 * hs); x.fill();
+    const rtG = x.createLinearGradient(-10 * hs, -6 * hs, 8 * hs, 6 * hs);
+    rtG.addColorStop(0, skinRight.spec); rtG.addColorStop(0.48, skinRight.hi); rtG.addColorStop(0.82, skinRight.mid); rtG.addColorStop(1, skinRight.sh);
+    x.fillStyle = rtG; x.beginPath(); x.roundRect(-13 * hs, -4.8 * hs, 21 * hs, 9.5 * hs, 4.8 * hs); x.fill();
+    x.strokeStyle = 'rgba(30,14,8,0.5)'; x.lineWidth = 0.95 * hs; x.stroke();
+    x.fillStyle = 'rgba(255,238,228,0.58)';
+    x.beginPath(); x.roundRect(-11.5 * hs, -2.7 * hs, 4.5 * hs, 5.4 * hs, 2 * hs); x.fill();
+    x.restore();
+
+    for (let i = 0; i < 3; i++) {
+      const ky = (-5 + i * 6.2) * hs;
+      const kg = x.createRadialGradient(-16 * hs, ky - 1 * hs, 0.5 * hs, -16 * hs, ky, 5 * hs);
+      kg.addColorStop(0, skinRight.spec); kg.addColorStop(0.6, skinRight.mid); kg.addColorStop(1, skinRight.deep);
+      x.fillStyle = kg; x.beginPath(); x.ellipse(-15.5 * hs, ky, 5.2 * hs, 3.6 * hs, -0.15, 0, 7); x.fill();
+      x.strokeStyle = 'rgba(28,14,8,0.48)'; x.lineWidth = 0.8 * hs; x.stroke();
     }
     x.restore();
 
-    // 8. Tebeşir tozu / darbe kıvılcımları (her A/D vuruşu ve QTE patlamasında!)
+    // 8. Tebeşir tozu & güç patlaması efektleri
+    const fistR = 22 * sc;
     st.fx = (st.fx || []).filter(p => now - p.t0 < p.life);
     for (const p of st.fx) {
       const u = (now - p.t0) / p.life;
       if (p.ring) {
-        x.strokeStyle = `rgba(${p.col},${(1 - u) * 0.78})`;
-        x.lineWidth = Math.max(1.5, 3 * (1 - u) * dpr);
-        x.beginPath(); x.arc(handX, handY, (fistR * 0.8 + u * p.maxR * dpr), 0, 7); x.stroke();
+        x.strokeStyle = `rgba(${p.col},${(1 - u) * 0.72})`;
+        x.lineWidth = Math.max(1.5, 2.8 * (1 - u) * dpr);
+        x.beginPath(); x.arc(handX, handY, fistR * 0.9 + u * p.maxR * dpr, 0, 7); x.stroke();
       } else {
-        const px = handX + p.vx * u * dpr, py = handY + p.vy * u * dpr + 26 * u * u * dpr;
-        x.fillStyle = `rgba(${p.col},${(1 - u) * 0.85})`;
-        x.beginPath(); x.arc(px, py, Math.max(1, p.r * (1 - u * 0.5) * dpr), 0, 7); x.fill();
+        const px = handX + p.vx * u * dpr, py = handY + p.vy * u * dpr + 24 * u * u * dpr;
+        x.fillStyle = `rgba(${p.col},${(1 - u) * 0.75})`;
+        x.beginPath(); x.arc(px, py, Math.max(1, p.r * (1 - u * 0.45) * dpr), 0, 7); x.fill();
       }
     }
     x.restore();
