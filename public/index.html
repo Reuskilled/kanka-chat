@@ -4151,6 +4151,33 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .sbf-row { display: grid; grid-template-columns: 96px 1fr 58px; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); margin: 6px 0; } .sbf-row input { accent-color: var(--accent); } .sbf-row em { font-style: normal; text-align: right; color: var(--ink); }
   .sbf-2 { display: grid; grid-template-columns: 64px 1fr; gap: 8px; margin-top: 10px; } .sbf-2 .field { margin: 0; } #sbf-emoji { text-align: center; font-size: 18px; }
   #vsb { flex: 0 0 auto; }
+  /* ===== Kanka Wrapped ===== */
+  #wr { position: fixed; inset: 0; z-index: 95; background: #000; display: grid; place-items: center; animation: fadeIn .2s; outline: none; }
+  .wr-frame { position: relative; height: min(100dvh, 900px); aspect-ratio: 9 / 16; max-width: 100vw; border-radius: 18px; overflow: hidden; }
+  @media (max-width: 560px) { .wr-frame { height: 100dvh; width: 100vw; aspect-ratio: auto; border-radius: 0; } }
+  .wr-prog { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 10px; right: 10px; display: flex; gap: 4px; z-index: 3; } .wr-prog i { flex: 1; height: 3px; border-radius: 9px; background: rgba(255,255,255,.3); overflow: hidden; } .wr-prog b { display: block; height: 100%; width: 0; background: #fff; }
+  .wr-x { position: absolute; top: max(22px, calc(env(safe-area-inset-top) + 14px)); right: 12px; z-index: 3; color: #fff; padding: 6px; } .wr-x .ic { width: 22px; height: 22px; }
+  .wr-slot { position: absolute; inset: 0; cursor: pointer; user-select: none; -webkit-user-select: none; }
+  .wr-card { position: absolute; inset: 0; background: var(--c1); overflow: hidden; color: #fff; }
+  .wr-glow { position: absolute; inset: 0; background: radial-gradient(circle at 85% 12%, var(--c2), transparent 55%), radial-gradient(circle at 10% 95%, color-mix(in srgb, var(--c2) 45%, transparent), transparent 50%); opacity: .85; animation: wrGlow 6s ease-in-out infinite alternate; }
+  @keyframes wrGlow { to { transform: scale(1.12) rotate(4deg); } }
+  .wr-in { position: relative; height: 100%; padding: 70px 28px 90px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .wr-in > * { animation: wrUp .55s var(--ease-out) both; } .wr-in > :nth-child(2) { animation-delay: .08s; } .wr-in > :nth-child(3) { animation-delay: .16s; } .wr-in > :nth-child(4) { animation-delay: .24s; } .wr-in > :nth-child(5) { animation-delay: .32s; } .wr-in > :nth-child(6) { animation-delay: .4s; }
+  @keyframes wrUp { from { opacity: 0; transform: translateY(24px); } }
+  .wr-k { font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; opacity: .8; }
+  .wr-big { font-weight: 900; font-size: clamp(44px, 13vw, 72px); line-height: 1; letter-spacing: -.03em; word-break: break-word; } .wr-big small { display: block; font-size: 22px; letter-spacing: 0; margin-top: 8px; color: var(--c2); font-weight: 800; }
+  .wr-sub { font-size: 16.5px; font-weight: 600; opacity: .9; line-height: 1.35; }
+  .wr-emoji { font-size: 96px; line-height: 1.1; } .wr-bigav > * { width: 96px !important; height: 96px !important; font-size: 36px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+  .wr-row { display: flex; gap: 14px; font-size: 40px; }
+  .wr-bars { display: flex; align-items: flex-end; gap: 3px; height: 120px; margin-top: 12px; } .wr-bars i { flex: 1; border-radius: 4px; background: rgba(255,255,255,.3); } .wr-bars i.on { background: var(--c2); } .wr-bl { display: flex; justify-content: space-between; font-size: 11px; opacity: .6; font-weight: 700; }
+  .wr-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; } .wr-list li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: rgba(0,0,0,.25); } .wr-list li div { min-width: 0; } .wr-list b { display: block; font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .wr-list small { opacity: .75; font-size: 12.5px; }
+  .wr-e { width: 36px; text-align: center; font-weight: 900; font-size: 20px; flex: none; } .wr-av > * { width: 36px !important; height: 36px !important; }
+  .wr-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; } .wr-sum div { padding: 14px; border-radius: 16px; background: rgba(255,255,255,.08); min-width: 0; } .wr-sum b { display: block; font-size: 22px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .wr-sum small { opacity: .7; font-size: 12px; }
+  .wr-who { display: flex; align-items: center; margin-top: 10px; } .wr-who .wr-av { margin-right: -8px; } .wr-who span { margin-left: 18px; font-weight: 700; font-size: 13.5px; opacity: .85; }
+  .wr-brand { position: absolute; bottom: 64px; left: 0; right: 0; text-align: center; font-weight: 900; font-size: 15px; opacity: .9; } .wr-brand b { color: #fff; } .wr-brand { color: var(--c2); }
+  .wr-acts { position: absolute; bottom: max(14px, env(safe-area-inset-bottom)); left: 0; right: 0; display: flex; justify-content: center; z-index: 3; }
+  .wr-share { display: flex; gap: 8px; align-items: center; padding: 10px 20px; border-radius: 99px; background: #fff; color: #111; font-weight: 800; } .wr-share .ic { width: 17px; height: 17px; }
+  .box.wrn { max-width: 420px; text-align: center; } .wr-nudge-art { margin: 4px auto 14px; width: 150px; height: 190px; border-radius: 20px; background: radial-gradient(circle at 80% 15%, #c8ff00, transparent 60%), #1b1036; display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; text-align: left; color: #fff; } .wr-nudge-art b { font-size: 40px; font-weight: 900; line-height: 1; } .wr-nudge-art span { font-weight: 800; color: #c8ff00; }
   /* ===== Kanka Arena ===== */
   #arena { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.62); display: grid; place-items: center; animation: fadeIn .15s; }
   .ar-box { width: min(1080px, calc(100vw - 32px)); height: min(760px, calc(100vh - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 22px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
@@ -4437,6 +4464,7 @@ if (window.visualViewport && matchMedia('(pointer: coarse)').matches) {
   fit();
 }
 const ICON = {
+  share: '<path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>',
   play: '<path d="M7 5v14l12-7z"/>',
   upload: '<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>',
   volumeoff: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/>',
@@ -5050,7 +5078,7 @@ function onAuth(res) {
   if (res.prefs?.at) { applyServerPrefs(res.prefs); if (!res.prefs.emoji && (eFav.length || Object.keys(eUse).length)) syncPrefs(); } // emoji favorileri eski hesaba ilk kez taşınır
   else socket.emit('prefs', prefsNow()); // sunucuda yoksa bu cihazın ayarlarını yükle
   initReadState(res); S.calls = res.calls || {};
-  pushSync(); setTimeout(pushNudge, 4000); setTimeout(() => pullBackup(), 15000);
+  pushSync(); setTimeout(pushNudge, 4000); setTimeout(wrNudge, 2500); setTimeout(() => pullBackup(), 15000);
   socket.emit('vis', document.visibilityState === 'visible');
   { const ac = new URLSearchParams(location.search).get('ac'), kim = new URLSearchParams(location.search).get('kim');
     if (ac) { history.replaceState(null, '', APP_PATH); setTimeout(() => openFromNotif({ ch: ac === 'arkadaslar' ? null : ac, friend: ac === 'arkadaslar', from: kim, dm: /^(dm|g):/.test(ac) }), 300); } }
@@ -6081,6 +6109,7 @@ function toggleSrvMenu() {
     '<hr>' +
     item('info', 'Sunucu bilgisi', 'info') +
     item('lb', 'Liderlik tablosu', 'trophy') +
+    (!s.public && wrCanSee() ? item('wrapped', wrOpen() ? `Sunucunun ${trNow().getUTCFullYear()} yılı` : 'Sunucu yılı (önizleme)', 'sparkle') : '') +
     (s.welcome?.enabled ? item('welcome', 'Hoş geldin ekranı', 'sparkle') : '') +
     (mod && !s.public ? item('reports', `Şikayetler${S.rc?.servers?.[s.id] ? ` <em class="cnt">${S.rc.servers[s.id]}</em>` : ''}`, 'flag') : '') +
     (mod ? item('audit', 'Moderasyon kayıtları', 'log') : '') +
@@ -6097,6 +6126,7 @@ function toggleSrvMenu() {
     closeSrvMenu();
     if (a === 'invite') showInvite(s);
     if (a === 'settings') showServerSettings(s);
+    if (a === 'wrapped') openWrapped({ server: s.id });
     if (a === 'newch') showCreateChannel(s);
     if (a === 'newcat') showCreateCategory(s);
     if (a === 'viewas') setTimeout(() => startViewAs(s), 30);
@@ -11238,6 +11268,113 @@ function arenaCardHTML(m) {
     <div class="ar-avs">${(a.players || []).map(n => av(n)).join('')}</div>
     ${open ? `<div class="ar-cb">${a.state === 'lobby' && !a.players.includes(S.me) && a.players.length < a.max ? `<button class="primary" data-arcj="${a.id}">Katıl</button>` : ''}<button class="btns2" data-arcw="${a.id}">${a.players.includes(S.me) ? 'Aç' : 'İzle'}</button></div>` : ''}</div>`;
 }
+// ================= Kanka Wrapped (yıl özeti) =================
+// 9:16 hikâye kartları: dokun → sonraki, sol tarafa dokun → önceki. Her kart 1080x1920 resim olarak paylaşılabilir.
+const trNow = () => new Date(Date.now() + 3 * 3600e3);
+const wrOpen = (y = trNow().getUTCFullYear()) => { const n = trNow(); return y < n.getUTCFullYear() || (n.getUTCMonth() === 11 && n.getUTCDate() >= 31); };
+const wrCanSee = y => wrOpen(y) || S.siteAdmin;
+const fmtN = n => Number(n || 0).toLocaleString('tr-TR');
+const hrs = dk => dk >= 60 ? `${fmtN(Math.round(dk / 60))} saat` : `${fmtN(dk)} dakika`;
+function wrSlides(d) {
+  const y = d.year, sl = [], pre = d.preview ? `${y} şimdiye kadar` : `Kanka Wrapped ${y}`;
+  if (d.server) {
+    const s = d.server;
+    sl.push({ bg: ['#1b1036', '#c8ff00'], kicker: pre, big: s.ad, sub: `${fmtN(s.uye)} kankanın bir yılı`, icon: s.simge || '🏠' });
+    sl.push({ bg: ['#0b3d2e', '#2fd3c3'], kicker: 'Bu sunucuda bu yıl', big: fmtN(d.msg), unit: 'mesaj', sub: `ve ${fmtN(d.ses)} saat seste sohbet` });
+    if (d.uyeler.length) sl.push({ bg: ['#3a0d2e', '#ff6b9a'], kicker: 'Sunucunun yıldızları', list: d.uyeler.map((n, i) => ({ av: n, t: dn(n), s: ['Sunucunun kalbi', 'Hep oradaydı', 'Sohbetin tuzu biberi', 'Vazgeçilmez', 'Efsane'][i] })) });
+    if (d.odalar.length || d.sesOdalari.length) sl.push({ bg: ['#10233f', '#4aa8ff'], kicker: 'En canlı odalar', list: [...d.odalar.map(c => ({ e: '#', t: c.ad, s: `${fmtN(c.v)} mesaj` })), ...d.sesOdalari.map(c => ({ e: '🔊', t: c.ad, s: `${fmtN(c.v)} saat ses` }))].slice(0, 5) });
+    sl.push({ bg: ['#21123d', '#b07cff'], kicker: 'En kalabalık saat', big: `${String(d.peak).padStart(2, '0')}:00`, sub: 'Bu saatte sunucu hiç susmadı', bars: d.hours });
+    if (d.emoji.length) sl.push({ bg: ['#3d2a05', '#f6c445'], kicker: 'Sunucunun emojisi', emoji: d.emoji[0].k, sub: `${fmtN(d.emoji[0].v)} kez kullanıldı`, row: d.emoji.slice(1).map(e => e.k) });
+    sl.push({ bg: ['#111', '#c8ff00'], kicker: pre, big: s.ad, summary: [[fmtN(d.msg), 'mesaj'], [fmtN(d.ses), 'saat ses'], [`${String(d.peak).padStart(2, '0')}:00`, 'en canlı saat'], [d.emoji[0]?.k || '—', 'favori emoji']], who: d.uyeler.slice(0, 3) });
+    return sl;
+  }
+  sl.push({ bg: ['#1b1036', '#c8ff00'], kicker: pre, big: d.me.gorunen, sub: 'Bu yıl Kanka\'da neler yaptığına bakalım', av: d.me.ad });
+  if (d.sesDk) sl.push({ bg: ['#0f2a4a', '#4aa8ff'], kicker: 'Bu yıl seste', big: d.ses >= 1 ? fmtN(Math.round(d.ses)) : fmtN(d.sesDk), unit: d.ses >= 1 ? 'saat' : 'dakika', sub: d.sesYuzde && d.sesYuzde <= 50 ? `Kanka'da seste en çok kalanların ilk %${d.sesYuzde}'indesin` : 'Kankalarınla bol bol konuştun' });
+  if (d.kankalar.length) sl.push({ bg: ['#3a0d2e', '#ff6b9a'], kicker: 'En çok takıldığın kankalar', list: d.kankalar.map(k => ({ av: k.ad, t: dn(k.ad), s: [k.dk ? `${hrs(k.dk)} seste` : '', k.msg ? `${fmtN(k.msg)} mesaj` : ''].filter(Boolean).join(' · ') })) });
+  if (d.sunucular.length || d.odalar.length) sl.push({ bg: ['#0b3d2e', '#2fd3c3'], kicker: 'En sevdiğin yerler', list: [...d.sunucular.map(s => ({ e: s.simge || '🏠', t: s.ad, s: 'Sunucu' })), ...d.odalar.map(c => ({ e: '🔊', t: c.ad, s: `${c.sv} · ${hrs(c.dk)}` }))].slice(0, 5) });
+  if (d.muzikDk) sl.push({ bg: ['#0d3b1c', '#1ed760'], kicker: 'Bu yılın müziği', big: d.muzikDk >= 60 ? fmtN(Math.round(d.muzikDk / 60)) : fmtN(d.muzikDk), unit: d.muzikDk >= 60 ? 'saat müzik' : 'dakika müzik', list: d.sanatcilar.map((a, i) => ({ e: `${i + 1}`, t: a.k, s: hrs(a.v) })), sub: d.sarkilar[0] ? `Yılın şarkın: ${d.sarkilar[0].ad} · ${d.sarkilar[0].sanatci}` : '' });
+  if (d.oyunDk) sl.push({ bg: ['#2a0f0f', '#ff7a59'], kicker: 'En çok oynadıkların', big: fmtN(Math.round(d.oyunDk / 60)), unit: 'saat oyun', list: d.oyunlar.map((g, i) => ({ e: ['🥇', '🥈', '🥉', '4', '5'][i], t: g.k, s: hrs(g.v) })) });
+  if (d.arena.length) { const fav = [...d.arena].sort((a, b) => b.oynadi - a.oynadi)[0]; sl.push({ bg: ['#2a1a05', '#f6c445'], kicker: 'Kanka Arena', big: fmtN(d.arenaGalibiyet), unit: 'galibiyet', sub: `En çok oynadığın: ${fav.oyun} (${fav.oynadi} maç)`, list: d.arena.slice(0, 4).map(a => ({ e: '🎮', t: a.oyun, s: `${a.oynadi} maç · ${a.kazandi} galibiyet` })) }); }
+  if (d.msg) sl.push({ bg: ['#21123d', '#b07cff'], kicker: 'En aktif saatin', big: `${String(d.peak).padStart(2, '0')}:00`, sub: d.night >= 15 ? `Mesajlarının %${d.night}'ini gece yarısından sonra attın 🦉` : `Bu yıl ${fmtN(d.msg)} mesaj attın`, bars: d.hours });
+  if (d.emoji.length) sl.push({ bg: ['#3d2a05', '#f6c445'], kicker: 'Yılın emojisi', emoji: d.emoji[0].k, sub: `${fmtN(d.emoji[0].v)} kez kullandın`, row: d.emoji.slice(1).map(e => e.k) });
+  if (d.gun) sl.push({ bg: ['#3b1206', '#ff4d2e'], kicker: 'Hiç bırakmadın', big: fmtN(d.gun), unit: 'gün aktiftin', sub: d.seri > 1 ? `En uzun serin ${d.seri} gün 🔥` : '' });
+  sl.push({ bg: ['#0f0f14', '#c8ff00'], kicker: 'Bu yılki kişiliğin', emoji: d.kisilik[0], big: d.kisilik[1], sub: d.kisilik[2] });
+  sl.push({ bg: ['#111', '#c8ff00'], kicker: pre, big: d.me.gorunen, av: d.me.ad, summary: [[d.ses >= 1 ? fmtN(Math.round(d.ses)) : fmtN(d.sesDk), d.ses >= 1 ? 'saat seste' : 'dakika seste'], [fmtN(d.msg), 'mesaj'], [d.sanatcilar[0]?.k || d.oyunlar[0]?.k || '—', d.sanatcilar[0] ? 'yılın sanatçısı' : 'yılın oyunu'], [`${d.kisilik[0]} ${d.kisilik[1]}`, 'kişiliğin']], who: d.kankalar.slice(0, 3).map(k => k.ad) });
+  return sl;
+}
+function wrSlideHTML(s) {
+  const avH = n => `<span class="wr-av">${av(n)}</span>`;
+  return `<div class="wr-card" style="--c1:${s.bg[0]};--c2:${s.bg[1]}"><div class="wr-glow"></div><div class="wr-in">
+    <div class="wr-k">${esc(s.kicker)}</div>
+    ${s.av ? `<div class="wr-bigav">${av(s.av)}</div>` : ''}${s.icon && !s.av ? `<div class="wr-emoji">${esc(s.icon)}</div>` : ''}
+    ${s.emoji ? `<div class="wr-emoji">${esc(s.emoji)}</div>` : ''}
+    ${s.big ? `<div class="wr-big">${esc(s.big)}${s.unit ? `<small>${esc(s.unit)}</small>` : ''}</div>` : ''}
+    ${s.sub ? `<div class="wr-sub">${esc(s.sub)}</div>` : ''}
+    ${s.row?.length ? `<div class="wr-row">${s.row.map(e => `<span>${esc(e)}</span>`).join('')}</div>` : ''}
+    ${s.bars ? `<div class="wr-bars">${s.bars.map((v, h) => `<i style="height:${Math.max(3, v / Math.max(...s.bars, 1) * 100)}%" class="${h === s.bars.indexOf(Math.max(...s.bars)) ? 'on' : ''}"></i>`).join('')}</div><div class="wr-bl"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>` : ''}
+    ${s.list?.length ? `<ol class="wr-list">${s.list.map(x => `<li>${x.av ? avH(x.av) : `<span class="wr-e">${esc(x.e)}</span>`}<div><b>${esc(x.t)}</b>${x.s ? `<small>${esc(x.s)}</small>` : ''}</div></li>`).join('')}</ol>` : ''}
+    ${s.summary ? `<div class="wr-sum">${s.summary.map(([a, b]) => `<div><b>${esc(a)}</b><small>${esc(b)}</small></div>`).join('')}</div>${s.who?.length ? `<div class="wr-who">${s.who.map(n => avH(n)).join('')}<span>ve kankaları</span></div>` : ''}` : ''}
+    </div><div class="wr-brand"><b>kanka</b>hq.com</div></div>`;
+}
+function openWrapped(opts = {}) {
+  const y = opts.year || trNow().getUTCFullYear();
+  socket.emit('wrapped', { year: y, server: opts.server || undefined }, d => {
+    if (!d || d.error) return toast(d?.error || 'Özet hazırlanamadı');
+    const slides = wrSlides(d); let i = 0, t0 = 0, raf = 0, paused = false;
+    $('#wr')?.remove();
+    const el = document.createElement('div'); el.id = 'wr'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Kanka Wrapped');
+    el.innerHTML = `<div class="wr-frame"><div class="wr-prog">${slides.map(() => '<i><b></b></i>').join('')}</div><button class="wr-x" aria-label="Kapat">${ic('x')}</button><div class="wr-slot"></div>
+      <div class="wr-acts"><button class="wr-share">${ic('share')}Paylaş</button></div></div>`;
+    document.body.appendChild(el); ovOpen('wr', () => close(true));
+    const DUR = 6500;
+    const show = n => { i = Math.max(0, Math.min(slides.length - 1, n)); el.querySelector('.wr-slot').innerHTML = wrSlideHTML(slides[i]); t0 = performance.now(); el.querySelectorAll('.wr-prog i').forEach((p, k) => p.querySelector('b').style.width = k < i ? '100%' : '0%'); };
+    const tick = () => { raf = requestAnimationFrame(tick); if (paused) { t0 += 16; return; } const p = (performance.now() - t0) / DUR; const b = el.querySelectorAll('.wr-prog b')[i]; if (b) b.style.width = Math.min(100, p * 100) + '%'; if (p >= 1 && i < slides.length - 1) show(i + 1); };
+    const close = fromBack => { cancelAnimationFrame(raf); el.remove(); if (!fromBack) ovClosed('wr'); };
+    el.querySelector('.wr-x').onclick = () => close();
+    el.querySelector('.wr-slot').onpointerdown = () => { paused = true; };
+    el.querySelector('.wr-slot').onpointerup = e => { paused = false; const r = e.currentTarget.getBoundingClientRect(); show(i + (e.clientX - r.left < r.width * 0.3 ? -1 : 1)); };
+    el.querySelector('.wr-share').onclick = async () => { paused = true; try { await wrShare(slides[i], d); } finally { paused = false; } };
+    el.onkeydown = e => { if (e.key === 'ArrowRight') show(i + 1); if (e.key === 'ArrowLeft') show(i - 1); if (e.key === 'Escape') close(); };
+    el.tabIndex = -1; el.focus(); show(0); tick();
+  });
+}
+// Kartı 1080x1920 resim olarak çiz (paylaşım için)
+async function wrShare(s, d) {
+  const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, s.bg[0]); g.addColorStop(1, s.bg[0]); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const rg = x.createRadialGradient(W * 0.85, H * 0.15, 50, W * 0.85, H * 0.15, 900); rg.addColorStop(0, s.bg[1] + 'cc'); rg.addColorStop(1, s.bg[1] + '00'); x.fillStyle = rg; x.fillRect(0, 0, W, H);
+  const rg2 = x.createRadialGradient(W * 0.1, H * 0.95, 50, W * 0.1, H * 0.95, 800); rg2.addColorStop(0, s.bg[1] + '66'); rg2.addColorStop(1, s.bg[1] + '00'); x.fillStyle = rg2; x.fillRect(0, 0, W, H);
+  const F = (w, px) => `${w} ${px}px Inter, system-ui, -apple-system, Segoe UI, sans-serif`;
+  const fit = (t, w, px, max) => { let p = px; x.font = F(w, p); while (x.measureText(t).width > max && p > 20) { p -= 4; x.font = F(w, p); } return p; };
+  const img = src => new Promise(r => { if (!src) return r(null); const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
+  const avatar = async (n, cx, cy, r) => { const u = S.users[n] || {}; const im = await img(u.avatar); x.save(); x.beginPath(); x.arc(cx, cy, r, 0, 7); x.clip(); if (im) x.drawImage(im, cx - r, cy - r, 2 * r, 2 * r); else { x.fillStyle = u.color || '#555'; x.fillRect(cx - r, cy - r, 2 * r, 2 * r); x.fillStyle = '#fff'; x.font = F(800, r); x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText((n[0] || '?').toUpperCase(), cx, cy + 4); } x.restore(); };
+  let yy = 230; x.textAlign = 'left'; x.textBaseline = 'alphabetic'; const L = 90;
+  x.fillStyle = 'rgba(255,255,255,.75)'; x.font = F(800, 40); x.fillText(s.kicker.toLocaleUpperCase('tr'), L, yy); yy += 60;
+  if (s.av) { await avatar(s.av, L + 110, yy + 110, 110); yy += 270; }
+  if (s.emoji || (s.icon && !s.av)) { x.font = F(400, 240); x.fillText(s.emoji || s.icon, L - 10, yy + 230); yy += 300; }
+  if (s.big) { const p = fit(s.big, 900, 190, W - 2 * L); x.fillStyle = '#fff'; x.fillText(s.big, L, yy + p * 0.85); yy += p + 34; if (s.unit) { x.font = F(800, 64); x.fillStyle = s.bg[1]; x.fillText(s.unit, L, yy + 56); yy += 90; } }
+  if (s.sub) { x.fillStyle = 'rgba(255,255,255,.85)'; x.font = F(600, 44); const words = s.sub.split(' '); let line = ''; for (const w of words) { const t = line ? line + ' ' + w : w; if (x.measureText(t).width > W - 2 * L) { x.fillText(line, L, yy + 44); yy += 60; line = w; } else line = t; } if (line) { x.fillText(line, L, yy + 44); yy += 70; } yy += 20; }
+  if (s.row?.length) { x.font = F(400, 110); s.row.forEach((e, k) => x.fillText(e, L + k * 150, yy + 110)); yy += 160; }
+  if (s.bars) { const bw = (W - 2 * L) / 24, mx = Math.max(...s.bars, 1), bh = 360, pk = s.bars.indexOf(mx); s.bars.forEach((v, h) => { const hh = Math.max(8, v / mx * bh); x.fillStyle = h === pk ? s.bg[1] : 'rgba(255,255,255,.3)'; x.beginPath(); x.roundRect(L + h * bw + 4, yy + bh - hh, bw - 8, hh, 8); x.fill(); }); yy += bh + 70; }
+  if (s.list?.length) for (const [k, it] of s.list.entries()) { const cy = yy + 70; x.fillStyle = 'rgba(0,0,0,.25)'; x.beginPath(); x.roundRect(L - 20, yy, W - 2 * L + 40, 140, 32); x.fill();
+    if (it.av) await avatar(it.av, L + 50, cy, 46); else { x.fillStyle = '#fff'; x.font = F(800, 60); x.textAlign = 'center'; x.fillText(it.e, L + 50, cy + 22); x.textAlign = 'left'; }
+    x.fillStyle = '#fff'; fit(it.t, 800, 50, W - 2 * L - 160); x.fillText(it.t, L + 130, cy - (it.s ? 4 : -16)); if (it.s) { x.fillStyle = 'rgba(255,255,255,.7)'; x.font = F(600, 36); x.fillText(it.s, L + 130, cy + 44); } yy += 165; if (k > 4) break; }
+  if (s.summary) { const cw = (W - 2 * L - 30) / 2; s.summary.forEach(([a, b], k) => { const cx = L + (k % 2) * (cw + 30), cy = yy + Math.floor(k / 2) * 250; x.fillStyle = 'rgba(255,255,255,.08)'; x.beginPath(); x.roundRect(cx, cy, cw, 220, 36); x.fill(); x.fillStyle = '#fff'; fit(a, 900, 76, cw - 60); x.fillText(a, cx + 34, cy + 110); x.fillStyle = 'rgba(255,255,255,.7)'; x.font = F(600, 36); x.fillText(b, cx + 34, cy + 170); }); yy += 520;
+    if (s.who?.length) { for (const [k, n] of s.who.entries()) await avatar(n, L + 50 + k * 80, yy + 50, 48); x.fillStyle = 'rgba(255,255,255,.8)'; x.font = F(700, 40); x.fillText('ve kankaları', L + 40 + s.who.length * 80 + 30, yy + 64); } }
+  x.font = F(900, 56); x.textAlign = 'left'; { const w1 = x.measureText('kanka').width, w2 = x.measureText('hq.com').width, x0 = (W - w1 - w2) / 2; x.fillStyle = '#fff'; x.fillText('kanka', x0, H - 110); x.fillStyle = s.bg[1]; x.fillText('hq.com', x0 + w1, H - 110); }
+  const blob = await new Promise(r => c.toBlob(r, 'image/png')), name = `kanka-wrapped-${d.year}.png`, file = new File([blob], name, { type: 'image/png' });
+  if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title: `Kanka Wrapped ${d.year}` }); return; } catch (e) { if (e?.name === 'AbortError') return; } }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('Kart indirildi, hikâyende paylaşabilirsin');
+}
+// Yıl sonu: bir kez davet
+function wrNudge() {
+  const n = trNow(), y = n.getUTCMonth() === 11 ? n.getUTCFullYear() : n.getUTCFullYear() - 1, inWin = (n.getUTCMonth() === 11 && n.getUTCDate() >= 31) || (n.getUTCMonth() === 0 && n.getUTCDate() <= 20);
+  if (!inWin || y < 2026 || store.get('kanka-wr-' + y) || $('#modal').classList.contains('open')) return;
+  store.set('kanka-wr-' + y, '1');
+  modal(`<div class="wr-nudge"><div class="wr-nudge-art"><b>${y}</b><span>Wrapped</span></div><h3>Kanka yılın hazır 🎁</h3><p class="hint">Seste kaç saat kaldın, en çok kiminle takıldın, yılın şarkın ve oyunun, Arena galibiyetlerin… Hepsi bir hikâyede.</p>
+    <div class="actions"><button class="btns2" id="wrn-no">Sonra</button><button class="primary" id="wrn-go">Yılımı göster</button></div></div>`, 'wrn');
+  $('#wrn-no').onclick = closeModal; $('#wrn-go').onclick = () => { closeModal(); openWrapped({ year: y }); };
+}
 function cleanupVoice(keepState) { Object.keys(peers).forEach(closePeer); myVoice = null; pttPageDown = pttHookDown = pttDown = false; pttSync(); myVoiceAt = 0; dmCallMin = false; dmCallSig = ''; dmCallEver = false; if (deaf && !keepState) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
@@ -14464,7 +14601,7 @@ function accountPageHTML(u) {
     <p class="hint" style="margin-top:0">Yıl sonunda açılan <b style="color:var(--ink)">Kanka Wrapped</b> için sadece sayılar tutulur: seste kaç dakika kaldığın, en çok dinlediğin sanatçılar, oynadığın oyunlar, en çok konuştuğun kankaların. Mesajlarının içeriği tutulmaz.</p>
     <div class="pc-sec"><label class="switch">Yıl özetim için sayılsın (Kanka Wrapped)<input type="checkbox" id="acc-wrap" ${S.wrapOff ? '' : 'checked'}></label>
       <label class="switch">Müzik ve oyun zevkime göre kişilere önerileyim, profilde uyum yüzdesi görünsün<input type="checkbox" id="acc-match" ${S.matchOff ? '' : 'checked'}></label></div>
-    <div class="st-field"><button class="btns2" id="acc-wipe">${ic('trash')} Bu yılın sayılarını sıfırla</button></div>
+    <div class="st-field" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btns2" id="acc-wr" ${wrCanSee() ? '' : 'disabled'}>${ic('sparkle')} ${wrOpen() ? `${trNow().getUTCFullYear()} özetimi aç` : S.siteAdmin ? `${trNow().getUTCFullYear()} şimdiye kadar (önizleme)` : `${trNow().getUTCFullYear()} özetin 31 Aralık'ta açılır`}</button><button class="btns2" id="acc-wipe">${ic('trash')} Bu yılın sayılarını sıfırla</button></div>
     <div class="st-sec danger">Tehlikeli bölge</div>
     <div class="acc-danger"><span><b>Hesabı kalıcı olarak sil</b>Profilin, mesajların ve özel mesajların silinir. Kurduğun sunucular en yetkili üyeye devredilir. Geri alınamaz.</span><button class="danger-btn" id="acc-del">Hesabı sil</button></div></div>`;
 }
@@ -14472,6 +14609,7 @@ function wireAccount() {
   drawTfa(); drawTrash();
   $('#acc-wrap').onchange = e => socket.emit('statPrefs', { wrapOff: !e.target.checked }, r => { if (r?.error) return toast(r.error); S.wrapOff = r.wrapOff; toast(r.wrapOff ? 'Yıl özetin için artık hiçbir şey sayılmayacak' : 'Yıl özetin için sayılıyor'); });
   $('#acc-match').onchange = e => socket.emit('statPrefs', { matchOff: !e.target.checked }, r => { if (r?.error) return toast(r.error); S.matchOff = r.matchOff; toast(r.matchOff ? 'Zevk eşleşmesi kapatıldı' : 'Zevk eşleşmesi açıldı'); });
+  $('#acc-wr').onclick = () => { closeModal(); openWrapped(); };
   $('#acc-wipe').onclick = () => confirmBox('Bu yıl için tutulan tüm sayıların (dinleme, oyun, ses süresi, mesaj sayıları) silinsin mi? Yıl özetin boş başlar.', () => socket.emit('statPrefs', { wipe: true }, r => toast(r?.error || 'Sayıların silindi')));
   { const inp = $('#un-new'), st = $('#un-st'), btn = $('#un-save'); let tm, ok = false;
     const NAME_OK = /^[\p{L}\p{N}_.-]{2,20}$/u;
