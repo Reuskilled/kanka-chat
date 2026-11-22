@@ -4487,8 +4487,20 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .bl-mb { width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 8.5px; font-weight: 900; color: #111; flex-shrink: 0; box-shadow: inset -2px -2px 4px rgba(0,0,0,.4), inset 1px 1px 2px rgba(255,255,255,.45); }
   .bl-mb i { width: 10px; height: 10px; border-radius: 50%; background: #fffef8; display: grid; place-items: center; font-style: normal; line-height: 1; }
   @media (max-width: 680px) { .bl-rack { padding: 5px 7px; gap: 5px; justify-content: center; } .bl-slot { width: 18px; height: 18px; font-size: 8px; } .bl-slot.in::before { width: 10px; height: 10px; } .bl-rl { font-size: 10px; } }
-  .hk-sc { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 60px; z-index: 2; font-weight: 700; font-size: 13px; color: var(--muted); } .hk-sc b { display: block; font-size: 30px; color: var(--ink); } .hk-sc em { position: absolute; left: 0; top: 50%; transform: translateY(-50%); font-style: normal; background: var(--accent); color: #111; padding: 4px 10px; border-radius: 99px; white-space: nowrap; font-weight: 900; }
-  @media (max-width: 700px) { .hk-sc { left: 6px; gap: 40px; font-size: 11px; } .hk-sc b { font-size: 22px; } }
+  .hk-wrap { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; position: relative; min-height: 0; }
+  .hk-hud { width: min(520px, 100%); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 11px; background: #13161e; border: 1px solid rgba(255,255,255,.085); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .hk-side { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .hk-side.r { justify-content: flex-end; text-align: right; }
+  .hk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .hk-dot.op { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,.55); }
+  .hk-dot.me { background: var(--accent); box-shadow: 0 0 8px rgba(200,255,0,.45); }
+  .hk-side span { font-size: 12.5px; font-weight: 600; color: #9ba3b4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hk-side b { font-size: 20px; font-weight: 800; color: #f5f6f8; line-height: 1; }
+  .hk-mid { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #7c8392; padding: 4px 10px; border-radius: 7px; background: #0c0e14; border: 1px solid rgba(255,255,255,.07); white-space: nowrap; }
+  .hk-mid.gol { background: var(--accent); color: #090a0d; border-color: var(--accent); animation: popIn .22s var(--ease-out); }
+  .hk-board { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; cursor: none; }
+  @media (hover: none) { .hk-board { cursor: default; } }
+  @media (max-width: 700px) { .hk-hud { padding: 5px 9px; gap: 6px; } .hk-side span { font-size: 11.5px; } .hk-side b { font-size: 17px; } .hk-mid { font-size: 10px; padding: 3px 8px; } }
   .bk2 { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 10px; padding: 10px 6px; }
   .bk2-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; font-weight: 800; font-size: 14px; }
   .bk2-top .l { color: #7fb2ff; } .bk2-top .r { color: #ffad6b; text-align: right; } .bk2-top .c { color: var(--muted); font-size: 11.5px; letter-spacing: .12em; }
@@ -11963,32 +11975,396 @@ AR_R.bilek = {
   },
   unmount(st) { cancelAnimationFrame(st.raf); clearInterval(st.iv); removeEventListener('keydown', st.key); },
 };
-// ---- Masa hokeyi ----
+// ---- Masa hokeyi (3D Stüdyo + 60/144Hz Ultra Hassasiyet) ----
+const HOK_SFX = (() => {
+  let ctx;
+  const ac = () => (ctx ||= new (window.AudioContext || window.webkitAudioContext)());
+  const wake = () => { try { const a = ac(); if (a.state === 'suspended') a.resume(); } catch {} };
+  const tone = (f0, f1, dur, gain, type = 'triangle') => {
+    try {
+      const a = ac(), t = a.currentTime, o = a.createOscillator(), g = a.createGain();
+      o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t + dur);
+      g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+      o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.01);
+    } catch {}
+  };
+  return {
+    wake,
+    hit(v = 0.6) { const s = Math.max(0.2, Math.min(1, v)); tone(920 + s * 360, 260, 0.055, 0.16 * s, 'triangle'); tone(210, 88, 0.06, 0.12 * s, 'sine'); },
+    rail(v = 0.5) { const s = Math.max(0.18, Math.min(1, v)); tone(540 + s * 180, 190, 0.045, 0.11 * s, 'sine'); },
+    post(v = 0.7) { const s = Math.max(0.25, Math.min(1, v)); tone(1480, 1180, 0.13, 0.14 * s, 'sine'); tone(2240, 1820, 0.09, 0.07 * s, 'triangle'); },
+    goal() { tone(180, 68, 0.34, 0.22, 'sawtooth'); setTimeout(() => tone(523.25, 523.25, 0.22, 0.14, 'triangle'), 40); setTimeout(() => tone(659.25, 659.25, 0.30, 0.15, 'triangle'), 140); }
+  };
+})();
+
 AR_R.hokey = {
+  // Analitik 1-nokta 3D perspektif projeksiyon + birebir kesin ters izdüşüm (0 piksel sapma!)
+  metrics(W, H) {
+    const k = 0.22, padX = W * 0.085, padTop = H * 0.058, padBot = H * 0.052;
+    const cx = W * 0.5, baseW = W - padX * 2, topY = padTop, botY = H - padBot, tableH = botY - topY;
+    const zScale = baseW * 0.62;
+    const proj = (x, y, z = 0) => {
+      const u = 1 - y / 1.6, d = 1 + k * u;
+      return [cx + (x - 0.5) * baseW / d, botY - ((1 + k) * u / d) * tableH - (z * zScale) / d, 1 / d];
+    };
+    const unproj = (sx, sy) => {
+      const f = (botY - sy) / tableH;
+      const u = Math.max(-0.15, Math.min(1.15, f / (1 + k - f * k)));
+      const d = 1 + k * u;
+      return [0.5 + (sx - cx) * d / baseW, (1 - u) * 1.6];
+    };
+    return { k, cx, baseW, topY, botY, tableH, zScale, proj, unproj };
+  },
+  buildBg(W, H) {
+    const off = document.createElement('canvas'); off.width = W; off.height = H;
+    const x = off.getContext('2d'), m = AR_R.hokey.metrics(W, H), P = m.proj;
+    const goalL = 0.5 - 0.18, goalR = 0.5 + 0.18, railZ = 0.064, wallW = 0.068;
+
+    // 1. Dış alüminyum gövde zemin gölgesi
+    const oTL = P(-wallW, -wallW * 1.15, 0), oTR = P(1 + wallW, -wallW * 1.15, 0);
+    const oBR = P(1 + wallW, 1.6 + wallW * 1.05, 0), oBL = P(-wallW, 1.6 + wallW * 1.05, 0);
+    x.save();
+    x.shadowColor = 'rgba(0,0,0,0.72)'; x.shadowBlur = W * 0.05; x.shadowOffsetY = H * 0.016;
+    x.fillStyle = '#090b10';
+    x.beginPath(); x.moveTo(oTL[0], oTL[1]); x.lineTo(oTR[0], oTR[1]); x.lineTo(oBR[0], oBR[1]); x.lineTo(oBL[0], oBL[1]); x.closePath(); x.fill();
+    x.restore();
+
+    // 2. Dış 3D kabin üst yüzeyi (fırçalanmış koyu alüminyum)
+    const cTL = P(-wallW, -wallW * 1.15, railZ), cTR = P(1 + wallW, -wallW * 1.15, railZ);
+    const cBR = P(1 + wallW, 1.6 + wallW * 1.05, railZ), cBL = P(-wallW, 1.6 + wallW * 1.05, railZ);
+    // Dış yan etekler (3D kabin kalınlığı)
+    const skirtG = x.createLinearGradient(0, cBL[1], 0, oBL[1] + 22);
+    skirtG.addColorStop(0, '#1e2330'); skirtG.addColorStop(1, '#090b10');
+    x.fillStyle = skirtG;
+    x.beginPath(); x.moveTo(cBL[0], cBL[1]); x.lineTo(cBR[0], cBR[1]); x.lineTo(oBR[0], oBR[1] + 6); x.lineTo(oBL[0], oBL[1] + 6); x.closePath(); x.fill();
+
+    const frameG = x.createLinearGradient(0, cTL[1], 0, cBL[1]);
+    frameG.addColorStop(0, '#232836'); frameG.addColorStop(0.5, '#171b25'); frameG.addColorStop(1, '#262c3a');
+    x.fillStyle = frameG;
+    x.beginPath(); x.moveTo(cTL[0], cTL[1]); x.lineTo(cTR[0], cTR[1]); x.lineTo(cBR[0], cBR[1]); x.lineTo(cBL[0], cBL[1]); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,0.14)'; x.lineWidth = Math.max(1.2, W * 0.0025);
+    x.stroke();
+
+    // 3. Buz pisti oyun yüzeyi (mat koyu buz-arduvaz + stüdyo yumuşak ışık)
+    const iTL = P(0, 0, 0), iTR = P(1, 0, 0), iBR = P(1, 1.6, 0), iBL = P(0, 1.6, 0);
+    const rTL = P(0, 0, railZ), rTR = P(1, 0, railZ), rBR = P(1, 1.6, railZ), rBL = P(0, 1.6, railZ);
+
+    // Gömülü 3D iç bant duvarları (üst, sol, sağ)
+    const topWallG = x.createLinearGradient(0, rTL[1], 0, iTL[1]);
+    topWallG.addColorStop(0, '#2a3142'); topWallG.addColorStop(1, '#0b0e16');
+    x.fillStyle = topWallG;
+    x.beginPath(); x.moveTo(rTL[0], rTL[1]); x.lineTo(rTR[0], rTR[1]); x.lineTo(iTR[0], iTR[1]); x.lineTo(iTL[0], iTL[1]); x.closePath(); x.fill();
+
+    const sideLG = x.createLinearGradient(rBL[0], 0, iBL[0], 0);
+    sideLG.addColorStop(0, '#222836'); sideLG.addColorStop(1, '#0b0e15');
+    x.fillStyle = sideLG;
+    x.beginPath(); x.moveTo(rTL[0], rTL[1]); x.lineTo(iTL[0], iTL[1]); x.lineTo(iBL[0], iBL[1]); x.lineTo(rBL[0], rBL[1]); x.closePath(); x.fill();
+
+    const sideRG = x.createLinearGradient(rBR[0], 0, iBR[0], 0);
+    sideRG.addColorStop(0, '#1b202d'); sideRG.addColorStop(1, '#0a0d14');
+    x.fillStyle = sideRG;
+    x.beginPath(); x.moveTo(rTR[0], rTR[1]); x.lineTo(iTR[0], iTR[1]); x.lineTo(iBR[0], iBR[1]); x.lineTo(rBR[0], rBR[1]); x.closePath(); x.fill();
+
+    // Ana buz pisti kırpma alanı
+    x.save();
+    x.beginPath(); x.moveTo(iTL[0], iTL[1]); x.lineTo(iTR[0], iTR[1]); x.lineTo(iBR[0], iBR[1]); x.lineTo(iBL[0], iBL[1]); x.closePath();
+    const iceG = x.createLinearGradient(0, iTL[1], 0, iBL[1]);
+    iceG.addColorStop(0, '#101622'); iceG.addColorStop(0.48, '#161f2f'); iceG.addColorStop(1, '#111826');
+    x.fillStyle = iceG; x.fill();
+    x.clip();
+
+    // Tavan stüdyo softbox yansıması (buzlu yüzey derinliği)
+    const sheen = x.createRadialGradient(W * 0.5, H * 0.44, W * 0.04, W * 0.5, H * 0.48, H * 0.55);
+    sheen.addColorStop(0, 'rgba(148,195,255,0.095)'); sheen.addColorStop(0.55, 'rgba(100,150,220,0.03)'); sheen.addColorStop(1, 'rgba(0,0,0,0.28)');
+    x.fillStyle = sheen; x.fillRect(0, 0, W, H);
+
+    // Perspektifli mikro hava delikleri (gerçek air-hockey masası dokusu!)
+    x.fillStyle = 'rgba(255,255,255,0.055)';
+    for (let gy = 0.08; gy <= 1.52; gy += 0.09) {
+      for (let gx = 0.07; gx <= 0.93; gx += 0.086) {
+        const [px, py, sc] = P(gx, gy, 0);
+        x.beginPath(); x.arc(px, py, Math.max(0.8, 0.0022 * m.baseW * sc), 0, 7); x.fill();
+      }
+    }
+
+    // Saha çizgileri (perspektifli orta çizgi, başlama çemberi, kale yayları)
+    const drawPoly = (pts, stroke, lw) => {
+      x.strokeStyle = stroke; x.lineWidth = lw; x.beginPath();
+      pts.forEach((pt, idx) => { const [px, py] = P(pt[0], pt[1], 0); idx ? x.lineTo(px, py) : x.moveTo(px, py); });
+      x.stroke();
+    };
+    const drawCircle3D = (cx0, cy0, rad, stroke, lw, a0 = 0, a1 = Math.PI * 2) => {
+      const pts = []; for (let i = 0; i <= 48; i++) { const a = a0 + (a1 - a0) * (i / 48); pts.push([cx0 + Math.cos(a) * rad, cy0 + Math.sin(a) * rad]); }
+      drawPoly(pts, stroke, lw);
+    };
+    // Savunma bölgesi ince mavi çizgileri
+    drawPoly([[0, 0.48], [1, 0.48]], 'rgba(56,189,248,0.16)', Math.max(1.4, W * 0.003));
+    drawPoly([[0, 1.12], [1, 1.12]], 'rgba(56,189,248,0.16)', Math.max(1.4, W * 0.003));
+    // Orta çizgi + merkez dairesi
+    drawPoly([[0, 0.8], [1, 0.8]], 'rgba(239,68,68,0.48)', Math.max(2.2, W * 0.0055));
+    drawCircle3D(0.5, 0.8, 0.16, 'rgba(56,189,248,0.34)', Math.max(1.8, W * 0.0042));
+    drawCircle3D(0.5, 0.8, 0.022, 'rgba(239,68,68,0.55)', Math.max(1.8, W * 0.004));
+    // Kale yayları
+    drawCircle3D(0.5, 0, 0.20, 'rgba(239,68,68,0.34)', Math.max(1.6, W * 0.0038), 0, Math.PI);
+    drawCircle3D(0.5, 1.6, 0.20, 'rgba(200,255,0,0.30)', Math.max(1.6, W * 0.0038), Math.PI, Math.PI * 2);
+
+    // İç bant diplerinde yumuşak ambient occlusion gölgesi
+    const aoT = x.createLinearGradient(0, iTL[1], 0, iTL[1] + H * 0.04);
+    aoT.addColorStop(0, 'rgba(0,0,0,0.55)'); aoT.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = aoT; x.fillRect(0, iTL[1], W, H * 0.045);
+    x.restore();
+
+    // 4. Üst & Alt gömülü kaleler + ince hedef ışıkları + metalik kale direkleri
+    const drawGoal = (gy, col, isTop) => {
+      const a0 = P(goalL, gy, 0), b0 = P(goalR, gy, 0);
+      const a1 = P(goalL, gy, railZ * 0.85), b1 = P(goalR, gy, railZ * 0.85);
+      const dOff = isTop ? -0.055 : 0.048;
+      const ad = P(goalL, gy + dOff, 0), bd = P(goalR, gy + dOff, 0);
+      x.fillStyle = '#040508';
+      x.beginPath();
+      if (isTop) { x.moveTo(a1[0], a1[1]); x.lineTo(b1[0], b1[1]); x.lineTo(b0[0], b0[1]); x.lineTo(a0[0], a0[1]); }
+      else { x.moveTo(a0[0], a0[1]); x.lineTo(b0[0], b0[1]); x.lineTo(bd[0], bd[1]); x.lineTo(ad[0], ad[1]); }
+      x.closePath(); x.fill();
+      // İnce LED kale çizgisi
+      x.save();
+      x.strokeStyle = col; x.lineWidth = Math.max(2.2, W * 0.005);
+      x.shadowColor = col; x.shadowBlur = 10;
+      x.beginPath(); x.moveTo(a0[0], a0[1]); x.lineTo(b0[0], b0[1]); x.stroke();
+      x.restore();
+      // Metalik 3D kale direkleri
+      for (const gx of [goalL, goalR]) {
+        const pb = P(gx, gy, 0), pt = P(gx, gy, railZ * 0.92), pr = 0.015 * m.baseW * pb[2];
+        x.fillStyle = '#334155'; x.fillRect(pb[0] - pr, pt[1], pr * 2, pb[1] - pt[1]);
+        const pg = x.createRadialGradient(pt[0] - pr * 0.3, pt[1] - pr * 0.3, pr * 0.1, pt[0], pt[1], pr);
+        pg.addColorStop(0, '#f8fafc'); pg.addColorStop(0.55, '#94a3b8'); pg.addColorStop(1, '#1e293b');
+        x.fillStyle = pg; x.beginPath(); x.arc(pt[0], pt[1], pr, 0, 7); x.fill();
+      }
+    };
+    drawGoal(0, '#ef4444', true);
+    drawGoal(1.6, '#c8ff00', false);
+
+    // 5. İç bant üst parıltı çizgisi (keskin metalik çerçeve)
+    x.strokeStyle = 'rgba(255,255,255,0.16)'; x.lineWidth = Math.max(1.2, W * 0.0022);
+    x.beginPath();
+    x.moveTo(rTL[0], rTL[1]); x.lineTo(P(goalL, 0, railZ)[0], P(goalL, 0, railZ)[1]);
+    x.moveTo(P(goalR, 0, railZ)[0], P(goalR, 0, railZ)[1]); x.lineTo(rTR[0], rTR[1]); x.lineTo(rBR[0], rBR[1]);
+    x.lineTo(P(goalR, 1.6, railZ)[0], P(goalR, 1.6, railZ)[1]);
+    x.moveTo(P(goalL, 1.6, railZ)[0], P(goalL, 1.6, railZ)[1]); x.lineTo(rBL[0], rBL[1]); x.lineTo(rTL[0], rTL[1]);
+    x.stroke();
+
+    return off;
+  },
+  drawMallet(x, m, px, py, isMe) {
+    const P = m.proj, R = 0.075;
+    const [bx, by, sc] = P(px, py, 0);
+    const rx = R * m.baseW * sc, ry = rx * 0.80;
+    const [tx, ty] = P(px, py, 0.030);
+    const [kx, ky] = P(px, py, 0.074);
+
+    // 1. Zemin gölgesi
+    x.fillStyle = 'rgba(0,0,0,0.48)';
+    x.beginPath(); x.ellipse(bx + rx * 0.06, by + ry * 0.16, rx * 1.08, ry * 1.04, 0, 0, 7); x.fill();
+
+    // 2. Dış 3D gövde eteği (fırçalanmış grafit silindir)
+    const bodyG = x.createLinearGradient(bx - rx, by, bx + rx, by);
+    bodyG.addColorStop(0, '#0f131c'); bodyG.addColorStop(0.35, '#2b3244'); bodyG.addColorStop(0.7, '#181c28'); bodyG.addColorStop(1, '#090b10');
+    x.fillStyle = bodyG;
+    x.beginPath(); x.ellipse(bx, by, rx, ry, 0, 0, Math.PI); x.lineTo(tx - rx, ty); x.ellipse(tx, ty, rx, ry, 0, Math.PI, 0, true); x.closePath(); x.fill();
+
+    // 3. Üst halka (takım renk vurgulu metalik yüzey)
+    const topG = x.createRadialGradient(tx - rx * 0.3, ty - ry * 0.3, rx * 0.1, tx, ty, rx);
+    topG.addColorStop(0, '#374151'); topG.addColorStop(0.65, '#171c26'); topG.addColorStop(1, '#0c0f16');
+    x.fillStyle = topG;
+    x.beginPath(); x.ellipse(tx, ty, rx, ry, 0, 0, 7); x.fill();
+    x.strokeStyle = isMe ? '#c8ff00' : '#ef4444';
+    x.lineWidth = Math.max(2, rx * 0.11);
+    x.beginPath(); x.ellipse(tx, ty, rx * 0.86, ry * 0.86, 0, 0, 7); x.stroke();
+    // İnce dış üst kenar yansıması
+    x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = Math.max(1, rx * 0.035);
+    x.beginPath(); x.ellipse(tx, ty, rx * 0.98, ry * 0.98, 0, 0, 7); x.stroke();
+
+    // 4. İç oyuk halka gölgesi
+    x.fillStyle = 'rgba(0,0,0,0.45)';
+    x.beginPath(); x.ellipse(tx, ty, rx * 0.56, ry * 0.56, 0, 0, 7); x.fill();
+
+    // 5. Merkezi 3D tutma topuzu (yükseltilmiş işlenmiş metal başlık)
+    const krx = rx * 0.38, kry = ry * 0.38;
+    const stemG = x.createLinearGradient(tx - krx, ty, tx + krx, ty);
+    stemG.addColorStop(0, '#141822'); stemG.addColorStop(0.35, '#475569'); stemG.addColorStop(1, '#0f131b');
+    x.fillStyle = stemG;
+    x.beginPath(); x.ellipse(tx, ty, krx, kry, 0, 0, Math.PI); x.lineTo(kx - krx, ky); x.ellipse(kx, ky, krx, kry, 0, Math.PI, 0, true); x.closePath(); x.fill();
+
+    const capG = x.createRadialGradient(kx - krx * 0.32, ky - kry * 0.35, krx * 0.08, kx, ky, krx);
+    capG.addColorStop(0, isMe ? '#ecfccb' : '#fecaca');
+    capG.addColorStop(0.38, isMe ? '#98c915' : '#dc2626');
+    capG.addColorStop(1, isMe ? '#365314' : '#7f1d1d');
+    x.fillStyle = capG;
+    x.beginPath(); x.ellipse(kx, ky, krx, kry, 0, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,0.42)'; x.lineWidth = Math.max(1, krx * 0.08); x.stroke();
+  },
+  drawPuck(x, m, px, py) {
+    const P = m.proj, R = 0.042;
+    const [bx, by, sc] = P(px, py, 0);
+    const rx = R * m.baseW * sc, ry = rx * 0.80;
+    const [tx, ty] = P(px, py, 0.024);
+
+    // Gölge
+    x.fillStyle = 'rgba(0,0,0,0.52)';
+    x.beginPath(); x.ellipse(bx + rx * 0.08, by + ry * 0.18, rx * 1.12, ry * 1.06, 0, 0, 7); x.fill();
+
+    // Pak kenar kalınlığı
+    const sideG = x.createLinearGradient(bx - rx, by, bx + rx, by);
+    sideG.addColorStop(0, '#380912'); sideG.addColorStop(0.4, '#9f1239'); sideG.addColorStop(1, '#26050c');
+    x.fillStyle = sideG;
+    x.beginPath(); x.ellipse(bx, by, rx, ry, 0, 0, Math.PI); x.lineTo(tx - rx, ty); x.ellipse(tx, ty, rx, ry, 0, Math.PI, 0, true); x.closePath(); x.fill();
+
+    // Parlak bordo-kırmızı ağırlıklı pak üst yüzeyi + kenar pahı
+    const topG = x.createRadialGradient(tx - rx * 0.3, ty - ry * 0.32, rx * 0.06, tx, ty, rx);
+    topG.addColorStop(0, '#fb7185'); topG.addColorStop(0.35, '#be123c'); topG.addColorStop(0.85, '#6b0a22'); topG.addColorStop(1, '#3b0613');
+    x.fillStyle = topG;
+    x.beginPath(); x.ellipse(tx, ty, rx, ry, 0, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,0.34)'; x.lineWidth = Math.max(1, rx * 0.07);
+    x.beginPath(); x.ellipse(tx, ty, rx * 0.84, ry * 0.84, 0, 0, 7); x.stroke();
+    // Stüdyo parlama noktası
+    x.fillStyle = 'rgba(255,255,255,0.42)';
+    x.beginPath(); x.ellipse(tx - rx * 0.28, ty - ry * 0.28, rx * 0.26, ry * 0.14, -0.4, 0, 7); x.fill();
+  },
   mount(el, st) {
-    el.innerHTML = '<div class="hk-sc" id="hk-sc"></div>'; const c = st.c = arCanvas(el, 1 / 1.6, 520);
+    el.innerHTML = '<div class="hk-wrap"><div class="hk-hud" id="hk-sc"></div><div class="hk-board" id="hk-board"></div></div>';
+    const board = el.querySelector('#hk-board');
+    const c = st.c = arCanvas(board, 1.18 / 1.72, 560);
+    st.sparks = []; st.trail = []; st.lastEvSeq = 0; st.lastT = performance.now(); st.lastSend = 0;
     const flip = () => arIdx() === 1;
-    const send = e => { if (!arMine() || AR.lobby.state !== 'play') return; const [u, v] = arPt(c, e); let x = u, y = v * 1.6; st.mine = [x, Math.max(0.8 + 0.075, Math.min(1.6 - 0.075, y))]; st.dirty = true; };
-    c.onpointermove = send; c.onpointerdown = e => { c.setPointerCapture(e.pointerId); send(e); };
-    st.iv = setInterval(() => { if (st.dirty && AR.lobby) { st.dirty = false; socket.emit('arenaIn', { id: AR.lobby.id, x: +st.mine[0].toFixed(3), y: +st.mine[1].toFixed(3) }); } }, 33);
+
+    const emitNow = () => {
+      if (!st.mine || !AR.lobby || AR.lobby.state !== 'play') return;
+      st.dirty = false; st.lastSend = performance.now();
+      st.sentX = st.mine[0]; st.sentY = st.mine[1];
+      socket.emit('arenaIn', { id: AR.lobby.id, x: +st.mine[0].toFixed(4), y: +st.mine[1].toFixed(4) });
+    };
+    const sample = e => {
+      if (!arMine() || AR.lobby?.state !== 'play') return;
+      const list = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+      const ev = list && list.length ? list[list.length - 1] : e;
+      const r = c.getBoundingClientRect();
+      const sx = (ev.clientX - r.left) * (c.width / r.width);
+      const sy = (ev.clientY - r.top) * (c.height / r.height);
+      const m = AR_R.hokey.metrics(c.width, c.height);
+      let [x, y] = m.unproj(sx, sy);
+      if (e.pointerType === 'touch') y -= 0.055; // dokunmatikte parmak tokmağı kapatmasın
+      x = Math.max(0.075, Math.min(1 - 0.075, x));
+      y = Math.max(0.8 + 0.075, Math.min(1.6 - 0.075, y));
+      st.mine = [x, y]; st.dirty = true;
+      const now = performance.now();
+      const moved = st.sentX != null ? Math.hypot(x - st.sentX, y - st.sentY) : 1;
+      if (now - st.lastSend >= 15 || (moved > 0.022 && now - st.lastSend >= 8)) emitNow();
+    };
+    c.onpointermove = sample;
+    c.onpointerdown = e => { HOK_SFX.wake(); c.setPointerCapture(e.pointerId); sample(e); };
+    st.iv = setInterval(() => { if (st.dirty) emitNow(); }, 16);
     const loop = () => { st.raf = requestAnimationFrame(loop); AR_R.hokey.draw(st, flip()); }; loop();
   },
   update(L, st) { if (!AR.rt && L.g) AR.rt = L.g; },
   draw(st, flip) {
     const g = AR.rt, L = AR.lobby; if (!g || !L?.ps) return;
-    const c = st.c, x = c.getContext('2d'), W = c.width, H = c.height, s = W, F = (px, py) => flip ? [(1 - px) * s, (1.6 - py) * s] : [px * s, py * s];
-    // yumuşatma
-    st.k = st.k ? [st.k[0] + (g.k[0] - st.k[0]) * 0.5, st.k[1] + (g.k[1] - st.k[1]) * 0.5] : g.k;
-    x.clearRect(0, 0, W, H); x.fillStyle = '#e9f3fb'; x.fillRect(0, 0, W, H);
-    x.strokeStyle = '#d0465a'; x.lineWidth = 3 * devicePixelRatio; x.beginPath(); x.moveTo(0, H / 2); x.lineTo(W, H / 2); x.stroke();
-    x.strokeStyle = '#7aa7d6'; x.beginPath(); x.arc(W / 2, H / 2, 0.15 * s, 0, 7); x.stroke();
-    x.fillStyle = '#20232a'; x.fillRect((0.5 - 0.18) * s, 0, 0.36 * s, 0.018 * s); x.fillRect((0.5 - 0.18) * s, H - 0.018 * s, 0.36 * s, 0.018 * s);
-    const disc = ([px, py], r, col, ring) => { x.beginPath(); x.arc(px, py, r * s, 0, 7); x.fillStyle = col; x.fill(); if (ring) { x.strokeStyle = ring; x.lineWidth = 4 * devicePixelRatio; x.stroke(); } };
-    const mi = arIdx();
-    g.p.forEach((p, i) => { const pos = i === mi && st.mine && AR.lobby.state === 'play' ? (flip ? [1 - st.mine[0], 1.6 - st.mine[1]] : st.mine) : p; disc(F(...pos), 0.075, i === 0 ? '#ff6b4a' : '#3a7bd5', 'rgba(0,0,0,.25)'); });
-    disc(F(...st.k), 0.042, '#111');
-    const me = mi >= 0 ? mi : 0, op = 1 - me;
-    $('#hk-sc').innerHTML = `<span>${esc(dn(L.ps[op]))} <b>${g.sc[op]}</b></span><span><b>${g.sc[me]}</b> ${esc(dn(L.ps[me]))}</span>${g.pause && g.last ? `<em>GOL! ${esc(dn(g.last))}</em>` : ''}`;
+    const c = st.c, x = c.getContext('2d'), W = c.width, H = c.height;
+    const now = performance.now(), dt = Math.min(0.05, Math.max(0.001, (now - (st.lastT || now)) / 1000));
+    st.lastT = now;
+    if (!st.bg || st.bg.width !== W || st.bg.height !== H) st.bg = AR_R.hokey.buildBg(W, H);
+    const m = AR_R.hokey.metrics(W, H), P = m.proj;
+    const toLocal = ([px, py]) => flip ? [1 - px, 1.6 - py] : [px, py];
+
+    // 1. Çarpışma / direk / gol ses ve kıvılcım olaylarını tetikle
+    if (g.ev?.seq && g.ev.seq !== st.lastEvSeq) {
+      st.lastEvSeq = g.ev.seq;
+      const [ex, ey] = toLocal([g.ev.x, g.ev.y]);
+      if (g.ev.t === 'hit') { HOK_SFX.hit(g.ev.v); st.sparks.push({ x: ex, y: ey, t0: now, col: '200,255,0', maxR: 0.08 + g.ev.v * 0.05 }); buzz(6); }
+      else if (g.ev.t === 'rail') { HOK_SFX.rail(g.ev.v); st.sparks.push({ x: ex, y: ey, t0: now, col: '148,195,255', maxR: 0.06 }); }
+      else if (g.ev.t === 'post') { HOK_SFX.post(g.ev.v); st.sparks.push({ x: ex, y: ey, t0: now, col: '255,255,255', maxR: 0.095 }); buzz(12); }
+      else if (g.ev.t === 'goal') { HOK_SFX.goal(); st.goalFlash = { t0: now, top: ey < 0.8 }; st.sparks.push({ x: ex, y: ey, t0: now, col: ey < 0.8 ? '200,255,0' : '239,68,68', maxR: 0.24 }); buzz(30); }
+    }
+
+    // 2. 60/120/144Hz Hız-Tahminli Pak İnterpolasyonu (0 takılma!)
+    const tk = toLocal(g.k);
+    const kv = g.kv ? (flip ? [-g.kv[0], -g.kv[1]] : g.kv) : [0, 0];
+    const age = Math.min(0.032, Math.max(0, (now - (AR.rtAt || now)) / 1000));
+    const predK = [
+      Math.max(0.042, Math.min(1 - 0.042, tk[0] + kv[0] * age)),
+      Math.max(-0.04, Math.min(1.64, tk[1] + kv[1] * age))
+    ];
+    if (!st.k || Math.hypot(predK[0] - st.k[0], predK[1] - st.k[1]) > 0.32) {
+      st.k = [...predK]; st.trail = [];
+    } else {
+      const a = 1 - Math.exp(-34 * dt);
+      st.k[0] += (predK[0] - st.k[0]) * a;
+      st.k[1] += (predK[1] - st.k[1]) * a;
+    }
+
+    // Rakip tokmağı yüksek FPS yumuşatma
+    const mi = arIdx(), me = mi >= 0 ? mi : 0, op = 1 - me;
+    const opTarget = toLocal(g.p[op]);
+    if (!st.opP) st.opP = [...opTarget];
+    else { const ao = 1 - Math.exp(-26 * dt); st.opP[0] += (opTarget[0] - st.opP[0]) * ao; st.opP[1] += (opTarget[1] - st.opP[1]) * ao; }
+    const myPos = (mi >= 0 && st.mine && L.state === 'play') ? st.mine : toLocal(g.p[me]);
+
+    // 3. Sahneyi çiz (önceden önbelleklenmiş 3D masa)
+    x.clearRect(0, 0, W, H);
+    x.drawImage(st.bg, 0, 0);
+
+    // Gol ışığı parlaması
+    if (st.goalFlash && now - st.goalFlash.t0 < 650) {
+      const u = (now - st.goalFlash.t0) / 650;
+      const gy = st.goalFlash.top ? 0 : 1.6;
+      const [gx, gsy] = P(0.5, gy, 0);
+      const fg = x.createRadialGradient(gx, gsy, 4, gx, gsy, W * 0.45);
+      fg.addColorStop(0, st.goalFlash.top ? `rgba(200,255,0,${(1 - u) * 0.42})` : `rgba(239,68,68,${(1 - u) * 0.42})`);
+      fg.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = fg; x.fillRect(0, 0, W, H);
+    }
+
+    // Pak hız izi (hızlı şutlarda ince şık iz)
+    const spd = Math.hypot(kv[0], kv[1]);
+    if (spd > 0.7 && !g.pause) st.trail.push({ x: st.k[0], y: st.k[1], t: now });
+    st.trail = st.trail.filter(p => now - p.t < 130);
+    if (st.trail.length > 1) {
+      for (let i = 1; i < st.trail.length; i++) {
+        const u = i / st.trail.length;
+        const [x1, y1, s1] = P(st.trail[i - 1].x, st.trail[i - 1].y, 0.012);
+        const [x2, y2] = P(st.trail[i].x, st.trail[i].y, 0.012);
+        x.strokeStyle = `rgba(251,113,133,${u * 0.36})`;
+        x.lineWidth = Math.max(1.5, 0.055 * m.baseW * s1 * u);
+        x.lineCap = 'round';
+        x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke();
+      }
+    }
+
+    // Çarpışma mikro şok dalgaları
+    st.sparks = st.sparks.filter(sp => now - sp.t0 < 230);
+    for (const sp of st.sparks) {
+      const u = (now - sp.t0) / 230, [sx, sy, sc] = P(sp.x, sp.y, 0.014);
+      const rad = (0.015 + u * sp.maxR) * m.baseW * sc;
+      x.strokeStyle = `rgba(${sp.col},${(1 - u) * 0.75})`;
+      x.lineWidth = Math.max(1.5, 2.6 * (1 - u) * devicePixelRatio);
+      x.beginPath(); x.ellipse(sx, sy, rad, rad * 0.8, 0, 0, 7); x.stroke();
+    }
+
+    // 4. Derinlik sıralı (painter's algorithm: küçük y -> büyük y) 3D objeler!
+    const objs = [
+      { y: st.opP[1], draw: () => AR_R.hokey.drawMallet(x, m, st.opP[0], st.opP[1], false) },
+      { y: st.k[1], draw: () => AR_R.hokey.drawPuck(x, m, st.k[0], st.k[1]) },
+      { y: myPos[1], draw: () => AR_R.hokey.drawMallet(x, m, myPos[0], myPos[1], true) },
+    ];
+    objs.sort((a, b) => a.y - b.y).forEach(o => o.draw());
+
+    // 5. Üst skor şeridi (sadece değiştiğinde DOM güncelle — 0 layout thrash!)
+    const hudKey = `${g.sc[op]}|${g.sc[me]}|${g.pause ? 1 : 0}|${g.last || ''}`;
+    if (st.hudKey !== hudKey) {
+      st.hudKey = hudKey;
+      const hud = $('#hk-sc');
+      if (hud) hud.innerHTML = `<div class="hk-side"><i class="hk-dot op"></i><span>${esc(dn(L.ps[op]))}</span><b>${g.sc[op]}</b></div>
+        <div class="hk-mid ${g.pause && g.last ? 'gol' : ''}">${g.pause && g.last ? `GOL · ${esc(dn(g.last))}` : `İLK ${g.win || 7}`}</div>
+        <div class="hk-side r"><b>${g.sc[me]}</b><span>${esc(dn(L.ps[me]))}</span><i class="hk-dot me"></i></div>`;
+    }
   },
   unmount(st) { cancelAnimationFrame(st.raf); clearInterval(st.iv); st.c?._ro?.disconnect(); },
 };

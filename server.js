@@ -3511,37 +3511,86 @@ const BILEK = {
   },
   leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
 };
-// ---------- Masa hokeyi (gerçek zamanlı) ----------
+// ---------- Masa hokeyi (gerçek zamanlı · 60Hz yüksek hassasiyet) ----------
 // Masa 1 x 1.6; ilk oyuncu altta, ikinci üstte. İstemci kendi tarafını hep altta görür (ikinci oyuncu için çevrilir).
-const HOK = { W: 1, H: 1.6, PR: 0.075, KR: 0.042, GOAL: 0.36, MAXV: 3.2, PADV: 5, WIN: 7 };
+const HOK = { W: 1, H: 1.6, PR: 0.075, KR: 0.042, GOAL: 0.36, POST: 0.014, MAXV: 3.6, PADV: 11.5, WIN: 7 };
+const HOK_POSTS = [
+  [0.5 - HOK.GOAL / 2, 0], [0.5 + HOK.GOAL / 2, 0],
+  [0.5 - HOK.GOAL / 2, HOK.H], [0.5 + HOK.GOAL / 2, HOK.H],
+];
 const HOKEY = {
-  ad: 'Masa Hokeyi', emoji: '🏒', min: 2, max: 2, rt: true, hz: 30,
-  init(ps) { return { ps, k: { x: 0.5, y: 1.05, vx: 0, vy: 0 }, pd: [{ x: 0.5, y: 1.4, tx: 0.5, ty: 1.4, vx: 0, vy: 0 }, { x: 0.5, y: 0.2, tx: 0.5, ty: 0.2, vx: 0, vy: 0 }], sc: [0, 0], pause: 2, serve: 0, last: null }; },
+  ad: 'Masa Hokeyi', emoji: '🏒', min: 2, max: 2, rt: true, hz: 60,
+  init(ps) { return { ps, k: { x: 0.5, y: 1.05, vx: 0, vy: 0 }, pd: [{ x: 0.5, y: 1.4, tx: 0.5, ty: 1.4, vx: 0, vy: 0 }, { x: 0.5, y: 0.2, tx: 0.5, ty: 0.2, vx: 0, vy: 0 }], sc: [0, 0], pause: 1.6, serve: 0, last: null, ev: null, evSeq: 0 }; },
   input(st, p, inp) { const i = st.ps.indexOf(p); if (i < 0) return; let x = +inp?.x, y = +inp?.y; if (!isFinite(x) || !isFinite(y)) return;
     if (i === 1) { x = HOK.W - x; y = HOK.H - y; } // ikinci oyuncu masayı ters görür
     const pd = st.pd[i]; pd.tx = Math.max(HOK.PR, Math.min(HOK.W - HOK.PR, x)); pd.ty = i === 0 ? Math.max(HOK.H / 2 + HOK.PR, Math.min(HOK.H - HOK.PR, y)) : Math.max(HOK.PR, Math.min(HOK.H / 2 - HOK.PR, y)); },
   tick(st, dt) {
     if (st.over) return false;
-    const steps = 4, h = dt / steps, k = st.k;
+    const steps = 8, h = dt / steps, k = st.k;
+    const emitEv = (t, x, y, v) => { st.evSeq = (st.evSeq || 0) + 1; st.ev = { seq: st.evSeq, t, x: r3(x), y: r3(y), v: r3(Math.min(1, v)) }; };
     for (let s = 0; s < steps; s++) {
-      for (const pd of st.pd) { const dx = pd.tx - pd.x, dy = pd.ty - pd.y, d = Math.hypot(dx, dy), m = Math.min(d, HOK.PADV * h); const ox = pd.x, oy = pd.y; if (d > 0) { pd.x += dx / d * m; pd.y += dy / d * m; } pd.vx = (pd.x - ox) / h; pd.vy = (pd.y - oy) / h; }
+      for (const pd of st.pd) {
+        const dx = pd.tx - pd.x, dy = pd.ty - pd.y, d = Math.hypot(dx, dy);
+        const ox = pd.x, oy = pd.y;
+        if (d > 1e-5) {
+          const step = Math.min(d, HOK.PADV * h);
+          pd.x += (dx / d) * step;
+          pd.y += (dy / d) * step;
+        }
+        const ivx = (pd.x - ox) / h, ivy = (pd.y - oy) / h;
+        pd.vx = pd.vx * 0.32 + ivx * 0.68;
+        pd.vy = pd.vy * 0.32 + ivy * 0.68;
+      }
       if (st.pause > 0) { st.pause -= h; continue; }
-      k.x += k.vx * h; k.y += k.vy * h; k.vx *= 0.9985; k.vy *= 0.9985;
-      if (Math.abs(k.y - HOK.H / 2) < HOK.PR && Math.hypot(k.vx, k.vy) < 0.08) { st.stuck = (st.stuck || 0) + h; if (st.stuck > 2) { k.vy = (Math.random() < 0.5 ? -1 : 1) * 0.5; st.stuck = 0; } } else st.stuck = 0; // orta çizgide kalan pak
-      if (k.x < HOK.KR) { k.x = HOK.KR; k.vx = Math.abs(k.vx) * 0.9; } if (k.x > HOK.W - HOK.KR) { k.x = HOK.W - HOK.KR; k.vx = -Math.abs(k.vx) * 0.9; }
-      const inGoal = Math.abs(k.x - HOK.W / 2) < HOK.GOAL / 2;
-      if (k.y < HOK.KR && !inGoal) { k.y = HOK.KR; k.vy = Math.abs(k.vy) * 0.9; } if (k.y > HOK.H - HOK.KR && !inGoal) { k.y = HOK.H - HOK.KR; k.vy = -Math.abs(k.vy) * 0.9; }
-      if (k.y < -HOK.KR || k.y > HOK.H + HOK.KR) { const scorer = k.y < 0 ? 0 : 1; st.sc[scorer]++; st.last = st.ps[scorer]; st.goalAt = Date.now();
+      k.x += k.vx * h; k.y += k.vy * h;
+      // Gerçek hava yastığı süzülmesi (çok düşük sürtünme)
+      const drag = Math.pow(0.996, h * 60);
+      k.vx *= drag; k.vy *= drag;
+      if (Math.abs(k.y - HOK.H / 2) < HOK.PR && Math.hypot(k.vx, k.vy) < 0.08) { st.stuck = (st.stuck || 0) + h; if (st.stuck > 1.8) { k.vy = (Math.random() < 0.5 ? -1 : 1) * 0.55; st.stuck = 0; } } else st.stuck = 0;
+      // Yan bantlar
+      if (k.x < HOK.KR) { k.x = HOK.KR; if (k.vx < -0.15) emitEv('rail', k.x, k.y, Math.abs(k.vx) / 2.2); k.vx = Math.abs(k.vx) * 0.93; }
+      if (k.x > HOK.W - HOK.KR) { k.x = HOK.W - HOK.KR; if (k.vx > 0.15) emitEv('rail', k.x, k.y, Math.abs(k.vx) / 2.2); k.vx = -Math.abs(k.vx) * 0.93; }
+      // Fiziksel kale direkleri (gerçekçi direk sekmesi!)
+      for (const [px, py] of HOK_POSTS) {
+        const dx = k.x - px, dy = k.y - py, d = Math.hypot(dx, dy), md = HOK.KR + HOK.POST;
+        if (d < md && d > 1e-6) {
+          const nx = dx / d, ny = dy / d; k.x = px + nx * md; k.y = py + ny * md;
+          const vn = k.vx * nx + k.vy * ny;
+          if (vn < 0) { k.vx -= 1.92 * vn * nx; k.vy -= 1.92 * vn * ny; emitEv('post', px, py, Math.abs(vn) / 2.0); }
+        }
+      }
+      const inGoal = Math.abs(k.x - HOK.W / 2) < HOK.GOAL / 2 - HOK.POST * 0.5;
+      if (k.y < HOK.KR && !inGoal) { k.y = HOK.KR; if (k.vy < -0.15) emitEv('rail', k.x, k.y, Math.abs(k.vy) / 2.2); k.vy = Math.abs(k.vy) * 0.93; }
+      if (k.y > HOK.H - HOK.KR && !inGoal) { k.y = HOK.H - HOK.KR; if (k.vy > 0.15) emitEv('rail', k.x, k.y, Math.abs(k.vy) / 2.2); k.vy = -Math.abs(k.vy) * 0.93; }
+      // Gol kontrolü
+      if (k.y < -HOK.KR || k.y > HOK.H + HOK.KR) {
+        const scorer = k.y < 0 ? 0 : 1; st.sc[scorer]++; st.last = st.ps[scorer]; st.goalAt = Date.now();
+        emitEv('goal', 0.5, k.y < 0 ? 0 : HOK.H, 1);
         if (st.sc[scorer] >= HOK.WIN) { st.over = { rank: [st.ps[scorer], st.ps[1 - scorer]] }; return true; }
-        Object.assign(k, { x: 0.5, y: scorer === 0 ? 0.55 : 1.05, vx: 0, vy: 0 }); st.pause = 1.2; break; }
-      for (const pd of st.pd) { const dx = k.x - pd.x, dy = k.y - pd.y, d = Math.hypot(dx, dy), md = HOK.PR + HOK.KR; if (d >= md || d === 0) continue;
-        const nx = dx / d, ny = dy / d; k.x = pd.x + nx * md; k.y = pd.y + ny * md;
-        const rvx = k.vx - pd.vx, rvy = k.vy - pd.vy, rv = rvx * nx + rvy * ny; if (rv < 0) { k.vx -= 1.9 * rv * nx; k.vy -= 1.9 * rv * ny; }
-        const v = Math.hypot(k.vx, k.vy); if (v > HOK.MAXV) { k.vx *= HOK.MAXV / v; k.vy *= HOK.MAXV / v; } }
+        Object.assign(k, { x: 0.5, y: scorer === 0 ? 0.52 : 1.08, vx: 0, vy: 0 }); st.pause = 1.15; break;
+      }
+      // Tokmak - Pak çarpışması (yüksek hassasiyetli momentum aktarımı + sıkışma önleyici)
+      for (const pd of st.pd) {
+        const dx = k.x - pd.x, dy = k.y - pd.y, d = Math.hypot(dx, dy), md = HOK.PR + HOK.KR;
+        if (d >= md) continue;
+        const nx = d > 1e-6 ? dx / d : 0, ny = d > 1e-6 ? dy / d : (pd.y > HOK.H / 2 ? -1 : 1);
+        k.x = pd.x + nx * (md + 0.001); k.y = pd.y + ny * (md + 0.001);
+        const rvx = k.vx - pd.vx, rvy = k.vy - pd.vy, rv = rvx * nx + rvy * ny;
+        if (rv < 0) {
+          const imp = -1.86 * rv;
+          k.vx += imp * nx + pd.vx * 0.14;
+          k.vy += imp * ny + pd.vy * 0.14;
+          if (-rv > 0.12) emitEv('hit', pd.x + nx * HOK.PR, pd.y + ny * HOK.PR, (-rv) / 2.6);
+        }
+        // Bant köşesine sıkışırsa paku temizce içeri iter
+        if (k.x < HOK.KR) { k.x = HOK.KR; k.vx = Math.max(k.vx, 0.35); }
+        if (k.x > HOK.W - HOK.KR) { k.x = HOK.W - HOK.KR; k.vx = Math.min(k.vx, -0.35); }
+        const v = Math.hypot(k.vx, k.vy); if (v > HOK.MAXV) { k.vx *= HOK.MAXV / v; k.vy *= HOK.MAXV / v; }
+      }
     }
     return true;
   },
-  view(st) { const k = st.k; return { k: [r3(k.x), r3(k.y)], p: st.pd.map(pd => [r3(pd.x), r3(pd.y)]), sc: st.sc, pause: st.pause > 0, last: st.last, win: HOK.WIN }; },
+  view(st) { const k = st.k; return { k: [r3(k.x), r3(k.y)], kv: [r3(k.vx), r3(k.vy)], p: st.pd.map(pd => [r3(pd.x), r3(pd.y)]), sc: st.sc, pause: st.pause > 0, last: st.last, win: HOK.WIN, ev: st.ev }; },
   leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
 };
 const ARENA_GAMES = { bilardo: BILARDO, dart: DART, pisti: PISTI, kart: KART, bilek: BILEK, hokey: HOKEY, asmaca: ASMACA };
@@ -3623,18 +3672,21 @@ setInterval(() => {
     if (L.state === 'lobby' && now - L.at > 60 * 60e3) { for (const n of [...L.players]) arenaDrop(L, n, 'Lobi uzun süre başlamadı'); }
   }
 }, 1000);
-// Gerçek zamanlı oyunlar
-{ let lastRt = Date.now(), acc10 = 0;
+// Gerçek zamanlı oyunlar (60Hz akıcı hokey, 10Hz bilek güreşi)
+{ let lastRt = Date.now(), acc10 = 0, acc30 = 0;
   setInterval(() => {
-    const now = Date.now(), dt = Math.min(0.1, (now - lastRt) / 1000); lastRt = now; acc10 += dt; const slow = acc10 >= 0.1; if (slow) acc10 = 0;
+    const now = Date.now(), dt = Math.min(0.05, (now - lastRt) / 1000); lastRt = now;
+    acc10 += dt; const slow10 = acc10 >= 0.1; if (slow10) acc10 = 0;
+    acc30 += dt; const tick30 = acc30 >= 0.033; if (tick30) acc30 = 0;
     for (const L of arenas.values()) {
       const E = ARENA_GAMES[L.game]; if (!E.rt || L.state !== 'play') continue;
-      if (E.hz === 10 && !slow) continue;
-      E.tick(L.st, E.hz === 10 ? 0.1 : dt);
+      if (E.hz === 10 && !slow10) continue;
+      if (E.hz === 30 && !tick30) continue;
+      E.tick(L.st, E.hz === 10 ? 0.1 : E.hz === 30 ? 0.033 : dt);
       io.to('ar:' + L.id).volatile.emit('arT', { id: L.id, g: E.view(L.st) });
       if (L.st.over) arenaFinish(L);
     }
-  }, 33);
+  }, 16);
 }
 // Genel sıralama: her oyundaki (puan - 1000) toplamı + oynanan maç başına 2 (en az 3 maç oynamış olanlar)
 let arenaTopCache = null;
