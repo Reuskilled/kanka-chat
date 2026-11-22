@@ -4275,9 +4275,27 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .hm-guess { display: flex; gap: 8px; } .hm-guess .field { margin: 0; flex: 1; width: auto; min-width: 0; } .hm-guess button { flex: none; padding: 0 18px; }
   @media (max-width: 600px) { .hm-svg { width: 90px; } .hm-word span { width: 24px; height: 32px; font-size: 20px; } }
   /* dart, bilardo, hokey, bilek */
-  .dt-ev, .bl-ev { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 2; text-align: center; pointer-events: none; } .dt-ev span, .bl-ev span { display: inline-block; padding: 6px 12px; border-radius: 99px; background: rgba(0,0,0,.7); font-weight: 800; font-size: 13.5px; } .dt-ev .big { background: var(--accent); color: #111; } .dt-ev .bad, .bl-ev .bad { background: #7a1f1f; }
+  .dt-ev, .bl-ev { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 2; text-align: center; pointer-events: none; } .dt-ev span, .bl-ev span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 99px; background: rgba(9,9,12,.82); border: 1px solid rgba(255,255,255,.12); font-weight: 800; font-size: 13px; } .dt-ev .big { background: var(--accent); color: #111; } .dt-ev .bad, .bl-ev .bad { background: rgba(122,31,31,.92); border-color: rgba(248,113,113,.5); color: #fee2e2; }
   .dt-ev::after, .bl-ev::after { content: attr(data-r); display: block; color: var(--muted); font-size: 12px; font-weight: 600; margin-top: 4px; }
-  .bl-ev { top: auto; bottom: 4px; }
+  .bl-wrap { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; min-height: 0; }
+  .bl-board { flex: 1; min-height: 0; width: 100%; display: grid; place-items: center; position: relative; }
+  .bl-rack { width: min(1000px, 100%); display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 12px; background: linear-gradient(180deg, #17181d, #0e0f13); border: 1px solid var(--line); flex-shrink: 0; flex-wrap: wrap; }
+  .bl-rg { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .bl-rl { font-size: 11px; font-weight: 800; color: var(--muted); white-space: nowrap; }
+  .bl-rl.me { color: var(--accent); }
+  .bl-slots { display: flex; align-items: center; gap: 4px; }
+  .bl-slot { width: 22px; height: 22px; border-radius: 50%; position: relative; display: grid; place-items: center; font-size: 9.5px; font-weight: 900; background: #09090c; border: 1px dashed #2e2e38; color: #52525b; transition: transform .22s cubic-bezier(.2,1.4,.4,1), box-shadow .22s; }
+  .bl-slot.in { border: 0; color: #111; box-shadow: inset -3px -3px 6px rgba(0,0,0,.45), inset 2px 2px 4px rgba(255,255,255,.45), 0 2px 5px rgba(0,0,0,.5); }
+  .bl-slot.solid.in { background: var(--c); }
+  .bl-slot.stripe.in { background: linear-gradient(180deg, #f6f2e7 0 22%, var(--c) 22% 78%, #f6f2e7 78% 100%); }
+  .bl-slot.in::before { content: ''; position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #fffef8; }
+  .bl-slot span { position: relative; z-index: 1; line-height: 1; }
+  .bl-slot.pop { transform: scale(1.25); box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(212,255,0,.6); }
+  .bl-ev { position: static; transform: none; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 24px; flex-shrink: 0; }
+  .bl-ev .bl-evs { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+  .bl-mb { width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 8.5px; font-weight: 900; color: #111; flex-shrink: 0; box-shadow: inset -2px -2px 4px rgba(0,0,0,.4), inset 1px 1px 2px rgba(255,255,255,.45); }
+  .bl-mb i { width: 10px; height: 10px; border-radius: 50%; background: #fffef8; display: grid; place-items: center; font-style: normal; line-height: 1; }
+  @media (max-width: 680px) { .bl-rack { padding: 5px 7px; gap: 5px; justify-content: center; } .bl-slot { width: 18px; height: 18px; font-size: 8px; } .bl-slot.in::before { width: 10px; height: 10px; } .bl-rl { font-size: 10px; } }
   .hk-sc { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 60px; z-index: 2; font-weight: 700; font-size: 13px; color: var(--muted); } .hk-sc b { display: block; font-size: 30px; color: var(--ink); } .hk-sc em { position: absolute; left: 0; top: 50%; transform: translateY(-50%); font-style: normal; background: var(--accent); color: #111; padding: 4px 10px; border-radius: 99px; white-space: nowrap; font-weight: 900; }
   @media (max-width: 700px) { .hk-sc { left: 6px; gap: 40px; font-size: 11px; } .hk-sc b { font-size: 22px; } }
   .bk-wrap { width: 100%; max-width: 640px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
@@ -11245,9 +11263,11 @@ const bilQRot = (q, v) => {
 
 AR_R.bilardo = {
   mount(el, st) {
-    el.innerHTML = '<div class="bl-ev" id="bl-ev"></div>';
-    const c = st.c = arCanvas(el, 2.24 / 1.24, 1000);
-    st.ang = 0; st.pw = 0; st.drops = []; st.sparks = []; st.strike = null;
+    el.innerHTML = '<div class="bl-wrap"><div class="bl-rack" id="bl-rack"></div><div class="bl-board" id="bl-board"></div><div class="bl-ev" id="bl-ev"></div></div>';
+    const board = el.querySelector('#bl-board');
+    const c = st.c = arCanvas(board, 2.24 / 1.24, 1000);
+    st.ang = 0; st.pw = 0; st.drops = []; st.sparks = []; st.callouts = []; st.strike = null;
+    st.livePotted = new Set(); st.lastPop = null;
     st.quats = Array.from({ length: 16 }, () => [1, 0, 0, 0]);
     st.prevPos = new Array(16).fill(null);
     const toT = e => { const [u, v] = arPt(c, e); return [u * 2.24 - 0.12, v * 1.24 - 0.12]; };
@@ -11268,6 +11288,26 @@ AR_R.bilardo = {
       BIL_SFX.cue(pw); buzz(15);
     };
     const loop = () => { st.raf = requestAnimationFrame(loop); AR_R.bilardo.draw(st); }; loop();
+  },
+  miniBall(n) {
+    const col = BALL_C[n] || '#f6f2e7';
+    const bg = n >= 9 ? `background:linear-gradient(180deg,#f6f2e7 0 22%,${col} 22% 78%,#f6f2e7 78% 100%)` : `background:${col}`;
+    return `<span class="bl-mb" style="${bg}">${n ? `<i>${n}</i>` : ''}</span>`;
+  },
+  renderRack(st) {
+    const box = $('#bl-rack'), g = st.g; if (!box || !g) return;
+    const potted = new Set(st.livePotted);
+    if (!st.anim) { for (const b of g.balls || []) if (b.in && b.n > 0) potted.add(b.n); }
+    const groups = g.groups || {};
+    const duzOwner = Object.keys(groups).find(k => groups[k] === 'duz');
+    const cizOwner = Object.keys(groups).find(k => groups[k] === 'cizgili');
+    const mk = nums => nums.map(n => {
+      const isIn = potted.has(n), cls = n >= 9 ? 'stripe' : 'solid';
+      return `<div class="bl-slot ${cls} ${isIn ? 'in' : ''} ${st.lastPop === n ? 'pop' : ''}" style="--c:${BALL_C[n]}" title="${n} numara ${isIn ? '(Deliğe girdi)' : '(Masada)'}"><span>${n}</span></div>`;
+    }).join('');
+    box.innerHTML = `<div class="bl-rg"><span class="bl-rl ${duzOwner === S.me ? 'me' : ''}">${duzOwner ? esc(dn(duzOwner)) + ' · ' : ''}Düz</span><div class="bl-slots">${mk([1, 2, 3, 4, 5, 6, 7])}</div></div>
+      <div class="bl-slots">${mk([8])}</div>
+      <div class="bl-rg"><div class="bl-slots">${mk([9, 10, 11, 12, 13, 14, 15])}</div><span class="bl-rl ${cizOwner === S.me ? 'me' : ''}">Çizgili${cizOwner ? ' · ' + esc(dn(cizOwner)) : ''}</span></div>`;
   },
   freeAt(g, x, y) { const R = 0.028; return x > R && x < 2 - R && y > R && y < 1 - R && g.balls.every(b => b.in || b.n === 0 || Math.hypot(b.x - x, b.y - y) > 2 * R + 0.002); },
   analyzeFrames(frames) {
@@ -11308,14 +11348,29 @@ AR_R.bilardo = {
     const g = L.g; st.g = g;
     if (g.ev?.seq && st.seq !== g.ev.seq) {
       if (st.seq !== undefined && g.ev.frames?.length) {
+        const f0 = g.ev.frames[0] || [];
+        st.livePotted = new Set();
+        for (let n = 1; n < 16; n++) if (!f0[n]) st.livePotted.add(n);
         st.anim = { f: g.ev.frames, t0: performance.now(), evs: AR_R.bilardo.analyzeFrames(g.ev.frames), evI: 0 };
         if (g.ev.by !== S.me) BIL_SFX.cue(0.6);
+      } else {
+        st.livePotted = new Set((g.balls || []).filter(b => b.in && b.n > 0).map(b => b.n));
       }
       st.seq = g.ev.seq;
-      const pot = g.ev.potted.filter(n => n), msg = g.ev.foul ? `Faul: ${g.ev.foul}` : pot.length ? `${esc(dn(g.ev.by))} soktu: ${pot.join(', ')}` : '';
-      setTimeout(() => { if ($('#bl-ev')) $('#bl-ev').innerHTML = msg ? `<span class="${g.ev.foul ? 'bad' : ''}">${msg}</span>` : ''; }, (g.ev.frames?.length || 0) * 33);
+      const pot = (g.ev.potted || []).filter(n => n > 0), scratch = (g.ev.potted || []).includes(0);
+      const parts = [];
+      if (pot.length) parts.push(`<span>${esc(dn(g.ev.by))} soktu: ${pot.map(n => AR_R.bilardo.miniBall(n)).join('')}</span>`);
+      if (scratch) parts.push(`<span class="bad">${AR_R.bilardo.miniBall(0)} Beyaz deliğe düştü · Top elinde</span>`);
+      else if (g.ev.foul) parts.push(`<span class="bad">Faul: ${esc(g.ev.foul)}</span>`);
+      setTimeout(() => {
+        if ($('#bl-ev')) $('#bl-ev').innerHTML = parts.length ? `<div class="bl-evs">${parts.join('')}</div>` : '';
+        AR_R.bilardo.renderRack(st);
+      }, (g.ev.frames?.length || 0) * 33);
+    } else if (st.seq === undefined) {
+      st.livePotted = new Set((g.balls || []).filter(b => b.in && b.n > 0).map(b => b.n));
     }
-    const gr = g.groups?.[S.me]; $('#bl-ev').dataset.r = L.state === 'play' ? (g.turn === S.me ? (g.hand ? 'Top elinde: beyazı istediğin yere koy, sonra vur' : `Nişan al, basılı tutup güç topla, bırakınca vurur${gr ? ` · ${gr === 'duz' ? 'Düz (1-7)' : 'Çizgili (9-15)'}` : ''}`) : '') : '';
+    AR_R.bilardo.renderRack(st);
+    const gr = g.groups?.[S.me]; $('#bl-ev').dataset.r = L.state === 'play' ? (g.turn === S.me ? (g.hand ? 'Top elinde: beyazı masada boş bir yere koy, sonra vur' : `Nişan al, basılı tutup güç topla, bırakınca vurur${gr ? ` · ${gr === 'duz' ? 'Düz (1-7)' : 'Çizgili (9-15)'}` : ''}`) : '') : '';
   },
   buildBg(W, H) {
     const off = document.createElement('canvas'); off.width = W; off.height = H;
@@ -11460,9 +11515,18 @@ AR_R.bilardo = {
         const ev = evs[st.anim.evI++];
         if (ev.t === 'hit') { BIL_SFX.clack(ev.str); st.sparks.push({ x: ev.x, y: ev.y, t0: now, col: '212,255,0' }); }
         else if (ev.t === 'rail') { BIL_SFX.rail(ev.str); }
-        else if (ev.t === 'pocket') { BIL_SFX.pocket(); st.drops.push({ n: ev.n, x: ev.x, y: ev.y, px: ev.px, py: ev.py, q: [...st.quats[ev.n]], t0: now }); }
+        else if (ev.t === 'pocket') {
+          BIL_SFX.pocket();
+          st.drops.push({ n: ev.n, x: ev.x, y: ev.y, px: ev.px, py: ev.py, q: [...st.quats[ev.n]], t0: now });
+          st.callouts.push({ n: ev.n, px: ev.px, py: ev.py, t0: now });
+          if (ev.n === 0) st.sparks.push({ x: ev.px, y: ev.py, t0: now, col: '239,68,68' });
+          else {
+            st.livePotted.add(ev.n); st.lastPop = ev.n; AR_R.bilardo.renderRack(st);
+            setTimeout(() => { if (st.lastPop === ev.n) { st.lastPop = null; AR_R.bilardo.renderRack(st); } }, 850);
+          }
+        }
       }
-      if (i >= f.length - 1) st.anim = null;
+      if (i >= f.length - 1) { st.anim = null; AR_R.bilardo.renderRack(st); }
       else {
         const a = f[i], b = f[i + 1], k = fi - i;
         balls = a.map((p, n) => p ? { n, x: b?.[n] ? p[0] + (b[n][0] - p[0]) * k : p[0], y: b?.[n] ? p[1] + (b[n][1] - p[1]) * k : p[1], in: false } : { n, in: true });
@@ -11497,6 +11561,15 @@ AR_R.bilardo = {
       AR_R.bilardo.ball(x, ...P(b.x, b.y), R, b.n, st.quats[b.n], b.x, b.y, 1);
     }
     if (cue && my) {
+      if (g.hand) {
+        const [gx, gy] = P(cue.x, cue.y), ok = AR_R.bilardo.freeAt(g, cue.x, cue.y);
+        x.save();
+        x.strokeStyle = ok ? 'rgba(212,255,0,0.88)' : 'rgba(239,68,68,0.9)';
+        x.lineWidth = Math.max(1.8, 0.005 * s);
+        x.setLineDash([5 * devicePixelRatio, 4 * devicePixelRatio]);
+        x.beginPath(); x.arc(gx, gy, R * (1.42 + 0.14 * Math.sin(now / 180)), 0, 7); x.stroke();
+        x.restore();
+      }
       if (cue.ghost) AR_R.bilardo.ball(x, ...P(cue.x, cue.y), R, 0, st.quats[0], cue.x, cue.y, 0.55);
       else if (st.place) AR_R.bilardo.ball(x, ...P(cue.x, cue.y), R, 0, st.quats[0], cue.x, cue.y, 1);
     }
@@ -11545,6 +11618,41 @@ AR_R.bilardo = {
         x.fillStyle = pg; x.beginPath(); x.roundRect(bx + 2, by + bhMax - bh, bw - 4, Math.max(4, bh), bw * 0.45); x.fill();
         x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = 1.5; x.beginPath(); x.roundRect(bx, by, bw, bhMax, bw * 0.5); x.stroke();
       }
+    }
+
+    // Cep üstü anlık "girdi / beyaz düştü" rozetleri
+    st.callouts = (st.callouts || []).filter(co => now - co.t0 < 1550);
+    for (const co of st.callouts) {
+      const u = (now - co.t0) / 1550;
+      const alpha = u < 0.12 ? u / 0.12 : u > 0.75 ? (1 - u) / 0.25 : 1;
+      const [px0, py0] = P(co.px, co.py);
+      const isCue = co.n === 0, isEight = co.n === 8;
+      const label = isCue ? 'Beyaz düştü · FAUL' : isEight ? '8 numara!' : `${co.n} girdi!`;
+      const fSize = Math.max(11, Math.round(0.033 * s));
+      x.save();
+      x.globalAlpha = Math.max(0, Math.min(1, alpha));
+      x.font = `700 ${fSize}px system-ui,-apple-system,sans-serif`;
+      const tw = x.measureText(label).width;
+      const dotR = fSize * 0.48, padX = fSize * 0.65, gap = fSize * 0.42;
+      const pw = padX * 2 + dotR * 2 + gap + tw, ph = fSize * 1.85;
+      const cx = Math.max(pw * 0.5 + 8, Math.min(W - pw * 0.5 - 8, px0));
+      const baseY = py0 < H * 0.5 ? py0 + 0.08 * s : py0 - 0.08 * s;
+      const cy = Math.max(ph * 0.5 + 8, Math.min(H - ph * 0.5 - 8, baseY - u * 0.075 * s));
+      x.fillStyle = isCue ? 'rgba(32,10,12,0.94)' : 'rgba(9,9,12,0.92)';
+      x.strokeStyle = isCue ? '#ef4444' : isEight ? '#facc15' : '#d4ff00';
+      x.lineWidth = Math.max(1.5, 0.004 * s);
+      x.beginPath(); x.roundRect(cx - pw * 0.5, cy - ph * 0.5, pw, ph, ph * 0.5); x.fill(); x.stroke();
+      const bx = cx - pw * 0.5 + padX + dotR;
+      x.save();
+      x.beginPath(); x.arc(bx, cy, dotR, 0, 7); x.clip();
+      x.fillStyle = co.n >= 9 ? '#f6f2e7' : (BALL_C[co.n] || '#f6f2e7');
+      x.fillRect(bx - dotR, cy - dotR, dotR * 2, dotR * 2);
+      if (co.n >= 9) { x.fillStyle = BALL_C[co.n]; x.fillRect(bx - dotR, cy - dotR * 0.52, dotR * 2, dotR * 1.04); }
+      x.restore();
+      x.fillStyle = isCue ? '#fecaca' : '#f4f4f6';
+      x.textAlign = 'left'; x.textBaseline = 'middle';
+      x.fillText(label, bx + dotR + gap, cy + 0.5);
+      x.restore();
     }
   },
   ball(x, cx, cy, R, n, q, bx = 1, by = 0.5, alpha = 1) {
