@@ -3462,19 +3462,53 @@ const BILARDO = {
 // ---------- Bilek güreşi (gerçek zamanlı: hızlı bas) ----------
 const BILEK = {
   ad: 'Bilek Güreşi', emoji: '💪', min: 2, max: 2, rt: true, hz: 10,
-  init(ps) { return { ps, pos: 0, wins: Object.fromEntries(ps.map(p => [p, 0])), taps: Object.fromEntries(ps.map(p => [p, 0])), tot: Object.fromEntries(ps.map(p => [p, 0])), phase: 'cd', t: 3, round: 1 }; },
-  input(st, p, inp) { if (st.phase !== 'go' || !(p in st.taps)) return; const n = Math.max(0, Math.min(6, +inp?.t || 0)); st.taps[p] += n; },
+  // Güç: A ve D'ye sırayla basınca artar; yoruldukça her basışın kazandırdığı güç azalır.
+  // Güç düşünce zamanlama barı çıkar: işaret yeşil bölgedeyken boşluğa basan gücünü zirvesine yaklaştırır, yorgunluğu atar.
+  PER: 1.1, QTE_MAX: 3, QTE_CD: 2.5,
+  init(ps) {
+    const pl = () => ({ pw: 30, peak: 30, fat: 0, k: 0, q: null, cd: 0, last: null });
+    return { ps, pos: 0, wins: Object.fromEntries(ps.map(p => [p, 0])), P: Object.fromEntries(ps.map(p => [p, pl()])), phase: 'cd', t: 3, round: 1, now: 0 };
+  },
+  mark: (q, age) => 0.5 - 0.5 * Math.cos(2 * Math.PI * Math.max(0, age) / BILEK.PER), // 0 → 1 → 0 gidip gelen işaret
+  input(st, p, inp) {
+    const P = st.P?.[p]; if (!P || st.phase !== 'go') return;
+    const k = Math.max(0, Math.min(3, Math.floor(+inp?.k || 0))); P.k += k; // 100 ms'de en çok 3 doğru basış (saniyede ~30)
+    if (inp?.q != null && P.q && !P.q.done) {
+      const age = st.now - P.q.at, v = Math.max(0, Math.min(1, +inp.q));
+      // gecikme payı: işaretin son 0-350 ms içindeki herhangi bir konumuna yakınsa kabul et
+      let ok = false; for (let l = 0; l <= 0.35; l += 0.05) if (Math.abs(BILEK.mark(P.q, age - l) - v) < 0.12) { ok = true; break; }
+      const dist = Math.abs((ok ? v : BILEK.mark(P.q, age)) - P.q.z), acc = Math.max(0, 1 - dist / (P.q.w * 1.6));
+      P.q.done = true; P.q.acc = Math.round(acc * 100) / 100; P.last = { acc: P.q.acc, at: st.now };
+      if (acc > 0) { P.pw += (P.peak - P.pw) * acc; P.fat *= 1 - acc * 0.85; } else P.pw = Math.max(0, P.pw - 8);
+      P.cd = BILEK.QTE_CD; setTimeout(() => { if (P.q?.done) P.q = null; }, 600);
+    }
+  },
   tick(st, dt) {
-    if (st.phase === 'cd' || st.phase === 'pause') { st.t -= dt; if (st.t <= 0) { if (st.phase === 'pause') { st.pos = 0; st.round++; } st.phase = 'go'; st.t = 0; } return true; }
+    st.now += dt;
+    if (st.phase === 'cd' || st.phase === 'pause') { st.t -= dt; if (st.t <= 0) { if (st.phase === 'pause') { st.pos = 0; st.round++; for (const p of st.ps) Object.assign(st.P[p], { pw: 30, peak: 30, fat: 0, q: null, cd: 0 }); } st.phase = 'go'; st.t = 0; } return true; }
     if (st.phase !== 'go') return false;
-    const [a, b] = st.ps, ta = Math.min(st.taps[a], 3), tb = Math.min(st.taps[b], 3); st.taps[a] = st.taps[b] = 0; // saniyede en çok ~30 basış sayılır
-    st.tot[a] += ta; st.tot[b] += tb;
-    st.pos += (ta - tb) * 0.026 - Math.sign(st.pos) * 0.002; // ortaya doğru hafif direnç
+    for (const p of st.ps) {
+      const P = st.P[p], k = Math.min(P.k, 3); P.k = 0;
+      P.pw = Math.min(100, P.pw + k * 4.2 * (1 - P.fat));   // basış gücü yorgunlukla azalır
+      P.fat = Math.min(0.92, P.fat + k * 0.016);             // her basış yorar
+      P.fat = Math.max(0, P.fat - 0.02 * dt);                // durunca çok yavaş dinlenir
+      P.pw = Math.max(0, P.pw - (7 + P.pw * 0.06) * dt);     // güç kendiliğinden düşer
+      if (P.pw > P.peak) P.peak = P.pw; else P.peak = Math.max(P.pw, P.peak - 1.5 * dt);
+      if (P.cd > 0) P.cd -= dt;
+      if (P.q && !P.q.done && st.now - P.q.at > BILEK.QTE_MAX) { P.q.done = true; P.q.acc = 0; P.last = { acc: 0, at: st.now, miss: true }; P.cd = BILEK.QTE_CD; setTimeout(() => { if (P.q?.done) P.q = null; }, 400); }
+      // güç zirvenin yarısına düşünce (ya da çok yorulunca) zamanlama barı çıkar
+      if (!P.q && P.cd <= 0 && P.peak > 25 && (P.pw < P.peak * 0.65 || P.fat > 0.5)) P.q = { at: st.now, z: r3(0.25 + Math.random() * 0.5), w: 0.09 };
+    }
+    const [a, b] = st.ps, d = st.P[a].pw - st.P[b].pw;
+    st.pos += d * 0.0019 * dt - Math.sign(st.pos) * 0.01 * dt; // güç farkı 50 iken yaklaşık 10 sn'de kazanılır
     if (Math.abs(st.pos) >= 1) { const w = st.pos > 0 ? a : b; st.wins[w]++; st.last = w;
       if (st.wins[w] >= 2) { st.over = { rank: [w, w === a ? b : a] }; st.phase = 'end'; } else { st.phase = 'pause'; st.t = 2.5; } }
     return true;
   },
-  view(st) { return { pos: r3(st.pos), wins: st.wins, phase: st.phase, t: Math.ceil(st.t), round: st.round, last: st.last || null }; },
+  view(st) {
+    const P = {}; for (const p of st.ps) { const x = st.P[p]; P[p] = { pw: Math.round(x.pw), peak: Math.round(x.peak), fat: Math.round(x.fat * 100) / 100, q: x.q ? { age: r3(st.now - x.q.at), z: x.q.z, w: x.q.w, done: !!x.q.done, acc: x.q.acc ?? null } : null, last: x.last && st.now - x.last.at < 1.2 ? x.last : null }; }
+    return { pos: r3(st.pos), wins: st.wins, phase: st.phase, t: Math.ceil(st.t), round: st.round, last: st.last || null, P, per: BILEK.PER };
+  },
   leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
 };
 // ---------- Masa hokeyi (gerçek zamanlı) ----------
