@@ -3,7 +3,7 @@
 Belgeler: https://kankahq.com/gelistirici
 
     import os, random, kanka
-    bot = kanka.Bot(token=os.environ["KANKA_TOKEN"])
+    bot = kanka.Bot(token=os.environ["KANKA_TOKEN"], durum={"durum": "cevrimici", "aktivite": {"tur": "oynuyor", "ad": "/zar"}})
 
     @bot.komut("zar", aciklama="Zar at", secenekler=[kanka.Secenek("yuz", "tamsayi", "Kaç yüzlü?")])
     async def zar(k):
@@ -11,10 +11,11 @@ Belgeler: https://kankahq.com/gelistirici
 
     bot.calistir()
 """
-import asyncio, time, random, hashlib, hmac, json, re, time
+import asyncio, time, random, hashlib, hmac, json, re
+from urllib.parse import quote
 import aiohttp
 
-SURUM = "1.2.0"
+SURUM = "1.3.0"
 
 
 class KankaHata(Exception):
@@ -25,6 +26,11 @@ class KankaHata(Exception):
 def Secenek(ad, tur="yazi", aciklama="", zorunlu=False, secimler=None):
     """Komut seçeneği. tur: yazi, sayi, tamsayi, kisi, oda, rol, evethayir"""
     return {"ad": ad, "tur": tur, "aciklama": aciklama or ad, "zorunlu": zorunlu, "secimler": [{"ad": str(a), "deger": d} for a, d in (secimler or [])]}
+
+
+def Satir(*ogeler):
+    """Butonları bir satırda topla: bilesenler=[kanka.Satir(Buton(...), Buton(...))]"""
+    return [o for x in ogeler for o in (x if isinstance(x, list) else [x])]
 
 
 def Buton(id, etiket, stil="ana", emoji=None, kapali=False):
@@ -46,10 +52,16 @@ class Kart(dict):
         super().__init__({k: v for k, v in dict(baslik=baslik, aciklama=aciklama, renk=renk, url=url, resim=resim, kucukResim=kucuk_resim, altyazi=altyazi).items() if v})
     def alan(self, ad, deger, satir=False):
         self.setdefault("alanlar", []).append({"ad": ad, "deger": str(deger), "satir": satir}); return self
+    def alanlar(self, liste):
+        """[("Ad", "Değer", True), ...]"""
+        for x in liste: self.alan(*x)
+        return self
 
 
 def _govde(x):
-    return {"icerik": x} if isinstance(x, str) else dict(x or {})
+    if isinstance(x, str): return {"icerik": x}
+    if isinstance(x, Kart): return {"kartlar": [dict(x)]}
+    return dict(x or {})
 
 
 def imza_dogrula(sir, zaman, govde_metni, imza):
@@ -73,6 +85,24 @@ class Mesaj(dict):
         return await self._bot.sil(self["oda"], self["id"])
     async def duzenle(self, icerik):
         return await self._bot.duzenle(self["oda"], self["id"], icerik)
+    async def tepki_kaldir(self, emoji):
+        return await self._bot.tepki_kaldir(self["oda"], self["id"], emoji)
+    async def sabitle(self): return await self._bot.sabitle(self["oda"], self["id"])
+    async def sabit_kaldir(self): return await self._bot.sabit_kaldir(self["oda"], self["id"])
+    async def odaya_yaz(self, icerik):
+        """Aynı odaya (yanıt olmadan) yaz"""
+        return await self._bot.gonder(self["oda"], icerik)
+    @property
+    def yazar(self): return self.get("yazar") or {}
+    @property
+    def icerik(self): return self.get("icerik") or ""
+    @property
+    def dm_mi(self): return str(self.get("oda", "")).startswith("dm:")
+    @property
+    def etiketlendi_mi(self):
+        """Mesajda bot etiketlendi mi?"""
+        ben = (self._bot.ben or {}).get("ad")
+        return bool(ben and re.search("@" + re.escape(ben) + r"(?![\w.-])", self.icerik))
 
 
 class Etkilesim(dict):
@@ -103,6 +133,9 @@ class Etkilesim(dict):
     async def form_ac(self, id, baslik, alanlar):
         """alanlar: [{"id": "oyun", "etiket": "En sevdiğin oyun", "tur": "kisa"|"uzun", "zorunlu": True}]"""
         self.cevaplandi = True; return await self._istek("POST", "/cevap", {"tur": "form", "form": {"id": id, "baslik": baslik, "alanlar": alanlar}})
+    async def gizli_cevapla(self, icerik):
+        """Sadece komutu kullanan görür"""
+        return await self.cevapla(icerik, gizli=True)
     async def duzenle(self, icerik):
         return await self._istek("PATCH", "/mesaj", _govde(icerik))
     async def takip(self, icerik, gizli=False):
@@ -110,9 +143,12 @@ class Etkilesim(dict):
 
 
 class Bot:
-    def __init__(self, token, niyetler=("mesajlar", "uyeler", "tepkiler", "dm"), adres="https://kankahq.com"):
+    def __init__(self, token, niyetler=("mesajlar", "uyeler", "tepkiler", "dm"), adres="https://kankahq.com", durum=None, hata_ayikla=False):
+        """durum: bağlanınca ayarlanacak durum, ör. {"durum": "rahatsizetme", "aktivite": {"tur": "dinliyor", "ad": "Spotify"}}
+        hata_ayikla: True ise bağlantı olaylarını yazdırır"""
         if not token: raise KankaHata("token gerekli (Geliştirici Portalı › botun › Token)")
         self.token = re.sub(r"^Bot\s+", "", token); self.niyetler = list(niyetler); self.adres = adres.rstrip("/")
+        self._durum = dict(durum) if durum else None; self._hd = hata_ayikla; self._bekleyenler = []
         self.komutlar = {}; self.sunucu_komutlari = {}; self._butonlar = []; self._secimler = []; self._formlar = []; self._olaylar = {}
         self.ben = None; self.sunucular = {}; self._oturum = None; self._oturum_id = None; self._sira = 0
 
@@ -142,7 +178,6 @@ class Bot:
             return j
     async def dosya_yukle(self, veri, ad="dosya"):
         """veri: bytes. Dönen id'yi mesajda kullan: await bot.gonder(oda, {"icerik": "al", "ekler": [d["id"]]})"""
-        from urllib.parse import quote
         return await self._ham("POST", "/dosyalar", veri, {"X-Dosya-Adi": quote(ad)})
     async def emoji_yukle(self, ad, veri):
         """Botun kendi emojisi: mesajda :ad: yazınca her yerde görünür (en fazla 50)."""
@@ -152,22 +187,96 @@ class Bot:
     async def yaziyor(self, oda):
         """Odada "yazıyor…" göster (yaklaşık 8 saniye)."""
         return await self.api("POST", f"/odalar/{oda}/yaziyor")
-    async def durum(self, durum=None, yazi=None):
-        """durum: "cevrimici" | "bosta" | "rahatsizetme" | "gorunmez"; yazi: durum yazısı"""
-        return await self.api("PATCH", "/ben/durum", {**({"durum": durum} if durum else {}), **({"yazi": yazi} if yazi is not None else {})})
-    async def dm(self, kullanici, icerik):
-        return Mesaj(self, (await self.api("POST", f"/kullanicilar/{kullanici}/dm", _govde(icerik)))["mesaj"])
+    def _log(self, *x):
+        if self._hd: print("[kanka]", *x)
+
+    # ---------- Durum ----------
+    async def durum(self, durum=None, yazi=None, aktivite=None):
+        """Botun durumu. durum: "cevrimici" | "bosta" | "rahatsizetme" | "gorunmez" (Türkçe harfle ya da "online", "dnd" de olur)
+        yazi: durum yazısı · aktivite: {"tur": "oynuyor"|"dinliyor"|"izliyor"|"yayinda"|"yarisiyor", "ad": "..."}
+        Bağlantı kopup yeniden gelince de korunur."""
+        d = dict(durum) if isinstance(durum, dict) else {**({"durum": durum} if durum else {}), **({"yazi": yazi} if yazi is not None else {}), **({"aktivite": aktivite} if aktivite else {})}
+        self._durum = {**(self._durum or {}), **d}
+        return await self.api("PATCH", "/ben/durum", d)
+    async def aktivite(self, tur, ad):
+        """Örnek: await bot.aktivite("oynuyor", "Minecraft") ile durum yazısı Oynuyor: Minecraft olur."""
+        return await self.durum(aktivite={"tur": tur, "ad": ad})
+    async def durumu_getir(self): return await self.api("GET", "/ben/durum")
+
+    # ---------- Bilgi ----------
+    async def bilgi(self): return await self.api("GET", "/ben")
+    async def sunucu_listesi(self):
+        l = (await self.api("GET", "/sunucular"))["sunucular"]
+        for s in l: self.sunucular[s["id"]] = s
+        return l
+    async def sunucu(self, id):
+        s = await self.api("GET", f"/sunucular/{id}"); self.sunucular[s["id"]] = s; return s
+    async def uye(self, sunucu, kisi): return await self.api("GET", f"/sunucular/{sunucu}/uyeler/{quote(str(kisi))}")
+    async def oda(self, id): return await self.api("GET", f"/odalar/{quote(str(id))}")
+    async def mesaj(self, oda, id): return Mesaj(self, await self.api("GET", f"/odalar/{quote(str(oda))}/mesajlar/{id}"))
+    async def kullanici(self, ad_veya_id): return await self.api("GET", f"/kullanicilar/{quote(str(ad_veya_id))}")
+    async def mesajlar(self, oda, limit=50, once=None):
+        return [Mesaj(self, m) for m in (await self.api("GET", f"/odalar/{quote(str(oda))}/mesajlar?limit={limit}" + (f"&once={once}" if once else "")))["mesajlar"]]
     async def duzenle(self, oda, mesaj, icerik): return await self.api("PATCH", f"/odalar/{oda}/mesajlar/{mesaj}", _govde(icerik))
     async def sil(self, oda, mesaj): return await self.api("DELETE", f"/odalar/{oda}/mesajlar/{mesaj}")
     async def tepki(self, oda, mesaj, emoji):
-        from urllib.parse import quote
         return await self.api("PUT", f"/odalar/{oda}/mesajlar/{mesaj}/tepkiler/{quote(emoji)}")
+    async def tepki_kaldir(self, oda, mesaj, emoji):
+        return await self.api("DELETE", f"/odalar/{oda}/mesajlar/{mesaj}/tepkiler/{quote(emoji)}")
+    async def sabitle(self, oda, mesaj): return await self.api("PUT", f"/odalar/{oda}/sabitler/{mesaj}")
+    async def sabit_kaldir(self, oda, mesaj): return await self.api("DELETE", f"/odalar/{oda}/sabitler/{mesaj}")
+    async def sabitler(self, oda): return [Mesaj(self, m) for m in (await self.api("GET", f"/odalar/{oda}/sabitler"))["mesajlar"]]
+    async def toplu_sil(self, oda, adet_veya_idler, kisi=None):
+        """En fazla 100 mesaj, son 14 gün. toplu_sil(oda, 20) son 20 · toplu_sil(oda, ["id1", "id2"]) · toplu_sil(oda, 50, kisi="ahmet")"""
+        g = {"mesajlar": list(adet_veya_idler)} if isinstance(adet_veya_idler, (list, tuple)) else {"adet": int(adet_veya_idler)}
+        if kisi: g["kisi"] = kisi
+        return (await self.api("POST", f"/odalar/{oda}/mesajlar/toplu-sil", g))["silinen"]
     async def uyeler(self, sunucu): return (await self.api("GET", f"/sunucular/{sunucu}/uyeler"))["uyeler"]
+    async def dm(self, kullanici, icerik):
+        return Mesaj(self, (await self.api("POST", f"/kullanicilar/{quote(str(kullanici))}/dm", _govde(icerik)))["mesaj"])
     async def rol_ver(self, sunucu, kisi, rol): return await self.api("PUT", f"/sunucular/{sunucu}/uyeler/{kisi}/roller/{rol}")
     async def rol_al(self, sunucu, kisi, rol): return await self.api("DELETE", f"/sunucular/{sunucu}/uyeler/{kisi}/roller/{rol}")
     async def sustur(self, sunucu, kisi, dakika=10, sebep=""): return await self.api("POST", f"/sunucular/{sunucu}/uyeler/{kisi}/sustur", {"dakika": dakika, "sebep": sebep})
     async def at(self, sunucu, kisi, sebep=""): return await self.api("DELETE", f"/sunucular/{sunucu}/uyeler/{kisi}", {"sebep": sebep})
     async def yasakla(self, sunucu, kisi, sebep=""): return await self.api("PUT", f"/sunucular/{sunucu}/yasaklar/{kisi}", {"sebep": sebep})
+    async def yasak_kaldir(self, sunucu, kisi): return await self.api("DELETE", f"/sunucular/{sunucu}/yasaklar/{kisi}")
+    async def yasaklar(self, sunucu): return (await self.api("GET", f"/sunucular/{sunucu}/yasaklar"))["yasaklar"]
+    async def susturma_kaldir(self, sunucu, kisi): return await self.api("DELETE", f"/sunucular/{sunucu}/uyeler/{kisi}/sustur")
+
+    # ---------- Yardımcılar ----------
+    def yaziyor_ken(self, oda):
+        """İş sürerken "yazıyor…" göster:  async with bot.yaziyor_ken(oda): ..."""
+        bot = self
+        class _Y:
+            async def __aenter__(s):
+                async def dongu():
+                    while True:
+                        try: await bot.yaziyor(oda)
+                        except Exception: pass
+                        await asyncio.sleep(7)
+                s.t = asyncio.create_task(dongu()); return s
+            async def __aexit__(s, *a): s.t.cancel()
+        return _Y()
+    async def mesaj_bekle(self, filtre=lambda m: True, sure=60):
+        """Bir sonraki uygun mesajı bekle; süre (saniye) dolarsa None.
+        m = await bot.mesaj_bekle(lambda m: m["oda"] == oda and m.yazar.get("ad") == "ahmet", sure=30)"""
+        return await self._bekle("mesaj", filtre, sure)
+    async def etkilesim_bekle(self, filtre=lambda e: True, sure=60):
+        """Buton/seçim bekle: e = await bot.etkilesim_bekle(lambda e: e["veri"]["id"] == "evet", sure=30)"""
+        return await self._bekle("etkilesim", filtre, sure)
+    async def _bekle(self, olay, filtre, sure):
+        f = asyncio.get_running_loop().create_future(); b = (olay, filtre, f); self._bekleyenler.append(b)
+        try: return await asyncio.wait_for(f, sure)
+        except asyncio.TimeoutError: return None
+        finally:
+            if b in self._bekleyenler: self._bekleyenler.remove(b)
+    def _bekleyene_ver(self, olay, x):
+        for b in list(self._bekleyenler):
+            if b[0] != olay or b[2].done(): continue
+            try: ok = b[1](x)
+            except Exception: ok = False
+            if ok: b[2].set_result(x); self._bekleyenler.remove(b); return True
+        return False
 
     # ---------- Dekoratörler ----------
     def komut(self, ad, aciklama="", secenekler=None, sunucu=None):
@@ -187,7 +296,8 @@ class Bot:
         def kaydet(fn): self._formlar.append((id, fn)); return fn
         return kaydet
     def olay(self, ad):
-        """Olaylar: hazir, mesaj, mesaj_duzenlendi, mesaj_silindi, uye_katildi, uye_ayrildi, uye_guncellendi, tepki, sunucuya_eklendi, sunucudan_cikarildi"""
+        """Olaylar: hazir, mesaj, mesaj_duzenlendi, mesaj_silindi, uye_katildi, uye_ayrildi, uye_guncellendi, tepki, tepki_kaldirildi,
+        sunucuya_eklendi, sunucudan_cikarildi, etkilesim, durum, hata"""
         def kaydet(fn): self._olaylar.setdefault(ad, []).append(fn); return fn
         return kaydet
     async def _yay(self, ad, *a):
@@ -231,12 +341,15 @@ class Bot:
                     async def nabiz_at(araligi=p["d"].get("nabizAraligi", 30000) / 1000):
                         while True: await asyncio.sleep(araligi); await ws.send_json({"op": 1, "d": self._sira})
                     nabiz = asyncio.create_task(nabiz_at())
-                    if self._oturum_id: await ws.send_json({"op": 6, "d": {"token": self.token, "oturum": self._oturum_id, "sira": self._sira, "niyetler": self.niyetler}})
-                    else: await ws.send_json({"op": 2, "d": {"token": self.token, "niyetler": self.niyetler}})
+                    ek = {"durum": self._durum} if self._durum else {}
+                    if self._oturum_id: await ws.send_json({"op": 6, "d": {"token": self.token, "oturum": self._oturum_id, "sira": self._sira, "niyetler": self.niyetler, **ek}})
+                    else: await ws.send_json({"op": 2, "d": {"token": self.token, "niyetler": self.niyetler, **ek}})
+                    self._log("bağlandı, kimlik gönderildi")
                 elif p["op"] == 7:
                     self._ilk_bekle = (p.get("d") or {}).get("bekle", 4000) / 1000
                 elif p["op"] == 0:
                     if p.get("s"): self._sira = p["s"]
+                    self._log("olay", p["t"])
                     asyncio.create_task(self._olay(p["t"], p["d"]))
             if nabiz: nabiz.cancel()
             if ws.close_code == 1012 and not self._ilk_bekle: self._ilk_bekle = 4
@@ -250,16 +363,25 @@ class Bot:
         adlar = {"MESAJ_DUZENLENDI": "mesaj_duzenlendi", "MESAJ_SILINDI": "mesaj_silindi", "TEPKI_EKLENDI": "tepki", "TEPKI_KALDIRILDI": "tepki_kaldirildi", "SUNUCUYA_EKLENDI": "sunucuya_eklendi", "SUNUCUDAN_CIKARILDI": "sunucudan_cikarildi"}
         if t == "MESAJ_GELDI":
             if d.get("yazar") and self.ben and d["yazar"]["ad"] == self.ben["ad"]: return
-            return await self._yay("mesaj", Mesaj(self, d))
+            m = Mesaj(self, d)
+            if self._bekleyene_ver("mesaj", m): return
+            return await self._yay("mesaj", m)
+        if t == "DURUM_GUNCELLENDI": return await self._yay("durum", d)
+        if t == "HATA":
+            print(f"[kanka] sunucu hatası: {d.get('hata')}"); return await self._yay("hata", d)
+        if t == "DEVAM_EDILDI": return await self._yay("devam")
         if t in ("UYE_KATILDI", "UYE_AYRILDI", "UYE_GUNCELLENDI"): return await self._yay(t.lower(), d["uye"], d["sunucu"])
         if t in adlar: return await self._yay(adlar[t], d)
         if t in ("KOMUT", "BUTON", "SECIM", "FORM"):
             e = Etkilesim(self, d); fn = None
+            if t != "KOMUT" and self._bekleyene_ver("etkilesim", e): return
+            await self._yay("etkilesim", e)
             if t == "KOMUT": fn = (self.komutlar.get(d["veri"]["ad"]) or (None, None))[1]
             else:
                 liste = {"BUTON": self._butonlar, "SECIM": self._secimler, "FORM": self._formlar}[t]
                 for id, f in liste:
                     if (isinstance(id, str) and id == d["veri"]["id"]) or (hasattr(id, "match") and id.match(d["veri"]["id"])): fn = f; break
+            if not fn and t == "KOMUT": print(f"[kanka] /{d['veri']['ad']} komutu için işleyici yok")
             if fn:
                 try: await fn(e)
                 except Exception as er:
