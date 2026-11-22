@@ -2695,6 +2695,53 @@
   .mini-card .pf-side .pf-in { padding-bottom: 18px; }
   .mini-card .pf-prevabout { padding: 14px 4px 0; display: grid; gap: 10px; }
   .mini-card .psocs { grid-template-columns: 1fr; }
+  /* --- Profilim 3 Sekme + Görünüm Stüdyosu --- */
+  .pf-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; padding: 4px; margin: 14px 0 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); }
+  .pf-tabs button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 10px; border-radius: 10px; background: transparent; border: 1px solid transparent; color: var(--muted); font-size: 13px; font-weight: 800; transition: color .14s, background .14s, border-color .14s; white-space: nowrap; }
+  .pf-tabs button:hover { color: var(--ink); background: rgba(255, 255, 255, .03); }
+  .pf-tabs button.on { background: var(--card); color: var(--ink); border-color: rgba(212, 255, 0, .42); box-shadow: 0 4px 14px rgba(0, 0, 0, .24); }
+  .pf-tabs button .ic { width: 15px; height: 15px; flex-shrink: 0; }
+  .pf-tabs button.on .ic { color: var(--accent); }
+  .pf-tabs .pf-tcnt { font-size: 10.5px; font-weight: 900; padding: 1px 6px; border-radius: 99px; background: rgba(212, 255, 0, .15); color: var(--accent); border: 1px solid rgba(212, 255, 0, .3); }
+  .pf-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin-bottom: 14px; }
+  .pf-card-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .pf-card-h b { font-size: 12px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; color: var(--ink); }
+  .pf-card-h small { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .pf-card .st-field:first-of-type { margin-top: 0; }
+  .st-stabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .st-stab { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 11px; border-radius: 13px; background: var(--panel); border: 1.5px solid var(--line); color: var(--ink); text-align: left; transition: border-color .14s, background .14s, transform .14s; position: relative; min-width: 0; }
+  .st-stab:hover { border-color: rgba(255, 255, 255, .2); background: var(--card); transform: translateY(-1px); }
+  .st-stab.on { border-color: var(--accent); background: rgba(212, 255, 0, .07); box-shadow: 0 0 0 2px rgba(212, 255, 0, .12); }
+  .st-stab-top { width: 100%; display: flex; align-items: center; gap: 6px; }
+  .st-stab-ico { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; display: grid; place-items: center; }
+  .st-stab-ico svg { width: 15px; height: 15px; }
+  .st-stab.on .st-stab-ico { color: var(--accent); }
+  .st-stab-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: auto; box-shadow: 0 0 8px rgba(212, 255, 0, .65); flex-shrink: 0; }
+  .st-stab-tag { font-size: 9px; font-weight: 900; letter-spacing: .05em; padding: 1px 5px; border-radius: 99px; background: rgba(212, 255, 0, .16); color: var(--accent); margin-left: auto; }
+  .st-stab strong { font-size: 13px; font-weight: 800; line-height: 1.25; margin-top: 2px; }
+  .st-stab small { font-size: 11px; font-weight: 700; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .st-stab.has small { color: var(--accent); }
+  .st-sbody { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .st-sh { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .st-sh h4 { font-size: 15.5px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 8px; }
+  .st-sh p { font-size: 12.5px; color: var(--muted); margin: 3px 0 0; line-height: 1.4; }
+  .st-sh-r { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .st-sh-cur { font-size: 11.5px; font-weight: 800; padding: 4px 9px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--ink); }
+  .st-sh-cur.on { border-color: rgba(212, 255, 0, .4); color: var(--accent); background: rgba(212, 255, 0, .09); }
+  .st-sh-clr { font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 99px; background: transparent; border: 1px solid var(--line); color: var(--muted); transition: border-color .14s, color .14s; }
+  .st-sh-clr:hover { border-color: var(--red); color: var(--red); }
+  .st-sbody .ns-box { padding: 0; background: transparent; border: 0; border-radius: 0; }
+  .st-bt-sec { display: flex; flex-direction: column; gap: 10px; }
+  .st-bt-sec + .st-bt-sec { padding-top: 14px; border-top: 1px solid var(--line); }
+  .st-bt-lbl { font-size: 11.5px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; justify-content: space-between; }
+  .st-live-strip { margin-top: 14px; padding: 12px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); display: grid; gap: 9px; }
+  .st-live-strip[hidden] { display: none; }
+  .st-live-h { display: flex; align-items: center; justify-content: space-between; font-size: 10px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .st-live-h em { font-style: normal; font-weight: 700; letter-spacing: 0; text-transform: none; opacity: .8; }
+  .st-live-strip .ns-prev-chat { padding: 6px 8px; border-radius: 11px; background: var(--bg); border: 1px solid var(--line); }
+  .st-mob-prev { display: none; margin-top: 12px; }
+  @media (max-width: 1100px) { .st-mob-prev { display: block; } }
+  @media (max-width: 640px) { .pf-tabs { grid-template-columns: 1fr; } .st-stabs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) { .st-2, .socin { grid-template-columns: 1fr; } }
   /* --- rozet madalyonları (Sadece hover/incelemede animasyonlu — 0 idle CPU) --- */
   .medal { display: block; overflow: visible; }
@@ -4814,7 +4861,7 @@ function showSettings(tab) {
   const u = S.users[S.me];
   const KEYS = ['avatar', 'status', 'bio', 'banner', 'color', 'birthday', 'music', 'displayName', 'pronouns', 'theme', 'bannerImg', 'frame', 'effect', 'nameBanner', 'nameStyle', 'socials'];
   const OBJ = { theme: null, socials: {}, frame: null, effect: null, nameBanner: null, nameStyle: null, bannerImg: null, avatar: null, banner: null };
-  let nbCat = 'all';
+  let nbCat = 'all', profTab = 'identity', studioTab = 'frame';
   const initDraft = () => Object.fromEntries(KEYS.map(k => [k, k in OBJ ? (u[k] && typeof u[k] === 'object' ? JSON.parse(JSON.stringify(u[k])) : u[k] || OBJ[k]) : u[k] || '']));
   const draft = initDraft();
   const norm = (k, v) => JSON.stringify(k === 'socials' ? Object.fromEntries(Object.entries(v || {}).filter(([, x]) => x)) : k === 'nameStyle' ? cleanNs(v) : v || (k in OBJ ? null : ''));
@@ -4823,61 +4870,82 @@ function showSettings(tab) {
       <button data-tab="profile">${ic('user')}Profilim</button><button data-tab="account">${ic('lock')}Hesap</button><button data-tab="act">${ic('gamepad')}Etkinlik</button><button data-tab="look">${ic('palette')}Görünüm</button><button data-tab="notif">${ic('bell')}Bildirim ve uygulama</button><button data-tab="dev">${ic('code')}Bot geliştirici</button>${S.staff ? `<h4 style="margin-top:14px">KANKA EKİBİ</h4><button data-tab="admin">${ic('shield')}Yönetim paneli${S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>` : ''}
       <button class="out" id="st-out">${ic('logout')}Çıkış yap</button><div class="st-ver" id="st-ver">Kanka Chat</div><button id="mx">${ic('x')}Kapat</button></nav>
     <div class="st-main" id="st-main"></div>
-    <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div><div class="mini-card" id="st-card"></div></aside>`, 'settings');
+    <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Ayarları kapat"><span>${ic('x')}</span>ESC</button></div><div class="mini-card" id="st-card"></div><div class="st-live-strip" id="st-live-strip"></div></aside>`, 'settings');
   const nbAvHTML = () => `<div class="av on-dot st-online" style="background:${draft.color || u.color}">${draft.avatar ? `<img src="${esc(draft.avatar)}" alt="">` : initial(S.me)}</div>`;
-  const drawNbPrev = () => {
-    const box = $('#st-nbprev'); if (!box) return;
+  const liveStripHTML = () => {
     const id = draft.nameBanner && NAME_BANNERS.some(x => x.id === draft.nameBanner && x.id !== 'none') ? draft.nameBanner : null;
-    const nm = styledNameHTML(draft.displayName || S.me, S.staff === 'owner' ? draft.nameStyle : null), st = esc(draft.status || 'Yeni görünümle oynuyor');
-    box.innerHTML = `<div class="nb-prevbox"><small>Üye listesi & Özel mesaj önizlemesi (üstüne gel)</small>
-      <div class="nb-prev-row ${id ? 'has-nb nb-' + id : ''}">${id ? nbLayers(id) : ''}${nbAvHTML()}<div class="info"><b>${nm}</b><span>${st}</span></div></div></div>`;
+    const nm = styledNameHTML(draft.displayName || S.me, S.staff === 'owner' ? draft.nameStyle : null);
+    const st = esc(draft.status || 'Çevrimiçi');
+    return `<div class="st-live-h"><span>ÜYE LİSTESİ & SOHBET</span><em>Üstüne gel</em></div>
+      <div class="nb-prev-row ${id ? 'has-nb nb-' + id : ''}">${id ? nbLayers(id) : ''}${nbAvHTML()}<div class="info"><b>${nm}</b><span>${st}</span></div></div>
+      <div class="ns-prev-chat">${nbAvHTML()}<div class="nc-b"><div class="nc-h" style="color:${draft.color || u.color}">${nm}${S.staff === 'owner' ? '<span class="pe-tag" style="margin:0">KURUCU</span>' : ''}<small>şimdi</small></div><div class="nc-t">Yeni profil görünümüm nasıl duruyor?</div></div></div>`;
   };
-  const drawNsPrev = () => {
-    const box = $('#st-nsprev'); if (!box) return;
-    const id = draft.nameBanner && NAME_BANNERS.some(x => x.id === draft.nameBanner && x.id !== 'none') ? draft.nameBanner : null;
-    const nm = styledNameHTML(draft.displayName || S.me, draft.nameStyle), st = esc(draft.status || 'Kurucu çevrimiçi');
-    box.innerHTML = `<div class="ns-prev"><span class="ns-sub">Canlı önizleme</span>
-      <div class="ns-prev-chat">${nbAvHTML()}<div class="nc-b"><div class="nc-h" style="color:${draft.color || u.color}">${nm}<span class="pe-tag" style="margin:0">KURUCU</span><small>bugün 03:15</small></div><div class="nc-t">Yeni görünen ad stili efsane duruyor 🔥</div></div></div>
-      <div class="nb-prev-row ${id ? 'has-nb nb-' + id : ''}">${id ? nbLayers(id) : ''}${nbAvHTML()}<div class="info"><b>${nm}</b><span>${st}</span></div></div></div>`;
+  const drawLiveStrip = () => {
+    const html = liveStripHTML();
+    const side = $('#st-live-strip');
+    if (side) { side.hidden = tab !== 'profile'; if (!side.hidden) side.innerHTML = html; }
+    const mob = $('#st-mob-prev');
+    if (mob) mob.innerHTML = `<div class="st-live-strip" style="margin-top:0">${html}</div>`;
+  };
+  const studioInfo = () => {
+    const fr = draft.frame && FRAMES.find(f => f[0] === draft.frame);
+    const ef = draft.effect && PEFFECTS.find(e => e[0] === draft.effect);
+    const nb = draft.nameBanner && NAME_BANNERS.find(b => b.id === draft.nameBanner && b.id !== 'none');
+    const ns = S.staff === 'owner' ? cleanNs(draft.nameStyle) : null;
+    const hasBT = !!(draft.bannerImg || draft.banner || draft.theme);
+    const btLbl = draft.bannerImg && draft.theme ? 'Resim + Tema' : draft.bannerImg ? 'Özel resim' : draft.theme ? 'Özel tema' : draft.banner ? 'Özel renk' : 'Varsayılan';
+    const nsLbl = ns ? (NS_FONTS.find(x => x[0] === ns.font)?.[1] || 'Özel') : 'Standart';
+    const items = [
+      { id: 'frame', lbl: 'Çerçeve', sub: fr ? fr[1] : 'Yok', on: !!fr, ico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5" stroke-dasharray="3 2"/></svg>' },
+      { id: 'effect', lbl: 'Efekt', sub: ef ? ef[1] : 'Yok', on: !!ef, ico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></svg>' },
+      { id: 'nameBanner', lbl: 'İsim Afişi', sub: nb ? nb.name : 'Yok', on: !!nb, ico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="8" cy="12" r="2"/><path d="M13 10h5M13 14h3"/></svg>' },
+      ...(S.staff === 'owner' ? [{ id: 'nameStyle', lbl: 'Ad Stili', sub: nsLbl, on: !!ns, tag: 'KURUCU', ico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg>' }] : []),
+      { id: 'bannerTheme', lbl: 'Afiş & Tema', sub: btLbl, on: hasBT, ico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18"/><circle cx="8.5" cy="15" r="1.5"/></svg>' },
+    ];
+    return { items, count: items.filter(x => x.on).length, total: items.length };
+  };
+  const syncStudioBadges = () => {
+    const info = studioInfo();
+    const cnt = $('#pf-stcnt');
+    if (cnt) { cnt.textContent = `${info.count}/${info.total}`; cnt.style.display = info.count ? '' : 'none'; }
+    info.items.forEach(it => {
+      const btn = $(`#st-stabs [data-stab="${it.id}"]`); if (!btn) return;
+      btn.classList.toggle('has', it.on);
+      const sm = btn.querySelector('small'); if (sm) sm.textContent = it.sub;
+      const top = btn.querySelector('.st-stab-top');
+      if (top && !it.tag) {
+        let dot = top.querySelector('.st-stab-dot');
+        if (it.on && !dot) { dot = document.createElement('i'); dot.className = 'st-stab-dot'; top.appendChild(dot); }
+        else if (!it.on && dot) dot.remove();
+      }
+    });
+    const cur = info.items.find(x => x.id === studioTab);
+    const curEl = $('#st-sh-cur'), clrEl = $('#st-sh-clr');
+    if (cur && curEl) { curEl.textContent = cur.sub; curEl.classList.toggle('on', cur.on); }
+    if (cur && clrEl) clrEl.style.display = cur.on ? '' : 'none';
   };
   const preview = () => {
     const pu = { ...u, ...draft };
     $('#st-card').innerHTML = profSideHTML(S.me, pu, { preview: true }) + `<div class="pf-prevabout">${pu.bio ? `<div class="pf-bio">${bioFmt(pu.bio)}</div>` : ''}${Object.values(pu.socials || {}).some(Boolean) ? `<div class="psocs">${socialsHTML({ socials: Object.fromEntries(Object.entries(pu.socials).filter(([, x]) => x)) })}</div>` : ''}</div>`;
     $('#st-card .pf-actslot').innerHTML = `<button class="btnp" tabindex="-1">${ic('chat')} Mesaj</button><button class="btns2" tabindex="-1">${ic('userplus')}</button>`;
     mountProfileEffect($('#st-card .pf-side'), pu.effect);
-    drawNbPrev();
-    drawNsPrev();
+    drawLiveStrip();
+    syncStudioBadges();
     fillBars();
     if (!$('.st-save')?.classList.contains('saved')) $('.st-save')?.classList.toggle('dirty', dirty());
   };
   const pages = {
-    profile: () => `<div class="st-page"><h3>Profilim</h3><p class="hint">Sağda canlı önizlemesini görürsün. Diğerleri profiline tıklayınca bunları görecek.</p>
-      <div class="st-sec">Kimlik</div>
-      <div class="st-field st-2"><div><label>Görünen ad</label><input class="field" id="st-dn" maxlength="32" placeholder="${esc(S.me)}" value="${esc(draft.displayName)}" style="margin:0"></div><div><label>Zamir</label><input class="field" id="st-pr" maxlength="20" placeholder="Örn. o/onun" value="${esc(draft.pronouns)}" style="margin:0"></div></div>
-      <div class="st-field"><label>Profil fotoğrafı</label><div class="st-av"><div class="av" id="st-av"></div><button id="st-up">${ic('camera')}<span>Yükle</span></button>${draft.avatar ? '<button id="st-rm">Kaldır</button>' : ''}</div><div class="avgrid sm" id="st-presets">${(S.presets || []).map(a => `<button type="button" class="avopt ${draft.avatar === a ? 'on' : ''}" data-av="${a}" aria-label="Rakun avatarı"><img src="${a}" alt=""></button>`).join('')}</div></div>
-      <div class="st-field"><label>Avatar ve isim rengi</label><div class="swatches" id="sw-color"></div></div>
-      <div class="st-sec">Görünüm</div>
-      <div class="st-field"><label>Avatar çerçevesi</label><div class="frames">${FRAMES.map(f => { const open = frameOpen(u, f), on = (draft.frame || 'none') === f[0];
-        return `<button type="button" data-fr="${f[0]}" class="${on ? 'on' : ''} ${open ? '' : 'lock'}" title="${open ? f[1] : f[2] < 0 ? 'İlk 100 kullanıcıya özel' : 'Genel seviyen ' + f[2] + ' olunca açılır (şu an ' + (u.level || 1) + '). Sunucu seviyeleri sayılmaz.'}">${pAv(S.me, { ...u, ...draft, frame: f[0] === 'none' ? null : f[0] }, 52, false)}<span>${f[1]}</span>${open ? '' : `<em>${f[2] < 0 ? '🔒' : 'Sv ' + f[2]}</em>`}</button>`; }).join('')}</div></div>
-      <div class="st-field"><label>Profil efekti</label><div class="peffects" id="st-peffects">${PEFFECTS.map(ef => { const on = (draft.effect || 'none') === ef[0];
-        return `<button type="button" data-ef="${ef[0]}" class="${on ? 'on' : ''}" title="${ef[1]}"><div class="pe-pv" style="background:${ef[3]};color:${ef[4]}">${ef[2]}</div><span>${ef[1]}</span></button>`; }).join('')}</div><p class="hint">Profil kartın açıldığında üstünde canlı oynar.</p></div>
-      <div class="st-field"><label>İsim afişi</label><div id="st-nbbox"></div><div id="st-nbprev"></div><p class="hint">Üye listesinde, özel mesajlarda ve sesli odada konuştuğunda (yeşil yandığında) isminin arkasında canlı görünür.</p></div>
-      ${S.staff === 'owner' ? `<div class="st-field"><label>Görünen ad stili <span class="pe-tag">KURUCU</span></label><div id="st-nsbox"></div><div id="st-nsprev" style="margin-top:8px"></div><p class="hint">Sadece Kurucu rütbesine özeldir. Sohbet, üye listesi, sesli odalar ve profil kartı dahil her yerde aynı şekilde görünür.</p></div>` : ''}
-      <div class="st-field"><label>Afiş</label><div class="bnr"><div class="bprev" style="${banStyle(S.me, { ...u, ...draft })}"></div><button class="btns2" id="st-bimg">${ic('image')} Resim / GIF yükle</button>${draft.bannerImg ? `<button class="btns2" id="st-brm">Resmi kaldır</button>` : ''}</div>${draft.bannerImg ? '' : '<div class="swatches" id="sw-banner" style="margin-top:10px"></div>'}</div>
-      <div class="st-field"><label>Profil teması</label><div class="themes"><button type="button" class="none ${draft.theme ? '' : 'on'}" data-th="none" title="Tema yok">${ic('x')}</button>${PTHEMES.map((t, i) => `<button type="button" data-th="${i}" class="${JSON.stringify(draft.theme) === JSON.stringify(t) ? 'on' : ''}" style="background:linear-gradient(160deg, ${t[0]}, ${t[1]})"></button>`).join('')}
-        <label>Özel <input type="color" id="th-a" value="${draft.theme?.[0] || '#ff8a4c'}"><input type="color" id="th-b" value="${draft.theme?.[1] || '#5b2a86'}"></label></div><p class="hint">Tema profil kartının tamamını boyar.</p></div>
-      <div class="st-sec">Hakkında</div>
-      <div class="st-field"><label>Durum</label><input class="field" id="st-status" maxlength="60" placeholder="Örn. Valorant oynuyor" value="${esc(draft.status)}"></div>
-      <div class="st-field"><label>Hakkımda</label><textarea class="field" id="st-bio" maxlength="190" placeholder="Kendinden biraz bahset... (**kalın**, *italik* kullanabilirsin)">${esc(draft.bio)}</textarea><div class="st-count" id="st-cnt"></div></div>
-      <div class="st-field st-2"><div><label>Doğum günü</label><div style="display:flex;gap:6px">
-        <select class="field" id="st-bd-d" style="margin:0"><option value="">Gün</option>${Array.from({ length: 31 }, (_, i) => `<option ${draft.birthday?.slice(3) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${String(i + 1).padStart(2, '0')}</option>`).join('')}</select>
-        <select class="field" id="st-bd-m" style="margin:0"><option value="">Ay</option>${['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'].map((a, i) => `<option value="${String(i + 1).padStart(2, '0')}" ${draft.birthday?.slice(0, 2) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${a}</option>`).join('')}</select></div></div>
-        <div><label>Profil şarkısı</label><input class="field" id="st-music" placeholder="YouTube / Spotify linki" value="${esc(draft.music || '')}" style="margin:0"></div></div>
-      <div class="st-sec">Rozetlerin</div>
-      <div class="st-field"><p class="hint" style="margin-top:0">Profilinde ve isminin yanında hangi rozetlerin görüneceğini seç. Gizlediğin rozet kaybolmaz, istediğin zaman tekrar açarsın. Gece kuşu, Geveze, Kurucu gibi başarımların profilindeki <b>Başarımlar</b> bölümünde.</p><div class="bdg-vis" id="st-bdg"><p class="hint">Yükleniyor…</p></div></div>
-      <div class="st-sec">Bağlantılar</div>
-      <div class="st-field"><div class="socin">${Object.entries(SOCIAL_META).map(([k, [nm, c]]) => `<label style="--c:${c}"><i></i><b>${nm}</b><input data-soc="${k}" maxlength="60" placeholder="kullanıcı adı" value="${esc(draft.socials?.[k] || '')}"></label>`).join('')}</div><p class="hint">Sadece kullanıcı adını yaz, linki biz oluştururuz.</p></div>
-      <div class="st-save"><i class="sv-ic">${ic('info')}</i><span>${SAVE_TXT}</span><button class="sv-reset" id="st-reset">Sıfırla</button><button class="primary" id="st-saveb">Değişiklikleri kaydet<kbd>Ctrl S</kbd></button></div></div>`,
+    profile: () => {
+      const info = studioInfo();
+      return `<div class="st-page"><h3>Profilim</h3><p class="hint">Sağda canlı önizlemesini görürsün. Sekmeler arası geçerken değişikliklerin korunur.</p>
+        <div class="pf-tabs" id="pf-tabs">
+          <button type="button" data-ptab="identity" class="${profTab === 'identity' ? 'on' : ''}">${ic('user')}Kimlik & Hakkında</button>
+          <button type="button" data-ptab="studio" class="${profTab === 'studio' ? 'on' : ''}">${ic('palette')}Görünüm Stüdyosu<span class="pf-tcnt" id="pf-stcnt" style="${info.count ? '' : 'display:none'}">${info.count}/${info.total}</span></button>
+          <button type="button" data-ptab="badges" class="${profTab === 'badges' ? 'on' : ''}">${ic('shield')}Rozet & Bağlantılar</button>
+        </div>
+        <div id="pf-tab-root"></div>
+        <div class="st-save"><i class="sv-ic">${ic('info')}</i><span>${SAVE_TXT}</span><button class="sv-reset" id="st-reset">Sıfırla</button><button class="primary" id="st-saveb">Değişiklikleri kaydet<kbd>Ctrl S</kbd></button></div></div>`;
+    },
     account: () => accountPageHTML(u),
     dev: () => `<div class="st-page"><h3>Bot geliştirici</h3><div id="dev-root"><p class="hint">Yükleniyor…</p></div></div>`,
     admin: () => '<div id="adm-root"></div>',
@@ -4902,11 +4970,177 @@ function showSettings(tab) {
       <div class="pc-sec"><label class="switch">Etiketlendiğimde ve özel mesaj geldiğinde bildir<input type="checkbox" id="p-nt" ${notifOn() ? 'checked' : ''}></label><label class="switch">Botlar bana özel mesaj atabilsin<input type="checkbox" id="p-botdm" ${S.botDmOff ? '' : 'checked'}></label>
       </div>${pushSettingsHTML()}</div>`,
   };
-  const swatches = (el, key, opts) => {
-    $(el).innerHTML = opts.map(c => `<button style="background:${c || 'linear-gradient(135deg,' + u.color + ',#2b211c)'}" data-c="${c || ''}" class="${(draft[key] || '') === (c || '') ? 'on' : ''}" title="${c || 'Otomatik'}" aria-label="Renk ${c || 'otomatik'}"></button>`).join('') +
-      `<button class="custom" title="Özel renk" aria-label="Özel renk"><input type="color" value="${draft[key] || u.color}"></button>`;
-    $(el).onclick = e => { const b = e.target.closest('button[data-c]'); if (!b) return; draft[key] = b.dataset.c || null; swatches(el, key, opts); preview(); };
-    $(el + ' input').oninput = e => { draft[key] = e.target.value; preview(); $(el).querySelectorAll('button').forEach(b => b.classList.remove('on')); };
+  const swatches = (el, key, opts, onPick) => {
+    const box = $(el); if (!box) return;
+    box.innerHTML = opts.map(c => `<button type="button" style="background:${c || 'linear-gradient(135deg,' + u.color + ',#2b211c)'}" data-c="${c || ''}" class="${(draft[key] || '') === (c || '') ? 'on' : ''}" title="${c || 'Otomatik'}" aria-label="Renk ${c || 'otomatik'}"></button>`).join('') +
+      `<button type="button" class="custom" title="Özel renk" aria-label="Özel renk"><input type="color" value="${draft[key] || u.color}"></button>`;
+    box.onclick = e => { const b = e.target.closest('button[data-c]'); if (!b) return; draft[key] = b.dataset.c || null; swatches(el, key, opts, onPick); onPick?.(); preview(); };
+    box.querySelector('input').oninput = e => { draft[key] = e.target.value; box.querySelectorAll('button').forEach(b => b.classList.remove('on')); onPick?.(); preview(); };
+  };
+  const renderStudioBody = () => {
+    const root = $('#st-sbody'); if (!root) return;
+    if (studioTab === 'nameStyle' && S.staff !== 'owner') studioTab = 'frame';
+    $('#st-stabs')?.querySelectorAll('[data-stab]').forEach(b => b.classList.toggle('on', b.dataset.stab === studioTab));
+    const info = studioInfo();
+    const cur = info.items.find(x => x.id === studioTab) || info.items[0];
+    const META = {
+      frame: ['Avatar Çerçevesi', 'Avatarının etrafında ve profil kartında görünür.'],
+      effect: ['Profil Efekti', 'Profil kartın açıldığında üstünde canlı oynar.'],
+      nameBanner: ['İsim Afişi', 'Üye listesinde, DM\'lerde ve sesli odada konuştuğunda isminin arkasında görünür.'],
+      nameStyle: ['Görünen Ad Stili', 'Sadece Kurucu rütbesine özeldir. Sohbet, üye listesi, sesli odalar ve profil kartında aynı görünür.'],
+      bannerTheme: ['Afiş & Profil Teması', 'Profilinin üst afişini ve kart arka plan renklerini özelleştir.'],
+    };
+    const [title, desc] = META[studioTab];
+    const head = `<div class="st-sh"><div><h4>${title}${studioTab === 'nameStyle' ? ' <span class="pe-tag" style="margin:0">KURUCU</span>' : ''}</h4><p>${desc}</p></div>
+      <div class="st-sh-r"><span class="st-sh-cur ${cur.on ? 'on' : ''}" id="st-sh-cur">${esc(cur.sub)}</span><button type="button" class="st-sh-clr" id="st-sh-clr" style="${cur.on ? '' : 'display:none'}">Sıfırla</button></div></div>`;
+
+    if (studioTab === 'frame') {
+      root.innerHTML = head + `<div class="frames">${FRAMES.map(f => { const open = frameOpen(u, f), on = (draft.frame || 'none') === f[0];
+        return `<button type="button" data-fr="${f[0]}" class="${on ? 'on' : ''} ${open ? '' : 'lock'}" title="${open ? f[1] : f[2] < 0 ? 'İlk 100 kullanıcıya özel' : 'Genel seviyen ' + f[2] + ' olunca açılır (şu an ' + (u.level || 1) + '). Sunucu seviyeleri sayılmaz.'}">${pAv(S.me, { ...u, ...draft, frame: f[0] === 'none' ? null : f[0] }, 52, false)}<span>${f[1]}</span>${open ? '' : `<em>${f[2] < 0 ? '🔒' : 'Sv ' + f[2]}</em>`}</button>`; }).join('')}</div>`;
+      root.querySelectorAll('[data-fr]').forEach(b => b.onclick = () => {
+        if (b.classList.contains('lock')) return toast(b.title);
+        draft.frame = b.dataset.fr === 'none' ? null : b.dataset.fr;
+        root.querySelectorAll('[data-fr]').forEach(x => x.classList.toggle('on', x === b));
+        preview();
+      });
+    } else if (studioTab === 'effect') {
+      root.innerHTML = head + `<div class="peffects" id="st-peffects">${PEFFECTS.map(ef => { const on = (draft.effect || 'none') === ef[0];
+        return `<button type="button" data-ef="${ef[0]}" class="${on ? 'on' : ''}" title="${ef[1]}"><div class="pe-pv" style="background:${ef[3]};color:${ef[4]}">${ef[2]}</div><span>${ef[1]}</span></button>`; }).join('')}</div>`;
+      root.querySelectorAll('[data-ef]').forEach(b => b.onclick = () => {
+        draft.effect = b.dataset.ef === 'none' ? null : b.dataset.ef;
+        root.querySelectorAll('[data-ef]').forEach(x => x.classList.toggle('on', x === b));
+        preview();
+      });
+    } else if (studioTab === 'nameBanner') {
+      const list = nbCat === 'all' ? NAME_BANNERS : NAME_BANNERS.filter(b => b.id === 'none' || b.cat === nbCat);
+      const nm = esc(draft.displayName || S.me);
+      root.innerHTML = head + `<div class="nb-cats">${NB_CATS.map(([k, l]) => `<button type="button" data-nbcat="${k}" class="${nbCat === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+        <div class="nb-grid">${list.map(b => {
+          const on = (draft.nameBanner || 'none') === b.id;
+          return `<button type="button" class="nb-card ${on ? 'on' : ''}" data-nb="${b.id}" title="${b.name}">
+            <div class="nb-pv ${b.id !== 'none' ? 'has-nb nb-' + b.id : ''}">${b.id !== 'none' ? nbLayers(b.id) : ''}${nbAvHTML()}<b>${nm}</b></div>
+            <span class="nb-lbl"><span>${b.name}</span>${b.tag ? `<em>${b.tag}</em>` : ''}</span></button>`;
+        }).join('')}</div>`;
+      root.querySelectorAll('[data-nbcat]').forEach(b => b.onclick = () => { nbCat = b.dataset.nbcat; renderStudioBody(); });
+      root.querySelectorAll('[data-nb]').forEach(b => b.onclick = () => {
+        draft.nameBanner = b.dataset.nb === 'none' ? null : b.dataset.nb;
+        root.querySelectorAll('[data-nb]').forEach(x => x.classList.toggle('on', x === b));
+        preview();
+      });
+    } else if (studioTab === 'nameStyle') {
+      const nsCur = () => cleanNs(draft.nameStyle) || { font: 'default', mode: 'none', c1: '#d4ff00', c2: '#00f5d4', anim: 'none' };
+      const nsSet = patch => { draft.nameStyle = cleanNs({ ...nsCur(), ...patch }); };
+      const s = nsCur();
+      root.innerHTML = head + `<div class="ns-box">
+        <div class="ns-sub">Yazı tipi</div>
+        <div class="ns-fonts">${NS_FONTS.map(([id, lbl]) => `<button type="button" class="ns-fbtn ${s.font === id ? 'on' : ''}" data-nsf="${id}"><b class="${id !== 'default' ? 'nsf-' + id : ''}">Gg</b><span>${lbl}</span></button>`).join('')}</div>
+        <div class="ns-sub">Renk</div>
+        <div class="ns-seg">${NS_MODES.map(([id, lbl]) => `<button type="button" class="${s.mode === id ? 'on' : ''}" data-nsm="${id}">${lbl}</button>`).join('')}</div>
+        ${s.mode !== 'none' ? `<div class="ns-colors">
+          <label class="ns-pick"><input type="color" id="ns-c1" value="${s.c1}">${s.mode === 'gradient' ? '1. renk' : 'Renk'}</label>
+          ${s.mode === 'gradient' ? `<label class="ns-pick"><input type="color" id="ns-c2" value="${s.c2}">2. renk</label>` : ''}
+          <div class="ns-pres">${NS_PRESETS.map(([a, b, nm], i) => `<button type="button" data-nsp="${i}" class="${s.c1.toLowerCase() === a && (s.mode === 'solid' || s.c2.toLowerCase() === b) ? 'on' : ''}" style="background:${s.mode === 'gradient' ? `linear-gradient(135deg,${a},${b})` : a}" title="${nm}" aria-label="${nm}"></button>`).join('')}</div>
+        </div>` : ''}
+        <div class="ns-sub">Animasyon</div>
+        <div class="ns-seg">${NS_ANIMS.map(([id, lbl]) => `<button type="button" class="${s.anim === id ? 'on' : ''}" data-nsa="${id}">${lbl}</button>`).join('')}</div>
+      </div>`;
+      root.querySelectorAll('[data-nsf]').forEach(b => b.onclick = () => { nsSet({ font: b.dataset.nsf }); renderStudioBody(); preview(); });
+      root.querySelectorAll('[data-nsm]').forEach(b => b.onclick = () => { nsSet({ mode: b.dataset.nsm }); renderStudioBody(); preview(); });
+      root.querySelectorAll('[data-nsa]').forEach(b => b.onclick = () => { nsSet({ anim: b.dataset.nsa }); renderStudioBody(); preview(); });
+      root.querySelectorAll('[data-nsp]').forEach(b => b.onclick = () => { const [a, c] = NS_PRESETS[+b.dataset.nsp]; nsSet({ c1: a, c2: c }); renderStudioBody(); preview(); });
+      const c1 = $('#ns-c1'), c2 = $('#ns-c2');
+      if (c1) c1.oninput = e => { nsSet({ c1: e.target.value }); root.querySelectorAll('[data-nsp]').forEach(x => x.classList.remove('on')); preview(); };
+      if (c2) c2.oninput = e => { nsSet({ c2: e.target.value }); root.querySelectorAll('[data-nsp]').forEach(x => x.classList.remove('on')); preview(); };
+    } else if (studioTab === 'bannerTheme') {
+      root.innerHTML = head + `<div class="st-bt-sec">
+          <div class="st-bt-lbl"><span>Profil Afişi</span></div>
+          <div class="bnr"><div class="bprev" id="st-bprev" style="${banStyle(S.me, { ...u, ...draft })}"></div><button type="button" class="btns2" id="st-bimg">${ic('image')} Resim / GIF yükle</button>${draft.bannerImg ? `<button type="button" class="btns2" id="st-brm">Resmi kaldır</button>` : ''}</div>
+          ${draft.bannerImg ? '' : '<div class="swatches" id="sw-banner"></div>'}
+        </div>
+        <div class="st-bt-sec">
+          <div class="st-bt-lbl"><span>Profil Teması</span><small style="text-transform:none;letter-spacing:0;font-weight:600">Kartın tamamını boyar</small></div>
+          <div class="themes"><button type="button" class="none ${draft.theme ? '' : 'on'}" data-th="none" title="Tema yok">${ic('x')}</button>${PTHEMES.map((t, i) => `<button type="button" data-th="${i}" class="${JSON.stringify(draft.theme) === JSON.stringify(t) ? 'on' : ''}" style="background:linear-gradient(160deg, ${t[0]}, ${t[1]})"></button>`).join('')}
+            <label>Özel <input type="color" id="th-a" value="${draft.theme?.[0] || '#d4ff00'}"><input type="color" id="th-b" value="${draft.theme?.[1] || '#1c2410'}"></label></div>
+        </div>`;
+      const syncBprev = () => { const bp = $('#st-bprev'); if (bp) bp.setAttribute('style', banStyle(S.me, { ...u, ...draft })); };
+      if ($('#sw-banner')) swatches('#sw-banner', 'banner', [null, '#ff7a59', '#e5484d', '#ff6b9a', '#b07cff', '#4aa8ff', '#2fd3c3', '#4cc38a', '#f6c445', '#3a2c24'], syncBprev);
+      $('#st-bimg').onclick = () => readImage(url => { draft.bannerImg = url; renderStudioBody(); preview(); });
+      if ($('#st-brm')) $('#st-brm').onclick = () => { draft.bannerImg = null; renderStudioBody(); preview(); };
+      root.querySelectorAll('[data-th]').forEach(b => b.onclick = () => {
+        draft.theme = b.dataset.th === 'none' ? null : [...PTHEMES[+b.dataset.th]];
+        renderStudioBody(); preview();
+      });
+      const thc = () => { draft.theme = [$('#th-a').value, $('#th-b').value]; root.querySelectorAll('[data-th]').forEach(x => x.classList.remove('on')); preview(); };
+      $('#th-a').oninput = thc; $('#th-b').oninput = thc;
+    }
+
+    const clr = $('#st-sh-clr');
+    if (clr) clr.onclick = () => {
+      if (studioTab === 'frame') draft.frame = null;
+      else if (studioTab === 'effect') draft.effect = null;
+      else if (studioTab === 'nameBanner') draft.nameBanner = null;
+      else if (studioTab === 'nameStyle') draft.nameStyle = null;
+      else if (studioTab === 'bannerTheme') { draft.bannerImg = null; draft.banner = null; draft.theme = null; }
+      renderStudioBody(); preview();
+    };
+  };
+
+  const renderProfTab = () => {
+    const root = $('#pf-tab-root'); if (!root) return;
+    $('#pf-tabs')?.querySelectorAll('[data-ptab]').forEach(b => b.classList.toggle('on', b.dataset.ptab === profTab));
+    if (profTab === 'identity') {
+      root.innerHTML = `<div class="pf-card">
+          <div class="pf-card-h"><b>Temel Kimlik</b><small>Profilin ve mesajlarda görünen bilgilerin</small></div>
+          <div class="st-field st-2"><div><label>Görünen ad</label><input class="field" id="st-dn" maxlength="32" placeholder="${esc(S.me)}" value="${esc(draft.displayName)}" style="margin:0"></div><div><label>Zamir</label><input class="field" id="st-pr" maxlength="20" placeholder="Örn. o/onun" value="${esc(draft.pronouns)}" style="margin:0"></div></div>
+          <div class="st-field"><label>Profil fotoğrafı</label><div class="st-av"><div class="av" id="st-av"></div><button type="button" id="st-up">${ic('camera')}<span>Yükle</span></button>${draft.avatar ? '<button type="button" id="st-rm">Kaldır</button>' : ''}</div><div class="avgrid sm" id="st-presets">${(S.presets || []).map(a => `<button type="button" class="avopt ${draft.avatar === a ? 'on' : ''}" data-av="${a}" aria-label="Rakun avatarı"><img src="${a}" alt=""></button>`).join('')}</div></div>
+          <div class="st-field"><label>Avatar ve isim rengi</label><div class="swatches" id="sw-color"></div></div>
+        </div>
+        <div class="pf-card">
+          <div class="pf-card-h"><b>Hakkında & Kişisel</b><small>Profil kartında görünür</small></div>
+          <div class="st-field"><label>Durum</label><input class="field" id="st-status" maxlength="60" placeholder="Örn. Valorant oynuyor" value="${esc(draft.status)}"></div>
+          <div class="st-field"><label>Hakkımda</label><textarea class="field" id="st-bio" maxlength="190" placeholder="Kendinden biraz bahset... (**kalın**, *italik* kullanabilirsin)">${esc(draft.bio)}</textarea><div class="st-count" id="st-cnt"></div></div>
+          <div class="st-field st-2"><div><label>Doğum günü</label><div style="display:flex;gap:6px">
+            <select class="field" id="st-bd-d" style="margin:0"><option value="">Gün</option>${Array.from({ length: 31 }, (_, i) => `<option ${draft.birthday?.slice(3) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${String(i + 1).padStart(2, '0')}</option>`).join('')}</select>
+            <select class="field" id="st-bd-m" style="margin:0"><option value="">Ay</option>${['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'].map((a, i) => `<option value="${String(i + 1).padStart(2, '0')}" ${draft.birthday?.slice(0, 2) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${a}</option>`).join('')}</select></div></div>
+            <div><label>Profil şarkısı</label><input class="field" id="st-music" placeholder="YouTube / Spotify linki" value="${esc(draft.music || '')}" style="margin:0"></div></div>
+        </div>`;
+      const avEl = () => { const el = $('#st-av'); if (!el) return; el.style.background = draft.color; el.innerHTML = draft.avatar ? `<img src="${esc(draft.avatar)}" alt="">` : initial(S.me); };
+      avEl();
+      $('#st-up').onclick = () => readImage(url => { draft.avatar = url; renderProfTab(); preview(); }, 512);
+      if ($('#st-rm')) $('#st-rm').onclick = () => { draft.avatar = null; renderProfTab(); preview(); };
+      $('#st-presets').querySelectorAll('[data-av]').forEach(b => b.onclick = () => { draft.avatar = b.dataset.av; renderProfTab(); preview(); });
+      swatches('#sw-color', 'color', PALETTE, avEl);
+      $('#st-dn').oninput = e => { draft.displayName = e.target.value; preview(); };
+      $('#st-pr').oninput = e => { draft.pronouns = e.target.value; preview(); };
+      const cnt = () => $('#st-cnt').textContent = `${$('#st-bio').value.length}/190`; cnt();
+      $('#st-status').oninput = e => { draft.status = e.target.value; preview(); };
+      $('#st-bio').oninput = e => { draft.bio = e.target.value; cnt(); preview(); };
+      const bd = () => { const d = $('#st-bd-d').value, m = $('#st-bd-m').value; draft.birthday = d && m ? `${m}-${d}` : ''; preview(); };
+      $('#st-bd-d').onchange = bd; $('#st-bd-m').onchange = bd;
+      $('#st-music').oninput = e => { draft.music = e.target.value.trim(); preview(); };
+    } else if (profTab === 'studio') {
+      const info = studioInfo();
+      root.innerHTML = `<div class="st-stabs" id="st-stabs">${info.items.map(it => `<button type="button" class="st-stab ${studioTab === it.id ? 'on' : ''} ${it.on ? 'has' : ''}" data-stab="${it.id}">
+          <span class="st-stab-top"><span class="st-stab-ico">${it.ico}</span>${it.tag ? `<span class="st-stab-tag">${it.tag}</span>` : (it.on ? '<i class="st-stab-dot"></i>' : '')}</span>
+          <strong>${it.lbl}</strong><small>${esc(it.sub)}</small></button>`).join('')}</div>
+        <div class="st-sbody" id="st-sbody"></div>
+        <div class="st-mob-prev" id="st-mob-prev"></div>`;
+      $('#st-stabs').querySelectorAll('[data-stab]').forEach(b => b.onclick = () => { studioTab = b.dataset.stab; renderStudioBody(); });
+      renderStudioBody();
+      drawLiveStrip();
+    } else if (profTab === 'badges') {
+      root.innerHTML = `<div class="pf-card">
+          <div class="pf-card-h"><b>Rozet Görünürlüğü</b><small>Gizlediğin rozet kaybolmaz</small></div>
+          <p class="hint" style="margin:0 0 12px">Profilinde ve isminin yanında hangi rozetlerin görüneceğini seç. Gece kuşu, Geveze, Kurucu gibi başarımların profilindeki <b>Başarımlar</b> bölümünde.</p>
+          <div class="bdg-vis" id="st-bdg"><p class="hint">Yükleniyor…</p></div>
+        </div>
+        <div class="pf-card">
+          <div class="pf-card-h"><b>Sosyal Bağlantılar</b><small>Sadece kullanıcı adını yaz</small></div>
+          <div class="st-field" style="margin-top:0"><div class="socin">${Object.entries(SOCIAL_META).map(([k, [nm, c]]) => `<label style="--c:${c}"><i></i><b>${nm}</b><input data-soc="${k}" maxlength="60" placeholder="kullanıcı adı" value="${esc(draft.socials?.[k] || '')}"></label>`).join('')}</div></div>
+        </div>`;
+      badgeVisPanel();
+      root.querySelectorAll('[data-soc]').forEach(inp => inp.oninput = () => { draft.socials = { ...draft.socials, [inp.dataset.soc]: inp.value.trim().replace(/^@/, '') }; preview(); });
+    }
   };
   const open = t => {
     tab = t;
@@ -4914,83 +5148,15 @@ function showSettings(tab) {
     const changed = $('#st-main').dataset.tab !== t; $('#st-main').dataset.tab = t; if (changed) { $('#st-main').scrollTop = 0; freshPage($('#st-main')); }
     $('#st-main').innerHTML = pages[t]();
     $('#modal-box').classList.toggle('st-wide', t === 'admin');
+    const strip = $('#st-live-strip'); if (strip) strip.hidden = t !== 'profile';
     if (t === 'account') wireAccount();
     if (t === 'dev') devPage($('#dev-root'));
     if (t === 'admin') adminPanel($('#adm-root').parentElement);
     if (t === 'profile') {
-      const avEl = () => { $('#st-av').style.background = draft.color; $('#st-av').innerHTML = draft.avatar ? `<img src="${esc(draft.avatar)}" alt="">` : initial(S.me); };
-      avEl();
-      $('#st-up').onclick = () => readImage(url => { draft.avatar = url; open('profile'); preview(); }, 512);
-      if ($('#st-rm')) $('#st-rm').onclick = () => { draft.avatar = null; open('profile'); preview(); };
-      $('#st-presets').querySelectorAll('[data-av]').forEach(b => b.onclick = () => { draft.avatar = b.dataset.av; open('profile'); preview(); });
-      if ($('#sw-banner')) swatches('#sw-banner', 'banner', [null, '#ff7a59', '#e5484d', '#ff6b9a', '#b07cff', '#4aa8ff', '#2fd3c3', '#4cc38a', '#f6c445', '#3a2c24']);
-      $('#st-dn').oninput = e => { draft.displayName = e.target.value; preview(); };
-      $('#st-pr').oninput = e => { draft.pronouns = e.target.value; preview(); };
-      $('#st-main').querySelectorAll('[data-fr]').forEach(b => b.onclick = () => { if (b.classList.contains('lock')) return toast(b.title); draft.frame = b.dataset.fr === 'none' ? null : b.dataset.fr; open('profile'); preview(); });
-      $('#st-main').querySelectorAll('[data-ef]').forEach(b => b.onclick = () => { draft.effect = b.dataset.ef === 'none' ? null : b.dataset.ef; $('#st-main').querySelectorAll('[data-ef]').forEach(x => x.classList.toggle('on', x === b)); preview(); });
-      if ($('#st-nbbox')) {
-        const drawNb = () => {
-          const list = nbCat === 'all' ? NAME_BANNERS : NAME_BANNERS.filter(b => b.id === 'none' || b.cat === nbCat);
-          const nm = esc(draft.displayName || S.me);
-          $('#st-nbbox').innerHTML = `<div class="nb-cats">${NB_CATS.map(([k, l]) => `<button type="button" data-nbcat="${k}" class="${nbCat === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-            <div class="nb-grid">${list.map(b => {
-              const on = (draft.nameBanner || 'none') === b.id;
-              return `<button type="button" class="nb-card ${on ? 'on' : ''}" data-nb="${b.id}" title="${b.name}">
-                <div class="nb-pv ${b.id !== 'none' ? 'has-nb nb-' + b.id : ''}">${b.id !== 'none' ? nbLayers(b.id) : ''}${nbAvHTML()}<b>${nm}</b></div>
-                <span class="nb-lbl"><span>${b.name}</span>${b.tag ? `<em>${b.tag}</em>` : ''}</span></button>`;
-            }).join('')}</div>`;
-          $('#st-nbbox').querySelectorAll('[data-nbcat]').forEach(b => b.onclick = () => { nbCat = b.dataset.nbcat; drawNb(); });
-          $('#st-nbbox').querySelectorAll('[data-nb]').forEach(b => b.onclick = () => { draft.nameBanner = b.dataset.nb === 'none' ? null : b.dataset.nb; $('#st-nbbox').querySelectorAll('[data-nb]').forEach(x => x.classList.toggle('on', x === b)); preview(); });
-          drawNbPrev();
-        };
-        drawNb();
-      }
-      if ($('#st-nsbox')) {
-        const nsCur = () => cleanNs(draft.nameStyle) || { font: 'default', mode: 'none', c1: '#d4ff00', c2: '#00f5d4', anim: 'none' };
-        const nsSet = patch => { const nxt = { ...nsCur(), ...patch }; draft.nameStyle = cleanNs(nxt); };
-        const drawNs = () => {
-          const s = nsCur(), has = !!cleanNs(draft.nameStyle);
-          $('#st-nsbox').innerHTML = `<div class="ns-box">
-            <div class="ns-head"><span class="ns-sub">Yazı tipi</span>${has ? '<button type="button" class="ns-clr" id="ns-clr">Stili sıfırla</button>' : ''}</div>
-            <div class="ns-fonts">${NS_FONTS.map(([id, lbl]) => `<button type="button" class="ns-fbtn ${s.font === id ? 'on' : ''}" data-nsf="${id}"><b class="${id !== 'default' ? 'nsf-' + id : ''}">Gg</b><span>${lbl}</span></button>`).join('')}</div>
-            <div class="ns-sub">Renk</div>
-            <div class="ns-seg">${NS_MODES.map(([id, lbl]) => `<button type="button" class="${s.mode === id ? 'on' : ''}" data-nsm="${id}">${lbl}</button>`).join('')}</div>
-            ${s.mode !== 'none' ? `<div class="ns-colors">
-              <label class="ns-pick"><input type="color" id="ns-c1" value="${s.c1}">${s.mode === 'gradient' ? '1. renk' : 'Renk'}</label>
-              ${s.mode === 'gradient' ? `<label class="ns-pick"><input type="color" id="ns-c2" value="${s.c2}">2. renk</label>` : ''}
-              <div class="ns-pres">${NS_PRESETS.map(([a, b, nm], i) => `<button type="button" data-nsp="${i}" class="${s.c1.toLowerCase() === a && (s.mode === 'solid' || s.c2.toLowerCase() === b) ? 'on' : ''}" style="background:${s.mode === 'gradient' ? `linear-gradient(135deg,${a},${b})` : a}" title="${nm}" aria-label="${nm}"></button>`).join('')}</div>
-            </div>` : ''}
-            <div class="ns-sub">Animasyon</div>
-            <div class="ns-seg">${NS_ANIMS.map(([id, lbl]) => `<button type="button" class="${s.anim === id ? 'on' : ''}" data-nsa="${id}">${lbl}</button>`).join('')}</div>
-          </div>`;
-          $('#ns-clr')?.addEventListener('click', () => { draft.nameStyle = null; drawNs(); preview(); });
-          $('#st-nsbox').querySelectorAll('[data-nsf]').forEach(b => b.onclick = () => { nsSet({ font: b.dataset.nsf }); drawNs(); preview(); });
-          $('#st-nsbox').querySelectorAll('[data-nsm]').forEach(b => b.onclick = () => { nsSet({ mode: b.dataset.nsm }); drawNs(); preview(); });
-          $('#st-nsbox').querySelectorAll('[data-nsa]').forEach(b => b.onclick = () => { nsSet({ anim: b.dataset.nsa }); drawNs(); preview(); });
-          $('#st-nsbox').querySelectorAll('[data-nsp]').forEach(b => b.onclick = () => { const [a, c] = NS_PRESETS[+b.dataset.nsp]; nsSet({ c1: a, c2: c }); drawNs(); preview(); });
-          const c1 = $('#ns-c1'), c2 = $('#ns-c2');
-          if (c1) c1.oninput = e => { nsSet({ c1: e.target.value }); $('#st-nsbox').querySelectorAll('[data-nsp]').forEach(x => x.classList.remove('on')); preview(); };
-          if (c2) c2.oninput = e => { nsSet({ c2: e.target.value }); $('#st-nsbox').querySelectorAll('[data-nsp]').forEach(x => x.classList.remove('on')); preview(); };
-          drawNsPrev();
-        };
-        drawNs();
-      }
-      $('#st-bimg').onclick = () => readImage(url => { draft.bannerImg = url; open('profile'); preview(); });
-      if ($('#st-brm')) $('#st-brm').onclick = () => { draft.bannerImg = null; open('profile'); preview(); };
-      $('#st-main').querySelectorAll('[data-th]').forEach(b => b.onclick = () => { draft.theme = b.dataset.th === 'none' ? null : [...PTHEMES[+b.dataset.th]]; open('profile'); preview(); });
-      const thc = () => { draft.theme = [$('#th-a').value, $('#th-b').value]; $('#st-main').querySelectorAll('[data-th]').forEach(x => x.classList.remove('on')); preview(); };
-      $('#th-a').oninput = thc; $('#th-b').oninput = thc;
-      $('#st-main').querySelectorAll('[data-soc]').forEach(inp => inp.oninput = () => { draft.socials = { ...draft.socials, [inp.dataset.soc]: inp.value.trim().replace(/^@/, '') }; preview(); });
-      swatches('#sw-color', 'color', PALETTE);
-      $('#sw-color').addEventListener('click', avEl); $('#sw-color input').addEventListener('input', avEl);
-      badgeVisPanel();
-      const cnt = () => $('#st-cnt').textContent = `${$('#st-bio').value.length}/190`; cnt();
-      $('#st-status').oninput = e => { draft.status = e.target.value; preview(); };
-      $('#st-bio').oninput = e => { draft.bio = e.target.value; cnt(); preview(); };
-      const bd = () => { const d = $('#st-bd-d').value, m = $('#st-bd-m').value; draft.birthday = d && m ? `${m}-${d}` : ''; preview(); };
-      $('#st-bd-d').onchange = bd; $('#st-bd-m').onchange = bd;
-      $('#st-music').oninput = e => { draft.music = e.target.value.trim(); preview(); };
-      $('#st-reset').onclick = () => { Object.assign(draft, initDraft()); open('profile'); preview(); };
+      $('#pf-tabs').querySelectorAll('[data-ptab]').forEach(b => b.onclick = () => { profTab = b.dataset.ptab; renderProfTab(); });
+      renderProfTab();
+      drawLiveStrip();
+      $('#st-reset').onclick = () => { Object.assign(draft, initDraft()); renderProfTab(); preview(); };
       $('#st-saveb').onclick = () => socket.emit('updateProfile', { avatar: draft.avatar, status: draft.status, bio: draft.bio, banner: draft.banner || '', color: draft.color, birthday: draft.birthday || '', music: draft.music || '',
         displayName: draft.displayName, pronouns: draft.pronouns, theme: draft.theme, bannerImg: draft.bannerImg, frame: draft.frame || 'none', effect: draft.effect || 'none', nameBanner: draft.nameBanner || 'none', ...(S.staff === 'owner' ? { nameStyle: draft.nameStyle } : {}), socials: draft.socials }, r => {
         if (r.error) return toast(r.error);
