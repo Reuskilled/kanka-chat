@@ -2507,28 +2507,34 @@
   .mini-card .pf-prevabout { padding: 14px 4px 0; display: grid; gap: 10px; }
   .mini-card .psocs { grid-template-columns: 1fr; }
   @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) { .st-2, .socin { grid-template-columns: 1fr; } }
-  /* --- rozet madalyonları (Kinetik Animasyonlu Noir) --- */
+  /* --- rozet madalyonları (Sadece hover/incelemede animasyonlu — 0 idle CPU) --- */
   .medal { display: block; overflow: visible; }
-  .medal.kb { filter: drop-shadow(0 2px 5px rgba(0,0,0,.48)); }
   .medal.kb.locked { filter: grayscale(1) brightness(.45); }
   .medal.kb.locked * { animation: none !important; }
-  .medal.r2:not(.locked) { filter: drop-shadow(0 0 6px rgba(139,92,246,.42)); }
-  .medal.r3:not(.locked) { filter: drop-shadow(0 0 7px rgba(255,215,120,.38)); }
-  .kb-spin { transform-origin: 24px 24px; animation: kbSpin 7s linear infinite; }
-  .kb-spin-slow { transform-origin: 24px 24px; animation: kbSpin 11s linear infinite; }
-  .kb-radar { transform-origin: 24px 24px; animation: kbSpin 3.2s linear infinite; }
-  .kb-pulse { transform-origin: 24px 24px; animation: kbPulse 2.4s ease-in-out infinite; }
-  .kb-sway-l { transform-origin: 24px 28px; animation: kbSwayL 3s ease-in-out infinite; }
-  .kb-sway-r { transform-origin: 24px 26px; animation: kbSwayR 3s ease-in-out infinite; }
-  .kb-float1 { animation: kbFloat 2.6s ease-in-out infinite; }
-  .kb-float2 { animation: kbFloat 2.6s ease-in-out .9s infinite; }
-  .kb-flow { stroke-dasharray: 18 46; animation: kbFlow 2.6s linear infinite; }
-  .kb-twinkle1 { transform-origin: 39px 11px; animation: kbTwinkle 2.2s ease-in-out infinite; }
-  .kb-twinkle2 { transform-origin: 10px 36px; animation: kbTwinkle 2.2s ease-in-out 1.1s infinite; }
-  .kb-blink { animation: kbBlink 1.1s steps(2, start) infinite; }
-  .kb-brk-l { animation: kbBrkL 2.8s ease-in-out infinite; }
-  .kb-brk-r { animation: kbBrkR 2.8s ease-in-out infinite; }
-  .kb-orb { transform-origin: 24px 24px; animation: kbOrb 3.8s linear infinite; }
+  .mchip:hover .medal.kb, .mcard:hover .medal.kb, .btip .medal.kb, #bpanel .medal.kb { filter: drop-shadow(0 2px 6px rgba(0,0,0,.55)); }
+  .mchip:hover .medal.r2:not(.locked), .mcard:hover .medal.r2:not(.locked), .btip .medal.r2, #bpanel .medal.r2 { filter: drop-shadow(0 0 6px rgba(139,92,246,.5)); }
+  .mchip:hover .medal.r3:not(.locked), .mcard:hover .medal.r3:not(.locked), .btip .medal.r3, #bpanel .medal.r3 { filter: drop-shadow(0 0 7px rgba(255,215,120,.48)); }
+  .kb-spin, .kb-spin-slow, .kb-radar, .kb-pulse, .kb-orb { transform-origin: 24px 24px; }
+  .kb-sway-l { transform-origin: 24px 28px; }
+  .kb-sway-r { transform-origin: 24px 26px; }
+  .kb-flow { stroke-dasharray: 18 46; }
+  .kb-twinkle1 { transform-origin: 39px 11px; }
+  .kb-twinkle2 { transform-origin: 10px 36px; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-spin { animation: kbSpin 7s linear infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-spin-slow { animation: kbSpin 11s linear infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-radar { animation: kbSpin 3.2s linear infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-pulse { animation: kbPulse 2.4s ease-in-out infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-sway-l { animation: kbSwayL 3s ease-in-out infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-sway-r { animation: kbSwayR 3s ease-in-out infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-float1 { animation: kbFloat 2.6s ease-in-out infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-float2 { animation: kbFloat 2.6s ease-in-out .9s infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-flow { animation: kbFlow 2.6s linear infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-twinkle1 { animation: kbTwinkle 2.2s ease-in-out infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-twinkle2 { animation: kbTwinkle 2.2s ease-in-out 1.1s infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-blink { animation: kbBlink 1.1s steps(2, start) infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-brk-l { animation: kbBrkL 2.8s ease-in-out infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-brk-r { animation: kbBrkR 2.8s ease-in-out infinite; }
+  :is(.mchip:hover, .mchip:focus-visible, .mcard:hover, .acard:hover, .btip, #bpanel) .kb-orb { animation: kbOrb 3.8s linear infinite; }
   @keyframes kbSpin { to { transform: rotate(360deg); } }
   @keyframes kbPulse { 0%,100% { transform: scale(1); opacity: .9; } 50% { transform: scale(1.09); opacity: 1; } }
   @keyframes kbSwayL { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-7deg); } }
@@ -2540,12 +2546,12 @@
   @keyframes kbBrkL { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1.5px); } }
   @keyframes kbBrkR { 0%,100% { transform: translateX(0); } 50% { transform: translateX(1.5px); } }
   @keyframes kbOrb { 0% { transform: rotate(0deg) translateX(17px) scale(1); } 50% { transform: rotate(180deg) translateX(17px) scale(.75); } 100% { transform: rotate(360deg) translateX(17px) scale(1); } }
-  .pf-badges:not(:empty), .vp-badges:not(:empty) { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 11px; background: rgba(14,14,20,.78); border: 1px solid rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 4px 14px rgba(0,0,0,.35); backdrop-filter: blur(8px); }
+  .pf-badges:not(:empty), .vp-badges:not(:empty) { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 11px; background: rgba(14,14,20,.88); border: 1px solid rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 4px 14px rgba(0,0,0,.35); }
   .mchip.memb { display: inline-grid; vertical-align: -3px; margin-left: 4px; } .mchip.memb:hover { transform: scale(1.22); }
   .bno { display: block; font-style: normal; font-weight: 900; font-size: 15px; letter-spacing: -.3px; background: linear-gradient(90deg, #7ff3e4, #8ea2ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin: 2px 0; }
   .mchip { display: inline-grid; place-items: center; cursor: pointer; transition: transform .18s var(--ease-out); outline: none; }
   .mchip:hover, .mchip:focus-visible { transform: translateY(-2px) scale(1.18); }
-  .btip { position: fixed; z-index: 120; display: flex; align-items: center; gap: 12px; max-width: 286px; padding: 12px 14px; border-radius: 16px; background: rgba(14,14,20,.95); border: 1px solid color-mix(in srgb, var(--rc) 38%, rgba(255,255,255,.1)); box-shadow: 0 18px 44px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.07); backdrop-filter: blur(12px); pointer-events: none; animation: popIn .16s var(--ease-out); }
+  .btip { position: fixed; z-index: 120; display: flex; align-items: center; gap: 12px; max-width: 286px; padding: 12px 14px; border-radius: 16px; background: rgba(14,14,20,.96); border: 1px solid color-mix(in srgb, var(--rc) 38%, rgba(255,255,255,.1)); box-shadow: 0 18px 44px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.07); pointer-events: none; animation: popIn .16s var(--ease-out); }
   .btip::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(120px 60px at 0% 50%, color-mix(in srgb, var(--rc) 24%, transparent), transparent); pointer-events: none; }
   .btip b { display: block; font-size: 14.5px; font-weight: 900; color: #f4f4f6; }
   .btip small { display: block; color: #a1a1aa; font-size: 12.5px; margin-top: 2px; line-height: 1.35; }
@@ -2564,8 +2570,9 @@
   .mcard.got::before { content: ''; position: absolute; inset: 0; background: radial-gradient(140px 90px at 15% 50%, color-mix(in srgb, var(--c1) 22%, transparent), transparent 70%); pointer-events: none; }
   .mcard.got:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--rc) 55%, var(--line)); box-shadow: 0 10px 24px rgba(0,0,0,.35), 0 0 18px color-mix(in srgb, var(--rc) 18%, transparent); }
   .mcard.got.r3 { border-color: color-mix(in srgb, var(--rc) 32%, var(--line)); }
-  .mcard.got.r3::after { content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.11), transparent); animation: shine 3.8s ease-in-out infinite; pointer-events: none; }
-  @keyframes shine { 0%, 60% { transform: translateX(0); } 100% { transform: translateX(475%); } }
+  .mcard.got.r3::after { content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.14), transparent); pointer-events: none; }
+  .mcard.got.r3:hover::after { animation: shine .85s ease forwards; }
+  @keyframes shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
   .mcard > div { position: relative; min-width: 0; flex: 1; }
   .mcard b { display: block; font-size: 14.5px; font-weight: 900; }
   .mcard small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.35; margin-top: 2px; }
@@ -8704,7 +8711,8 @@ function styledNameHTML(txt, ns) {
 }
 function mountProfileEffect(el, fx) {
   if (!el) return;
-  el.querySelector(':scope > .pfx-cv')?.remove();
+  const old = el.querySelector(':scope > .pfx-cv');
+  if (old) { old._stop?.(); old.remove(); }
   if (!fx || fx === 'none' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const cv = document.createElement('canvas');
   cv.className = 'pfx-cv';
@@ -8715,7 +8723,7 @@ function mountProfileEffect(el, fx) {
   let W = Math.max(180, el.clientWidth || 300), H = Math.max(220, el.clientHeight || 400);
   cv.width = W; cv.height = H;
   const rnd = (a, b) => a + Math.random() * (b - a);
-  let pts = [], bolt = null, frame = 0;
+  let pts = [], bolt = null, frame = 0, raf = 0, lastT = 0, running = false;
   if (fx === 'starry') {
     for (let i = 0; i < 40; i++) pts.push({ x: rnd(0, W), y: rnd(0, H * 0.85), r: rnd(0.7, 1.8), ph: rnd(0, 6.28), sp: rnd(0.03, 0.08) });
     pts.shoot = { x: W + 40, y: 20, vx: -5, vy: 2.5, life: 0 };
@@ -8748,8 +8756,8 @@ function mountProfileEffect(el, fx) {
     ctx.moveTo(0, -s); ctx.quadraticCurveTo(0, 0, s, 0); ctx.quadraticCurveTo(0, 0, 0, s);
     ctx.quadraticCurveTo(0, 0, -s, 0); ctx.quadraticCurveTo(0, 0, 0, -s); ctx.fill(); ctx.restore();
   };
-  const tick = () => {
-    if (!cv.isConnected) return;
+  const draw = () => {
+    if (!cv.isConnected) return false;
     frame++;
     if (frame % 30 === 0 && el.clientWidth > 60 && (Math.abs(el.clientWidth - W) > 8 || Math.abs(el.clientHeight - H) > 8)) {
       W = cv.width = el.clientWidth; H = cv.height = el.clientHeight;
@@ -8850,9 +8858,24 @@ function mountProfileEffect(el, fx) {
         if (a > 0.05) star4(p.x, p.y, p.s * a, p.c, a * 0.9);
       }
     }
-    requestAnimationFrame(tick);
+    return true;
   };
-  requestAnimationFrame(tick);
+  const stop = () => { running = false; if (raf) { cancelAnimationFrame(raf); raf = 0; } };
+  const loop = now => {
+    raf = 0;
+    if (!running || !cv.isConnected || document.hidden) { stop(); return; }
+    const mod = el.closest('#modal');
+    if (mod && !mod.classList.contains('open')) { stop(); cv.remove(); return; }
+    if (now - lastT >= 33) { lastT = now; if (!draw()) { stop(); return; } }
+    raf = requestAnimationFrame(loop);
+  };
+  const start = () => { if (running || !cv.isConnected) return; running = true; lastT = 0; raf = requestAnimationFrame(loop); };
+  const onEnter = () => start();
+  const onLeave = () => stop();
+  el.addEventListener('pointerenter', onEnter);
+  el.addEventListener('pointerleave', onLeave);
+  cv._stop = () => { stop(); el.removeEventListener('pointerenter', onEnter); el.removeEventListener('pointerleave', onLeave); };
+  draw();
 }
 const themeOf = u => u?.theme?.length === 2 ? u.theme : null;
 const banStyle = (n, u) => u?.bannerImg ? `background:url('${esc(u.bannerImg)}') center/cover` : themeOf(u) ? `background:linear-gradient(135deg, ${u.theme[0]}, ${u.theme[1]})` : bannerBg(n, u);
@@ -13152,7 +13175,7 @@ function wireOverlaySettings() {
 
 function modal(html, cls = '') { document.querySelector('.bcard')?.remove(); const was = $('#modal').classList.contains('open'), wasSet = was && $('#modal-box').classList.contains('settings'), wasKey = $('#modal-box').dataset.mkey; $('#modal-box').className = 'box ' + cls; $('#modal-box').innerHTML = html; void $('#modal').offsetWidth; $('#modal').classList.add('open'); if (!was) ovOpen('modal', () => { if (saveGuard()) return false; closeModalRaw(); }); msetEnhance(!wasSet || wasKey !== msetKey()); }
 function freshPage(el) { if (!el) return; el.setAttribute('data-fresh', ''); clearTimeout(el._fr); el._fr = setTimeout(() => el.removeAttribute('data-fresh'), 260); }
-function closeModalRaw() { $('#modal').classList.remove('open'); window.onMyActivity = null; }
+function closeModalRaw() { $('#modal').classList.remove('open'); $('#modal').querySelectorAll('.pfx-cv').forEach(c => { c._stop?.(); c.remove(); }); window.onMyActivity = null; }
 function closeModal() { const was = $('#modal').classList.contains('open'); closeModalRaw(); if (ovStack?.some(o => o.name === 'msetpage')) ovClosed('msetpage'); if (was) ovClosed('modal'); }
 $('#modal').onclick = e => { if (e.target.id === 'modal' && !saveGuard()) closeModal(); };
 function form(title, hint, fields, onOk) {
