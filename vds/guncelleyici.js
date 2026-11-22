@@ -143,9 +143,10 @@ function needsRestart(root) {
 }
 // Yeniden başlatma gerektiren güncellemeler toplu ve sakin bir anda kurulur:
 //  - üst üste gelen commit'ler bitsin diye son commit'ten sonra QUIET kadar beklenir (hepsi tek seferde kurulur)
-//  - seste biri varsa (konuşma kesilmesin) en fazla MAX_WAIT kadar beklenir, sonra yine de kurulur
+//  - seste biri varsa en fazla MAX_WAIT kadar sakin bir an beklenir. Sesli bağlantılar kişiden kişiye olduğu ve uygulama
+//    yeniden bağlanınca mevcut bağlantıyı koruduğu için yeniden başlatma konuşmayı kesmez; bu yüzden bekleme kısa.
 // Sadece sayfa dosyaları değiştiyse sunucu hiç yeniden başlamaz, hemen kurulur.
-const QUIET = 3 * 60e3, MAX_WAIT = 25 * 60e3;
+const QUIET = 90e3, MAX_WAIT = 4 * 60e3;
 async function liveStatus() {
   try {
     const key = fs.readFileSync(path.join(APP, 'veri', 'kapat.anahtar'), 'utf8').trim();

@@ -4845,7 +4845,7 @@ function onAuth(res) {
   if (!res.error) { authed = true; setTimeout(flushSendQ, 50); clearTimeout(restartToast); if (restartShown && Date.now() - restartingAt < 120e3) toast('✅ Kanka güncellendi'); restartingAt = 0; restartShown = false; }
   if (res.error) { vcResume = null; store.set('kanka-token', null); showAuth(); return setTimeout(() => $('#auth-err') && authErr(res), 0); }
   if (location.pathname !== APP_PATH) try { history.replaceState(null, '', APP_PATH + location.search); } catch {}
-  if (vcResume) setTimeout(resumeVoice, 300);
+  if (vcHold) setTimeout(voiceRejoin, 150); else if (vcResume) setTimeout(resumeVoice, 300);
   S.minor = !!res.minor; if (res.needVeli) setTimeout(veliGate, 1500);
   store.set('kanka-token', res.token);
   S.me = res.user.name;
@@ -4891,9 +4891,49 @@ socket.on('connect', () => {
   const t = store.get('kanka-token');
   if (t) socket.emit('auth', t, onAuth); else if ($('#app').style.display === 'none') { showAuth(); hideBoot(); }
   // Bağlantı koptu (ör. sunucu güncellendi): sesteysen odayı ve mikrofon/kulaklık durumunu hatırla, giriş doğrulanınca aynen geri dön
-  if (myVoice) { vcResume = { ch: myVoice, muted, deaf, deafWasMuted }; cleanupVoice(true); }
+  // Sunucu güncellenirken: sesli bağlantılar kişiden kişiye (P2P) olduğu için kopmaz. Odayı bırakmıyoruz; yeniden bağlanınca
+  // sunucuya "aynı kişiyim" deyip mevcut bağlantıları yeni kimliğe taşıyoruz (giriş/çıkış sesi yok, konuşma kesilmez).
+  if (myVoice && mySid && mySid !== socket.id && Date.now() - restartingAt < 90e3) { clearTimeout(vcHold?.t); vcHold = { ch: myVoice, old: mySid, muted, deaf, deafWasMuted }; }
+  else if (myVoice) { vcHold = null; vcResume = { ch: myVoice, muted, deaf, deafWasMuted }; cleanupVoice(true); }
+  mySid = socket.id;
 });
-let vcResume = null;
+let vcResume = null, vcHold = null, mySid = null;
+function voiceRejoin() {
+  const h = vcHold; if (!h) return;
+  const fallback = () => { if (vcHold !== h) return; vcHold = null; vcResume = { ch: h.ch, muted: h.muted, deaf: h.deaf, deafWasMuted: h.deafWasMuted }; cleanupVoice(true); resumeVoice(); };
+  if (myVoice !== h.ch || !localStream) return fallback();
+  const to = setTimeout(fallback, 5000); // eski sunucu bu isteği tanımıyorsa normal yoldan geri katıl
+  socket.emit('voiceRejoin', { ch: h.ch, old: h.old }, r => {
+    clearTimeout(to); if (vcHold !== h) return;
+    if (!r || r.error) return fallback();
+    vcHold = null;
+    for (const pc of Object.values(peers)) pc._re = false;
+    for (const p of r.peers || []) { peerNames[p.sid] = p.name; if (p.media) peerMedia[p.sid] = p.media; if (peers[p.sid]) { peers[p.sid]._re = true; continue; } if (p.old && peers[p.old]) rekeyPeer(p.old, p.sid); else makePeer(p.sid); }
+    if (r.stage) stageSt[h.ch] = r.stage;
+    // 25 sn içinde yeni kimliğe geçmeyenler güncelleme sırasında ayrılmış demektir
+    setTimeout(() => { if (myVoice === h.ch) for (const sid of Object.keys(peers)) if (!peers[sid]._re) closePeer(sid); }, 25e3);
+    applyMute(); sendMedia(); renderStage(); pushOverlay();
+  });
+}
+// Bir kişinin bağlantısını eski kimliğinden yenisine taşı (ses/görüntü akışı kesilmeden)
+function rekeyPeer(old, sid) {
+  const pc = peers[old]; if (!pc || old === sid) return;
+  delete peers[old]; peers[sid] = pc; pc._sid = sid; pc._polite = socket.id < sid; pc._re = true;
+  for (const m of [peerNames, peerMedia, peerVideo]) if (old in m) { m[sid] = m[old]; delete m[old]; }
+  if (watchers.has(old)) { watchers.delete(old); watchers.add(sid); }
+  if (watching === old) watching = sid; if (focusSid === old) focusSid = sid;
+  if (vqHist[old]) { vqHist[sid] = vqHist[old]; delete vqHist[old]; }
+  for (const pre of ['a-', 'as-']) { const el = document.getElementById(pre + old); if (el) el.id = pre + sid; }
+  if (vaMeters[old]) { vaMeters[sid] = vaMeters[old]; delete vaMeters[old]; }
+  if (['failed', 'disconnected'].includes(pc.connectionState)) try { pc.restartIce(); } catch {}
+}
+socket.on('voiceRekey', ({ sid, old, name }) => {
+  if (!myVoice) return;
+  peerNames[sid] = name;
+  if (peers[old]) rekeyPeer(old, sid);
+  else if (peers[sid]) peers[sid]._re = true;
+  sendMedia(); renderStage();
+});
 // Sayfa yenilenirken (ör. güncellemede "Yenile") sesteysen odayı ve mikrofon/kulaklığı hatırla; açılınca 2 dakika içindeyse aynen geri dön
 addEventListener('pagehide', () => { try { if (myVoice) sessionStorage.setItem('kanka-vc', JSON.stringify({ ch: myVoice, muted, deaf, deafWasMuted, at: Date.now() })); else sessionStorage.removeItem('kanka-vc'); } catch {} });
 try { const v = JSON.parse(sessionStorage.getItem('kanka-vc') || 'null'); sessionStorage.removeItem('kanka-vc'); if (v?.ch && Date.now() - v.at < 120e3) vcResume = { ...v, reload: true }; } catch {}
@@ -10351,17 +10391,18 @@ window.addEventListener('online', () => { Object.values(peers).forEach(pc => pc.
 navigator.mediaDevices?.addEventListener?.('devicechange', () => { if (myVoice && rawStream && !store.get('kanka-mic') && rawStream.getAudioTracks().every(t => t.readyState === 'ended')) micRecover('Mikrofon değişti, yenisine geçildi'); });
 function makePeer(sid) {
   const pc = new RTCPeerConnection(ICE);
-  Object.assign(pc, { _polite: socket.id < sid, _making: false, _ignore: false });
+  Object.assign(pc, { _sid: sid, _polite: socket.id < sid, _making: false, _ignore: false, _re: true });
   peers[sid] = pc;
   { const rt = bgRaw ? rawTrack() : null; localStream.getTracks().forEach(t => pc.addTrack(rt && t.kind === 'audio' ? rt : t, localStream)); }
   setTimeout(() => { const br = vch()?.c.bitrate === 'high' ? 128000 : 64000; pc.getSenders().filter(x => x.track?.kind === 'audio' && x.track === localStream?.getAudioTracks()[0]).forEach(x => { try { const p = x.getParameters(); if (!p.encodings?.length) p.encodings = [{}]; p.encodings[0].maxBitrate = br; p.encodings[0].priority = p.encodings[0].networkPriority = 'high'; x.setParameters(p).catch(() => {}); } catch {} }); }, 1500);
   if (videoStream) setTimeout(() => feedPeer(sid));
-  pc.onicecandidate = e => e.candidate && socket.emit('signal', { to: sid, data: { ice: e.candidate } });
+  pc.onicecandidate = e => e.candidate && socket.emit('signal', { to: pc._sid, data: { ice: e.candidate } });
   pc.onnegotiationneeded = async () => {
-    try { pc._making = true; await pc.setLocalDescription(); socket.emit('signal', { to: sid, data: { sdp: pc.localDescription } }); }
+    try { pc._making = true; await pc.setLocalDescription(); socket.emit('signal', { to: pc._sid, data: { sdp: pc.localDescription } }); }
     catch (e) { console.warn(e); } finally { pc._making = false; }
   };
   pc.ontrack = e => {
+    const sid = pc._sid;
     const mic = document.getElementById('a-' + sid);
     if (e.track.kind === 'audio' && e.streams[0] && (e.streams[0].id === peerMedia[sid]?.streamId || (mic?.srcObject && mic.srcObject.id !== e.streams[0].id))) {
       let a = document.getElementById('as-' + sid);
@@ -10373,7 +10414,7 @@ function makePeer(sid) {
       a.srcObject = e.streams[0] || new MediaStream([e.track]);
       if (deaf) { a.dataset.dm = ''; }
       applySink(a); a.volume = Math.min(1, (vol[peerNames[sid]] ?? 1) * ovol()); a.muted = deaf || uMuted.has(peerNames[sid]) || stageSilenced(peerNames[sid]);
-      meter(sid, () => peerNames[sid], new MediaStream([e.track]));
+      meter(sid, () => peerNames[pc._sid], new MediaStream([e.track]));
     } else {
       peerVideo[sid] = new MediaStream([e.track]);
       e.track.onunmute = renderStage; e.track.onended = renderStage;
