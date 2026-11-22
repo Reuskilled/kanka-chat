@@ -33,8 +33,11 @@ function syncPath(src, dst, changed, created) {
     for (const n of fs.readdirSync(src)) syncPath(path.join(src, n), path.join(dst, n), changed, created);
     return;
   }
-  if (hash(src) === hash(dst)) return;
   const rel = path.relative(APP, dst);
+  // package-lock.json'ı npm kurulumu sunucuda yeniden yazıyor; bu yüzden sunucudaki dosyayla değil, depodan en son alınan hâliyle karşılaştır.
+  // (Yoksa her güncellemede "değişti" sanılıp paketler kuruluyor ve sunucu boş yere yeniden başlıyordu.)
+  if (rel === 'package-lock.json') { const h = hash(src); if (!st.lockSrc) st.lockSrc = h; if (h === st.lockSrc) return; st.lockSrc = h; }
+  else if (hash(src) === hash(dst)) return;
   if (fs.existsSync(dst)) { const b = path.join(BAK, rel); fs.mkdirSync(path.dirname(b), { recursive: true }); fs.copyFileSync(dst, b); }
   else created.push(rel);
   const tmp = dst + '.yeni';
@@ -131,10 +134,27 @@ async function latestSha() {
   return { sha: j.sha, msg: (j.commit?.message || '').split('\n')[0] };
 }
 
+// Bu sürüm kurulursa sunucu yeniden başlamalı mı? (dosyalara dokunmadan bakar)
+function needsRestart(root) {
+  for (const [a, b] of [['server.js', 'server.js'], ['package.json', 'package.json']]) if (hash(path.join(root, a)) !== hash(path.join(APP, b))) return true;
+  const h = hash(path.join(root, 'package-lock.json')); return !!(h && st.lockSrc && h !== st.lockSrc);
+}
+// Yeniden başlatma gerektiren güncellemeler toplu ve sakin bir anda kurulur:
+//  - üst üste gelen commit'ler bitsin diye son commit'ten sonra QUIET kadar beklenir (hepsi tek seferde kurulur)
+//  - seste biri varsa (konuşma kesilmesin) en fazla MAX_WAIT kadar beklenir, sonra yine de kurulur
+// Sadece sayfa dosyaları değiştiyse sunucu hiç yeniden başlamaz, hemen kurulur.
+const QUIET = 3 * 60e3, MAX_WAIT = 25 * 60e3;
+async function liveStatus() {
+  try {
+    const key = fs.readFileSync(path.join(APP, 'veri', 'kapat.anahtar'), 'utf8').trim();
+    const r = await fetch(`http://127.0.0.1:${PORT}/api/_durum`, { headers: { 'x-kapat-anahtar': key }, signal: AbortSignal.timeout(4000) });
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
+}
 async function checkCode() {
   const j = await latestSha(); if (!j) return;
   if (j.sha === st.sha || j.sha === st.badSha) return; // hatalı sürüm bir sonraki commit'e kadar tekrar denenmez
-  log(`Yeni sürüm bulundu ${j.sha.slice(0, 7)}${j.msg ? ': ' + j.msg : ''}`);
+  if (st.waitSha !== j.sha) log(`Yeni sürüm bulundu ${j.sha.slice(0, 7)}${j.msg ? ': ' + j.msg : ''}`);
   const zr = await fetch(`https://codeload.github.com/${REPO}/zip/${j.sha}`, { headers: H, signal: AbortSignal.timeout(120000) });
   if (!zr.ok) throw new Error('Arşiv indirilemedi: ' + zr.status);
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kanka-'));
@@ -146,6 +166,14 @@ async function checkCode() {
     const root = path.join(tmp, 'x', fs.readdirSync(path.join(tmp, 'x'))[0]);
     const errs = validate(root);
     if (errs.length) { st.badSha = j.sha; save(); log(`KURULMADI ${j.sha.slice(0, 7)}: kod hatalı, canlı sürüm aynen çalışmaya devam ediyor. ${errs.join(' ; ')}`); return; }
+    if (needsRestart(root)) {
+      if (st.waitSha !== j.sha) { if (!st.waitSha) st.waitFirst = Date.now(); st.waitSha = j.sha; st.waitSeen = Date.now(); save(); log(`${j.sha.slice(0, 7)} sunucuyu yeniden başlatacak; sakin bir an bekleniyor`); }
+      const now = Date.now(), lv = await liveStatus();
+      const quiet = now - st.waitSeen >= QUIET, calm = !lv || !lv.ses, late = now - (st.waitFirst || now) >= MAX_WAIT;
+      if (!(quiet && (calm || late))) return;
+      log(`Kuruluyor (${late && !calm ? 'en uzun bekleme doldu' : 'sakin an'}${lv ? `, seste ${lv.ses}, bağlı ${lv.bagli}` : ''})`);
+    }
+    st.waitSha = null; st.waitFirst = null;
     const changed = [], created = [];
     fs.rmSync(BAK, { recursive: true, force: true }); fs.mkdirSync(BAK, { recursive: true });
     for (const [a, b] of SYNC) syncPath(path.join(root, a), path.join(APP, b), changed, created);
@@ -193,8 +221,8 @@ function npmInstall() {
       if (process.env.APPDATA) fs.mkdirSync(path.join(process.env.APPDATA, 'npm'), { recursive: true });
       const npm = path.join(path.dirname(process.execPath), 'npm.cmd');
       // /s ile cmd komutun ilk ve son tırnağını atar: bütün komut ayrıca tırnağa alınmazsa "C:\Program Files" boşlukta bölünür ve kurulum hiç çalışmaz
-      execFileSync('cmd.exe', ['/d', '/s', '/c', `""${fs.existsSync(npm) ? npm : 'npm'}" install --omit=dev --no-audit --no-fund"`], { cwd: APP, stdio: ['ignore', out, out], windowsHide: true, windowsVerbatimArguments: true, timeout: 10 * 60e3 });
-    } else execFileSync('npm', ['install', '--omit=dev', '--no-audit', '--no-fund'], { cwd: APP, stdio: ['ignore', out, out], timeout: 10 * 60e3 });
+      execFileSync('cmd.exe', ['/d', '/s', '/c', `""${fs.existsSync(npm) ? npm : 'npm'}" install --omit=dev --no-audit --no-fund --no-save"`], { cwd: APP, stdio: ['ignore', out, out], windowsHide: true, windowsVerbatimArguments: true, timeout: 10 * 60e3 });
+    } else execFileSync('npm', ['install', '--omit=dev', '--no-audit', '--no-fund', '--no-save'], { cwd: APP, stdio: ['ignore', out, out], timeout: 10 * 60e3 });
   } finally { fs.closeSync(out); }
 }
 

@@ -4798,14 +4798,14 @@ const tfaField = () => S.tfa ? `<label class="rp-lbl">İki adımlı doğrulama k
 const tfaVal = () => $('#tfa-f')?.value.trim() || undefined;
 // Bağlantı yokken ya da yeniden giriş yapılmadan gönderilenler (mesaj, düzenleme, tepki) sıraya alınır,
 // giriş doğrulanınca gönderilir. Önceden güncelleme anında yazılan mesaj "giriş yap" hatasıyla kayboluyordu.
-var authed = false, restartingAt = 0, sendQ = [];
+var authed = false, restartingAt = 0, restartToast = null, restartShown = false, sendQ = [], everAuthed = '', softUntil = 0;
 const QUEUED = new Set(['message', 'edit', 'react', 'delete', 'pin']);
 { const raw = socket.emit.bind(socket);
   socket.emit = (ev, ...a) => { if (QUEUED.has(ev) && (!socket.connected || !authed)) { if (sendQ.length < 50) sendQ.push([ev, a]); return socket; } return raw(ev, ...a); }; }
 function flushSendQ() { const q = sendQ; sendQ = []; for (const [ev, a] of q) socket.emit(ev, ...a); }
 function onAuth(res) {
   hideBoot();
-  if (!res.error) { authed = true; setTimeout(flushSendQ, 50); if (restartingAt && Date.now() - restartingAt < 60e3) { restartingAt = 0; toast('✅ Kanka güncellendi'); } }
+  if (!res.error) { authed = true; setTimeout(flushSendQ, 50); clearTimeout(restartToast); if (restartShown && Date.now() - restartingAt < 120e3) toast('✅ Kanka güncellendi'); restartingAt = 0; restartShown = false; }
   if (res.error) { vcResume = null; store.set('kanka-token', null); showAuth(); return setTimeout(() => $('#auth-err') && authErr(res), 0); }
   if (location.pathname !== APP_PATH) try { history.replaceState(null, '', APP_PATH + location.search); } catch {}
   if (vcResume) setTimeout(resumeVoice, 300);
@@ -4841,6 +4841,9 @@ function onAuth(res) {
   const invite = new URLSearchParams(location.search).get('davet');
   if (invite) { history.replaceState(null, '', APP_PATH); return S.servers.some(x => x.invite === invite) ? selectServer(S.servers.find(x => x.invite === invite).id) : joinInviteNow(invite); }
   const last = S.view === 'dm' ? null : S.server && S.servers.find(s => s.id === S.server.id);
+  // Yeniden bağlanma (ör. sunucu güncellendi): açık sohbet silinip baştan yüklenmesin, yerinde tazelensin
+  const reAuth = everAuthed === S.me; if (reAuth) softUntil = Date.now() + 3000; everAuthed = S.me;
+  if (!reAuth && !S.server && !S.channel && restoreView()) return;
   if (S.view === 'dm' && S.channel) openChat(S.channel.id, S.channel.with);
   else if (S.view === 'dm') showFriends(friendTab);
   else if (S.view === 'discover') showDiscover();
@@ -7574,12 +7577,13 @@ function enterRoom(id, placeholder, hello, isRetry) {
   if (draftFor !== id) { forumPostId = null; forumNewOpen = false; forumMenuOpen = false; forumRulesOpen = false; forumQ = ''; forumDraftTitle = ''; forumDraftBody = ''; forumReplyDraft = ''; }
   setTimeout(() => S.channel?.id === id && renderCallBar(), 0);
   if (draftFor && draftFor !== id) { const v = $('#input').value; v.trim() && !/^\/\S*$/.test(v.trim()) ? drafts[draftFor] = v : delete drafts[draftFor]; }
+  const soft = Date.now() < softUntil && draftFor === id && S.msgs.length > 0; softUntil = 0;
   if (draftFor !== id) { $('#input').value = drafts[id] || ''; requestAnimationFrame(growInput); }
   hideSuggest(); $('#cmdhint').style.display = 'none'; // oda değişince komut / etiket önerisi açık kalmasın
   draftFor = id;
   if (S.view === 'server' && S.server) { lastCh[S.server.id] = id; store.set('kanka-lastch', JSON.stringify(lastCh)); }
   $('#jumpnew')?.remove();
-  helloHTML = hello; cancelReply();
+  helloHTML = hello; if (!soft) cancelReply();
   $('#compose').style.display = 'flex';
   $('#input').dataset.ph = placeholder; $('#input').placeholder = shortPh(placeholder);
   $('#input').disabled = /^(Susturuldun|Bu oda salt okunur)/.test(placeholder);
@@ -7587,9 +7591,10 @@ function enterRoom(id, placeholder, hello, isRetry) {
   typers.clear(); renderTyping();
   $('#e2e-bar')?.remove(); setTimeout(() => E2E.enter(id), 0); // şifreli sohbet: kilit simgesi, anahtar ve eski mesajların şifrelenmesi
   // yeni oda yüklenene kadar eski odanın mesajları/boş ekranı görünmesin
-  S.msgs = []; histMore = false; roomLoading = id; $('#messages').innerHTML = '<div class="loadmore">Mesajlar yükleniyor…</div>';
+  if (!soft) { S.msgs = []; histMore = false; roomLoading = id; $('#messages').innerHTML = '<div class="loadmore">Mesajlar yükleniyor…</div>'; }
   joinTimer = setTimeout(() => {
-    if (seq !== joinSeq || roomLoading !== id) return;
+    if (seq !== joinSeq || (roomLoading !== id && !soft)) return;
+    if (soft) return;
     if (!isRetry && socket.connected) return enterRoom(id, placeholder, hello, true);
     roomLoading = null;
     $('#messages').innerHTML = `<div class="loadmore">Mesajlar gecikti. <button type="button" class="btns2" id="retry-join" style="margin-left:8px;padding:5px 12px">Yeniden dene</button></div>`;
@@ -7601,6 +7606,13 @@ function enterRoom(id, placeholder, hello, isRetry) {
     if (r?.messages?.some(m => m.enc)) await Promise.race([E2E.prep(id, r.messages).catch(() => {}), new Promise(res => setTimeout(res, 6000))]);
     if (seq !== joinSeq || draftFor !== id || S.channel?.id !== id) { if (roomLoading === id && seq === joinSeq) roomLoading = null; return; }
     roomLoading = null;
+    if (soft && (!r || r.error)) return;
+    if (soft) { // yerinde tazele: kaydırma yeri korunur, odak/klavye açılmaz
+      const box = $('#messages'), fromBot = box.scrollHeight - box.scrollTop - box.clientHeight, top = box.scrollTop;
+      S.msgs = r.messages; S.playlist = r.playlist; histMore = !r.noHistory && r.messages.length >= 150; S.noHistory = !!r.noHistory; setWatch(r.watch);
+      renderMessages(false); box.scrollTop = fromBot < 120 ? box.scrollHeight : top; if (document.visibilityState === 'visible' && document.hasFocus()) markRead(id);
+      return;
+    }
     if (!r || r.error) { $('#messages').innerHTML = `<div class="loadmore">${esc(r?.error || 'Mesajlar yüklenemedi, sayfayı yenile')}</div>`; return r && toast(r.error); }
     S.msgs = r.messages; S.playlist = r.playlist;
     histMore = !r.noHistory && r.messages.length >= 150; S.noHistory = !!r.noHistory;
@@ -11608,13 +11620,13 @@ document.body.classList.toggle('lowfx', lowFx());
 
 // ================= Güncelleme uyarıları =================
 let myBuild = null, updKind = null;
-function showUpdate(kind) {
+function showUpdate(kind, quiet) {
   if (updKind === 'app') return; // masaüstü güncellemesi öncelikli
   updKind = kind;
   $('#upd-t').textContent = kind === 'app' ? 'Yeni Kanka Chat sürümü hazır' : 'Kanka Chat güncellendi';
   $('#upd-s').textContent = kind === 'app' ? 'Yeniden başlatınca birkaç saniyede kurulur' : 'Yeni özellikler ve düzeltmeler için yenile';
   $('#upd-go').textContent = kind === 'app' ? 'Şimdi yeniden başlat' : 'Yenile';
-  $('#updbar').classList.add('on'); playSound('join');
+  $('#updbar').classList.add('on'); if (!quiet) playSound('join');
 }
 $('#upd-go').onclick = () => {
   if (updKind === 'app') { $('#upd-go').textContent = 'Kuruluyor…'; window.kankaDesktop.installUpdate(); }
@@ -11624,14 +11636,49 @@ $('#upd-go').onclick = () => {
 async function safeReload() {
   const btn = $('#upd-go'); if (btn) { btn.disabled = true; btn.textContent = 'Bekle…'; }
   for (let i = 0; i < 30; i++) {
-    try { const r = await fetch('/api/surum', { cache: 'no-store' }); if (r.ok) return location.reload(); } catch {}
+    try { const r = await fetch('/api/surum', { cache: 'no-store' }); if (r.ok) { saveView(); return location.reload(); } } catch {}
     if (btn) btn.textContent = 'Sunucu açılıyor…';
     await new Promise(r => setTimeout(r, 2000));
   }
   if (btn) { btn.disabled = false; btn.textContent = 'Yenile'; } toast('Sunucuya ulaşılamadı, birazdan tekrar dene');
 }
-$('#upd-later').onclick = () => { $('#updbar').classList.remove('on'); const k = updKind; updKind = null; setTimeout(() => k === 'web' && myBuild && showUpdate('web'), 30 * 60e3); };
-socket.on('build', b => { if (!b) return; if (myBuild === null) myBuild = b; else if (b !== myBuild) showUpdate('web'); });
+$('#upd-later').onclick = () => { $('#updbar').classList.remove('on'); const k = updKind; updKind = null; if (k === 'web') pendingAt = Date.now(); }; // sessiz yenileme beklemeye devam eder, 45 dk sonra tekrar hatırlatır
+// Sayfa yenilenince kaldığın yere dön (sessiz güncelleme ve "Yenile" düğmesi için)
+function saveView() { try { sessionStorage.setItem('kanka-geri', JSON.stringify({ v: S.view, sid: S.server?.id || null, cid: S.channel?.id || null, w: S.channel?.with || null, ft: typeof friendTab !== 'undefined' ? friendTab : null, at: Date.now() })); } catch {} }
+function restoreView() {
+  let g = null; try { g = JSON.parse(sessionStorage.getItem('kanka-geri') || 'null'); sessionStorage.removeItem('kanka-geri'); } catch {}
+  if (!g || Date.now() - g.at > 5 * 60e3) return false;
+  try {
+    if (g.v === 'server' && g.sid && S.servers.some(x => x.id === g.sid)) { selectServer(g.sid, g.cid || undefined); return true; }
+    if (g.v === 'dm' && g.cid) { S.view = 'dm'; openChat(g.cid, g.w); return true; }
+    if (g.v === 'dm') { openDMHome(); if (g.ft) showFriends(g.ft); return true; }
+    if (g.v === 'discover') { showDiscover(); return true; }
+  } catch {}
+  return false;
+}
+// Yeni sayfa sürümü: herkesin önüne "Yenile" çıkarmak yerine uygun bir anda sessizce yenilenir
+// (sekme arka plandayken ya da bir süredir dokunulmadıysa; seste, yazarken veya bir pencere açıkken asla).
+// 45 dakika içinde uygun an gelmezse küçük uyarı (sessiz) gösterilir.
+let pendingBuild = null, pendingAt = 0, hiddenAt = document.hidden ? Date.now() : 0;
+document.addEventListener('visibilitychange', () => { hiddenAt = document.hidden ? Date.now() : 0; });
+function safeToReload() {
+  if (myVoice || vcResume || !authed) return false;
+  if ($('#input')?.value.trim() || document.querySelector('#attach:not([hidden])')) return false;
+  if ($('#modal')?.classList.contains('open') || document.querySelector('.vpop, #msheet.open')) return false;
+  if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName) && document.activeElement.value) return false;
+  if (typeof calling !== 'undefined' && calling) return false;
+  const away = (hiddenAt && Date.now() - hiddenAt > 20e3) || Date.now() - lastAct > 4 * 60e3;
+  return away;
+}
+setInterval(async () => {
+  if (!pendingBuild || updKind) return;
+  if (safeToReload()) {
+    try { const r = await fetch('/api/surum', { cache: 'no-store' }); if (!r.ok || !safeToReload()) return; } catch { return; }
+    saveView(); location.reload(); return;
+  }
+  if (Date.now() - pendingAt > 45 * 60e3) showUpdate('web', true);
+}, 5000);
+socket.on('build', b => { if (!b) return; if (myBuild === null) myBuild = b; else if (b !== myBuild) { if (!pendingBuild) pendingAt = Date.now(); pendingBuild = b; } });
 window.kankaDesktop?.onUpdateReady?.(() => showUpdate('app'));
 
 // ================= Sesler =================
@@ -13357,7 +13404,8 @@ socket.on('reportNew', r => {
 });
 socket.on('disconnect', why => { authed = false; if (why === 'io server disconnect') setTimeout(() => socket.connect(), 900); });
 // Sunucu güncellenirken (birkaç saniye) bağlantı kopar: kullanıcıya haber ver, ses/oda kendiliğinden geri gelir
-socket.on('serverRestart', () => { restartingAt = Date.now(); toast('🔄 Kanka güncelleniyor, birkaç saniye içinde geri bağlanacak'); });
+// Sunucu birkaç saniyeliğine yeniden başlıyor: kısa sürerse kimse fark etmesin diye uyarı ancak gecikirse çıkar
+socket.on('serverRestart', () => { restartingAt = Date.now(); clearTimeout(restartToast); restartToast = setTimeout(() => { if (authed) return; restartShown = true; toast('🔄 Kanka güncelleniyor, birkaç saniye içinde geri bağlanacak'); }, 7000); });
 socket.on('renamed', ({ to }) => { // adın başka bir cihazdan değişti: yeni adla yeniden aç
   toast(`Kullanıcı adın <b>${esc(to)}</b> olarak değişti. Sayfa yenileniyor…`, null, true); setTimeout(() => location.reload(), 1300);
 });
