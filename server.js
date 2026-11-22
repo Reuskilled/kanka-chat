@@ -2253,6 +2253,105 @@ function notifyUser(name, n) {
 const presenceList = () => [...onlineNames().map(n => { const st = statusOf(n); return st && onMobile(n) ? [n, st, 'm'] : [n, st]; }).filter(x => x[1]),
   ...botsOnline().map(n => [n, db.users[n]?.presence || 'online']).filter(x => x[1] !== 'invisible')]; // geliştirici botları: ağ geçidine bağlıyken çevrimiçi
 function botsOnline() { const out = []; try { for (const [appId, set] of botConns) if ([...set].some(c => c.ready) && db.apps?.[appId]?.bot) out.push(db.apps[appId].bot); } catch {} return out; }
+// ---------- Yıllık sayaçlar (Kanka Wrapped ve zevk eşleşmesi için) ----------
+// Sadece toplam sayılar tutulur (hangi şarkıyı kaç dakika dinledin, kiminle kaç dakika seste kaldın…); mesaj içeriği tutulmaz.
+// Ayrı dosyada (istatistik.db) durur, data.json'u büyütmez. Bellekte biriktirilir, dakikada bir topluca yazılır.
+// Kullanıcı Ayarlar › Gizlilik'ten kapatırsa (u.wrapOff) onun için hiçbir şey sayılmaz.
+// Anahtarlar: msg, msgh:<saat>, msgsv:<sunucu>, msgch:<oda>, dm:<kişi>, em:<emoji>, vs (ses dk), vch:<oda>, vsv:<sunucu>, vk:<kişi>,
+//   mz (müzik dk), ma:<sanatçı>, ms:<sanatçı — şarkı>, oy (oyun dk), og:<oyun>, gun (aktif gün), ar:<oyun>:o / :w (Arena)
+// Sunucu toplamları "#<sunucu id>" adıyla: msg, vs, m:<üye>, v:<üye>, ch:<oda>, vch:<oda>, em:<emoji>, h:<saat>
+const STAT = (() => {
+  const pend = new Map(); let sdb = null, up = null;
+  if (SQLITE_OK) try {
+    const { DatabaseSync } = require('node:sqlite');
+    sdb = new DatabaseSync(path.join(DATA_DIR, 'istatistik.db'));
+    sdb.exec('PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=2000;'
+      + 'CREATE TABLE IF NOT EXISTS sayac (y INTEGER NOT NULL, u TEXT NOT NULL, k TEXT NOT NULL, v REAL NOT NULL, PRIMARY KEY (y, u, k)) WITHOUT ROWID;');
+    up = sdb.prepare('INSERT INTO sayac (y, u, k, v) VALUES (?, ?, ?, ?) ON CONFLICT(y, u, k) DO UPDATE SET v = v + excluded.v');
+  } catch (e) { console.error('istatistik.db açılamadı:', e.message); sdb = null; }
+  const yearTR = (t = Date.now()) => new Date(t + 3 * 3600e3).getUTCFullYear();
+  const off = n => { const u = db.users[n]; return !u || u.bot || !!u.wrapOff; };
+  const K = s => String(s).slice(0, 160);
+  function add(u, k, n = 1) { if (!sdb || !u || !k || !n) return; const key = u + '\u0001' + K(k); pend.set(key, (pend.get(key) || 0) + n); }
+  function flush() {
+    if (!sdb || !pend.size) return; const y = yearTR(), rows = [...pend]; pend.clear();
+    try { sdb.exec('BEGIN'); for (const [key, v] of rows) { const i = key.indexOf('\u0001'); up.run(y, key.slice(0, i), key.slice(i + 1), v); } sdb.exec('COMMIT'); }
+    catch (e) { try { sdb.exec('ROLLBACK'); } catch {} console.error('istatistik yazılamadı:', e.message); }
+  }
+  setInterval(flush, 60e3);
+  const qTop = () => sdb.prepare('SELECT k, v FROM sayac WHERE y = ? AND u = ? AND k >= ? AND k < ? ORDER BY v DESC LIMIT ?');
+  const qAll = () => sdb.prepare('SELECT k, v FROM sayac WHERE y = ? AND u = ?');
+  let _top = null, _all = null;
+  return {
+    on: () => !!sdb, yearTR, off, add, flush,
+    // kişi için (sayılmıyorsa hiçbir şey eklenmez)
+    me(n, k, v = 1) { if (!off(n)) add(n, k, v); },
+    top(u, y, prefix, lim = 10) { if (!sdb) return []; flush(); _top ||= qTop(); return _top.all(y, u, prefix, prefix + '￿', lim).map(r => ({ k: r.k.slice(prefix.length), v: r.v })); },
+    all(u, y) { if (!sdb) return {}; flush(); _all ||= qAll(); const o = {}; for (const r of _all.all(y, u)) o[r.k] = r.v; return o; },
+    wipe(u) { if (!sdb) return; for (const k of [...pend.keys()]) if (k.startsWith(u + '\u0001')) pend.delete(k); try { sdb.prepare('DELETE FROM sayac WHERE u = ?').run(u); } catch {} },
+    close() { try { flush(); sdb?.close(); } catch {} },
+  };
+})();
+// Mesaj sayaçları: saat (TR), sunucu, oda, DM kişisi, kullanılan emojiler
+const EMOJI_RE = /\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}])*/gu;
+const statDay = new Map();
+function statMsg(me, chId, text) {
+  if (!STAT.on() || !db.users[me] || db.users[me].bot) return;
+  const h = new Date(Date.now() + 3 * 3600e3).getUTCHours(), mine = !STAT.off(me), sv = serverOf(chId), ems = text ? (String(text).match(EMOJI_RE) || []).slice(0, 12) : [];
+  if (mine) {
+    STAT.add(me, 'msg'); STAT.add(me, 'msgh:' + h);
+    const d = dayKeyTR(); if (statDay.get(me) !== d) { statDay.set(me, d); STAT.add(me, 'gun'); }
+    if (sv) { STAT.add(me, 'msgsv:' + sv.id); STAT.add(me, 'msgch:' + chId); }
+    else if (chId.startsWith('dm:')) { const o = chId.slice(3).split('|').find(n => n !== me); if (o && !STAT.off(o)) STAT.add(me, 'dm:' + o); }
+    for (const e of ems) STAT.add(me, 'em:' + e);
+  }
+  if (sv && !sv.public) { const g = '#' + sv.id; STAT.add(g, 'msg'); STAT.add(g, 'h:' + h); STAT.add(g, 'ch:' + chId); if (mine) STAT.add(g, 'm:' + me); for (const e of ems) STAT.add(g, 'em:' + e); }
+}
+// Dakikada bir: dinlenen müzik ve oynanan oyun (masaüstü uygulamasının bildirdiği)
+setInterval(() => {
+  if (!STAT.on()) return; const now = Date.now();
+  for (const u of Object.values(db.users)) {
+    const a = u.auto; if (!a || a.gone || now - a.at > 45e3 || STAT.off(u.name)) continue;
+    if (a.music?.title) { const ar = (a.music.artist || '').split(/\s*(?:,|&| feat\.? | ft\.? | x )\s*/i)[0].trim(); STAT.add(u.name, 'mz'); if (ar) { STAT.add(u.name, 'ma:' + ar); STAT.add(u.name, 'ms:' + ar + ' — ' + a.music.title); } }
+    if (a.game?.name) { STAT.add(u.name, 'oy'); STAT.add(u.name, 'og:' + a.game.name); }
+    if ((a.music?.title || a.game?.name) && statDay.get(u.name) !== dayKeyTR()) { statDay.set(u.name, dayKeyTR()); STAT.add(u.name, 'gun'); }
+  }
+}, 60e3);
+// Zevk profili: sanatçı ve oyun dakikaları (bu yıl + geçen yılın yarısı), 10 dakika önbellekli
+const tasteCache = new Map();
+function tasteOf(n) {
+  const c = tasteCache.get(n); if (c && Date.now() - c.at < 600e3) return c;
+  const y = STAT.yearTR(), art = new Map(), game = new Map(), arena = new Map();
+  if (!STAT.off(n)) for (const [yy, w] of [[y, 1], [y - 1, 0.5]]) {
+    for (const r of STAT.top(n, yy, 'ma:', 200)) art.set(r.k, (art.get(r.k) || 0) + r.v * w);
+    for (const r of STAT.top(n, yy, 'og:', 60)) game.set(r.k, (game.get(r.k) || 0) + r.v * w);
+    for (const r of STAT.top(n, yy, 'ar:', 40)) if (r.k.endsWith(':o')) arena.set(r.k.slice(0, -2), (arena.get(r.k.slice(0, -2)) || 0) + r.v * w);
+  }
+  const t = { at: Date.now(), art, game, arena }; tasteCache.set(n, t); return t;
+}
+// Kosinüs benzerliği (dakikaların logaritması: 10 saat dinlenen sanatçı 1 saatlikten 10 kat değil ~2 kat ağır)
+function cosSim(a, b) {
+  if (!a.size || !b.size) return null;
+  let dot = 0, na = 0, nb = 0; const w = v => Math.log1p(v);
+  for (const [k, v] of a) { na += w(v) ** 2; const o = b.get(k); if (o) dot += w(v) * w(o); }
+  for (const v of b.values()) nb += w(v) ** 2;
+  return na && nb ? dot / Math.sqrt(na * nb) : 0;
+}
+const shared = (a, b, min = 3) => [...a].filter(([k, v]) => v >= min && (b.get(k) || 0) >= min).sort((x, y) => Math.min(y[1], b.get(y[0])) - Math.min(x[1], b.get(x[0]))).map(([k]) => k);
+// İki kişinin uyumu: müzik ve oyun ayrı ayrı (yüzde), toplam, ortak sanatçılar/oyunlar ve "neden önerildi" yazısı
+function compat(a, b) {
+  const ua = db.users[a], ub = db.users[b]; if (!ua || !ub || ua.matchOff || ub.matchOff) return null;
+  const A = tasteOf(a), B = tasteOf(b);
+  const pct = x => x == null ? null : Math.round(100 * Math.sqrt(Math.max(0, Math.min(1, x))));
+  const mz = pct(cosSim(A.art, B.art)), og = pct(cosSim(A.game, B.game)), ar = pct(cosSim(A.arena, B.arena));
+  const parts = [[mz, 0.5], [og, 0.35], [ar, 0.15]].filter(([v]) => v != null);
+  if (!parts.length) return null;
+  const sw = parts.reduce((s, [, w]) => s + w, 0), total = Math.round(parts.reduce((s, [v, w]) => s + v * w, 0) / sw);
+  const sanatci = shared(A.art, B.art).slice(0, 5), oyun = shared(A.game, B.game, 10).slice(0, 4), arena = shared(A.arena, B.arena, 1).slice(0, 3);
+  const why = [mz != null && mz >= 20 ? `%${mz} müzik uyumu` : '', sanatci.length ? `${sanatci.length} ortak sanatçı` : '', oyun.length === 1 ? `ikiniz de ${oyun[0]}` : oyun.length ? `${oyun.length} ortak oyun` : '', arena.length ? `Arena'da ${arena[0]}` : ''].filter(Boolean).join(' · ');
+  return { uyum: total, muzik: mz, oyun: og, arenaUyum: ar, sanatci, oyunlar: oyun, arena, neden: why };
+}
+
 // Odadaki sohbet ne zamandır sürüyor: oda boşken doluya geçince başlar, tamamen boşalınca sıfırlanır
 // Seste geçen süre (kişi başı, gün gün): Yuva'daki "Bu hafta seste" grafiği için. Dakikada bir sayılır, 21 gün tutulur.
 const dayKeyTR = (t = Date.now()) => new Date(t + 3 * 3600e3).toISOString().slice(0, 10);
@@ -2260,6 +2359,13 @@ setInterval(() => {
   const who = new Set(); for (const [, m] of voice) for (const n of m.values()) who.add(n);
   if (!who.size) return;
   const d = dayKeyTR(), cut = dayKeyTR(Date.now() - 21 * 864e5);
+  for (const [ch, m] of voice) { // yıllık sayaçlar: ses dakikası, oda, sunucu, birlikte seste olunan kişiler
+    const f = ch.startsWith('call:') ? null : findChannel(ch), names = [...new Set(m.values())], afk = f && (f.s.afk?.ch || f.s.afk) === ch;
+    if (afk) continue;
+    for (const n of names) { if (STAT.off(n)) continue; STAT.add(n, 'vs'); if (f) { STAT.add(n, 'vch:' + ch); STAT.add(n, 'vsv:' + f.s.id); }
+      if (names.length <= 16) for (const o of names) if (o !== n && !STAT.off(o)) STAT.add(n, 'vk:' + o); }
+    if (f && !f.s.public) { const g = '#' + f.s.id; STAT.add(g, 'vs', names.length); STAT.add(g, 'vch:' + ch, names.length); for (const n of names) if (!STAT.off(n)) STAT.add(g, 'v:' + n); }
+  }
   for (const n of who) { const u = db.users[n]; if (!u) continue; u.firstVoiceAt ||= Date.now(); u.vtot = (u.vtot || 0) + 1; const v = (u.vmin ||= {}); v[d] = (v[d] || 0) + 1; for (const k of Object.keys(v)) if (k < cut) delete v[k]; }
   for (const [ch, m] of voice) { // sesli XP
     if (m.size < 2) continue; const f = ch.startsWith('call:') ? null : findChannel(ch); if (f && (f.s.afk?.ch || f.s.afk) === ch) continue;
@@ -2452,6 +2558,7 @@ function postMessage(me, chId, p = {}) {
     const srvCh = !chId.startsWith('dm:') && !chId.startsWith('g:'), f0 = srvCh ? findChannel(chId) : null, crowd = !srvCh || (f0 && membersOf(f0.s).length >= 3);
     if (real && fresh && crowd && now - (u.xpAt || 0) >= 60e3) { u.xpAt = now; addXp(me, 3 + Math.floor(Math.random() * 4), 'mesaj', f0?.s || null, chId); }
     if (txt) u.xpLast = txt.slice(0, 200); }
+  if (!p.scheduled && !p.xfrom) statMsg(me, chId, msg.text);
   u.msgs = (u.msgs || 0) + 1; u.firstMsgAt ||= Date.now();
   const hr = new Date().getHours(); if (hr >= 0 && hr < 5) u.night = true;
   save();
@@ -2767,6 +2874,7 @@ setInterval(() => { // eski şikayetleri ve süresi dolan sıfırlama linklerini
 
 // ---------- Hesap silme (KVKK) ----------
 function deleteUserData(name) {
+  STAT.wipe(name); tasteCache.delete(name);
   for (const [fid, f] of Object.entries(db.files || {})) if (f.owner === name) { try { fs.unlinkSync(path.join(FILES, fid)); } catch {} delete db.files[fid]; }
   for (const s of [...db.servers]) {
     if (s.owner === name && !s.public) {
@@ -3000,6 +3108,7 @@ function gracefulShutdown(why = 'güncelleme') {
   // Botlara: op 7 = yeniden bağlan (oturum korunur), 1012 = sunucu yeniden başlıyor
   for (const set of botConns.values()) for (const conn of set) { gwSend(conn, { op: 7, d: { bekle: 4000, sebep: 'Sunucu güncelleniyor' } }); try { conn.ws.close(1012, 'Sunucu güncelleniyor, birkaç saniye sonra yeniden bağlan'); } catch {} }
   try { flushDb(); } catch (e) { console.error('Kapanışta kayıt:', e.message); }
+  STAT.close();
   setTimeout(() => process.exit(0), 700);
 }
 // Güncelleyici sunucuyu öldürmeden önce bunu çağırır (sadece bu bilgisayardan, anahtarla)
@@ -3511,7 +3620,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: seenBy(flagsState(), name), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: seenBy(voiceState(), name), voiceAge: seenBy(voiceAges(), name), calls: callsFor(name), live: seenBy(liveState(), name), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
+      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 
@@ -4517,6 +4626,7 @@ io.on('connection', socket => {
     i >= 0 ? arr.splice(i, 1) : arr.push(me);
     if (!arr.length) delete msg.reactions[emoji];
     update(cur, msg); botReact(cur, msg, emoji, me, i < 0);
+    if (i < 0 && !cm) { STAT.me(me, 'em:' + emoji); const sv = serverOf(cur); if (sv && !sv.public) STAT.add('#' + sv.id, 'em:' + emoji); }
   });
 
   socket.on('edit', ({ msgId, text, enc, fc } = {}) => {
@@ -5456,7 +5566,35 @@ io.on('connection', socket => {
       const sv = servers.get(n) || [], mf = friendsOf.get(n) || 0;
       return { name: n, sunucular: sv.slice(0, 3), sunucuSayisi: sv.length, ortakArkadas: mf, puan: mf * 3 + Math.min(sv.length, 5) * 2 + (isOnlineName(n) ? 1 : 0) };
     }).sort((a, b) => b.puan - a.puan).slice(0, 30);
-    cb({ ok: true, sohbet: chatted.slice(0, 8).map(c => ({ name: c.name, last: c.last, n: c.n })), oneriler: cand });
+    // Zevkine göre: dinlediğin müzik, oynadığın oyunlar ve Arena (sadece aynı yaş grubundan, son 30 günde aktif olanlar)
+    let uyumlu = [];
+    if (!u.matchOff && STAT.on()) {
+      const me_ = tasteOf(me);
+      if (me_.art.size || me_.game.size || me_.arena.size) {
+        const cutoff = Date.now() - 30 * 864e5;
+        uyumlu = Object.values(db.users).filter(x => ok(x.name) && !seen.has(x.name) && !x.matchOff && !x.wrapOff && Math.max(Date.parse(x.streak?.last || "") || 0, x.auto?.at || 0, x.createdAt || 0) > cutoff)
+          .map(x => { const c = compat(me, x.name); return c && c.uyum >= 25 && c.neden ? { name: x.name, ...c } : null; }).filter(Boolean)
+          .sort((a, b) => b.uyum - a.uyum).slice(0, 12);
+        const um = new Map(uyumlu.map(x => [x.name, x]));
+        for (const c of cand) { const x = um.get(c.name) || compat(me, c.name); if (x) { c.uyum = x.uyum; c.neden = x.neden; } }
+      }
+    }
+    cb({ ok: true, sohbet: chatted.slice(0, 8).map(c => ({ name: c.name, last: c.last, n: c.n })), oneriler: cand, uyumlu, zevkYok: !u.matchOff && !uyumlu.length && !tasteOf(me).art.size && !tasteOf(me).game.size });
+  });
+  // Profilde: "Müzik uyumunuz %74" (yaş grubu farklıysa ya da biri kapattıysa gösterilmez)
+  socket.on('compat', (name, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const u = db.users[me], o = typeof name === 'string' && db.users[name];
+    if (!u || !o || name === me || o.bot || isMinor(u) !== isMinor(o) || (o.blocked || []).includes(me)) return cb(null);
+    if (limited('cmp|' + me, 60, 60e3)) return cb(null);
+    cb(compat(me, name));
+  });
+  // Gizlilik: yıllık özet için sayma (Wrapped) ve zevk eşleşmesi ayrı ayrı kapatılabilir
+  socket.on('statPrefs', ({ wrapOff, matchOff, wipe } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (typeof wrapOff === 'boolean') u.wrapOff = wrapOff || undefined;
+    if (typeof matchOff === 'boolean') u.matchOff = matchOff || undefined;
+    if (wipe === true) STAT.wipe(me);
+    tasteCache.delete(me); save(); cb({ ok: true, wrapOff: !!u.wrapOff, matchOff: !!u.matchOff });
   });
   socket.on('friendSuggestHide', (name, cb = () => {}) => {
     const u = db.users[me]; if (!u || typeof name !== 'string' || !db.users[name]) return cb({ error: 'Bulunamadı' });
