@@ -5963,6 +5963,15 @@ addEventListener('popstate', () => {
 });
 const reArm = () => { if (atBase) { atBase = false; history.pushState({ kapp: 1 }, ''); } };
 function openDrawer() { closeMembers(); document.body.classList.add('drawer'); ovOpen('drawer', () => document.body.classList.remove('drawer')); }
+// Telefonda yan menü (kanallar) ya da üye listesi açılınca yazma alanına ait her şey kapansın: emoji/GIF paneli, öneri listesi ve klavye.
+// Açık kalınca menünün üstüne biniyordu (emoji açıkken kenardan kaydırınca).
+new MutationObserver(() => {
+  const B = document.body.classList; if (!B.contains('drawer') && !B.contains('mdrawer')) return;
+  if ($('#emojipanel')?.classList.contains('on')) closeEmojiPanel();
+  if ($('#gifpanel')?.classList.contains('on')) closeGifPanel();
+  try { hideSuggest(); } catch {}
+  const ae = document.activeElement; if (ae && ae.matches?.('#input, #compose textarea, #compose input')) ae.blur();
+}).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 function closeDrawer() { if (!document.body.classList.contains('drawer')) return; document.body.classList.remove('drawer'); if (atBase) reArm(); else ovClosed('drawer'); }
 new MutationObserver(() => { if (!document.body.classList.contains('drawer')) { if (atBase) reArm(); else if (ovStack.some(o => o.name === 'drawer')) ovClosed('drawer'); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 function openMembers() { if (document.body.classList.contains('drawer')) document.body.classList.remove('drawer'); renderMembers(); document.body.classList.add('mdrawer'); buzz(6); ovOpen('mdrawer', () => document.body.classList.remove('mdrawer')); }
