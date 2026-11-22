@@ -2936,7 +2936,7 @@ const readBuild = () => { try { return crypto.createHash('sha1').update(fs.readF
 build = readBuild();
 // Görünüm (stil) ve kod ayrı özetlenir: sadece stil değiştiyse açık sayfalar yenilenmeden yeni görünümü alır
 const sh = x => crypto.createHash('sha1').update(x).digest('hex').slice(0, 12);
-const readParts = () => { try { const t = fs.readFileSync(INDEX, 'utf8'), m = t.match(/<style[^>]*>([\s\S]*?)<\/style>/); return { b: sh(t), css: sh(m ? m[1] : ''), js: sh(m ? t.replace(m[0], '') : t) }; } catch { return null; } };
+const readParts = () => { try { const t = fs.readFileSync(INDEX, 'utf8'), m = t.match(/<style[^>]*>([\s\S]*?)<\/style>/); return { b: sh(t), css: sh(m ? m[1] : ''), js: sh(m ? t.replace(m[0], '') : t), major: /<meta name="kanka-buyuk" content="([^"]+)"/.exec(t)?.[1] || null }; } catch { return null; } };
 let buildParts = readParts();
 let buildTimer = null;
 try {
@@ -4058,6 +4058,10 @@ io.on('connection', socket => {
   { let n = 0, t0 = Date.now();
     socket.onAny(() => { const now = Date.now(); if (now - t0 > 10e3) { n = 0; t0 = now; } if (++n === 400) { secLog('istek-seli', socket.data?.me || 'bağlantı', '10 saniyede 400+ istek, bağlantı kesildi'); socket.disconnect(true); } }); }
   socket.emit('build', build); if (buildParts) socket.emit('buildParts', buildParts);
+  // Eski sayfa (büyük güncellemeden önce açılmış) yenile uyarısını bilmiyor: ona birkaç kez yazılı haber ver.
+  // Yeni sayfalar bağlanınca 'yeniIstemci' der; demeyenler eski sayfadır.
+  socket.on('yeniIstemci', () => { socket.data.yeni = true; });
+  for (const ms of [6e3, 4 * 60e3, 12 * 60e3]) setTimeout(() => { if (socket.connected && online.has(socket.id) && !socket.data.yeni && buildParts?.major) socket.emit('toast', '🎉 Büyük güncelleme geldi: Kanka Arena (sesli odada oyunlar), ses paneli ve yıl özeti! Görmek için sayfayı yenile. Telefonda uygulamayı kapatıp yeniden aç.'); }, ms);
   const ip = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']);
   const devRaw = socket.handshake.auth?.d, dH = typeof devRaw === 'string' && /^[a-z0-9-]{16,64}$/i.test(devRaw) ? idH('d|' + devRaw) : null, iH = ip && ip !== 'bilinmiyor' ? idH('i|' + ip) : null;
   let me = null, cur = null, myVoice = null;
