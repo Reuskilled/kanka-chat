@@ -3,31 +3,292 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bot Geliştirici Belgeleri · Kanka Chat</title>
-<meta name="description" content="Kanka Chat için bot yaz: komutlar, butonlar, kartlar, formlar. JavaScript ve Python kütüphaneleriyle 5 dakikada ilk botun.">
+<title>Bot Geliştirici Belgeleri & Canlı Playground · Kanka Chat</title>
+<meta name="description" content="Kanka Chat için bot yaz: komutlar, butonlar, kartlar, formlar. Sayfa içinde tıklayarak canlı dene, JavaScript ve Python koduyla 5 dakikada ilk botunu çalıştır.">
+<link rel="icon" href="/favicon.png">
 <link rel="stylesheet" href="/legal.css">
 <style>
-  .wrap { max-width: 980px; }
-  pre { background: #120c09; border: 1px solid #ffffff14; border-radius: 12px; padding: 14px 16px; overflow-x: auto; font: 13px/1.55 ui-monospace, Consolas, monospace; color: #f3e8df; }
-  code { font-family: ui-monospace, Consolas, monospace; font-size: .92em; }
-  p code, li code, td code { background: #ffffff12; padding: 1px 6px; border-radius: 6px; }
-  table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #ffffff12; vertical-align: top; }
-  th { color: #c9b8ab; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
-  .toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 6px; }
-  .toc a { padding: 6px 12px; border-radius: 999px; background: #ffffff0f; text-decoration: none; font-size: 13px; font-weight: 700; }
-  .tabs { display: flex; gap: 6px; margin: 12px 0 0; } .tabs button { padding: 7px 14px; border-radius: 10px 10px 0 0; border: 1px solid #ffffff14; border-bottom: 0; background: #ffffff08; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
-  .tabs button.on { background: #120c09; color: #ff8a4c; } .tabs + pre { margin-top: 0; border-top-left-radius: 0; }
-  .note { padding: 12px 14px; border-radius: 12px; background: #ff8a4c14; border: 1px solid #ff8a4c33; margin: 12px 0; font-size: 14px; }
-  .dl { display: inline-flex; gap: 6px; align-items: center; padding: 9px 14px; border-radius: 10px; background: #ff8a4c; color: #1a0f0a !important; font-weight: 800; text-decoration: none; margin: 4px 8px 4px 0; }
+  .wrap { max-width: 1080px; }
+  pre {
+    position: relative;
+    background: #09090d; border: 1px solid rgba(255,255,255,.09);
+    border-radius: 14px; padding: 16px 18px; overflow-x: auto;
+    font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; color: #e4e4ec;
+    margin: 10px 0 16px;
+  }
+  code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .92em; }
+  p code, li code, td code { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); padding: 1.5px 6px; border-radius: 6px; color: #f4f4f6; }
+  .toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 8px; }
+  .toc a {
+    padding: 7px 13px; border-radius: 999px;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+    color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 700;
+    transition: all .15s;
+  }
+  .toc a:hover { color: var(--ink); border-color: rgba(212,255,0,.4); background: rgba(212,255,0,.08); }
+  .tabs { display: flex; gap: 6px; margin: 14px 0 0; }
+  .tabs button {
+    padding: 8px 15px; border-radius: 11px 11px 0 0;
+    border: 1px solid rgba(255,255,255,.09); border-bottom: 0;
+    background: rgba(255,255,255,.03); color: var(--muted);
+    font: inherit; font-size: 13px; font-weight: 800; cursor: pointer;
+    transition: color .15s, background .15s;
+  }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button.on { background: #09090d; color: var(--accent); border-color: rgba(212,255,0,.3); }
+  .tabs + pre { margin-top: 0; border-top-left-radius: 0; }
+  .note {
+    padding: 13px 16px; border-radius: 14px;
+    background: rgba(212,255,0,.06); border: 1px solid rgba(212,255,0,.22);
+    margin: 14px 0; font-size: 14px; color: #e4e4ec;
+  }
+  .dl {
+    display: inline-flex; gap: 8px; align-items: center;
+    padding: 10px 18px; border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #070902 !important; font-weight: 800; font-size: 14px;
+    text-decoration: none !important; margin: 6px 8px 6px 0;
+    box-shadow: 0 8px 24px rgba(212,255,0,.18);
+    transition: transform .15s, box-shadow .18s;
+  }
+  .dl:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(212,255,0,.3); }
+  .cp-btn {
+    position: absolute; top: 10px; right: 10px;
+    padding: 5px 10px; border-radius: 8px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    color: var(--muted); font: 700 11.5px 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer; transition: all .15s;
+  }
+  .cp-btn:hover { color: var(--ink); border-color: rgba(212,255,0,.4); background: rgba(255,255,255,.1); }
+  .cp-btn.ok { color: #070902; background: var(--accent); border-color: var(--accent); }
+
+  /* ===== INTERACTIVE BOT PLAYGROUND ===== */
+  .pg-box {
+    margin: 26px 0 34px; border-radius: 22px; overflow: hidden;
+    background: #0a0a0f; border: 1px solid rgba(212,255,0,.24);
+    box-shadow: 0 24px 64px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .pg-top {
+    padding: 14px 18px; background: #101017; border-bottom: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .pg-title { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 14px; color: var(--ink); }
+  .pg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(212,255,0,.18); }
+  .pg-pills { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 18px; background: #0c0c12; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .pg-pill {
+    padding: 7px 13px; border-radius: 10px;
+    background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08);
+    color: var(--muted); font: 700 12.5px 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer; transition: all .15s;
+  }
+  .pg-pill:hover { color: var(--ink); border-color: rgba(255,255,255,.18); }
+  .pg-pill.on { background: rgba(212,255,0,.14); border-color: rgba(212,255,0,.55); color: var(--accent); }
+
+  .pg-grid { display: grid; grid-template-columns: 1.05fr .95fr; min-height: 370px; }
+  @media (max-width: 860px) { .pg-grid { grid-template-columns: 1fr; } }
+
+  /* Left: Simulated Kanka Chat Room */
+  .pg-chat {
+    display: flex; flex-direction: column; justify-content: space-between;
+    background: #0d0d13; border-right: 1px solid rgba(255,255,255,.07);
+    padding: 16px;
+  }
+  .pg-roombar {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding-bottom: 11px; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,.07);
+    font-size: 13px; font-weight: 800; color: var(--muted);
+  }
+  .pg-run {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 8px;
+    background: rgba(212,255,0,.12); border: 1px solid rgba(212,255,0,.35);
+    color: var(--accent); font: 800 12px 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer; transition: all .15s;
+  }
+  .pg-run:hover { background: var(--accent); color: #070902; }
+
+  .pg-msgs { flex: 1; display: flex; flex-direction: column; gap: 14px; justify-content: flex-start; }
+  .pg-msg { display: flex; align-items: flex-start; gap: 10px; animation: pgIn .22s ease both; }
+  @keyframes pgIn { from { opacity: 0; transform: translateY(5px); } }
+  .pg-av {
+    width: 34px; height: 34px; border-radius: 50%; flex: none;
+    display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff;
+    background: #272732; position: relative;
+  }
+  .pg-av.bot { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+  .pg-col { flex: 1; min-width: 0; }
+  .pg-who { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #f4f4f6; margin-bottom: 3px; }
+  .pg-who small { font-size: 11px; font-weight: 600; color: var(--dim); }
+  .pg-btag {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 1px 6px; border-radius: 5px;
+    background: #3b82f6; color: #fff; font-size: 9.5px; font-weight: 900; letter-spacing: .04em;
+  }
+  .pg-cmd-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11.5px; color: var(--muted); margin-bottom: 3px;
+  }
+  .pg-cmd-tag code { color: var(--accent); background: rgba(212,255,0,.1); border-color: rgba(212,255,0,.25); padding: 1px 6px; border-radius: 5px; font-weight: 700; }
+  .pg-bub {
+    display: inline-block; max-width: 100%;
+    padding: 9px 13px; border-radius: 13px;
+    background: #16161f; border: 1px solid rgba(255,255,255,.07);
+    color: #e4e4ec; font-size: 13.5px; line-height: 1.45;
+  }
+  .pg-Eph {
+    margin-top: 8px; padding: 8px 11px; border-radius: 10px;
+    background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.28);
+    font-size: 12.5px; color: #bfdbfe; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    animation: pgIn .2s ease both;
+  }
+  .pg-Eph small { font-size: 10.5px; color: #93c5fd; opacity: .85; white-space: nowrap; }
+
+  /* Simulated Bot Components (Buttons, Select, Embed Card, Form Modal) */
+  .pg-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .pg-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: 9px;
+    font: 800 12.5px 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer; border: 1px solid transparent;
+    transition: transform .12s, filter .15s;
+  }
+  .pg-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .pg-btn:active { transform: scale(.96); }
+  .pg-btn.basari { background: #23a55a; color: #fff; }
+  .pg-btn.tehlike { background: #ef4444; color: #fff; }
+  .pg-btn.ana { background: var(--accent); color: #070902; }
+  .pg-btn.ikincil { background: #262632; border-color: rgba(255,255,255,.12); color: #e4e4ec; }
+  .pg-sel {
+    width: 100%; max-width: 240px; padding: 7px 11px; border-radius: 9px;
+    background: #1d1d28; border: 1px solid rgba(255,255,255,.14);
+    color: #f4f4f6; font: 700 12.5px 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+  }
+  .pg-sel:focus { outline: none; border-color: var(--accent); }
+
+  .pg-embed {
+    margin-top: 4px; padding: 12px 14px; border-radius: 12px;
+    background: #14141d; border: 1px solid rgba(255,255,255,.08);
+    border-left: 4px solid #3fcf8e; max-width: 340px;
+  }
+  .pg-embed h4 { margin: 0 0 4px; font-size: 14px; font-weight: 800; color: #fff; }
+  .pg-embed p { margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
+  .pg-efields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+  .pg-efields div { background: rgba(255,255,255,.03); padding: 6px 8px; border-radius: 8px; }
+  .pg-efields small { display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; }
+  .pg-efields b { font-size: 13.5px; color: #fff; }
+  .pg-efoot { font-size: 11px; color: var(--dim); font-weight: 600; }
+
+  .pg-modal {
+    margin-top: 8px; padding: 13px; border-radius: 13px;
+    background: #181824; border: 1px solid rgba(212,255,0,.35);
+    box-shadow: 0 14px 34px rgba(0,0,0,.6); max-width: 320px;
+    animation: pgIn .2s ease both;
+  }
+  .pg-modal h5 { margin: 0 0 9px; font-size: 13.5px; font-weight: 800; color: #fff; display: flex; justify-content: space-between; }
+  .pg-modal label { display: block; font-size: 11px; font-weight: 800; color: var(--muted); margin: 7px 0 3px; }
+  .pg-modal input, .pg-modal textarea {
+    width: 100%; padding: 7px 9px; border-radius: 8px;
+    background: #0e0e15; border: 1px solid rgba(255,255,255,.12);
+    color: #fff; font: 12.5px 'Plus Jakarta Sans', sans-serif;
+  }
+  .pg-modal input:focus, .pg-modal textarea:focus { outline: none; border-color: var(--accent); }
+
+  .pg-dots { display: inline-flex; gap: 4px; align-items: center; padding: 4px 2px; }
+  .pg-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pgDot 1s infinite ease-in-out; }
+  .pg-dots i:nth-child(2) { animation-delay: .18s; }
+  .pg-dots i:nth-child(3) { animation-delay: .36s; }
+  @keyframes pgDot { 0%,100% { opacity: .3; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.15); } }
+
+  .pg-log {
+    margin-top: 12px; padding: 8px 11px; border-radius: 10px;
+    background: #08080c; border: 1px solid rgba(255,255,255,.07);
+    font: 11.5px ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--muted);
+    display: flex; align-items: center; gap: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .pg-log b { color: var(--accent); font-weight: 700; flex: none; }
+
+  /* Right: Code & JSON Inspector */
+  .pg-code { display: flex; flex-direction: column; background: #09090d; }
+  .pg-ctabs {
+    display: flex; align-items: center; gap: 4px; padding: 10px 14px;
+    background: #0e0e14; border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .pg-ctab {
+    padding: 5px 11px; border-radius: 8px;
+    font: 800 12px 'Plus Jakarta Sans', sans-serif; color: var(--muted);
+    background: transparent; border: 0; cursor: pointer;
+  }
+  .pg-ctab:hover { color: var(--ink); }
+  .pg-ctab.on { background: rgba(212,255,0,.14); color: var(--accent); }
+  .pg-copy {
+    margin-left: auto; padding: 5px 11px; border-radius: 8px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    color: var(--ink); font: 700 11.5px 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+  }
+  .pg-copy:hover { border-color: var(--accent); }
+  .pg-pre {
+    flex: 1; margin: 0 !important; border: 0 !important; border-radius: 0 !important;
+    background: transparent !important; padding: 16px !important; font-size: 12.5px !important;
+    max-height: 340px; overflow: auto;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><a class="brand" href="/"><i>🦝</i>Kanka Chat</a><nav><a href="/gelistirici" class="on">Geliştiriciler</a><a href="/kosullar">Kullanım Şartları</a><a href="/gizlilik">Gizlilik</a><a href="/">Uygulamaya dön</a></nav></div>
+  <div class="top">
+    <a class="brand" href="/">
+      <i><svg viewBox="0 0 200 200" aria-hidden="true"><path fill="#f4f4f6" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="#d4ff00" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></svg></i>
+      Kanka Chat
+    </a>
+    <nav>
+      <a href="/gelistirici" class="on">Geliştiriciler</a>
+      <a href="/kosullar">Kullanım Şartları</a>
+      <a href="/gizlilik">Gizlilik &amp; KVKK</a>
+      <a href="/">Ana sayfa →</a>
+    </nav>
+  </div>
+
   <div class="card">
     <h1>Kanka için bot yaz</h1>
     <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.0, kanka.py 1.0</div>
+
+    <!-- ===== CANLI İNTERAKTİF BOT PLAYGROUND ===== -->
+    <div class="pg-box" id="playground">
+      <div class="pg-top">
+        <div class="pg-title"><span class="pg-dot"></span>Canlı Bot Laboratuvarı — Tıkla ve Dene</div>
+        <span style="font-size:12px;color:var(--muted);font-weight:600">Soldaki sohbetten butonlara/menülere tıkla, sağdan kodu kopyala</span>
+      </div>
+      <div class="pg-pills" id="pg-scenarios">
+        <button type="button" class="pg-pill on" data-sc="zar">🎲 /zar Komutu</button>
+        <button type="button" class="pg-pill" data-sc="oylama">🗳️ Butonlar &amp; Seçim Menüsü</button>
+        <button type="button" class="pg-pill" data-sc="kart">📊 Zengin Kart (Embed)</button>
+        <button type="button" class="pg-pill" data-sc="form">📝 Form Penceresi (Modal)</button>
+        <button type="button" class="pg-pill" data-sc="bekle">⏳ Düşünüyor (bekle + düzenle)</button>
+        <button type="button" class="pg-pill" data-sc="zaman">⚡ Zaman Etiketi &amp; Durum</button>
+      </div>
+      <div class="pg-grid">
+        <div class="pg-chat">
+          <div>
+            <div class="pg-roombar">
+              <span># bot-deneme · Kanka HQ</span>
+              <button type="button" class="pg-run" id="pg-rerun">↻ Komutu çalıştır</button>
+            </div>
+            <div class="pg-msgs" id="pg-msgs"></div>
+          </div>
+          <div class="pg-log" id="pg-log"><b>GATEWAY</b><span>Örnek seçildi — etkileşim bekleniyor…</span></div>
+        </div>
+        <div class="pg-code">
+          <div class="pg-ctabs">
+            <button type="button" class="pg-ctab on" data-lang="js">JavaScript (kanka.js)</button>
+            <button type="button" class="pg-ctab" data-lang="py">Python (kanka.py)</button>
+            <button type="button" class="pg-ctab" data-lang="json">Gelen/Giden JSON</button>
+            <button type="button" class="pg-copy" id="pg-copy">Kopyala</button>
+          </div>
+          <pre class="pg-pre" id="pg-codebox"></pre>
+        </div>
+      </div>
+    </div>
+
     <div class="tldr"><b>Kısaca:</b>
       <ul>
         <li>Bot geliştirici başvurun kabul edildiyse Kanka'da <b>Ayarlar › Bot geliştirici</b> sayfası Geliştirici Portalı'na dönüşür. Oradan bot oluşturur, token alırsın.</li>
@@ -36,7 +297,7 @@
         <li>Doğrulanmamış bir bot en fazla <b>50 farklı kişiye</b> ulaşabilir. Büyümek için portaldan doğrulama istersin.</li>
       </ul>
     </div>
-    <div class="tldr" style="border-color:#4cd98a55"><b>Önce bunu oku:</b>
+    <div class="tldr" style="border-color:rgba(63,207,142,.35)"><b>Önce bunu oku:</b>
       <ul>
         <li><b>Bot yapmak ücretsiz.</b> Kanka senden hiçbir ücret istemez. Botunu kendi bilgisayarında çalıştırabilirsin; VDS ya da hosting kiralaman gerekmez.</li>
         <li><b>18 yaşından küçüksen</b> bot için para harcamadan önce mutlaka velinle konuş. Geliştirici başvurusunda velinin bilgisi olduğunu onaylarsın.</li>
@@ -44,12 +305,12 @@
         <li>Botunun yaptığından sen sorumlusun. Bot üzerinden para toplamak, premium satmak ve bahis/çekiliş yasak. Ayrıntılar: <a href="/kosullar">Kullanım Şartları, bölüm 6</a>.</li>
       </ul>
     </div>
-    <div class="toc"><a href="#baslangic">Başlangıç</a><a href="#komutlar">Komutlar</a><a href="#bilesenler">Butonlar ve menüler</a><a href="#kartlar">Kartlar</a><a href="#formlar">Formlar</a><a href="#olaylar">Olaylar</a><a href="#rest">REST API</a><a href="#gateway">Gateway</a><a href="#http">HTTP etkileşimleri</a><a href="#sinirlar">Sınırlar ve kurallar</a></div>
+    <div class="toc"><a href="#baslangic">1. Başlangıç</a><a href="#komutlar">2. Komutlar</a><a href="#bilesenler">3. Butonlar &amp; Menüler</a><a href="#kartlar">4. Kartlar</a><a href="#formlar">5. Formlar</a><a href="#olaylar">6. Olaylar</a><a href="#rest">7. REST API</a><a href="#gateway">8. Gateway</a><a href="#http">9. HTTP Etkileşimleri</a><a href="#sinirlar">10. Sınırlar</a></div>
 
     <h2 id="baslangic">1. Beş dakikada ilk bot</h2>
     <ol>
       <li>Kanka'da <b>Ayarlar › Bot geliştirici › Yeni bot</b>. Bot adını yaz; token bir kez gösterilir, kopyala. İlk botunla birlikte içinde botun hazır olan bir <b>deneme sunucusu</b> açılır.</li>
-      <li>Kütüphaneyi indir (npm ve PyPI'a yakında):<br><a class="dl" href="/sdk/kanka.js" download>⬇ kanka.js</a><a class="dl" href="/sdk/kanka.py" download>⬇ kanka.py</a></li>
+      <li>Kütüphaneyi indir (npm ve PyPI'a yakında):<br><a class="dl" href="/sdk/kanka.js" download>⬇ kanka.js indir</a><a class="dl" href="/sdk/kanka.py" download>⬇ kanka.py indir</a></li>
       <li>Token'ı <code>KANKA_TOKEN</code> ortam değişkenine koy ve çalıştır. Deneme sunucusunda <code>/</code> yaz; komutun listede.</li>
     </ol>
     <div class="tabs" data-g="ilk"><button class="on" data-t="js">JavaScript</button><button data-t="py">Python</button></div>
@@ -158,7 +419,7 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
 
     <h3 id="zaman">Zaman etiketi</h3>
     <p>Mesajda <code>&lt;t:1767225600:R&gt;</code> yazarsan herkes kendi saatine göre görür. Sayı Unix zamanı (saniye). Biçimler: <code>t</code> 21:30 · <code>T</code> 21:30:00 · <code>d</code> 01.01.2026 · <code>D</code> 1 Ocak 2026 · <code>f</code> 1 Ocak 2026 21:30 (varsayılan) · <code>F</code> gün adıyla · <code>R</code> "3 saat sonra". Kullanıcılar da yazabilir.</p>
-    <pre>await bot.yaziyor(oda);                       // "yazıyor…"
+<pre>await bot.yaziyor(oda);                       // "yazıyor…"
 const d = await bot.dosyaYukle(fs.readFileSync('kart.png'), 'kart.png');
 await bot.gonder(oda, { icerik: 'Turnuva &lt;t:1767225600:R&gt; başlıyor :kupa:', ekler: [d.id] });
 await bot.durum('cevrimici', 'Oynuyor: /yardim');</pre>
@@ -196,12 +457,400 @@ if (istek.tur === 'PING') return res.json({ tur: 'PONG' }); // adresi kaydederke
     </ul>
     <p>Sorun mu var? Kanka HQ'daki <b>#bot-gelistirici</b> odasına yaz.</p>
   </div>
+  <div class="foot">Kanka Chat · <a href="/kosullar">Kullanım Şartları</a> · <a href="/gizlilik">Gizlilik ve KVKK</a></div>
 </div>
+
 <script>
+// Sekmeli kod blokları
 document.querySelectorAll('.tabs').forEach(t => t.querySelectorAll('button').forEach(b => b.onclick = () => {
   t.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll(`pre[data-g="${t.dataset.g}"]`).forEach(p => p.hidden = p.dataset.t !== b.dataset.t);
 }));
+
+// Tüm doküman <pre> bloklarına tek tık Kopyala butonu
+document.querySelectorAll('.card > pre').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'cp-btn'; btn.textContent = 'Kopyala';
+  btn.onclick = () => {
+    navigator.clipboard?.writeText(pre.innerText.replace(/Kopyala$|Kopyalandı ✓$/,'').trim());
+    btn.textContent = 'Kopyalandı ✓'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Kopyala'; btn.classList.remove('ok'); }, 1500);
+  };
+  pre.appendChild(btn);
+});
+
+// ===== CANLI İNTERAKTİF BOT PLAYGROUND =====
+const SCENARIOS = {
+  zar: {
+    cmd: '/zar yuz:20',
+    js: `bot.komut('zar', {
+  aciklama: 'Zar at',
+  secenekler: [{ ad: 'yuz', tur: 'tamsayi', aciklama: 'Kaç yüzlü?' }]
+}, k => {
+  const max = k.secenek('yuz', 6);
+  const sonuc = 1 + Math.floor(Math.random() * max);
+  k.cevapla(\`🎲 **\${sonuc}** geldi! (1-\${max})\`);
+});`,
+    py: `@bot.komut("zar", aciklama="Zar at", secenekler=[
+    kanka.Secenek("yuz", "tamsayi", "Kaç yüzlü?")
+])
+async def zar(k):
+    ust = k.secenek("yuz", 6)
+    sonuc = random.randint(1, ust)
+    await k.cevapla(f"🎲 **{sonuc}** geldi! (1-{ust})")`,
+    json: `{
+  "op": 0,
+  "t": "KOMUT",
+  "d": {
+    "ad": "zar",
+    "secenekler": { "yuz": 20 },
+    "kullanici": { "ad": "pisago", "gorunenAd": "pisago" }
+  }
+}`,
+    render(box, log) {
+      const roll = () => 1 + Math.floor(Math.random() * 20);
+      let val = roll();
+      const draw = () => {
+        box.innerHTML = `<div class="pg-msg">
+          <div class="pg-av bot">🤖</div>
+          <div class="pg-col">
+            <div class="pg-cmd-tag"><b>pisago</b> kullandı → <code>/zar yuz:20</code></div>
+            <div class="pg-who">Kanka Bot <span class="pg-btag">✓ BOT</span> <small>şimdi</small></div>
+            <div class="pg-bub">🎲 <b style="color:var(--accent);font-size:15px">${val}</b> geldi! <span style="color:var(--muted)">(1-20)</span></div>
+            <div class="pg-row"><button type="button" class="pg-btn ikincil" id="pg-roll-agn">🎲 Tekrar zar at</button></div>
+          </div>
+        </div>`;
+        document.getElementById('pg-roll-agn').onclick = () => {
+          val = roll(); draw();
+          log('KOMUT', `/zar yuz:20 çalıştırıldı → 🎲 ${val}`);
+        };
+      };
+      draw();
+      log('KOMUT', `/zar yuz:20 çalıştırıldı → 🎲 ${val}`);
+    }
+  },
+
+  oylama: {
+    cmd: '/oylama',
+    js: `const { Buton, LinkButon, Secim } = require('./kanka.js');
+
+bot.komut('oylama', { aciklama: 'Hızlı oylama' }, k => k.cevapla({
+  icerik: 'Akşam oyun var mı?',
+  bilesenler: [
+    [Buton('evet', 'Evet', 'basari', { emoji: '👍' }), Buton('hayir', 'Hayır', 'tehlike')],
+    [Secim('oyun', ['Valorant', 'CS2', 'LoL'], { yerTutucu: 'Hangi oyun?' })],
+  ],
+}));
+
+bot.buton(/^(evet|hayir)$/, e => e.guncelle(\`Oylama güncellendi (\${e.veri.id})\`));
+bot.secim('oyun', e => e.cevapla({ icerik: \`Seçtiğin: \${e.degerler[0]}\`, gizli: true }));`,
+    py: `@bot.komut("oylama", aciklama="Hızlı oylama")
+async def oylama(k):
+    await k.cevapla(
+        icerik="Akşam oyun var mı?",
+        bilesenler=[
+            [kanka.Buton("evet", "Evet", "basari", emoji="👍"), kanka.Buton("hayir", "Hayır", "tehlike")],
+            [kanka.Secim("oyun", ["Valorant", "CS2", "LoL"], yer_tutucu="Hangi oyun?")]
+        ]
+    )`,
+    json: `{
+  "tur": "mesaj",
+  "icerik": "Akşam oyun var mı?",
+  "bilesenler": [
+    [
+      { "tur": "buton", "id": "evet", "etiket": "Evet", "stil": "basari", "emoji": "👍" },
+      { "tur": "buton", "id": "hayir", "etiket": "Hayır", "stil": "tehlike" }
+    ],
+    [{ "tur": "secim", "id": "oyun", "secenekler": ["Valorant", "CS2", "LoL"] }]
+  ]
+}`,
+    render(box, log) {
+      let yes = 3, no = 1, eph = '';
+      const draw = () => {
+        box.innerHTML = `<div class="pg-msg">
+          <div class="pg-av bot">🤖</div>
+          <div class="pg-col">
+            <div class="pg-cmd-tag"><b>pisago</b> kullandı → <code>/oylama</code></div>
+            <div class="pg-who">Kanka Bot <span class="pg-btag">✓ BOT</span> <small>şimdi</small></div>
+            <div class="pg-bub">Akşam oyun var mı? <span style="color:var(--muted);font-size:12px">(${yes} Evet · ${no} Hayır)</span></div>
+            <div class="pg-row">
+              <button type="button" class="pg-btn basari" id="pg-b-yes">👍 Evet (${yes})</button>
+              <button type="button" class="pg-btn tehlike" id="pg-b-no">Hayır (${no})</button>
+            </div>
+            <div class="pg-row">
+              <select class="pg-sel" id="pg-s-game">
+                <option value="">Hangi oyun? (Seç)</option>
+                <option value="Valorant">Valorant</option>
+                <option value="CS2">CS2</option>
+                <option value="LoL">League of Legends</option>
+              </select>
+            </div>
+            ${eph ? `<div class="pg-Eph"><span>${eph}</span><small>👁 Sadece sen görüyorsun</small></div>` : ''}
+          </div>
+        </div>`;
+        document.getElementById('pg-b-yes').onclick = () => { yes++; draw(); log('BUTON', `id="evet" tıklandı → e.guncelle()`); };
+        document.getElementById('pg-b-no').onclick = () => { no++; draw(); log('BUTON', `id="hayir" tıklandı → e.guncelle()`); };
+        document.getElementById('pg-s-game').onchange = e => {
+          if (!e.target.value) return;
+          eph = `🎯 Seçtiğin oyun kaydedildi: <b>${e.target.value}</b>`;
+          draw();
+          log('SECIM', `id="oyun" degerler=["${e.target.value}"] → gizli cevap`);
+        };
+      };
+      draw();
+      log('KOMUT', `/oylama çalıştırıldı — butonlara veya seçim menüsüne tıkla!`);
+    }
+  },
+
+  kart: {
+    cmd: '/durum',
+    js: `const { Kart } = require('./kanka.js');
+
+bot.komut('durum', { aciklama: 'Sunucu istatistik kartı' }, k => {
+  const kart = new Kart()
+    .baslik('Kanka HQ Sunucu Durumu')
+    .aciklama('Tüm sesli odalar ve ağ geçidi aktif ✅')
+    .renk('#3fcf8e')
+    .alan('Üye', '148', true)
+    .alan('Çevrimiçi', '42', true)
+    .alan('Gecikme', '12 ms', true)
+    .altyazi('Son güncelleme: şimdi');
+  k.cevapla({ kartlar: [kart] });
+});`,
+    py: `@bot.komut("durum", aciklama="Sunucu istatistik kartı")
+async def durum(k):
+    kart = (kanka.Kart()
+        .baslik("Kanka HQ Sunucu Durumu")
+        .aciklama("Tüm sesli odalar ve ağ geçidi aktif ✅")
+        .renk("#3fcf8e")
+        .alan("Üye", "148", True)
+        .alan("Çevrimiçi", "42", True)
+        .alan("Gecikme", "12 ms", True)
+        .altyazi("Son güncelleme: şimdi"))
+    await k.cevapla(kartlar=[kart])`,
+    json: `{
+  "tur": "mesaj",
+  "kartlar": [{
+    "baslik": "Kanka HQ Sunucu Durumu",
+    "aciklama": "Tüm sesli odalar ve ağ geçidi aktif ✅",
+    "renk": "#3fcf8e",
+    "alanlar": [
+      { "ad": "Üye", "deger": "148", "yanYana": true },
+      { "ad": "Çevrimiçi", "deger": "42", "yanYana": true },
+      { "ad": "Gecikme", "deger": "12 ms", "yanYana": true }
+    ]
+  }]
+}`,
+    render(box, log) {
+      let onl = 42, ms = 12;
+      const draw = () => {
+        box.innerHTML = `<div class="pg-msg">
+          <div class="pg-av bot">🤖</div>
+          <div class="pg-col">
+            <div class="pg-cmd-tag"><b>pisago</b> kullandı → <code>/durum</code></div>
+            <div class="pg-who">Kanka Bot <span class="pg-btag">✓ BOT</span> <small>şimdi</small></div>
+            <div class="pg-embed">
+              <h4>Kanka HQ Sunucu Durumu</h4>
+              <p>Tüm sesli odalar ve ağ geçidi aktif ✅</p>
+              <div class="pg-efields">
+                <div><small>Üye</small><b>148</b></div>
+                <div><small>Çevrimiçi</small><b>${onl}</b></div>
+                <div><small>Gecikme</small><b style="color:#3fcf8e">${ms} ms</b></div>
+              </div>
+              <div class="pg-efoot">Son güncelleme: şimdi</div>
+            </div>
+            <div class="pg-row"><button type="button" class="pg-btn ikincil" id="pg-emb-ref">↻ Veriyi yenile</button></div>
+          </div>
+        </div>`;
+        document.getElementById('pg-emb-ref').onclick = () => {
+          onl = 38 + Math.floor(Math.random() * 15);
+          ms = 9 + Math.floor(Math.random() * 8);
+          draw();
+          log('BUTON', `Kart güncellendi → Çevrimiçi: ${onl}, Gecikme: ${ms} ms`);
+        };
+      };
+      draw();
+      log('KOMUT', `/durum çalıştırıldı → 1 zengin kart çizildi`);
+    }
+  },
+
+  form: {
+    cmd: '/basvur',
+    js: `bot.komut('basvur', { aciklama: 'Moderatörlük başvurusu' }, k => k.formAc({
+  id: 'basvuru',
+  baslik: 'Moderatör Başvurusu',
+  alanlar: [
+    { id: 'saat', etiket: 'Günde kaç saat aktifsin?' },
+    { id: 'neden', etiket: 'Neden sen?', tur: 'uzun' },
+  ],
+}));
+
+bot.form('basvuru', e => e.cevapla({
+  icerik: \`Başvurun alındı (\${e.alan('saat')} saat), teşekkürler!\`,
+  gizli: true,
+}));`,
+    py: `@bot.komut("basvur", aciklama="Moderatörlük başvurusu")
+async def basvur(k):
+    await k.form_ac(
+        id="basvuru",
+        baslik="Moderatör Başvurusu",
+        alanlar=[
+            {"id": "saat", "etiket": "Günde kaç saat aktifsin?"},
+            {"id": "neden", "etiket": "Neden sen?", "tur": "uzun"},
+        ]
+    )
+
+@bot.form("basvuru")
+async def basvuru_geldi(e):
+    await e.cevapla(icerik="Başvurun alındı, teşekkürler!", gizli=True)`,
+    json: `{
+  "tur": "form",
+  "id": "basvuru",
+  "baslik": "Moderatör Başvurusu",
+  "alanlar": [
+    { "id": "saat", "etiket": "Günde kaç saat aktifsin?", "tur": "kisa" },
+    { "id": "neden", "etiket": "Neden sen?", "tur": "uzun" }
+  ]
+}`,
+    render(box, log) {
+      let submitted = null;
+      const draw = () => {
+        if (!submitted) {
+          box.innerHTML = `<div class="pg-msg">
+            <div class="pg-av bot">🤖</div>
+            <div class="pg-col">
+              <div class="pg-cmd-tag"><b>pisago</b> kullandı → <code>/basvur</code></div>
+              <div class="pg-modal">
+                <h5><span>📋 Moderatör Başvurusu</span><small style="color:var(--accent)">FORM</small></h5>
+                <label>GÜNDE KAÇ SAAT AKTİFSİN?</label>
+                <input id="pg-f-hr" value="4-5 saat">
+                <label>NEDEN SEN?</label>
+                <textarea id="pg-f-why" rows="2">Topluluk kurallarına hakimim ve her akşam seste aktifim.</textarea>
+                <div class="pg-row" style="justify-content:flex-end;margin-top:10px">
+                  <button type="button" class="pg-btn ana" id="pg-f-sub">Başvuruyu gönder →</button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+          document.getElementById('pg-f-sub').onclick = () => {
+            const hr = document.getElementById('pg-f-hr').value || '4 saat';
+            submitted = hr; draw();
+            log('FORM', `id="basvuru" gönderildi (saat="${hr}") → gizli onay mesajı`);
+          };
+        } else {
+          box.innerHTML = `<div class="pg-msg">
+            <div class="pg-av bot">🤖</div>
+            <div class="pg-col">
+              <div class="pg-cmd-tag"><b>pisago</b> kullandı → <code>/basvur</code></div>
+              <div class="pg-who">Kanka Bot <span class="pg-btag">✓ BOT</span> <small>şimdi</small></div>
+              <div class="pg-Eph"><span>✅ Başvurun alındı (<b>${submitted}</b> aktiflik), teşekkürler!</span><small>👁 Sadece sen görüyorsun</small></div>
+              <div class="pg-row"><button type="button" class="pg-btn ikincil" id="pg-f-re">Formu tekrar aç</button></div>
+            </div>
+          </div>`;
+          document.getElementById('pg-f-re').onclick = () => { submitted = null; draw(); };
+        }
+      };
+      draw();
+      log('KOMUT', `/basvur çalıştırıldı → k.formAc() penceresi açıldı`);
+    }
+  },
+
+  bekle: {
+    cmd: '/rapor',
+    js: `bot.komut('rapor', { aciklama: 'Uzun süren analiz raporu' }, async k => {
+  await k.bekle(); // Kullanıcı "düşünüyor…" görür (3 sn sınırı aşılır)
+  const sonuc = await agirHesaplama();
+  await k.duzenle(\`📊 **Haftalık Rapor Hazır:** \${sonuc}\`);
+});`,
+    py: `@bot.komut("rapor", aciklama="Uzun süren analiz raporu")
+async def rapor(k):
+    await k.bekle() # Kullanıcı "düşünüyor…" görür
+    sonuc = await agir_hesaplama()
+    await k.duzenle(f"📊 **Haftalık Rapor Hazır:** {sonuc}")`,
+    json: `// 1) İlk 3 saniye içinde:
+POST /etkilesim/:id/:token/cevap
+{ "tur": "bekle" }
+
+// 2) İşlem bitince (15 dk içinde):
+PATCH /etkilesim/:id/:token/mesaj
+{ "icerik": "📊 Haftalık Rapor Hazır: +1.240 mesaj, 18 saat ses!" }`,
+    render(box, log) {
+      box.innerHTML = `<div class="pg-msg">
+        <div class="pg-av bot">🤖</div>
+        <div class="pg-col">
+          <div class="pg-cmd-tag"><b>pisago</b> kullandı → <code>/rapor</code></div>
+          <div class="pg-who">Kanka Bot <span class="pg-btag">✓ BOT</span> <small>şimdi</small></div>
+          <div class="pg-bub" id="pg-w-bub"><span class="pg-dots"><i></i><i></i><i></i></span> <span style="color:var(--muted);margin-left:6px">Kanka Bot düşünüyor…</span></div>
+        </div>
+      </div>`;
+      log('BEKLE', `k.bekle() gönderildi — sonuç hazırlanıyor…`);
+      setTimeout(() => {
+        const b = document.getElementById('pg-w-bub');
+        if (!b) return;
+        b.innerHTML = `📊 <b>Haftalık Rapor Hazır:</b> Bu hafta sunucuda <b style="color:var(--accent)">1.240 mesaj</b> atıldı ve sesli odalarda <b style="color:#3fcf8e">18 saat</b> geçirildi!`;
+        log('PATCH', `k.duzenle() ile mesaj yerinde güncellendi`);
+      }, 1100);
+    }
+  },
+
+  zaman: {
+    cmd: '/turnuva',
+    js: `await bot.yaziyor(oda); // "yazıyor…" göster
+await bot.gonder(oda, {
+  icerik: '🏆 Turnuva <t:1767225600:R> başlıyor! Hazır olun <@123456789012345678>',
+});
+await bot.durum('cevrimici', 'Oynuyor: /turnuva');`,
+    py: `await bot.yaziyor(oda)
+await bot.gonder(oda, icerik="🏆 Turnuva <t:1767225600:R> başlıyor! Hazır olun <@123456789012345678>")
+await bot.durum("cevrimici", "Oynuyor: /turnuva")`,
+    json: `POST /api/v1/odalar/genel/mesajlar
+{
+  "icerik": "🏆 Turnuva <t:1767225600:R> başlıyor! Hazır olun <@123456789012345678>"
+}`,
+    render(box, log) {
+      box.innerHTML = `<div class="pg-msg">
+        <div class="pg-av bot">🤖</div>
+        <div class="pg-col">
+          <div class="pg-who">Kanka Bot <span class="pg-btag">✓ BOT</span> <small>Oynuyor: /turnuva</small></div>
+          <div class="pg-bub">🏆 Turnuva <span style="background:rgba(255,255,255,.08);padding:2px 7px;border-radius:6px;font-weight:700;color:#fff" title="Herkes kendi saat dilimine göre görür">2 saat sonra</span> başlıyor! Hazır olun <span style="background:rgba(212,255,0,.14);color:var(--accent);padding:1px 6px;border-radius:5px;font-weight:800">@pisago</span></div>
+        </div>
+      </div>`;
+      log('REST', `POST /api/v1/odalar/:id/mesajlar (<t:...:R> zaman etiketi + <@id> etiketleme)`);
+    }
+  }
+};
+
+let curSc = 'zar', curLang = 'js';
+const msgsBox = document.getElementById('pg-msgs');
+const codeBox = document.getElementById('pg-codebox');
+const logBox = document.getElementById('pg-log');
+
+function setLog(tag, txt) {
+  logBox.innerHTML = `<b>${tag}</b><span>${txt}</span>`;
+}
+function updateCode() {
+  codeBox.textContent = SCENARIOS[curSc][curLang];
+}
+function runScenario(sc) {
+  curSc = sc;
+  document.querySelectorAll('#pg-scenarios [data-sc]').forEach(b => b.classList.toggle('on', b.dataset.sc === sc));
+  updateCode();
+  SCENARIOS[sc].render(msgsBox, setLog);
+}
+
+document.querySelectorAll('#pg-scenarios [data-sc]').forEach(b => b.onclick = () => runScenario(b.dataset.sc));
+document.querySelectorAll('.pg-ctab[data-lang]').forEach(b => b.onclick = () => {
+  curLang = b.dataset.lang;
+  document.querySelectorAll('.pg-ctab[data-lang]').forEach(x => x.classList.toggle('on', x === b));
+  updateCode();
+});
+document.getElementById('pg-rerun').onclick = () => runScenario(curSc);
+document.getElementById('pg-copy').onclick = function () {
+  navigator.clipboard?.writeText(codeBox.textContent);
+  this.textContent = 'Kopyalandı ✓';
+  setTimeout(() => { this.textContent = 'Kopyala'; }, 1400);
+};
+runScenario('zar');
 </script>
 </body>
 </html>
