@@ -377,6 +377,13 @@ app.post('/api/dosya', express.raw({ type: () => true, limit: FILE_MAX + 1024 })
   if (r.error) return res.status(r.code || 400).json({ error: r.error });
   res.json({ ok: true, ...r });
 });
+// İstemcide yaşanan ve sunucuya hiç ulaşmayan hatalar (ör. yükleme sırasında bağlantı kopması) kayda düşsün: nerede takıldığını görmek için
+app.post('/api/istemci-hata', express.text({ type: () => true, limit: '2kb' }), (req, res) => {
+  res.status(204).end();
+  if (limited('ihata|' + (req.ip || ''), 10, 600e3)) return;
+  let d; try { d = JSON.parse(req.body); } catch { return; }
+  console.warn('[istemci-hata]', JSON.stringify({ ...d, ua: String(req.headers['user-agent'] || '').slice(0, 110) }).slice(0, 400));
+});
 // Kullanıcı ya da bot için dosyayı kaydet (tür içerikten doğrulanır, günlük sınır uygulanır)
 function storeFile(me, name, typeHdr, buf) {
   const u = db.users[me], day = new Date().toISOString().slice(0, 10);
@@ -2211,7 +2218,9 @@ function pushAllowed(u, n) {
 // Bildirim gönderim sayaçları (/api/surum'da görünür): sorun olduğunda nerede takıldığını görmek için
 const pushStats = { gonderildi: 0, hata: 0, gorunur: 0, masaustu: 0, sonHata: null };
 function pushOne(u, sub, body, tag) {
-  return webpush.sendNotification(sub, body, { TTL: 3600, urgency: 'high', topic: (tag || 'kanka').replace(/[^\w-]/g, '').slice(0, 32) || undefined }).then(r => { pushStats.gonderildi++; return { ok: true, status: r?.statusCode }; }).catch(err => {
+  // Apple, Topic başlığını kabul etmiyor (BadWebPushTopic → iPhone'a hiç bildirim gitmiyordu); ona konu gönderme
+  const apple = /push\.apple\.com/.test(sub.endpoint || '');
+  return webpush.sendNotification(sub, body, { TTL: 3600, urgency: 'high', topic: apple ? undefined : (tag || 'kanka').replace(/[^\w-]/g, '').slice(0, 32) || undefined }).then(r => { pushStats.gonderildi++; return { ok: true, status: r?.statusCode }; }).catch(err => {
     const st = err?.statusCode || 0;
     if (st === 404 || st === 410) { u.push = (u.push || []).filter(x => x.endpoint !== sub.endpoint); save(); }
     else { pushStats.hata++; pushStats.sonHata = { at: Date.now(), status: st, host: (() => { try { return new URL(sub.endpoint).host; } catch { return '?'; } })(), msg: String(err?.body || err?.message || '').slice(0, 160) }; if (pushStats.hata % 20 === 1) console.warn('Bildirim gönderilemedi', pushStats.sonHata); }
