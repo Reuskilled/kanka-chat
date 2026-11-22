@@ -8869,7 +8869,7 @@ function renderMe() {
   { let x = $('#me-xp'); if (!x) { $('#me .row1').insertAdjacentHTML('afterend', '<div id="me-xp" title=""><i></i></div>'); x = $('#me-xp'); }
     const lo = lvlFloor(u.level), hi = lvlFloor(u.level + 1), pct = Math.max(2, Math.min(100, Math.round((u.xp - lo) / (hi - lo) * 100)));
     x.firstChild.style.width = pct + '%'; x.title = `Seviye ${u.level} · ${u.xp} / ${hi} XP`; }
-  $('#me-lvl').innerHTML = actLine(S.me) || (u.status ? esc(u.status) : '') || `<span title="Seviye ${u.level}${u.streak ? ` · ${u.streak} günlük seri` : ''}">Sv ${u.level}${u.streak ? ` · <span class="streak">${ic('fire')} ${u.streak}</span>` : ''}</span>`;
+  $('#me-lvl').innerHTML = actLine(S.me) || (u.status ? esc(u.status) : '') || `<span title="Seviye ${u.level}${u.streak ? ` · ${u.streak} günlük seri` : ''}">Sv ${u.level}${u.streak ? ` <span class="streak">${ic('fire')}${u.streak}</span>` : ''}</span>`;
 }
 function setPresence(list) {
   const pairs = (list || []).map(x => Array.isArray(x) ? x : [x, 'online']);

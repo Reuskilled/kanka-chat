@@ -106,7 +106,7 @@
   .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; text-align:left; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:28px; transition:transform .2s, border-color .2s; }
   .card:hover { transform:translateY(-4px); border-color:#6a4a36; }
-  .card .ico { width:52px; height:52px; border-radius:15px; display:grid; place-items:center; font-size:26px; margin-bottom:18px; background:#ff8a4c1f; }
+  .card .ico { width:52px; height:52px; border-radius:15px; display:grid; place-items:center; font-size:26px; margin-bottom:18px; background:#d4ff001a; }
   .card h3 { font-size:20px; font-weight:800; margin-bottom:8px; }
   .card p { color:var(--muted); font-size:15.5px; }
 
@@ -120,7 +120,7 @@
   details p { color:#d4c3b7; margin-top:10px; }
 
   /* kapanış */
-  .final { padding:120px 0 140px; text-align:center; position:relative; overflow:hidden; background:radial-gradient(900px 420px at 50% 100%, #ff8a4c30, transparent 70%), var(--bg); }
+  .final { padding:120px 0 140px; text-align:center; position:relative; overflow:hidden; background:radial-gradient(900px 420px at 50% 100%, #d4ff0022, transparent 70%), var(--bg); }
   .final img.mark { width:96px; height:96px; border-radius:26px; margin:0 auto 28px; box-shadow:0 20px 50px rgba(255,110,60,.35); animation:float 6s ease-in-out infinite; }
   .final h2 { font-size:clamp(38px,6vw,72px); text-transform:uppercase; letter-spacing:-2px; margin-bottom:18px; }
   .final p { color:var(--muted); font-size:19px; margin-bottom:34px; }
@@ -169,8 +169,8 @@
     <div class="stage">
       <div class="shot main"><img src="/marka/lp/ses.jpg" alt="Kanka Chat sesli oda ve canlı yayın ekranı" width="1400" height="875"></div>
       <div class="shot phone"><img src="/marka/lp/mobil.jpg" alt="Kanka Chat telefonda" width="640" height="1152"></div>
-      <div class="bubble b1"><div class="av" style="background:#3fcf8e26">🎧</div><div>Oyun Odası 1<small>4 kişi seste · 1:24</small></div></div>
-      <div class="bubble b2"><div class="av" style="background:#ff8a4c26">🔥</div><div>Elif yayında<small>Kanka HQ · 3 izleyen</small></div></div>
+      <div class="bubble b1"><div class="av" style="background:#3fcf8e26">🎧</div><div>Lobi<small>4 kişi seste · 4:00</small></div></div>
+      <div class="bubble b2"><div class="av" style="background:#d4ff0026">🔥</div><div>Pisago yayında<small>Gece Kuşları · 1080p</small></div></div>
     </div>
   </div>
   <div class="fade"></div>
@@ -279,12 +279,12 @@
   document.querySelectorAll('.reveal').forEach(function (el) { io ? io.observe(el) : el.classList.add('in'); });
 </script>
 
-<div id="cerez" hidden style="position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;max-width:560px;margin:0 auto;background:#1c1512;border:1px solid #3a2c25;border-radius:18px;padding:16px 18px;box-shadow:0 20px 50px rgba(0,0,0,.5);color:#f3e9e1;font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif">
+<div id="cerez" hidden style="position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;max-width:560px;margin:0 auto;background:#141417;border:1px solid #2a2a30;border-radius:18px;padding:16px 18px;box-shadow:0 20px 50px rgba(0,0,0,.5);color:#f4f4f5;font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif">
   <b style="display:block;font-size:15px;margin-bottom:4px">🍪 Çerez tercihin</b>
-  <span style="color:#c9b8aa">Reklamlarımızın işe yarayıp yaramadığını ölçmek için bu tanıtım sayfasında Google çerezlerini kullanmak istiyoruz. Uygulamanın içinde reklam ya da takip çerezi yok. <a href="/gizlilik.html#cerez" style="color:#ff9a62">Ayrıntılar</a></span>
+  <span style="color:#a1a1aa">Reklamlarımızın işe yarayıp yaramadığını ölçmek için bu tanıtım sayfasında Google çerezlerini kullanmak istiyoruz. Uygulamanın içinde reklam ya da takip çerezi yok. <a href="/gizlilik.html#cerez" style="color:#d4ff00">Ayrıntılar</a></span>
   <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-    <button id="cerez-evet" style="flex:1;min-width:120px;height:40px;border:0;border-radius:12px;background:#ff8a4c;color:#1a0f08;font-weight:800;cursor:pointer">Kabul et</button>
-    <button id="cerez-hayir" style="flex:1;min-width:120px;height:40px;border:1px solid #3a2c25;border-radius:12px;background:transparent;color:#f3e9e1;font-weight:700;cursor:pointer">Reddet</button>
+    <button id="cerez-evet" style="flex:1;min-width:120px;height:40px;border:0;border-radius:12px;background:#d4ff00;color:#0b0f00;font-weight:800;cursor:pointer">Kabul et</button>
+    <button id="cerez-hayir" style="flex:1;min-width:120px;height:40px;border:1px solid #2a2a30;border-radius:12px;background:transparent;color:#f4f4f5;font-weight:700;cursor:pointer">Reddet</button>
   </div>
 </div>
 <script>
