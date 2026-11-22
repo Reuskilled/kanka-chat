@@ -11311,15 +11311,17 @@ AR_R.bilardo = {
       const p = toT(e), g = AR.lobby.g, cue = cueOf();
       // 8 numarada cep seçimi
       if (g.eight) { const k = BIL_POCKETS.findIndex(([px, py]) => Math.hypot(p[0] - px, p[1] - py) < 0.1); if (k >= 0) { st.pc = k; buzz(10); return; } }
-      if (g.hand && (Math.hypot(p[0] - cue.x, p[1] - cue.y) < PT.R * 3 || (!st.place && g.hand))) { drag = { kind: 'ball' }; st.place = { x: p[0], y: p[1] }; return; }
-      drag = { kind: e.pointerType === 'mouse' ? 'mouse' : 'rot', a0: Math.atan2(p[1] - cue.y, p[0] - cue.x), ang0: st.ang, moved: false, p0: p };
+      if (g.hand && Math.hypot(p[0] - cue.x, p[1] - cue.y) < PT.R * 3.5) { drag = { kind: 'ball' }; st.place = { x: Math.max(PT.R, Math.min(g.hand === 'kitchen' ? PT.W * 0.25 : PT.W - PT.R, p[0])), y: Math.max(PT.R, Math.min(PT.H - PT.R, p[1])) }; return; }
+      if (e.pointerType === 'mouse') { st.ang = Math.atan2(p[1] - cue.y, p[0] - cue.x); drag = { kind: 'mouse' }; return; }
+      drag = { kind: 'rot', last: p, moved: false, p0: p };
     };
     c.onpointermove = e => {
       const p = toT(e); st.ptr = p; if (!my()) return; const cue = cueOf();
       if (drag?.kind === 'ball') { const g = AR.lobby.g, x = Math.max(PT.R, Math.min((g.hand === 'kitchen' ? PT.W * 0.25 : PT.W - PT.R), p[0])), y = Math.max(PT.R, Math.min(PT.H - PT.R, p[1])); st.place = { x, y }; return; }
       if (st.powDrag) return;
-      if (e.pointerType === 'mouse' && !drag) { st.ang = Math.atan2(p[1] - cue.y, p[0] - cue.x); return; }
-      if (drag?.kind === 'rot') { const a = Math.atan2(p[1] - cue.y, p[0] - cue.x); let d = a - drag.a0; d = Math.atan2(Math.sin(d), Math.cos(d)); if (Math.abs(d) > 0.004 || Math.hypot(p[0] - drag.p0[0], p[1] - drag.p0[1]) > 0.02) drag.moved = true; st.ang = drag.ang0 + d; }
+      if (drag?.kind === 'rot') { // parmağın cebe göre yanlamasına hareketi kadar döner; beyaza çok yakınken aşırı hassas olmasın
+        const rx = drag.last[0] - cue.x, ry = drag.last[1] - cue.y, dx = p[0] - drag.last[0], dy = p[1] - drag.last[1], r2 = Math.max(rx * rx + ry * ry, 0.09);
+        st.ang += (rx * dy - ry * dx) / r2; drag.last = p; if (Math.hypot(p[0] - drag.p0[0], p[1] - drag.p0[1]) > 0.015) drag.moved = true; }
       if (drag?.kind === 'mouse') st.ang = Math.atan2(p[1] - cue.y, p[0] - cue.x);
     };
     c.onpointerup = e => {
@@ -11408,14 +11410,14 @@ AR_R.bilardo = {
       if (g.ev.foul) parts.push(`<span class="bad">Faul: ${esc(g.ev.foul)} · Top rakipte</span>`);
       const wait = st.anim ? st.anim.f.length * 33 + 300 : 0;
       setTimeout(() => { if ($('#bl-ev')) $('#bl-ev').innerHTML = parts.length ? `<div class="bl-evs">${parts.join('')}</div>` : ''; AR_R.bilardo.renderRack(st); }, wait);
-      if (g.turn === S.me) { st.place = null; st.pc = null; if (prev?.turn !== S.me || g.hand) st.ang = Math.PI + (g.brk ? 0 : 0); }
+      if (g.turn === S.me) { st.place = null; st.pc = null; AR_R.bilardo.autoAim(st, g); }
     } else if (st.seq === undefined) st.livePotted = new Set((g.balls || []).filter(b => b.in && b.n > 0).map(b => b.n));
-    if (st.seq === undefined) st.seq = g.ev?.seq ?? 0;
-    if (g.brk && g.turn === S.me) st.ang = 0;
+    if (st.seq === undefined) { st.seq = g.ev?.seq ?? 0; if (g.turn === S.me) AR_R.bilardo.autoAim(st, g); }
     AR_R.bilardo.renderRack(st);
     const gr = g.groups?.[S.me], mine = g.turn === S.me && L.state === 'play';
+    const aimTip = matchMedia('(pointer: fine)').matches ? 'Masaya tıklayıp sürükleyerek nişan al' : 'Masada parmağını kaydırarak nişan al';
     $('#bl-ev').dataset.r = !mine ? '' : g.eight ? '8 numara sırası: önce bir cebe dokunup söyle, sonra vur' : g.hand === 'kitchen' ? 'Açılış: beyazı sol çeyrekte istediğin yere sürükle, soldaki güç çubuğunu aşağı çekip bırak'
-      : g.hand ? 'Top elinde: beyazı istediğin yere sürükle' : `Nişan al, soldaki güç çubuğunu aşağı çekip bırak${gr ? ` · ${gr === 'duz' ? 'Düz (1-7)' : 'Çizgili (9-15)'}` : ''}`;
+      : g.hand ? `Top elinde: beyazı sürükleyip istediğin yere koy · ${aimTip}` : `${aimTip}, soldaki güç çubuğunu aşağı çekip bırak${gr ? ` · ${gr === 'duz' ? 'Düz (1-7)' : 'Çizgili (9-15)'}` : ''}`;
     const side = $('.bl-side'), pw = $('#bl-pow'); if (side) side.style.visibility = mine ? '' : 'hidden'; if (pw) pw.classList.toggle('off', !mine);
   },
   buildBg(W, H, s) {
@@ -11471,6 +11473,12 @@ AR_R.bilardo = {
     let rail = null;
     if (!hit) { const tx = dx > 0 ? (PT.W - R - cue.x) / dx : dx < 0 ? (R - cue.x) / dx : 9, ty = dy > 0 ? (PT.H - R - cue.y) / dy : dy < 0 ? (R - cue.y) / dy : 9; best = Math.max(0, Math.min(tx, ty)); rail = tx < ty ? [-dx, dy] : [dx, -dy]; }
     return { gx: cue.x + dx * best, gy: cue.y + dy * best, hit, rail, dx, dy };
+  },
+  // Sıra bana geçince ıstakayı en yakın oynanabilir topa çevir (açılışta dizilişe)
+  autoAim(st, g) {
+    const c = g.balls[0]; if (g.brk) { st.ang = 0; return; }
+    let best = null, bd = 9; for (const b of g.balls) { if (b.in || !b.n || !AR_R.bilardo.legal(g, b.n)) continue; const d = Math.hypot(b.x - c.x, b.y - c.y); if (d < bd) { bd = d; best = b; } }
+    if (best) st.ang = Math.atan2(best.y - c.y, best.x - c.x);
   },
   legal(g, n) { const gr = g.groups?.[S.me]; if (g.brk) return true; if (!g.groups) return n !== 8; if (g.eight) return n === 8; return gr === 'duz' ? n >= 1 && n <= 7 : n >= 9 && n <= 15; },
   draw(st) {
