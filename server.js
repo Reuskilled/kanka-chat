@@ -1611,6 +1611,13 @@ const findMsg = (chId, msgId) => (db.messages[chId] || []).find(m => m.id === ms
 const roleOf = (s, n) => s.roles?.[n] || 'member';
 // Sahiplik role bağlı değildir: sahip rolü ne olursa olsun tüm yetkilere sahiptir
 const isAdmin = (s, n) => s.owner === n || roleOf(s, n) === 'admin';
+// Üye sunucudan çıkınca (ayrılma, atılma, yasak, geçici üyelik, ret) sunucudaki rolleri ve kabul bilgisi silinir;
+// geri gelirse yeni üye gibi başlar. Susturma (kaçmak için çık-gir yapılmasın) ve seviye (XP) korunur.
+function wipeMember(s, n) {
+  delete s.roles?.[n]; delete s.memberRoles?.[n]; delete s.joinedAt?.[n]; delete s.accepted?.[n]; delete s.temp?.[n];
+  if (s.applications?.[n]?.st !== 'ret') delete s.applications?.[n];
+  if (s.bot?.autorole?.pending) delete s.bot.autorole.pending[n];
+}
 const isMod = (s, n) => isAdmin(s, n) || roleOf(s, n) === 'mod' || can(s, n, 'manageChannels');
 const serverOf = chId => chId && !isPrivateChat(chId) ? findChannel(chId)?.s : null;
 const UPLOAD_RE = /^\/uploads\/[a-f0-9]+\.(png|jpe?g|gif|webp)$/;
@@ -3345,13 +3352,13 @@ api.post('/sunucular/:sid/uyeler/:ad/sustur', R((a, req) => {
 api.delete('/sunucular/:sid/uyeler/:ad', R((a, req) => {
   const x = botMod(a, req, 'kick'); if (x.error) return x; const { s, n } = x;
   if (nukeCheck(s, a.bot, 'üye atma')) return { error: 'Kısa sürede çok fazla üye attın, işlem durduruldu', code: 429 };
-  s.members = s.members.filter(m => m !== n); delete s.roles[n]; delete s.memberRoles?.[n]; audit(s, a.bot, 'Sunucudan attı (bot)', n + (req.body?.sebep ? ' · ' + clean(req.body.sebep, 120) : ''));
+  s.members = s.members.filter(m => m !== n); wipeMember(s, n); audit(s, a.bot, 'Sunucudan attı (bot)', n + (req.body?.sebep ? ' · ' + clean(req.body.sebep, 120) : ''));
   voiceKick(s.channels.map(c => c.id), n, 'Sunucudan çıkarıldın'); save(); pushServers([n, ...s.members]); io.to('user:' + n).emit('toast', `${s.name} sunucusundan çıkarıldın`); botMember(s, n, 'leave'); return { ok: true };
 }));
 api.put('/sunucular/:sid/yasaklar/:ad', R((a, req) => {
   const x = botMod(a, req, 'ban'); if (x.error) return x; const { s, n } = x;
   if (nukeCheck(s, a.bot, 'yasaklama')) return { error: 'Kısa sürede çok fazla yasaklama, işlem durduruldu', code: 429 };
-  s.bans[n] = { by: a.bot, time: Date.now(), reason: clean(req.body?.sebep, 120) }; s.members = s.members.filter(m => m !== n); delete s.roles[n]; delete s.memberRoles?.[n];
+  s.bans[n] = { by: a.bot, time: Date.now(), reason: clean(req.body?.sebep, 120) }; s.members = s.members.filter(m => m !== n); wipeMember(s, n);
   audit(s, a.bot, 'Yasakladı (bot)', n); voiceKick(s.channels.map(c => c.id), n, 'Sunucudan yasaklandın'); save(); pushServers([n, ...s.members]); io.to('user:' + n).emit('toast', `${s.name} sunucusundan yasaklandın`); botMember(s, n, 'leave'); return { ok: true };
 }));
 api.delete('/sunucular/:sid/uyeler/:ad/sustur', R((a, req) => {
@@ -5359,7 +5366,7 @@ io.on('connection', socket => {
     if (!db.users[name] || name === me || !outranks(s, me, name)) return cb({ error: 'Bu kişiyi yasaklayamazsın' });
     if (nukeCheck(s, me, 'yasaklama')) return cb({ error: 'Kanka Bot: Kısa sürede çok fazla yasaklama yaptın, işlem durduruldu.' });
     s.bans[name] = { by: me, time: Date.now(), reason: clean(reason, 120) };
-    s.members = s.members.filter(n => n !== name); delete s.roles[name]; delete s.memberRoles?.[name];
+    s.members = s.members.filter(n => n !== name); wipeMember(s, name);
     audit(s, me, 'Yasakladı', name + (reason ? ' · ' + clean(reason, 120) : ''));
     voiceKick(s.channels.map(c => c.id), name, 'Sunucudan yasaklandın');
     save(); pushServers([name, ...s.members]);
@@ -5371,7 +5378,7 @@ io.on('connection', socket => {
     if (s.public) return cb({ error: 'Herkese açık sunucudan kimse atılamaz' });
     if (name === s.owner || !can(s, me, 'kick') || !outranks(s, me, name)) return cb({ error: 'Bu kişiyi atamazsın' });
     if (nukeCheck(s, me, 'üye atma')) return cb({ error: 'Kanka Bot: Kısa sürede çok fazla üye attın, işlem durduruldu.' });
-    s.members = s.members.filter(n => n !== name); delete s.roles[name]; delete s.memberRoles?.[name];
+    s.members = s.members.filter(n => n !== name); wipeMember(s, name);
     audit(s, me, 'Sunucudan attı', name);
     voiceKick(s.channels.map(c => c.id), name, 'Sunucudan çıkarıldın');
     save(); pushServers([name, ...s.members]);
@@ -5815,7 +5822,7 @@ io.on('connection', socket => {
       (s.accepted ||= {})[name] = Date.now(); if (botOn(s, 'autorole') && s.bot.autorole.when === 'rules') autoRoleGive(s, name);
       audit(s, me, 'Katılım başvurusunu onayladı', name); io.to('user:' + name).emit('toast', `✅ ${s.name} sunucusuna katılım başvurun onaylandı, artık yazabilirsin!`);
     } else {
-      s.members = s.members.filter(n => n !== name); delete s.joinedAt?.[name]; delete s.temp?.[name]; voiceKick(s.channels.map(c => c.id), name, 'Başvurun reddedildi');
+      s.members = s.members.filter(n => n !== name); wipeMember(s, name); voiceKick(s.channels.map(c => c.id), name, 'Başvurun reddedildi');
       audit(s, me, 'Katılım başvurusunu reddetti', name + (note ? ': ' + note : '')); io.to('user:' + name).emit('toast', `${s.name} sunucusuna katılım başvurun kabul edilmedi${note ? ': ' + note : ''}`);
     }
     save(); pushServers([name, ...membersOf(s)]); cb({ ok: true });
@@ -5866,7 +5873,7 @@ io.on('connection', socket => {
     inviteGuard('u:' + me, !!s); inviteGuard('ip:' + ip, !!s);
     if (!s) return cb({ error: s === undefined && db.servers.some(x => x.invites?.some(i => i.code === code)) ? 'Bu davetin süresi dolmuş ya da kullanım sınırına ulaşmış' : 'Davet kodu geçersiz' });
     if (s.bans?.[me]) return cb({ error: 'Bu sunucudan yasaklandın' });
-    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); if (inv) { inv.uses = (inv.uses || 0) + 1; if (inv.temp) (s.temp ||= {})[me] = Date.now(); } (s.joinVia ||= {})[me] = inv ? inv.code : 'ana'; const ar = autoRoleOnJoin(s, me); if (s.id === db.devServer) devRoleSync(me); save(); pushServers(s.members); botWelcome(s, me, ar); botMember(s, me, 'join'); }
+    if (!s.public && !s.members.includes(me)) { wipeMember(s, me); s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); if (inv) { inv.uses = (inv.uses || 0) + 1; if (inv.temp) (s.temp ||= {})[me] = Date.now(); } (s.joinVia ||= {})[me] = inv ? inv.code : 'ana'; const ar = autoRoleOnJoin(s, me); if (s.id === db.devServer) devRoleSync(me); save(); pushServers(s.members); botWelcome(s, me, ar); botMember(s, me, 'join'); }
     cb(serverView(s, me));
   });
 
@@ -5874,7 +5881,7 @@ io.on('connection', socket => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || s.public) return cb({ error: 'Bu sunucudan ayrılamazsın' });
     if (s.owner === me && s.members.some(n => n !== me)) return cb({ error: 'Sunucunun sahibisin. Ayrılmadan önce Sunucu ayarları → Genel → Sahipliği devret, ya da sunucuyu sil.', owner: true });
-    s.members = s.members.filter(n => n !== me); botMember(s, me, 'leave');
+    s.members = s.members.filter(n => n !== me); wipeMember(s, me); botMember(s, me, 'leave');
     for (const c of s.channels.filter(c => c.ticket && !c.ticket.closedAt && c.ticket.by === me)) closeTicket(s, c, me);
     botBye(s, me);
     voiceKick(s.channels.map(c => c.id), me, 'Sunucudan ayrıldın');
@@ -6025,7 +6032,7 @@ setInterval(() => {
       if (!s.members.includes(n) || (s.memberRoles?.[n] || []).length) { delete s.temp[n]; ch = true; continue; }
       if (on.has(n) || Date.now() - s.temp[n] < 60e3) continue;
       if ([...voice.values()].some(m => [...m.values()].includes(n))) continue;
-      s.members = s.members.filter(x => x !== n); delete s.temp[n]; delete s.joinedAt?.[n]; delete s.accepted?.[n]; ch = true;
+      s.members = s.members.filter(x => x !== n); wipeMember(s, n); ch = true;
       try { pushServers([n, ...s.members]); } catch {}
     }
     if (!Object.keys(s.temp).length) delete s.temp;
