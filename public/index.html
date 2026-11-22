@@ -4195,7 +4195,11 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .ar-head { display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: #111319; border-bottom: 1px solid rgba(255,255,255,.07); padding-top: max(10px, env(safe-area-inset-top)); flex-shrink: 0; }
   .ar-head #ar-back .ic { transform: rotate(90deg); }
   #arena [hidden] { display: none !important; }
-  .ar-logo { display: flex; align-items: baseline; gap: 5px; font-size: 17px; letter-spacing: -.025em; flex-shrink: 0; } .ar-logo b { font-weight: 800; color: #f5f6f8; } .ar-logo span { font-weight: 900; color: var(--accent); font-style: italic; }
+  .ar-logo { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .ar-mark { width: 28px; height: 28px; border-radius: 8px; background: #090a0d; border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.07); }
+  .ar-mark svg { width: 16px; height: 16px; display: block; }
+  .ar-logo b { font-size: 16px; font-weight: 800; letter-spacing: -.025em; color: #f5f6f8; }
+  .ar-logo .ar-tag { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 3px 6px; border-radius: 5px; background: var(--accent); color: #090a0d; line-height: 1; font-style: normal; }
   .ar-tabs { display: flex; gap: 3px; padding: 3px; border-radius: 9px; background: #0b0c10; border: 1px solid rgba(255,255,255,.06); margin-left: 4px; }
   .ar-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; color: #8b92a1; transition: color .14s, background .14s; }
   .ar-tabs button:hover { color: #e5e7eb; }
@@ -11092,7 +11096,7 @@ function arCreate(game) {
 function arHead() {
   const L = AR.lobby, inGame = L && AR.view === 'lobby';
   const ch = myVoice && !myVoice.startsWith('call:') ? myVoice : null, lobN = ch ? (AR.lobbies[ch] || []).length : 0;
-  return `<div class="ar-head">${inGame ? `<button class="ar-icbtn" id="ar-back" aria-label="Lobilere dön">${ic('chevron')}</button>` : ''}<div class="ar-logo"><b>Kanka</b><span>Arena</span></div>
+  return `<div class="ar-head">${inGame ? `<button class="ar-icbtn" id="ar-back" aria-label="Lobilere dön">${ic('chevron')}</button>` : ''}<div class="ar-logo"><span class="ar-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M9 6.5v19M9 17.5L21 7.5" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="17.2" y="18.2" width="7.8" height="7.8" rx="3.9" transform="rotate(-12 17.2 18.2)" fill="#c8ff00"/></svg></span><b>Kanka</b><span class="ar-tag">ARENA</span></div>
     ${inGame ? `<div class="ar-ttl">${L.emoji} ${esc(L.ad)}${L.watchers - L.players.length > 0 ? `<small>${ic('eye')}${L.watchers - L.players.length} izliyor</small>` : ''}</div>`
       : `<nav class="ar-tabs"><button class="${AR.view === 'hub' ? 'on' : ''}" data-av="hub">${ic('gamepad')}Oyunlar</button><button class="${AR.view === 'top' ? 'on' : ''}" data-av="top">${ic('trophy')}Sıralama</button></nav>
          ${AR.view === 'hub' ? `<div class="ar-search">${ic('search')}<input id="ar-q" type="text" placeholder="Oyun ara..." value="${esc(AR.q || '')}" autocomplete="off"><kbd>/</kbd></div>` : ''}`}
