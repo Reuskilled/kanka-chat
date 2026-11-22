@@ -4195,6 +4195,13 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .ar-head { display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: #111319; border-bottom: 1px solid rgba(255,255,255,.07); padding-top: max(10px, env(safe-area-inset-top)); flex-shrink: 0; }
   .ar-head #ar-back .ic { transform: rotate(90deg); }
   #arena [hidden] { display: none !important; }
+  #arena.embed { position: relative; inset: auto; z-index: 1; background: none; backdrop-filter: none; display: flex; order: -3; flex: none; animation: none; padding: 0; }
+  #arena.embed .ar-box { width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+  #stage.act .tile { flex: none; border-radius: 12px; } #stage.act .tile .tname { font-size: 11px; } #stage.act .tile .tav .av { transform: scale(.6); }
+  .room .ico.gico { font-size: 15px; line-height: 1; display: grid; place-items: center; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
+  .room.has-game .rn::after { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: middle; box-shadow: 0 0 6px var(--accent); }
+  .vv-bar > b { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+  .lcard .lgame { font-size: 14px; line-height: 1; } .vv-bar .vv-game { font-size: 18px; line-height: 1; margin-right: 2px; }
   .ar-logo { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .ar-mark { width: 28px; height: 28px; border-radius: 8px; background: #090a0d; border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.07); }
   .ar-mark svg { width: 16px; height: 16px; display: block; }
@@ -5322,7 +5329,7 @@ function onAuth(res) {
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ageGate) return showAgeGate(res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
   if (res.ice?.length) ICE.iceServers = res.ice;
-  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff; S.wrapOff = !!res.wrapOff; S.entrySound = res.entrySound || null; S.matchOff = !!res.matchOff;
+  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff; S.wrapOff = !!res.wrapOff; S.arenaRooms = res.arenaRooms || {}; S.entrySound = res.entrySound || null; S.matchOff = !!res.matchOff;
   { const be = new URLSearchParams(location.search).get('botekle'); if (be) { const iz = new URLSearchParams(location.search).get('izin') || ''; history.replaceState(null, '', APP_PATH); setTimeout(() => showBotAuthorize(be, iz.split(',').filter(Boolean)), 900); } }
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
@@ -6139,7 +6146,8 @@ function liveNowHTML(s, seen = () => true) {
   return `<div class="livenow"><div class="ln-h">ŞU AN CANLI</div>${list.map(c => {
     const who = S.voice[c.id], live = (S.live?.[c.id] || []).length, mine = myVoice === c.id;
     const names = who.map(n => n === S.me ? 'Sen' : dn(n)), txt = live ? `${esc(dn(S.live[c.id][0]))} yayında` : names.slice(0, 3).join(', ') + (who.length > 3 ? ` +${who.length - 3}` : '');
-    return `<button type="button" class="lcard ${mine ? 'me' : ''}" data-golive="${c.id}"><span class="lt">${ic('volume')}<span class="nm">${esc(c.name)}</span>${live ? '<span class="ltag">● CANLI</span>' : ''}<em class="vtm" data-vt="${c.id}">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em></span>
+    const gm = arGameOf(c.id);
+    return `<button type="button" class="lcard ${mine ? 'me' : ''}" data-golive="${c.id}"><span class="lt">${gm ? `<span class="lgame" title="${esc(gm.t)}">${gm.e}</span>` : ic('volume')}<span class="nm">${esc(c.name)}</span>${live ? '<span class="ltag">● CANLI</span>' : ''}<em class="vtm" data-vt="${c.id}">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em></span>
       <span class="who">${who.slice(0, 5).map(n => av(n).replace('class="av', `class="av${speaking.has(n) ? ' spk' : ''}`)).join('')}<em>${txt}</em></span></button>`;
   }).join('')}</div>`;
 }
@@ -6158,7 +6166,7 @@ function renderSide() {
   const canAdd = canAddCh(s), manage = canManageCh(s);
   const isUn = c => S.unread.has(c.id) && notifMode(c.id) !== 'none' && c.id !== S.channel?.id;
   const tRow = c => { const mc = mentCountCh(c.id); return `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${isUn(c) || mc ? 'unread' : ''} ${mc ? 'has-ment' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${mc ? `<span class="mbadge">${mc > 9 ? '9+' : mc}</span>` : chBadge(c)}${notifMode(c.id) === 'none' ? `<button class="rmute" data-unmute="${c.id}" title="Sessizde · sesini açmak için tıkla" aria-label="Odanın sesini aç">${ic('belloff')}</button>` : ''}${!mc && isUn(c) && c.id !== S.channel?.id ? `<span class="udot" title="Son baktığından beri ${chCnt[c.id] ? chCnt[c.id] + ' yeni mesaj' : 'yeni mesaj var'}">${chCnt[c.id] > 1 ? (chCnt[c.id] > 99 ? '99+' : chCnt[c.id]) : ''}</span>` : ''}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` };
-  const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${(S.voice[c.id] || []).length ? `<em class="vtm" data-vt="${c.id}" title="Sohbet bu kadar zamandır sürüyor">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em>` : ''}${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
+  const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''} ${arGameOf(c.id) ? 'has-game' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}>${arGameOf(c.id) ? `<div class="ico gico" title="${esc(arGameOf(c.id).t)}">${arGameOf(c.id).e}</div>` : `<div class="ico">${roomIcon(c)}</div>`}<span class="rn">${esc(c.name)}</span>${(S.voice[c.id] || []).length ? `<em class="vtm" data-vt="${c.id}" title="Sohbet bu kadar zamandır sürüyor">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em>` : ''}${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n), vnb = nbOf(S.users[n]);
         return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''} ${(S.live?.[c.id] || []).includes(n) ? 'islive' : ''}${vnb ? ' has-nb-sp nb-' + vnb : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${vnb ? nbLayers(vnb) : ''}${av(n)}<span class="vn">${styledNameHTML(dn(n), S.users[n]?.nameStyle)}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${(fl.m || uMuted.has(n)) ? `<span class="vstat vm-mic" title="${uMuted.has(n) ? 'Senin için susturuldu' : 'Mikrofonu kapalı'}">${ic('micoff', 'vm')}</span>` : ''}${fl.d ? `<span class="vstat vm-deaf" title="Kulaklığı kapalı">${ic('headsetoff', 'vm')}</span>` : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle"><i></i>CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
   const vOrder = c => { const l = [...(S.voice[c.id] || [])], lv = S.live?.[c.id] || [], rk = n => { const i = lv.indexOf(n); return i < 0 ? 1e3 : i; }; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l.map((n, i) => [n, i]).sort((a, b) => rk(a[0]) - rk(b[0]) || a[1] - b[1]).map(x => x[0]); }; // yayın açanlar odanın en üstünde
@@ -11168,6 +11176,17 @@ function arBadges() {
   const n = myVoice ? arCount(myVoice) : 0;
   document.querySelectorAll('[data-arcount]').forEach(b => { b.dataset.arcount = n || ''; b.classList.toggle('ar-has', !!n); });
 }
+// Hangi sesli odada hangi oyun var (odalar listesinde ve oda başlığında simgesi görünür)
+S.arenaRooms = S.arenaRooms || {};
+function arGameOf(ch) {
+  const l = ch && S.arenaRooms?.[ch]; if (!l?.length) return null;
+  const g = l.find(x => x.state === 'play') || l[0], info = AR_INFO[g.game] || [g.emoji || '🎮', g.ad || 'Oyun'];
+  return { e: info[0], t: `${info[1]} ${g.state === 'play' ? 'oynanıyor' : 'lobisi açık'}${l.length > 1 ? ` · ${l.length} lobi` : ''}` };
+}
+socket.on('arenaRoom', ({ ch, g }) => {
+  if (g?.length) S.arenaRooms[ch] = g; else delete S.arenaRooms[ch];
+  if (S.view === 'server') renderSide(); if (myVoice === ch && vview()) { const b = $('#stage .vv-bar b'), gm = arGameOf(ch); if (b) b.innerHTML = `${gm ? `<span class="vv-game" title="${esc(gm.t)}">${gm.e}</span>` : ic('volume')}${esc($('#vname')?.textContent || 'Sesli oda')}`; }
+});
 socket.on('arenaCh', ({ ch, lobbies }) => { AR.lobbies[ch] = lobbies; arBadges(); if (AR.el && AR.view === 'hub') arRender(); });
 socket.on('arena', v => {
   if (!AR.lobby || AR.lobby.id !== v.id) return;
@@ -11187,15 +11206,27 @@ function arKey(e) {
   const qi = AR.el.querySelector('#ar-q'); if (!qi) return;
   e.preventDefault(); qi.focus();
 }
+// Discord'daki etkinlikler gibi: sesli odadaysan oyun odanın görünümünün içinde açılır (kişiler altta küçük şerit olur).
+// Seste değilsen (sohbetteki karttan izlerken) eskisi gibi pencere olarak açılır.
+function arEmbedOk() { return !!myVoice && !myVoice.startsWith('call:'); }
 function openArena(lobbyId) {
+  const embed = arEmbedOk();
+  if (AR.el && AR.el.classList.contains('embed') !== embed) closeArena(true);
   if (!AR.el) {
-    AR.el = document.createElement('div'); AR.el.id = 'arena'; AR.el.setAttribute('role', 'dialog'); AR.el.setAttribute('aria-label', 'Kanka Arena');
-    AR.el.innerHTML = '<div class="ar-box"></div>'; document.body.appendChild(AR.el);
-    AR.el.addEventListener('pointerdown', e => { if (e.target === AR.el) closeArena(); });
+    AR.el = document.createElement('div'); AR.el.id = 'arena'; AR.el.setAttribute('role', embed ? 'region' : 'dialog'); AR.el.setAttribute('aria-label', 'Kanka Arena');
+    AR.el.innerHTML = '<div class="ar-box"></div>';
+    if (embed) {
+      AR.el.classList.add('embed'); if (!vview()) setVView(true);
+      const st = $('#stage'); st.classList.add('act'); st.insertBefore(AR.el, st.querySelector('.tile') || null);
+      requestAnimationFrame(layoutStage);
+    } else {
+      document.body.appendChild(AR.el);
+      AR.el.addEventListener('pointerdown', e => { if (e.target === AR.el) closeArena(); });
+      document.body.classList.add('arena-open');
+    }
     window.addEventListener('keydown', arKey);
     ovOpen('arena', () => closeArena(true));
-    document.body.classList.add('arena-open');
-  }
+  } else if (embed && !vview()) setVView(true);
   closeSoundboard?.();
   const ch = myVoice && !myVoice.startsWith('call:') ? myVoice : null;
   if (ch) socket.emit('arenaWatch', { ch }, r => { AR.lobbies[ch] = r.lobbies || []; arBadges(); if (AR.view === 'hub') arRender(); });
@@ -11204,7 +11235,9 @@ function openArena(lobbyId) {
 function closeArena(fromBack) {
   if (!AR.el) return;
   window.removeEventListener('keydown', arKey);
+  const wasEmbed = AR.el.classList.contains('embed');
   arUnmount(); AR.el.remove(); AR.el = null; AR.q = ''; document.body.classList.remove('arena-open');
+  if (wasEmbed) { $('#stage')?.classList.remove('act'); requestAnimationFrame(layoutStage); }
   if (AR.lobby && !arMine()) { socket.emit('arenaClose'); AR.lobby = null; }
   AR.view = 'hub'; if (!fromBack) ovClosed('arena');
 }
@@ -11787,9 +11820,9 @@ AR_R.bilardo = {
   },
   legal(g, n) { const gr = g.groups?.[S.me]; if (g.brk) return true; if (!g.groups) return n !== 8; if (g.eight) return n === 8; return gr === 'duz' ? n >= 1 && n <= 7 : n >= 9 && n <= 15; },
   draw(st) {
-    const c = st.c, x = c.getContext('2d'), g = st.g; if (!g) return;
+    const c = st.c, x = c.getContext('2d'), g = st.g; if (!g || c.width < 8 || c.height < 8) return; // oda görünümü kapalıyken masa çizilmez
     const TW = PT.W + 2 * PT.M, TH = PT.H + 2 * PT.M, LW = st.rot ? c.height : c.width, LH = st.rot ? c.width : c.height, s = LW / TW, o = PT.M * s;
-    if (!st.bg) st.bg = AR_R.bilardo.buildBg(LW, LH, s);
+    if (!st.bg || st.bg.width !== LW || st.bg.height !== LH) st.bg = AR_R.bilardo.buildBg(LW, LH, s);
     const P = (px, py) => [o + px * s, o + py * s], now = performance.now();
     x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
     if (st.rot) { x.translate(c.width, 0); x.rotate(Math.PI / 2); }
@@ -12867,8 +12900,15 @@ function layoutStage() {
   if (st.classList.contains('vfs')) return;
   const tiles = [...st.querySelectorAll('.tile')].filter(t => !t.classList.contains('memoff')), gap = 12, top = 64, pad = 16;
   const W = st.clientWidth - pad * 2, H = st.clientHeight - top - pad;
-  if (!tiles.length || W <= 0 || H <= 0) return;
   const size = (el, w, h) => { el.style.width = Math.floor(w) + 'px'; el.style.height = Math.floor(h) + 'px'; };
+  const act = st.querySelector('#arena.embed');
+  if (act && W > 0 && H > 0) { // oyun açıkken: oyun büyük, kişiler altta şerit
+    const dock = innerWidth < 760 && document.body.classList.contains('invoice') ? ($('#vdock')?.offsetHeight || 0) + 22 : 0, H2 = H - dock;
+    const sh = tiles.length ? Math.min(92, Math.max(56, H * 0.14)) : 0, n = tiles.length, tw = n ? Math.min(sh * 16 / 9, (W - gap * (n - 1)) / n) : 0;
+    size(act, W, H2 - (sh ? sh + gap : 0)); tiles.forEach(t => size(t, tw, Math.min(sh, tw * 9 / 16 + 20)));
+    st.style.paddingTop = top + 'px'; return;
+  }
+  if (!tiles.length || W <= 0 || H <= 0) return;
   const focus = tiles.find(t => t.classList.contains('focus')), rest = tiles.filter(t => t !== focus);
   let usedH;
   if (focus) {
@@ -13070,12 +13110,14 @@ function renderPip() {
 }
 function renderStage() {
   const st = $('#stage');
-  if (!myVoice) { st.classList.remove('on', 'focus'); st.innerHTML = ''; fsOn(false); clearInterval(stageStats); stageStats = null; document.body.classList.remove('vview'); renderPip(); return; }
+  if (!myVoice && AR.el?.classList.contains('embed')) closeArena();
+  if (!myVoice) { st.classList.remove('on', 'focus', 'act'); st.innerHTML = ''; fsOn(false); clearInterval(stageStats); stageStats = null; document.body.classList.remove('vview'); renderPip(); return; }
   st.classList.add('on');
   renderPip();
   let bar = st.querySelector('.vv-bar');
   if (!bar) { bar = document.createElement('div'); bar.className = 'vv-bar'; st.prepend(bar); }
-  bar.innerHTML = `<b>${ic('volume')}${esc($('#vname')?.textContent || 'Sesli oda')}</b><button class="vv-mem" title="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}" aria-label="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}">${ic(hideMem ? 'eye' : 'eyeOff')} ${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}</button><button class="vv-ar" title="Kanka Arena" aria-label="Kanka Arena" data-arcount="${myVoice ? arCount(myVoice) || '' : ''}">${ic('gamepad')} Arena</button><button class="vv-sb" title="Ses paneli" aria-label="Ses paneli" data-sbopen>${ic('sboard')} Ses paneli</button><button class="vv-chat" title="Oda sohbeti" aria-label="Oda sohbeti">${ic('chat')} Oda sohbeti</button><button class="vv-back" title="Geri dön" aria-label="Geri dön">${ic('x')} Geri dön</button>`;
+  const gmv = arGameOf(myVoice);
+  bar.innerHTML = `<b>${gmv ? `<span class="vv-game" title="${esc(gmv.t)}">${gmv.e}</span>` : ic('volume')}${esc($('#vname')?.textContent || 'Sesli oda')}</b><button class="vv-mem" title="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}" aria-label="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}">${ic(hideMem ? 'eye' : 'eyeOff')} ${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}</button><button class="vv-ar" title="Kanka Arena" aria-label="Kanka Arena" data-arcount="${myVoice ? arCount(myVoice) || '' : ''}">${ic('gamepad')} Arena</button><button class="vv-sb" title="Ses paneli" aria-label="Ses paneli" data-sbopen>${ic('sboard')} Ses paneli</button><button class="vv-chat" title="Oda sohbeti" aria-label="Oda sohbeti">${ic('chat')} Oda sohbeti</button><button class="vv-back" title="Geri dön" aria-label="Geri dön">${ic('x')} Geri dön</button>`;
   bar.querySelector('.vv-chat').onclick = openVoiceChat;
   bar.querySelector('.vv-sb').onclick = e => openSoundboard(e.currentTarget);
   bar.querySelector('.vv-ar').onclick = () => openArena();
