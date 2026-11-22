@@ -2396,8 +2396,27 @@
   .nb-prev-row .info { display: flex; flex-direction: column; min-width: 0; }
   .nb-prev-row .info b { font-size: 13px; font-weight: 800; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.85); }
   .nb-prev-row .info span { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.78); text-shadow: 0 1px 3px rgba(0,0,0,.8); }
-  @media (prefers-reduced-motion: reduce) { .has-nb:hover .nb-sheen, .has-nb:hover .nb-bg, .has-nb:hover .nb-art .mv, .has-nb:hover .nb-art .sp, .nb-card:hover .nb-sheen, .nb-card:hover .nb-bg, .nb-card:hover .nb-art .mv, .nb-card:hover .nb-art .sp { animation: none !important; } }
-  /* Görünen ad stili (Kurucu) */
+  @media (prefers-reduced-motion: reduce) { .has-nb:hover .nb-sheen, .has-nb:hover .nb-bg, .has-nb:hover .nb-art .mv, .has-nb:hover .nb-art .sp, .nb-card:hover .nb-sheen, .nb-card:hover .nb-bg, .nb-card:hover .nb-art .mv, .nb-card:hover .nb-art .sp, .has-nb-sp.speaking .nb-sheen, .has-nb-sp.speaking .nb-bg, .has-nb-sp.speaking .nb-art .mv, .has-nb-sp.speaking .nb-art .sp { animation: none !important; } }
+  /* Konuşurken (yeşil yandığında) beliren İsim Afişi */
+  .vuser.has-nb-sp { position: relative; overflow: hidden; isolation: isolate; }
+  .vuser.has-nb-sp > *:not(.nb-bg):not(.nb-art):not(.nb-sheen) { position: relative; z-index: 2; }
+  .vuser.has-nb-sp::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 1px solid transparent; pointer-events: none; z-index: 2; transition: border-color .2s ease; }
+  .has-nb-sp .nb-bg, .has-nb-sp .nb-art { opacity: 0; transition: opacity .22s ease, filter .22s ease; }
+  .has-nb-sp .nb-sheen { opacity: 0; }
+  .vuser.has-nb-sp.speaking { background: #141418 !important; }
+  .vuser.has-nb-sp.speaking::after { border-color: color-mix(in srgb, var(--green) 58%, rgba(255,255,255,.16)); }
+  .vuser.has-nb-sp.speaking .vn { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.85); }
+  .vuser.has-nb-sp.speaking .vic { color: rgba(255,255,255,.88); }
+  .has-nb-sp.speaking .nb-bg, .has-nb-sp.speaking .nb-art { opacity: 1; }
+  .has-nb-sp.speaking .nb-bg { animation: nbShift 2.8s ease infinite; filter: brightness(1.14); }
+  .has-nb-sp.speaking .nb-sheen { opacity: 1; animation: nbSweep 1.15s ease forwards; }
+  .has-nb-sp.speaking .nb-art .mv { animation: nbFloat 1.4s ease-in-out infinite; }
+  .has-nb-sp.speaking .nb-art .sp { animation: nbSpin 8s linear infinite; transform-box: fill-box; transform-origin: center; }
+  .tile .tnb { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; border-radius: inherit; }
+  .tile .tav { position: relative; z-index: 2; }
+  .tile .tname, .tile .tvol { z-index: 3; }
+  .tile.has-video .tnb, .tile.screen .tnb { display: none; }
+  /* Görünen ad stili (Kurucu — her yerde aynı kalır) */
   .dn-st { display: inline-block; line-height: 1.22; max-width: 100%; vertical-align: baseline; }
   .nsf-serif { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; }
   .nsf-cinzel { font-family: 'Cinzel', Georgia, serif; font-weight: 800; letter-spacing: .03em; }
@@ -2406,9 +2425,9 @@
   .nsf-pixel { font-family: 'Silkscreen', monospace; font-weight: 700; font-size: .88em; letter-spacing: -.02em; }
   .nsf-cyber { font-family: 'Chakra Petch', sans-serif; font-weight: 700; letter-spacing: .04em; }
   .nsf-mono { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: .92em; }
-  .dn-st.ns-solid { color: var(--ns1); }
-  .dn-st.ns-clip { -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent !important; text-shadow: none !important; }
-  .has-nb .dn-st.ns-clip { filter: drop-shadow(0 1px 3px rgba(0,0,0,.85)); }
+  .dn-st.ns-solid { color: var(--ns1) !important; -webkit-text-fill-color: var(--ns1) !important; }
+  .dn-st.ns-clip { -webkit-background-clip: text !important; background-clip: text !important; -webkit-text-fill-color: transparent !important; color: transparent !important; text-shadow: none !important; }
+  .has-nb .dn-st.ns-clip, .has-nb-sp.speaking .dn-st.ns-clip { filter: drop-shadow(0 1px 3px rgba(0,0,0,.85)); }
   .dn-st.ns-grad { background-image: linear-gradient(90deg, var(--ns1), var(--ns2)); }
   .dn-st.ns-a-flow { background-image: linear-gradient(90deg, var(--ns1), var(--ns2), var(--ns1)); background-size: 220% 100%; animation: nsFlow 3.2s linear infinite; }
   .dn-st.ns-a-shimmer { background-image: linear-gradient(110deg, var(--ns1) 0%, var(--ns2) 38%, #ffffff 50%, var(--ns1) 62%, var(--ns2) 100%); background-size: 240% 100%; animation: nsShimmer 2.8s ease-in-out infinite; }
@@ -4577,8 +4596,8 @@ function showSettings(tab) {
         return `<button type="button" data-fr="${f[0]}" class="${on ? 'on' : ''} ${open ? '' : 'lock'}" title="${open ? f[1] : f[2] < 0 ? 'İlk 100 kullanıcıya özel' : 'Genel seviyen ' + f[2] + ' olunca açılır (şu an ' + (u.level || 1) + '). Sunucu seviyeleri sayılmaz.'}">${pAv(S.me, { ...u, ...draft, frame: f[0] === 'none' ? null : f[0] }, 52, false)}<span>${f[1]}</span>${open ? '' : `<em>${f[2] < 0 ? '🔒' : 'Sv ' + f[2]}</em>`}</button>`; }).join('')}</div></div>
       <div class="st-field"><label>Profil efekti</label><div class="peffects" id="st-peffects">${PEFFECTS.map(ef => { const on = (draft.effect || 'none') === ef[0];
         return `<button type="button" data-ef="${ef[0]}" class="${on ? 'on' : ''}" title="${ef[1]}"><div class="pe-pv" style="background:${ef[3]};color:${ef[4]}">${ef[2]}</div><span>${ef[1]}</span></button>`; }).join('')}</div><p class="hint">Profil kartın açıldığında üstünde canlı oynar.</p></div>
-      <div class="st-field"><label>İsim afişi</label><div id="st-nbbox"></div><div id="st-nbprev"></div><p class="hint">Üye listesinde ve özel mesajlarda isminin arkasında görünür; fareyle üstüne gelince hareketlenir.</p></div>
-      ${S.staff === 'owner' ? `<div class="st-field"><label>Görünen ad stili <span class="pe-tag">KURUCU</span></label><div id="st-nsbox"></div><div id="st-nsprev" style="margin-top:8px"></div><p class="hint">Sadece Kurucu rütbesine özeldir. Sohbette, üye listesinde, özel mesajlarda ve profil kartında görünür.</p></div>` : ''}
+      <div class="st-field"><label>İsim afişi</label><div id="st-nbbox"></div><div id="st-nbprev"></div><p class="hint">Üye listesinde, özel mesajlarda ve sesli odada konuştuğunda (yeşil yandığında) isminin arkasında canlı görünür.</p></div>
+      ${S.staff === 'owner' ? `<div class="st-field"><label>Görünen ad stili <span class="pe-tag">KURUCU</span></label><div id="st-nsbox"></div><div id="st-nsprev" style="margin-top:8px"></div><p class="hint">Sadece Kurucu rütbesine özeldir. Sohbet, üye listesi, sesli odalar ve profil kartı dahil her yerde aynı şekilde görünür.</p></div>` : ''}
       <div class="st-field"><label>Afiş</label><div class="bnr"><div class="bprev" style="${banStyle(S.me, { ...u, ...draft })}"></div><button class="btns2" id="st-bimg">${ic('image')} Resim / GIF yükle</button>${draft.bannerImg ? `<button class="btns2" id="st-brm">Resmi kaldır</button>` : ''}</div>${draft.bannerImg ? '' : '<div class="swatches" id="sw-banner" style="margin-top:10px"></div>'}</div>
       <div class="st-field"><label>Profil teması</label><div class="themes"><button type="button" class="none ${draft.theme ? '' : 'on'}" data-th="none" title="Tema yok">${ic('x')}</button>${PTHEMES.map((t, i) => `<button type="button" data-th="${i}" class="${JSON.stringify(draft.theme) === JSON.stringify(t) ? 'on' : ''}" style="background:linear-gradient(160deg, ${t[0]}, ${t[1]})"></button>`).join('')}
         <label>Özel <input type="color" id="th-a" value="${draft.theme?.[0] || '#ff8a4c'}"><input type="color" id="th-b" value="${draft.theme?.[1] || '#5b2a86'}"></label></div><p class="hint">Tema profil kartının tamamını boyar.</p></div>
@@ -4709,7 +4728,7 @@ function showSettings(tab) {
       $('#st-saveb').onclick = () => socket.emit('updateProfile', { avatar: draft.avatar, status: draft.status, bio: draft.bio, banner: draft.banner || '', color: draft.color, birthday: draft.birthday || '', music: draft.music || '',
         displayName: draft.displayName, pronouns: draft.pronouns, theme: draft.theme, bannerImg: draft.bannerImg, frame: draft.frame || 'none', effect: draft.effect || 'none', nameBanner: draft.nameBanner || 'none', ...(S.staff === 'owner' ? { nameStyle: draft.nameStyle } : {}), socials: draft.socials }, r => {
         if (r.error) return toast(r.error);
-        const bar = $('.st-save'); flashSaved(bar); Object.assign(u, JSON.parse(JSON.stringify(draft))); renderMembers(); if (S.view === 'dm') renderDMSide(); if (S.msgs.length) renderMessages(); setTimeout(preview, 1400); toast('Profilin kaydedildi');
+        const bar = $('.st-save'); flashSaved(bar); Object.assign(u, JSON.parse(JSON.stringify(draft))); renderMe(); renderMembers(); if (S.view === 'dm') renderDMSide(); else if (S.server) renderSide(); if (myVoice) renderStage(); if (S.msgs.length) renderMessages(); setTimeout(preview, 1400); toast('Profilin kaydedildi');
       });
     }
     if (t === 'account') $('#p-pw').onclick = () => { const nextPw = $('#p-new').value; socket.emit('changePassword', { old: $('#p-old').value, next: nextPw }, async r => {
@@ -5047,8 +5066,8 @@ function renderSide() {
   const isUn = c => S.unread.has(c.id) && notifMode(c.id) !== 'none' && c.id !== S.channel?.id;
   const tRow = c => { const mc = mentCountCh(c.id); return `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${isUn(c) || mc ? 'unread' : ''} ${mc ? 'has-ment' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${mc ? `<span class="mbadge">${mc > 9 ? '9+' : mc}</span>` : chBadge(c)}${notifMode(c.id) === 'none' ? `<button class="rmute" data-unmute="${c.id}" title="Sessizde · sesini açmak için tıkla" aria-label="Odanın sesini aç">${ic('belloff')}</button>` : ''}${!mc && isUn(c) && c.id !== S.channel?.id ? `<span class="udot" title="Son baktığından beri ${chCnt[c.id] ? chCnt[c.id] + ' yeni mesaj' : 'yeni mesaj var'}">${chCnt[c.id] > 1 ? (chCnt[c.id] > 99 ? '99+' : chCnt[c.id]) : ''}</span>` : ''}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` };
   const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${(S.voice[c.id] || []).length ? `<em class="vtm" data-vt="${c.id}" title="Sohbet bu kadar zamandır sürüyor">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em>` : ''}${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
-      `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n);
-        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''} ${(S.live?.[c.id] || []).includes(n) ? 'islive' : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${av(n)}<span class="vn">${esc(dn(n))}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.d ? ic('headsetoff', 'vm') : fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle"><i></i>CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
+      `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n), vnb = nbOf(S.users[n]);
+        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''} ${(S.live?.[c.id] || []).includes(n) ? 'islive' : ''}${vnb ? ' has-nb-sp nb-' + vnb : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${vnb ? nbLayers(vnb) : ''}${av(n)}<span class="vn">${styledNameHTML(dn(n), S.users[n]?.nameStyle)}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.d ? ic('headsetoff', 'vm') : fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle"><i></i>CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
   const vOrder = c => { const l = [...(S.voice[c.id] || [])], lv = S.live?.[c.id] || [], rk = n => { const i = lv.indexOf(n); return i < 0 ? 1e3 : i; }; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l.map((n, i) => [n, i]).sort((a, b) => rk(a[0]) - rk(b[0]) || a[1] - b[1]).map(x => x[0]); }; // yayın açanlar odanın en üstünde
   const row = c => voiceLike(c.type) ? vRow(c) : tRow(c);
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
@@ -8093,7 +8112,7 @@ function homeSidePanel(item, mdrH) {
   $('#members').innerHTML = mdrH.replace('<b>Üyeler</b>', '<b>Sıralama</b>') + `<div class="hp-lb">
     <div class="hp-h">🏆 Kanka HQ sıralaması</div>
     <div class="hp-tabs"><button class="${lbTab === 'lvl' ? 'on' : ''}" data-lb="lvl">⭐ Seviye</button><button class="${lbTab === 'stk' ? 'on' : ''}" data-lb="stk">🔥 Seri</button></div>
-    ${!t ? '<div class="hp-load">Yükleniyor…</div>' : list.length ? list.map((x, i) => `<div class="hp-lr ${x.name === S.me ? 'me' : ''} ${i < 3 ? 'top' : ''}" data-n="${esc(x.name)}"><span class="rk">${medal(i)}</span>${av(x.name, S.online.has(x.name))}<span class="t"><b>${esc(dn(x.name))}</b><small>${sub(x)}</small></span>${val(x)}</div>`).join('') + mine : '<div class="hp-load">Henüz serisi olan yok. Her gün bir mesaj at, ilk sen ol!</div>'}
+    ${!t ? '<div class="hp-load">Yükleniyor…</div>' : list.length ? list.map((x, i) => `<div class="hp-lr ${x.name === S.me ? 'me' : ''} ${i < 3 ? 'top' : ''}" data-n="${esc(x.name)}"><span class="rk">${medal(i)}</span>${av(x.name, S.online.has(x.name))}<span class="t"><b>${styledNameHTML(dn(x.name), S.users[x.name]?.nameStyle)}</b><small>${sub(x)}</small></span>${val(x)}</div>`).join('') + mine : '<div class="hp-load">Henüz serisi olan yok. Her gün bir mesaj at, ilk sen ol!</div>'}
     <p class="hp-tip">${lbTab === 'lvl' ? 'Sohbet ederek (dakikada bir 3-6 XP), seste arkadaşlarınla kalarak (dakikada 2 XP) ve her gün gelerek XP kazanırsın. Spam XP getirmez.' : 'Seri, her gün en az bir mesaj atınca büyür. Bir gün atlarsan sıfırlanır.'}</p></div>`;
   $('#members').querySelectorAll('.hp-lr[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
   $('#members').querySelectorAll('[data-lb]').forEach(b => b.onclick = e => { e.stopPropagation(); lbTab = b.dataset.lb; renderMembers(); });
@@ -9003,7 +9022,7 @@ function renderMe() {
   const u = S.users[S.me];
   { const h = av(S.me, true); if ($('#me-av').innerHTML !== h) $('#me-av').innerHTML = h; } // değişmediyse yeniden çizme (resim titremesin)
   $('#me-av').onclick = e => { e.stopPropagation(); toggleStatusMenu(); }; $('#me-av').style.cursor = 'pointer'; $('#me-av').title = S.myStatus !== 'online' && S.myStatusUntil ? `${STATUS[S.myStatus][0]} · ${leftTxt(S.myStatusUntil)}` : 'Durumunu değiştir';
-  $('#me-name').textContent = S.me;
+  { const h = styledNameHTML(S.me, u?.nameStyle); if ($('#me-name').innerHTML !== h) $('#me-name').innerHTML = h; }
   { let x = $('#me-xp'); if (!x) { $('#me .row1').insertAdjacentHTML('afterend', '<div id="me-xp" title=""><i></i></div>'); x = $('#me-xp'); }
     const lo = lvlFloor(u.level), hi = lvlFloor(u.level + 1), pct = Math.max(2, Math.min(100, Math.round((u.xp - lo) / (hi - lo) * 100)));
     x.firstChild.style.width = pct + '%'; x.title = `Seviye ${u.level} · ${u.xp} / ${hi} XP`; }
@@ -9021,11 +9040,18 @@ socket.on('presence', list => {
   if (S.view === 'dm' && !S.channel) showFriends();
   if (S.view === 'dm') { renderDMSide(); if (S.channel?.with) $('#subtitle').textContent = S.online.has(S.channel.with) ? stLabel(S.channel.with) : 'Çevrimdışı'; }
 });
-let usersT;
+let usersT, lastVoiceUsersSig = '';
+const voiceUsersSig = () => {
+  const names = new Set();
+  for (const l of Object.values(S.voice || {})) for (const n of l || []) names.add(n);
+  return JSON.stringify([...names].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.nameBanner, u.nameStyle]; }));
+};
 socket.on('users', list => {
   S.users = Object.fromEntries(list.map(u => [u.name, u]));
   if (!S.me || !S.users[S.me]) return;
   renderMe(); renderMembers(); if (S.view === 'dm') renderDMSide();
+  const vsig = voiceUsersSig();
+  if (vsig !== lastVoiceUsersSig) { lastVoiceUsersSig = vsig; if (S.view === 'server' && S.server) renderSide(); if (myVoice) renderStage(); }
   // Mesajları sadece ekrandaki yazarların adı/rengi/resmi/seviyesi değiştiyse yeniden çiz (her XP artışında değil)
   clearTimeout(usersT); usersT = setTimeout(() => { if (!S.msgs.length) return; const sig = msgUsersSig(); if (sig !== lastMsgUsersSig) { lastMsgUsersSig = sig; renderMessages(); } }, 300);
 });
@@ -10181,7 +10207,7 @@ function renderStage() {
     let el = st.querySelector(`.tile[data-sid="${t.sid}"]`);
     if (!el) {
       el = document.createElement('div'); el.className = 'tile'; el.dataset.sid = t.sid;
-      el.innerHTML = `<video autoplay playsinline muted></video><div class="tav"></div><div class="tbadge"></div><div class="live-ov" hidden></div><div class="tname"></div><div class="tctl"></div>${t.sid !== 'me' ? '<input class="tvol" type="range" min="0" max="1" step="0.05" title="Ses seviyesi" aria-label="Ses seviyesi">' : ''}`;
+      el.innerHTML = `<div class="tnb"></div><video autoplay playsinline muted></video><div class="tav"></div><div class="tbadge"></div><div class="live-ov" hidden></div><div class="tname"></div><div class="tctl"></div>${t.sid !== 'me' ? '<input class="tvol" type="range" min="0" max="1" step="0.05" title="Ses seviyesi" aria-label="Ses seviyesi">' : ''}`;
       el.ondblclick = () => {
         if (el._z?.k > 1) return zReset(el);
         el.querySelector('video').srcObject && (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.());
@@ -10213,8 +10239,16 @@ function renderStage() {
     if (v.srcObject !== (t.stream || null)) { v.srcObject = t.stream || null; if (el._z) zReset(el); }
     v.classList.toggle('mirror', t.sid === 'me' && t.kind === 'cam');
     el.style.order = t.kind === 'screen' ? -2 : t.kind === 'cam' ? -1 : 0; // yayın açanlar sahnede de önde
+    const tnb = nbOf(S.users[t.name]) || '';
+    if (el.dataset.nb !== tnb) {
+      if (el.dataset.nb) el.classList.remove('nb-' + el.dataset.nb);
+      el.dataset.nb = tnb;
+      el.classList.toggle('has-nb-sp', !!tnb);
+      if (tnb) el.classList.add('nb-' + tnb);
+      const nbBox = el.querySelector('.tnb'); if (nbBox) nbBox.innerHTML = tnb ? nbLayers(tnb) : '';
+    }
     el.querySelector('.tav').innerHTML = av(t.name);
-    el.querySelector('.tname').textContent = t.sid === 'me' ? t.name + ' (sen)' : t.name;
+    el.querySelector('.tname').innerHTML = styledNameHTML(dn(t.name), S.users[t.name]?.nameStyle) + (t.sid === 'me' ? ' <small style="opacity:.75;font-weight:700">(sen)</small>' : '');
     const viewers = t.sid === 'me' ? watchers.size : t.m?.viewers || 0, q = GO_Q[t.sid === 'me' ? goCur?.q : t.m?.q];
     el.querySelector('.tbadge').innerHTML = live ? `<span class="red">${ic('live')}CANLI</span><span title="İzleyen">${ic('eye')}${viewers}</span>${q && t.sid !== watching ? `<span>${q[4]} · ${q[5].replace(/^1440p /, '')}</span>` : ''}${t.sid === watching ? '<span class="fpsx" hidden></span>' : ''}${t.sid === 'me' ? '<span class="sendq" hidden></span>' : ''}` : '';
     const ov = el.querySelector('.live-ov');
@@ -10319,7 +10353,7 @@ function renderDMCall() {
       <div class="dc-top"><span class="dc-live"><i></i>Sesli arama · <span id="dc-tm">${tm}</span></span>
         <div class="dc-tools"><button class="dc-tool" data-dc="full" title="Sahneye geç" aria-label="Sahneye geç">${ic('expand')}Sahne</button><button class="dc-tool icon" data-dc="min" title="Paneli küçült" aria-label="Paneli küçült">${ic('down')}</button></div></div>
       <div class="dc-vidwrap"><video autoplay playsinline muted></video><span class="dc-vl"></span><button class="dc-vfs" title="Sahnede aç" aria-label="Sahnede aç">${ic('expand')}</button></div>
-      <div class="dc-avs">${[{ n: S.me, me: 1 }, ...others.map(n => ({ n }))].slice(0, 3).map(p => `<div class="dc-p ${p.me ? 'me' : ''}" data-vu="${esc(p.n)}">${av(p.n)}${p.me ? `<span class="dc-mb">${ic('micoff')}</span>` : ''}<small>${p.me ? 'Sen' : esc(dn(p.n))}</small></div>`).join('')}${extra ? `<span class="dc-more">+${extra}</span>` : ''}</div>
+      <div class="dc-avs">${[{ n: S.me, me: 1 }, ...others.map(n => ({ n }))].slice(0, 3).map(p => `<div class="dc-p ${p.me ? 'me' : ''}" data-vu="${esc(p.n)}">${av(p.n)}${p.me ? `<span class="dc-mb">${ic('micoff')}</span>` : ''}<small>${p.me ? 'Sen' : styledNameHTML(dn(p.n), S.users[p.n]?.nameStyle)}</small></div>`).join('')}${extra ? `<span class="dc-more">+${extra}</span>` : ''}</div>
       <div class="dc-acts">${dcBtn('mute', muted ? 'micoff' : 'mic', 'Mikrofon')}${dcBtn('cam', 'video', 'Kamera')}${dcBtn('scr', 'screen', 'Ekran paylaş')}${dcBtn('deaf', 'headset', 'Hoparlörü kapat')}<button class="dc-b dc-leave" data-dc="leave" title="Aramayı bitir" aria-label="Aramayı bitir">${ic('hangup')}<span>Ayrıl</span></button></div>
     </div>`;
   }
