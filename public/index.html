@@ -4097,6 +4097,23 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .sg-nm { display: block; font-size: 15px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .sg-nm:hover { text-decoration: underline; }
   .sg-un { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
   .sg-why { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .sg-uy { position: absolute; top: 10px; right: 10px; background: color-mix(in srgb, var(--accent) 22%, var(--card)); color: var(--text); font: 700 12px/1 inherit; padding: 5px 8px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+  .sg-tip { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px dashed var(--line); border-radius: 14px; margin: 14px 0 4px; color: var(--muted); font-size: 13px; }
+  .sg-tip .ic { flex: none; width: 20px; height: 20px; color: var(--accent); }
+  .sg-tip b { display: block; color: var(--text); margin-bottom: 2px; }
+  .cp { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .cp-head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+  .cp-head > div:last-child { min-width: 0; } .cp-head b { display: block; font-size: 14.5px; } .cp-head small { color: var(--muted); font-size: 12.5px; }
+  .cp-pct { flex: none; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--line) 0); position: relative; }
+  .cp-pct::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: var(--card); }
+  .cp-pct b { position: relative; font-size: 13px !important; }
+  .cp-row { display: grid; grid-template-columns: 92px 1fr 40px; gap: 10px; align-items: center; font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .cp-row span { display: flex; gap: 6px; align-items: center; } .cp-row .ic { width: 14px; height: 14px; }
+  .cp-row i { height: 6px; border-radius: 9px; background: var(--line); overflow: hidden; } .cp-row i b { display: block; height: 100%; background: var(--accent); border-radius: 9px; }
+  .cp-row em { font-style: normal; text-align: right; color: var(--text); font-weight: 600; }
+  .cp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .cp-chips span { display: inline-flex; gap: 5px; align-items: center; font-size: 12px; padding: 4px 9px; border-radius: 99px; background: var(--hover); }
+  .cp-chips .ic { width: 12px; height: 12px; }
   .sg-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; } .sg-chips span { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; padding: 3px 8px; border-radius: 7px; background: var(--hover); font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .sg-chips .ic { width: 11px; height: 11px; flex: none; }
   .sg-acts { display: flex; gap: 4px; margin-top: 12px; align-items: center; } .sg-acts .sg-add { flex: 1; min-width: 0; justify-content: center; white-space: nowrap; padding: 8px 10px; } .sg-acts .ibtn { flex: none; width: 34px; height: 34px; }
   .sg-add.done { background: var(--hover); color: var(--muted); }
@@ -4854,7 +4871,7 @@ function onAuth(res) {
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ageGate) return showAgeGate(res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
   if (res.ice?.length) ICE.iceServers = res.ice;
-  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff;
+  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff; S.wrapOff = !!res.wrapOff; S.matchOff = !!res.matchOff;
   { const be = new URLSearchParams(location.search).get('botekle'); if (be) { const iz = new URLSearchParams(location.search).get('izin') || ''; history.replaceState(null, '', APP_PATH); setTimeout(() => showBotAuthorize(be, iz.split(',').filter(Boolean)), 900); } }
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
@@ -7168,23 +7185,33 @@ function showFriends(tab = friendTab) {
     socket.emit('friendRequest', n, r => r.error ? toast(r.error) : toast(r.accepted ? 'Artık arkadaşsınız' : 'İstek gönderildi'));
   });
 }
+// ---- Zevk uyumu (profil ve öneriler): müzik + oyun + Arena ----
+function compatHTML(c) {
+  if (!c) return '';
+  const bar = (t, v, icn) => v == null ? '' : `<div class="cp-row"><span>${ic(icn)}${t}</span><i><b style="width:${v}%"></b></i><em>%${v}</em></div>`;
+  const chips = [...(c.sanatci || []).map(x => `<span>${ic('music')}${esc(x)}</span>`), ...(c.oyunlar || []).map(x => `<span>${ic('gamepad')}${esc(x)}</span>`), ...(c.arena || []).map(x => `<span>${ic('trophy')}${esc(x)}</span>`)].slice(0, 7);
+  return `<div class="cp"><div class="cp-head"><div class="cp-pct" style="--p:${c.uyum}"><b>%${c.uyum}</b></div><div><b>${c.muzik != null ? `Müzik uyumunuz %${c.muzik}` : `Uyumunuz %${c.uyum}`}</b><small>${esc(c.neden || 'Dinlediğiniz müziklere ve oynadığınız oyunlara göre')}</small></div></div>
+    ${bar('Müzik', c.muzik, 'music')}${bar('Oyunlar', c.oyun, 'gamepad')}${bar('Arena', c.arenaUyum, 'trophy')}${chips.length ? `<div class="cp-chips">${chips.join('')}</div>` : ''}</div>`;
+}
 // ================= Önerilen: tanıyor olabileceğin kişiler =================
 function loadSuggest(el) {
   socket.emit('friendSuggest', {}, r => {
     if (!el.isConnected) return;
     if (r.error) { el.innerHTML = `<div class="empty" style="padding:40px 0">${esc(r.error)}</div>`; return; }
-    const why = o => [o.ortakArkadas ? `${o.ortakArkadas} ortak arkadaş` : '', o.sunucuSayisi ? `${o.sunucuSayisi} ortak sunucu` : ''].filter(Boolean).join(' · ') || 'Kanka\'da';
+    const why = o => o.zevk ? esc(o.neden) : [o.ortakArkadas ? `${o.ortakArkadas} ortak arkadaş` : '', o.sunucuSayisi ? `${o.sunucuSayisi} ortak sunucu` : '', o.neden ? esc(o.neden) : ''].filter(Boolean).join(' · ') || 'Kanka\'da';
     const card = o => { const u = S.users[o.name] || {}, nm = dn(o.name);
       return `<div class="sg-card" data-n="${esc(o.name)}"><div class="sg-ban" style="${banStyle(o.name, u)}"></div>
-        <div class="sg-av">${av(o.name, S.online.has(o.name))}</div>
+        <div class="sg-av">${av(o.name, S.online.has(o.name))}</div>${o.uyum != null ? `<span class="sg-uy" title="Zevk uyumu">%${o.uyum}</span>` : ''}
         <div class="sg-body"><b class="sg-nm" data-prof="${esc(o.name)}">${esc(nm)}</b>${nm !== o.name ? `<small class="sg-un">${esc(o.name)}</small>` : ''}
           <div class="sg-why">${why(o)}</div>
           ${o.sunucular?.length ? `<div class="sg-chips">${o.sunucular.slice(0, 2).map(x => `<span>${ic('hash')}${esc(x.ad)}</span>`).join('')}</div>` : ''}
           <div class="sg-acts"><button class="primary sg-add" data-add="${esc(o.name)}">${ic('userplus')}Arkadaş ekle</button><button class="ibtn" data-dm="${esc(o.name)}" title="Mesaj gönder" aria-label="Mesaj gönder">${ic('chat')}</button><button class="ibtn" data-hide="${esc(o.name)}" title="Bunu gösterme" aria-label="Bunu gösterme">${ic('x')}</button></div></div></div>`; };
-    const chat = r.sohbet || [], list = r.oneriler || [];
+    const zevk = (r.uyumlu || []).map(x => ({ ...x, zevk: true })), zn = new Set(zevk.map(x => x.name)), chat = r.sohbet || [], list = (r.oneriler || []).filter(x => !zn.has(x.name));
     el.innerHTML = `<div class="sg">
       <div class="sg-inv"><div><b>${ic('userplus')} Kankanı davet et</b><small>Linki gönder, hesap açınca buradan arkadaş olun.</small></div><button class="primary" id="sg-inv">${ic('link')}Davet linkini kopyala</button></div>
       ${chat.length ? `<h5 class="sg-h">Sohbet ettiğin kişiler</h5><div class="sg-chat">${chat.map(c => `<div class="frow" data-n="${esc(c.name)}">${av(c.name, S.online.has(c.name))}<div class="info"><b>${esc(dn(c.name))}</b><small>${c.n} mesaj · ${esc(ago(c.last))}</small></div><button data-dm="${esc(c.name)}" title="Mesaj" aria-label="Mesaj gönder">${ic('chat')}</button><button class="sg-addsm" data-add="${esc(c.name)}">${ic('userplus')}Ekle</button></div>`).join('')}</div>` : ''}
+      ${zevk.length ? `<h5 class="sg-h">${ic('music')} Zevkine göre</h5><p class="sg-sub">Dinlediğin müziklere, oynadığın oyunlara ve Arena maçlarına göre seçildi.</p><div class="sg-grid">${zevk.map(card).join('')}</div>`
+        : r.zevkYok && !S.matchOff ? `<div class="sg-tip">${ic('music')}<span><b>Zevkine göre öneriler</b>Masaüstü uygulamasında Spotify dinledikçe ve oyun oynadıkça müzik ve oyun zevkin sana benzeyen kişiler burada çıkar.</span></div>` : ''}
       <div class="sg-hrow"><h5 class="sg-h">Tanıyor olabileceğin kişiler</h5><button class="ibtn" id="sg-ref" title="Yenile" aria-label="Yenile">${ic('refresh')}</button></div>
       <p class="sg-sub">Ortak arkadaşlarına ve aynı sunuculardaki kişilere göre seçildi.</p>
       ${list.length ? `<div class="sg-grid">${list.map(card).join('')}</div>` : `<div class="empty" style="padding:30px 0"><div class="big">${ic('users')}</div>Şimdilik öneri yok. Bir sunucuya katıl ya da arkadaş ekle, öneriler burada belirir.</div>`}
@@ -9549,7 +9576,8 @@ function showProfile(n, tab = 'about') {
   const u = S.users[n] || { level: 1, xp: 0 }, srv = S.view === 'server' ? S.server : null, r = roleOf(srv, n), me = n === S.me;
   const meAdmin = srv && isAdmin(srv, S.me), meMod = srv && isMod(srv, S.me);
   const canKick = srv && !srv.public && meMod && !me && n !== srv.owner && !isAdmin(srv, n) && !(r === 'mod' && !meAdmin);
-  let mut = null;
+  let mut = null, cmp = null;
+  if (!me) socket.emit('compat', n, x => { if (!x || profileOpen !== n || !$('#pf-tabs')) return; cmp = x; if (tab === 'about') draw(); });
   const tabs = () => [['about', 'Hakkında'], ['act', 'Aktivite'], ...(me ? [] : [['servers', `Ortak sunucular${mut ? ` · ${mut.servers.length}` : ''}`], ['friends', `Ortak arkadaşlar${mut ? ` · ${mut.friends.length}` : ''}`]])];
   modal(`<button class="pc-close" id="mx" aria-label="Kapat">${ic('x')}</button><div class="pf">${profSideHTML(n, u, { srv })}<div class="pf-main"><nav class="pf-tabs" id="pf-tabs"></nav><div class="pf-body" id="pf-body"></div></div></div>`, 'pcard2');
   mountProfileEffect($('.pf .pf-side'), u.effect);
@@ -9559,7 +9587,7 @@ function showProfile(n, tab = 'about') {
     $('#pf-tabs').innerHTML = tabs().map(([k, t]) => `<button class="${k === tab ? 'on' : ''}" data-pt="${k}">${t}</button>`).join('');
     $('#pf-tabs').querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { tab = b.dataset.pt; draw(); });
     const B = $('#pf-body');
-    if (tab === 'about') { B.innerHTML = profAboutHTML(n, u); if (mut?.matches?.length) B.querySelector('.pf-grid')?.insertAdjacentHTML('beforebegin', matchAboutHTML(mut.matches)); if (me) socket.emit('badgeProgress', pr => { window._bprog = pr; const el = $('#pf-badges-sec'); if (el && profileOpen === n) el.innerHTML = badgeGrid(n, u, pr); }); }
+    if (tab === 'about') { B.innerHTML = compatHTML(cmp) + profAboutHTML(n, u); if (mut?.matches?.length) B.querySelector('.pf-grid')?.insertAdjacentHTML('beforebegin', matchAboutHTML(mut.matches)); if (me) socket.emit('badgeProgress', pr => { window._bprog = pr; const el = $('#pf-badges-sec'); if (el && profileOpen === n) el.innerHTML = badgeGrid(n, u, pr); }); }
     if (tab === 'act') B.innerHTML = (actCards(u) || `<div class="pf-empty">${ic('activity')}<b>Şu an bir şey yapmıyor</b><span>Oyun oynarken ya da Spotify dinlerken burada görünür.</span></div>`) + matchListHTML(mut?.matches);
     if (tab === 'servers') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.servers.length ? `<div class="pf-list">${mut.servers.map(s => `<button data-gs="${s.id}"><span class="pl-ic">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</span><span><b>${esc(s.name)}</b><small>${s.joined ? ago2(s.joined) + 'dır üye' : 'Ortak sunucu'}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('grid')}<b>Ortak sunucunuz yok</b><span>Onu bir sunucuna davet et.</span></div>`;
     if (tab === 'friends') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.friends.length ? `<div class="pf-list">${mut.friends.map(f => `<button data-gf="${esc(f)}">${av(f, S.online.has(f))}<span><b>${esc(dn(f))}</b><small>@${esc(f)}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('users')}<b>Ortak arkadaşınız yok</b><span>Arkadaş olunca burada görünür.</span></div>`;
@@ -13702,11 +13730,19 @@ function accountPageHTML(u) {
     <div class="st-sec">Verilerin</div>
     <p class="hint" style="margin-top:0">Hakkında tuttuğumuz her şeyi (profil, sunucular, mesajların) bir dosya olarak indirebilirsin. Ayrıntılar <a href="/gizlilik" target="_blank" style="color:var(--accent)">Gizlilik Politikası</a>'nda.</p>
     <div class="st-field"><button class="btns2" id="acc-export">${ic('download')} Verilerimi indir</button></div>
+    <div class="st-sec">Yıl özeti ve zevk eşleşmesi</div>
+    <p class="hint" style="margin-top:0">Yıl sonunda açılan <b style="color:var(--text)">Kanka Wrapped</b> için sadece sayılar tutulur: seste kaç dakika kaldığın, en çok dinlediğin sanatçılar, oynadığın oyunlar, en çok konuştuğun kankaların. Mesajlarının içeriği tutulmaz.</p>
+    <div class="pc-sec"><label class="switch">Yıl özetim için sayılsın (Kanka Wrapped)<input type="checkbox" id="acc-wrap" ${S.wrapOff ? '' : 'checked'}></label>
+      <label class="switch">Müzik ve oyun zevkime göre kişilere önerileyim, profilde uyum yüzdesi görünsün<input type="checkbox" id="acc-match" ${S.matchOff ? '' : 'checked'}></label></div>
+    <div class="st-field"><button class="btns2" id="acc-wipe">${ic('trash')} Bu yılın sayılarını sıfırla</button></div>
     <div class="st-sec danger">Tehlikeli bölge</div>
     <div class="acc-danger"><span><b>Hesabı kalıcı olarak sil</b>Profilin, mesajların ve özel mesajların silinir. Kurduğun sunucular en yetkili üyeye devredilir. Geri alınamaz.</span><button class="danger-btn" id="acc-del">Hesabı sil</button></div></div>`;
 }
 function wireAccount() {
   drawTfa(); drawTrash();
+  $('#acc-wrap').onchange = e => socket.emit('statPrefs', { wrapOff: !e.target.checked }, r => { if (r?.error) return toast(r.error); S.wrapOff = r.wrapOff; toast(r.wrapOff ? 'Yıl özetin için artık hiçbir şey sayılmayacak' : 'Yıl özetin için sayılıyor'); });
+  $('#acc-match').onchange = e => socket.emit('statPrefs', { matchOff: !e.target.checked }, r => { if (r?.error) return toast(r.error); S.matchOff = r.matchOff; toast(r.matchOff ? 'Zevk eşleşmesi kapatıldı' : 'Zevk eşleşmesi açıldı'); });
+  $('#acc-wipe').onclick = () => confirmBox('Bu yıl için tutulan tüm sayıların (dinleme, oyun, ses süresi, mesaj sayıları) silinsin mi? Yıl özetin boş başlar.', () => socket.emit('statPrefs', { wipe: true }, r => toast(r?.error || 'Sayıların silindi')));
   { const inp = $('#un-new'), st = $('#un-st'), btn = $('#un-save'); let tm, ok = false;
     const NAME_OK = /^[\p{L}\p{N}_.-]{2,20}$/u;
     inp.oninput = () => { clearTimeout(tm); const v = inp.value.trim(); ok = false; btn.disabled = true; st.className = 'un-st';
