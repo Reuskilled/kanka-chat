@@ -2926,6 +2926,13 @@ app.post('/api/_kapat', (req, res) => {
   if (!/^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(ip) || req.get('x-kapat-anahtar') !== kapatKey) return res.status(404).end();
   res.json({ ok: true }); setTimeout(() => gracefulShutdown('güncelleyici'), 50);
 });
+// Güncelleyici yeniden başlatmak için sakin bir an bekler: seste kimse yokken (sadece bu bilgisayardan, anahtarla)
+app.get('/api/_durum', (req, res) => {
+  const ip = req.socket.remoteAddress || '';
+  if (!/^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(ip) || req.get('x-kapat-anahtar') !== kapatKey) return res.status(404).end();
+  let ses = 0; for (const [, m] of voice) ses += m.size;
+  res.json({ ses, bagli: io.engine.clientsCount });
+});
 function botServerView(a, s) {
   return { id: s.id, ad: s.name, simge: s.iconImg || null, sahip: s.owner, uyeSayisi: humans(s.members).length,
     odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => ({ id: c.id, ad: c.name, tur: c.type, konu: c.topic || '', kategori: c.cat || null, yazabilir: chPerm(s, c, a.bot, 'send') })),
