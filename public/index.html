@@ -3092,6 +3092,10 @@
   .vpop .vp-acts { margin-top: 14px; }
   .vpop.sheet { border-radius: 22px; }
   .vpop.sheet .vp-in { max-height: 60vh; }
+  .vpop.sheet { transition: transform .2s cubic-bezier(.2,.8,.2,1), opacity .2s; touch-action: pan-y; }
+  .vpop.sheet.sh-drag { transition: none; }
+  .sh-grip { position: absolute; top: 7px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.55); box-shadow: 0 1px 3px rgba(0,0,0,.35); z-index: 6; pointer-events: none; }
+  .vpop:not(.sheet) .sh-grip { display: none; }
 
   .vp-avw { position: relative; padding: 0; cursor: pointer; }
   .vp-avh { position: absolute; z-index: 3; inset: 6px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: rgba(0,0,0,.55); color: #fff; font-size: 10.5px; font-weight: 900; line-height: 1.15; text-align: center; opacity: 0; transition: opacity .15s; pointer-events: none; }
@@ -9441,6 +9445,41 @@ function thumbLoop(on) {
   setTimeout(snap, 1500); thumbT = setInterval(snap, 10000);
 }
 function closeVPop() { $('.vpop')?.remove(); vpopFor = null; }
+// Mobil alt kart: tutup aşağı sürükleyince kapanır (yalnızca içerik en üstteyken)
+function sheetDrag(p, close, scrollSel) {
+  if (!p || p._sd) return; p._sd = 1;
+  if (!p.querySelector(':scope > .sh-grip')) p.insertAdjacentHTML('afterbegin', '<div class="sh-grip" aria-hidden="true"></div>');
+  let y0 = null, x0 = 0, t0 = 0, dy = 0, on = false;
+  const sc = t => (scrollSel && t.closest(scrollSel)) || null;
+  p.addEventListener('touchstart', e => {
+    if (e.touches.length > 1 || e.target.closest('input, textarea, select, .krange, [contenteditable]')) return;
+    const s = sc(e.target); if (s && s.scrollTop > 2) return;
+    y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; t0 = Date.now(); dy = 0; on = false;
+  }, { passive: true });
+  p.addEventListener('touchmove', e => {
+    if (y0 === null) return;
+    const d = e.touches[0].clientY - y0, dx = Math.abs(e.touches[0].clientX - x0);
+    if (!on) {
+      if (Math.abs(d) < 8 && dx < 8) return;
+      const s = sc(e.target);
+      if (d <= 0 || dx > Math.abs(d) || (s && s.scrollTop > 2)) { y0 = null; return; }
+      on = true; p.classList.add('sh-drag');
+    }
+    dy = Math.max(0, d); if (e.cancelable) e.preventDefault();
+    p.style.transform = `translateY(${dy}px)`; p.style.opacity = String(Math.max(.4, 1 - dy / 600));
+  }, { passive: false });
+  const end = () => {
+    if (y0 === null) return; y0 = null; if (!on) return; on = false;
+    p.classList.remove('sh-drag');
+    const fast = dy > 40 && dy / Math.max(1, Date.now() - t0) > .6;
+    if (dy > Math.min(130, p.offsetHeight * .25) || fast) {
+      p.classList.add('sh-out'); p.style.transform = `translateY(${p.offsetHeight + 40}px)`; p.style.opacity = '0';
+      try { buzz?.(8); } catch {}
+      setTimeout(close, 200);
+    } else { p.style.transform = ''; p.style.opacity = ''; }
+  };
+  p.addEventListener('touchend', end); p.addEventListener('touchcancel', end);
+}
 // Kanka Bot profil kartı (üye listesi, mesajdaki bot adı/avatarı ya da @Kanka Bot'a tıklayınca)
 function botPop(anchor) {
   if (vpopFor === BOT_NAME) return closeVPop();
@@ -9466,7 +9505,7 @@ function botPop(anchor) {
       <p class="kb-foot">Kanka Bot'a DM atılamaz. Sorun olursa Kanka HQ'ya yaz.</p></div>`;
   document.body.appendChild(p);
   const r = anchor.getBoundingClientRect(), W = innerWidth, H = innerHeight, pw = p.offsetWidth, ph = p.offsetHeight;
-  if (W < 760) p.classList.add('sheet');
+  if (W < 760) { p.classList.add('sheet'); sheetDrag(p, () => { if (p.isConnected) closeVPop(); }, '.vp-in'); }
   else { const left = r.right + 12 + pw > W - 10 ? r.left - pw - 12 : r.right + 12; p.style.left = Math.max(10, left) + 'px'; p.style.top = Math.max(10, Math.min(r.top + r.height / 2 - 70, H - ph - 10)) + 'px'; }
   p.onclick = e => e.stopPropagation();
   socket.emit('botInfo', {}, x => { if (vpopFor !== BOT_NAME || !x?.total) return;
@@ -9512,7 +9551,7 @@ function voicePop(n, anchor, chId) {
   document.body.appendChild(p);
   mountProfileEffect(p, u.effect);
   const r = anchor.getBoundingClientRect(), W = innerWidth, H = innerHeight, pw = p.offsetWidth, ph = p.offsetHeight;
-  if (W < 760) { p.classList.add('sheet'); }
+  if (W < 760) { p.classList.add('sheet'); sheetDrag(p, () => { if (p.isConnected) closeVPop(); }, '.vp-in'); }
   else { const left = r.right + 12 + pw > W - 10 ? r.left - pw - 12 : r.right + 12; p.style.left = Math.max(10, left) + 'px'; p.style.top = Math.max(10, Math.min(r.top + r.height / 2 - 70, H - ph - 10)) + 'px'; }
   p.onclick = e => e.stopPropagation();
   socket.emit('mutuals', n, x => { if (vpopFor !== n || !x) return; const el = $('#vp-mut') || document.createElement('i'); const parts = [];
