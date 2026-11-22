@@ -1030,8 +1030,8 @@ const allUsers = () => Object.values(db.users).map(pubUser);
 
 const serversFor = name => db.servers.filter(s => (s.public || s.members.includes(name)) && !s.bans?.[name]);
 // ---------- Roller ve izinler ----------
-const PERMS = ['administrator', 'manageServer', 'manageRoles', 'manageChannels', 'manageEmojis', 'manageWebhooks', 'viewAudit', 'manageMessages', 'pinMessages', 'slowBypass', 'mentionEveryone', 'kick', 'ban', 'timeout', 'voiceMute', 'voiceMove'];
-const MOD_PERMS = ['manageChannels', 'manageEmojis', 'viewAudit', 'manageMessages', 'pinMessages', 'slowBypass', 'kick', 'timeout', 'mentionEveryone', 'voiceMute', 'voiceMove'];
+const PERMS = ['administrator', 'manageServer', 'manageRoles', 'manageChannels', 'manageEmojis', 'manageWebhooks', 'viewAudit', 'manageMessages', 'pinMessages', 'slowBypass', 'mentionEveryone', 'kick', 'ban', 'timeout', 'voiceMute', 'voiceMove', 'manageSounds'];
+const MOD_PERMS = ['manageChannels', 'manageEmojis', 'manageSounds', 'viewAudit', 'manageMessages', 'pinMessages', 'slowBypass', 'kick', 'timeout', 'mentionEveryone', 'voiceMute', 'voiceMove'];
 function permsOf(s, n) {
   if (s.owner === n) return new Set(PERMS);
   const p = new Set(s.roles?.[n] === 'mod' ? MOD_PERMS : []);
@@ -1045,7 +1045,7 @@ const timedOut = (s, n) => (s.timeouts?.[n] || 0) > Date.now();
 // ---------- Kategoriler ve oda izinleri ----------
 // Her oda/kategori: perms = { '@everyone' | rolId: { view, send, connect } } (true izin, false yasak, yoksa devral)
 // Eşitlenmiş oda (sync) kategorisinin izinlerini kullanır.
-const CH_KEYS = ['view', 'send', 'history', 'connect', 'attach', 'embed', 'react', 'mention', 'apps', 'thread', 'manage', 'video', 'stream', 'speak'];
+const CH_KEYS = ['view', 'send', 'history', 'connect', 'attach', 'embed', 'react', 'mention', 'apps', 'thread', 'manage', 'video', 'stream', 'speak', 'soundboard'];
 // 'video' (kamera) eskiden 'stream' ile birlikteydi: bir katmanda video yazılmamışsa o katmandaki stream değeri geçerli
 const ovGet = (o, k) => o?.[k] !== undefined ? o[k] : k === 'video' ? o?.stream : undefined;
 const voiceLike = t => t === 'voice' || t === 'stage';
@@ -1126,7 +1126,7 @@ function chView(s, c, viewer, manager) {
   const v = { id: c.id, name: c.name, type: c.type || 'text', cat: c.cat || null, sync: !!c.sync,
     topic: c.topic || '', slow: c.slow || 0, limit: c.limit || 0, bitrate: c.bitrate || 'std', news: !!c.news, followers: (c.followers || []).length,
     stage: c.type === 'stage' && stage.has(c.id) ? stageView(c.id) : undefined,
-    canAttach: P('attach'), canReact: P('react'), canMention: P('mention'), canManage: P('manage'), canStream: P('stream'), canSpeak: P('speak'),
+    canAttach: P('attach'), canReact: P('react'), canMention: P('mention'), canManage: P('manage'), canStream: P('stream'), canSpeak: P('speak'), canSound: P('soundboard'),
     canVideo: P('video'), canEmbed: P('embed'), canApps: P('apps'), canThread: P('thread'), canHistory: P('history'),
     private: everyoneDenied(ov, 'view'), ann: everyoneDenied(ov, 'send'), locked: voiceLike(c.type) && everyoneDenied(ov, 'connect'),
     readonly: viewer ? !chPerm(s, c, viewer, 'send') : false, canConnect: viewer ? chPerm(s, c, viewer, 'connect') : true,
@@ -1242,7 +1242,7 @@ const TEMPLATES = {
 const CATS = ['Oyun', 'Sohbet', 'Müzik', 'Eğitim', 'Yazılım', 'Anime', 'Film ve dizi', 'Spor', 'Sanat', 'Diğer'];
 // ---------- Discord şablonundan sunucu kurma ----------
 // discord.new/KOD linkindeki şablonu Discord'un açık API'sinden okur; odalar, kategoriler, roller ve izinler Kanka modeline çevrilir
-const DC_PERM_BITS = { administrator: 3n, manageWebhooks: 29n, pinMessages: 13n, slowBypass: 13n, manageServer: 5n, manageRoles: 28n, manageChannels: 4n, manageEmojis: 30n, viewAudit: 7n, manageMessages: 13n, mentionEveryone: 17n, kick: 1n, ban: 2n, timeout: 40n, voiceMute: 22n, voiceMove: 24n };
+const DC_PERM_BITS = { administrator: 3n, manageWebhooks: 29n, pinMessages: 13n, slowBypass: 13n, manageServer: 5n, manageRoles: 28n, manageChannels: 4n, manageEmojis: 30n, viewAudit: 7n, manageMessages: 13n, mentionEveryone: 17n, kick: 1n, ban: 2n, timeout: 40n, voiceMute: 22n, voiceMove: 24n, manageSounds: 30n };
 const DC_CH_BITS = { view: 10n, send: 11n, history: 16n, connect: 20n, attach: 15n, embed: 14n, react: 6n, mention: 17n, apps: 39n, thread: 38n, manage: 13n, video: 9n, stream: 9n, speak: 21n };
 const DC_TYPES = { 0: 'text', 2: 'voice', 5: 'text', 13: 'stage', 15: 'forum' };
 const DC_TYPE_TR = { 14: 'rehber odası', 16: 'medya odası' };
@@ -1289,7 +1289,7 @@ function dcConvert(t) {
     return kr;
   });
   let memberOv = false;
-  const BASE_KEYS = ['view', 'send', 'history', 'connect', 'attach', 'embed', 'react', 'apps', 'thread', 'video', 'stream', 'speak']; // Kanka'da varsayılanı "açık" olanlar
+  const BASE_KEYS = ['view', 'send', 'history', 'connect', 'attach', 'embed', 'react', 'apps', 'thread', 'video', 'stream', 'speak', 'soundboard']; // Kanka'da varsayılanı "açık" olanlar
   const conv = ows => {
     const list = Array.isArray(ows) ? ows : [], out = {}, ev = {};
     if (list.some(o => o.type === 1)) memberOv = true;
@@ -1562,7 +1562,7 @@ function srvBadges(s) {
 }
 const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
   id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, vanity: isStar(s) ? s.vanity || null : null, public: s.public, roles: s.roles,
-  emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, filter: !!s.filter, slow: s.slow || 0,
+  emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, sounds: s.sounds || [], sbAll: s.sbAll !== false, filter: !!s.filter, slow: s.slow || 0,
   channels: (viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels).map(c => chView(s, c, viewer, viewer && can(s, viewer, 'manageChannels'))),
   categories: (s.categories || []).filter(k => !viewer || can(s, viewer, 'manageChannels') || s.channels.some(c => c.cat === k.id && seesChannel(s, c, viewer)))
     .map(k => ({ id: k.id, name: k.name, ...(viewer && can(s, viewer, 'manageChannels') ? { perms: k.perms || {} } : {}) })), members: s.public ? Object.keys(db.users) : s.members,
@@ -1694,6 +1694,28 @@ function winnerOf(b) {
 }
 const watch = new Map(); // kanal -> {videoId, playing, time, at, by}
 const AUDIO_RE = /^\/uploads\/[a-f0-9]+\.(webm|ogg|m4a|mp4)$/;
+// ---------- Ses paneli ----------
+// Hazır sesler herkese açık; her sunucu en çok SB_MAX ses ekleyebilir (en fazla 5 sn, WAV olarak yüklenir: tarayıcı kırpıp dönüştürür).
+const SB_DEFAULTS = [['korna', 'Korna', '📯'], ['ba-dum-tss', 'Ba dum tss', '🥁'], ['alkis', 'Alkış', '👏'], ['tada', 'Tada', '🎉'], ['yanlis', 'Yanlış', '❌'], ['dramatik', 'Dramatik', '😱'],
+  ['kriket', 'Sessizlik', '🦗'], ['ding', 'Ding', '🔔'], ['boing', 'Boing', '🤸'], ['vuuu', 'Vuuu', '💨'], ['seviye', 'Seviye atladı', '🆙'], ['pop', 'Pop', '🫧']]
+  .map(([f, name, emoji]) => ({ id: 'd:' + f, name, emoji, vol: 0.8, url: `/ses-paneli/${f}.mp3`, def: true }));
+const SB_MAX = 30, SB_MAX_SEC = 5.2, SB_MAX_BYTES = 520 * 1024;
+// Gelen WAV gerçekten kısa, düz PCM bir ses mi? (süre başlıktaki veri boyutundan hesaplanır)
+function wavInfo(buf) {
+  if (buf.length < 44 || buf.toString('ascii', 0, 4) !== 'RIFF' || buf.toString('ascii', 8, 12) !== 'WAVE') return null;
+  let i = 12, fmt = null, data = 0;
+  while (i + 8 <= buf.length) {
+    const id = buf.toString('ascii', i, i + 4), n = buf.readUInt32LE(i + 4);
+    if (id === 'fmt ') fmt = { pcm: buf.readUInt16LE(i + 8), ch: buf.readUInt16LE(i + 10), rate: buf.readUInt32LE(i + 12), bits: buf.readUInt16LE(i + 22) };
+    else if (id === 'data') { data = Math.min(n, buf.length - i - 8); break; }
+    i += 8 + n + (n & 1);
+  }
+  if (!fmt || fmt.pcm !== 1 || ![1, 2].includes(fmt.ch) || fmt.rate < 8000 || fmt.rate > 48000 || ![8, 16].includes(fmt.bits) || !data) return null;
+  return { sec: data / (fmt.rate * fmt.ch * fmt.bits / 8) };
+}
+const sbFind = (s, sid) => typeof sid !== 'string' ? null : sid.startsWith('d:') ? SB_DEFAULTS.find(x => x.id === sid) : (s?.sounds || []).find(x => x.id === sid);
+const sbCanManage = (s, n) => s.owner === n || can(s, n, 'manageSounds');
+const sbCanAdd = (s, n) => s.members.includes(n) && (sbCanManage(s, n) || (!s.public && s.sbAll !== false));
 const slowMap = new Map();
 const BAD = ['amk', 'aq', 'orospu', 'piç', 'siktir', 'sik', 'yarrak', 'göt', 'ananı', 'amına', 'oç', 'pezevenk', 'kahpe', 'gavat', 'fuck', 'shit', 'bitch'];
 const BAD_RE = new RegExp(`(?<![\\p{L}])(${BAD.join('|')})(?![\\p{L}])`, 'giu');
@@ -3620,7 +3642,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: seenBy(flagsState(), name), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: seenBy(voiceState(), name), voiceAge: seenBy(voiceAges(), name), calls: callsFor(name), live: seenBy(liveState(), name), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
+      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, entrySound: db.users[name].entrySound || null, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 
@@ -6108,9 +6130,83 @@ io.on('connection', socket => {
     myVoice = chId; socket.join('v:' + chId);
     pushVoice();
     cb({ peers, stage: f?.c.type === 'stage' ? stageView(chId) : null, srvMuted: !!f && srvMuted.has(f.s.id + '|' + me) });
+    if (!old) sbEntryPlay(chId);
     if (f && srvMuted.has(f.s.id + '|' + me)) socket.emit('srvMute', { on: true });
   }
   socket.on('voiceLeave', leaveVoice);
+  // ----- Ses paneli -----
+  const sbServer = (serverId, cb) => { const s = db.servers.find(x => x.id === serverId); if (!me || !s || !s.members.includes(me)) { cb({ error: 'Sunucu bulunamadı' }); return null; } return s; };
+  socket.on('sbAdd', ({ serverId, data, name, emoji, vol } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const s = sbServer(serverId, cb); if (!s) return;
+    if (!sbCanAdd(s, me)) return cb({ error: 'Bu sunucuya ses ekleme iznin yok' });
+    if (limited('sbadd|' + me, 10, 600e3)) return cb({ error: 'Çok fazla ses ekledin, biraz bekle' });
+    if ((s.sounds || []).length >= SB_MAX) return cb({ error: `Bir sunucuda en fazla ${SB_MAX} ses olabilir. Önce birini sil.` });
+    name = clean(name, 24); if (!name) return cb({ error: 'Sese bir ad ver' });
+    const m = /^data:audio\/(?:wav|x-wav|wave);base64,(.+)$/.exec(String(data || '')); if (!m) return cb({ error: 'Ses okunamadı' });
+    const buf = Buffer.from(m[1], 'base64');
+    if (buf.length > SB_MAX_BYTES) return cb({ error: 'Ses dosyası çok büyük' });
+    const w = wavInfo(buf); if (!w) return cb({ error: 'Ses bozuk ya da desteklenmiyor' });
+    if (w.sec > SB_MAX_SEC) return cb({ error: 'Ses en fazla 5 saniye olabilir' });
+    const fid = crypto.randomBytes(12).toString('hex');
+    try { fs.writeFileSync(path.join(UPLOADS, fid + '.wav'), buf); } catch { return cb({ error: 'Kaydedilemedi, tekrar dene' }); }
+    const snd = { id: id(), name, emoji: clean(emoji, 16) || '🔊', vol: Math.min(1, Math.max(0.05, +vol || 0.8)), url: `/uploads/${fid}.wav`, by: me, at: Date.now(), sec: Math.round(w.sec * 10) / 10 };
+    (s.sounds ||= []).push(snd); audit(s, me, 'Ses paneline ses ekledi', name);
+    save(); pushServers(membersOf(s)); cb({ ok: true, sound: snd });
+  });
+  socket.on('sbEdit', ({ serverId, id: sid, name, emoji, vol } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const s = sbServer(serverId, cb); if (!s) return;
+    const x = (s.sounds || []).find(y => y.id === sid); if (!x) return cb({ error: 'Ses bulunamadı' });
+    if (x.by !== me && !sbCanManage(s, me)) return cb({ error: 'Bu sesi düzenleme iznin yok' });
+    if (name !== undefined) x.name = clean(name, 24) || x.name;
+    if (emoji !== undefined) x.emoji = clean(emoji, 16) || '🔊';
+    if (vol !== undefined) x.vol = Math.min(1, Math.max(0.05, +vol || 0.8));
+    save(); pushServers(membersOf(s)); cb({ ok: true });
+  });
+  socket.on('sbDel', ({ serverId, id: sid } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const s = sbServer(serverId, cb); if (!s) return;
+    const x = (s.sounds || []).find(y => y.id === sid); if (!x) return cb({ error: 'Ses bulunamadı' });
+    if (x.by !== me && !sbCanManage(s, me)) return cb({ error: 'Bu sesi silme iznin yok' });
+    s.sounds = s.sounds.filter(y => y !== x); audit(s, me, 'Ses panelinden ses sildi', x.name);
+    if (!db.servers.some(o => (o.sounds || []).some(y => y.url === x.url))) try { fs.unlinkSync(path.join(UPLOADS, path.basename(x.url))); } catch {}
+    save(); pushServers(membersOf(s)); cb({ ok: true });
+  });
+  socket.on('sbSettings', ({ serverId, all } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const s = sbServer(serverId, cb); if (!s) return;
+    if (!sbCanManage(s, me)) return cb({ error: 'Yetkin yok' });
+    s.sbAll = !!all; audit(s, me, 'Ses paneli ayarı', all ? 'herkes ses ekleyebilir' : 'sadece yetkililer ses ekler');
+    save(); pushServers(membersOf(s)); cb({ ok: true });
+  });
+  // Çal: bulunduğun sesli odadaki herkes duyar (kişiden kişiye değil, herkes kendi tarafında çalar)
+  function sbPlayIn(ch, snd, entry) {
+    io.to('v:' + ch).emit('sbPlay', { by: me, id: snd.id, url: snd.url, vol: snd.vol, name: snd.name, emoji: snd.emoji, entry: !!entry });
+  }
+  function sbAllowed(f) { return !f || (chPerm(f.s, f.c, me, 'soundboard') && !timedOut(f.s, me) && !srvMuted.has(f.s.id + '|' + me) && (f.c.type !== 'stage' || chPerm(f.s, f.c, me, 'speak'))); }
+  socket.on('sbPlay', ({ id: sid, from } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') cb = () => {};
+    if (!me || !myVoice) return cb({ error: 'Önce bir sesli odaya katıl' });
+    const f = myVoice.startsWith('call:') ? null : findChannel(myVoice);
+    if (!sbAllowed(f)) return cb({ error: 'Bu odada ses panelini kullanma iznin yok' });
+    // başka bir sunucunun sesi de çalınabilir (üyesi olduğun sürece)
+    const src = from && from !== f?.s.id ? db.servers.find(x => x.id === from && x.members.includes(me)) : f?.s;
+    const snd = sbFind(src, sid); if (!snd) return cb({ error: 'Ses bulunamadı' });
+    if (limited('sbp|' + me, 1, 1500) || limited('sbpm|' + me, 12, 60e3)) return cb({ error: 'Biraz yavaş, sesler üst üste binmesin', cool: true });
+    sbPlayIn(myVoice, snd); cb({ ok: true });
+  });
+  // Giriş sesi: sesli odaya girince odadakiler duyar (hazır seslerden ya da üyesi olduğun bir sunucunun sesinden)
+  socket.on('sbEntry', (v, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (!v) { delete u.entrySound; save(); return cb({ ok: true, entry: null }); }
+    const src = v.s ? db.servers.find(x => x.id === v.s && x.members.includes(me)) : null, snd = sbFind(src, v.id);
+    if (!snd) return cb({ error: 'Ses bulunamadı' });
+    u.entrySound = { s: snd.def ? null : src.id, id: snd.id, name: snd.name, emoji: snd.emoji }; save(); cb({ ok: true, entry: u.entrySound });
+  });
+  function sbEntryPlay(ch) {
+    const u = db.users[me], e = u?.entrySound; if (!e) return;
+    const f = ch.startsWith('call:') ? null : findChannel(ch); if (!sbAllowed(f)) return;
+    const snd = sbFind(e.s ? db.servers.find(x => x.id === e.s && x.members.includes(me)) : null, e.id); if (!snd) return;
+    if (limited('sbent|' + me, 3, 60e3)) return;
+    setTimeout(() => { if (myVoice === ch) sbPlayIn(ch, snd, true); }, 700);
+  }
   socket.on('vflags', ({ m, d } = {}) => {
     if (!myVoice) return;
     const sv = findChannel(myVoice)?.s; if (sv && !m && srvMuted.has(sv.id + '|' + me)) { m = true; socket.emit('srvMute', { on: true }); }

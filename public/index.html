@@ -3840,7 +3840,7 @@
     #vdock .vd-b .ic { width: 20px; height: 20px; } #vdock .vd-b.off { background: rgba(255,107,107,.18); color: var(--red); } #vdock .vd-b.on { background: var(--accent); color: #1a0f0a; }
     #vdock .vd-leave { background: #e5484d; color: #fff; } #vdock .vd-x { display: none; }
     body.vview #vdock { bottom: calc(14px + env(safe-area-inset-bottom)); left: 50%; right: auto; transform: translateX(-50%); padding: 8px 10px; gap: 10px; border-radius: 26px; }
-    body.vview #vdock .vd-info { display: none; } body.vview #vdock .vd-x { display: grid; } body.vview #vdock .vd-b { width: 52px; height: 52px; } body.vview #vdock .vd-x.na { display: none; }
+    body.vview #vdock .vd-info { display: none; } body.vview #vdock .vd-x { display: grid; } body.vview #vdock .vd-b { width: min(52px, calc((100vw - 64px) / 7)); height: min(52px, calc((100vw - 64px) / 7)); } body.vview #vdock .vd-x.na { display: none; }
     body.invoice:not(.vview) #messages { padding-bottom: 76px; }
     /* kayıt çubuğu sığsın */
     #compose.recording #emo-btn, #compose.recording #plus { display: none; } #recbar { min-width: 0; white-space: nowrap; overflow: hidden; font-size: 14px; } #recbar #rec-cancel { flex-shrink: 0; }
@@ -4097,6 +4097,37 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .sg-nm { display: block; font-size: 15px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .sg-nm:hover { text-decoration: underline; }
   .sg-un { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
   .sg-why { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .sb-pop { width: 380px; display: flex; flex-direction: column; max-height: min(560px, calc(100vh - 20px)); }
+  .sb-head { display: flex; align-items: center; gap: 6px; padding: 12px 10px 8px 14px; }
+  .sb-head > b { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 15px; } .sb-head > b .ic { width: 18px; height: 18px; color: var(--accent); }
+  .sb-vol { display: flex; align-items: center; gap: 4px; color: var(--muted); } .sb-vol .ic { width: 16px; height: 16px; } .sb-vol input { width: 74px; accent-color: var(--accent); }
+  .sb-search { display: flex; align-items: center; gap: 8px; margin: 0 12px 8px; padding: 0 10px; border-radius: 10px; background: var(--hover); }
+  .sb-search .ic { width: 16px; height: 16px; color: var(--muted); } .sb-search input { flex: 1; background: none; border: 0; color: var(--text); padding: 9px 0; font: inherit; font-size: 13.5px; outline: none; min-width: 0; }
+  .sb-note { display: flex; gap: 8px; align-items: flex-start; margin: 0 12px 8px; font-size: 12.5px; color: var(--muted); } .sb-note .ic { width: 15px; height: 15px; flex: none; margin-top: 1px; }
+  .sb-in { overflow-y: auto; padding: 0 12px 10px; flex: 1; overscroll-behavior: contain; }
+  .sb-in h6 { margin: 10px 2px 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .sb-in h6 .ic { width: 12px; height: 12px; }
+  .sb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .sb-t { position: relative; display: flex; align-items: center; gap: 7px; min-width: 0; padding: 9px 9px; border-radius: 10px; background: var(--hover); border: 1px solid transparent; text-align: left; font-size: 12.5px; font-weight: 600; color: var(--text); transition: transform .08s, background .15s, border-color .15s; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .sb-t:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .sb-t:active, .sb-t.hit { transform: scale(.95); background: color-mix(in srgb, var(--accent) 22%, var(--hover)); }
+  .sb-t.cool { animation: sbShake .3s; }
+  @keyframes sbShake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+  .sb-e { font-size: 17px; line-height: 1; flex: none; } .sb-e .ic { width: 16px; height: 16px; }
+  .sb-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sb-star { position: absolute; top: 3px; right: 4px; color: #f6c445; } .sb-star .ic { width: 10px; height: 10px; fill: currentColor; }
+  .sb-add { border: 1px dashed var(--line); background: transparent; color: var(--muted); }
+  .sb-foot { display: flex; align-items: center; gap: 6px; padding: 9px 14px 12px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); } .sb-foot .ic { width: 14px; height: 14px; flex: none; } .sb-foot b { color: var(--text); margin-left: 2px; }
+  .vpop.sheet.sb-pop { max-height: 72vh; }
+  .sb-float { position: absolute; left: 50%; top: 0; transform: translate(-50%, 0); font-size: 22px; pointer-events: none; animation: sbFloat 1.6s ease-out forwards; z-index: 5; }
+  @keyframes sbFloat { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.6); } 15% { opacity: 1; transform: translate(-50%, -6px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -34px) scale(1); } }
+  .box.sbf { max-width: 460px; }
+  .sb-drop { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 26px 16px; border: 1.5px dashed var(--line); border-radius: 14px; cursor: pointer; color: var(--muted); margin: 12px 0; text-align: center; }
+  .sb-drop:hover { border-color: var(--accent); } .sb-drop .ic { width: 26px; height: 26px; color: var(--accent); } .sb-drop b { color: var(--text); }
+  #sbf-wave { width: 100%; height: 70px; border-radius: 10px; background: var(--hover); margin: 10px 0 6px; display: block; }
+  .sbf-row { display: grid; grid-template-columns: 96px 1fr 58px; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); margin: 6px 0; } .sbf-row input { accent-color: var(--accent); } .sbf-row em { font-style: normal; text-align: right; color: var(--text); }
+  .sbf-2 { display: grid; grid-template-columns: 64px 1fr; gap: 8px; margin-top: 10px; } .sbf-2 .field { margin: 0; } #sbf-emoji { text-align: center; font-size: 18px; }
+  #vsb { flex: 0 0 auto; }
+  .vuser { position: relative; }
   .sg-uy { position: absolute; top: 10px; right: 10px; background: color-mix(in srgb, var(--accent) 22%, var(--card)); color: var(--text); font: 700 12px/1 inherit; padding: 5px 8px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
   .sg-tip { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px dashed var(--line); border-radius: 14px; margin: 14px 0 4px; color: var(--muted); font-size: 13px; }
   .sg-tip .ic { flex: none; width: 20px; height: 20px; color: var(--accent); }
@@ -4193,7 +4224,7 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
     <div id="side-list"></div>
     <div id="me">
       <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vtime" class="vtime"></span><span id="vq" class="vq" hidden><svg viewBox="0 0 16 14" aria-hidden="true"><rect x="0" y="9" width="3.4" height="5" rx="1"/><rect x="6.3" y="5" width="3.4" height="9" rx="1"/><rect x="12.6" y="0" width="3.4" height="14" rx="1"/></svg><em></em></span></div><div class="vc" id="vname"></div>
-        <div class="btns"><button type="button" class="vb-chat2" aria-label="Oda sohbeti" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button><button id="vns" hidden title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button></div></div>
+        <div class="btns"><button type="button" class="vb-chat2" aria-label="Oda sohbeti" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="vsb" title="Ses paneli" aria-label="Ses paneli" data-sbopen><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M15 15.5v3M17.25 14v6M19.5 16v2"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button><button id="vns" hidden title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button></div></div>
       <div class="row1"><div id="me-av"></div><div><div class="n" id="me-name"></div><div class="s" id="me-lvl"></div></div>
         <button class="ibtn mebtn" id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect class="v-mic-body" x="9" y="2.5" width="6" height="11" rx="3"/><path class="v-mic-arc" d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></button><button class="ibtn mebtn" id="deaf" title="Hoparlörü kapat" aria-label="Hoparlörü kapat"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path class="v-hs-band" d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect class="v-hs-cup l" x="3" y="13.5" width="4.5" height="7" rx="2"/><rect class="v-hs-cup r" x="16.5" y="13.5" width="4.5" height="7" rx="2"/></svg></button><button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
     </div>
@@ -4236,7 +4267,7 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
     <div id="drop">Dosyaları buraya bırak</div>
   </main>
   <aside id="members" class="panel"></aside>
-  <div id="vdock" aria-label="Ses kontrolleri"><button class="vd-info" id="vd-info"><span class="vd-dot"></span><span class="vd-t"><b id="vd-name">Seste</b><small id="vd-sub">Dokun: odayı aç</small></span></button><button class="vd-b" id="vd-mute" aria-label="Mikrofon"></button><button class="vd-b vd-x" id="vd-cam" aria-label="Kamera"></button><button class="vd-b vd-x" id="vd-scr" aria-label="Ekran paylaş"></button><button class="vd-b vd-x" id="vd-chat" aria-label="Oda sohbeti"></button><button class="vd-b vd-leave" id="vd-leave" aria-label="Ayrıl"></button></div>
+  <div id="vdock" aria-label="Ses kontrolleri"><button class="vd-info" id="vd-info"><span class="vd-dot"></span><span class="vd-t"><b id="vd-name">Seste</b><small id="vd-sub">Dokun: odayı aç</small></span></button><button class="vd-b" id="vd-mute" aria-label="Mikrofon"></button><button class="vd-b vd-x" id="vd-cam" aria-label="Kamera"></button><button class="vd-b vd-x" id="vd-scr" aria-label="Ekran paylaş"></button><button class="vd-b vd-x" id="vd-sb" aria-label="Ses paneli" data-sbopen></button><button class="vd-b vd-x" id="vd-chat" aria-label="Oda sohbeti"></button><button class="vd-b vd-leave" id="vd-leave" aria-label="Ayrıl"></button></div>
   <div id="msheet" aria-hidden="true"><div class="ms-bg"></div><div class="ms-p" role="dialog" aria-label="Mesaj işlemleri"></div></div>
 </div>
 
@@ -4277,6 +4308,10 @@ if (window.visualViewport && matchMedia('(pointer: coarse)').matches) {
   fit();
 }
 const ICON = {
+  play: '<path d="M7 5v14l12-7z"/>',
+  upload: '<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>',
+  volumeoff: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/>',
+  sboard: '<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M15 15.5v3M17.25 14v6M19.5 16v2"/>',
   bug: '<path d="M8 6.5a4 4 0 0 1 8 0"/><rect x="7" y="7" width="10" height="12" rx="5"/><path d="M12 11v8M4 10l3 1.5M20 10l-3 1.5M3.5 15H7M20.5 15H17M5 20l2.5-2M19 20l-2.5-2M9.5 4 8 2.5M14.5 4 16 2.5"/>',
   logo: '<path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><path d="M9 9.5v1M15 9.5v1M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
@@ -4485,9 +4520,9 @@ const PERM_TXT = { administrator: ['Yönetici', 'Her yetkiye sahip olur ve odala
   manageChannels: ['Odaları yönet', 'Oda ve kategori açar, siler, düzenler, izinlerini ayarlar'], manageEmojis: ['Emojileri yönet', 'Sunucuya özel emoji ekler ve siler'], viewAudit: ['Kayıtları görüntüle', 'Sunucuda kimin ne değiştirdiğini görür'],
   manageMessages: ['Mesajları yönet', 'Başkalarının mesajını siler, sabitler, salt okunur odalara yazar'], mentionEveryone: ['@herkes ve tüm rolleri etiketle', '@herkes kullanır, etiketlenemez rolleri de etiketler'],
   kick: ['Üye at', 'Üyeleri sunucudan çıkarır (geri gelebilirler)'], ban: ['Üye yasakla', 'Üyeleri kalıcı olarak yasaklar'], timeout: ['Sustur (yazı)', 'Üyeleri bir süre yazamaz ve seslere giremez yapar, uyarı verir'],
-  voiceMute: ['Seste sustur', 'Sesli odadaki birinin mikrofonunu kapatır, o açamaz'], voiceMove: ['Seste taşı ve çıkar', 'Sesli odadakileri başka odaya taşır ya da bağlantısını keser'] };
+  voiceMute: ['Seste sustur', 'Sesli odadaki birinin mikrofonunu kapatır, o açamaz'], voiceMove: ['Seste taşı ve çıkar', 'Sesli odadakileri başka odaya taşır ya da bağlantısını keser'], manageSounds: ['Ses panelini yönet', 'Ses paneline ses ekler, herkesin eklediği sesleri düzenler ve siler'] };
 const PERM_GROUPS = [['Genel', 'gear', ['administrator', 'manageServer', 'manageRoles', 'manageChannels', 'manageEmojis', 'manageWebhooks', 'viewAudit']], ['Sohbet', 'chat', ['manageMessages', 'pinMessages', 'slowBypass', 'mentionEveryone']],
-  ['Üyeler', 'users', ['kick', 'ban', 'timeout']], ['Ses', 'volume', ['voiceMute', 'voiceMove']]];
+  ['Üyeler', 'users', ['kick', 'ban', 'timeout']], ['Ses', 'volume', ['voiceMute', 'voiceMove', 'manageSounds']]];
 const PERM_DANGER = new Set(['administrator', 'manageServer', 'manageRoles', 'ban']);
 const roleIconOf = (s, n) => (s?.customRoles || []).find(r => r.icon && (s.memberRoles?.[n] || []).includes(r.id))?.icon || '';
 const TIMEOUTS = [[1, '1 dakika'], [5, '5 dakika'], [10, '10 dakika'], [60, '1 saat'], [1440, '1 gün'], [10080, '1 hafta']];
@@ -4871,7 +4906,7 @@ function onAuth(res) {
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ageGate) return showAgeGate(res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
   if (res.ice?.length) ICE.iceServers = res.ice;
-  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff; S.wrapOff = !!res.wrapOff; S.matchOff = !!res.matchOff;
+  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff; S.wrapOff = !!res.wrapOff; S.entrySound = res.entrySound || null; S.matchOff = !!res.matchOff;
   { const be = new URLSearchParams(location.search).get('botekle'); if (be) { const iz = new URLSearchParams(location.search).get('izin') || ''; history.replaceState(null, '', APP_PATH); setTimeout(() => showBotAuthorize(be, iz.split(',').filter(Boolean)), 900); } }
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
@@ -5826,7 +5861,7 @@ function userMenu(n, x, y) {
     (self ? '' : b('note', `<span>Not ekle<small>${uNotes[n] ? esc(uNotes[n].slice(0, 40)) : 'Sadece sana görünür'}</small></span>`)) +
     (self ? '' : b('nick', `<span>Arkadaş takma adı ${uNicks[n] ? 'değiştir' : 'ekle'}${uNicks[n] ? `<small>${esc(uNicks[n])}</small>` : ''}</span>`)) +
     (inVoice ? `<hr><div class="ui">Kullanıcı ses seviyesi<input type="range" id="u-vol" min="0" max="1" step="0.05" value="${vol[n] ?? 1}"></div>` : '') +
-    (self ? '' : '<hr>' + chk('mute', 'Sustur', uMuted.has(n)) + chk('novid', 'Görüntüyü devre dışı bırak', uNoVid.has(n))) +
+    (self ? '' : '<hr>' + chk('mute', 'Sustur', uMuted.has(n)) + chk('sbmute', 'Ses paneli seslerini duyma', sbMute.has(n)) + chk('novid', 'Görüntüyü devre dışı bırak', uNoVid.has(n))) +
     (self ? '' : '<hr>' + (others.length ? `<button data-u="invsub" class="arr">Sunucuya davet et${ic('chevron')}</button><div class="sub" id="u-inv">${others.map(s => `<button data-inv="${s.id}">${esc(s.name)}</button>`).join('')}</div>` : '') +
       b('friend', fr ? 'Arkadaşı çıkar' : sc.reqOut.includes(n) ? 'İsteği geri çek' : sc.reqIn.includes(n) ? 'İsteği kabul et' : 'Arkadaş ekle') +
       b('ignore', uIgnored.has(n) ? 'Yok saymayı bırak' : 'Yok say') + b('block', sc.blocked.includes(n) ? 'Engeli kaldır' : 'Engelle', 'danger') + b('report', 'Şikayet et', 'danger')) +
@@ -5861,6 +5896,7 @@ function userMenu(n, x, y) {
       const rid = a.slice(5), cur = srv.memberRoles?.[n] || [], next = cur.includes(rid) ? cur.filter(x => x !== rid) : [...cur, rid];
       return socket.emit('memberRoles', { serverId: srv.id, name: n, roles: next }, r => { if (r.error) return toast(r.error); t.querySelector('.box2').classList.toggle('on'); });
     }
+    if (a === 'sbmute') { sbMute.has(n) ? sbMute.delete(n) : sbMute.add(n); sbSave(); t.querySelector('.box2').classList.toggle('on'); return; }
     if (a === 'mute' || a === 'novid') {
       const set = a === 'mute' ? uMuted : uNoVid; set.has(n) ? set.delete(n) : set.add(n); saveU(); t.querySelector('.box2').classList.toggle('on');
       applyPeerAudio(); if (a === 'novid') renderStage?.(); return;
@@ -6325,7 +6361,7 @@ $('#head-more').onclick = e => {
 // --- Telefonda ses kontrolleri (sol paneldeki ses çubuğunun kopyası, her ekranda elde) ---
 (() => {
   const B = document.body, set = (id, icn) => $(id).innerHTML = ic(icn);
-  set('#vd-cam', 'video'); set('#vd-scr', 'screen'); set('#vd-chat', 'chat'); set('#vd-leave', 'hangup');
+  set('#vd-cam', 'video'); set('#vd-scr', 'screen'); set('#vd-chat', 'chat'); set('#vd-leave', 'hangup'); set('#vd-sb', 'sboard');
   const sync = () => {
     const on = $('#voicebar').style.display === 'block'; B.classList.toggle('invoice', on); if (!on) return;
     $('#vd-mute').innerHTML = $('#mute').innerHTML; $('#vd-mute').classList.toggle('off', $('#mute').classList.contains('off'));
@@ -6342,6 +6378,7 @@ $('#head-more').onclick = e => {
   $('#vd-cam').onclick = () => { $('#vcam').click(); setTimeout(sync, 300); };
   $('#vd-scr').onclick = () => { $('#vscreen').click(); setTimeout(sync, 300); };
   $('#vd-chat').onclick = () => $('#vb-chat')?.click();
+  $('#vd-sb').onclick = e => openSoundboard(e.currentTarget);
   $('#vd-leave').onclick = () => { buzz(15); $('#vleave').click(); setTimeout(sync, 100); };
   $('#vd-info').onclick = () => { const f = vch(); if (f && (S.view !== 'server' || S.server?.id !== f.s.id)) selectServer(f.s.id); setTimeout(() => setVView(true), f ? 120 : 0); };
   sync();
@@ -8051,7 +8088,7 @@ function appCmdForm(c, pre = {}) {
     socket.emit('appCmd', { chId: S.channel?.id, app: c.app, name: c.ad, opts }, r => { if (r?.error) return toast(r.error, null, false, { type: 'err' }); closeModal(); }); };
 }
 // ---- Botu sunucuya ekleme ekranı (kankahq.com/bot-ekle/...) ----
-const PERM_TR = { manageServer: 'Sunucuyu yönet', manageRoles: 'Rolleri yönet', manageChannels: 'Odaları yönet', manageEmojis: 'Emojileri yönet', manageWebhooks: 'Webhook yönet', viewAudit: 'Kayıt defterini gör', manageMessages: 'Mesajları yönet (başkasınınkini sil)', pinMessages: 'Mesaj sabitle', slowBypass: 'Yavaş moda takılmasın', mentionEveryone: '@herkes etiketle', kick: 'Üye at', ban: 'Üye yasakla', timeout: 'Üye sustur', voiceMute: 'Seste sustur', voiceMove: 'Sesten taşı' };
+const PERM_TR = { manageServer: 'Sunucuyu yönet', manageRoles: 'Rolleri yönet', manageChannels: 'Odaları yönet', manageEmojis: 'Emojileri yönet', manageWebhooks: 'Webhook yönet', viewAudit: 'Kayıt defterini gör', manageMessages: 'Mesajları yönet (başkasınınkini sil)', pinMessages: 'Mesaj sabitle', slowBypass: 'Yavaş moda takılmasın', mentionEveryone: '@herkes etiketle', kick: 'Üye at', ban: 'Üye yasakla', timeout: 'Üye sustur', voiceMute: 'Seste sustur', voiceMove: 'Sesten taşı', manageSounds: 'Ses panelini yönet' };
 function showBotAuthorize(aid, perms) {
   socket.emit('appInfo', { id: aid, perms }, r => {
     if (r?.error) return toast(r.error, null, false, { type: 'err' });
@@ -9966,7 +10003,7 @@ socket.on('ticketClosed', ({ channelId, goCh }) => {
   const first = S.server.channels.find(c => (c.type || 'text') === 'text' && !c.news);
   first ? selectChannel(first.id) : showFriends();
 });
-socket.on('servers', list => {
+socket.on('servers', list => { setTimeout(sbRefresh, 0);
   const gateSig = x => x ? JSON.stringify([x.accepted, x.apply, (x.sec || []).map(y => y.k)]) : '', prevGate = S.view === 'server' ? gateSig(S.server) : '';
   S.servers = list;
   // Bulunduğun ses odası artık yoksa (silindi / erişim kalktı) bağlantıyı kapat
@@ -10529,6 +10566,161 @@ socket.on('voiceLeft', sid => {
     leaveVoice(false); renderStage();
   }
 });
+// ================= Ses paneli =================
+// Sesli odadayken kısa sesler çalınır; odadaki herkes kendi tarafında çalar (konuşma kalitesini etkilemez).
+// Favoriler, susturulan kişiler ve panel ses seviyesi bu cihazda tutulur.
+const sbFav = new Set(JSON.parse(store.get('kanka-sbfav') || '[]')), sbMute = new Set(JSON.parse(store.get('kanka-sbmute') || '[]'));
+const sbSave = () => { store.set('kanka-sbfav', JSON.stringify([...sbFav])); store.set('kanka-sbmute', JSON.stringify([...sbMute])); };
+const sbVol = () => { const v = parseFloat(store.get('kanka-sbvol')); return isNaN(v) ? 0.7 : v; };
+const sbKey = (srvId, x) => x.def ? x.id : srvId + '|' + x.id;
+const sbPlaying = new Set();
+function sbAudio(url, vol) {
+  const a = new Audio(url); a.volume = Math.max(0, Math.min(1, vol)); applySink(a);
+  sbPlaying.add(a); a.onended = a.onerror = () => sbPlaying.delete(a);
+  a.play().catch(() => sbPlaying.delete(a)); return a;
+}
+socket.on('sbPlay', d => {
+  if (!myVoice || deaf || store.get('kanka-sboff') === '1' || sbMute.has(d.by) || uMuted.has(d.by)) return;
+  if (sbPlaying.size >= 4) return; // aynı anda en fazla 4 ses
+  sbAudio(d.url, (d.vol ?? 0.8) * sbVol());
+  document.querySelectorAll(`[data-vu="${CSS.escape(d.by)}"]`).forEach(el => {
+    const b = document.createElement('span'); b.className = 'sb-float'; b.textContent = d.emoji || '🔊'; b.title = d.name; el.appendChild(b); setTimeout(() => b.remove(), 1700);
+  });
+});
+function sbLists() {
+  const f = vch(), cur = f?.s || (S.view === 'server' ? S.server : null), out = [];
+  if (cur) out.push({ srv: cur, title: cur.name, list: cur.sounds || [], add: !!cur.members && (perm(cur, 'manageSounds') || (!cur.public && cur.sbAll !== false)), manage: perm(cur, 'manageSounds') });
+  for (const s of S.servers) if (s !== cur && s.sounds?.length) out.push({ srv: s, title: s.name, list: s.sounds, other: true, manage: perm(s, 'manageSounds') });
+  return { cur, groups: out };
+}
+function openSoundboard(anchor) {
+  if ($('#sbpanel')) return closeSoundboard();
+  closeVPop?.();
+  const p = document.createElement('div'); p.id = 'sbpanel'; p.className = 'vpop sb-pop'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Ses paneli');
+  document.body.appendChild(p);
+  let q = '';
+  const draw = () => {
+    const { cur, groups } = sbLists(), inV = !!myVoice, f = vch(), can = !f || f.c.canSound !== false;
+    const all = [...groups.flatMap(g => g.list.map(x => ({ x, g }))), ...SB_DEF.map(x => ({ x, g: null }))];
+    const match = ({ x }) => !q || (x.name + ' ' + (x.emoji || '')).toLocaleLowerCase('tr').includes(q);
+    const tile = ({ x, g }) => { const k = sbKey(g?.srv.id, x);
+      return `<button class="sb-t" data-k="${esc(k)}" title="${esc(x.name)}${g?.other ? ' · ' + esc(g.title) : ''}"><span class="sb-e">${esc(x.emoji || '🔊')}</span><span class="sb-n">${esc(x.name)}</span>${sbFav.has(k) ? `<i class="sb-star">${ic('star')}</i>` : ''}</button>`; };
+    const sec = (t, items, extra = '') => items.length || extra ? `<h6>${t}</h6><div class="sb-grid">${items.map(tile).join('')}${extra}</div>` : '';
+    const favs = all.filter(o => sbFav.has(sbKey(o.g?.srv.id, o.x))).filter(match);
+    const cg = groups.find(g => !g.other);
+    p.innerHTML = `<div class="sb-head"><b>${ic('sboard')}Ses paneli</b><label class="sb-vol" title="Panel sesleri ses seviyesi (sadece senin için)">${ic('volume')}<input type="range" min="0" max="1" step="0.05" value="${sbVol()}" aria-label="Panel ses seviyesi"></label><button class="ibtn" id="sb-more" aria-label="Ayarlar">${ic('more')}</button><button class="ibtn" id="sb-x" aria-label="Kapat">${ic('x')}</button></div>
+      <div class="sb-search">${ic('search')}<input placeholder="Ses ara" value="${esc(q)}" aria-label="Ses ara"></div>
+      ${!inV ? `<p class="sb-note">${ic('info')}Sesli bir odaya girince çaldığın sesleri odadaki herkes duyar. Şimdilik sadece sen dinlersin.</p>` : !can ? `<p class="sb-note">${ic('lock')}Bu odada ses panelini kullanma iznin yok. Sesleri sadece sen dinleyebilirsin.</p>` : ''}
+      <div class="sb-in vp-in">${sec(`${ic('star')} Favoriler`, favs)}
+        ${cg ? sec(esc(cg.title), cg.list.map(x => ({ x, g: cg })).filter(match), cg.add && !q ? `<button class="sb-t sb-add" id="sb-add" title="Ses ekle"><span class="sb-e">${ic('plus')}</span><span class="sb-n">Ses ekle</span></button>` : '') : ''}
+        ${groups.filter(g => g.other).map(g => sec(esc(g.title), g.list.map(x => ({ x, g })).filter(match))).join('')}
+        ${sec('Hazır sesler', SB_DEF.map(x => ({ x, g: null })).filter(match))}
+        ${q && !all.some(match) ? `<p class="sb-note">"${esc(q)}" ile eşleşen ses yok</p>` : ''}</div>
+      <div class="sb-foot">${S.entrySound ? `${ic('door')}Giriş sesin: <b>${esc(S.entrySound.emoji || '')} ${esc(S.entrySound.name)}</b>` : `${ic('door')}Bir sese sağ tıkla (telefonda basılı tut): giriş sesin olsun`}</div>`;
+    const find = k => all.find(o => sbKey(o.g?.srv.id, o.x) === k);
+    p.querySelectorAll('.sb-t[data-k]').forEach(b => {
+      const o = find(b.dataset.k);
+      b.onclick = () => {
+        if (!myVoice || !can) { sbAudio(o.x.url, (o.x.vol ?? 0.8) * sbVol()); return; }
+        socket.emit('sbPlay', { id: o.x.id, from: o.g?.srv.id || null }, r => { if (r?.error) { if (r.cool) { b.classList.add('cool'); setTimeout(() => b.classList.remove('cool'), 600); } else toast(r.error); } else { b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 300); } });
+      };
+      const menu = (x, y) => { const k = b.dataset.k, mine = o.g && (o.x.by === S.me || o.g.manage), items = [
+        { t: 'Sadece ben dinleyeyim', icon: 'play', act: () => sbAudio(o.x.url, (o.x.vol ?? 0.8) * sbVol()) },
+        { t: sbFav.has(k) ? 'Favorilerden çıkar' : 'Favorilere ekle', icon: 'star', act: () => { sbFav.has(k) ? sbFav.delete(k) : sbFav.add(k); sbSave(); draw(); } },
+        { t: S.entrySound?.id === o.x.id ? 'Giriş sesimi kaldır' : 'Giriş sesim olsun', icon: 'door', act: () => socket.emit('sbEntry', S.entrySound?.id === o.x.id ? null : { s: o.g?.srv.id || null, id: o.x.id }, r => { if (r?.error) return toast(r.error); S.entrySound = r.entry; toast(r.entry ? `${r.entry.emoji} ${r.entry.name} artık giriş sesin. Sesli odaya girince odadakiler duyar.` : 'Giriş sesin kaldırıldı'); draw(); }) }];
+        if (mine) items.push('-', { t: 'Düzenle', icon: 'edit', act: () => sbEditForm(o.g.srv, o.x) }, { t: 'Sil', icon: 'trash', danger: true, act: () => confirmBox(`"${o.x.name}" sesi silinsin mi?`, () => socket.emit('sbDel', { serverId: o.g.srv.id, id: o.x.id }, r => r?.error ? toast(r.error) : setTimeout(draw, 150))) });
+        ctxMenu(x, y, items, `${o.x.emoji || ''} ${o.x.name}`); };
+      b.oncontextmenu = e => { e.preventDefault(); menu(e.clientX, e.clientY); };
+      let lt; b.addEventListener('touchstart', e => { lt = setTimeout(() => { lt = 'x'; const t = e.touches[0]; menu(t.clientX, t.clientY); }, 480); }, { passive: true });
+      b.addEventListener('touchend', e => { if (lt === 'x') e.preventDefault(); clearTimeout(lt); lt = null; });
+      b.addEventListener('touchmove', () => { clearTimeout(lt); lt = null; }, { passive: true });
+    });
+    const si = p.querySelector('.sb-search input'); si.oninput = () => { q = si.value.trim().toLocaleLowerCase('tr'); const pos = si.selectionStart; draw(); const n = p.querySelector('.sb-search input'); n.focus(); n.setSelectionRange(pos, pos); };
+    p.querySelector('.sb-vol input').oninput = e => store.set('kanka-sbvol', e.target.value);
+    $('#sb-x').onclick = closeSoundboard;
+    if ($('#sb-add')) $('#sb-add').onclick = () => { closeSoundboard(); sbAddForm(cur); };
+    $('#sb-more').onclick = e => { const r = e.currentTarget.getBoundingClientRect(), off = store.get('kanka-sboff') === '1', items = [
+      { t: off ? 'Panel seslerini duy' : 'Panel seslerini hiç duyma', icon: off ? 'volume' : 'volumeoff', act: () => { store.set('kanka-sboff', off ? null : '1'); toast(off ? 'Panel seslerini duyacaksın' : 'Kimsenin panel sesini duymayacaksın'); } }];
+      if (sbMute.size) items.push({ t: `Susturduklarını aç (${sbMute.size})`, icon: 'users', act: () => { sbMute.clear(); sbSave(); toast('Herkesin panel seslerini yeniden duyacaksın'); } });
+      if (S.entrySound) items.push({ t: 'Giriş sesimi kaldır', icon: 'door', act: () => socket.emit('sbEntry', null, () => { S.entrySound = null; draw(); }) });
+      if (cur && perm(cur, 'manageSounds') && !cur.public) items.push('-', { t: cur.sbAll !== false ? 'Sadece yetkililer ses eklesin' : 'Herkes ses ekleyebilsin', icon: 'shield', act: () => socket.emit('sbSettings', { serverId: cur.id, all: cur.sbAll === false }, r => r?.error ? toast(r.error) : toast(cur.sbAll === false ? 'Artık herkes ses ekleyebilir' : 'Artık sadece "Ses panelini yönet" yetkisi olanlar ses ekler')) });
+      ctxMenu(r.left, r.bottom + 6, items); };
+  };
+  p._draw = draw; draw();
+  if (innerWidth < 760) { p.classList.add('sheet'); sheetDrag(p, closeSoundboard, '.sb-in'); }
+  else { const r = anchor.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight; let x = Math.min(innerWidth - w - 10, Math.max(10, r.left)), y = r.top - h - 10; if (y < 10) y = Math.min(innerHeight - h - 10, r.bottom + 10); p.style.left = x + 'px'; p.style.top = y + 'px'; }
+  setTimeout(() => addEventListener('pointerdown', sbOut, true), 0);
+}
+function sbOut(e) { const p = $('#sbpanel'); if (!p) return removeEventListener('pointerdown', sbOut, true); if (!p.contains(e.target) && !e.target.closest('.ctx, #modal, [data-sbopen]')) closeSoundboard(); }
+function closeSoundboard() { $('#sbpanel')?.remove(); removeEventListener('pointerdown', sbOut, true); }
+// Sunucu verisi değişince (biri ses ekledi/sildi) açık paneli tazele
+function sbRefresh() { $('#sbpanel')?._draw?.(); }
+const SB_DEF = [['korna', 'Korna', '📯'], ['ba-dum-tss', 'Ba dum tss', '🥁'], ['alkis', 'Alkış', '👏'], ['tada', 'Tada', '🎉'], ['yanlis', 'Yanlış', '❌'], ['dramatik', 'Dramatik', '😱'],
+  ['kriket', 'Sessizlik', '🦗'], ['ding', 'Ding', '🔔'], ['boing', 'Boing', '🤸'], ['vuuu', 'Vuuu', '💨'], ['seviye', 'Seviye atladı', '🆙'], ['pop', 'Pop', '🫧']]
+  .map(([f, name, emoji]) => ({ id: 'd:' + f, name, emoji, vol: 0.8, url: `/ses-paneli/${f}.mp3`, def: true }));
+// ---- Ses ekle: dosyayı tarayıcıda aç, en fazla 5 sn'lik kısmı seç, WAV'a çevirip yükle ----
+function sbEditForm(srv, x) {
+  form('Sesi düzenle', '', [{ k: 'name', p: 'Ad', v: x.name }, { k: 'emoji', p: 'Emoji', v: x.emoji || '' }], v => socket.emit('sbEdit', { serverId: srv.id, id: x.id, name: v.name, emoji: v.emoji }, r => r?.error ? toast(r.error) : toast('Kaydedildi')));
+}
+function wavEncode(buf) {
+  const d = buf.getChannelData(0), n = d.length, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab), w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, buf.sampleRate, true); v.setUint32(28, buf.sampleRate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i])) * 0x7fff, true);
+  return new Blob([ab], { type: 'audio/wav' });
+}
+function sbAddForm(srv) {
+  if (!srv) return toast('Önce bir sunucu seç');
+  modal(`<h3>Ses paneline ses ekle</h3><p class="hint">${esc(srv.name)} sunucusundaki herkes kullanabilir. Ses en fazla 5 saniye olur; daha uzunsa istediğin kısmı seç.</p>
+    <label class="sb-drop" id="sbf-drop">${ic('upload')}<b>Ses dosyası seç</b><small>MP3, WAV, OGG, M4A… ya da kısa bir video</small><input type="file" id="sbf-file" accept="audio/*,video/*" hidden></label>
+    <div id="sbf-ed" hidden><canvas id="sbf-wave" height="70"></canvas>
+      <div class="sbf-row"><span>Başlangıç</span><input type="range" id="sbf-st" min="0" step="0.05" value="0"><em id="sbf-stv">0,0 sn</em></div>
+      <div class="sbf-row"><span>Uzunluk</span><input type="range" id="sbf-len" min="0.3" max="5" step="0.05" value="5"><em id="sbf-lenv">5,0 sn</em></div>
+      <div class="sbf-row"><span>Ses seviyesi</span><input type="range" id="sbf-vol" min="0.05" max="1" step="0.05" value="0.8"><em id="sbf-volv">%80</em></div>
+      <div class="sbf-2"><input class="field" id="sbf-emoji" maxlength="8" placeholder="🔊" aria-label="Emoji"><input class="field" id="sbf-name" maxlength="24" placeholder="Sesin adı" aria-label="Ad"></div>
+      <div class="actions"><button class="btns2" id="sbf-play">${ic('play')} Dinle</button><button class="primary" id="sbf-ok">Ekle</button></div></div>
+    <div class="actions" id="sbf-cancel-row"><button class="btns2" id="sbf-cancel">Vazgeç</button></div>`, 'sbf');
+  $('#sbf-cancel').onclick = closeModal;
+  let src = null, prev = null;
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const fmt = x => x.toFixed(1).replace('.', ',') + ' sn';
+  const sel = () => { const st = +$('#sbf-st').value, len = Math.min(+$('#sbf-len').value, src.duration - st); return { st, len: Math.max(0.1, len) }; };
+  const drawWave = () => {
+    const c = $('#sbf-wave'), W = c.width = c.clientWidth * devicePixelRatio, H = c.height = 70 * devicePixelRatio, g = c.getContext('2d'), d = src.getChannelData(0), step = Math.ceil(d.length / W), { st, len } = sel();
+    g.clearRect(0, 0, W, H); const x0 = st / src.duration * W, x1 = (st + len) / src.duration * W;
+    g.fillStyle = 'rgba(200,255,0,.12)'; g.fillRect(x0, 0, x1 - x0, H);
+    for (let x = 0; x < W; x++) { let m = 0; for (let i = x * step; i < (x + 1) * step && i < d.length; i++) m = Math.max(m, Math.abs(d[i])); const h = Math.max(1, m * H * 0.9); g.fillStyle = x >= x0 && x <= x1 ? '#c8ff00' : 'rgba(255,255,255,.25)'; g.fillRect(x, (H - h) / 2, 1, h); }
+  };
+  const sync = () => { const { st, len } = sel(); $('#sbf-stv').textContent = fmt(st); $('#sbf-lenv').textContent = fmt(len); $('#sbf-volv').textContent = '%' + Math.round($('#sbf-vol').value * 100); drawWave(); };
+  $('#sbf-file').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    if (f.size > 40 * 1024 * 1024) return toast('Dosya çok büyük (en fazla 40 MB)');
+    try { src = await ctx.decodeAudioData(await f.arrayBuffer()); } catch { return toast('Bu dosyadaki ses açılamadı. Başka bir biçim dene (MP3, WAV, OGG).'); }
+    $('#sbf-drop').hidden = true; $('#sbf-ed').hidden = false; $('#sbf-cancel-row').hidden = true;
+    $('#sbf-st').max = Math.max(0, src.duration - 0.3); $('#sbf-len').value = Math.min(5, src.duration).toFixed(2);
+    if (!$('#sbf-name').value) $('#sbf-name').value = f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 24);
+    sync();
+  };
+  for (const k of ['st', 'len', 'vol']) $('#sbf-' + k).oninput = sync;
+  // seçilen kısmı 22 kHz tek kanala indir, başta/sonda tık sesi olmasın diye kısa yumuşatma
+  const render = async () => {
+    const { st, len } = sel(), rate = 22050, off = new OfflineAudioContext(1, Math.ceil(len * rate), rate), s = off.createBufferSource(), gn = off.createGain();
+    s.buffer = src; s.connect(gn); gn.connect(off.destination);
+    gn.gain.setValueAtTime(0, 0); gn.gain.linearRampToValueAtTime(1, 0.01); gn.gain.setValueAtTime(1, Math.max(0.02, len - 0.04)); gn.gain.linearRampToValueAtTime(0, len);
+    s.start(0, st, len); return off.startRendering();
+  };
+  $('#sbf-play').onclick = async () => { prev?.pause(); const b = await render(); prev = sbAudio(URL.createObjectURL(wavEncode(b)), +$('#sbf-vol').value * sbVol()); };
+  $('#sbf-ok').onclick = async () => {
+    const name = $('#sbf-name').value.trim(); if (!name) return toast('Sese bir ad ver');
+    const btn = $('#sbf-ok'); btn.disabled = true; btn.textContent = 'Yükleniyor…';
+    const blob = wavEncode(await render()), data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
+    socket.emit('sbAdd', { serverId: srv.id, data, name, emoji: $('#sbf-emoji').value.trim(), vol: +$('#sbf-vol').value }, r => {
+      btn.disabled = false; btn.textContent = 'Ekle';
+      if (r?.error) return toast(r.error, null, false, { type: 'err' });
+      prev?.pause(); ctx.close?.(); closeModal(); toast(`${r.sound.emoji} ${esc(r.sound.name)} ses paneline eklendi`);
+    });
+  };
+}
 function cleanupVoice(keepState) { Object.keys(peers).forEach(closePeer); myVoice = null; pttPageDown = pttHookDown = pttDown = false; pttSync(); myVoiceAt = 0; dmCallMin = false; dmCallSig = ''; dmCallEver = false; if (deaf && !keepState) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
@@ -10883,6 +11075,7 @@ $('#vleave').onclick = () => leaveVoice(false);
 const streamOk = k => { const c = vch()?.c; if (k === 'cam' ? (c?.canVideo ?? c?.canStream) === false : c?.canStream === false) { toast(k === 'cam' ? 'Bu odada kamera açma iznin yok' : 'Bu odada ekran paylaşma iznin yok'); return false; } return true; };
 $('#vcam').onclick = () => streamOk('cam') && startVideo('cam');
 $('#vscreen').onclick = () => streamOk('screen') && startVideo('screen');
+$('#vsb').onclick = e => openSoundboard(e.currentTarget);
 function updateVoiceBtns() { $('#vcam').classList.toggle('on', videoKind === 'cam'); $('#vscreen').classList.toggle('on', videoKind === 'screen'); fsSync(); }
 
 // --- Sahne (ses/görüntü kutucukları) ---
@@ -11116,8 +11309,9 @@ function renderStage() {
   renderPip();
   let bar = st.querySelector('.vv-bar');
   if (!bar) { bar = document.createElement('div'); bar.className = 'vv-bar'; st.prepend(bar); }
-  bar.innerHTML = `<b>${ic('volume')}${esc($('#vname')?.textContent || 'Sesli oda')}</b><button class="vv-mem" title="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}" aria-label="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}">${ic(hideMem ? 'eye' : 'eyeOff')} ${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}</button><button class="vv-chat" title="Oda sohbeti" aria-label="Oda sohbeti">${ic('chat')} Oda sohbeti</button><button class="vv-back" title="Geri dön" aria-label="Geri dön">${ic('x')} Geri dön</button>`;
+  bar.innerHTML = `<b>${ic('volume')}${esc($('#vname')?.textContent || 'Sesli oda')}</b><button class="vv-mem" title="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}" aria-label="${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}">${ic(hideMem ? 'eye' : 'eyeOff')} ${hideMem ? 'Üyeleri göster' : 'Üyeleri gizle'}</button><button class="vv-sb" title="Ses paneli" aria-label="Ses paneli" data-sbopen>${ic('sboard')} Ses paneli</button><button class="vv-chat" title="Oda sohbeti" aria-label="Oda sohbeti">${ic('chat')} Oda sohbeti</button><button class="vv-back" title="Geri dön" aria-label="Geri dön">${ic('x')} Geri dön</button>`;
   bar.querySelector('.vv-chat').onclick = openVoiceChat;
+  bar.querySelector('.vv-sb').onclick = e => openSoundboard(e.currentTarget);
   bar.querySelector('.vv-back').onclick = () => setVView(false);
   bar.querySelector('.vv-mem').onclick = () => { hideMem = !hideMem; store.set('kanka-vmems', hideMem ? '1' : null); renderStage(); };
   const tiles = [{ sid: 'me', name: S.me, stream: videoStream, kind: videoKind }, ...Object.keys(peers).map(sid => {
@@ -13002,8 +13196,8 @@ const voiceLike = t => t === 'voice' || t === 'stage';
 const SLOW_OPTS = [[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [15, '15 sn'], [30, '30 sn'], [60, '1 dk'], [120, '2 dk'], [300, '5 dk'], [600, '10 dk'], [900, '15 dk'], [3600, '1 saat']];
 const slowTxt = v => (SLOW_OPTS.find(x => x[0] === v) || [0, v + ' sn'])[1];
 const KEYS_BY = { text: ['view', 'send', 'history', 'attach', 'embed', 'react', 'mention', 'apps', 'thread', 'manage'], forum: ['view', 'send', 'history', 'attach', 'embed', 'react', 'thread', 'manage'],
-  voice: ['view', 'connect', 'speak', 'video', 'stream'], stage: ['view', 'connect', 'video', 'stream', 'manage'], cat: ['view', 'send', 'history', 'attach', 'embed', 'react', 'mention', 'apps', 'thread', 'manage', 'connect', 'speak', 'video', 'stream'] };
-const PERM_SECS = [['Genel', ['view', 'manage']], ['Yazı', ['send', 'history', 'attach', 'embed', 'react', 'mention', 'apps', 'thread']], ['Ses', ['connect', 'speak', 'video', 'stream']]];
+  voice: ['view', 'connect', 'speak', 'video', 'stream', 'soundboard'], stage: ['view', 'connect', 'video', 'stream', 'manage'], cat: ['view', 'send', 'history', 'attach', 'embed', 'react', 'mention', 'apps', 'thread', 'manage', 'connect', 'speak', 'video', 'stream', 'soundboard'] };
+const PERM_SECS = [['Genel', ['view', 'manage']], ['Yazı', ['send', 'history', 'attach', 'embed', 'react', 'mention', 'apps', 'thread']], ['Ses', ['connect', 'speak', 'video', 'stream', 'soundboard']]];
 Object.assign(PERM_ROWS, {
   history: ['Mesaj geçmişini oku', 'Kapalıysa odaya girince eski mesajları göremezler, sadece o andan sonra yazılanları görürler.', 'clock'],
   embed: ['Bağlantı önizlemesi ve GIF', 'Linklerin önizleme kartı çıkar ve GIF gönderebilirler.', 'link'],
@@ -13016,6 +13210,7 @@ Object.assign(PERM_ROWS, {
   manage: ['Mesajları yönet', 'Başkalarının mesajlarını silebilir ve sabitleyebilirler. Sahnede: sahne moderatörü.', 'pin'],
   speak: ['Konuş', 'Kapalıysa odaya girebilir ama sadece dinleyebilirler.', 'mic'],
   stream: ['Ekran paylaş', 'Ekranlarını ya da bir pencereyi yayınlayabilirler.', 'screen'],
+  soundboard: ['Ses panelini kullan', 'Sesli odada ses panelinden ses çalabilirler (giriş sesi dahil).', 'sboard'],
 });
 const chNotif = () => { try { return JSON.parse(store.get('kanka-chnotif') || '{}'); } catch { return {}; } };
 const setChNotif = (id, v) => { const o = chNotif(); v === 'mentions' ? delete o[id] : o[id] = v; store.set('kanka-chnotif', JSON.stringify(o)); syncPrefs(); };
