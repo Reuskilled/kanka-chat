@@ -15,7 +15,7 @@ import asyncio, time, random, hashlib, hmac, json, re
 from urllib.parse import quote
 import aiohttp
 
-SURUM = "1.3.0"
+SURUM = "1.3.1"
 
 
 class KankaHata(Exception):
@@ -244,8 +244,13 @@ class Bot:
     async def susturma_kaldir(self, sunucu, kisi): return await self.api("DELETE", f"/sunucular/{sunucu}/uyeler/{kisi}/sustur")
 
     # ---------- Yardımcılar ----------
-    def yaziyor_ken(self, oda):
-        """İş sürerken "yazıyor…" göster:  async with bot.yaziyor_ken(oda): ..."""
+    def yaziyor_ken(self, oda, sure=None):
+        """İş sürerken "yazıyor…" göster:  async with bot.yaziyor_ken(oda): ...
+        Ya da belli bir süre:  await bot.yaziyor_ken(oda, 3)  (saniye)"""
+        if sure is not None:
+            async def _sureli():
+                async with self.yaziyor_ken(oda): await asyncio.sleep(min(max(float(sure), 0), 120))
+            return _sureli()
         bot = self
         class _Y:
             async def __aenter__(s):

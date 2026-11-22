@@ -2853,12 +2853,26 @@ const noPing = t => String(t || '').replace(/@(everyone|here|herkes)/gi, '@​$1
 // ---- Mesaj içeriği: kartlar (embed) ve bileşenler (buton / seçim menüsü) ----
 const hexColor = c => Number.isInteger(c) ? '#' + (c >>> 0 & 0xffffff).toString(16).padStart(6, '0') : /^#[0-9a-f]{6}$/i.test(c || '') ? c : null;
 const httpsUrl = u => typeof u === 'string' && /^https:\/\/[^\s<>"']{4,400}$/i.test(u) ? u : null;
+// Kart resmi: https adresi ya da Kanka'ya yüklenmiş bir dosya (kimliği, /dosya/... adresi, "dosya:kimlik" ya da "attachment://kimlik").
+// Bot önce POST /dosyalar ile yükleyip dönen id/url'yi kartta kullanabilir (Discord'daki attachment:// gibi).
+let embedWarn = null;
+function cardImg(u, alan) {
+  if (u == null || u === '') return null;
+  if (typeof u === 'string') {
+    const m = u.match(/^(?:https:\/\/[^/]+)?\/dosya\/([a-f0-9]{24})(?:\/|$)/) || u.match(/^(?:dosya:|attachment:\/\/)?([a-f0-9]{24})$/);
+    if (m && db.files?.[m[1]]) { const f = db.files[m[1]]; if (f.kind === 'image') return `/dosya/${m[1]}/${encodeURIComponent(f.name)}`; embedWarn ||= `${alan}: bu dosya resim değil`; return null; }
+    const h = httpsUrl(u); if (h) return h;
+    embedWarn ||= /^data:/i.test(u) ? `${alan}: base64 (data:) resim olmaz; önce POST /dosyalar ile yükle, dönen id'yi yaz` : /^http:\/\//i.test(u) ? `${alan}: adres https:// ile başlamalı` : m ? `${alan}: dosya bulunamadı (önce POST /dosyalar ile yükle)` : `${alan}: geçersiz resim adresi (https:// adresi ya da yüklediğin dosyanın id'si olmalı)`;
+  } else embedWarn ||= `${alan}: resim metin (adres ya da dosya id'si) olmalı`;
+  return null;
+}
 function cleanEmbeds(list) {
+  embedWarn = null;
   if (!Array.isArray(list)) return [];
   return list.slice(0, 5).map(e => { if (!e || typeof e !== 'object') return null;
     const k = { baslik: noPing(clean(e.baslik ?? e.title, 200)), aciklama: noPing(clean(e.aciklama ?? e.description, 3000)), renk: hexColor(e.renk ?? e.color), url: httpsUrl(e.url),
       alanlar: (Array.isArray(e.alanlar ?? e.fields) ? (e.alanlar ?? e.fields) : []).slice(0, 15).map(f => ({ ad: noPing(clean(f?.ad ?? f?.name, 100)), deger: noPing(clean(f?.deger ?? f?.value, 800)), satir: !!(f?.satir ?? f?.inline) })).filter(f => f.ad || f.deger),
-      resim: httpsUrl(e.resim ?? e.image?.url ?? e.image), kucukResim: httpsUrl(e.kucukResim ?? e.thumbnail?.url ?? e.thumbnail), altyazi: noPing(clean(e.altyazi ?? e.footer?.text ?? e.footer, 200)) };
+      resim: cardImg(e.resim ?? e.image?.url ?? e.image, 'resim'), kucukResim: cardImg(e.kucukResim ?? e.thumbnail?.url ?? e.thumbnail, 'kucukResim'), altyazi: noPing(clean(e.altyazi ?? e.footer?.text ?? e.footer, 200)) };
     return k.baslik || k.aciklama || k.alanlar.length || k.resim ? k : null; }).filter(Boolean);
 }
 function cleanComps(rows) {
@@ -2885,7 +2899,8 @@ function msgBody(b) { // REST gövdesinden mesaj alanları (Kanka ve alışık o
   // <@kimlik> yazılırsa o kişinin güncel adıyla etiketlenir (bot adı değil kimliği saklar)
   const text = noPing(clean(b?.icerik ?? b?.content ?? '', MSG_MAX).replace(/<@!?(\d{12,20})>/g, (m, id) => { const u = userById(id); return u ? '@' + u.name : m; }));
   const ek = b?.ekler ?? b?.attachments, files = Array.isArray(ek) ? ek.slice(0, 10).map(x => typeof x === 'string' ? x : x?.id).filter(x => typeof x === 'string' && /^[a-f0-9]{24}$/.test(x)) : [];
-  return { text, embeds: cleanEmbeds(b?.kartlar ?? b?.embeds), comps: cleanComps(b?.bilesenler ?? b?.components), files };
+  const embeds = cleanEmbeds(b?.kartlar ?? b?.embeds);
+  return { text, embeds, comps: cleanComps(b?.bilesenler ?? b?.components), files, uyari: embedWarn };
 }
 // Botun yüklediği dosyalar (POST /dosyalar) mesaja eklenir; başkasının dosyası eklenemez
 const botFiles = (a, ids) => (ids || []).filter(x => db.files?.[x]?.owner === a.bot).map(x => { const f = db.files[x]; return { id: x, name: f.name, size: f.size, kind: f.kind, url: `/dosya/${x}/${encodeURIComponent(f.name)}` }; });
@@ -3055,7 +3070,7 @@ function appPost(a, chId, body, extra = {}) {
   const u = db.users[a.bot];
   const files = botFiles(a, body.files), emo = appEmo(a, body.text, body.embeds);
   const msg = { id: id(), author: a.bot, color: u.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, appInfo: appInfoOf(a), text: body.text || '', ...(files.length ? { files } : {}), ...(emo ? { emo } : {}), ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
-  if (!msg.text && !msg.embeds && !msg.comps && !msg.files && !msg.loading) return { error: 'Boş mesaj: icerik, kartlar, ekler ya da bilesenler gerekli' };
+  if (!msg.text && !msg.embeds && !msg.comps && !msg.files && !msg.loading) return { error: body?.uyari ? `Mesaj boş kaldı: ${body.uyari}` : 'Boş mesaj: icerik, kartlar, ekler ya da bilesenler gerekli' };
   const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
   save(); io.to(chId).emit('message', { channelId: chId, msg });
   if (chId.startsWith('dm:')) for (const n of dmPeers(chId)) { io.to('user:' + n).emit('dms', dmsFor(n)); if (n !== a.bot) notifyUser(n, { from: a.bot, text: msg.text || msg.embeds?.[0]?.baslik || 'Yeni mesaj', channelId: chId, where: 'özel mesaj', dm: true }); }
@@ -3137,7 +3152,7 @@ function editAppMsg(a, chId, msgId, b, user) {
   if (e) { const m = e.msg; if (m.app !== a.id) return { error: 'Bu mesaj botun değil', code: 403 }; Object.assign(m, { text: body.text, embeds: body.embeds.length ? body.embeds : undefined, comps: body.comps.length || Array.isArray(b?.bilesenler ?? b?.components) ? body.comps : m.comps, loading: false, edited: !!m.text });
     io.to('user:' + e.user).emit('update', { channelId: e.chId, msg: m }); return { ok: true }; }
   const m = findMsg(chId, msgId); if (!m || m.author !== a.bot) return { error: 'Mesaj bulunamadı ya da botun değil', code: 404 };
-  if (!body.text && !body.embeds.length && !body.comps.length && !Array.isArray(b?.bilesenler ?? b?.components)) return { error: 'Boş mesaj', code: 400 };
+  if (!body.text && !body.embeds.length && !body.comps.length && !Array.isArray(b?.bilesenler ?? b?.components)) return { error: body.uyari ? `Mesaj boş kaldı: ${body.uyari}` : 'Boş mesaj', code: 400 };
   m.text = body.text; m.emo = appEmo(a, body.text, body.embeds); if (body.embeds.length || Array.isArray(b?.kartlar ?? b?.embeds)) m.embeds = body.embeds; if (Array.isArray(b?.bilesenler ?? b?.components)) m.comps = body.comps;
   if (!m.loading) m.edited = true; m.loading = false; save(); io.to(chId).emit('update', { channelId: chId, msg: m });
   return { ok: true };
@@ -3311,7 +3326,7 @@ api.post('/odalar/:cid/mesajlar', R((a, req) => {
   if (!f.dm && timedOut(f.s, a.bot)) return { error: 'Bot bu sunucuda susturulmuş', code: 403 };
   const body = msgBody(req.body || {}); let extra = {};
   const rid = req.body?.yanit ?? req.body?.message_reference?.message_id; if (rid) { const r = findMsg(cid, rid); if (r) extra.replyTo = { id: r.id, author: r.author, text: r.enc ? '' : (r.text || '').slice(0, 100) }; }
-  const r = appPost(a, cid, body, extra); return r.error ? r : { mesaj: msgForBot(a, cid, r.msg, true) };
+  const r = appPost(a, cid, body, extra); return r.error ? r : { mesaj: msgForBot(a, cid, r.msg, true), ...(body.uyari ? { uyari: body.uyari } : {}) };
 }));
 api.patch('/odalar/:cid/mesajlar/:mid', R((a, req) => { const f = botChan(a, req.params.cid); if (f.error) return f; return editAppMsg(a, req.params.cid, req.params.mid, req.body || {}); }));
 api.delete('/odalar/:cid/mesajlar/:mid', R((a, req) => {

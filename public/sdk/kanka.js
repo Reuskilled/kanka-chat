@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.3.0';
+const SURUM = '1.3.1';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -47,7 +47,7 @@ class Kanka extends EventEmitter {
     }
     throw new KankaHata('Hız sınırı: istek tekrar tekrar reddedildi', 429);
   }
-  gonder(oda, icerik) { return this.api('POST', `/odalar/${oda}/mesajlar`, govde(icerik)).then(r => this._mesaj(r.mesaj)); }
+  gonder(oda, icerik) { return this.api('POST', `/odalar/${oda}/mesajlar`, govde(icerik)).then(r => { if (r.uyari) { this.emit('uyari', r.uyari); if (!this.listenerCount('uyari')) console.warn('[kanka] uyarı:', r.uyari); } return this._mesaj(r.mesaj); }); }
   // Ham gövdeli istek (dosya, emoji)
   async _ham(yontem, yol, veri, basliklar = {}) {
     const r = await fetch(this.adres + '/api/v1' + yol, { method: yontem, headers: { Authorization: 'Bot ' + this.token, 'Content-Type': 'application/octet-stream', 'User-Agent': 'kanka.js/' + SURUM, ...basliklar }, body: veri });
@@ -108,10 +108,19 @@ class Kanka extends EventEmitter {
   yasakKaldir(sunucu, kisi) { return this.api('DELETE', `/sunucular/${sunucu}/yasaklar/${encodeURIComponent(kisi)}`); }
   yasaklar(sunucu) { return this.api('GET', `/sunucular/${sunucu}/yasaklar`).then(r => r.yasaklar); }
   // ---------- Yardımcılar ----------
-  /** İş sürerken odada "yazıyor…" göster: await bot.yaziyorKen(oda, async () => { ... }) */
+  /**
+   * Bir süre "yazıyor…" göster. İkinci değer: iş fonksiyonu, bir Promise ya da milisaniye.
+   * await bot.yaziyorKen(oda, async () => { ...uzun iş... })  ·  await bot.yaziyorKen(oda, 3000)  ·  await bot.yaziyorKen(oda, fetch(url))
+   */
   async yaziyorKen(oda, is) {
+    const bekle = ms => new Promise(r => setTimeout(r, ms));
     this.yaziyor(oda).catch(() => {}); const t = setInterval(() => this.yaziyor(oda).catch(() => {}), 7000);
-    try { return await is(); } finally { clearInterval(t); }
+    try {
+      if (typeof is === 'function') return await is();
+      if (typeof is === 'number') return await bekle(Math.min(Math.max(is, 0), 120000));
+      if (is && typeof is.then === 'function') return await is;
+      return await bekle(3000);
+    } finally { clearInterval(t); }
   }
   /**
    * Bir sonraki uygun mesajı bekle (oyunlar, sorular için). Süre dolarsa null döner.
