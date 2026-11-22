@@ -4161,6 +4161,20 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .sbf-row { display: grid; grid-template-columns: 96px 1fr 58px; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); margin: 6px 0; } .sbf-row input { accent-color: var(--accent); } .sbf-row em { font-style: normal; text-align: right; color: var(--ink); }
   .sbf-2 { display: grid; grid-template-columns: 64px 1fr; gap: 8px; margin-top: 10px; } .sbf-2 .field { margin: 0; } #sbf-emoji { text-align: center; font-size: 18px; }
   #vsb { flex: 0 0 auto; }
+  .stag { --tc: #c8ff00; display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; padding: 1px 6px 1px 4px; border-radius: 6px; font-weight: 800; font-size: 10.5px; line-height: 1.5; letter-spacing: .04em; color: var(--tc); background: color-mix(in srgb, var(--tc) 15%, transparent); border: 1px solid color-mix(in srgb, var(--tc) 40%, transparent); vertical-align: middle; cursor: pointer; white-space: nowrap; flex: none; transition: background .12s; }
+  .stag:hover { background: color-mix(in srgb, var(--tc) 26%, transparent); } .stag i { font-style: normal; font-size: 11px; line-height: 1; }
+  .stag.big { font-size: 13px; padding: 3px 9px 3px 7px; border-radius: 8px; margin: 0; } .stag.big i { font-size: 14px; }
+  .mem .stag { margin-left: 4px; font-size: 9.5px; padding: 0 5px 0 3px; } .vuser .stag { margin-left: 4px; font-size: 9.5px; padding: 0 5px 0 3px; }
+  #stagcard { position: fixed; z-index: 120; width: 270px; padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 20px 50px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 6px; animation: popIn .16s; }
+  .stc-top { display: flex; align-items: center; gap: 10px; } .stc-ic { width: 44px; height: 44px; border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--tc) 20%, var(--hover)); display: grid; place-items: center; font-size: 22px; flex: none; } .stc-ic img { width: 100%; height: 100%; object-fit: cover; }
+  .stc-ad { font-size: 15px; margin-top: 4px; } .stc-sub, .stc-note { color: var(--muted); font-size: 12px; } .stc-acts { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; } .stc-acts button { flex: 1; }
+  .tagpick { display: flex; flex-direction: column; gap: 6px; } .tagpick button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--hover); border: 1.5px solid transparent; text-align: left; font-weight: 700; font-size: 13.5px; color: var(--ink); }
+  .tagpick button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--hover)); } .tagpick button .stag { margin: 0; pointer-events: none; }
+  .tag-set { display: grid; gap: 14px; } .tag-icons { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; } .tag-icons button { aspect-ratio: 1; border-radius: 9px; background: var(--hover); font-size: 17px; border: 1.5px solid transparent; } .tag-icons button.on { border-color: var(--accent); }
+  .tag-cols { display: flex; gap: 6px; flex-wrap: wrap; } .tag-cols button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; } .tag-cols button.on { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+  .tag-preview { padding: 14px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 12px; } .tag-preview .tp-msg { display: flex; gap: 10px; } .tag-preview .tp-msg p { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; } .tag-preview .tp-mem { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; } .tag-preview .stag { pointer-events: none; }
+  .tag-in { text-transform: uppercase; font-weight: 900; letter-spacing: .12em; font-size: 18px; width: 120px; text-align: center; }
+  .box.tagi { max-width: 420px; text-align: center; } .ti-prev { padding: 14px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); margin-bottom: 14px; text-align: left; } .ti-row { display: flex; gap: 10px; } .ti-row small { color: var(--muted); font-size: 11px; margin-left: 6px; } .ti-row p { margin: 2px 0 0; } .tag-intro .stag { pointer-events: none; }
   /* ===== Kanka Wrapped ===== */
   #wr { position: fixed; inset: 0; z-index: 95; background: #000; display: grid; place-items: center; animation: fadeIn .2s; outline: none; }
   .wr-frame { position: relative; height: min(100dvh, 900px); aspect-ratio: 9 / 16; max-width: 100vw; border-radius: 18px; overflow: hidden; }
@@ -5347,7 +5361,7 @@ function onAuth(res) {
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ageGate) return showAgeGate(res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
   if (res.ice?.length) ICE.iceServers = res.ice;
-  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff; S.wrapOff = !!res.wrapOff; S.arenaRooms = res.arenaRooms || {}; S.entrySound = res.entrySound || null; S.matchOff = !!res.matchOff;
+  S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff; S.wrapOff = !!res.wrapOff; S.tagDefs = res.tagDefs || {}; S.tagCan = res.tagCan || []; S.tagCfg = res.tagCfg || null; setTimeout(tagIntro, 6000); S.arenaRooms = res.arenaRooms || {}; S.entrySound = res.entrySound || null; S.matchOff = !!res.matchOff;
   { const be = new URLSearchParams(location.search).get('botekle'); if (be) { const iz = new URLSearchParams(location.search).get('izin') || ''; history.replaceState(null, '', APP_PATH); setTimeout(() => showBotAuthorize(be, iz.split(',').filter(Boolean)), 900); } }
   if (window.kankaDesktop) socket.emit('presenceKey', {}, r => window.kankaDesktop.setPresenceKey(r.key));
   if (res.reward) (res.onb && !res.onb.seen && !res.onb.done && !res.onb.dismissed ? f => { S.afterWelcome = () => setTimeout(f, 700); } : f => setTimeout(f, 600))(() => { playSound('reward'); toast(`<b class="streak">${ic('fire')} ${res.reward.count}. gün serisi!</b><br>Günlük ödülün: +${res.reward.bonus} XP${res.reward.count > 1 ? '' : '<small>Yarın da gel, seri büyüsün</small>'}`, null, true); });
@@ -5748,7 +5762,7 @@ function showSettings(tab) {
           <div class="st-field st-2"><div><label>Görünen ad</label><input class="field" id="st-dn" maxlength="32" placeholder="${esc(S.me)}" value="${esc(draft.displayName)}" style="margin:0"></div><div><label>Zamir</label><input class="field" id="st-pr" maxlength="20" placeholder="Örn. o/onun" value="${esc(draft.pronouns)}" style="margin:0"></div></div>
           <div class="st-field"><label>Profil fotoğrafı</label><div class="st-av"><div class="av" id="st-av"></div><button type="button" id="st-up">${ic('camera')}<span>Yükle</span></button>${draft.avatar ? '<button type="button" id="st-rm">Kaldır</button>' : ''}</div>${(S.presets || []).length ? `<div class="avgrid sm" id="st-presets">${S.presets.map(a => `<button type="button" class="avopt ${draft.avatar === a ? 'on' : ''}" data-av="${a}" aria-label="Hazır avatar"><img src="${a}" alt=""></button>`).join('')}</div>` : ''}</div>
           <div class="st-field"><label>Avatar ve isim rengi</label><div class="swatches" id="sw-color"></div></div>
-        </div>
+        </div>${tagPickerHTML()}
         <div class="pf-card">
           <div class="pf-card-h"><b>Hakkında & Kişisel</b><small>Profil kartında görünür</small></div>
           <div class="st-field"><label>Durum</label><input class="field" id="st-status" maxlength="60" placeholder="Örn. Valorant oynuyor" value="${esc(draft.status)}"></div>
@@ -5763,7 +5777,7 @@ function showSettings(tab) {
       $('#st-up').onclick = () => readImage(url => { draft.avatar = url; renderProfTab(); preview(); }, 512);
       if ($('#st-rm')) $('#st-rm').onclick = () => { draft.avatar = null; renderProfTab(); preview(); };
       $('#st-presets')?.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { draft.avatar = b.dataset.av; renderProfTab(); preview(); });
-      swatches('#sw-color', 'color', PALETTE, avEl);
+      swatches('#sw-color', 'color', PALETTE, avEl); wireTagPicker();
       $('#st-dn').oninput = e => { draft.displayName = e.target.value; preview(); };
       $('#st-pr').oninput = e => { draft.pronouns = e.target.value; preview(); };
       const cnt = () => $('#st-cnt').textContent = `${$('#st-bio').value.length}/190`; cnt();
@@ -6186,7 +6200,7 @@ function renderSide() {
   const tRow = c => { const mc = mentCountCh(c.id); return `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${isUn(c) || mc ? 'unread' : ''} ${mc ? 'has-ment' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${mc ? `<span class="mbadge">${mc > 9 ? '9+' : mc}</span>` : chBadge(c)}${notifMode(c.id) === 'none' ? `<button class="rmute" data-unmute="${c.id}" title="Sessizde · sesini açmak için tıkla" aria-label="Odanın sesini aç">${ic('belloff')}</button>` : ''}${!mc && isUn(c) && c.id !== S.channel?.id ? `<span class="udot" title="Son baktığından beri ${chCnt[c.id] ? chCnt[c.id] + ' yeni mesaj' : 'yeni mesaj var'}">${chCnt[c.id] > 1 ? (chCnt[c.id] > 99 ? '99+' : chCnt[c.id]) : ''}</span>` : ''}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` };
   const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''} ${arGameOf(c.id) ? 'has-game' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}>${arGameOf(c.id) ? `<div class="ico gico" title="${esc(arGameOf(c.id).t)}">${arGameOf(c.id).e}</div>` : `<div class="ico">${roomIcon(c)}</div>`}<span class="rn">${esc(c.name)}</span>${(S.voice[c.id] || []).length ? `<em class="vtm" data-vt="${c.id}" title="Sohbet bu kadar zamandır sürüyor">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em>` : ''}${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n), vnb = nbOf(S.users[n]);
-        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''} ${(S.live?.[c.id] || []).includes(n) ? 'islive' : ''}${vnb ? ' has-nb-sp nb-' + vnb : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${vnb ? nbLayers(vnb) : ''}${av(n)}<span class="vn">${styledNameHTML(dn(n), S.users[n]?.nameStyle)}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${(fl.m || uMuted.has(n)) ? `<span class="vstat vm-mic" title="${uMuted.has(n) ? 'Senin için susturuldu' : 'Mikrofonu kapalı'}">${ic('micoff', 'vm')}</span>` : ''}${fl.d ? `<span class="vstat vm-deaf" title="Kulaklığı kapalı">${ic('headsetoff', 'vm')}</span>` : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle"><i></i>CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
+        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''} ${(S.live?.[c.id] || []).includes(n) ? 'islive' : ''}${vnb ? ' has-nb-sp nb-' + vnb : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${vnb ? nbLayers(vnb) : ''}${av(n)}<span class="vn">${styledNameHTML(dn(n), S.users[n]?.nameStyle)}</span>${srvTag(n)}<span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${(fl.m || uMuted.has(n)) ? `<span class="vstat vm-mic" title="${uMuted.has(n) ? 'Senin için susturuldu' : 'Mikrofonu kapalı'}">${ic('micoff', 'vm')}</span>` : ''}${fl.d ? `<span class="vstat vm-deaf" title="Kulaklığı kapalı">${ic('headsetoff', 'vm')}</span>` : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle"><i></i>CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
   const vOrder = c => { const l = [...(S.voice[c.id] || [])], lv = S.live?.[c.id] || [], rk = n => { const i = lv.indexOf(n); return i < 0 ? 1e3 : i; }; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l.map((n, i) => [n, i]).sort((a, b) => rk(a[0]) - rk(b[0]) || a[1] - b[1]).map(x => x[0]); }; // yayın açanlar odanın en üstünde
   const row = c => voiceLike(c.type) ? vRow(c) : tRow(c);
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
@@ -6945,6 +6959,7 @@ function showServerSettings(s, tab, focus) {
     ['bot', 'Kanka Bot', 'shield', P('manageServer')], ['welcome', 'Hoş geldin', 'sparkle', P('manageServer')], ['invites', 'Davetler', 'link', !s.public && P('manageServer')], ['security', 'Katılım güvenliği', 'lock', !s.public && P('manageServer')], ['apps', `Başvurular${s.appsWaiting ? ` · ${s.appsWaiting}` : ''}`, 'users', !s.public && mod && (!!s.gate?.approval || s.appsWaiting > 0)], ['discovery', 'Keşif', 'compass', !s.public && P('manageServer')],
     ['template', 'Şablon', 'file', s.owner === S.me && P('manageServer')],
     ['badges', 'Rozetler', 'check', s.owner === S.me && !s.public && s.id !== 's1'],
+    ['tag', 'Sunucu etiketi', 'tag', !!s.tagAllowed && (P('manageServer') || (s.public && S.siteAdmin))],
     ['levels', 'Seviyeler', 'trophy', !s.public && P('manageServer')],
     ['webhooks', 'Webhook\'lar', 'link', !s.public && (s.owner === S.me || P('manageServer') || P('manageWebhooks'))],
     ['emoji', 'Emojiler', 'smile', mod || P('manageEmojis')], ['reports', 'Şikayetler', 'flag', mod && !s.public], ['bans', 'Yasaklar', 'ban', !s.public && P('ban')], ['audit', 'Kayıtlar', 'log', mod || P('viewAudit')]].filter(t => t[3]);
@@ -6967,6 +6982,26 @@ function showServerSettings(s, tab, focus) {
   const done = msg => r => { if (r?.error) return toast(r.error); if (msg) toast(msg); again(); };
   const roleChecks = (sel, name) => (s.customRoles || []).filter(r => !r.bot).map(r => `<label class="chk"><input type="checkbox" name="${name}" value="${r.id}" ${sel.includes(r.id) ? 'checked' : ''}><span class="rdot" style="background:${r.color}"></span>${esc(r.name)}</label>`).join('') || '<p class="hint">Henüz rol yok. Önce Roller sekmesinden rol oluştur.</p>';
   const page = {
+    tag: () => {
+      const cur = s.tag || { t: '', i: TAG_ICONS_C[0], c: TAG_COLORS_C[0], on: true }, d = { ...cur };
+      main.innerHTML = `<div class="st-page"><h3>Sunucu etiketi <span class="beta-pill">TEST</span></h3><p class="hint">Üyeler bu etiketi isimlerinin yanına takabilir; herkes etikete tıklayıp sunucunu görür. Etiketi günde bir kez değiştirebilirsin.</p>
+        <div class="tag-set"><div class="st-field"><label>Etiket (2-4 harf ya da rakam)</label><input class="field tag-in" id="tg-t" maxlength="4" value="${esc(cur.t)}" autocomplete="off" spellcheck="false"></div>
+          <div class="st-field"><label>Simge</label><div class="tag-icons" id="tg-i">${TAG_ICONS_C.map(x => `<button type="button" data-i="${x}" class="${x === cur.i ? 'on' : ''}">${x}</button>`).join('')}</div></div>
+          <div class="st-field"><label>Renk</label><div class="tag-cols" id="tg-c">${TAG_COLORS_C.map(x => `<button type="button" data-c="${x}" style="background:${x}" class="${x === cur.c ? 'on' : ''}" aria-label="Renk ${x}"></button>`).join('')}</div></div>
+          <div class="st-field"><label>Önizleme</label><div class="tag-preview" id="tg-p"></div></div>
+          <label class="switch">Üyeler etiketi takabilsin<input type="checkbox" id="tg-on" ${cur.on !== false ? 'checked' : ''}></label>
+          ${S.siteAdmin && S.tagCfg ? `<div class="st-field"><label>Test: kimler takabilir</label><select class="field" id="tg-who"><option value="ekip" ${S.tagCfg.who === 'ekip' ? 'selected' : ''}>Sadece Kanka ekibi</option><option value="uye" ${S.tagCfg.who === 'uye' ? 'selected' : ''}>Sunucunun tüm üyeleri</option></select><small class="hint" id="tg-st"></small></div>` : ''}
+          <div><button class="primary" id="tg-save">${ic('check')} Kaydet</button></div></div></div>`;
+      const prev = () => { const t = ($('#tg-t').value || 'ETKT').toLocaleUpperCase('tr'), chip = tagChip({ t, i: d.i, c: d.c, ad: s.name }, s.id, 'tag-prev');
+        $('#tg-p').innerHTML = `<div class="tp-msg">${av(S.me)}<div><b style="color:${userColor(S.me)}">${esc(dn(S.me))}</b>${chip}<p>bu akşam turnuva var, kimler geliyor?</p></div></div><div class="tp-mem">${av(S.me)}<span>${esc(dn(S.me))}</span>${chip}</div>`; };
+      $('#tg-t').oninput = e => { e.target.value = e.target.value.toLocaleUpperCase('tr').replace(/[^A-Z0-9ÇĞİÖŞÜ]/gu, ''); prev(); };
+      $('#tg-i').querySelectorAll('[data-i]').forEach(b => b.onclick = () => { d.i = b.dataset.i; $('#tg-i').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); prev(); });
+      $('#tg-c').querySelectorAll('[data-c]').forEach(b => b.onclick = () => { d.c = b.dataset.c; $('#tg-c').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); prev(); });
+      $('#tg-save').onclick = () => socket.emit('srvTagSave', { serverId: s.id, t: $('#tg-t').value, i: d.i, c: d.c, on: $('#tg-on').checked }, done('Sunucu etiketi kaydedildi'));
+      if ($('#tg-who')) { $('#tg-who').onchange = e => socket.emit('tagCfgSet', { who: e.target.value }, r => { if (r?.error) return toast(r.error); S.tagCfg = r.cfg; toast(r.cfg.who === 'uye' ? 'Artık tüm üyeler etiketi takabilir' : 'Artık sadece Kanka ekibi takabilir'); });
+        socket.emit('tagInfo', s.id, x => { if (x && $('#tg-st')) $('#tg-st').textContent = `${x.takan} kişi takıyor · toplam ${x.tiklama || 0} kez takıldı`; }); }
+      prev();
+    },
     bot: () => {
       const b = s.bot || {}, m = b.mod || {};
       if (!b.added) {
@@ -8337,7 +8372,7 @@ const dayLabel = t => {
   return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
 };
 let lastMsgUsersSig = '';
-const msgUsersSig = () => JSON.stringify([...new Set(S.msgs.map(m => m.author).filter(Boolean))].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.color, u.avatar, u.frame, u.level, u.nameColor, u.avatarDeco, u.nameStyle]; }));
+const msgUsersSig = () => JSON.stringify([...new Set(S.msgs.map(m => m.author).filter(Boolean))].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.color, u.avatar, u.frame, u.level, u.nameColor, u.avatarDeco, u.nameStyle, u.tg]; }));
 let roomLoading = null;
 function renderMessages(toBottom) {
   if (roomLoading) return; // oda yüklenirken eski/boş ekran çizme
@@ -8657,7 +8692,7 @@ function msgHTML(m, prev) {
   const reacts = Object.entries(m.reactions || {}).filter(([e]) => m.kind !== 'match' || !['👏', '🔥', '💀', '😂'].includes(e)).map(([e, us]) => reactionHTML(e, m.id, us)).join('');
   const tools = `<div class="tools"><button data-emo="${m.id}" title="Tepki ver" aria-label="Tepki ver">${ic('smile')}</button><button data-reply="${m.id}" title="Yanıtla" aria-label="Yanıtla">${ic('reply')}</button><button data-more="${m.id}" title="Diğer" aria-label="Diğer">${ic('more')}</button></div>`;
   return day + `<div class="row ${mine ? 'own' : ''} ${cont ? 'cont' : ''} ${m.replyTo ? 'reply' : ''}" data-id="${m.id}" data-au="${esc(m.author || '')}">${av(m.author)}<span class="gtime">${hm(m.time)}</span>
-    <div class="col">${m.inter ? interTag(m) : ''}${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${avInner(m.replyTo.author)}</span><b style="color:${(S.view === 'server' && roleColor(S.server, m.replyTo.author)) || userColor(m.replyTo.author)}">@${esc(dn(m.replyTo.author))}</b><span class="txt">${esc(mdPlain(m.replyTo.text))}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${styledNameHTML(dn(m.author), S.users[m.author]?.nameStyle)}</span>${botTag(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
+    <div class="col">${m.inter ? interTag(m) : ''}${m.pinned ? `<div class="pinned-tag">${ic('pin')} Sabitlendi</div>` : ''}${m.fwd ? `<div class="fwd-tag">${ic('forward')}<span><b>${esc(m.fwd.author || 'Bilinmeyen')}</b> tarafından iletildi</span></div>` : ''}${m.replyTo ? `<div class="rref" data-jump="${m.replyTo.id}" title="Mesaja git"><span class="mini" style="background:${userColor(m.replyTo.author)}">${avInner(m.replyTo.author)}</span><b style="color:${(S.view === 'server' && roleColor(S.server, m.replyTo.author)) || userColor(m.replyTo.author)}">@${esc(dn(m.replyTo.author))}</b><span class="txt">${esc(mdPlain(m.replyTo.text))}</span></div>` : ''}${!cont ? `<div class="who" style="color:${(S.view === 'server' && roleColor(S.server, m.author)) || userColor(m.author)}"><span class="wname">${styledNameHTML(dn(m.author), S.users[m.author]?.nameStyle)}</span>${botTag(m.author)}${srvTag(m.author)}${S.view === 'server' ? badge(roleOf(S.server, m.author)) : ''}${lvl}${m.xfrom ? `<span class="xfrom" title="Takip edilen duyuru">${ic('megaphone')}${esc(m.xfrom.server)} · #${esc(m.xfrom.channel)}</span>` : ''}<span class="t">${m.scheduled ? ic('clock') + ' ' : ''}${whenTxt(m.time)}</span></div>` : ''}${body}${reacts ? `<div class="reacts">${reacts}</div>` : ''}</div>${tools}</div>`;
 }
 
 // ================= Uçtan uca şifreleme (DM ve grup DM) =================
@@ -9400,7 +9435,7 @@ function renderMembers() {
     }
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n), nb = nbOf(u);
-    return `<div class="mem ${o ? '' : 'off'}${nb ? ' has-nb nb-' + nb : ''}" data-n="${esc(n)}">${nb ? nbLayers(nb) : ''}${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}><span class="mem-nm">${styledNameHTML(dn(n), u?.nameStyle)}</span><span class="mem-ic">${srv?.owner === n ? ownerCrown() : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) && !u?.bot ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u?.bot ? botTag(n) : u ? lvTag(u.level) : ''}</span></span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}${nb ? ' has-nb nb-' + nb : ''}" data-n="${esc(n)}">${nb ? nbLayers(nb) : ''}${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}><span class="mem-nm">${styledNameHTML(dn(n), u?.nameStyle)}</span><span class="mem-ic">${srvTag(n)}${srv?.owner === n ? ownerCrown() : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) && !u?.bot ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u?.bot ? botTag(n) : u ? lvTag(u.level) : ''}</span></span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
@@ -10039,7 +10074,7 @@ function profSideHTML(n, u, { srv, preview } = {}) {
     <div class="pf-ban" style="${banStyle(n, u)}"></div>
     <div class="pf-in">
       <div class="pf-top">${pAv(n, u, 108, !preview || true)}<div class="pf-badges">${badgesHTML(u)}</div></div>
-      <h2 class="pf-dn">${styledNameHTML(u?.displayName || n, u?.nameStyle)}${srv?.owner === n ? ownerCrown() : ''}${badge(r)}</h2>
+      <h2 class="pf-dn">${styledNameHTML(u?.displayName || n, u?.nameStyle)}${srv?.owner === n ? ownerCrown() : ''}${badge(r)}${srvTag(n)}</h2>
       <div class="pf-un">@${esc(n)}${u?.pronouns ? `<i>•</i>${esc(u.pronouns)}` : ''}</div>
       ${u?.status ? `<div class="pf-bubble">${esc(u.status)}</div>` : ''}
       <div class="pf-actslot"></div>
@@ -10258,7 +10293,7 @@ function voicePop(n, anchor, chId) {
     <div class="vp-head"><button class="vp-avw ${speaking.has(n) ? 'vp-spk' : ''}" id="vp-avb" aria-label="Tam profili aç">${pAv(n, u, 88)}<span class="vp-avh">${ic('user')}Profili<br>görüntüle</span></button>
       ${u.status ? `<div class="vp-bub" title="${esc(u.status)}"><span>${esc(u.status)}</span></div>` : ''}</div>
     <div class="vp-in">
-      <button class="vp-name" id="vp-nm">${styledNameHTML(dn(n), u?.nameStyle)}</button>
+      <button class="vp-name" id="vp-nm">${styledNameHTML(dn(n), u?.nameStyle)}</button>${srvTag(n)}
       <div class="vp-un"><span>@${esc(n)}</span>${u.pronouns ? `<i>•</i><span>${esc(u.pronouns)}</span>` : ''}<i>•</i><span class="vp-st"><b style="background:${dotColor(n)}"></b>${esc(stTxt)}</span>${badge(roleOf(srv, n))}</div>
       ${hasB ? `<div class="vp-badges">${badgesHTML(u, 'sm')}</div>` : ''}
       ${tags ? `<div class="vp-tags">${tags}</div>` : ''}
@@ -10422,7 +10457,7 @@ let usersT, lastVoiceUsersSig = '';
 const voiceUsersSig = () => {
   const names = new Set();
   for (const l of Object.values(S.voice || {})) for (const n of l || []) names.add(n);
-  return JSON.stringify([...names].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.nameBanner, u.nameStyle]; }));
+  return JSON.stringify([...names].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.nameBanner, u.nameStyle, u.tg]; }));
 };
 socket.on('users', list => {
   S.users = Object.fromEntries(list.map(u => [u.name, u]));
@@ -12930,6 +12965,59 @@ function wrNudge() {
   modal(`<div class="wr-nudge"><div class="wr-nudge-art"><b>${y}</b><span>Wrapped</span></div><h3>Kanka yılın hazır 🎁</h3><p class="hint">Seste kaç saat kaldın, en çok kiminle takıldın, yılın şarkın ve oyunun, Arena galibiyetlerin… Hepsi bir hikâyede.</p>
     <div class="actions"><button class="btns2" id="wrn-no">Sonra</button><button class="primary" id="wrn-go">Yılımı göster</button></div></div>`, 'wrn');
   $('#wrn-no').onclick = closeModal; $('#wrn-go').onclick = () => { closeModal(); openWrapped({ year: y }); };
+}
+// ================= Sunucu etiketi =================
+// İsmin yanında küçük etiket: [🦝 KHQ]. Tıklayınca sunucu kartı açılır. Test aşamasında sadece Kanka HQ.
+const TAG_ICONS_C = ['🦝', '🔥', '⚡', '🎮', '👑', '💎', '🌙', '⭐', '🍀', '🐺', '🦊', '🐉', '🎧', '🎯', '🏆', '🚀', '💀', '❤️', '🌊', '🍕', '🎵', '🌸', '🛡️', '⚔️'];
+const TAG_COLORS_C = ['#c8ff00', '#ff7a59', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#f6c445', '#4cc38a', '#e5484d', '#e4e4e7'];
+const tagChip = (d, sid, cls = '') => d ? `<span class="stag ${cls}" data-stag="${esc(sid)}" style="--tc:${esc(d.c)}" title="${esc(d.ad)} etiketi" role="button" tabindex="0"><i>${esc(d.i)}</i>${esc(d.t)}</span>` : '';
+const srvTag = (n, cls = '') => { const sid = S.users?.[n]?.tg; return sid ? tagChip(S.tagDefs?.[sid], sid, cls) : ''; };
+socket.on('tagDefs', d => { S.tagDefs = d || {}; tagRefresh(); });
+socket.on('tagCan', l => { S.tagCan = l || []; });
+function tagRefresh() { try { if (S.view === 'server' && S.server) renderSide(); renderMembers(); if (S.msgs?.length) renderMessages(); } catch {} }
+function closeTagCard() { $('#stagcard')?.remove(); removeEventListener('pointerdown', tagOut, true); }
+function tagOut(e) { if (!e.target.closest('#stagcard, .stag')) closeTagCard(); }
+function openTagCard(sid, anchor) {
+  closeTagCard();
+  socket.emit('tagInfo', sid, x => {
+    if (!x) return toast('Bu etiket artık kullanılmıyor');
+    const el = document.createElement('div'); el.id = 'stagcard'; el.setAttribute('role', 'dialog');
+    const icon = x.simgeImg ? `<img src="${esc(x.simgeImg)}" alt="">` : `<span>${esc(x.simge || x.ad[0])}</span>`;
+    el.innerHTML = `<div class="stc-top" style="--tc:${esc(x.c)}"><div class="stc-ic">${icon}</div>${tagChip(x, sid, 'big')}</div>
+      <b class="stc-ad">${esc(x.ad)}</b><small class="stc-sub">${x.uye.toLocaleString('tr-TR')} üye · ${x.takan.toLocaleString('tr-TR')} kişi bu etiketi takıyor${x.tiklama != null ? ` · ${x.tiklama} kez takıldı` : ''}</small>
+      <div class="stc-acts">${x.mine ? `<button class="btns2" id="stc-off">Etiketi çıkar</button>` : x.canUse ? `<button class="primary" id="stc-on">${esc(x.i)} Bu etiketi tak</button>` : ''}${x.member ? `<button class="btns2" id="stc-go">Sunucuya git</button>` : ''}</div>
+      ${!x.canUse && !x.mine && x.member ? '<small class="stc-note">Etiket şimdilik test aşamasında, yakında herkes takabilecek.</small>' : ''}`;
+    document.body.appendChild(el);
+    const r = anchor.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+    el.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + 'px'; el.style.top = (r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 8) : r.bottom + 6) + 'px';
+    const set = v => socket.emit('tagSet', v, y => { if (y?.error) return toast(y.error); toast(v ? `${x.i} ${x.t} etiketin isminin yanında görünüyor` : 'Etiket çıkarıldı'); closeTagCard(); });
+    $('#stc-on') && ($('#stc-on').onclick = () => set(sid)); $('#stc-off') && ($('#stc-off').onclick = () => set(null));
+    $('#stc-go') && ($('#stc-go').onclick = () => { closeTagCard(); closeModal?.(); selectServer(sid); });
+    setTimeout(() => addEventListener('pointerdown', tagOut, true), 0);
+  });
+}
+document.addEventListener('click', e => { const t = e.target.closest('.stag[data-stag]'); if (!t || t.closest('.tag-prev')) return; e.stopPropagation(); e.preventDefault(); openTagCard(t.dataset.stag, t); }, true);
+// Profil ayarlarında: hangi sunucunun etiketini takacağını seç
+function tagPickerHTML() {
+  const can = (S.tagCan || []).filter(id => S.tagDefs?.[id]), cur = S.users[S.me]?.tg || null;
+  if (!can.length && !cur) return '';
+  return `<div class="pf-card"><div class="pf-card-h"><b>Sunucu etiketi</b><small>İsminin yanında küçük bir etiket olarak görünür</small></div>
+    <div class="tagpick" id="st-tagpick"><button type="button" class="${cur ? '' : 'on'}" data-tp="">Etiket gösterme</button>${can.map(id => `<button type="button" class="${cur === id ? 'on' : ''}" data-tp="${esc(id)}">${tagChip(S.tagDefs[id], id, 'tag-prev')}<span>${esc(S.tagDefs[id].ad)}</span></button>`).join('')}</div>
+    <p class="hint" style="margin:8px 0 0">Test aşamasında. Etiketi sadece üyesi olduğun sunucular için takabilirsin, sunucudan çıkarsan etiket de kalkar.</p></div>`;
+}
+function wireTagPicker() {
+  $('#st-tagpick')?.querySelectorAll('[data-tp]').forEach(b => b.onclick = () => socket.emit('tagSet', b.dataset.tp || null, r => {
+    if (r?.error) return toast(r.error); if (S.users[S.me]) S.users[S.me].tg = r.tag; $('#st-tagpick').querySelectorAll('[data-tp]').forEach(x => x.classList.toggle('on', (x.dataset.tp || null) === r.tag)); toast(r.tag ? 'Etiketin takıldı' : 'Etiket kaldırıldı');
+  }));
+}
+// İlk kez: etiketi takabilen birine bir kez tanıtım
+function tagIntro() {
+  const id = (S.tagCan || []).find(x => S.tagDefs?.[x]); if (!id || S.users[S.me]?.tg || store.get('kanka-tag-tanitim') || $('#modal').classList.contains('open')) return;
+  store.set('kanka-tag-tanitim', '1'); const d = S.tagDefs[id];
+  modal(`<div class="tag-intro"><div class="ti-prev"><div class="ti-row">${av(S.me)}<div><b>${esc(dn(S.me))}</b>${tagChip(d, id, 'tag-prev')}<small>bugün 21:30</small><p>selam kankalar 👋</p></div></div></div>
+    <h3>${esc(d.ad)} etiketi geldi ${esc(d.i)}</h3><p class="hint">İsminin yanında herkesin göreceği küçük bir etiket. İstediğin zaman Ayarlar › Profil'den çıkarabilirsin. Şimdilik test aşamasında, ilk takanlardan ol!</p>
+    <div class="actions"><button class="btns2" id="ti-no">Şimdi değil</button><button class="primary" id="ti-go">${esc(d.i)} Etiketi tak</button></div></div>`, 'tagi');
+  $('#ti-no').onclick = closeModal; $('#ti-go').onclick = () => socket.emit('tagSet', id, r => { closeModal(); toast(r?.error || `${d.i} ${d.t} etiketin takıldı`); });
 }
 function cleanupVoice(keepState) { Object.keys(peers).forEach(closePeer); myVoice = null; pttPageDown = pttHookDown = pttDown = false; pttSync(); myVoiceAt = 0; dmCallMin = false; dmCallSig = ''; dmCallEver = false; if (deaf && !keepState) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
