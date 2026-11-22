@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.1.0';
+const SURUM = '1.2.0';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -29,8 +29,12 @@ class Kanka extends EventEmitter {
   }
   // ---------- REST ----------
   async api(yontem, yol, veri) {
-    for (let deneme = 0; deneme < 4; deneme++) {
-      const r = await fetch(this.adres + '/api/v1' + yol, { method: yontem, headers: { Authorization: 'Bot ' + this.token, 'Content-Type': 'application/json', 'User-Agent': 'kanka.js/' + SURUM }, body: veri === undefined ? undefined : JSON.stringify(veri) });
+    for (let deneme = 0; deneme < 6; deneme++) {
+      let r;
+      // Sunucu güncellenirken birkaç saniye cevap vermez (502/503 ya da bağlantı hatası): bekleyip tekrar dene
+      try { r = await fetch(this.adres + '/api/v1' + yol, { method: yontem, headers: { Authorization: 'Bot ' + this.token, 'Content-Type': 'application/json', 'User-Agent': 'kanka.js/' + SURUM }, body: veri === undefined ? undefined : JSON.stringify(veri) });
+      } catch (e) { if (deneme < 5) { await uyu(1500 * (deneme + 1)); continue; } throw e; }
+      if ([502, 503, 504].includes(r.status) && deneme < 5) { await uyu(1500 * (deneme + 1)); continue; }
       const j = await r.json().catch(() => null);
       if (r.status === 429) { await uyu(((j && j.tekrarDene) || 1) * 1000 + 100); continue; }
       if (!r.ok) throw new KankaHata((j && j.hata) || `HTTP ${r.status}`, r.status, j);
@@ -98,12 +102,15 @@ class Kanka extends EventEmitter {
         if (this._oturum) gonder({ op: 6, d: { token: this.token, oturum: this._oturum, sira: this._sira, niyetler: this.niyetler } });
         else gonder({ op: 2, d: { token: this.token, niyetler: this.niyetler } });
       }
-      if (m.op === 0) { if (m.s) this._sira = m.s; this._olay(m.t, m.d).catch(e => this.emit('hata', e)); }
+      if (m.op === 0) { if (m.s) this._sira = m.s; if (m.t === 'DEVAM_EDILDI') this._deneme = 0; this._olay(m.t, m.d).catch(e => this.emit('hata', e)); }
+      if (m.op === 7) this._ilkBekle = (m.d && m.d.bekle) || 4000; // sunucu güncelleniyor: biraz bekleyip aynı oturumla dön
     };
     const kapandi = (kod, sebep) => {
       clearInterval(this._nabiz); if (this._kapat) return;
       if ([4004, 4014].includes(kod)) { this.emit('hata', new KankaHata(`Bağlantı reddedildi: ${sebep || kod}`, kod)); return; }
-      const bekle = Math.min(30000, 1000 * 2 ** this._deneme++); this.emit('koptu', { kod, sebep, bekle }); setTimeout(() => this._ac(), bekle);
+      // 1012 / op 7: sunucu güncelleniyor; birkaç saniye bekle. Diğer kopmalarda artan bekleme (en çok 15 sn) + küçük rastgelelik
+      const bekle = this._ilkBekle || (kod === 1012 ? 4000 : Math.min(15000, 1000 * 2 ** this._deneme++)) + Math.floor(Math.random() * 500); this._ilkBekle = 0;
+      this.emit('koptu', { kod, sebep, bekle }); setTimeout(() => this._ac(), bekle);
     };
     if (ws.on) { ws.on('message', al); ws.on('close', (k, s) => kapandi(k, String(s || ''))); ws.on('error', e => this.emit('hata', e)); }
     else { ws.onmessage = al; ws.onclose = e => kapandi(e.code, e.reason); ws.onerror = () => {}; }
