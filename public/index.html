@@ -3677,10 +3677,32 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   #voicebar .btns button { min-height: 36px; display: grid; place-items: center; }
   #voicebar .btns button[hidden] { display: none; }
   #voicebar .vb-chat2 { background: var(--hover); }
-  #me .mebtn { position: relative; flex: none; }
-  #me .mebtn.off { color: #ff6b6f; background: rgba(255,90,95,.12); }
-  #me #mute.ns-on::after { content: ''; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #3fcf8e; box-shadow: 0 0 0 2px var(--panel); }
-  #me .row1 { gap: 6px; } #me .row1 > div:nth-child(2) { margin-left: 4px; }
+  #me .mebtn { position: relative; flex: none; margin-left: 0; width: 32px; height: 32px; }
+  #me #settings { margin-left: 0; width: 32px; height: 32px; }
+  #me .mebtn.off { color: #ff6b6f; background: rgba(255,90,95,.14); }
+  #me #mute.ns-on::after { content: ''; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: #3fcf8e; box-shadow: 0 0 0 2px var(--panel); }
+  #me .row1 { gap: 4px; } #me .row1 > div:nth-child(2) { margin-left: 4px; margin-right: 2px; }
+  /* Animasyonlu mikrofon & kulaklık SVG ikonları */
+  .ic .v-off-grp { opacity: .76; transform-origin: 12px 12px; animation: vOffShake .36s cubic-bezier(.22,1,.36,1) both; }
+  .ic .v-slash { stroke-width: 2.35; stroke-dasharray: 26; animation: vSlashDraw .28s cubic-bezier(.22,1,.36,1) both; }
+  .mebtn:not(.off) .ic { animation: vOnPop .28s cubic-bezier(.2,1.25,.4,1) both; }
+  .mebtn:not(.off):hover .v-mic-body { transform-origin: 12px 8px; animation: vMicBounce .42s ease; }
+  .mebtn:not(.off):hover .v-hs-cup.l { transform-origin: 5.5px 17px; animation: vHsCupL .42s ease; }
+  .mebtn:not(.off):hover .v-hs-cup.r { transform-origin: 18.5px 17px; animation: vHsCupR .42s ease; }
+  .vuser .vic { gap: 5px; }
+  .vuser .vic .vstat { width: 20px; height: 20px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(242,63,67,.14); color: #f23f43; animation: vStatPop .26s cubic-bezier(.2,1.2,.4,1) both; }
+  .vuser .vic .vstat.vm-deaf { animation-delay: .05s; }
+  .vuser .vic .vstat .ic { width: 13.5px; height: 13.5px; overflow: visible; }
+  .vuser:hover .vstat .v-off-grp { animation: vOffShake .34s ease; }
+  .vuser.has-nb-sp.speaking .vstat { background: rgba(0,0,0,.46); }
+  @keyframes vSlashDraw { from { stroke-dashoffset: 26; opacity: .2; } to { stroke-dashoffset: 0; opacity: 1; } }
+  @keyframes vOffShake { 0% { transform: rotate(0deg) scale(.92); } 30% { transform: rotate(-9deg) scale(1.04); } 65% { transform: rotate(5deg); } 100% { transform: rotate(0deg) scale(1); } }
+  @keyframes vOnPop { 0% { transform: scale(.78); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  @keyframes vStatPop { 0% { transform: scale(.65); opacity: 0; } 70% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes vMicBounce { 0%,100% { transform: translateY(0); } 45% { transform: translateY(-2px); } }
+  @keyframes vHsCupL { 0%,100% { transform: translateX(0); } 45% { transform: translateX(-1.3px); } }
+  @keyframes vHsCupR { 0%,100% { transform: translateX(0); } 45% { transform: translateX(1.3px); } }
+  @media (prefers-reduced-motion: reduce) { .ic .v-off-grp, .ic .v-slash, .mebtn .ic, .mebtn:hover .v-mic-body, .mebtn:hover .v-hs-cup, .vuser .vic .vstat { animation: none !important; } }
   .dv-ns b { color: var(--muted); } .dv-ns.on b { color: #3fcf8e; }
 </style>
 </head>
@@ -3706,7 +3728,7 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
       <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vtime" class="vtime"></span><span id="vq" class="vq" hidden><svg viewBox="0 0 16 14" aria-hidden="true"><rect x="0" y="9" width="3.4" height="5" rx="1"/><rect x="6.3" y="5" width="3.4" height="9" rx="1"/><rect x="12.6" y="0" width="3.4" height="14" rx="1"/></svg><em></em></span></div><div class="vc" id="vname"></div>
         <div class="btns"><button type="button" class="vb-chat2" aria-label="Oda sohbeti" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button><button id="vns" hidden title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button></div></div>
       <div class="row1"><div id="me-av"></div><div><div class="n" id="me-name"></div><div class="s" id="me-lvl"></div></div>
-        <button class="ibtn mebtn" id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="ibtn mebtn" id="deaf" title="Hoparlörü kapat" aria-label="Hoparlörü kapat"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/></svg></button><button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
+        <button class="ibtn mebtn" id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect class="v-mic-body" x="9" y="2.5" width="6" height="11" rx="3"/><path class="v-mic-arc" d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></button><button class="ibtn mebtn" id="deaf" title="Hoparlörü kapat" aria-label="Hoparlörü kapat"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path class="v-hs-band" d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect class="v-hs-cup l" x="3" y="13.5" width="4.5" height="7" rx="2"/><rect class="v-hs-cup r" x="16.5" y="13.5" width="4.5" height="7" rx="2"/></svg></button><button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
     </div>
   </aside>
   <main id="chat" class="panel">
@@ -3800,8 +3822,8 @@ const ICON = {
   music: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
   trophy: '<path d="M8 21h8M12 16v5M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/>',
-  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
-  micoff: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M3 3l18 18"/>',
+  mic: '<rect class="v-mic-body" x="9" y="2.5" width="6" height="11" rx="3"/><path class="v-mic-arc" d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/>',
+  micoff: '<g class="v-off-grp"><rect class="v-mic-body" x="9" y="2.5" width="6" height="11" rx="3"/><path class="v-mic-arc" d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></g><path class="v-slash" d="M3.5 3.5 20.5 20.5"/>',
   keyboard: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
   video: '<rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/>',
   screen: '<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/>',
@@ -3863,8 +3885,8 @@ const ICON = {
   refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
-  headset: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/>',
-  headsetoff: '<path d="M4 15v-3a8 8 0 0 1 13.6-5.7M20 12v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><path d="M16 21h2a2 2 0 0 0 2-2v-3M3 3l18 18"/>',
+  headset: '<path class="v-hs-band" d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect class="v-hs-cup l" x="3" y="13.5" width="4.5" height="7" rx="2"/><rect class="v-hs-cup r" x="16.5" y="13.5" width="4.5" height="7" rx="2"/>',
+  headsetoff: '<g class="v-off-grp"><path class="v-hs-band" d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect class="v-hs-cup l" x="3" y="13.5" width="4.5" height="7" rx="2"/><rect class="v-hs-cup r" x="16.5" y="13.5" width="4.5" height="7" rx="2"/></g><path class="v-slash" d="M3.5 3.5 20.5 20.5"/>',
   rcompass: '<path d="M5.2 7.6 4.6 3.8l3.7 1.6M18.8 7.6l.6-3.8-3.7 1.6"/><circle cx="12" cy="13" r="8.5"/><path d="M5.3 12.2c1.6-1.7 3.9-1.9 5.4-.6l1.3 1 1.3-1c1.5-1.3 3.8-1.1 5.4.6"/><path d="m14.6 15.6-1.4 2.9-2.6-2.4 1.4-2.9z" fill="currentColor" stroke-width="1.2"/>',
   belloff: '<path d="M6 16v-5a6 6 0 0 1 9.5-4.9M18 11v5l2 2H8"/><path d="M10 21h4M3 3l18 18"/>',
   alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
@@ -5067,7 +5089,7 @@ function renderSide() {
   const tRow = c => { const mc = mentCountCh(c.id); return `<div class="room ${c.id === S.channel?.id ? 'active' : ''} ${isUn(c) || mc ? 'unread' : ''} ${mc ? 'has-ment' : ''} ${notifMode(c.id) === 'none' ? 'cmuted' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${mc ? `<span class="mbadge">${mc > 9 ? '9+' : mc}</span>` : chBadge(c)}${notifMode(c.id) === 'none' ? `<button class="rmute" data-unmute="${c.id}" title="Sessizde · sesini açmak için tıkla" aria-label="Odanın sesini aç">${ic('belloff')}</button>` : ''}${!mc && isUn(c) && c.id !== S.channel?.id ? `<span class="udot" title="Son baktığından beri ${chCnt[c.id] ? chCnt[c.id] + ' yeni mesaj' : 'yeni mesaj var'}">${chCnt[c.id] > 1 ? (chCnt[c.id] > 99 ? '99+' : chCnt[c.id]) : ''}</span>` : ''}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` };
   const vRow = c => `<div class="room vroom ${myVoice === c.id ? 'active' : ''} ${c.canConnect === false ? 'nocon' : ''}" data-id="${c.id}" data-list="${c.cat || ''}" ${manage ? 'data-drag="ch"' : ''}><div class="ico">${roomIcon(c)}</div><span class="rn">${esc(c.name)}</span>${(S.voice[c.id] || []).length ? `<em class="vtm" data-vt="${c.id}" title="Sohbet bu kadar zamandır sürüyor">${voiceSince[c.id] ? vDur(Date.now() - voiceSince[c.id]) : ''}</em>` : ''}${c.limit ? `<em class="vlim ${(S.voice[c.id] || []).length >= c.limit ? 'full' : ''}">${(S.voice[c.id] || []).length}/${c.limit}</em>` : ''}${chBadge(c)}${manage ? `<button class="rset" data-rset="${c.id}" title="Odayı düzenle" aria-label="Odayı düzenle">${ic('gear')}</button>` : ''}</div>` +
       `<div class="vusers">${vOrder(c).map(n => { const fl = S.vflags?.[c.id]?.[n] || {}, st = c.type === 'stage' && stageSt[c.id]?.speakers?.includes(n), vnb = nbOf(S.users[n]);
-        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''} ${(S.live?.[c.id] || []).includes(n) ? 'islive' : ''}${vnb ? ' has-nb-sp nb-' + vnb : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${vnb ? nbLayers(vnb) : ''}${av(n)}<span class="vn">${styledNameHTML(dn(n), S.users[n]?.nameStyle)}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${fl.d ? ic('headsetoff', 'vm') : fl.m || uMuted.has(n) ? ic('micoff', 'vm') : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle"><i></i>CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
+        return `<div class="vuser ${speaking.has(n) ? 'speaking' : ''} ${n === S.me ? 'me' : ''} ${(S.live?.[c.id] || []).includes(n) ? 'islive' : ''}${vnb ? ' has-nb-sp nb-' + vnb : ''}" data-vu="${esc(n)}" data-ch="${c.id}" role="button" tabindex="0" title="${esc(n)}">${vnb ? nbLayers(vnb) : ''}${av(n)}<span class="vn">${styledNameHTML(dn(n), S.users[n]?.nameStyle)}</span><span class="vic">${st ? ic('stage', 'vs') : ''}${fl.cam ? ic('video') : ''}${(fl.m || uMuted.has(n)) ? `<span class="vstat vm-mic" title="${uMuted.has(n) ? 'Senin için susturuldu' : 'Mikrofonu kapalı'}">${ic('micoff', 'vm')}</span>` : ''}${fl.d ? `<span class="vstat vm-deaf" title="Kulaklığı kapalı">${ic('headsetoff', 'vm')}</span>` : ''}${(S.live?.[c.id] || []).includes(n) ? `<span class="livebadge" data-live="${esc(n)}" data-ch="${c.id}" title="Yayını izle"><i></i>CANLI</span>` : ''}</span></div>`; }).join('')}</div>`;
   const vOrder = c => { const l = [...(S.voice[c.id] || [])], lv = S.live?.[c.id] || [], rk = n => { const i = lv.indexOf(n); return i < 0 ? 1e3 : i; }; if (c.type === 'stage') { const sp = stageSt[c.id]?.speakers || []; l.sort((a, b) => sp.includes(b) - sp.includes(a)); } return l.map((n, i) => [n, i]).sort((a, b) => rk(a[0]) - rk(b[0]) || a[1] - b[1]).map(x => x[0]); }; // yayın açanlar odanın en üstünde
   const row = c => voiceLike(c.type) ? vRow(c) : tRow(c);
   const shut = new Set(JSON.parse(store.get('kanka-cats') || '[]'));
