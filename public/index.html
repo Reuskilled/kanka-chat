@@ -4221,7 +4221,9 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .ar-uinfo { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
   .ar-uinfo b { font-size: 12.5px; font-weight: 600; color: #f2f3f5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ar-uinfo small { font-size: 10.5px; color: #4ade80; }
-  .ar-ttl { flex: 1; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 10px; min-width: 0; color: #f2f3f5; } .ar-ttl small { color: #8b92a1; font-weight: 600; font-size: 12px; display: flex; align-items: center; gap: 4px; } .ar-ttl .ic { width: 14px; height: 14px; }
+  .ar-ttl { flex: 1; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 9px; min-width: 0; color: #f2f3f5; }
+  .ar-ttl-img { width: 28px; height: 18px; border-radius: 5px; object-fit: cover; border: 1px solid rgba(255,255,255,.14); flex-shrink: 0; }
+  .ar-ttl small { color: #8b92a1; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; background: #161923; border: 1px solid rgba(255,255,255,.07); } .ar-ttl .ic { width: 13px; height: 13px; }
   .ar-body { flex: 1; overflow-y: auto; padding: 18px 20px 26px; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 20px; }
   .ar-strip { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 22px; border-radius: 14px; background: #13161e; border: 1px solid rgba(255,255,255,.075); overflow: hidden; flex-shrink: 0; }
   .ar-strip-bg { position: absolute; top: 0; right: 0; bottom: 0; width: 48%; background: url('/arena/bilardo.jpg') center 42% / cover no-repeat; opacity: .42; mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.65) 45%, #000 100%); -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.65) 45%, #000 100%); pointer-events: none; }
@@ -4271,17 +4273,46 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .ar-g:not(:disabled):hover .ar-g-arr { transform: translateX(2px); background: var(--accent); color: #0b0c10; }
   .ar-empty { grid-column: 1 / -1; padding: 26px; text-align: center; border-radius: 12px; border: 1px dashed rgba(255,255,255,.1); color: #838a98; font-size: 13px; }
   .ar-g-bilardo { --g1: #0f6b3b; --g2: #0a3a22; } .ar-g-dart { --g1: #8a1f1f; --g2: #3a0e0e; } .ar-g-pisti { --g1: #1e3a8a; --g2: #0f1d45; } .ar-g-kart { --g1: #7c3aed; --g2: #c2410c; } .ar-g-bilek { --g1: #b45309; --g2: #451a03; } .ar-g-hokey { --g1: #0e7490; --g2: #082f49; } .ar-g-asmaca { --g1: #4d7c0f; --g2: #1a2e05; }
-  .ar-lobby { max-width: 680px; margin: 0 auto; width: 100%; gap: 16px; }
-  .ar-lhero { position: relative; display: flex; align-items: center; gap: 16px; padding: 22px; border-radius: 16px; background: #13161e; border: 1px solid rgba(255,255,255,.09); overflow: hidden; }
-  .ar-lhero-bg { position: absolute; inset: 0; left: 32%; background-size: cover; background-position: center; opacity: .48; mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.7) 42%, #000 100%); -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.7) 42%, #000 100%); pointer-events: none; }
-  .ar-lhero > div { position: relative; z-index: 1; }
-  .ar-lhero b { display: block; font-size: 22px; color: #f5f6f8; letter-spacing: -.02em; } .ar-lhero small { color: #9ba3b4; font-size: 13.5px; }
-  .ar-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 8px; }
-  .ar-slot { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 11px; background: #13161e; border: 1px solid rgba(255,255,255,.08); min-width: 0; } .ar-slot b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; color: #f2f3f5; } .ar-slot i { color: #f6c445; } .ar-slot i .ic { width: 16px; height: 16px; }
-  .ar-slot.empty { border-style: dashed; border-color: rgba(255,255,255,.12); color: #7c8392; background: transparent; } .ar-slot.empty span { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #171a22; } .ar-slot.empty .ic { width: 16px; height: 16px; }
-  .ar-lacts { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; align-items: center; } .ar-big { padding: 11px 20px; font-size: 14.5px; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; } .ar-big .ic { width: 17px; height: 17px; }
-  .ar-wait { display: flex; gap: 8px; align-items: center; color: #8b92a1; font-size: 13.5px; flex: 1; } .ar-wait .ic { width: 16px; height: 16px; }
-  .ar-hint { display: flex; gap: 8px; color: #7c8392; font-size: 12.5px; margin: 4px 0 0; } .ar-hint .ic { width: 15px; height: 15px; flex: none; }
+  .ar-lobby { max-width: 780px; margin: 0 auto; width: 100%; gap: 18px; justify-content: flex-start; }
+  .ar-lhero { position: relative; min-height: 156px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 22px 24px; border-radius: 16px; background: #12151d; border: 1px solid rgba(255,255,255,.09); overflow: hidden; box-shadow: 0 14px 36px rgba(0,0,0,.42); flex-shrink: 0; }
+  .ar-lhero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 45%; opacity: .55; filter: brightness(.85) contrast(1.06); pointer-events: none; }
+  .ar-lhero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(95deg, #11141c 12%, rgba(17,20,28,.86) 46%, rgba(17,20,28,.24) 100%), linear-gradient(180deg, rgba(17,20,28,.12) 0%, rgba(17,20,28,.75) 100%); pointer-events: none; }
+  .ar-lhero-c { position: relative; z-index: 2; max-width: 460px; }
+  .ar-lbadge { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 6px; background: rgba(11,13,18,.78); border: 1px solid rgba(255,255,255,.11); backdrop-filter: blur(8px); font-size: 11px; font-weight: 700; color: #cbd5e1; margin-bottom: 10px; }
+  .ar-lbadge.ok { border-color: rgba(200,255,0,.35); color: var(--accent); }
+  .ar-lhero b { display: block; font-size: 26px; font-weight: 800; color: #f5f6f8; letter-spacing: -.025em; line-height: 1.1; margin-bottom: 5px; }
+  .ar-lhero small { display: block; color: #a3abb9; font-size: 13.5px; line-height: 1.4; }
+  .ar-lhero-cap { position: relative; z-index: 2; padding: 5px 10px; border-radius: 7px; background: rgba(11,13,18,.78); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(8px); font-size: 12px; font-weight: 700; color: #e2e8f0; align-self: flex-start; flex-shrink: 0; }
+  .ar-roster { display: flex; flex-direction: column; gap: 10px; }
+  .ar-roster-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 2px; }
+  .ar-roster-h .ar-h { margin: 0; }
+  .ar-roster-st { font-size: 12px; font-weight: 600; color: #8b92a1; }
+  .ar-roster-st.ok { color: #4ade80; }
+  .ar-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ar-slots.duel { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; }
+  .ar-vs { display: grid; place-items: center; width: 38px; height: 38px; align-self: center; border-radius: 10px; background: #151822; border: 1px solid rgba(255,255,255,.09); font-size: 11.5px; font-weight: 900; letter-spacing: .06em; color: #7c8392; }
+  .ar-slot { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 13px; background: #13161e; border: 1px solid rgba(255,255,255,.085); min-width: 0; }
+  .ar-slot.me { border-color: rgba(200,255,0,.25); background: linear-gradient(135deg, rgba(200,255,0,.045), #13161e 55%); }
+  .ar-slot > :first-child { width: 40px !important; height: 40px !important; flex: none; }
+  .ar-slot-m { flex: 1; min-width: 0; }
+  .ar-slot b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14.5px; font-weight: 700; color: #f5f6f8; }
+  .ar-slot-sub { display: block; font-size: 11.5px; color: #7c8392; margin-top: 2px; }
+  .ar-slot-sub.host { color: #f6c445; }
+  .ar-slot i { color: #f6c445; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; background: rgba(246,196,69,.1); border: 1px solid rgba(246,196,69,.22); flex-shrink: 0; } .ar-slot i .ic { width: 14px; height: 14px; }
+  .ar-slot.empty { border: 1px dashed rgba(255,255,255,.13); color: #7c8392; background: rgba(19,22,30,.45); }
+  .ar-slot.empty > span { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: #161923; border: 1px dashed rgba(255,255,255,.12); flex-shrink: 0; }
+  .ar-slot.empty .ic { width: 16px; height: 16px; color: #646b7a; }
+  .ar-slot.empty b { color: #9ba3b4; font-weight: 600; font-size: 13.5px; }
+  .ar-lbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #13161e; border: 1px solid rgba(255,255,255,.08); flex-wrap: wrap; }
+  .ar-lbar-acts { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+  .ar-lbar .primary.ar-big { width: auto; flex: none; padding: 10px 20px; font-size: 13.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 7px; border-radius: 9px; }
+  .ar-lbar .primary.ar-big:disabled { opacity: .45; filter: saturate(.4); cursor: not-allowed; }
+  .ar-lbar .btns2 { padding: 10px 15px; font-size: 13px; font-weight: 600; border-radius: 9px; background: #1a1e29; border: 1px solid rgba(255,255,255,.1); color: #cbd5e1; }
+  .ar-lbar .btns2:hover { background: #232836; color: #fff; }
+  .ar-big .ic { width: 15px; height: 15px; }
+  .ar-wait { display: flex; gap: 8px; align-items: center; color: #8b92a1; font-size: 13px; } .ar-wait .ic { width: 15px; height: 15px; flex: none; }
+  .ar-hint { display: flex; gap: 8px; align-items: center; color: #6e7584; font-size: 12px; margin: 0; padding: 0 4px; } .ar-hint .ic { width: 14px; height: 14px; flex: none; }
+  @media (max-width: 600px) { .ar-slots, .ar-slots.duel { grid-template-columns: 1fr; } .ar-vs { width: 100%; height: 26px; } .ar-lbar { flex-direction: column; align-items: stretch; } .ar-lbar-acts { margin-left: 0; width: 100%; } .ar-lbar-acts button { flex: 1; justify-content: center; } }
   .ar-load { color: #8b92a1; padding: 30px; text-align: center; }
   /* Sıralama (Studio v2) */
   .ar-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; flex-shrink: 0; }
@@ -11157,7 +11188,7 @@ function arHead() {
   const L = AR.lobby, inGame = L && AR.view === 'lobby';
   const ch = myVoice && !myVoice.startsWith('call:') ? myVoice : null, lobN = ch ? (AR.lobbies[ch] || []).length : 0;
   return `<div class="ar-head">${inGame ? `<button class="ar-icbtn" id="ar-back" aria-label="Lobilere dön">${ic('chevron')}</button>` : ''}<div class="ar-logo"><span class="ar-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M9 6.5v19M9 17.5L21 7.5" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="17.2" y="18.2" width="7.8" height="7.8" rx="3.9" transform="rotate(-12 17.2 18.2)" fill="#c8ff00"/></svg></span><b>Kanka</b><span class="ar-tag">ARENA</span></div>
-    ${inGame ? `<div class="ar-ttl">${L.emoji} ${esc(L.ad)}${L.watchers - L.players.length > 0 ? `<small>${ic('eye')}${L.watchers - L.players.length} izliyor</small>` : ''}</div>`
+    ${inGame ? `<div class="ar-ttl"><img class="ar-ttl-img" src="${AR_ART(L.game)}" alt=""><span>${esc(L.ad)}</span>${L.watchers - L.players.length > 0 ? `<small>${ic('eye')}${L.watchers - L.players.length} izliyor</small>` : ''}</div>`
       : `<nav class="ar-tabs"><button class="${AR.view === 'hub' ? 'on' : ''}" data-av="hub">${ic('gamepad')}Oyunlar</button><button class="${AR.view === 'top' ? 'on' : ''}" data-av="top">${ic('trophy')}Sıralama</button></nav>
          ${AR.view === 'hub' ? `<div class="ar-search">${ic('search')}<input id="ar-q" type="text" placeholder="Oyun ara..." value="${esc(AR.q || '')}" autocomplete="off"><kbd>/</kbd></div>` : ''}`}
     <div class="ar-top-r">${!inGame ? `<button class="ar-icbtn" id="ar-notif" aria-label="Açık lobiler" title="Açık lobiler">${ic('bell')}${lobN ? `<span class="ar-notif-cnt">${lobN}</span>` : ''}</button>
@@ -11223,11 +11254,25 @@ function arWire(box) {
 }
 function arLobbyHTML(L) {
   const E = AR_INFO[L.game], me = L.players.includes(S.me), host = L.host === S.me, slots = Math.max(L.max, L.players.length);
-  return `<div class="ar-body ar-lobby"><div class="ar-lhero"><div class="ar-lhero-bg" style="background-image:url('${AR_ART(L.game)}')"></div><div><b>${E[1]}</b><small>${E[2]}</small></div></div>
-    <div><h5 class="ar-h">Oyuncular · ${L.players.length}/${L.max}${L.min > 1 && L.players.length < L.min ? ` <em>(en az ${L.min})</em>` : ''}</h5>
-    <div class="ar-slots">${Array.from({ length: slots }, (_, i) => { const n = L.players[i]; return n ? `<div class="ar-slot">${av(n, S.online.has(n))}<b>${esc(dn(n))}</b>${n === L.host ? `<i title="Lobiyi açan">${ic('crown')}</i>` : host && L.state !== 'play' ? `<button class="ibtn" data-arkick="${esc(n)}" aria-label="Çıkar">${ic('x')}</button>` : ''}</div>` : `<div class="ar-slot empty"><span>${ic('plus')}</span><small>Boş</small></div>`; }).join('')}</div></div>
-    <div class="ar-lacts">${me ? (host ? `<button class="primary ar-big" id="ar-start" ${L.players.length < L.min ? 'disabled' : ''}>${ic('play')}Oyunu başlat</button>` : `<div class="ar-wait">${ic('clock')}${esc(dn(L.host))} oyunu başlatınca başlayacak</div>`) + `<button class="btns2" id="ar-leave">Lobiden çık</button>`
-      : L.players.length < L.max ? `<button class="primary ar-big" id="ar-join">Katıl</button>` : '<div class="ar-wait">Lobi dolu, oyunu izleyebilirsin</div>'}</div>
+  const ready = L.players.length >= L.min, isDuel = slots === 2;
+  const slotCard = i => {
+    const n = L.players[i];
+    if (!n) return `<div class="ar-slot empty"><span>${ic('plus')}</span><div class="ar-slot-m"><b>Oyuncu bekleniyor</b><span class="ar-slot-sub">Boş koltuk</span></div></div>`;
+    const isH = n === L.host;
+    return `<div class="ar-slot ${n === S.me ? 'me' : ''}">${av(n, S.online.has(n))}<div class="ar-slot-m"><b>${esc(dn(n))}</b><span class="ar-slot-sub ${isH ? 'host' : ''}">${isH ? 'Lobi Sahibi' : n === S.me ? 'Sen · Hazır' : 'Hazır'}</span></div>${isH ? `<i title="Lobiyi açan">${ic('crown')}</i>` : host && L.state !== 'play' ? `<button class="ar-icbtn" data-arkick="${esc(n)}" aria-label="Çıkar" title="Çıkar">${ic('x')}</button>` : ''}</div>`;
+  };
+  const slotHtml = isDuel ? `${slotCard(0)}<div class="ar-vs">VS</div>${slotCard(1)}` : Array.from({ length: slots }, (_, i) => slotCard(i)).join('');
+  const statusMsg = me
+    ? (host ? (ready ? 'Herkes hazır — oyunu başlatabilirsin.' : `Başlamak için en az ${L.min - L.players.length} oyuncu daha bekleniyor.`) : `${esc(dn(L.host))} oyunu başlatınca maç başlayacak.`)
+    : (L.players.length < L.max ? 'Lobide boş yer var — hemen katılabilirsin.' : 'Lobi dolu, oyun başlayınca izleyebilirsin.');
+  return `<div class="ar-body ar-lobby">
+    <div class="ar-lhero"><img class="ar-lhero-img" src="${AR_ART(L.game)}" alt="">
+      <div class="ar-lhero-c"><div class="ar-lbadge ${ready ? 'ok' : ''}"><span class="ar-room-dot ${ready ? '' : 'off'}"></span>${ready ? 'Maç Başlamaya Hazır' : 'Oyuncu Bekleniyor'} · ${L.players.length}/${L.max}</div><b>${E[1]}</b><small>${E[2]}</small></div>
+      <span class="ar-lhero-cap">${E[3]}</span></div>
+    <div class="ar-roster"><div class="ar-roster-h"><h5 class="ar-h">Oyuncular <span class="ar-cnt">${L.players.length}/${L.max}</span></h5><span class="ar-roster-st ${ready ? 'ok' : ''}">${ready ? 'Hazır' : `En az ${L.min} kişi`}</span></div>
+      <div class="ar-slots ${isDuel ? 'duel' : ''}">${slotHtml}</div></div>
+    <div class="ar-lbar"><div class="ar-wait">${ic(ready ? 'check' : 'clock')}${statusMsg}</div>
+      <div class="ar-lbar-acts">${me ? `<button class="btns2" id="ar-leave">Lobiden çık</button>${host ? `<button class="primary ar-big" id="ar-start" ${!ready ? 'disabled' : ''}>${ic('play')}Oyunu başlat</button>` : ''}` : L.players.length < L.max ? `<button class="primary ar-big" id="ar-join">${ic('play')}Lobiye Katıl</button>` : ''}</div></div>
     <p class="ar-hint">${ic('info')}Odadaki herkes bu lobiyi oda sohbetindeki karttan görebilir. Oyun başlayınca diğerleri izleyebilir.</p></div>`;
 }
 function arLobbyWire(box) {
