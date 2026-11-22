@@ -3098,6 +3098,17 @@
   .vpop.sheet .vp-in { max-height: 60vh; }
   .vpop.sheet { transition: transform .2s cubic-bezier(.2,.8,.2,1), opacity .2s; touch-action: pan-y; }
   .vpop.sheet.sh-drag { transition: none; }
+  /* Telefonda alt kart: küçültme (scale) animasyonu yerine aşağıdan kayarak gelsin, büyük gölge yerine hafif gölge ve kendi boyama alanı.
+     Android Chrome'da büyük, ölçeklenerek açılan ve altında hareketli isim plakaları olan katman yarım/boş çiziliyordu. */
+  .vpop.sheet { animation: sheetUp .22s var(--ease-out) both; box-shadow: 0 -6px 28px rgba(0,0,0,.5); contain: layout paint; transform: translateZ(0); }
+  body:has(.vpop.sheet) #members *, body:has(.vpop.sheet) #side-list *, body:has(.vpop.sheet) #messages * { animation-play-state: paused !important; }
+  /* Dokunmatik ekranda "üstüne gelme" yok: dokununca takılı kalan hover, isim plakası animasyonlarını ve filtrelerini sürekli çalıştırıyordu */
+  @media (hover: none) {
+    .has-nb:hover .nb-bg, .has-nb:hover .nb-sheen, .has-nb:hover .nb-art .mv, .has-nb:hover .nb-art .sp { animation: none !important; filter: none !important; }
+    .has-nb:hover .nb-art { transform: none; }
+    #members .mem.has-nb:hover { transform: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
+    :is(#members .mem, #messages .row, #side-list .room, #rail .srv, #stage .tile, #thread .row):hover :is(.kb-spin, .kb-spin-slow, .kb-radar, .kb-pulse, .kb-sway-l, .kb-sway-r, .kb-float1, .kb-float2, .kb-flow, .kb-twinkle1, .kb-twinkle2, .kb-blink, .kb-brk-l, .kb-brk-r, .kb-orb, .dn-st) { animation-play-state: paused !important; }
+  }
   .sh-grip { position: absolute; top: 7px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.55); box-shadow: 0 1px 3px rgba(0,0,0,.35); z-index: 6; pointer-events: none; }
   .vpop:not(.sheet) .sh-grip { display: none; }
 
