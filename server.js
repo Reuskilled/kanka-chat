@@ -5928,12 +5928,19 @@ io.on('connection', socket => {
     if (left.startsWith('call:')) { const c = left.slice(5); if (voice.get(left)) callAloneWatch(c); else callEnded(c); }
     socket.to('v:' + left).emit('voiceLeft', socket.id);
     socket.leave('v:' + myVoice);
-    voiceMedia.delete(socket.id); voiceFlags.delete(socket.id);
+    voiceMedia.delete(socket.id); voiceFlags.delete(socket.id); delete socket.data.vold;
     { const st = stage.get(myVoice); if (st && ![...(voice.get(myVoice)?.values() || [])].includes(me)) { st.speakers.delete(me); st.hands.delete(me); io.to('v:' + myVoice).emit('stage', { ch: myVoice, ...stageView(myVoice) }); } }
     myVoice = null;
     pushVoice();
   }
-  socket.on('voiceJoin', (chId, cb = () => {}) => {
+  socket.on('voiceJoin', (chId, cb = () => {}) => joinVoice(chId, typeof cb === 'function' ? cb : () => {}, null));
+  // Sunucu güncellendikten sonra: aynı kişi yeni bağlantıyla odasına sessizce döner, diğerleri eski bağlantıyı yeni kimliğe taşır
+  socket.on('voiceRejoin', ({ ch, old } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return;
+    if (typeof ch !== 'string' || typeof old !== 'string' || old.length > 40 || myVoice) return cb({ error: 'geçersiz' });
+    joinVoice(ch, cb, old);
+  });
+  function joinVoice(chId, cb, old) {
     const isCall = typeof chId === 'string' && chId.startsWith('call:');
     const f = isCall ? null : findChannel(chId);
     if (!me) return cb({ error: 'Erişim yok' });
@@ -5949,21 +5956,22 @@ io.on('connection', socket => {
     if (f?.c.limit && myVoice !== chId && (voice.get(chId)?.size || 0) >= f.c.limit && !can(f.s, me, 'manageChannels') && f.s.owner !== me) return cb({ error: `Oda dolu (${f.c.limit}/${f.c.limit})` });
     leaveVoice();
     const room = voice.get(chId) || new Map();
-    const peers = [...room].map(([sid, name]) => ({ sid, name, media: voiceMedia.get(sid) || null }));
+    const peers = [...room].map(([sid, name]) => ({ sid, name, media: voiceMedia.get(sid) || null, old: io.sockets.sockets.get(sid)?.data?.vold || null }));
     room.set(socket.id, me); voice.set(chId, room);
+    if (old) socket.data.vold = old;
     if (isCall) {
       const c = chId.slice(5), s = callSessOf(c);
-      if (!s.by) { s.by = me; callMsg(c, { state: 'start', by: me }); }
+      if (!s.by) { s.by = me; if (!old) callMsg(c, { state: 'start', by: me }); }
       s.max = Math.max(s.max, room.size); s.names.add(me);
       callAloneWatch(c);
     }
-    onbFlag(me, 'voice');
-    socket.to('v:' + chId).emit('voiceJoined', { sid: socket.id, name: me });
+    if (!old) onbFlag(me, 'voice');
+    socket.to('v:' + chId).emit(old ? 'voiceRekey' : 'voiceJoined', { sid: socket.id, name: me, old });
     myVoice = chId; socket.join('v:' + chId);
     pushVoice();
     cb({ peers, stage: f?.c.type === 'stage' ? stageView(chId) : null, srvMuted: !!f && srvMuted.has(f.s.id + '|' + me) });
     if (f && srvMuted.has(f.s.id + '|' + me)) socket.emit('srvMute', { on: true });
-  });
+  }
   socket.on('voiceLeave', leaveVoice);
   socket.on('vflags', ({ m, d } = {}) => {
     if (!myVoice) return;
