@@ -1,6 +1,6 @@
 {
   "name": "kanka-chat",
-  "version": "1.2.11",
+  "version": "1.2.12",
   "description": "Kanka Chat masaüstü uygulaması (Windows)",
   "main": "main.js",
   "author": "Kanka Chat",

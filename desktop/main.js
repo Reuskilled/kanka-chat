@@ -238,7 +238,72 @@ function libGame(out) {
   return null;
 }
 const ps = b64 => run('powershell', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', b64]);
-let games = {}, lastStatus = 'Etkinlik: bekleniyor', lolPid = null;
+// Tek, sürekli açık PowerShell yardımcısı: her 10 saniyede yeni PowerShell açmak (her seferinde .NET'i baştan yüklemek)
+// uygulamanın işlemci kullanımının büyük kısmıydı. Yardımcı bir kez açılır, komut alır, cevabı verir.
+// Çalışmazsa eski yönteme (her seferinde ayrı çağrı) düşülür, algılama bozulmaz.
+const PSH_END = '<<KANKA-SON>>';
+const PSH_SRC = `$ErrorActionPreference = 'SilentlyContinue'
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$script:mr = $false
+function Init-Media {
+  if ($script:mr) { return }
+  Add-Type -AssemblyName System.Runtime.WindowsRuntime
+  $script:at = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation\`1' })[0]
+  $script:M = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType = WindowsRuntime]
+  $script:P = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties, Windows.Media.Control, ContentType = WindowsRuntime]
+  $script:mr = $true
+}
+function W($op, $t) { $task = $script:at.MakeGenericMethod($t).Invoke($null, @($op)); $null = $task.Wait(3000); $task.Result }
+while ($true) {
+  $cmd = [Console]::In.ReadLine()
+  if ($cmd -eq $null) { break }
+  try {
+    if ($cmd -eq 'PROCS') { Get-Process | ForEach-Object { $_.ProcessName + '|' + $_.Id + '|' + [int]($_.MainWindowHandle -ne 0) } }
+    elseif ($cmd -eq 'LIB') { Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.Path -match '\\\\(steamapps\\\\common|Epic Games|XboxGames)\\\\' } | ForEach-Object { $_.Path } }
+    elseif ($cmd -eq 'LOL') { (Get-CimInstance Win32_Process -Filter "Name='LeagueClientUx.exe'" | Select-Object -First 1).CommandLine }
+    elseif ($cmd -eq 'MEDIA') {
+      Get-Process Spotify,javaw | Where-Object MainWindowTitle | ForEach-Object { 'T' + (@{ p = $_.ProcessName; t = $_.MainWindowTitle } | ConvertTo-Json -Compress) }
+      try {
+        Init-Media
+        $mgr = W ($script:M::RequestAsync()) $script:M
+        foreach ($x in $mgr.GetSessions()) {
+          if ([string]$x.GetPlaybackInfo().PlaybackStatus -ne 'Playing') { continue }
+          $p = W ($x.TryGetMediaPropertiesAsync()) $script:P
+          $tl = $x.GetTimelineProperties()
+          $age = 0; try { $age = [int]([DateTimeOffset]::Now - $tl.LastUpdatedTime).TotalMilliseconds } catch {}
+          'M' + (@{ app = $x.SourceAppUserModelId; artist = $p.Artist; title = $p.Title; album = $p.AlbumTitle; pos = [int]$tl.Position.TotalMilliseconds; end = [int]$tl.EndTime.TotalMilliseconds; age = $age } | ConvertTo-Json -Compress)
+        }
+      } catch {}
+    }
+  } catch {}
+  [Console]::Out.WriteLine('${PSH_END}'); [Console]::Out.Flush()
+}`;
+let psh = null, pshBuf = '', pshWait = null, pshChain = Promise.resolve(), pshFails = 0;
+function pshStart() {
+  if (psh) return psh;
+  try {
+    psh = spawn('powershell', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', enc(PSH_SRC)], { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] });
+    psh.stdout.setEncoding('utf8'); pshBuf = '';
+    psh.stdout.on('data', d => { pshBuf += d; const i = pshBuf.indexOf(PSH_END); if (i >= 0 && pshWait) { const out = pshBuf.slice(0, i); pshBuf = pshBuf.slice(i + PSH_END.length).replace(/^\r?\n/, ''); const w = pshWait; pshWait = null; w(out); } });
+    psh.on('exit', () => { psh = null; if (pshWait) { const w = pshWait; pshWait = null; w(null); } });
+    psh.on('error', () => { psh = null; });
+  } catch { psh = null; }
+  return psh;
+}
+// Bir komut gönder, cevabı bekle. Yardımcı çalışmıyorsa null döner (çağıran eski yönteme düşer).
+function psq(cmd) {
+  if (process.platform !== 'win32' || pshFails >= 3) return Promise.resolve(null);
+  const job = pshChain.then(() => new Promise(res => {
+    const p = pshStart(); if (!p) { pshFails++; return res(null); }
+    const t = setTimeout(() => { if (pshWait) { pshWait = null; pshFails++; try { p.kill(); } catch {} psh = null; res(null); } }, 12000);
+    pshWait = out => { clearTimeout(t); if (out === null) pshFails++; else pshFails = 0; res(out); };
+    try { p.stdin.write(cmd + '\n'); } catch { clearTimeout(t); pshWait = null; pshFails++; res(null); }
+  }));
+  pshChain = job.catch(() => {});
+  return job;
+}
+app.on('will-quit', () => { try { psh?.kill(); } catch {} });
+let games = {}, lastStatus = 'Etkinlik: bekleniyor', lolPid = null, detectN = 0, lastLibGame = null;
 const run = (cmd, args) => new Promise(res => execFile(cmd, args, { windowsHide: true, maxBuffer: 8 * 1024 * 1024 }, (e, out) => res(e ? '' : String(out))));
 const csvRow = l => (l.match(/"([^"]*)"/g) || []).map(x => x.slice(1, -1));
 
@@ -256,7 +321,14 @@ async function setupCS2() {
 
 async function detect() {
   if (process.platform !== 'win32') return { game: null, detail: '', music: null };
-  const lines = (await run('tasklist', ['/fo', 'csv', '/nh'])).split(/\r?\n/);
+  detectN++;
+  // İşlem listesi (ad, pid, penceresi var mı) tek seferde yardımcıdan; olmazsa eski yöntem (tasklist)
+  const pq = await psq('PROCS');
+  let lines, winSet = null;
+  if (pq !== null) {
+    const rows = pq.split(/\r?\n/).map(l => l.trim().split('|')).filter(r => r[0]);
+    lines = rows.map(r => `"${r[0]}.exe","${r[1]}"`); winSet = new Set(rows.filter(r => r[2] === '1').map(r => r[0].toLowerCase()));
+  } else lines = (await run('tasklist', ['/fo', 'csv', '/nh'])).split(/\r?\n/);
   let best = 0, game = null, detail = '';
   const cands = [];
   for (const l of lines) {
@@ -267,7 +339,7 @@ async function detect() {
   // Sadece penceresi açık olan oyun sayılır: kapatılan oyunların arka planda kalan işlemi
   // (ör. RobloxPlayerBeta) saatlerce "oynuyor" gösteriyordu.
   if (cands.length) {
-    const withWin = new Set((await ps(PS_WIN)).split(/\r?\n/).map(x => x.trim().toLowerCase()).filter(Boolean));
+    const withWin = winSet || new Set((await ps(PS_WIN)).split(/\r?\n/).map(x => x.trim().toLowerCase()).filter(Boolean));
     for (const [name, hit] of cands) {
       if (withWin.size && !withWin.has(name.toLowerCase())) continue;
       const score = ['Lobide', 'Açılıyor', 'Başlatıcıda'].includes(hit[1]) ? 1 : 2;
@@ -275,21 +347,22 @@ async function detect() {
       if (best === 2) break;
     }
   }
-  if (!game) { const g = libGame(await ps(PS_LIB)); if (g) { game = g; detail = ''; } }
+  // Steam/Epic klasöründen oyun arama (tüm işlemlerin yolunu okur, pahalı): her 3 turda bir, oyun bulunmadıysa
+  if (!game && (detectN % 3 === 1 || lastLibGame)) { const o = await psq('LIB'); const g = libGame(o ?? await ps(PS_LIB)); lastLibGame = g; if (g) { game = g; detail = ''; } }
   const names = new Map(lines.map(l => { const r = csvRow(l); return [(r[0] || '').toLowerCase(), r[1]]; }));
   // Oyunların kendi yerel servislerinden ayrıntı: şampiyon, mod, derece, skor, KDA
   let rich = null;
   try {
     if (game === 'League of Legends' && names.has('leagueclientux.exe')) {
       const pid = names.get('leagueclientux.exe'); if (pid !== lolPid) { lolPid = pid; RICH.resetLol(); }
-      rich = await RICH.lolRich(() => ps(PS_LOL));
+      rich = await RICH.lolRich(async () => (await psq('LOL')) ?? ps(PS_LOL));
     } else if (game === 'Valorant') rich = await RICH.valorantRich();
     else if (game === 'Counter-Strike 2') rich = RICH.cs2Rich();
   } catch { rich = null; }
   // Pencere başlıkları ve Windows medya oturumu (Spotify şarkısı, süresi, Minecraft sürümü)
   let titles = [], media = [];
   if (names.has('spotify.exe') || (!game && names.has('javaw.exe')) || game === 'Minecraft') {
-    for (const l of (await ps(PS_MEDIA)).split(/\r?\n/).filter(Boolean)) {
+    for (const l of ((await psq('MEDIA')) ?? await ps(PS_MEDIA)).split(/\r?\n/).filter(Boolean)) {
       try { const j = JSON.parse(l.slice(1)); if (l[0] === 'M') media.push({ ...j, app: String(j.app || '').toLowerCase() }); else if (l[0] === 'T') titles.push([String(j.p).toLowerCase(), String(j.t || '').trim()]); } catch {}
     }
   }
@@ -326,7 +399,7 @@ async function presenceLoop() {
       lastStatus = st.game ? `Oynuyor: ${st.game}${st.rich?.state ? ' · ' + st.rich.state : ''}` : st.music ? `Dinliyor: ${st.music.title}` : 'Etkinlik: boşta';
     } catch { lastStatus = 'Etkinlik: sunucuya ulaşılamadı'; }
   }
-  setTimeout(presenceLoop, 10000);
+  setTimeout(presenceLoop, currentGame ? 10000 : 15000); // oyun yokken daha seyrek bak
 }
 
 ipcMain.handle('kanka:presenceKey', (e, key) => {
@@ -456,21 +529,33 @@ ipcMain.handle('kanka:openBackups', () => { const d = backupDir(); try { fs.mkdi
 let screenLocked = false;
 // Bas-konuş: pencere odakta değilken de (oyundayken) tuşu yakala. Tek bir gizli PowerShell tuşun durumunu 25 ms'de bir okur,
 // sadece basılma/bırakılma anında satır yazar. Ek yerel modül gerekmez.
-let pttProc = null, pttVk = 0;
+let pttProc = null, pttVk = 0, pttSlow = false;
 function stopPtt() { try { pttProc?.kill(); } catch {} pttProc = null; pttVk = 0; }
-ipcMain.handle('kanka:ptt', (e, vk) => {
+ipcMain.handle('kanka:ptt', (e, vk) => startPtt(vk));
+function startPtt(vk) {
   vk = Number(vk) | 0;
   if (process.platform !== 'win32' || vk < 1 || vk > 254) { stopPtt(); return false; }
   if (pttProc && pttVk === vk) return true;
   stopPtt(); pttVk = vk;
-  const src = `Add-Type -Name K -Namespace KC -MemberDefinition '[DllImport("user32.dll")] public static extern short GetAsyncKeyState(int v);'
+  // Döngü C# olarak derlenip çalışır (PowerShell döngüsü saniyede 40 kez yorumlanınca işlemci yiyordu); derlenemezse eski PowerShell döngüsü
+  const fast = `Add-Type -TypeDefinition @"
+using System; using System.Runtime.InteropServices; using System.Threading;
+public static class KankaPtt {
+  [DllImport("user32.dll")] static extern short GetAsyncKeyState(int v);
+  public static void Run(int vk) { bool p = false; while (true) { bool d = (GetAsyncKeyState(vk) & 0x8000) != 0; if (d != p) { p = d; Console.Out.WriteLine(d ? "1" : "0"); Console.Out.Flush(); } Thread.Sleep(15); } }
+}
+"@
+[KankaPtt]::Run(${vk})`;
+  const slow = `Add-Type -Name K -Namespace KC -MemberDefinition '[DllImport("user32.dll")] public static extern short GetAsyncKeyState(int v);'
 $p = $false; while ($true) { $d = ([KC.K]::GetAsyncKeyState(${vk}) -band 0x8000) -ne 0; if ($d -ne $p) { $p = $d; [Console]::Out.WriteLine([int]$d); [Console]::Out.Flush() }; Start-Sleep -Milliseconds 25 }`;
+  const src = pttSlow ? slow : fast, t0 = Date.now();
   const pr = spawn('powershell', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', enc(src)], { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
   pttProc = pr; let buf = '';
   pr.stdout.on('data', d => { buf += d; let i; while ((i = buf.indexOf('\n')) >= 0) { const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if ((l === '1' || l === '0') && win && !win.isDestroyed()) win.webContents.send('kanka:ptt-state', l === '1'); } });
-  pr.on('exit', () => { if (pttProc === pr) { pttProc = null; pttVk = 0; } });
+  pr.on('exit', code => { if (pttProc !== pr) return; pttProc = null; pttVk = 0;
+    if (!pttSlow && Date.now() - t0 < 15000) { pttSlow = true; startPtt(vk); } }); // C# derlenemedi: eski yönteme geç
   return true;
-});
+}
 // Mesaj bildirimleri ana süreçte gösterilir: sayfanın kendi bildirimi Windows'ta tıklanınca çoğu zaman hiçbir şey yapmıyordu
 // (bildirim nesnesi çöpe gidince tıklama olayı kayboluyor). Burada referansı tutup tıklanınca pencereyi açıp sohbete götürüyoruz.
 const liveNotifs = new Map();
