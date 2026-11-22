@@ -2344,27 +2344,52 @@
   .peffects .pe-pv { width: 100%; height: 48px; border-radius: 10px; display: grid; place-items: center; font-size: 19px; position: relative; overflow: hidden; }
   .pe-tag { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 99px; background: var(--accent); color: var(--on-accent); font-size: 10px; font-weight: 900; letter-spacing: .04em; vertical-align: middle; }
   .pfx-cv { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; border-radius: inherit; }
-  /* İsim Afişleri (Kurucu) */
-  .has-nb { position: relative; overflow: hidden; isolation: isolate; background: #141418 !important; }
-  .mem.has-nb { margin-bottom: 3px; }
-  .room.has-nb { margin-bottom: 2px; }
-  .has-nb > *:not(.nb-bg):not(.nb-art):not(.nb-sheen) { position: relative; z-index: 2; }
-  .has-nb::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 1px solid rgba(255,255,255,.11); pointer-events: none; z-index: 2; }
-  .has-nb .info > span:first-child, .has-nb .nb-dmn { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.85); }
-  .has-nb .st, .has-nb .act-line { color: rgba(255,255,255,.8) !important; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+  /* İsim Afişleri — Ultra Minimal */
+  .has-nb { position: relative; overflow: hidden; isolation: isolate; background: #101014 !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
+  .mem.has-nb { margin-bottom: 5px; }
+  .room.has-nb { margin-bottom: 3px; }
+  .has-nb > *:not(.nb-bg):not(.nb-scrim):not(.nb-art):not(.nb-sheen) { position: relative; z-index: 2; }
+  .has-nb::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 1px solid rgba(255,255,255,.05); pointer-events: none; z-index: 2; transition: border-color .22s ease; }
+  .has-nb:hover::after { border-color: rgba(255,255,255,.14); }
+  .has-nb .info > span:first-child, .has-nb .nb-dmn { color: #f4f4f6; text-shadow: 0 1px 3px rgba(0,0,0,.75); }
+  .has-nb .st, .has-nb .act-line { color: rgba(255,255,255,.68) !important; text-shadow: 0 1px 2px rgba(0,0,0,.65); }
+  .has-nb .act-line b { color: rgba(255,255,255,.88) !important; }
   .nb-dmn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .nb-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: 160% 100%; transition: filter .22s ease; }
-  .nb-art { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .nb-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: 160% 100%; opacity: .28; transition: opacity .26s ease, filter .26s ease; }
+  .nb-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, rgba(13,13,17,.96) 0%, rgba(13,13,17,.84) 56%, rgba(13,13,17,.22) 100%); transition: opacity .24s ease; }
+  .nb-art { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; opacity: .24; -webkit-mask-image: linear-gradient(90deg, transparent 38%, rgba(0,0,0,.55) 74%, #000 100%); mask-image: linear-gradient(90deg, transparent 38%, rgba(0,0,0,.55) 74%, #000 100%); transition: opacity .26s ease, transform .35s cubic-bezier(.16,1,.3,1); }
   .nb-art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .nb-sheen { position: absolute; top: 0; bottom: 0; width: 42%; z-index: 1; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(255,255,255,.17), transparent); transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+  .nb-sheen { position: absolute; top: 0; bottom: 0; width: 42%; z-index: 1; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+  .nb-card .nb-pv .nb-bg { opacity: .88; }
+  .nb-card .nb-pv .nb-scrim { background: linear-gradient(90deg, rgba(13,13,17,.75) 0%, rgba(13,13,17,.35) 55%, rgba(13,13,17,.05) 100%); }
+  .nb-card .nb-pv .nb-art { opacity: .85; }
   @keyframes nbShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
   @keyframes nbFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
   @keyframes nbSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   @keyframes nbSweep { 0% { transform: translateX(-130%) skewX(-18deg); } 100% { transform: translateX(250%) skewX(-18deg); } }
-  .has-nb:hover .nb-sheen, .nb-card:hover .nb-sheen { opacity: 1; animation: nbSweep 1.05s ease forwards; }
-  .has-nb:hover .nb-bg, .nb-card:hover .nb-bg { animation: nbShift 2.8s ease infinite; filter: brightness(1.16); }
+  .has-nb:hover .nb-sheen, .nb-card:hover .nb-sheen { opacity: 1; animation: nbSweep .95s ease forwards; }
+  .has-nb:hover .nb-bg, .nb-card:hover .nb-bg { opacity: .84; animation: nbShift 2.8s ease infinite; filter: brightness(1.08); }
+  .has-nb:hover .nb-art, .nb-card:hover .nb-art { opacity: .88; transform: translateX(-2px); }
   .has-nb:hover .nb-art .mv, .nb-card:hover .nb-art .mv { animation: nbFloat 1.4s ease-in-out infinite; }
   .has-nb:hover .nb-art .sp, .nb-card:hover .nb-art .sp { animation: nbSpin 8s linear infinite; transform-box: fill-box; transform-origin: center; }
+  /* Üye listesi — Ultra Minimal düzen ve hover'da seviye */
+  #members .label { font-size: 10.5px; font-weight: 800; letter-spacing: .09em; opacity: .78; }
+  #members .mem { padding: 7px 10px; border-radius: 12px; gap: 10px; margin-bottom: 3px; border: 1px solid transparent; transition: background-color .18s ease, border-color .18s ease, transform .18s var(--ease-out), box-shadow .18s ease; }
+  #members .mem:not(.has-nb):hover { background: var(--hover); border-color: var(--line); transform: none; }
+  #members .mem.has-nb:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.1); }
+  #members .mem .info { flex: 1; min-width: 0; gap: 1px; }
+  #members .mem .info > span:first-child { display: flex; align-items: center; gap: 5px; min-width: 0; line-height: 1.25; }
+  #members .mem .mem-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #members .mem .ricon { margin-left: 0; display: inline-flex; align-items: center; flex-shrink: 0; font-size: 12.5px; opacity: .86; }
+  #members .mem .ricon .ic { width: 13px; height: 13px; }
+  #members .mem .mchip.memb { margin-left: 0; vertical-align: 0; flex-shrink: 0; opacity: .9; }
+  #members .mem .mchip.memb svg { width: 14px; height: 14px; }
+  #members .mem .botbadge { margin-left: 2px; flex-shrink: 0; }
+  #members .mem .lvl { margin-left: auto; flex-shrink: 0; padding: 1.5px 6px; border-radius: 99px; font-size: 10px; font-weight: 700; letter-spacing: .02em; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.84); box-shadow: none; backdrop-filter: blur(6px); opacity: 0; transform: translateX(4px); pointer-events: none; transition: opacity .16s ease, transform .18s var(--ease-out); }
+  body.light #members .mem:not(.has-nb) .lvl { background: rgba(0,0,0,.06); border-color: rgba(0,0,0,.1); color: var(--ink); }
+  #members .mem:hover .lvl, #members .mem:focus-within .lvl { opacity: 1; transform: translateX(0); }
+  #members .mem .st, #members .mem .act-line { font-size: 11.5px; font-weight: 500; }
+  #members .mem .act-line b { font-weight: 600; }
   .nb-cyberlime .nb-bg { background: linear-gradient(100deg, #090b07 14%, #172306 56%, #3c5905 86%, #a3e600 100%); }
   .nb-embers .nb-bg { background: linear-gradient(100deg, #160c09 10%, #4d1c0c 52%, #b8420c 85%, #ff8224 100%); }
   .nb-magma .nb-bg { background: linear-gradient(105deg, #12090a 15%, #3a1109 55%, #7c2408 88%, #d95d16 100%); }
@@ -2399,15 +2424,16 @@
   @media (prefers-reduced-motion: reduce) { .has-nb:hover .nb-sheen, .has-nb:hover .nb-bg, .has-nb:hover .nb-art .mv, .has-nb:hover .nb-art .sp, .nb-card:hover .nb-sheen, .nb-card:hover .nb-bg, .nb-card:hover .nb-art .mv, .nb-card:hover .nb-art .sp, .has-nb-sp.speaking .nb-sheen, .has-nb-sp.speaking .nb-bg, .has-nb-sp.speaking .nb-art .mv, .has-nb-sp.speaking .nb-art .sp { animation: none !important; } }
   /* Konuşurken (yeşil yandığında) beliren İsim Afişi */
   .vuser.has-nb-sp { position: relative; overflow: hidden; isolation: isolate; }
-  .vuser.has-nb-sp > *:not(.nb-bg):not(.nb-art):not(.nb-sheen) { position: relative; z-index: 2; }
+  .vuser.has-nb-sp > *:not(.nb-bg):not(.nb-scrim):not(.nb-art):not(.nb-sheen) { position: relative; z-index: 2; }
   .vuser.has-nb-sp::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 1px solid transparent; pointer-events: none; z-index: 2; transition: border-color .2s ease; }
-  .has-nb-sp .nb-bg, .has-nb-sp .nb-art { opacity: 0; transition: opacity .22s ease, filter .22s ease; }
+  .has-nb-sp .nb-bg, .has-nb-sp .nb-scrim, .has-nb-sp .nb-art { opacity: 0; transition: opacity .22s ease, filter .22s ease; }
   .has-nb-sp .nb-sheen { opacity: 0; }
-  .vuser.has-nb-sp.speaking { background: #141418 !important; }
+  .vuser.has-nb-sp.speaking { background: #101014 !important; }
   .vuser.has-nb-sp.speaking::after { border-color: color-mix(in srgb, var(--green) 58%, rgba(255,255,255,.16)); }
   .vuser.has-nb-sp.speaking .vn { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.85); }
   .vuser.has-nb-sp.speaking .vic { color: rgba(255,255,255,.88); }
-  .has-nb-sp.speaking .nb-bg, .has-nb-sp.speaking .nb-art { opacity: 1; }
+  .has-nb-sp.speaking .nb-bg, .has-nb-sp.speaking .nb-scrim, .has-nb-sp.speaking .nb-art { opacity: 1; }
+  .has-nb-sp.speaking .nb-scrim { background: linear-gradient(90deg, rgba(13,13,17,.86) 0%, rgba(13,13,17,.58) 54%, rgba(13,13,17,.12) 100%); }
   .has-nb-sp.speaking .nb-bg { animation: nbShift 2.8s ease infinite; filter: brightness(1.14); }
   .has-nb-sp.speaking .nb-sheen { opacity: 1; animation: nbSweep 1.15s ease forwards; }
   .has-nb-sp.speaking .nb-art .mv { animation: nbFloat 1.4s ease-in-out infinite; }
@@ -8167,7 +8193,7 @@ function renderMembers() {
     }
     const o = S.online.has(n), r = roleOf(srv, n), u = S.users[n];
     const rc = roleColor(srv, n), nb = nbOf(u);
-    return `<div class="mem ${o ? '' : 'off'}${nb ? ' has-nb nb-' + nb : ''}" data-n="${esc(n)}">${nb ? nbLayers(nb) : ''}${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}>${styledNameHTML(dn(n), u?.nameStyle)}${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) && !u?.bot ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u?.bot ? botTag(n) : u ? lvTag(u.level) : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
+    return `<div class="mem ${o ? '' : 'off'}${nb ? ' has-nb nb-' + nb : ''}" data-n="${esc(n)}">${nb ? nbLayers(nb) : ''}${av(n, o)}<div class="info"><span class="${r !== 'member' ? 'role-' + r : ''}" ${rc ? `style="color:${rc}"` : ''}><span class="mem-nm">${styledNameHTML(dn(n), u?.nameStyle)}</span>${srv?.owner === n ? `<span class="ricon" title="Sunucu sahibi">${ic('crown')}</span>` : ''}${roleIconOf(srv, n) ? `<span class="ricon">${esc(roleIconOf(srv, n))}</span>` : ''}${timedOutLeft(srv, n) ? ic('hourglass', 'lockic') : ''}${topBadge(u) && !u?.bot ? `<span class="mchip memb" data-badge="${topBadge(u)}" data-pn="${esc(n)}">${medal(topBadge(u), 16)}</span>` : ''}${u?.bot ? botTag(n) : u ? lvTag(u.level) : ''}</span>${actLine(n) || (u?.status ? `<span class="st">${esc(u.status)}</span>` : '')}<span class="mtyp"><span class="typing-dots"><i></i><i></i><i></i></span>yazıyor</span></div></div>`;
   };
   const hoist = (srv?.customRoles || []).filter(r => r.hoist);
   const topHoist = n => roleOf(srv, n) === 'admin' ? null : hoist.find(r => (srv.memberRoles?.[n] || []).includes(r.id));
@@ -8570,7 +8596,7 @@ const NAME_BANNERS = [
   { id: 'goldsilk', cat: 'soft', name: 'Altın İpek', tag: 'ÖZEL', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><path class="mv" d="M130 36 Q180 8 240 26" fill="none" stroke="#fde047" stroke-opacity=".35" stroke-width="2"/><g class="mv" fill="#fef08a"><circle cx="174" cy="16" r="1.5"/><circle cx="204" cy="24" r="2"/><circle cx="224" cy="12" r="1.3"/></g></svg>` },
 ];
 const nbOf = u => u?.nameBanner && NAME_BANNERS.some(x => x.id === u.nameBanner && x.id !== 'none') ? u.nameBanner : null;
-const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `<div class="nb-bg"></div><div class="nb-art">${b.svg}</div><div class="nb-sheen"></div>`; };
+const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `<div class="nb-bg"></div><div class="nb-scrim"></div><div class="nb-art">${b.svg}</div><div class="nb-sheen"></div>`; };
 const NS_FONTS = [
   ['default', 'Varsayılan'], ['serif', 'Klasik'], ['cinzel', 'Kraliyet'], ['rounded', 'Yuvarlak'],
   ['script', 'El Yazısı'], ['pixel', 'Piksel'], ['cyber', 'Siber'], ['mono', 'Kod'],
