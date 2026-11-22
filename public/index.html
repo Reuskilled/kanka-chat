@@ -1061,9 +1061,9 @@
   .act-info span { display: block; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .act-info .elapsed { font-size: 12px; color: var(--accent-2); font-weight: 700; margin-top: 2px; text-decoration: none; }
   .eq { display: inline-flex !important; gap: 2px; align-items: flex-end; height: 10px; margin-left: 4px; vertical-align: -1px; }
-  .eq i { width: 3px; background: #1ed760; border-radius: 2px; animation: eq 1s infinite ease-in-out; }
+  .eq i { width: 3px; height: 10px; transform-origin: bottom; background: #1ed760; border-radius: 2px; animation: eq 1s infinite ease-in-out; }
   .eq i:nth-child(2) { animation-delay: .2s } .eq i:nth-child(3) { animation-delay: .4s }
-  @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 10px; } }
+  @keyframes eq { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
   .gamegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
   .gamegrid button { padding: 9px; border-radius: 12px; background: var(--card); border: 2px solid var(--line); font-weight: 800; font-size: 12.5px; display: flex; align-items: center; gap: 8px; text-align: left; }
   .gamegrid button.on { border-color: var(--accent); background: var(--accent-soft); }
@@ -1110,7 +1110,7 @@
   #callcard { position: fixed; z-index: 80; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; padding: 26px 22px 20px; border-radius: 24px; background: var(--card); border: 1px solid var(--line);
     box-shadow: 0 30px 80px rgba(0,0,0,.6); text-align: center; animation: popIn .3s var(--ease); }
   #callcard .av { width: 88px; height: 88px; font-size: 34px; margin: 0 auto 12px; border: none; animation: ringPulse 1.4s infinite; }
-  @keyframes ringPulse { 0% { box-shadow: 0 0 0 0 rgba(111,211,155,.6); } 70% { box-shadow: 0 0 0 22px rgba(111,211,155,0); } 100% { box-shadow: 0 0 0 0 rgba(111,211,155,0); } }
+  @keyframes ringPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
   #callcard h3 { font-size: 19px; } #callcard p { color: var(--muted); font-weight: 700; margin: 4px 0 18px; }
   #callcard .cbtns { display: flex; justify-content: center; gap: 26px; }
   #callcard .cbtns button { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; }
@@ -1504,7 +1504,7 @@
   .srv.active::before { content: ''; position: absolute; left: -15px; top: 50%; width: 5px; height: 32px; margin-top: -16px; border-radius: 0 4px 4px 0; background: var(--accent); }
   @keyframes pill { from { transform: scaleY(0); } }
   .srv .dot { animation: pulse 2s infinite; }
-  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,.6); } 50% { box-shadow: 0 0 0 5px rgba(255,107,107,0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
   .room { transition: background-color .15s, color .15s, transform .15s var(--ease-out); }
   .room:hover { transform: translateX(3px); }
   .room .ico { transition: background .25s, transform .25s var(--ease); }
@@ -1822,7 +1822,7 @@
   .echip:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-2px); }
   .estate .eacts { margin-top: 18px; }
   .srv.dash.hint { color: var(--accent); animation: discPulse 2.2s ease-out infinite; }
-  @keyframes discPulse { 0% { box-shadow: 0 0 0 0 rgba(255,138,76,.55); } 70%, 100% { box-shadow: 0 0 0 12px rgba(255,138,76,0); } }
+  @keyframes discPulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
   @media (max-width: 560px) { .avgrid { grid-template-columns: repeat(4, 1fr); } .ocards { grid-template-columns: 1fr; } .onbw .osec, .onbw .ofoot { padding-left: 18px; padding-right: 18px; } }
   @media (prefers-reduced-motion: reduce) { .onbw .ologo, .estate .eart .disc, .estate .eart .wv, .estate .eart .orb, .srv.dash.hint { animation: none; } }
   /* --- rehber v2 --- */
@@ -2590,7 +2590,7 @@
   @keyframes abIn { from { opacity: 0; transform: translateY(6px); } }
   .beta-pill { display: inline-flex; align-items: center; gap: 8px; margin: -2px auto 12px; padding: 6px 12px 6px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 800; color: #ffcf9e; background: rgba(255,138,76,.12); border: 1px solid rgba(255,138,76,.32); }
   .beta-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(255,138,76,.6); animation: bpulse 1.8s infinite; }
-  @keyframes bpulse { 70% { box-shadow: 0 0 0 7px rgba(255,138,76,0); } 100% { box-shadow: 0 0 0 0 rgba(255,138,76,0); } }
+  @keyframes bpulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
   .afield { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); margin-bottom: 10px; transition: border-color .15s, box-shadow .15s; text-align: left; }
   #agegate { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 20px; background: radial-gradient(ellipse at top, #2a1a12, var(--bg, #120c09) 70%); overflow-y: auto; }
   #agegate .ag-card { width: 100%; max-width: 420px; padding: 30px 26px 22px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); text-align: center; box-shadow: 0 30px 80px #0008; }
@@ -3333,7 +3333,7 @@
   .vb-chat { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 5px 10px; border-radius: 9px; background: rgba(255,138,76,.14); color: var(--accent); font-weight: 800; font-size: 12px; } .vb-chat .ic { width: 14px; height: 14px; } .vb-chat:hover { background: var(--accent); color: #fff; }
   #callbar { display: flex; align-items: center; gap: 12px; margin: 10px 20px 0; padding: 10px 14px; border-radius: 16px; background: linear-gradient(135deg, rgba(63,207,142,.16), rgba(63,207,142,.04)); border: 1px solid rgba(63,207,142,.4); }
   #callbar .cb-pulse { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: #3fcf8e; color: #0b1a12; animation: cbp 1.4s infinite; flex-shrink: 0; } #callbar .cb-pulse .ic { width: 18px; height: 18px; }
-  @keyframes cbp { 0% { box-shadow: 0 0 0 0 rgba(63,207,142,.55); } 100% { box-shadow: 0 0 0 14px rgba(63,207,142,0); } }
+  @keyframes cbp { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(.92); } }
   #callbar .cb-avs { display: flex; } #callbar .cb-avs .av { width: 28px; height: 28px; font-size: 11px; margin-left: -8px; border: 2px solid var(--panel); } #callbar .cb-avs .av:first-child { margin-left: 0; }
   #callbar .cb-t { flex: 1; min-width: 0; display: flex; flex-direction: column; } #callbar .cb-t small { color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #callbar .primary { width: auto; padding: 9px 18px; border-radius: 11px; background: #3fcf8e; color: #0b1a12; display: inline-flex; gap: 6px; align-items: center; font-weight: 900; } #callbar .primary .ic { width: 16px; height: 16px; }
@@ -3546,7 +3546,7 @@
     #modal .box.welcome #wl-ok { position: sticky; bottom: 12px; z-index: 2; box-shadow: 0 -12px 24px var(--panel); }
   }
   #vdock { display: none; }
-  @keyframes vdIn { from { opacity: 0; transform: translateY(16px); } } @keyframes vdPulse { 50% { box-shadow: 0 0 0 7px rgba(111,211,155,0); } }
+  @keyframes vdIn { from { opacity: 0; transform: translateY(16px); } } @keyframes vdPulse { 50% { opacity: .5; } }
   .row .col { min-width: 0; } .mtch { max-width: 100%; }
 @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
     /* Ayarlar: telefonda liste → sayfa (iOS / Discord gibi) */
@@ -3796,6 +3796,18 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .ctx-vol { padding: 8px 12px 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
   .ctx-vol label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; margin-bottom: 8px; } .ctx-vol label .ic { width: 16px; height: 16px; } .ctx-vol label b { margin-left: auto; color: var(--accent); font-size: 12px; }
   .ctx-vol input { width: 100%; }
+
+  /* ---------- Performans ----------
+     1) Uygulama arka plandayken (oyundayken, simge durumunda) hiçbir animasyon çalışmaz: işlemci ve ekran kartı boşa çizim yapmaz.
+     2) Listelerde (üyeler, mesajlar, sohbet listesi, sunucu çubuğu) rozet ve isim efektleri sadece üstüne gelince oynar (Discord gibi);
+        bunlar SVG / arka plan / filtre animasyonu olduğu için her karede işlemcide yeniden çiziliyordu. Profil kartlarında her zaman oynar. */
+  body.calm *, body.calm *::before, body.calm *::after { animation-play-state: paused !important; }
+  :is(#members, #messages, #side-list, #rail, #stage, #thread) :is(.kb-spin, .kb-spin-slow, .kb-radar, .kb-pulse, .kb-sway-l, .kb-sway-r, .kb-float1, .kb-float2, .kb-flow, .kb-twinkle1, .kb-twinkle2, .kb-blink, .kb-brk-l, .kb-brk-r, .kb-orb, .dn-st) { animation-play-state: paused; }
+  :is(#members .mem, #messages .row, #side-list .room, #rail .srv, #stage .tile, #thread .row):hover :is(.kb-spin, .kb-spin-slow, .kb-radar, .kb-pulse, .kb-sway-l, .kb-sway-r, .kb-float1, .kb-float2, .kb-flow, .kb-twinkle1, .kb-twinkle2, .kb-blink, .kb-brk-l, .kb-brk-r, .kb-orb, .dn-st) { animation-play-state: running; }
+  body.lowfx *, body.lowfx *::before, body.lowfx *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; }
+  body.lowfx { --blur: 0px; } body.lowfx * { backdrop-filter: none !important; }
+  /* Konuşma halkası anında yanıp sönsün: her konuşma başlangıcında gölge geçişi (ana iş parçacığında çizilir) saniyede onlarca kez yeniden hesaplatıyordu */
+  .vuser .av, .vuser, #dmcall .av { transition: none !important; } .tile { transition-property: none !important; }
 </style>
 </head>
 <body>
@@ -4737,6 +4749,7 @@ function showSettings(tab) {
       <div class="st-field"><label>Vurgu rengi</label><div class="swatches">${Object.entries(ACCENTS).map(([k, a]) => `<button data-acc="${k}" class="${(store.get('kanka-accent') || 'asit') === k ? 'on' : ''}" style="background:linear-gradient(135deg,${a[2]},${a[1]})" title="${k}" aria-label="Vurgu ${k}"></button>`).join('')}</div></div>
       <div class="pc-sec" style="margin-top:18px"><label class="switch" hidden>Yeni arayüz<input type="checkbox" id="p-ui2" ${uiNew() ? 'checked' : ''}></label>
       <label class="switch">Bildirim sesleri<input type="checkbox" id="p-snd" ${soundOn() ? 'checked' : ''}></label>
+      <label class="switch">Animasyonları azalt (daha az işlemci, oyunda daha yüksek FPS)<input type="checkbox" id="p-lowfx" ${store.get('kanka-lowfx') === '1' ? 'checked' : ''}></label>
       <label class="switch">:) ;) :D gibi ifadeleri emojiye çevir<input type="checkbox" id="p-emo" ${emoOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada tuşa basılı tutunca konuşursun)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label>
       <div class="st-row" style="display:flex;align-items:center;gap:10px;margin-top:6px"><span>Bas-konuş tuşu</span><button class="btns2" id="p-pttkey">${esc(pttKeyName())}</button><small class="muted">${window.kankaDesktop ? 'Uygulama arka plandayken (oyunda) da çalışır' : 'Tarayıcıda sadece Kanka sekmesi açıkken çalışır'}</small></div></div></div>`,
@@ -4868,6 +4881,7 @@ function showSettings(tab) {
       $('#p-ui2').onchange = e => { store.set('kanka-ui', e.target.checked ? null : '1'); applyUI(); toast(e.target.checked ? 'Yeni arayüz açık. Beğenmezsen buradan kapatabilirsin.' : 'Eski arayüze dönüldü'); };
       $('#p-emo').onchange = e => { store.set('kanka-emoticon', e.target.checked ? null : 'off'); toast(e.target.checked ? 'İfadeler emojiye çevrilecek 🙂' : 'İfadeler olduğu gibi gönderilecek :)'); };
       $('#p-snd').onchange = e => { store.set('kanka-sound', e.target.checked ? null : 'off'); if (e.target.checked) playSound('mention'); };
+      $('#p-lowfx').onchange = e => { store.set('kanka-lowfx', e.target.checked ? '1' : null); document.body.classList.toggle('lowfx', lowFx()); };
       $('#p-ptt').onchange = e => { store.set('kanka-ptt', e.target.checked ? 'on' : null); applyMute(); };
       $('#p-pttkey').onclick = e => { // sıradaki tuşa ya da farenin yan tuşuna basınca o tuş olur; Esc vazgeçer
         const b = e.currentTarget; b.textContent = 'Bir tuşa bas…'; pttPicking = true;
@@ -11089,6 +11103,34 @@ function showSchedule() {
   };
   $('#mx').onclick = closeModal;
 }
+
+// ================= Performans: arka planda çizim yapma, hareketli avatarlar üstüne gelince oynasın =================
+{ const calm = () => document.body.classList.toggle('calm', document.hidden || !document.hasFocus());
+  addEventListener('blur', calm); addEventListener('focus', calm); document.addEventListener('visibilitychange', calm); calm(); }
+// Hareketli (GIF) avatar ve sunucu simgeleri listelerde durağan görünür, satırın üstüne gelince oynar.
+// Yüzlerce GIF'in sürekli kare çözmesi işlemciyi en çok yoran şeylerden biriydi.
+const gifStill = new Map(); // gif adresi -> ilk karenin resmi
+function stillOf(img) {
+  const src = img.getAttribute('src'); if (gifStill.has(src)) return gifStill.get(src);
+  try { const w = img.naturalWidth, h = img.naturalHeight; if (!w || !h) return null; const c = document.createElement('canvas'), k = Math.min(1, 128 / Math.max(w, h)); c.width = Math.round(w * k); c.height = Math.round(h * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); const d = c.toDataURL('image/png'); gifStill.set(src, d); return d; } catch { gifStill.set(src, null); return null; } // başka siteden gelen resim: dokunma
+}
+function freezeGifs(root) {
+  root.querySelectorAll('img[src$=".gif"]:not([data-gif]), img[src*=".gif?"]:not([data-gif])').forEach(img => {
+    if (!img.closest('.av, .srv, .gav, .tav')) return;
+    const go = () => { const d = stillOf(img); if (d) { img.dataset.gif = img.getAttribute('src'); img.src = d; } else img.dataset.gif = ''; };
+    img.complete && img.naturalWidth ? go() : img.addEventListener('load', go, { once: true });
+  });
+}
+{ let t = null; const roots = ['#members', '#messages', '#side-list', '#rail', '#stage', '#thread'];
+  const run = () => { t = null; if (document.body.classList.contains('nofreeze')) return; for (const r of roots) { const el = $(r); if (el) freezeGifs(el); } };
+  new MutationObserver(() => { t ||= setTimeout(run, 120); }).observe(document.body, { childList: true, subtree: true });
+  const ROW = '.mem, .row, .room, .srv, .tile, .frow, .yv-act';
+  document.addEventListener('mouseover', e => { const r = e.target.closest?.(ROW); if (!r) return; r.querySelectorAll('img[data-gif]:not([data-gif=""])').forEach(i => { if (!i.dataset.st) { i.dataset.st = i.src; i.src = i.dataset.gif; } }); });
+  document.addEventListener('mouseout', e => { const r = e.target.closest?.(ROW); if (!r || r.contains(e.relatedTarget)) return; r.querySelectorAll('img[data-gif][data-st]').forEach(i => { i.src = i.dataset.st; delete i.dataset.st; }); }); }
+// "Animasyonları azalt" ayarı: tüm hareketler ve bulanık arka planlar kapanır (zayıf bilgisayarlar ve oyun sırasında)
+const lowFx = () => store.get('kanka-lowfx') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.body.classList.toggle('lowfx', lowFx());
 
 // ================= Güncelleme uyarıları =================
 let myBuild = null, updKind = null;
