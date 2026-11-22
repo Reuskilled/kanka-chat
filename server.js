@@ -1516,7 +1516,7 @@ const meets = (st, r) => st.members >= r.members && st.days >= r.days && (!r.act
 const emojiLimit = s => isStar(s) || s.id === 's1' ? 200 : srvBadges(s).some(b => b.id === 'yukselen') ? 100 : 50;
 function srvBadges(s) {
   const b = [];
-  if (s.id === 's1') b.push({ id: 'resmi', since: s.createdAt || null });
+  if (s.id === 's1' || (db.devServer && s.id === db.devServer)) b.push({ id: 'resmi', since: s.createdAt || null });
   for (const id of ['dogrulanmis', 'partner', 'yildiz']) if (s.badges?.[id]) b.push({ id, by: s.badges[id].by, since: s.badges[id].time });
   const age = Date.now() - (s.createdAt || 0);
   if (s.id !== 's1' && membersOf(s).length >= 15 && (!s.createdAt || age > 7 * 864e5)) b.push({ id: 'topluluk' });
@@ -4735,7 +4735,8 @@ io.on('connection', socket => {
   const myApp = (aid, cb) => { const a = db.apps?.[aid]; if (!a || (a.owner !== me && !siteAdmin(me))) { cb({ error: 'Uygulama bulunamadı' }); return null; } return a; };
   socket.on('appMine', (_ = {}, cb = () => {}) => {
     if (!me) return cb({ error: 'Giriş yap' });
-    cb({ ok: true, izin: devOk(me), basvuru: db.devApps?.[me]?.status || null, max: APP_MAX, esik: REACH_MAX, apps: Object.values(db.apps || {}).filter(a => a.owner === me).map(a => appView(a, true)), devStats: db.users[me].devStats || { servers: 0, cmds: 0 }, hedef: DEV_GOAL, rozet: !!db.users[me].devEarned });
+    const devS = db.devServer && db.servers.find(x => x.id === db.devServer);
+    cb({ ok: true, topluluk: devS ? { davet: devS.invite, id: devS.id, uye: devS.members.includes(me) } : null, izin: devOk(me), basvuru: db.devApps?.[me]?.status || null, max: APP_MAX, esik: REACH_MAX, apps: Object.values(db.apps || {}).filter(a => a.owner === me).map(a => appView(a, true)), devStats: db.users[me].devStats || { servers: 0, cmds: 0 }, hedef: DEV_GOAL, rozet: !!db.users[me].devEarned });
   });
   socket.on('appCreate', ({ name, desc } = {}, cb = () => {}) => {
     if (!me) return cb({ error: 'Giriş yap' });
@@ -4883,6 +4884,7 @@ io.on('connection', socket => {
     else if (action === 'reject') { if (a.verifyReq) Object.assign(a.verifyReq, { status: 'rejected', by: me, decidedAt: Date.now(), note });
       botDm(a.owner, { title: `${a.bot} doğrulama isteği`, tone: 'warn', text: `şimdilik onaylanmadı.${note ? ' sebep: ' + note : ''} düzeltip tekrar isteyebilirsin.` }); staffLog(me, 'Bot doğrulamasını reddetti', a.bot, note); }
     else if (action === 'unverify') { a.verified = null; a.contentOk = false; staffLog(me, 'Bot doğrulamasını kaldırdı', a.bot, note); }
+    if (['verify', 'unverify', 'kill', 'unkill'].includes(action)) devRoleSync(a.owner);
     else if (action === 'kill') { a.killed = { at: Date.now(), by: me, reason: note }; for (const c of botConnsOf(a.id)) c.ws.close(4014, 'Bot durduruldu'); botDm(a.owner, { title: `⛔ ${a.bot} durduruldu`, tone: 'danger', text: `botun Kanka ekibi tarafından durduruldu.${note ? ' sebep: ' + note : ''} itiraz için kankahq1@gmail.com` }); staffLog(me, 'Botu durdurdu', a.bot, note); }
     else if (action === 'unkill') { a.killed = null; staffLog(me, 'Botu yeniden açtı', a.bot); }
     else return cb({ error: 'Geçersiz işlem' });
@@ -5694,7 +5696,7 @@ io.on('connection', socket => {
     inviteGuard('u:' + me, !!s); inviteGuard('ip:' + ip, !!s);
     if (!s) return cb({ error: 'Davet kodu geçersiz' });
     if (s.bans?.[me]) return cb({ error: 'Bu sunucudan yasaklandın' });
-    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); const ar = autoRoleOnJoin(s, me); save(); pushServers(s.members); botWelcome(s, me, ar); botMember(s, me, 'join'); }
+    if (!s.public && !s.members.includes(me)) { s.members.push(me); (s.joinedAt ||= {})[me] = Date.now(); const ar = autoRoleOnJoin(s, me); if (s.id === db.devServer) devRoleSync(me); save(); pushServers(s.members); botWelcome(s, me, ar); botMember(s, me, 'join'); }
     cb(serverView(s, me));
   });
 
@@ -5791,5 +5793,56 @@ setInterval(() => {
   save();
 }, process.env.SCHED_MS ? +process.env.SCHED_MS : 10e3);
 
+// ---------- Kanka Geliştiriciler: bot yazanların resmi sunucusu ----------
+// İlk açılışta bir kez kurulur (sahibi Kanka HQ sahibi). Sonra her şey normal sunucu gibi yönetilir; silinirse yeniden kurulmaz.
+const DEV_ROLES = { ekip: 'Kanka Ekibi', dogru: 'Doğrulanmış Geliştirici', gel: 'Geliştirici' };
+function ensureDevServer() {
+  if (db.devServer) return;
+  const owner = db.servers.find(x => x.id === 's1')?.owner; if (!owner || !db.users[owner]) return;
+  const team = [...new Set([owner, ...coOwnerNames()])].filter(n => db.users[n]);
+  const s = {
+    id: id(), name: 'Kanka Geliştiriciler', icon: 'K', iconImg: '/marka/gelistirici-sunucu.svg', bannerColor: '#f2652f', owner, members: team,
+    joinedAt: Object.fromEntries(team.map(n => [n, Date.now()])), createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {},
+    invite: newInviteCode(), channels: [], template: 'gelistirici', discoverable: true, category: 'Yazılım',
+    description: "Kanka için bot yazanların resmi sunucusu. API duyuruları, SDK desteği, yardım ve bot vitrini.",
+  };
+  s.customRoles.push({ id: id(), name: DEV_ROLES.ekip, color: '#f2652f', perms: [...MOD, 'manageRoles'], hoist: true },
+    { id: id(), name: DEV_ROLES.dogru, color: '#4cc38a', perms: [], hoist: true }, { id: id(), name: DEV_ROLES.gel, color: '#4aa8ff', perms: [], hoist: false });
+  const ekip = s.customRoles[0].id; for (const n of team) s.memberRoles[n] = [ekip];
+  const CH = [
+    { n: 'hoş-geldin', cat: 'Bilgi', ro: 1, topic: 'Buradan başla: kurallar ve ilk adımlar' },
+    { n: 'duyurular', cat: 'Bilgi', ro: 1, topic: 'API değişiklikleri, yeni özellikler, SDK sürümleri' },
+    { n: 'değişiklik-günlüğü', cat: 'Bilgi', ro: 1, topic: 'Her API değişikliği, tarihiyle' },
+    { n: 'genel', cat: 'Topluluk', topic: 'Geliştiricilerin genel sohbeti' },
+    { n: 'yardım', cat: 'Topluluk', forum: 1, topic: 'Her soru ayrı başlık: kodunu ve hata mesajını ekle' },
+    { n: 'botunu-tanıt', cat: 'Topluluk', forum: 1, topic: 'Yaptığın botu tanıt, ekleme linkini paylaş' },
+    { n: 'fikirler', cat: 'Topluluk', forum: 1, topic: 'API ve SDK için istekler' },
+    { n: 'kanka-js', cat: 'Teknik', topic: 'JavaScript SDK (kanka.js)' },
+    { n: 'kanka-py', cat: 'Teknik', topic: 'Python SDK (kanka.py)' },
+    { n: 'test-alanı', cat: 'Teknik', topic: 'Botlarını burada dene, spam serbest' },
+    { n: 'hata-bildirimi', cat: 'Teknik', topic: 'API ya da SDK hatası mı buldun? Adımları yaz' },
+    { n: 'Kod Sohbeti', cat: 'Sesli', v: 1 }, { n: 'Birlikte Kodlayalım', cat: 'Sesli', v: 1 },
+  ];
+  for (const c of CH) { const ch = { id: id(), name: c.n, type: c.v ? 'voice' : c.forum ? 'forum' : 'text' }; if (c.cat) ch.category = c.cat; if (c.ro) ch.readonly = true; if (c.topic) ch.topic = c.topic; if (/^(duyurular|değişiklik-günlüğü)$/.test(c.n)) ch.news = true; s.channels.push(ch); }
+  migrateCats(s);
+  const chId = n => s.channels.find(c => c.name === n)?.id;
+  s.welcome = { enabled: true, message: 'Kanka Geliştiriciler\'e hoş geldin! Bot yazmaya yeni başlıyorsan belgelerle başla: kankahq.com/gelistirici',
+    rules: ['Saygılı ol; herkes bir yerden başladı.', 'Soru sorarken kodunu ve tam hata mesajını ekle.', 'Token, şifre ya da anahtar paylaşma. Paylaştıysan hemen yenile.', 'Reklam ve bot tanıtımı sadece #botunu-tanıt kanalında.', 'Bot denemelerini #test-alanı kanalında yap.'],
+    channels: [[chId('duyurular'), 'API ve SDK duyuruları'], [chId('yardım'), 'Takıldığın yeri sor'], [chId('botunu-tanıt'), 'Botunu göster']].filter(x => x[0]).map(([id, desc]) => ({ id, desc })) };
+  db.servers.push(s); db.devServer = s.id;
+  for (const a of Object.values(db.apps || {})) devRoleSync(a.owner);
+  save(); console.log('Kanka Geliştiriciler sunucusu kuruldu:', s.id);
+}
+// Botu doğrulanmış geliştiricilere sunucuda "Doğrulanmış Geliştirici" rolü (doğrulama kalkarsa rol de kalkar)
+function devRoleSync(name) {
+  const s = db.devServer && db.servers.find(x => x.id === db.devServer); if (!s || !name || !s.members.includes(name)) return;
+  const r = s.customRoles.find(x => x.name === DEV_ROLES.dogru); if (!r) return;
+  const has = Object.values(db.apps || {}).some(a => a.owner === name && a.verified && !a.killed);
+  const cur = s.memberRoles[name] || [], on = cur.includes(r.id);
+  if (has && !on) s.memberRoles[name] = [...cur, r.id]; else if (!has && on) s.memberRoles[name] = cur.filter(x => x !== r.id); else return;
+  try { pushServers([name]); } catch {}
+}
+app.get('/gelistirici-topluluk', (req, res) => { const s = db.devServer && db.servers.find(x => x.id === db.devServer); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/gelistirici'); });
+ensureDevServer();
 migrateUids();
 server.listen(PORT, () => console.log(`Kanka Chat çalışıyor: http://localhost:${PORT}`));
