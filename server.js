@@ -3348,7 +3348,7 @@ function poolRack() {
   const cornerA = solids.pop(), cornerB = stripes.pop(), rest = shuffle([...solids, ...stripes]);
   for (let row = 0; row < 5; row++) for (let k = 0; k <= row; k++) {
     const n = row === 2 && k === 1 ? 8 : row === 4 && k === 0 ? cornerA : row === 4 && k === 4 ? cornerB : rest.pop();
-    b.push({ n, x: W * 0.75 + row * dx, y: H / 2 + (k - row / 2) * dy, in: false });
+    b.push({ n, x: W * 0.75 + row * dx + (Math.random() - 0.5) * 0.0006, y: H / 2 + (k - row / 2) * dy + (Math.random() - 0.5) * 0.0006, in: false }); // gerçek diziliş gibi milimetrik boşluklar: açılışta toplar daha iyi dağılır
   }
   return b.sort((a, c) => a.n - c.n);
 }
