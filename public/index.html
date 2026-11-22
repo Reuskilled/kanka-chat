@@ -10886,8 +10886,18 @@ function showUpdate(kind) {
 }
 $('#upd-go').onclick = () => {
   if (updKind === 'app') { $('#upd-go').textContent = 'Kuruluyor…'; window.kankaDesktop.installUpdate(); }
-  else location.reload();
+  else safeReload();
 };
+// Yenilemeden önce sunucunun gerçekten açık olduğuna bak: güncelleme sırasında birkaç saniye kapalıyken yenilenirse boş/karanlık ekranda kalınıyordu
+async function safeReload() {
+  const btn = $('#upd-go'); if (btn) { btn.disabled = true; btn.textContent = 'Bekle…'; }
+  for (let i = 0; i < 30; i++) {
+    try { const r = await fetch('/api/surum', { cache: 'no-store' }); if (r.ok) return location.reload(); } catch {}
+    if (btn) btn.textContent = 'Sunucu açılıyor…';
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Yenile'; } toast('Sunucuya ulaşılamadı, birazdan tekrar dene');
+}
 $('#upd-later').onclick = () => { $('#updbar').classList.remove('on'); const k = updKind; updKind = null; setTimeout(() => k === 'web' && myBuild && showUpdate('web'), 30 * 60e3); };
 socket.on('build', b => { if (!b) return; if (myBuild === null) myBuild = b; else if (b !== myBuild) showUpdate('web'); });
 window.kankaDesktop?.onUpdateReady?.(() => showUpdate('app'));
