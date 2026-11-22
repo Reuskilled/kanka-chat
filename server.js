@@ -1587,9 +1587,12 @@ const isAdmin = (s, n) => s.owner === n || roleOf(s, n) === 'admin';
 const isMod = (s, n) => isAdmin(s, n) || roleOf(s, n) === 'mod' || can(s, n, 'manageChannels');
 const serverOf = chId => chId && !isPrivateChat(chId) ? findChannel(chId)?.s : null;
 const UPLOAD_RE = /^\/uploads\/[a-f0-9]+\.(png|jpe?g|gif|webp)$/;
-// Hazır rakun avatarları (public/avatar)
-const PRESET_AV = ['klasik', 'kulaklik', 'gunes-gozlugu', 'tac', 'kep', 'parti', 'bere', 'papyon', 'bandana', 'astronot', 'sihirbaz', 'kalp'].map(k => `/avatar/rakun-${k}.svg`);
+// Hazır profil avatarları (public/avatar) — eski rakun seti kaldırıldı, yeni set hazırlanıyor
+const PRESET_AV = [];
+const pickPresetAv = () => PRESET_AV.length ? PRESET_AV[crypto.randomInt(PRESET_AV.length)] : null;
 const AVATAR_OK = a => UPLOAD_RE.test(a) || PRESET_AV.includes(a);
+// Eski kaldırılan rakun avatarlarını kullanan hesapları temiz baş harf avatarına döndür
+for (const u of Object.values(db.users || {})) { if (typeof u?.avatar === 'string' && u.avatar.startsWith('/avatar/rakun-')) u.avatar = null; }
 // Başlangıç rehberi: bu tarihten önce açılmış hesaplara gösterilmez
 const ONB_SINCE = Date.parse('2026-11-11T15:00:00Z');
 const onbPush = (name, ob) => io.to('user:' + name).emit('onb', ob);
@@ -3356,7 +3359,7 @@ io.on('connection', socket => {
     const w = limited('reg|' + ip, 5, 3600e3);
     if (w) return cb({ error: `Bu bağlantıdan çok fazla hesap açıldı. ${Math.ceil(w / 60)} dakika sonra tekrar dene.` });
     const salt = crypto.randomBytes(16).toString('hex');
-    db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], onb: {} }; uidOf(db.users[name]);
+    db.users[name] = { name, email, terms: { v: 1, at: Date.now() }, color: COLORS[Object.keys(db.users).length % COLORS.length], salt, hash: hashPw(password, salt), xp: 0, createdAt: Date.now(), avatar: pickPresetAv(), onb: {} }; uidOf(db.users[name]);
     const sr = cleanSrc(src); if (sr) db.users[name].src = sr;
     db.users[name].dob = String(dob); db.users[name].birthday = String(dob).slice(5); if (age < 18) db.users[name].guardian = { at: Date.now(), v: 1, where: 'kayit' }; // tam tarih gizli tutulur; profilde sadece gün-ay (istersen kaldırabilirsin)
     { const iv = clean(invite, 40).split(/[=/]/).pop(), sv = iv && db.servers.find(x => x.invite === iv); if (sv) db.users[name].via = { srv: sv.id, name: clean(sv.name, 40) }; else if (gate.code) db.users[name].via = { code: 1 }; } // hangi reklamdan / kelimeden geldi (ilk ziyaret)
@@ -4709,7 +4712,7 @@ io.on('connection', socket => {
     if (!NAME_RE.test(name)) return cb({ error: 'Bot adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin', field: 'name' });
     if (nameTaken(name) || /kanka|claude|admin|yönetim|yonetim|destek|resmi|official/i.test(name)) return cb({ error: 'Bu ad kullanılamaz ya da alınmış', field: 'name' });
     const aid = id() + id(), token = crypto.randomBytes(30).toString('base64url');
-    db.users[name] = { name, bot: { app: aid }, color: COLORS[crypto.randomInt(COLORS.length)], xp: 0, createdAt: Date.now(), avatar: PRESET_AV[crypto.randomInt(PRESET_AV.length)], displayName: name, bio: clean(desc, 190) }; uidOf(db.users[name]);
+    db.users[name] = { name, bot: { app: aid }, color: COLORS[crypto.randomInt(COLORS.length)], xp: 0, createdAt: Date.now(), avatar: pickPresetAv(), displayName: name, bio: clean(desc, 190) }; uidOf(db.users[name]);
     const a = (db.apps ||= {})[aid] = { id: aid, owner: me, bot: name, name, desc: clean(desc, 400), createdAt: Date.now(), tokenH: appTokH(token), tokenAt: Date.now(), secret: crypto.randomBytes(24).toString('hex'), cmds: [], dmOk: true, stats: {} };
     if (!mine.length) { // ilk botla birlikte bir deneme sunucusu: bot içinde hazır
       const s = { id: id(), name: `${name} deneme`, icon: '🤖', owner: me, members: [me], joinedAt: { [me]: Date.now() }, createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {}, invite: newInviteCode(), template: 'bos', botTest: aid,
@@ -4723,7 +4726,7 @@ io.on('connection', socket => {
     const a = myApp(aid, cb); if (!a) return; const u = db.users[a.bot];
     if (desc !== undefined) { a.desc = clean(desc, 400); u.bio = clean(desc, 190); }
     if (displayName !== undefined) u.displayName = clean(displayName, 32) || a.bot;
-    if (avatar !== undefined && (avatar === null || UPLOAD_RE.test(avatar) || /^\/dosya\/[a-f0-9]{24}(\/[^?#\s]*)?$/.test(avatar) || PRESET_AV.includes(avatar))) u.avatar = avatar || PRESET_AV[0];
+    if (avatar !== undefined && (avatar === null || UPLOAD_RE.test(avatar) || /^\/dosya\/[a-f0-9]{24}(\/[^?#\s]*)?$/.test(avatar) || PRESET_AV.includes(avatar))) u.avatar = avatar || PRESET_AV[0] || null;
     if (privacy !== undefined) a.privacy = /^https:\/\/\S{4,300}$/.test(privacy || '') ? privacy : '';
     if (dmOk !== undefined) a.dmOk = !!dmOk;
     if (listed !== undefined) a.listed = !!listed;

@@ -5092,7 +5092,7 @@ function showSettings(tab) {
       root.innerHTML = `<div class="pf-card">
           <div class="pf-card-h"><b>Temel Kimlik</b><small>Profilin ve mesajlarda görünen bilgilerin</small></div>
           <div class="st-field st-2"><div><label>Görünen ad</label><input class="field" id="st-dn" maxlength="32" placeholder="${esc(S.me)}" value="${esc(draft.displayName)}" style="margin:0"></div><div><label>Zamir</label><input class="field" id="st-pr" maxlength="20" placeholder="Örn. o/onun" value="${esc(draft.pronouns)}" style="margin:0"></div></div>
-          <div class="st-field"><label>Profil fotoğrafı</label><div class="st-av"><div class="av" id="st-av"></div><button type="button" id="st-up">${ic('camera')}<span>Yükle</span></button>${draft.avatar ? '<button type="button" id="st-rm">Kaldır</button>' : ''}</div><div class="avgrid sm" id="st-presets">${(S.presets || []).map(a => `<button type="button" class="avopt ${draft.avatar === a ? 'on' : ''}" data-av="${a}" aria-label="Rakun avatarı"><img src="${a}" alt=""></button>`).join('')}</div></div>
+          <div class="st-field"><label>Profil fotoğrafı</label><div class="st-av"><div class="av" id="st-av"></div><button type="button" id="st-up">${ic('camera')}<span>Yükle</span></button>${draft.avatar ? '<button type="button" id="st-rm">Kaldır</button>' : ''}</div>${(S.presets || []).length ? `<div class="avgrid sm" id="st-presets">${S.presets.map(a => `<button type="button" class="avopt ${draft.avatar === a ? 'on' : ''}" data-av="${a}" aria-label="Hazır avatar"><img src="${a}" alt=""></button>`).join('')}</div>` : ''}</div>
           <div class="st-field"><label>Avatar ve isim rengi</label><div class="swatches" id="sw-color"></div></div>
         </div>
         <div class="pf-card">
@@ -5108,7 +5108,7 @@ function showSettings(tab) {
       avEl();
       $('#st-up').onclick = () => readImage(url => { draft.avatar = url; renderProfTab(); preview(); }, 512);
       if ($('#st-rm')) $('#st-rm').onclick = () => { draft.avatar = null; renderProfTab(); preview(); };
-      $('#st-presets').querySelectorAll('[data-av]').forEach(b => b.onclick = () => { draft.avatar = b.dataset.av; renderProfTab(); preview(); });
+      $('#st-presets')?.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { draft.avatar = b.dataset.av; renderProfTab(); preview(); });
       swatches('#sw-color', 'color', PALETTE, avEl);
       $('#st-dn').oninput = e => { draft.displayName = e.target.value; preview(); };
       $('#st-pr').oninput = e => { draft.pronouns = e.target.value; preview(); };
@@ -11820,12 +11820,12 @@ function onbRestart() {
 // --- İlk giriş karşılaması + avatar seçimi ---
 function showOnbWelcome() {
   const presets = S.presets || [], cur = S.users[S.me]?.avatar;
-  let pick = presets.includes(cur) ? cur : cur || presets[0];
+  let pick = presets.includes(cur) ? cur : cur || presets[0] || '/icon-192.png';
   const sparks = Array.from({ length: 9 }, (_, i) => `<i class="spark" style="left:${8 + i * 10.5}%;top:${12 + (i * 37) % 70}%;animation-delay:${-i * .4}s"></i>`).join('');
   const draw = () => {
     modal(`<div class="ohero">${sparks}<div class="ologo"><img src="${esc(pick)}" alt=""></div><h2>Hoş geldin, <em>${esc(S.me)}</em>!</h2><p>Seni aramızda görmek güzel. Bir dakikada her şeyi hazırlayalım.</p></div>
       <div class="osec"><h4>Avatarını seç <button id="ow-up">${ic('camera')} Kendi fotoğrafını yükle</button></h4>
-        <div class="avgrid">${presets.map((u, i) => `<button class="avopt ${u === pick ? 'on' : ''}" data-av="${esc(u)}" style="animation-delay:${i * .025}s" aria-label="Avatar ${i + 1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div></div>
+        ${presets.length ? `<div class="avgrid">${presets.map((u, i) => `<button class="avopt ${u === pick ? 'on' : ''}" data-av="${esc(u)}" style="animation-delay:${i * .025}s" aria-label="Avatar ${i + 1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : ''}</div>
       <div class="osec"><h4>5 adımda başla <span class="orew">🎁 +100 XP · 🐣 Çaylak rozeti</span></h4><div class="osteps">${ONB_STEPS.map((s, i) => `<div class="ostp" style="animation-delay:${i * .05}s"><i>${i + 1}</i><span><b>${s.t}</b><small>${s.d}</small></span></div>`).join('')}</div></div>
       <div class="ofoot"><button class="ghost" id="ow-later">Sonra bakarım</button><button class="btnp" id="ow-go">Başlayalım ${ic('send')}</button></div>`, 'onbw');
     document.querySelectorAll('.onbw [data-av]').forEach(b => b.onclick = () => {
