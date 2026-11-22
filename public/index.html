@@ -2173,20 +2173,166 @@
   .sg-btn .ic { width: 15px; height: 15px; }
   .sg-btn.hl { background: var(--accent); border-color: var(--accent); color: #fff; } .sg-btn.on { border-color: var(--accent-2); color: var(--accent-2); }
   .sg-btn.req { flex: 0 0 auto; background: rgba(255,179,71,.15); border-color: rgba(255,179,71,.4); color: var(--accent-2); animation: discPulse 2s infinite; }
-  body.forumv #compose, body.forumv #typing { display: none !important; }
-  .forum { padding: 22px clamp(14px, 3vw, 34px) 40px; max-width: 980px; width: 100%; margin: 0 auto; }
-  .fo-head { display: flex; align-items: center; gap: 14px; justify-content: space-between; margin-bottom: 18px; }
-  .fo-head h2 { display: flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 900; } .fo-head h2 .ic { width: 24px; height: 24px; color: var(--accent); }
-  .fo-head p { color: var(--muted); margin-top: 4px; }
-  .fo-list { display: grid; gap: 10px; }
-  .fo-card { display: block; width: 100%; text-align: left; padding: 16px 18px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font: inherit; cursor: pointer; transition: border-color .15s, transform .18s var(--ease-out), box-shadow .18s; animation: fadeUp .35s var(--ease-out) both; }
-  .fo-card:hover { border-color: rgba(255,138,76,.5); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,.25); }
-  .fo-top { display: flex; align-items: center; gap: 8px; font-size: 13px; } .fo-top .av { width: 24px; height: 24px; font-size: 11px; } .fo-top span { color: var(--muted); }
-  .fo-card h3 { font-size: 17px; font-weight: 900; margin: 10px 0 4px; line-height: 1.3; }
-  .fo-card p { color: #cdb9aa; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .fo-card img { margin-top: 10px; max-height: 180px; border-radius: 12px; object-fit: cover; max-width: 100%; }
-  .fo-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 12.5px; font-weight: 800; }
-  .fo-meta span { display: inline-flex; align-items: center; gap: 5px; } .fo-meta .ic { width: 14px; height: 14px; } .fo-meta .fo-last { margin-left: auto; font-weight: 700; }
+  body.forumv #compose, body.forumv #typing, body.forumv #jumpnew { display: none !important; }
+  body.forumv #messages { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; gap: 0 !important; }
+  .fo-shell { flex: 1; min-height: 0; height: 100%; width: 100%; display: flex; overflow: hidden; background: var(--bg); }
+  .fo-left { flex: 1; min-width: 0; height: 100%; overflow-y: auto; padding: 18px clamp(14px, 2.4vw, 28px) 32px; display: flex; flex-direction: column; gap: 12px; }
+  .fo-shell.open .fo-left { flex: 0 0 clamp(320px, 41%, 500px); border-right: 1px solid var(--line); padding: 14px 16px 28px; }
+  .fo-wrap { width: 100%; max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .fo-shell.open .fo-wrap { max-width: none; }
+
+  /* Üst arama + Yeni Gönderi barı */
+  .fo-bar { display: flex; align-items: center; gap: 10px; padding: 7px 8px 7px 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); transition: border-color .15s, box-shadow .15s; }
+  .fo-bar:focus-within { border-color: rgba(212, 255, 0, .55); box-shadow: 0 0 0 3px rgba(212, 255, 0, .09); }
+  .fo-bar .fo-sico { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
+  .fo-bar input { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--ink); font: inherit; font-size: 14.5px; font-weight: 600; outline: none; padding: 6px 0; }
+  .fo-bar input::placeholder { color: var(--muted); font-weight: 500; }
+  .fo-bar .fo-clr { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); background: transparent; flex-shrink: 0; }
+  .fo-bar .fo-clr:hover { background: var(--panel); color: var(--ink); }
+  .fo-newbtn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px; background: var(--accent); color: #0a0b07; font-weight: 900; font-size: 13.5px; letter-spacing: -.01em; flex-shrink: 0; transition: filter .14s, transform .14s; white-space: nowrap; }
+  .fo-newbtn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .fo-newbtn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  /* Satır içi hızlı gönderi oluşturucu */
+  .fo-compose { background: var(--card); border: 1px solid rgba(212, 255, 0, .35); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 28px rgba(0, 0, 0, .28); }
+  .fo-compose-h { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
+  .fo-compose input { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; color: var(--ink); font: inherit; font-size: 15px; font-weight: 800; outline: none; }
+  .fo-compose input:focus, .fo-compose textarea:focus { border-color: var(--accent); }
+  .fo-compose textarea { width: 100%; min-height: 92px; max-height: 220px; resize: vertical; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; color: var(--ink); font: inherit; font-size: 14px; line-height: 1.5; outline: none; }
+  .fo-compose-f { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .fo-compose-f .fo-hint { margin-right: auto; font-size: 12px; color: var(--muted); }
+  .fo-btn-ghost { padding: 7px 12px; border-radius: 9px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); font-weight: 700; font-size: 13px; }
+  .fo-btn-ghost:hover { border-color: var(--muted); }
+
+  /* Araç çubuğu (Sırala ve Görüntüle + İlkeler) */
+  .fo-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; position: relative; }
+  .fo-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font-size: 12.5px; font-weight: 700; transition: border-color .14s, background .14s; }
+  .fo-pill:hover, .fo-pill.on { border-color: rgba(212, 255, 0, .45); background: var(--panel); }
+  .fo-pill svg { width: 14px; height: 14px; color: var(--muted); }
+  .fo-count { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .fo-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; width: 224px; padding: 6px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 14px 36px rgba(0, 0, 0, .48); display: flex; flex-direction: column; gap: 2px; }
+  .fo-menu h6 { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 6px 8px 3px; margin: 0; font-weight: 800; }
+  .fo-menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 6px; }
+  .fo-menu button { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 9px; border-radius: 8px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 700; text-align: left; }
+  .fo-menu button:hover { background: var(--card); }
+  .fo-menu button.on { background: rgba(212, 255, 0, .12); color: var(--accent); }
+  .fo-menu button .fo-chk { font-size: 13px; font-weight: 900; }
+  .fo-rules { padding: 12px 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+  .fo-rules b { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); margin-bottom: 4px; }
+
+  /* Moderatör Haydi Başla kartı */
+  .fo-guide { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .fo-gh { display: flex; align-items: center; gap: 8px; padding: 11px 14px; font-size: 13.5px; flex-wrap: wrap; }
+  .fo-gh b { font-weight: 900; color: var(--ink); }
+  .fo-gh .fo-gp { color: var(--muted); font-size: 12.5px; font-weight: 700; }
+  .fo-gh-r { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11.5px; font-weight: 600; }
+  .fo-gh-r .fo-modnote { display: inline-flex; align-items: center; gap: 4px; }
+  .fo-shell.open .fo-modnote span { display: none; }
+  .fo-gh-r button { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: var(--muted); background: transparent; }
+  .fo-gh-r button:hover { background: var(--panel); color: var(--ink); }
+  .fo-gh-r svg { width: 14px; height: 14px; }
+  .fo-gsteps { border-top: 1px solid var(--line); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .fo-gstep { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 11px 12px; border-radius: 11px; background: rgba(255, 255, 255, .015); border: 1px solid transparent; color: var(--ink); transition: border-color .14s, background .14s; }
+  .fo-gstep:hover { border-color: rgba(212, 255, 0, .55); background: rgba(212, 255, 0, .04); }
+  .fo-gstep .fo-gdot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; flex-shrink: 0; font-size: 12px; font-weight: 900; }
+  .fo-gstep.done .fo-gdot { background: #22c55e; border-color: #22c55e; color: #051209; }
+  .fo-gstep .fo-gt { flex: 1; min-width: 0; }
+  .fo-gstep .fo-gt strong { display: block; font-size: 13.5px; font-weight: 800; color: var(--ink); }
+  .fo-gstep .fo-gt small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .fo-gstep .fo-gchip { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 3px 8px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); font-size: 11.5px; font-weight: 800; color: var(--ink); }
+  .fo-gstep .fo-gchip i { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); display: inline-block; }
+  .fo-gstep .fo-garr { color: var(--muted); font-size: 16px; font-weight: 700; flex-shrink: 0; }
+
+  /* Gönderi kart listesi & galeri */
+  .fo-list { display: flex; flex-direction: column; gap: 8px; }
+  .fo-list.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+  .fo-shell.open .fo-list.grid { grid-template-columns: 1fr; }
+  .fo-card { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 14px 16px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font: inherit; cursor: pointer; transition: border-color .14s, background .14s; }
+  .fo-card:hover { border-color: rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .035); }
+  .fo-card.on { border-color: rgba(212, 255, 0, .55); background: rgba(212, 255, 0, .06); }
+  .fo-list.grid .fo-card { flex-direction: column; align-items: stretch; gap: 10px; }
+  .fo-cm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .fo-ctitle { font-size: 15.5px; font-weight: 800; line-height: 1.3; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fo-list.grid .fo-ctitle { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .fo-cprev { font-size: 13.5px; color: var(--muted); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fo-cprev .fo-cauth { font-weight: 800; color: var(--ink); }
+  .fo-cmeta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 3px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .fo-cmeta .fo-cm-cnt { display: inline-flex; align-items: center; gap: 5px; color: var(--ink); font-weight: 800; }
+  .fo-cmeta .fo-cm-cnt svg { width: 14px; height: 14px; color: var(--muted); }
+  .fo-cmeta .fo-crx { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 11.5px; color: var(--ink); }
+  .fo-cmeta .fo-crx img.cemoji { width: 14px; height: 14px; }
+  .fo-cthumb { width: 68px; height: 68px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--line); }
+  .fo-list.grid .fo-cthumb { width: 100%; height: 140px; order: -1; }
+  .fo-empty { text-align: center; padding: 48px 20px; border-radius: 16px; border: 1px dashed var(--line); background: rgba(255, 255, 255, .01); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .fo-empty .fo-eico { width: 52px; height: 52px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; color: var(--accent); }
+  .fo-empty .fo-eico svg { width: 26px; height: 26px; }
+  .fo-empty h3 { font-size: 17px; font-weight: 900; margin: 2px 0 0; }
+  .fo-empty p { font-size: 13.5px; color: var(--muted); max-width: 360px; line-height: 1.5; }
+
+  /* Sağ Bölünmüş Gönderi Paneli (Split-Pane) */
+  .fo-pane { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; background: var(--bg); }
+  .fo-phead { height: 52px; padding: 0 14px 0 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; flex-shrink: 0; background: var(--panel); }
+  .fo-phead .fo-pback { display: none; width: 30px; height: 30px; border-radius: 8px; place-items: center; color: var(--ink); background: var(--card); border: 1px solid var(--line); flex-shrink: 0; }
+  .fo-phead .fo-pico { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
+  .fo-phead h3 { flex: 1; min-width: 0; font-size: 15px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; }
+  .fo-phead-acts { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .fo-phead-acts button { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); background: transparent; }
+  .fo-phead-acts button:hover { background: var(--card); color: var(--ink); }
+  .fo-phead-acts svg { width: 16px; height: 16px; }
+
+  .fo-pbody { flex: 1; min-height: 0; overflow-y: auto; padding: 24px 20px 18px; display: flex; flex-direction: column; }
+  .fo-pbody-in { margin-top: auto; display: flex; flex-direction: column; }
+  .fo-hero { padding: 8px 0 14px; }
+  .fo-hero-ico { width: 54px; height: 54px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; color: var(--ink); margin-bottom: 12px; }
+  .fo-hero-ico svg { width: 26px; height: 26px; }
+  .fo-hero h2 { font-size: 24px; font-weight: 900; line-height: 1.25; margin: 0; word-break: break-word; }
+
+  .fo-date { display: flex; align-items: center; gap: 10px; margin: 12px 0 14px; font-size: 11.5px; font-weight: 800; color: var(--muted); }
+  .fo-date::before, .fo-date::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .fo-date.fresh::before, .fo-date.fresh::after { background: rgba(239, 68, 68, .45); }
+  .fo-date.fresh span { color: #f87171; }
+  .fo-date .fo-newtag { background: #ef4444; color: #fff; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; letter-spacing: .04em; }
+
+  .fo-msg { display: flex; align-items: flex-start; gap: 12px; padding: 6px 4px; border-radius: 10px; }
+  .fo-msg:hover { background: rgba(255, 255, 255, .02); }
+  .fo-msg .fo-avw { flex-shrink: 0; cursor: pointer; display: inline-flex; }
+  .fo-msg .fo-avw > .av { width: 38px; height: 38px; font-size: 14px; }
+  .fo-msg-c { flex: 1; min-width: 0; }
+  .fo-msg-h { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; line-height: 1.25; margin-bottom: 3px; }
+  .fo-msg-h .fo-author { font-size: 14.5px; font-weight: 800; cursor: pointer; }
+  .fo-msg-h .fo-opbadge { font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 5px; background: rgba(212, 255, 0, .14); color: var(--accent); border: 1px solid rgba(212, 255, 0, .3); letter-spacing: .04em; }
+  .fo-msg-h .fo-time { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+  .fo-msg-b { font-size: 14.5px; line-height: 1.55; color: var(--ink); word-break: break-word; }
+  .fo-msg-b img.fo-img { display: block; margin-top: 8px; max-width: min(440px, 100%); max-height: 340px; border-radius: 12px; border: 1px solid var(--line); cursor: pointer; }
+
+  /* Gönderi tepki + Takip Et + Link barı */
+  .fo-pacts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 6px; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .fo-pact-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 9px; background: var(--card); border: 1px solid var(--line); color: var(--ink); font-size: 12.5px; font-weight: 800; transition: border-color .14s, background .14s; }
+  .fo-pact-btn:hover { border-color: rgba(255, 255, 255, .25); background: var(--panel); }
+  .fo-pact-btn.on { border-color: rgba(212, 255, 0, .45); background: rgba(212, 255, 0, .1); color: var(--accent); }
+  .fo-pact-btn svg { width: 15px; height: 15px; }
+  .fo-pacts .fo-pacts-r { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+  .fo-pacts .reacts { display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; margin: 0; }
+  .fo-replies { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .fo-rep-hdr { font-size: 11.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; padding: 4px 4px 2px; }
+
+  /* Alt satır içi yanıt barı */
+  .fo-pfoot { padding: 10px 16px 14px; flex-shrink: 0; background: var(--bg); }
+  .fo-rin-box { display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 12px; border-radius: 13px; background: var(--card); border: 1px solid var(--line); transition: border-color .14s; }
+  .fo-rin-box:focus-within { border-color: rgba(212, 255, 0, .5); }
+  .fo-rin-plus { width: 26px; height: 26px; border-radius: 50%; background: var(--panel); color: var(--muted); display: grid; place-items: center; font-size: 17px; font-weight: 800; flex-shrink: 0; }
+  .fo-rin-box input { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--ink); font: inherit; font-size: 14px; outline: none; padding: 7px 0; }
+  .fo-rin-box input::placeholder { color: var(--muted); }
+  .fo-rsend { padding: 7px 13px; border-radius: 9px; background: var(--accent); color: #0a0b07; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .fo-rsend:disabled { opacity: .4; cursor: not-allowed; }
+  .fo-rsend svg { width: 14px; height: 14px; }
+
+  @media (max-width: 960px) {
+    .fo-shell.open .fo-left { display: none; }
+    .fo-phead .fo-pback { display: grid; }
+    .fo-pbody { padding: 16px 14px 14px; }
+    .fo-pfoot { padding: 8px 12px 12px; }
+  }
   /* --- süreli durum --- */
   #statusmenu { width: auto; right: 10px; }
   #statusmenu button { position: relative; }
@@ -7165,6 +7311,7 @@ const drafts = {};
 let draftFor = null;
 const lastCh = JSON.parse(store.get('kanka-lastch') || '{}');
 function enterRoom(id, placeholder, hello) {
+  if (draftFor !== id) { forumPostId = null; forumNewOpen = false; forumMenuOpen = false; forumRulesOpen = false; forumQ = ''; forumDraftTitle = ''; forumDraftBody = ''; forumReplyDraft = ''; }
   setTimeout(() => S.channel?.id === id && renderCallBar(), 0);
   if (draftFor && draftFor !== id) { const v = $('#input').value; v.trim() && !/^\/\S*$/.test(v.trim()) ? drafts[draftFor] = v : delete drafts[draftFor]; }
   if (draftFor !== id) { $('#input').value = drafts[id] || ''; requestAnimationFrame(growInput); }
@@ -7218,7 +7365,7 @@ function renderMessages(toBottom) {
   if (roomLoading) return; // oda yüklenirken eski/boş ekran çizme
   lastMsgUsersSig = msgUsersSig();
   const box = $('#messages');
-  if (S.view === 'server' && S.channel?.type === 'forum') { const sc = box.scrollTop; box.innerHTML = forumHTML(); wireForum(box); box.scrollTop = toBottom ? 0 : sc; return; }
+  if (S.view === 'server' && S.channel?.type === 'forum') { renderForum(box, toBottom); return; }
   const atBottom = toBottom || box.scrollHeight - box.scrollTop - box.clientHeight < 120;
   const quiet = !histMore && !S.msgs.some(m => m.author);
   let prev = null, html = histMore ? '<div class="loadmore" id="loadmore">Yukarı kaydırınca eski mesajlar yüklenir</div>' : quiet ? emptyHTML() : helloHTML;
@@ -12298,33 +12445,411 @@ function showFollow(s, c) {
   $('#fw-ok').onclick = () => go(false); $('#fw-off').onclick = () => go(true);
 }
 
-// Forum görünümü
-function forumHTML() {
-  const posts = S.msgs.filter(m => m.author).slice().reverse();
-  const last = m => Math.max(m.time, ...(m.thread || []).map(t => t.time));
-  posts.sort((a, b) => last(b) - last(a));
-  const canPost = !S.channel.readonly;
-  return `<div class="forum"><div class="fo-head"><div><h2>${roomIcon(S.channel)} ${esc(S.channel.name)}</h2>${S.channel.topic ? `<p>${esc(S.channel.topic)}</p>` : '<p>Her gönderi kendi sohbetini başlatır.</p>'}</div>${canPost ? `<button class="btnp" id="fo-new">${ic('plus')} Yeni gönderi</button>` : ''}</div>
-    ${posts.length ? `<div class="fo-list">${posts.map((m, i) => `<button class="fo-card" data-post="${m.id}" style="animation-delay:${Math.min(i, 10) * .03}s">
-      <div class="fo-top">${av(m.author)}<b>${esc(m.author)}</b><span>${ago(m.time)}</span></div>
-      <h3>${esc(m.title || (m.text || '').slice(0, 60) || 'Gönderi')}</h3>${m.text ? `<p>${esc(m.text.slice(0, 220))}</p>` : ''}${m.image ? `<img src="${esc(m.image)}" alt="" loading="lazy">` : ''}
-      <div class="fo-meta"><span>${ic('thread')} ${(m.thread || []).length} yanıt</span>${Object.values(m.reactions || {}).reduce((a, x) => a + x.length, 0) ? `<span>${ic('smile')} ${Object.values(m.reactions).reduce((a, x) => a + x.length, 0)}</span>` : ''}<span class="fo-last">son etkinlik ${ago(last(m))}</span></div></button>`).join('')}</div>`
-      : `<div class="estate"><div class="eart"><div class="disc"></div><div class="eico">${ic('forum')}</div><i class="orb o1"></i><i class="orb o2"></i></div><h3>Henüz gönderi yok</h3><p>İlk konuyu sen aç: bir soru, bir öneri ya da paylaşmak istediğin bir şey.</p>${canPost ? `<button class="btnp" id="fo-new2">${ic('plus')} İlk gönderiyi oluştur</button>` : ''}</div>`}</div>`;
-}
+// Forum görünümü (Discord tarzı bölünmüş panel + hızlı oluşturucu + moderatör rehberi)
+let forumPostId = null, forumQ = '', forumSort = 'active', forumView = 'list';
+let forumNewOpen = false, forumMenuOpen = false, forumRulesOpen = false, forumScrollEnd = false;
+let forumDraftTitle = '', forumDraftBody = '', forumReplyDraft = '';
+const forumGuideState = JSON.parse(store.get('kanka-foguide') || '{}');
+const forumFollows = JSON.parse(store.get('kanka-fofollow') || '{}');
+const saveForumGuide = () => store.set('kanka-foguide', JSON.stringify(forumGuideState));
+const saveForumFollows = () => store.set('kanka-fofollow', JSON.stringify(forumFollows));
+
 const ago = t => { const d = (Date.now() - t) / 1000; return d < 60 ? 'az önce' : d < 3600 ? Math.floor(d / 60) + ' dk önce' : d < 86400 ? Math.floor(d / 3600) + ' sa önce' : Math.floor(d / 86400) + ' gün önce'; };
-function wireForum(box) {
-  box.querySelectorAll('[data-post]').forEach(b => b.onclick = () => openThread(b.dataset.post));
-  [box.querySelector('#fo-new'), box.querySelector('#fo-new2')].forEach(b => b && (b.onclick = newForumPost));
+const agoLong = t => { const d = Math.max(0, (Date.now() - t) / 1000); return d < 60 ? 'az önce' : d < 3600 ? Math.floor(d / 60) + ' dakika önce' : d < 86400 ? Math.floor(d / 3600) + ' saat önce' : Math.floor(d / 86400) + ' gün önce'; };
+const foClock = t => new Date(t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+const foFullDate = t => new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+const foUserName = u => styledNameHTML(dn(u), S.users[u]?.nameStyle);
+
+const FO_IC = {
+  search: '<svg class="fo-sico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  bubble: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3C6.8 3 2.5 6.8 2.5 11.4c0 2.1.9 4 2.4 5.5L3.6 21l4.5-1.4c1.2.4 2.5.6 3.9.6 5.2 0 9.5-3.8 9.5-8.4S17.2 3 12 3Z"/></svg>',
+  sort: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 4 4 7M7 4l3 3M17 20V4m0 16-3-3m3 3 3-3"/></svg>',
+  chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>',
+  min: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>',
+  max: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>',
+  smile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
+  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>'
+};
+
+function forumHTML() {
+  const ch = S.channel;
+  const allPosts = S.msgs.filter(m => m.author);
+  const lastOf = m => Math.max(m.time || 0, ...(m.thread || []).map(t => t.time || 0));
+  const activePost = forumPostId ? allPosts.find(m => m.id === forumPostId) : null;
+  if (forumPostId && !activePost) forumPostId = null;
+
+  const q = forumQ.trim().toLocaleLowerCase('tr');
+  const posts = allPosts.filter(m => {
+    if (!q) return true;
+    const hay = `${m.title || ''} ${m.text || ''} ${dn(m.author)} ${m.author}`.toLocaleLowerCase('tr');
+    return hay.includes(q);
+  });
+  if (forumSort === 'new') posts.sort((a, b) => (b.time || 0) - (a.time || 0));
+  else if (forumSort === 'replies') posts.sort((a, b) => (b.thread?.length || 0) - (a.thread?.length || 0) || lastOf(b) - lastOf(a));
+  else posts.sort((a, b) => lastOf(b) - lastOf(a));
+
+  const canPost = !ch.readonly;
+  const gKey = ch.id;
+  const gState = forumGuideState[gKey] || {};
+  const showGuide = !!ch.canManage && !gState.off;
+  const guideMin = gState.min !== undefined ? !!gState.min : !!activePost;
+
+  const gStepPerm = !ch.readonly && !ch.private;
+  const gStepRules = !!(ch.topic && ch.topic.trim());
+  const gStepPost = allPosts.length > 0;
+  const gDone = (gStepPerm ? 1 : 0) + (gStepRules ? 1 : 0) + (gStepPost ? 1 : 0);
+
+  const guideHTML = showGuide ? `<div class="fo-guide">
+    <div class="fo-gh">
+      <b>Haydi Başla</b>
+      <span class="fo-gp">(3 adımın ${gDone} tanesi tamamlandı)</span>
+      <span class="fo-gh-r">
+        <span class="fo-modnote" title="Bunu sadece moderatörler görebilir">${FO_IC.info}<span>Bunu sadece moderatörler görebilir</span></span>
+        <button id="fo-gmin" title="${guideMin ? 'Genişlet' : 'Daralt'}">${guideMin ? FO_IC.max : FO_IC.min}</button>
+        <button id="fo-goff" title="Kapat">${FO_IC.x}</button>
+      </span>
+    </div>
+    ${guideMin ? '' : `<div class="fo-gsteps">
+      <button class="fo-gstep ${gStepPerm ? 'done' : ''}" data-gact="perms">
+        <span class="fo-gdot">${gStepPerm ? '✓' : ''}</span>
+        <span class="fo-gt"><strong>Önerilen izinleri ayarla</strong><small>Herkesin paylaşım yapmasına izin veren forumlar daha aktif kalır.</small><span class="fo-gchip"><i></i>@everyone</span></span>
+        <span class="fo-garr">›</span>
+      </button>
+      <button class="fo-gstep ${gStepRules ? 'done' : ''}" data-gact="rules">
+        <span class="fo-gdot">${gStepRules ? '✓' : ''}</span>
+        <span class="fo-gt"><strong>Gönderi ilkeleri oluştur</strong><small>Yazarların uyması gereken kuralları ve forum açıklamasını belirle.</small></span>
+        <span class="fo-garr">›</span>
+      </button>
+      <button class="fo-gstep ${gStepPost ? 'done' : ''}" data-gact="post">
+        <span class="fo-gdot">${gStepPost ? '✓' : ''}</span>
+        <span class="fo-gt"><strong>İlk paylaşımı yap!</strong><small>Konuşma başlatarak buzları kır.</small></span>
+        <span class="fo-garr">›</span>
+      </button>
+    </div>`}
+  </div>` : '';
+
+  const composeHTML = forumNewOpen && canPost ? `<div class="fo-compose" id="fo-compose">
+    <div class="fo-compose-h"><span>Yeni Forum Gönderisi</span><button class="fo-btn-ghost" id="fo-cx" style="padding:3px 8px;font-size:12px">Kapat</button></div>
+    <input id="fo-ct" maxlength="100" placeholder="Başlık yaz…" value="${esc(forumDraftTitle)}">
+    <textarea id="fo-cb" placeholder="Gönderi detaylarını yaz…">${esc(forumDraftBody)}</textarea>
+    <div class="fo-compose-f">
+      <span class="fo-hint">Ctrl + Enter ile hızlı paylaş</span>
+      <button class="fo-btn-ghost" id="fo-ccancel">Vazgeç</button>
+      <button class="fo-newbtn" id="fo-csend">${FO_IC.bubble} Paylaş</button>
+    </div>
+  </div>` : '';
+
+  const sortLabels = { active: 'Son etkinlik', new: 'Yeni gönderilenler', replies: 'En çok yanıt' };
+  const menuHTML = forumMenuOpen ? `<div class="fo-menu" id="fo-menu">
+    <h6>Sırala</h6>
+    ${Object.entries(sortLabels).map(([k, lbl]) => `<button data-fosort="${k}" class="${forumSort === k ? 'on' : ''}"><span>${lbl}</span><span class="fo-chk">${forumSort === k ? '✓' : ''}</span></button>`).join('')}
+    <hr>
+    <h6>Görünüm</h6>
+    <button data-foview="list" class="${forumView === 'list' ? 'on' : ''}"><span>Liste görünümü</span><span class="fo-chk">${forumView === 'list' ? '✓' : ''}</span></button>
+    <button data-foview="grid" class="${forumView === 'grid' ? 'on' : ''}"><span>Galeri görünümü</span><span class="fo-chk">${forumView === 'grid' ? '✓' : ''}</span></button>
+  </div>` : '';
+
+  const cardHTML = m => {
+    const title = m.title || (m.text || '').split('\n')[0].slice(0, 80) || 'Gönderi';
+    const rawPrev = (m.text || '').replace(/\s+/g, ' ').trim();
+    const prev = rawPrev === title ? rawPrev : (rawPrev || (m.image ? '📷 Görsel paylaştı' : ''));
+    const repCount = (m.thread || []).length;
+    const rxEntries = Object.entries(m.reactions || {}).filter(([, us]) => us?.length).slice(0, 3);
+    const rxHTML = rxEntries.map(([k, us]) => {
+      const em = EMOJI_TOKEN.exec(k), url = em && serverEmojis()[em[1]];
+      return `<span class="fo-crx">${url ? `<img class="cemoji" src="${esc(url)}" alt="${esc(k)}">` : esc(k)} ${us.length}</span>`;
+    }).join('');
+    return `<button class="fo-card ${activePost?.id === m.id ? 'on' : ''}" data-post="${m.id}">
+      <div class="fo-cm">
+        <div class="fo-ctitle">${esc(title)}</div>
+        <div class="fo-cprev"><span class="fo-cauth" style="color:${userColor(m.author)}">${foUserName(m.author)}</span>: ${esc(prev.slice(0, 140))}</div>
+        <div class="fo-cmeta">
+          <span class="fo-cm-cnt">${FO_IC.bubble} ${repCount}</span>
+          ${rxHTML}
+          <span>${agoLong(lastOf(m))}</span>
+        </div>
+      </div>
+      ${m.image ? `<img class="fo-cthumb" src="${esc(m.image)}" alt="" loading="lazy">` : ''}
+    </button>`;
+  };
+
+  let paneHTML = '';
+  if (activePost) {
+    const m = activePost;
+    const title = m.title || (m.text || '').split('\n')[0].slice(0, 80) || 'Gönderi';
+    const replies = m.thread || [];
+    const rxList = Object.entries(m.reactions || {}).filter(([, us]) => us?.length).map(([k, us]) => reactionHTML(k, m.id, us)).join('');
+    const isFollowed = forumFollows[m.id] !== undefined ? !!forumFollows[m.id] : (m.author === S.me || replies.some(t => t.author === S.me));
+    const isFresh = (Date.now() - (m.time || 0)) < 600000;
+    const canDel = m.author === S.me || !!ch.canManage || S.server?.owner === S.me;
+    const crown = u => (S.server?.owner === u && typeof ownerCrown === 'function') ? ownerCrown() : '';
+    const repHTML = replies.length ? `<div class="fo-replies">
+      <div class="fo-rep-hdr">${replies.length} Yanıt</div>
+      ${replies.map(t => `<div class="fo-msg">
+        <span class="fo-avw" data-prof="${esc(t.author)}">${av(t.author, true)}</span>
+        <div class="fo-msg-c">
+          <div class="fo-msg-h">
+            <span class="fo-author" data-prof="${esc(t.author)}" style="color:${userColor(t.author)}">${foUserName(t.author)}</span>${crown(t.author)}
+            ${t.author === m.author ? '<span class="fo-opbadge">YAZAR</span>' : ''}
+            <span class="fo-time">${foClock(t.time)}</span>
+          </div>
+          <div class="fo-msg-b">${fmt(t.text || '')}</div>
+        </div>
+      </div>`).join('')}
+    </div>` : '';
+
+    paneHTML = `<section class="fo-pane" id="fo-pane">
+      <header class="fo-phead">
+        <button class="fo-pback" id="fo-pback" title="Gönderilere dön">${FO_IC.back}</button>
+        <span class="fo-pico">${FO_IC.bubble}</span>
+        <h3 title="${esc(title)}">${esc(title)}</h3>
+        <div class="fo-phead-acts">
+          <button id="fo-pcopy2" title="Bağlantıyı kopyala">${FO_IC.link}</button>
+          ${canDel ? `<button id="fo-pdel" title="Gönderiyi sil">${FO_IC.trash}</button>` : ''}
+          <button id="fo-pclose" title="Kapat">${FO_IC.x}</button>
+        </div>
+      </header>
+      <div class="fo-pbody" id="fo-pbody">
+        <div class="fo-pbody-in">
+          <div class="fo-hero">
+            <div class="fo-hero-ico">${FO_IC.bubble}</div>
+            <h2>${esc(title)}</h2>
+          </div>
+          <div class="fo-date ${isFresh ? 'fresh' : ''}"><span>${foFullDate(m.time)}</span>${isFresh ? '<b class="fo-newtag">YENİ</b>' : ''}</div>
+          <div class="fo-msg">
+            <span class="fo-avw" data-prof="${esc(m.author)}">${av(m.author, true)}</span>
+            <div class="fo-msg-c">
+              <div class="fo-msg-h">
+                <span class="fo-author" data-prof="${esc(m.author)}" style="color:${userColor(m.author)}">${foUserName(m.author)}</span>${crown(m.author)}
+                <span class="fo-opbadge">YAZAR</span>
+                <span class="fo-time">${foClock(m.time)}</span>
+              </div>
+              <div class="fo-msg-b">${fmt(m.text || '')}${m.image ? `<img class="fo-img" src="${esc(m.image)}" data-view="${esc(m.image)}" alt="">` : ''}</div>
+            </div>
+          </div>
+          <div class="fo-pacts">
+            <button class="fo-pact-btn" data-emo="${m.id}">${FO_IC.smile} Gönderiye Tepki Ver</button>
+            ${rxList ? `<div class="reacts">${rxList}</div>` : ''}
+            <span class="fo-pacts-r">
+              <button class="fo-pact-btn ${isFollowed ? 'on' : ''}" id="fo-pfollow">${isFollowed ? `${FO_IC.check} Takip Ediliyor` : `${FO_IC.bell} Takip Et`}</button>
+              <button class="fo-pact-btn" id="fo-pcopy" title="Bağlantıyı kopyala">${FO_IC.link}</button>
+            </span>
+          </div>
+          ${repHTML}
+        </div>
+      </div>
+      <div class="fo-pfoot">
+        <div class="fo-rin-box">
+          <span class="fo-rin-plus">+</span>
+          <input id="fo-rin" maxlength="1000" placeholder="${canPost ? esc(`"${title.slice(0, 40)}" kanalına mesaj gönder`) : 'Bu forum salt okunur'}" value="${esc(forumReplyDraft)}" ${canPost ? '' : 'disabled'}>
+          <button class="fo-rsend" id="fo-rsend" ${!canPost || !forumReplyDraft.trim() ? 'disabled' : ''}>${FO_IC.send} Gönder</button>
+        </div>
+      </div>
+    </section>`;
+  }
+
+  return `<div class="fo-shell ${activePost ? 'open' : ''}">
+    <div class="fo-left" id="fo-left">
+      <div class="fo-wrap">
+        <div class="fo-bar">
+          ${FO_IC.search}
+          <input id="fo-q" placeholder="Bir gönderi ara veya oluştur..." value="${esc(forumQ)}" autocomplete="off">
+          ${forumQ ? `<button class="fo-clr" id="fo-qclr" title="Temizle">${FO_IC.x}</button>` : ''}
+          ${canPost ? `<button class="fo-newbtn" id="fo-new">${FO_IC.bubble} Yeni Gönderi</button>` : ''}
+        </div>
+        ${composeHTML}
+        <div class="fo-tools">
+          <button class="fo-pill ${forumMenuOpen ? 'on' : ''}" id="fo-sortbtn">${FO_IC.sort} Sırala ve Görüntüle ${FO_IC.chev}</button>
+          ${ch.topic ? `<button class="fo-pill ${forumRulesOpen ? 'on' : ''}" id="fo-rulesbtn">${FO_IC.book} İlkeler</button>` : ''}
+          <span class="fo-count">${posts.length} gönderi</span>
+          ${menuHTML}
+        </div>
+        ${forumRulesOpen && ch.topic ? `<div class="fo-rules"><b>Gönderi İlkeleri</b>${fmt(ch.topic)}</div>` : ''}
+        ${guideHTML}
+        ${posts.length ? `<div class="fo-list ${forumView === 'grid' ? 'grid' : ''}">${posts.map(cardHTML).join('')}</div>`
+          : `<div class="fo-empty"><div class="fo-eico">${FO_IC.bubble}</div><h3>${q ? 'Eşleşen gönderi bulunamadı' : 'Henüz gönderi yok'}</h3><p>${q ? `"${esc(forumQ)}" için sonuç yok. Bu başlıkla yeni bir gönderi oluşturabilirsin.` : 'İlk konuyu sen aç: bir soru, öneri ya da paylaşmak istediğin bir şey.'}</p>${canPost ? `<button class="fo-newbtn" id="fo-new2">${FO_IC.bubble} ${q ? 'Bu başlıkla oluştur' : 'İlk gönderiyi oluştur'}</button>` : ''}</div>`}
+      </div>
+    </div>
+    ${paneHTML}
+  </div>`;
 }
+
+function renderForum(box, toBottom) {
+  const prevLeft = box.querySelector('#fo-left')?.scrollTop || 0;
+  const prevPaneEl = box.querySelector('#fo-pbody');
+  const prevPane = prevPaneEl ? prevPaneEl.scrollTop : 0;
+  const paneWasBottom = prevPaneEl ? (prevPaneEl.scrollHeight - prevPaneEl.scrollTop - prevPaneEl.clientHeight < 60) : true;
+  const act = document.activeElement;
+  const actId = act && box.contains(act) && act.id ? act.id : null;
+  const selS = act && typeof act.selectionStart === 'number' ? act.selectionStart : null;
+  const selE = act && typeof act.selectionEnd === 'number' ? act.selectionEnd : null;
+  if (actId === 'fo-rin') forumReplyDraft = act.value;
+  if (actId === 'fo-ct') forumDraftTitle = act.value;
+  if (actId === 'fo-cb') forumDraftBody = act.value;
+
+  box.innerHTML = forumHTML();
+  wireForum(box);
+
+  const leftEl = box.querySelector('#fo-left');
+  if (leftEl) leftEl.scrollTop = toBottom ? 0 : prevLeft;
+  const paneEl = box.querySelector('#fo-pbody');
+  if (paneEl) {
+    if (forumScrollEnd || paneWasBottom) { paneEl.scrollTop = paneEl.scrollHeight; forumScrollEnd = false; }
+    else paneEl.scrollTop = prevPane;
+  }
+  if (actId) {
+    const next = box.querySelector('#' + actId);
+    if (next && !next.disabled) {
+      next.focus();
+      if (selS !== null && typeof next.setSelectionRange === 'function') {
+        try { next.setSelectionRange(selS, selE); } catch {}
+      }
+    }
+  }
+}
+
+function wireForum(box) {
+  const rerender = () => renderForum(box, false);
+  const openCompose = (prefill) => {
+    if (S.channel?.readonly) return;
+    forumNewOpen = true;
+    if (prefill && !forumDraftTitle) forumDraftTitle = prefill.slice(0, 100);
+    rerender();
+    setTimeout(() => { const el = box.querySelector('#fo-ct'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 20);
+  };
+
+  const qEl = box.querySelector('#fo-q');
+  if (qEl) {
+    qEl.oninput = () => { forumQ = qEl.value; rerender(); };
+    qEl.onkeydown = e => {
+      if (e.key === 'Enter' && qEl.value.trim() && !S.channel?.readonly) {
+        e.preventDefault();
+        openCompose(qEl.value.trim());
+      } else if (e.key === 'Escape' && forumQ) {
+        forumQ = ''; rerender();
+      }
+    };
+  }
+  const qClr = box.querySelector('#fo-qclr');
+  if (qClr) qClr.onclick = () => { forumQ = ''; rerender(); box.querySelector('#fo-q')?.focus(); };
+
+  [box.querySelector('#fo-new'), box.querySelector('#fo-new2')].forEach(b => b && (b.onclick = () => {
+    if (forumNewOpen && b.id === 'fo-new') { forumNewOpen = false; rerender(); }
+    else openCompose(forumQ.trim());
+  }));
+
+  const ct = box.querySelector('#fo-ct'), cb = box.querySelector('#fo-cb');
+  if (ct) ct.oninput = () => { forumDraftTitle = ct.value; };
+  if (cb) cb.oninput = () => { forumDraftBody = cb.value; };
+  const closeCompose = () => { forumNewOpen = false; forumDraftTitle = ''; forumDraftBody = ''; rerender(); };
+  const submitPost = () => {
+    const title = (ct?.value || '').trim(), text = (cb?.value || '').trim();
+    if (!title) { ct?.focus(); return toast('Gönderi başlığı yaz'); }
+    socket.emit('message', { kind: 'text', title, text: text || title }, r => {
+      if (r?.error) return toast(r.error);
+      forumNewOpen = false; forumDraftTitle = ''; forumDraftBody = ''; forumQ = '';
+      if (r?.id) { forumPostId = r.id; forumScrollEnd = true; }
+      toast('Gönderi paylaşıldı');
+      rerender();
+    });
+  };
+  if (box.querySelector('#fo-cx')) box.querySelector('#fo-cx').onclick = closeCompose;
+  if (box.querySelector('#fo-ccancel')) box.querySelector('#fo-ccancel').onclick = closeCompose;
+  if (box.querySelector('#fo-csend')) box.querySelector('#fo-csend').onclick = submitPost;
+  [ct, cb].forEach(el => el && (el.onkeydown = e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submitPost(); } else if (e.key === 'Escape') closeCompose(); }));
+
+  const sortBtn = box.querySelector('#fo-sortbtn');
+  if (sortBtn) sortBtn.onclick = e => { e.stopPropagation(); forumMenuOpen = !forumMenuOpen; rerender(); };
+  const rulesBtn = box.querySelector('#fo-rulesbtn');
+  if (rulesBtn) rulesBtn.onclick = () => { forumRulesOpen = !forumRulesOpen; rerender(); };
+  box.querySelectorAll('[data-fosort]').forEach(b => b.onclick = e => { e.stopPropagation(); forumSort = b.dataset.fosort; forumMenuOpen = false; rerender(); });
+  box.querySelectorAll('[data-foview]').forEach(b => b.onclick = e => { e.stopPropagation(); forumView = b.dataset.foview; forumMenuOpen = false; rerender(); });
+  const shellEl = box.querySelector('.fo-shell');
+  if (forumMenuOpen && shellEl) {
+    shellEl.addEventListener('click', e => {
+      if (!e.target.closest('#fo-menu') && !e.target.closest('#fo-sortbtn')) { forumMenuOpen = false; rerender(); }
+    });
+  }
+
+  // Moderatör Haydi Başla kartı aksiyonları
+  const gKey = S.channel?.id;
+  if (box.querySelector('#fo-gmin')) box.querySelector('#fo-gmin').onclick = () => {
+    const cur = forumGuideState[gKey] || {};
+    const curMin = cur.min !== undefined ? !!cur.min : !!forumPostId;
+    forumGuideState[gKey] = { ...cur, min: !curMin };
+    saveForumGuide(); rerender();
+  };
+  if (box.querySelector('#fo-goff')) box.querySelector('#fo-goff').onclick = () => {
+    forumGuideState[gKey] = { ...(forumGuideState[gKey] || {}), off: true };
+    saveForumGuide(); rerender();
+  };
+  box.querySelectorAll('[data-gact]').forEach(b => b.onclick = () => {
+    const act = b.dataset.gact;
+    if (act === 'perms') showChSettings(S.server, 'ch', S.channel.id, 'perms');
+    else if (act === 'rules') showChSettings(S.server, 'ch', S.channel.id, 'general');
+    else if (act === 'post') openCompose('');
+  });
+
+  // Gönderi kartlarına tıkla -> Sağ bölünmüş panelde aç
+  box.querySelectorAll('[data-post]').forEach(b => b.onclick = () => {
+    const pid = b.dataset.post;
+    if (forumPostId === pid) return;
+    forumPostId = pid; forumReplyDraft = ''; forumScrollEnd = true; forumMenuOpen = false;
+    rerender();
+  });
+
+  // Sağ bölünmüş panel kontrolleri
+  const closePane = () => { forumPostId = null; forumReplyDraft = ''; rerender(); };
+  if (box.querySelector('#fo-pclose')) box.querySelector('#fo-pclose').onclick = closePane;
+  if (box.querySelector('#fo-pback')) box.querySelector('#fo-pback').onclick = closePane;
+  const copyLink = () => {
+    const url = `${location.origin}${location.pathname}#forum-${forumPostId}`;
+    navigator.clipboard?.writeText(url).then(() => toast('Gönderi bağlantısı kopyalandı')).catch(() => toast(url));
+  };
+  [box.querySelector('#fo-pcopy'), box.querySelector('#fo-pcopy2')].forEach(b => b && (b.onclick = copyLink));
+  if (box.querySelector('#fo-pdel')) box.querySelector('#fo-pdel').onclick = () => {
+    const pid = forumPostId;
+    confirmBox('Bu forum gönderisi kalıcı olarak silinsin mi?', () => { socket.emit('delete', pid); forumPostId = null; rerender(); });
+  };
+  if (box.querySelector('#fo-pfollow')) box.querySelector('#fo-pfollow').onclick = () => {
+    const m = S.msgs.find(x => x.id === forumPostId); if (!m) return;
+    const cur = forumFollows[m.id] !== undefined ? !!forumFollows[m.id] : (m.author === S.me || (m.thread || []).some(t => t.author === S.me));
+    forumFollows[m.id] = !cur; saveForumFollows();
+    toast(!cur ? 'Gönderi takip ediliyor' : 'Gönderi takibi bırakıldı');
+    rerender();
+  };
+
+  // Satır içi yanıt gönderme
+  const rin = box.querySelector('#fo-rin'), rsend = box.querySelector('#fo-rsend');
+  if (rin && rsend) {
+    rin.oninput = () => { forumReplyDraft = rin.value; rsend.disabled = !rin.value.trim(); };
+    const sendReply = () => {
+      const txt = rin.value.trim(); if (!txt || !forumPostId) return;
+      const pid = forumPostId;
+      rsend.disabled = true;
+      socket.emit('threadReply', { msgId: pid, text: txt }, r => {
+        if (r?.error) { rsend.disabled = false; return toast(r.error); }
+        forumReplyDraft = ''; forumScrollEnd = true;
+        if (box.querySelector('#fo-rin')) box.querySelector('#fo-rin').value = '';
+      });
+    };
+    rsend.onclick = sendReply;
+    rin.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); } };
+  }
+}
+
 function newForumPost() {
-  modal(`<div class="ccm"><div class="cc-head"><div class="cc-ico">${ic('forum')}</div><div><h3>Yeni gönderi</h3><p>#${esc(S.channel.name)}</p></div></div>
-    <div class="mlabel">Başlık</div><div class="cname"><input id="fp-t" maxlength="100" placeholder="Ne hakkında konuşalım?"></div>
-    <div class="mlabel">İçerik</div><textarea class="fp-b" id="fp-b" rows="5" placeholder="Detayları yaz…"></textarea>
-    <div class="mfoot"><span style="margin-right:auto"></span><button class="btns2" id="mx">Vazgeç</button><button class="btnp" id="fp-ok">${ic('send')} Paylaş</button></div></div>`, 'ccm');
-  $('#mx').onclick = closeModal; setTimeout(() => $('#fp-t').focus(), 60);
-  $('#fp-ok').onclick = () => { const title = $('#fp-t').value.trim(), text = $('#fp-b').value.trim();
-    if (!title) { $('.cname').classList.add('err'); return $('#fp-t').focus(); }
-    socket.emit('message', { kind: 'text', title, text: text || title }, r => { if (r?.error) return toast(r.error); closeModal(); toast('Gönderi paylaşıldı'); }); };
+  forumNewOpen = true;
+  renderForum($('#messages'), false);
+  setTimeout(() => $('#fo-ct')?.focus(), 30);
 }
 
 // Yavaş mod geri sayımı
