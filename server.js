@@ -3464,20 +3464,19 @@ const BILEK = {
   ad: 'Bilek Güreşi', emoji: '💪', min: 2, max: 2, rt: true, hz: 10,
   // Güç: A ve D'ye sırayla basınca artar; yoruldukça her basışın kazandırdığı güç azalır.
   // Güç düşünce zamanlama barı çıkar: işaret yeşil bölgedeyken boşluğa basan gücünü zirvesine yaklaştırır, yorgunluğu atar.
-  PER: 1.1, QTE_MAX: 3, QTE_CD: 2.5,
+  PER: 2.4, QTE_MAX: 3.6, QTE_CD: 2.5, qid: 0,
   init(ps) {
     const pl = () => ({ pw: 30, peak: 30, fat: 0, k: 0, q: null, cd: 0, last: null });
     return { ps, pos: 0, wins: Object.fromEntries(ps.map(p => [p, 0])), P: Object.fromEntries(ps.map(p => [p, pl()])), phase: 'cd', t: 3, round: 1, now: 0 };
   },
-  mark: (q, age) => 0.5 - 0.5 * Math.cos(2 * Math.PI * Math.max(0, age) / BILEK.PER), // 0 → 1 → 0 gidip gelen işaret
+  mark: t => { const u = (Math.max(0, t) / BILEK.PER) % 1; return u < 0.5 ? u * 2 : 2 - u * 2; }, // 0 → 1 → 0 sabit hızla gidip gelen işaret
   input(st, p, inp) {
     const P = st.P?.[p]; if (!P || st.phase !== 'go') return;
     const k = Math.max(0, Math.min(3, Math.floor(+inp?.k || 0))); P.k += k; // 100 ms'de en çok 3 doğru basış (saniyede ~30)
-    if (inp?.q != null && P.q && !P.q.done) {
-      const age = st.now - P.q.at, v = Math.max(0, Math.min(1, +inp.q));
-      // gecikme payı: işaretin son 0-350 ms içindeki herhangi bir konumuna yakınsa kabul et
-      let ok = false; for (let l = 0; l <= 0.35; l += 0.05) if (Math.abs(BILEK.mark(P.q, age - l) - v) < 0.12) { ok = true; break; }
-      const dist = Math.abs((ok ? v : BILEK.mark(P.q, age)) - P.q.z), acc = Math.max(0, 1 - dist / (P.q.w * 1.6));
+    if (inp?.q != null && P.q && !P.q.done && (inp.qi == null || +inp.qi === P.q.id)) {
+      // İstemci, barı gördüğü andan bu yana geçen süreyi gönderir; gecikme payı: sunucudaki süreden en çok 0,8 sn geride olabilir
+      const sv = (Date.now() - P.q.at) / 1000; let t = +inp.q; if (!isFinite(t) || t > sv + 0.05 || t < sv - 0.8) t = sv;
+      const dist = Math.abs(BILEK.mark(t) - P.q.z), acc = Math.max(0, Math.min(1, 1 - dist / (2 * P.q.w))); // bölge kenarında %50, ortasında %100
       P.q.done = true; P.q.acc = Math.round(acc * 100) / 100; P.last = { acc: P.q.acc, at: st.now };
       if (acc > 0) { P.pw += (P.peak - P.pw) * acc; P.fat *= 1 - acc * 0.85; } else P.pw = Math.max(0, P.pw - 8);
       P.cd = BILEK.QTE_CD; setTimeout(() => { if (P.q?.done) P.q = null; }, 600);
@@ -3495,9 +3494,9 @@ const BILEK = {
       P.pw = Math.max(0, P.pw - (7 + P.pw * 0.06) * dt);     // güç kendiliğinden düşer
       if (P.pw > P.peak) P.peak = P.pw; else P.peak = Math.max(P.pw, P.peak - 1.5 * dt);
       if (P.cd > 0) P.cd -= dt;
-      if (P.q && !P.q.done && st.now - P.q.at > BILEK.QTE_MAX) { P.q.done = true; P.q.acc = 0; P.last = { acc: 0, at: st.now, miss: true }; P.cd = BILEK.QTE_CD; setTimeout(() => { if (P.q?.done) P.q = null; }, 400); }
+      if (P.q && !P.q.done && (Date.now() - P.q.at) / 1000 > BILEK.QTE_MAX) { P.q.done = true; P.q.acc = 0; P.last = { acc: 0, at: st.now, miss: true }; P.cd = BILEK.QTE_CD; setTimeout(() => { if (P.q?.done) P.q = null; }, 400); }
       // güç zirvenin yarısına düşünce (ya da çok yorulunca) zamanlama barı çıkar
-      if (!P.q && P.cd <= 0 && P.peak > 25 && (P.pw < P.peak * 0.65 || P.fat > 0.5)) P.q = { at: st.now, z: r3(0.25 + Math.random() * 0.5), w: 0.09 };
+      if (!P.q && P.cd <= 0 && P.peak > 25 && (P.pw < P.peak * 0.65 || P.fat > 0.5)) P.q = { id: ++BILEK.qid, at: Date.now(), z: r3(0.3 + Math.random() * 0.5), w: 0.1 };
     }
     const [a, b] = st.ps, d = st.P[a].pw - st.P[b].pw;
     st.pos += d * 0.0019 * dt - Math.sign(st.pos) * 0.01 * dt; // güç farkı 50 iken yaklaşık 10 sn'de kazanılır
@@ -3506,7 +3505,7 @@ const BILEK = {
     return true;
   },
   view(st) {
-    const P = {}; for (const p of st.ps) { const x = st.P[p]; P[p] = { pw: Math.round(x.pw), peak: Math.round(x.peak), fat: Math.round(x.fat * 100) / 100, q: x.q ? { age: r3(st.now - x.q.at), z: x.q.z, w: x.q.w, done: !!x.q.done, acc: x.q.acc ?? null } : null, last: x.last && st.now - x.last.at < 1.2 ? x.last : null }; }
+    const P = {}; for (const p of st.ps) { const x = st.P[p]; P[p] = { pw: Math.round(x.pw), peak: Math.round(x.peak), fat: Math.round(x.fat * 100) / 100, q: x.q ? { id: x.q.id, age: r3((Date.now() - x.q.at) / 1000), z: x.q.z, w: x.q.w, done: !!x.q.done, acc: x.q.acc ?? null } : null, last: x.last && st.now - x.last.at < 1.2 ? x.last : null }; }
     return { pos: r3(st.pos), wins: st.wins, phase: st.phase, t: Math.ceil(st.t), round: st.round, last: st.last || null, P, per: BILEK.PER };
   },
   leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
