@@ -3826,6 +3826,13 @@
     /* emoji paneli tam genişlik */
     #gifpanel { position: fixed !important; left: 10px !important; right: 10px !important; width: auto !important; bottom: calc(84px + env(safe-area-inset-bottom)) !important; height: min(60vh, 470px) !important; z-index: 30; box-shadow: 0 -10px 40px rgba(0,0,0,.45); }
     #compose.recording #gif-btn { display: none; }
+    /* Telefonda yazarken yazıya yer aç: GIF ve sesli mesaj gizlenir, düğmeler küçülür, kutu kenarlara yaklaşır */
+    #compose.has-text :is(#gif-btn, #mic-btn) { display: none; }
+    body.ui2 #compose { margin: 0 8px 8px; padding: 6px; gap: 4px; }
+    #plus { width: 36px; height: 36px; } #send { width: 40px; height: 40px; }
+    #emo-btn, #mic-btn { width: 34px; height: 36px; } #gif-btn { height: 36px; padding: 0 3px; }
+    #compose:not(.has-text) #send { opacity: .55; }
+    #input { padding-left: 6px; padding-right: 4px; }
     #emojipanel { position: fixed !important; left: 10px !important; right: 10px !important; width: auto !important; bottom: calc(84px + env(safe-area-inset-bottom)) !important; height: min(56vh, 440px) !important; z-index: 30; box-shadow: 0 -10px 40px rgba(0,0,0,.45); }
     .ep-prev { display: none; }
     /* ayar kaydet çubuğu: telefonda sadece düğmeler */
@@ -8594,7 +8601,7 @@ $('#input').addEventListener('input', () => {
   sugg = pool.filter(n => n !== S.me && n.toLowerCase().startsWith(m[1].toLowerCase())).slice(0, 6); suggI = 0;
   renderSuggest();
 });
-const growInput = () => { const i = $('#input'); i.style.height = 'auto'; i.style.height = Math.min(i.scrollHeight, innerHeight * .4) + 'px'; };
+const growInput = () => { const i = $('#input'); $('#compose').classList.toggle('has-text', !!i.value.trim()); i.style.height = 'auto'; i.style.height = Math.min(i.scrollHeight, innerHeight * .4) + 'px'; };
 $('#input').addEventListener('input', growInput);
 $('#input').addEventListener('keydown', e => {
   // Enter gönderir, Shift+Enter alt satıra geçer (Discord gibi)
