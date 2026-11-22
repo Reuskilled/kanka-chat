@@ -884,7 +884,7 @@ function save() {
 }
 // Kapanırken bekleyen değişiklikleri senkron yaz (süren asenkron yazım yarım kalsa da data.json hep sağlam kalır)
 const flushDb = () => { if (saveTimer || dbDirty || dbWriting) { writeDbNow(); dbDirty = false; } };
-for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) { try { process.on(sig, () => { flushDb(); process.exit(0); }); } catch {} }
+for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) { try { process.on(sig, () => { if (typeof gracefulShutdown === 'function') gracefulShutdown(sig); else { flushDb(); process.exit(0); } }); } catch {} }
 process.on('exit', flushDb);
 if (dbRecovered) { try { fs.unlinkSync(DATA_FILE); } catch {} writeDbNow(); } // kurtarılan veriyi hemen sağlam dosyaya yaz (bozuk kopya .bozuk-… olarak saklandı)
 setTimeout(() => backup(), 5000); setInterval(backup, 60 * 60e3);
@@ -2898,6 +2898,34 @@ function gwConnection(ws, req) {
   ws.on('error', () => {});
 }
 setInterval(() => { for (const [k, s] of botSessions) if (s.closedAt && Date.now() - s.closedAt > 120e3) botSessions.delete(k); }, 60e3);
+// ---- Güncellemede botlar kopmasın: oturumlar diske yazılır, yeni sunucu açılınca bot "devam et" (op 6) ile kaldığı yerden döner ----
+const GW_SESS_FILE = path.join(DATA_DIR, 'gw-oturumlar.json');
+try {
+  const o = JSON.parse(fs.readFileSync(GW_SESS_FILE, 'utf8'));
+  if (Date.now() - o.at < 180e3) for (const [k, v] of Object.entries(o.s || {})) botSessions.set(k, { app: v.app, seq: v.seq || 0, buf: [], closedAt: Date.now() });
+  fs.unlinkSync(GW_SESS_FILE);
+} catch {}
+let shuttingDown = false;
+function gracefulShutdown(why = 'güncelleme') {
+  if (shuttingDown) return; shuttingDown = true;
+  console.log('Sunucu düzgün kapanıyor:', why);
+  try { const o = {}; for (const [k, v] of botSessions) o[k] = { app: v.app, seq: v.seq }; fs.writeFileSync(GW_SESS_FILE, JSON.stringify({ at: Date.now(), s: o })); } catch {}
+  // Kullanıcılara: birkaç saniyelik kesinti (uygulama "güncelleniyor" der, sesli oda kendiliğinden geri bağlanır)
+  try { io.emit('serverRestart', { ms: 5000 }); } catch {}
+  // Botlara: op 7 = yeniden bağlan (oturum korunur), 1012 = sunucu yeniden başlıyor
+  for (const set of botConns.values()) for (const conn of set) { gwSend(conn, { op: 7, d: { bekle: 4000, sebep: 'Sunucu güncelleniyor' } }); try { conn.ws.close(1012, 'Sunucu güncelleniyor, birkaç saniye sonra yeniden bağlan'); } catch {} }
+  try { flushDb(); } catch (e) { console.error('Kapanışta kayıt:', e.message); }
+  setTimeout(() => process.exit(0), 700);
+}
+// Güncelleyici sunucuyu öldürmeden önce bunu çağırır (sadece bu bilgisayardan, anahtarla)
+const KAPAT_KEY_FILE = path.join(DATA_DIR, 'kapat.anahtar');
+let kapatKey = ''; try { kapatKey = fs.readFileSync(KAPAT_KEY_FILE, 'utf8').trim(); } catch {}
+if (!kapatKey) { kapatKey = crypto.randomBytes(24).toString('hex'); try { fs.writeFileSync(KAPAT_KEY_FILE, kapatKey); } catch {} }
+app.post('/api/_kapat', (req, res) => {
+  const ip = req.socket.remoteAddress || '';
+  if (!/^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(ip) || req.get('x-kapat-anahtar') !== kapatKey) return res.status(404).end();
+  res.json({ ok: true }); setTimeout(() => gracefulShutdown('güncelleyici'), 50);
+});
 function botServerView(a, s) {
   return { id: s.id, ad: s.name, simge: s.iconImg || null, sahip: s.owner, uyeSayisi: humans(s.members).length,
     odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => ({ id: c.id, ad: c.name, tur: c.type, konu: c.topic || '', kategori: c.cat || null, yazabilir: chPerm(s, c, a.bot, 'send') })),

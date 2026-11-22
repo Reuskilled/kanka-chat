@@ -4792,8 +4792,16 @@ function tfaLogin(err, go) {
 }
 const tfaField = () => S.tfa ? `<label class="rp-lbl">İki adımlı doğrulama kodu</label><input class="field" id="tfa-f" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="6 haneli kod ya da yedek kod">` : '';
 const tfaVal = () => $('#tfa-f')?.value.trim() || undefined;
+// Bağlantı yokken ya da yeniden giriş yapılmadan gönderilenler (mesaj, düzenleme, tepki) sıraya alınır,
+// giriş doğrulanınca gönderilir. Önceden güncelleme anında yazılan mesaj "giriş yap" hatasıyla kayboluyordu.
+var authed = false, restartingAt = 0, sendQ = [];
+const QUEUED = new Set(['message', 'edit', 'react', 'delete', 'pin']);
+{ const raw = socket.emit.bind(socket);
+  socket.emit = (ev, ...a) => { if (QUEUED.has(ev) && (!socket.connected || !authed)) { if (sendQ.length < 50) sendQ.push([ev, a]); return socket; } return raw(ev, ...a); }; }
+function flushSendQ() { const q = sendQ; sendQ = []; for (const [ev, a] of q) socket.emit(ev, ...a); }
 function onAuth(res) {
   hideBoot();
+  if (!res.error) { authed = true; setTimeout(flushSendQ, 50); if (restartingAt && Date.now() - restartingAt < 60e3) { restartingAt = 0; toast('✅ Kanka güncellendi'); } }
   if (res.error) { vcResume = null; store.set('kanka-token', null); showAuth(); return setTimeout(() => $('#auth-err') && authErr(res), 0); }
   if (location.pathname !== APP_PATH) try { history.replaceState(null, '', APP_PATH + location.search); } catch {}
   if (vcResume) setTimeout(resumeVoice, 300);
@@ -13308,7 +13316,9 @@ socket.on('reportNew', r => {
     const s = r.serverId && S.servers.find(x => x.id === r.serverId); s ? showServerSettings(s, 'reports') : openReportsQueue();
   }, true);
 });
-socket.on('disconnect', why => { if (why === 'io server disconnect') setTimeout(() => socket.connect(), 900); });
+socket.on('disconnect', why => { authed = false; if (why === 'io server disconnect') setTimeout(() => socket.connect(), 900); });
+// Sunucu güncellenirken (birkaç saniye) bağlantı kopar: kullanıcıya haber ver, ses/oda kendiliğinden geri gelir
+socket.on('serverRestart', () => { restartingAt = Date.now(); toast('🔄 Kanka güncelleniyor, birkaç saniye içinde geri bağlanacak'); });
 socket.on('renamed', ({ to }) => { // adın başka bir cihazdan değişti: yeni adla yeniden aç
   toast(`Kullanıcı adın <b>${esc(to)}</b> olarak değişti. Sayfa yenileniyor…`, null, true); setTimeout(() => location.reload(), 1300);
 });

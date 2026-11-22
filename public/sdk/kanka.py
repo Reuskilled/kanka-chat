@@ -11,10 +11,10 @@ Belgeler: https://kankahq.com/gelistirici
 
     bot.calistir()
 """
-import asyncio, hashlib, hmac, json, re, time
+import asyncio, time, random, hashlib, hmac, json, re, time
 import aiohttp
 
-SURUM = "1.1.0"
+SURUM = "1.2.0"
 
 
 class KankaHata(Exception):
@@ -118,13 +118,20 @@ class Bot:
 
     # ---------- REST ----------
     async def api(self, yontem, yol, veri=None):
-        for _ in range(4):
-            async with self._oturum.request(yontem, f"{self.adres}/api/v1{yol}", json=veri, headers={"Authorization": "Bot " + self.token, "User-Agent": "kanka.py/" + SURUM}) as r:
-                j = await r.json(content_type=None)
-                if r.status == 429: await asyncio.sleep((j or {}).get("tekrarDene", 1) + 0.1); continue
-                if r.status >= 400: raise KankaHata((j or {}).get("hata", f"HTTP {r.status}"), r.status, j)
-                return j
-        raise KankaHata("Hız sınırı", 429)
+        for deneme in range(6):
+            try:
+                async with self._oturum.request(yontem, f"{self.adres}/api/v1{yol}", json=veri, headers={"Authorization": "Bot " + self.token, "User-Agent": "kanka.py/" + SURUM}) as r:
+                    gecici = r.status in (502, 503, 504) and deneme < 5
+                    if not gecici:
+                        j = await r.json(content_type=None)
+                        if r.status == 429: await asyncio.sleep((j or {}).get("tekrarDene", 1) + 0.1); continue
+                        if r.status >= 400: raise KankaHata((j or {}).get("hata", f"HTTP {r.status}"), r.status, j)
+                        return j
+            except aiohttp.ClientConnectionError:
+                if deneme >= 5: raise
+            # sunucu güncellenirken birkaç saniye cevap vermez: bekleyip tekrar dene
+            await asyncio.sleep(1.5 * (deneme + 1))
+        raise KankaHata("Sunucuya ulaşılamadı ya da hız sınırı", 429)
     async def gonder(self, oda, icerik):
         return Mesaj(self, (await self.api("POST", f"/odalar/{oda}/mesajlar", _govde(icerik)))["mesaj"])
     async def _ham(self, yontem, yol, veri, basliklar=None):
@@ -202,14 +209,17 @@ class Bot:
             if self.komutlar: await self.komutlari_kaydet()
             bekle = 1
             while True:
+                basladi = time.monotonic(); self._ilk_bekle = 0
                 try:
-                    await self._baglan(); bekle = 1
+                    await self._baglan()
                 except KankaHata as e:
                     if e.durum in (4004, 4014): raise
                     print(f"[kanka] bağlantı koptu: {e}")
                 except Exception as e:
                     print(f"[kanka] bağlantı koptu: {e!r}")
-                await asyncio.sleep(bekle); bekle = min(30, bekle * 2)
+                if time.monotonic() - basladi > 30: bekle = 1  # uzun süre bağlı kaldıysa beklemeyi sıfırla
+                # sunucu güncelleniyor (op 7 / 1012): birkaç saniye bekle, aynı oturumla devam et
+                await asyncio.sleep(self._ilk_bekle or (bekle + random.random() * 0.5)); bekle = min(15, bekle * 2)
 
     async def _baglan(self):
         async with self._oturum.ws_connect(self.adres.replace("http", "ws", 1) + "/bot/gateway", heartbeat=None) as ws:
@@ -223,10 +233,13 @@ class Bot:
                     nabiz = asyncio.create_task(nabiz_at())
                     if self._oturum_id: await ws.send_json({"op": 6, "d": {"token": self.token, "oturum": self._oturum_id, "sira": self._sira, "niyetler": self.niyetler}})
                     else: await ws.send_json({"op": 2, "d": {"token": self.token, "niyetler": self.niyetler}})
+                elif p["op"] == 7:
+                    self._ilk_bekle = (p.get("d") or {}).get("bekle", 4000) / 1000
                 elif p["op"] == 0:
                     if p.get("s"): self._sira = p["s"]
                     asyncio.create_task(self._olay(p["t"], p["d"]))
             if nabiz: nabiz.cancel()
+            if ws.close_code == 1012 and not self._ilk_bekle: self._ilk_bekle = 4
             if ws.close_code in (4004, 4014): raise KankaHata(f"Bağlantı reddedildi ({ws.close_code})", ws.close_code)
             raise KankaHata(f"kapandı ({ws.close_code})", ws.close_code)
 

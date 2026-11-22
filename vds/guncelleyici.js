@@ -92,8 +92,21 @@ function restartCaddy() {
   ps("Get-Process caddy -ErrorAction SilentlyContinue | Stop-Process -Force");
   log('Https sunucusu yeni ayarla yeniden başlatıldı');
 }
-function restartServer() {
+// Önce sunucudan düzgün kapanmasını iste: kayıtları diske yazar, kullanıcılara "güncelleniyor" der,
+// botlara "birkaç saniye sonra yeniden bağlan" der ve oturumlarını saklar (botlar kaldığı yerden devam eder).
+// Cevap vermezse eskisi gibi zorla kapatılır.
+async function askGraceful() {
+  try {
+    const key = fs.readFileSync(path.join(APP, 'veri', 'kapat.anahtar'), 'utf8').trim(); if (!key) return false;
+    const r = await fetch(`http://127.0.0.1:${PORT}/api/_kapat`, { method: 'POST', headers: { 'x-kapat-anahtar': key }, signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return false;
+    await new Promise(res => setTimeout(res, 2500)); // sunucu kendi kendine kapanır (~0,7 sn)
+    return true;
+  } catch { return false; }
+}
+async function restartServer() {
   if (process.platform !== 'win32') { log('(test) sunucu yeniden başlatılacaktı'); return false; }
+  if (await askGraceful()) log('Sunucu düzgün kapandı');
   // calistir-uygulama.cmd döngüsü sunucuyu 3 saniye içinde yeniden açar
   ps("Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -like '*server.js*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }");
   log('Sunucu yeniden başlatıldı');
@@ -155,7 +168,7 @@ async function finishPending() {
   }
   // paket kurulamasa bile sunucu yeni koda geçsin; kurulum sonraki turlarda yeniden denenir
   if (st.needRestart) {
-    const since = Date.now(); const did = restartServer(); st.needRestart = false; save();
+    const since = Date.now(); const did = await restartServer(); st.needRestart = false; save();
     const p = st.pending;
     if (did && p) {
       if (await healthy(since)) log(`Yeni sürüm ${p.sha.slice(0, 7)} sağlıklı çalışıyor`);
@@ -163,7 +176,7 @@ async function finishPending() {
         log(`Yeni sürüm ${p.sha.slice(0, 7)} 90 saniyede açılmadı, önceki sürüme dönülüyor`);
         rollback(p); st.badSha = p.sha; st.sha = p.prevSha; save();
         if (st.needNpm) { try { npmInstall(); st.needNpm = false; save(); } catch (e) { log('Eski paketler kurulamadı: ' + e.message); } }
-        const since2 = Date.now(); restartServer();
+        const since2 = Date.now(); await restartServer();
         log(await healthy(since2) ? 'Önceki sürüm geri geldi ve çalışıyor' : 'DİKKAT: önceki sürüm de açılmadı, elle bakılmalı');
       }
     }
