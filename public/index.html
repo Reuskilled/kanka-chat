@@ -3751,6 +3751,14 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .sg-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; } .sg-chips span { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; padding: 3px 8px; border-radius: 7px; background: var(--hover); font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .sg-chips .ic { width: 11px; height: 11px; flex: none; }
   .sg-acts { display: flex; gap: 4px; margin-top: 12px; align-items: center; } .sg-acts .sg-add { flex: 1; min-width: 0; justify-content: center; white-space: nowrap; padding: 8px 10px; } .sg-acts .ibtn { flex: none; width: 34px; height: 34px; }
   .sg-add.done { background: var(--hover); color: var(--muted); }
+
+  .dp-emo { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-bottom: 8px; }
+  .dp-em { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); min-width: 0; }
+  .dp-em img { width: 36px; height: 36px; object-fit: contain; } .dp-em code { font-size: 11px; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dp-em button { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; color: var(--muted); opacity: 0; } .dp-em:hover button, .dp-em button:focus-visible { opacity: 1; } .dp-em button:hover { color: #ff6b6f; background: var(--hover); } .dp-em button .ic { width: 13px; height: 13px; }
+  .dp-em.add { justify-content: center; color: var(--accent); border-style: dashed; cursor: pointer; font-size: 12px; font-weight: 800; } .dp-em.add .ic { width: 22px; height: 22px; }
+  @media (hover: none) { .dp-em button { opacity: 1; } }
+  .dp-emrow[hidden] { display: none; } .dp-emrow { display: flex; align-items: center; gap: 6px; margin: 4px 0 10px; flex-wrap: wrap; } .dp-emrow img { width: 36px; height: 36px; object-fit: contain; border-radius: 8px; background: var(--hover); padding: 3px; } .dp-emrow .field { width: 160px; } .dp-emc { color: var(--muted); font-weight: 800; }
 </style>
 </head>
 <body>
@@ -12519,6 +12527,12 @@ function appDetail(root, a, r) {
         <label class="ba-pr"><input type="checkbox" id="ap-vc"><span>Botum mesaj içeriklerini görmeli <small>(sadece gerçekten gerekiyorsa; komutlar ve etiketlendiği mesajlar zaten gelir)</small></span></label>
         <div class="st-field" id="ap-vcw-w" hidden><input class="field" id="ap-vcw" maxlength="500" placeholder="Neden? (örn. küfür filtresi)" style="margin:0"></div>
         <div class="st-field"><button class="btns2" id="ap-v">${ic('shield')} Doğrulama iste</button></div>`}
+    <div class="st-sec">Emojiler (${(a.emojiler || []).length}/50)</div>
+    <p class="hint" style="margin-top:0">Bu emojileri sadece bu bot kullanabilir. Bot mesajına <code>:ad:</code> yazınca her sunucuda ve DM'de görünür. Kodla da eklenebilir: <code>PUT /api/v1/emojiler/:ad</code>.</p>
+    <div class="dp-emo">${(a.emojiler || []).map(e => `<div class="dp-em" title=":${esc(e.ad)}:"><img src="${esc(e.url)}" alt=":${esc(e.ad)}:"><code>:${esc(e.ad)}:</code><button type="button" data-emdel="${esc(e.ad)}" title="Sil" aria-label=":${esc(e.ad)}: emojisini sil">${ic('x')}</button></div>`).join('')}
+      ${(a.emojiler || []).length < 50 ? `<button type="button" class="dp-em add" id="ap-emadd">${ic('plus')}<span>Emoji yükle</span></button>` : ''}</div>
+    <input type="file" id="ap-emf" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+    <div class="dp-emrow" id="ap-emrow" hidden><img id="ap-emprev" alt=""><span class="dp-emc">:</span><input class="field" id="ap-emname" maxlength="24" placeholder="kupa" style="margin:0"><span class="dp-emc">:</span><button class="btns2" id="ap-emok">${ic('check')} Ekle</button><button class="btns2" id="ap-emno">Vazgeç</button></div>
     <div class="st-sec">Komutlar (${a.komutlar})</div>
     <p class="hint" style="margin-top:0">Komutları botun kodundan kaydeder: <code>PUT /api/v1/komutlar</code>. Kütüphane kullanıyorsan <code>bot.komut(...)</code> bunu senin için yapar.</p>
     <div class="st-sec">Sunucular</div>
@@ -12541,6 +12555,23 @@ function appDetail(root, a, r) {
   $('#ap-url-s').onclick = () => { const b = $('#ap-url-s'); b.disabled = true; socket.emit('appUpdate', { id: a.id, interUrl: $('#ap-url').value }, x => { b.disabled = false; if (x.error) return toast(x.error, null, false, { type: 'err' }); toast($('#ap-url').value ? 'Adres doğrulandı ve kaydedildi' : 'Adres kaldırıldı'); }); };
   if ($('#ap-v')) { $('#ap-vc').onchange = () => $('#ap-vcw-w').hidden = !$('#ap-vc').checked;
     $('#ap-v').onclick = () => socket.emit('appVerifyReq', { id: a.id, why: $('#ap-vw').value, needContent: $('#ap-vc').checked, contentWhy: $('#ap-vcw').value }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Doğrulama isteğin gönderildi'); re(); }); }
+  // Bot emojisi: dosya seç → ad sor → yükle
+  root.querySelectorAll('[data-emdel]').forEach(b => b.onclick = () => confirmBox(`:${b.dataset.emdel}: silinsin mi? Bu emojiyi kullanan eski mesajlarda emoji görünmeye devam eder.`, () => socket.emit('appEmojiDel', { id: a.id, name: b.dataset.emdel }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Emoji silindi'); re(); })));
+  $('#ap-emadd') && ($('#ap-emadd').onclick = () => $('#ap-emf').click());
+  $('#ap-emf').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    if (f.size > 512 * 1024) return toast('Emoji en fazla 512 KB olabilir', null, false, { type: 'err' });
+    const guess = f.name.replace(/\.[^.]+$/, '').toLowerCase().replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 24) || 'emoji';
+    $('#ap-emrow').hidden = false; $('#ap-emprev').src = URL.createObjectURL(f); $('#ap-emname').value = guess; $('#ap-emname').focus(); $('#ap-emname').select();
+    $('#ap-emno').onclick = () => { $('#ap-emrow').hidden = true; };
+    $('#ap-emname').onkeydown = ev => { if (ev.key === 'Enter') $('#ap-emok').click(); };
+    $('#ap-emok').onclick = () => { const name = $('#ap-emname').value.trim().toLowerCase(), b = $('#ap-emok');
+      if (!/^[a-z0-9_]{2,24}$/.test(name)) return toast('Emoji adı 2-24 karakter olmalı: küçük harf, rakam ya da _', null, false, { type: 'err' });
+      b.disabled = true;
+      const rd = new FileReader(); rd.onload = () => socket.emit('upload', { data: rd.result }, x => {
+        if (x?.error || !x?.url) { b.disabled = false; return toast(x?.error || 'Resim yüklenemedi', null, false, { type: 'err' }); }
+        socket.emit('appEmojiAdd', { id: a.id, name, url: x.url }, y => { b.disabled = false; if (y.error) return toast(y.error, null, false, { type: 'err' }); toast(`:${y.ad}: eklendi`); re(); });
+      }); rd.readAsDataURL(f); };
+  };
   $('#ap-del').onclick = () => socket.emit('appDelete', { id: a.id, confirm: $('#ap-delc').value }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Bot silindi'); devPortal(root); });
 }
 // Yönetim paneli: botlar, doğrulama istekleri, acil durdurma

@@ -2766,7 +2766,7 @@ function appView(a, full) {
   const u = db.users[a.bot] || {};
   const v = { id: a.id, kullaniciId: uidOf(db.users[a.bot]), ad: a.bot, gorunenAd: u.displayName || a.name, aciklama: a.desc || '', avatar: u.avatar || null, sahip: a.owner, dogrulandi: !!a.verified, olusturuldu: a.createdAt, listede: !!(a.listed && a.verified) };
   if (!full) return v;
-  return { ...v, tokenVar: !!a.tokenH, tokenAt: a.tokenAt || null, gizlilik: a.privacy || '', etkilesimUrl: a.interUrl || '', dmIzin: a.dmOk !== false, kapali: a.killed || null,
+  return { ...v, emojiler: Object.entries(a.emojis || {}).map(([ad, url]) => ({ ad, url })), tokenVar: !!a.tokenH, tokenAt: a.tokenAt || null, gizlilik: a.privacy || '', etkilesimUrl: a.interUrl || '', dmIzin: a.dmOk !== false, kapali: a.killed || null,
     erisim: reachOf(a), esik: REACH_MAX, sunucular: botServers(a).map(s => ({ id: s.id, ad: s.name, uye: humans(s.members).length })),
     dogrulama: a.verifyReq || null, icerikIzni: contentOk(a), komutlar: (a.cmds || []).length, istatistik: appStatsOut(a), cevrimici: botConnsOf(a.id).length > 0,
     sirIpucu: a.secret ? a.secret.slice(0, 6) + '…' : null };
@@ -4735,6 +4735,23 @@ io.on('connection', socket => {
         if (!r || (r.tur ?? r.type) !== 'PONG') { a.interUrl = old || ''; return cb({ error: 'Adres doğrulanamadı: { "tur": "PING" } isteğine 3 saniye içinde { "tur": "PONG" } dönmeli (imzayı da kontrol etmelisin)' }); } }
     }
     save(); io.emit('users', allUsers()); cb({ ok: true, app: appView(a, true) });
+  });
+  // Geliştirici Portalı: botun kendi emojileri (sadece o bot kullanabilir; mesajda :ad: yazınca görünür)
+  socket.on('appEmojiAdd', ({ id: aid, name, url } = {}, cb = () => {}) => {
+    const a = myApp(aid, cb); if (!a) return;
+    const ad = String(name || '').toLowerCase().trim();
+    if (!/^[a-z0-9_]{2,24}$/.test(ad)) return cb({ error: 'Emoji adı 2-24 karakter olmalı: küçük harf, rakam ya da _' });
+    if (!UPLOAD_RE.test(url || '')) return cb({ error: 'Geçersiz resim' });
+    try { if (fs.statSync(path.join(UPLOADS, path.basename(url))).size > 512 * 1024) return cb({ error: 'Emoji en fazla 512 KB olabilir' }); } catch { return cb({ error: 'Resim bulunamadı' }); }
+    a.emojis ||= {};
+    if (!a.emojis[ad] && Object.keys(a.emojis).length >= APP_EMOJI_MAX) return cb({ error: `Bir bota en fazla ${APP_EMOJI_MAX} emoji eklenebilir` });
+    if (limited('appemo|' + me, 40, 600e3)) return cb({ error: 'Çok hızlı, biraz bekle' });
+    a.emojis[ad] = url; save(); cb({ ok: true, ad });
+  });
+  socket.on('appEmojiDel', ({ id: aid, name } = {}, cb = () => {}) => {
+    const a = myApp(aid, cb); if (!a) return;
+    if (!a.emojis?.[name]) return cb({ error: 'Böyle bir emoji yok' });
+    delete a.emojis[name]; save(); cb({ ok: true });
   });
   socket.on('appToken', ({ id: aid, secret } = {}, cb = () => {}) => {
     const a = myApp(aid, cb); if (!a) return; if (limited('appt|' + me, 10, 3600e3)) return cb({ error: 'Biraz bekle' });
