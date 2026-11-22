@@ -3601,9 +3601,16 @@ function arenaView(L, viewer) {
     watchers: io.sockets.adapter.rooms.get('ar:' + L.id)?.size || 0, g: L.st ? E.view(L.st, viewer) : null, ps: L.st?.ps || null, res: L.res || null, rematch: L.rematch || [], turnAt: L.turnAt || null, turnSec: E.turnSec || null, seq: L.seq };
 }
 const arenaSummary = L => ({ id: L.id, game: L.game, ad: ARENA_GAMES[L.game].ad, emoji: ARENA_GAMES[L.game].emoji, host: L.host, players: L.players, max: ARENA_GAMES[L.game].max, state: L.state });
+// Odalar listesinde oyun simgesi: odayı görebilen herkese hangi oyunların açık olduğu
+const arenaRoomOf = ch => [...arenas.values()].filter(L => L.ch === ch).map(L => ({ game: L.game, state: L.state }));
+function arenaRoomsFor(n) { const o = {}; for (const L of arenas.values()) { if (o[L.ch]) continue; const f = findChannel(L.ch); if (f && (f.s.public || f.s.members.includes(n)) && seesChannel(f.s, f.c, n)) o[L.ch] = arenaRoomOf(L.ch); } return o; }
+const arenaRoomSig = new Map();
 function arenaPushCh(ch) {
   const list = [...arenas.values()].filter(L => L.ch === ch).map(arenaSummary);
   io.to('v:' + ch).to('arch:' + ch).emit('arenaCh', { ch, lobbies: list });
+  const g = arenaRoomOf(ch), sig = JSON.stringify(g);
+  if (arenaRoomSig.get(ch) !== sig) { arenaRoomSig.set(ch, sig); if (!g.length) arenaRoomSig.delete(ch);
+    const f = findChannel(ch); if (f) { const who = f.s.public ? [...new Set(online.values())] : membersOf(f.s); for (const n of who) if (seesChannel(f.s, f.c, n)) io.to('user:' + n).emit('arenaRoom', { ch, g }); } }
 }
 function arenaPush(L) {
   L.seq = (L.seq || 0) + 1;
@@ -4227,7 +4234,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: seenBy(flagsState(), name), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: seenBy(voiceState(), name), voiceAge: seenBy(voiceAges(), name), calls: callsFor(name), live: seenBy(liveState(), name), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, entrySound: db.users[name].entrySound || null, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
+      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, arenaRooms: arenaRoomsFor(name), entrySound: db.users[name].entrySound || null, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 
