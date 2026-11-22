@@ -7403,7 +7403,23 @@ function renderMemSearch() { // sunucu odasında üye listesinin tepesindeki ara
   if (w.dataset.ch !== S.channel.id) { w.dataset.ch = S.channel.id; w.innerHTML = searchBoxHTML(); wireSearchBox(w.querySelector('input')); }
   M.classList.add('has-srch');
 }
-function memSet(html) { const M = $('#members'), w = M.querySelector(':scope > .msrch'); M.innerHTML = html; if (w) M.prepend(w); }
+// Üye listesi her çevrimiçi/etkinlik değişiminde yeniden çiziliyordu: 200+ kişilik sunucuda tüm satırlar (avatarlar, isim efektleri,
+// plakalar) silinip baştan yaratıldığı için isimler sürekli "gidip geliyordu". Artık sadece değişen satırlar değiştiriliyor.
+function memSet(html) {
+  const M = $('#members'), w = M.querySelector(':scope > .msrch');
+  const tpl = document.createElement('template'); tpl.innerHTML = html;
+  const fresh = [...tpl.content.children], old = [...M.children].filter(x => x !== w);
+  if (!old.length || old.some(x => x._h === undefined)) { M.innerHTML = ''; for (const n of fresh) { n._h = n.outerHTML; M.appendChild(n); } if (w) M.prepend(w); return; }
+  // aynı satır (aynı kişi + aynı görünüm) varsa yerinde kalsın; yalnız farklı olanlar değişsin
+  const pool = new Map(); for (const n of old) { const k = n._h; (pool.get(k) || pool.set(k, []).get(k)).push(n); }
+  let at = w ? w.nextSibling : M.firstChild;
+  for (const n of fresh) {
+    const h = n.outerHTML, keep = pool.get(h)?.shift();
+    const node = keep || (n._h = h, n);
+    if (node === at) at = at.nextSibling; else M.insertBefore(node, at);
+  }
+  for (const rest of pool.values()) for (const n of rest) n.remove();
+}
 let spSeq = 0, spInput = null;
 function closeSearchPop() { $('#spop')?.remove(); spInput = null; }
 function placeSearchPop() {
