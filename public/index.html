@@ -9988,6 +9988,9 @@ navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.kankaOpe
 try { navigator.serviceWorker?.startMessages?.(); } catch {} // servis çalışanından gelen "şu sohbeti aç" mesajları beklemede kalmasın
 window.kankaDesktop?.onNotifOpen?.(d => { closeModal?.(); openFromNotif(d); });
 document.addEventListener('visibilitychange', () => { if (S.me) socket.emit('vis', document.visibilityState === 'visible'); });
+// telefonda ekran kilitlenince / uygulama arka plana atılınca 'görünmüyor' bilgisi kaçabiliyor: o zaman bildirim hiç gelmiyordu
+for (const ev of ['pagehide', 'freeze', 'blur']) addEventListener(ev, () => { if (S.me && (ev !== 'blur' || isTouch)) socket.emit('vis', false); }, { capture: true });
+addEventListener('focus', () => { if (S.me && document.visibilityState === 'visible') socket.emit('vis', true); });
 function pushSettingsHTML() {
   if (window.kankaDesktop) return '';
   return `<div class="push-card" id="push-card"><div class="pk-ic">${ic('bell')}</div><div class="pk-t"><b>Telefon ve tarayıcı bildirimleri</b><span id="pk-s">Kanka kapalıyken de özel mesaj, etiket ve arkadaşlık isteklerinde bildirim gelir.</span></div><div class="pk-b" id="pk-b"></div></div>`;
@@ -10001,7 +10004,14 @@ function wirePushSettings() {
     box.innerHTML = pushActive ? `<button class="btns2" id="pk-test">Dene</button><button class="btns2" id="pk-off">Kapat</button>` : `<button class="primary" id="pk-on">Bildirimleri aç</button>`;
     $('#pk-on') && ($('#pk-on').onclick = () => pushEnable().then(ok => { if (ok) toast('Bildirimler açıldı 🎉'); draw(); }));
     $('#pk-off') && ($('#pk-off').onclick = () => pushDisable().then(() => { toast('Bu cihazda bildirimler kapatıldı'); draw(); }));
-    $('#pk-test') && ($('#pk-test').onclick = () => { toast('Deneme bildirimi gönderildi; uygulamadan çıkınca da böyle gelecek'); socket.emit('pushTest', r => r?.error && toast(r.error)); });
+    $('#pk-test') && ($('#pk-test').onclick = async () => {
+      await pushEnable(true); // bu cihazın aboneliği sunucuda yoksa/eskiyse yenile
+      socket.emit('pushTest', r => {
+        if (r?.error) return toast(r.error);
+        if (r?.sent) toast(`Deneme bildirimi ${r.n > 1 ? `${r.sent}/${r.n} cihaza ` : ''}gönderildi. Gelmediyse telefonun bildirim ayarlarında tarayıcıya/Kanka'ya izin verildiğine bak.`);
+        else toast(`Bildirim gönderilemedi (${(r?.fail || []).join(', ') || 'bilinmeyen hata'}). Kapat'a basıp yeniden aç.`);
+      });
+    });
     $('#push-card').classList.toggle('on', pushActive);
   };
   draw();

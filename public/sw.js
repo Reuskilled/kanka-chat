@@ -1,5 +1,5 @@
 // Kanka Chat service worker: uygulama kabuğunu önbellekte tutar, çevrimdışıyken de açılır
-const CACHE = 'kanka-v184';
+const CACHE = 'kanka-v185';
 const SHELL = ['/app', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
@@ -36,7 +36,7 @@ async function e2ePeek(d) {
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data?.text() }; }
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async cs => {
-    if (cs.some(c => c.visibilityState === 'visible' && c.focused)) return; // zaten bakıyor
+    if (!d.test && cs.some(c => c.visibilityState === 'visible' && c.focused)) return; // zaten bakıyor (deneme bildirimi her zaman görünür)
     if (d.e?.enc && d.ch) d.body = await e2ePeek(d) || d.body;
     return self.registration.showNotification(d.title || 'Kanka Chat', {
       body: d.body || '', icon: '/icon-192.png', badge: '/icon-192.png', tag: d.tag || 'kanka', renotify: true,

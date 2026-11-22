@@ -404,7 +404,7 @@ const SQLITE_OK = (() => { try { require('node:sqlite'); return true; } catch { 
 app.get('/api/surum', (req, res) => {
   let sha = null;
   try { sha = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'guncelleme.json'), 'utf8')).sha; } catch {}
-  res.json({ surum: sha ? sha.slice(0, 7) : 'yerel', baslama: STARTED, node: process.version, sqlite: SQLITE_OK, kayit: saveSummary(), masaustu: { sunulan: (() => { try { return fs.readFileSync(path.join(__dirname, 'indir', '.surum'), 'utf8').trim(); } catch { return null; } })(), kullanilan48s: deskVersions() } });
+  res.json({ surum: sha ? sha.slice(0, 7) : 'yerel', baslama: STARTED, bildirim: pushStats, node: process.version, sqlite: SQLITE_OK, kayit: saveSummary(), masaustu: { sunulan: (() => { try { return fs.readFileSync(path.join(__dirname, 'indir', '.surum'), 'utf8').trim(); } catch { return null; } })(), kullanilan48s: deskVersions() } });
 });
 const artCache = new Map();
 async function albumArt(title, artist) {
@@ -2196,20 +2196,30 @@ function pushAllowed(u, n) {
   if ((pr.muted || []).includes(f.s.id) && !n.direct) return false;
   return (pr.ch || {})[chId] !== 'none';
 }
+// Bildirim gönderim sayaçları (/api/surum'da görünür): sorun olduğunda nerede takıldığını görmek için
+const pushStats = { gonderildi: 0, hata: 0, gorunur: 0, masaustu: 0, sonHata: null };
+function pushOne(u, sub, body, tag) {
+  return webpush.sendNotification(sub, body, { TTL: 3600, urgency: 'high', topic: (tag || 'kanka').replace(/[^\w-]/g, '').slice(0, 32) || undefined }).then(r => { pushStats.gonderildi++; return { ok: true, status: r?.statusCode }; }).catch(err => {
+    const st = err?.statusCode || 0;
+    if (st === 404 || st === 410) { u.push = (u.push || []).filter(x => x.endpoint !== sub.endpoint); save(); }
+    else { pushStats.hata++; pushStats.sonHata = { at: Date.now(), status: st, host: (() => { try { return new URL(sub.endpoint).host; } catch { return '?'; } })(), msg: String(err?.body || err?.message || '').slice(0, 160) }; if (pushStats.hata % 20 === 1) console.warn('Bildirim gönderilemedi', pushStats.sonHata); }
+    return { ok: false, status: st };
+  });
+}
 function sendPush(name, payload) {
   const u = db.users[name]; if (!webpush || !u?.push?.length) return;
   if ((u.presence || 'online') === 'dnd') return;
   if (!pushAllowed(u, payload)) return;
-  if ([...online].some(([sid, n]) => n === name && visibleSockets.has(sid))) return; // şu an Kanka'ya bakıyor
+  // Şu an Kanka'ya bakıyorsa gönderme. Ama ekran açık kalıp kişi uzaklaştıysa (boşta) telefona yine gelsin.
+  if ([...online].some(([sid, n]) => n === name && visibleSockets.has(sid) && !idleSockets.has(sid))) { pushStats.gorunur++; return; }
   const body = JSON.stringify(payload);
   // Masaüstü uygulaması açıksa bildirimi o zaten gösteriyor: bilgisayardaki tarayıcıya da gönderirsek tıklayınca Chrome açılıyordu.
   // O durumda sadece telefonlara gönder.
   const desk = [...online].some(([sid, n]) => n === name && desktopSockets.has(sid));
   for (const sub of [...u.push]) {
-    if (desk && !sub.mob) continue;
-    webpush.sendNotification(sub, body, { TTL: 3600, urgency: 'high', topic: (payload.tag || 'kanka').replace(/[^\w-]/g, '').slice(0, 32) || undefined }).catch(err => {
-      if (err?.statusCode === 404 || err?.statusCode === 410) { u.push = (u.push || []).filter(x => x.endpoint !== sub.endpoint); save(); }
-    });
+    // sadece bilgisayar tarayıcısı olduğunu bildiğimiz abonelikleri atla; eski/bilinmeyen abonelikler (telefon olabilir) yine alır
+    if (desk && (sub.dev === 'pc' || (sub.dev == null && sub.mob === false))) { pushStats.masaustu++; continue; }
+    pushOne(u, sub, body, payload.tag);
   }
 }
 function notifyUser(name, n) {
@@ -4007,14 +4017,17 @@ io.on('connection', socket => {
   socket.on('pushSub', (sub, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     if (!sub || typeof sub.endpoint !== 'string' || !/^https:\/\//.test(sub.endpoint) || sub.endpoint.length > 600 || typeof sub.keys?.p256dh !== 'string' || typeof sub.keys?.auth !== 'string') return cb({ error: 'Geçersiz abonelik' });
-    const clean = { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh.slice(0, 200), auth: sub.keys.auth.slice(0, 100) }, at: Date.now(), mob: mobileSockets.has(socket.id) };
+    const mob = mobileSockets.has(socket.id) || isMobileUA(socket.handshake.headers['user-agent']);
+    const clean = { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh.slice(0, 200), auth: sub.keys.auth.slice(0, 100) }, at: Date.now(), mob, dev: mob ? 'mob' : 'pc' };
     u.push = [clean, ...(u.push || []).filter(x => x.endpoint !== clean.endpoint)].slice(0, 6); save(); cb({ ok: true });
   });
   socket.on('pushOff', (endpoint, cb = () => {}) => { const u = db.users[me]; if (!u) return; u.push = (u.push || []).filter(x => x.endpoint !== endpoint); save(); cb({ ok: true }); });
   socket.on('pushTest', (cb = () => {}) => {
     const u = db.users[me]; if (!u?.push?.length || !webpush) return cb({ error: 'Bu cihazda bildirim açık değil' });
-    const body = JSON.stringify({ title: 'Kanka Chat', body: 'Bildirimler çalışıyor! Kanka kapalıyken de mesajlarını kaçırmayacaksın.', tag: 'test' });
-    Promise.allSettled(u.push.map(sub => webpush.sendNotification(sub, body, { TTL: 60 }))).then(r => cb({ ok: r.some(x => x.status === 'fulfilled') }));
+    if (limited('ptest|' + me, 10, 600e3)) return cb({ error: 'Çok sık denedin, biraz bekle' });
+    const body = JSON.stringify({ title: 'Kanka Chat', body: 'Bildirimler çalışıyor! Kanka kapalıyken de mesajlarını kaçırmayacaksın.', tag: 'test', test: true });
+    const subs = [...u.push];
+    Promise.all(subs.map(sub => pushOne(u, sub, body, 'test'))).then(r => cb({ ok: r.some(x => x.ok), n: subs.length, sent: r.filter(x => x.ok).length, fail: r.filter(x => !x.ok).map(x => x.status) }));
   });
   socket.on('idle', on => { on ? idleSockets.add(socket.id) : idleSockets.delete(socket.id); pushPresence(); });
 
