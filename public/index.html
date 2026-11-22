@@ -2507,22 +2507,48 @@
   .mini-card .pf-prevabout { padding: 14px 4px 0; display: grid; gap: 10px; }
   .mini-card .psocs { grid-template-columns: 1fr; }
   @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) { .st-2, .socin { grid-template-columns: 1fr; } }
-  /* --- rozet madalyonları --- */
+  /* --- rozet madalyonları (Kinetik Animasyonlu Noir) --- */
   .medal { display: block; overflow: visible; }
-  .medal.kb { filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); } .medal.kb.locked { filter: grayscale(1) brightness(.45); }
-  .medal.kb.r3:not(.locked) { animation: kbShine 6s ease-in-out infinite; } @keyframes kbShine { 0%, 88%, 100% { filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); } 94% { filter: drop-shadow(0 0 7px rgba(255,230,160,.85)) brightness(1.15); } }
-  .pf-badges:not(:empty), .vp-badges:not(:empty) { display: inline-flex; gap: 3px; padding: 4px 6px; border-radius: 10px; background: rgba(10,7,5,.72); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px); }
-  .mchip.memb { display: inline-grid; vertical-align: -3px; margin-left: 4px; } .mchip.memb:hover { transform: scale(1.2); }
+  .medal.kb { filter: drop-shadow(0 2px 5px rgba(0,0,0,.48)); }
+  .medal.kb.locked { filter: grayscale(1) brightness(.45); }
+  .medal.kb.locked * { animation: none !important; }
+  .medal.r2:not(.locked) { filter: drop-shadow(0 0 6px rgba(139,92,246,.42)); }
+  .medal.r3:not(.locked) { filter: drop-shadow(0 0 7px rgba(255,215,120,.38)); }
+  .kb-spin { transform-origin: 24px 24px; animation: kbSpin 7s linear infinite; }
+  .kb-spin-slow { transform-origin: 24px 24px; animation: kbSpin 11s linear infinite; }
+  .kb-radar { transform-origin: 24px 24px; animation: kbSpin 3.2s linear infinite; }
+  .kb-pulse { transform-origin: 24px 24px; animation: kbPulse 2.4s ease-in-out infinite; }
+  .kb-sway-l { transform-origin: 24px 28px; animation: kbSwayL 3s ease-in-out infinite; }
+  .kb-sway-r { transform-origin: 24px 26px; animation: kbSwayR 3s ease-in-out infinite; }
+  .kb-float1 { animation: kbFloat 2.6s ease-in-out infinite; }
+  .kb-float2 { animation: kbFloat 2.6s ease-in-out .9s infinite; }
+  .kb-flow { stroke-dasharray: 18 46; animation: kbFlow 2.6s linear infinite; }
+  .kb-twinkle1 { transform-origin: 39px 11px; animation: kbTwinkle 2.2s ease-in-out infinite; }
+  .kb-twinkle2 { transform-origin: 10px 36px; animation: kbTwinkle 2.2s ease-in-out 1.1s infinite; }
+  .kb-blink { animation: kbBlink 1.1s steps(2, start) infinite; }
+  .kb-brk-l { animation: kbBrkL 2.8s ease-in-out infinite; }
+  .kb-brk-r { animation: kbBrkR 2.8s ease-in-out infinite; }
+  .kb-orb { transform-origin: 24px 24px; animation: kbOrb 3.8s linear infinite; }
+  @keyframes kbSpin { to { transform: rotate(360deg); } }
+  @keyframes kbPulse { 0%,100% { transform: scale(1); opacity: .9; } 50% { transform: scale(1.09); opacity: 1; } }
+  @keyframes kbSwayL { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-7deg); } }
+  @keyframes kbSwayR { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
+  @keyframes kbFloat { 0%,100% { transform: translateY(0); opacity: .4; } 50% { transform: translateY(-4px); opacity: 1; } }
+  @keyframes kbFlow { from { stroke-dashoffset: 64; } to { stroke-dashoffset: 0; } }
+  @keyframes kbTwinkle { 0%,100% { transform: scale(.55); opacity: .35; } 50% { transform: scale(1.25); opacity: 1; } }
+  @keyframes kbBlink { 0% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes kbBrkL { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1.5px); } }
+  @keyframes kbBrkR { 0%,100% { transform: translateX(0); } 50% { transform: translateX(1.5px); } }
+  @keyframes kbOrb { 0% { transform: rotate(0deg) translateX(17px) scale(1); } 50% { transform: rotate(180deg) translateX(17px) scale(.75); } 100% { transform: rotate(360deg) translateX(17px) scale(1); } }
+  .pf-badges:not(:empty), .vp-badges:not(:empty) { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 11px; background: rgba(14,14,20,.78); border: 1px solid rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 4px 14px rgba(0,0,0,.35); backdrop-filter: blur(8px); }
+  .mchip.memb { display: inline-grid; vertical-align: -3px; margin-left: 4px; } .mchip.memb:hover { transform: scale(1.22); }
   .bno { display: block; font-style: normal; font-weight: 900; font-size: 15px; letter-spacing: -.3px; background: linear-gradient(90deg, #7ff3e4, #8ea2ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin: 2px 0; }
-  .medal.r2:not(.locked) { filter: drop-shadow(0 0 5px rgba(176,124,255,.45)); }
-  .medal.r3:not(.locked) { filter: drop-shadow(0 0 7px rgba(255,207,92,.6)); }
-  .mchip { display: inline-grid; place-items: center; cursor: default; transition: transform .18s var(--ease-out); outline: none; }
-  .mchip:hover, .mchip:focus-visible { transform: translateY(-2px) scale(1.12); }
-  .pf-badges { gap: 2px; padding: 5px 7px; background: rgba(0,0,0,.4); backdrop-filter: blur(4px); }
-  .btip { position: fixed; z-index: 120; display: flex; align-items: center; gap: 12px; max-width: 280px; padding: 12px 14px; border-radius: 16px; background: #1d1511; border: 1px solid #4a3426; box-shadow: 0 16px 40px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04); pointer-events: none; animation: popIn .16s var(--ease-out); }
-  .btip::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(120px 60px at 0% 50%, color-mix(in srgb, var(--rc) 22%, transparent), transparent); pointer-events: none; }
-  .btip b { display: block; font-size: 14.5px; font-weight: 900; }
-  .btip small { display: block; color: #cbb8aa; font-size: 12.5px; margin-top: 2px; line-height: 1.35; }
+  .mchip { display: inline-grid; place-items: center; cursor: pointer; transition: transform .18s var(--ease-out); outline: none; }
+  .mchip:hover, .mchip:focus-visible { transform: translateY(-2px) scale(1.18); }
+  .btip { position: fixed; z-index: 120; display: flex; align-items: center; gap: 12px; max-width: 286px; padding: 12px 14px; border-radius: 16px; background: rgba(14,14,20,.95); border: 1px solid color-mix(in srgb, var(--rc) 38%, rgba(255,255,255,.1)); box-shadow: 0 18px 44px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.07); backdrop-filter: blur(12px); pointer-events: none; animation: popIn .16s var(--ease-out); }
+  .btip::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(120px 60px at 0% 50%, color-mix(in srgb, var(--rc) 24%, transparent), transparent); pointer-events: none; }
+  .btip b { display: block; font-size: 14.5px; font-weight: 900; color: #f4f4f6; }
+  .btip small { display: block; color: #a1a1aa; font-size: 12.5px; margin-top: 2px; line-height: 1.35; }
   .rar { display: inline-block; font-size: 10.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--rc); margin-top: 1px; }
   .agrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
   .acard { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
@@ -2534,21 +2560,21 @@
   .acard .tier { display: inline-block; font-size: 10.5px; font-weight: 900; letter-spacing: .02em; padding: 1px 7px; border-radius: 999px; margin-left: 4px; vertical-align: 1px; color: #1a120c; background: var(--tc); }
   .acard .mprog { margin-top: 5px; }
   .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-  .mcard { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); overflow: hidden; transition: transform .18s var(--ease-out), border-color .18s; animation: fadeUp .35s var(--ease-out) both; }
+  .mcard { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); overflow: hidden; transition: transform .2s var(--ease-out), border-color .2s, box-shadow .2s; animation: fadeUp .35s var(--ease-out) both; }
   .mcard.got::before { content: ''; position: absolute; inset: 0; background: radial-gradient(140px 90px at 15% 50%, color-mix(in srgb, var(--c1) 22%, transparent), transparent 70%); pointer-events: none; }
-  .mcard.got:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--rc) 55%, var(--line)); }
-  .mcard.got.r3 { border-color: color-mix(in srgb, #ffcf5c 35%, var(--line)); }
-  .mcard.got.r3::after { content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.12), transparent); animation: shine 3.5s ease-in-out infinite; pointer-events: none; }
+  .mcard.got:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--rc) 55%, var(--line)); box-shadow: 0 10px 24px rgba(0,0,0,.35), 0 0 18px color-mix(in srgb, var(--rc) 18%, transparent); }
+  .mcard.got.r3 { border-color: color-mix(in srgb, var(--rc) 32%, var(--line)); }
+  .mcard.got.r3::after { content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.11), transparent); animation: shine 3.8s ease-in-out infinite; pointer-events: none; }
   @keyframes shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
   .mcard > div { position: relative; min-width: 0; flex: 1; }
   .mcard b { display: block; font-size: 14.5px; font-weight: 900; }
   .mcard small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.35; margin-top: 2px; }
-  .mcard.lock { opacity: .78; } .mcard.lock b { color: #cbb8aa; } .mcard.lock .rar { opacity: .7; }
+  .mcard.lock { opacity: .78; } .mcard.lock b { color: var(--muted); } .mcard.lock .rar { opacity: .7; }
   .mcard .medal { flex-shrink: 0; }
   .mprog { height: 6px; border-radius: 3px; background: rgba(255,255,255,.07); margin-top: 8px; overflow: hidden; }
   .mprog i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--c1), var(--c2)); }
   .mcard em { display: block; font-style: normal; font-size: 11.5px; font-weight: 800; color: var(--muted); margin-top: 4px; }
-  @media (prefers-reduced-motion: reduce) { .mcard.got.r3::after { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .mcard.got.r3::after, .medal * { animation: none !important; } }
 
   /* ---------- Giriş 2: beta, e-posta, sıfırlama, bekleme listesi ---------- */
   #auth { overflow-y: auto; padding: 24px 12px; }
@@ -8445,43 +8471,45 @@ const SHAPES = [
   '<path d="M24 2.5 43 13.5v21L24 45.5 5 34.5v-21Z"/>',
   (() => { let d = ''; for (let i = 0; i < 16; i++) { const a = Math.PI * i / 8 - Math.PI / 2, rr = i % 2 ? 19.2 : 23; d += (i ? 'L' : 'M') + (24 + rr * Math.cos(a)).toFixed(2) + ' ' + (24 + rr * Math.sin(a)).toFixed(2); } return `<path d="${d}Z"/>`; })(),
 ];
-// Rozet simgeleri: her rozetin kendi şekli ve rengi (sayfaya bir kez eklenen SVG sprite'tan çizilir)
+// Rozet simgeleri: Kinetik animasyonlu Noir SVG rozet seti (paylaşımlı gradyanlar + satır içi animasyonlu SVG)
 const KB_SPRITE = `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
- <linearGradient id="kbg-ekip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ec5ff"/><stop offset="1" stop-color="#2f6fe0"/></linearGradient>
- <linearGradient id="kbg-erken" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ff0c2"/><stop offset="1" stop-color="#16a35a"/></linearGradient>
- <linearGradient id="kbg-kurucu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3d1"/><stop offset="1" stop-color="#c72a74"/></linearGradient>
- <linearGradient id="kbg-efsane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset="1" stop-color="#e09a12"/></linearGradient>
- <linearGradient id="kbg-avci" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4ff9a"/><stop offset="1" stop-color="#3a9d23"/></linearGradient>
- <linearGradient id="kbg-yildiz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a3"/><stop offset="1" stop-color="#f0a010"/></linearGradient>
- <linearGradient id="kbg-partner" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9a6ff"/><stop offset="1" stop-color="#5a35d8"/></linearGradient>
- <linearGradient id="kbg-dev" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6aa8ff"/><stop offset="1" stop-color="#3a4fd8"/></linearGradient>
- <linearGradient id="kbg-gece" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8c8ff"/><stop offset="1" stop-color="#6a45d8"/></linearGradient>
- <linearGradient id="kbg-sohbet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd8ff"/><stop offset="1" stop-color="#2a8ae0"/></linearGradient>
- <linearGradient id="kbg-sosyal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb0c0"/><stop offset="1" stop-color="#e5485d"/></linearGradient>
- <linearGradient id="kbg-seri" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".55" stop-color="#ff7a2e"/><stop offset="1" stop-color="#e0331a"/></linearGradient>
- <linearGradient id="kbg-xox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc2a1"/><stop offset="1" stop-color="#ff6a3a"/></linearGradient>
- <linearGradient id="kbg-caylak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2a0"/><stop offset="1" stop-color="#f2b322"/></linearGradient>
- <linearGradient id="kbg-beta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cf0ff"/><stop offset="1" stop-color="#6a4bff"/></linearGradient>
- <symbol id="kb-ekip" viewBox="0 0 48 48"><path d="M24 3 42 9.5V23c0 11-7.6 18.6-18 22C13.6 41.6 6 34 6 23V9.5Z" fill="url(#kbg-ekip)"/><path d="M24 7.5 38 12.6V23c0 8.6-5.8 14.6-14 17.6Z" fill="#fff" opacity=".18"/><path d="M18.5 15v18M18.5 24l9.5-9M21.5 21.5l7.5 11.5" stroke="#0e2a5c" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
- <symbol id="kb-erken" viewBox="0 0 48 48"><path d="M24 45V24" stroke="#16a35a" stroke-width="4.5" stroke-linecap="round"/><path d="M24 26C24 14 15 7 4 7c0 11 8 19 20 19Z" fill="url(#kbg-erken)"/><path d="M24 22c0-10 7.5-16 20-16 0 10-7 16-20 16Z" fill="#5fd18e"/></symbol>
- <symbol id="kb-kurucu" viewBox="0 0 48 48"><path d="M8 44V16h6v5h5v-5h10v5h5v-5h6v28Z" fill="url(#kbg-kurucu)"/><path d="M8 16V8h5v4h4V8h5v4h4V8h5v4h4V8h5v8" fill="#ff8ab8"/><path d="M19 44V33a5 5 0 0 1 10 0v11Z" fill="#5a0f30"/></symbol>
- <symbol id="kb-efsane" viewBox="0 0 48 48"><path d="M5 15l9.5 8L24 8l9.5 15L43 15l-4 24H9Z" fill="url(#kbg-efsane)"/><rect x="9" y="38" width="30" height="6" rx="2" fill="#c27c0e"/><circle cx="24" cy="29" r="3.6" fill="#fff" opacity=".85"/><circle cx="5" cy="15" r="3" fill="#fff3c0"/><circle cx="43" cy="15" r="3" fill="#fff3c0"/><circle cx="24" cy="7" r="3" fill="#fff3c0"/></symbol>
- <symbol id="kb-avci" viewBox="0 0 48 48"><g stroke="#2f7a1e" stroke-width="3" stroke-linecap="round"><path d="M10 20l6 3M38 20l-6 3M8 30h8M40 30h-8M10 41l7-4M38 41l-7-4M18 9l3 4M30 9l-3 4"/></g><ellipse cx="24" cy="29" rx="11" ry="14" fill="url(#kbg-avci)"/><path d="M24 15v28" stroke="#2f7a1e" stroke-width="2.4"/><circle cx="24" cy="15" r="7" fill="#3a9d23"/><circle cx="19" cy="27" r="2.4" fill="#1d4d12"/><circle cx="29" cy="33" r="2.4" fill="#1d4d12"/><circle cx="20" cy="36" r="1.8" fill="#1d4d12"/></symbol>
- <symbol id="kb-yildiz" viewBox="0 0 48 48"><path d="M24 3.5l6.2 12.6 13.9 2-10 9.8 2.4 13.8L24 35.2l-12.5 6.5 2.4-13.8-10-9.8 13.9-2Z" fill="url(#kbg-yildiz)" stroke="#b86e00" stroke-width="1.6" stroke-linejoin="round"/><path d="M24 9.5l4.4 9 9.9 1.4" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/></symbol>
- <symbol id="kb-partner" viewBox="0 0 48 48"><path d="M24 2.5 43 13.5v21L24 45.5 5 34.5v-21Z" fill="url(#kbg-partner)"/><path d="M24 6.5 39.5 15.5v4L24 10.5 8.5 19.5v-4Z" fill="#fff" opacity=".2"/><path d="M16.2 19.6a4.4 4.4 0 1 0 0 8.8c2.4 0 3.6-2.2 5-4.4s2.6-4.4 5-4.4a4.4 4.4 0 1 1 0 8.8c-2.4 0-3.6-2.2-5-4.4s-2.6-4.4-5-4.4Z" transform="translate(1.2 0)" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></symbol>
- <symbol id="kb-dev" viewBox="0 0 48 48"><rect x="3" y="7" width="42" height="34" rx="10" fill="url(#kbg-dev)"/><path d="M17 17l-7 7 7 7M31 17l7 7-7 7M27 14l-6 20" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
- <symbol id="kb-gece" viewBox="0 0 48 48"><path d="M30 6a19 19 0 1 0 13 30A16 16 0 0 1 30 6Z" fill="url(#kbg-gece)"/><path d="M35 9l1.6 3.4L40 14l-3.4 1.6L35 19l-1.6-3.4L30 14l3.4-1.6Z" fill="#fff6c8"/></symbol>
- <symbol id="kb-sohbet" viewBox="0 0 48 48"><path d="M8 6h32a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H22l-11 9v-9H8a5 5 0 0 1-5-5V11a5 5 0 0 1 5-5Z" fill="url(#kbg-sohbet)"/><circle cx="15" cy="21" r="3" fill="#fff"/><circle cx="24" cy="21" r="3" fill="#fff"/><circle cx="33" cy="21" r="3" fill="#fff"/></symbol>
- <symbol id="kb-sosyal" viewBox="0 0 48 48"><path d="M18 40S3 31 3 19.5A8.5 8.5 0 0 1 18 14a8.5 8.5 0 0 1 15 5.5C33 31 18 40 18 40Z" fill="url(#kbg-sosyal)"/><path d="M31 44s-10-6.4-10-14a6 6 0 0 1 10-4.2A6 6 0 0 1 41 30c0 7.6-10 14-10 14Z" fill="#ffd0da" stroke="#1d1613" stroke-width="2.4"/></symbol>
- <symbol id="kb-seri7" viewBox="0 0 48 48"><path d="M24 2c2 8 13 13 13 26a13 13 0 0 1-26 0c0-6 3-10 6-12 0 4 2 6 4 7-1-8 1-15 3-21Z" fill="url(#kbg-seri)"/><path d="M24 26c4 3 6 6 6 10a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3 0-5 1-7Z" fill="#fff2b0"/></symbol>
- <symbol id="kb-xox" viewBox="0 0 48 48"><rect x="3" y="3" width="42" height="42" rx="11" fill="url(#kbg-xox)"/><path d="M12 12l10 10M22 12 12 22" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/><circle cx="32" cy="32" r="5.6" stroke="#fff" stroke-width="3.6" fill="none"/></symbol>
- <symbol id="kb-caylak" viewBox="0 0 48 48"><path d="M24 4c9 0 16 12 16 23a16 16 0 0 1-32 0C8 16 15 4 24 4Z" fill="url(#kbg-caylak)"/><path d="M8.5 25l5-4 4 5 5-5 4 5 5-5 4 5 4.5-3.5" stroke="#fff8e0" stroke-width="2.6" stroke-linejoin="round" fill="none"/><circle cx="19" cy="33" r="2.4" fill="#5a3a0a"/><circle cx="29" cy="33" r="2.4" fill="#5a3a0a"/><path d="M22 38h4l-2 2.6Z" fill="#ff7a2e"/></symbol>
- <symbol id="kb-beta" viewBox="0 0 48 48"><path d="M24 2.5 43 13.3v21.4L24 45.5 5 34.7V13.3Z" fill="url(#kbg-beta)"/><path d="M24 6.8 39.3 15.5v17L24 41.2 8.7 32.5v-17Z" fill="#000" opacity=".18"/><ellipse cx="24" cy="24" rx="22" ry="8" transform="rotate(-24 24 24)" stroke="#ffd27a" stroke-width="2.4" fill="none"/><path d="M19.6 36V17.6a4.6 4.6 0 0 1 9.2 0c0 2.7-1.9 4.1-4.3 4.3 3.1.3 5.2 2 5.2 4.9 0 3.2-2.5 5.1-5.5 5.1-1.8 0-3.5-.7-4.5-1.9" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="41" cy="15" r="2.4" fill="#ffd27a"/></symbol>
+ <linearGradient id="kbg-ekip" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#38bdf8"/><stop offset=".5" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
+ <linearGradient id="kbg-beta" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset=".5" stop-color="#818cf8"/><stop offset="1" stop-color="#c084fc"/></linearGradient>
+ <linearGradient id="kbg-erken" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#059669"/></linearGradient>
+ <linearGradient id="kbg-avci" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9f99d"/><stop offset="1" stop-color="#65a30d"/></linearGradient>
+ <linearGradient id="kbg-partner" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f472b6"/><stop offset=".5" stop-color="#a855f7"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+ <linearGradient id="kbg-yildiz" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fef08a"/><stop offset=".55" stop-color="#f59e0b"/><stop offset="1" stop-color="#ea580c"/></linearGradient>
+ <linearGradient id="kbg-dev" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#67e8f9"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+ <linearGradient id="kbg-kurucu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f472b6"/><stop offset="1" stop-color="#be185d"/></linearGradient>
+ <linearGradient id="kbg-efsane" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fef08a"/><stop offset="1" stop-color="#d97706"/></linearGradient>
+ <linearGradient id="kbg-gece" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c4b5fd"/><stop offset="1" stop-color="#6d28d9"/></linearGradient>
+ <linearGradient id="kbg-sohbet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+ <linearGradient id="kbg-sosyal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fda4af"/><stop offset="1" stop-color="#e11d48"/></linearGradient>
+ <linearGradient id="kbg-seri" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde047"/><stop offset=".55" stop-color="#f97316"/><stop offset="1" stop-color="#dc2626"/></linearGradient>
+ <linearGradient id="kbg-xox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdba74"/><stop offset="1" stop-color="#ea580c"/></linearGradient>
+ <linearGradient id="kbg-caylak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fef08a"/><stop offset="1" stop-color="#eab308"/></linearGradient>
 </defs></svg>`;
 document.body.insertAdjacentHTML('afterbegin', KB_SPRITE);
+const KB_ART = {
+  ekip: '<g class="kb-spin"><circle cx="24" cy="24" r="21" fill="none" stroke="url(#kbg-ekip)" stroke-width="1.6" stroke-dasharray="14 9 4 9" opacity=".82"/></g><path d="M24 6 38 11.5v11.5c0 8.5-5.8 14.8-14 17.8C15.8 37.8 10 31.5 10 23V11.5Z" fill="#0d1526" stroke="url(#kbg-ekip)" stroke-width="2.2"/><path d="M24 9.5 34.5 13.8v9.2c0 6.2-4.2 11-10.5 13.5V9.5Z" fill="#38bdf8" opacity=".13"/><g class="kb-pulse"><path d="M19 16.5v15M28.5 16.5l-7.5 7.5 8 7.5" stroke="#e0f2fe" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>',
+  beta: '<path d="M24 5 39 14v20L24 43 9 34V14Z" fill="#121224" stroke="url(#kbg-beta)" stroke-width="2"/><ellipse cx="24" cy="24" rx="21" ry="8.5" transform="rotate(-24 24 24)" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity=".68"/><g transform="rotate(-24 24 24)"><circle class="kb-orb" cx="24" cy="24" r="2.7" fill="#fde047"/></g><path d="M19.5 32.5V16.5h4.8a3.8 3.8 0 0 1 0 7.6h-4.8m5 0a4.2 4.2 0 0 1 0 8.4h-5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+  erken: '<path d="M24 4 42 24 24 44 6 24Z" fill="#0a1914" stroke="url(#kbg-erken)" stroke-width="2"/><path d="M24 35V22" stroke="#34d399" stroke-width="2.8" stroke-linecap="round"/><path class="kb-sway-l" d="M24 25c0-6-4.8-10-10.5-10 0 6 4.5 10 10.5 10Z" fill="url(#kbg-erken)"/><path class="kb-sway-r" d="M24 22c0-5.5 4.5-9 10-9 0 5.5-4.2 9-10 9Z" fill="#6ee7b7"/><circle class="kb-float1" cx="15" cy="12" r="1.7" fill="#fde047"/><circle class="kb-float2" cx="35" cy="31" r="1.5" fill="#6ee7b7"/>',
+  avci: '<circle cx="24" cy="24" r="19" fill="#0d1508" stroke="#65a30d" stroke-width="2"/><circle cx="24" cy="24" r="12" fill="none" stroke="#a3e635" stroke-width="1.2" opacity=".35"/><g class="kb-radar"><path d="M24 24 L24 6 A18 18 0 0 1 39.6 15 Z" fill="url(#kbg-avci)" opacity=".38"/><line x1="24" y1="24" x2="24" y2="6" stroke="#d9f99d" stroke-width="2" stroke-linecap="round"/></g><path d="M24 3v5M24 40v5M3 24h5M40 24h5" stroke="#a3e635" stroke-width="2" stroke-linecap="round"/><circle class="kb-pulse" cx="24" cy="24" r="3" fill="#d9f99d"/><circle class="kb-blink" cx="31" cy="18" r="2.1" fill="#ef4444"/>',
+  partner: '<rect x="6" y="6" width="36" height="36" rx="12" transform="rotate(45 24 24)" fill="#160d24" stroke="url(#kbg-partner)" stroke-width="2"/><path d="M16.5 19.5a4.5 4.5 0 1 0 0 9c2.8 0 4.5-2.3 6.2-4.5s3.4-4.5 6.2-4.5a4.5 4.5 0 1 1 0 9c-2.8 0-4.5-2.3-6.2-4.5s-3.4-4.5-6.2-4.5Z" transform="translate(1.3 0)" fill="none" stroke="#7c3aed" stroke-width="3.2" stroke-linecap="round" opacity=".5"/><path class="kb-flow" d="M16.5 19.5a4.5 4.5 0 1 0 0 9c2.8 0 4.5-2.3 6.2-4.5s3.4-4.5 6.2-4.5a4.5 4.5 0 1 1 0 9c-2.8 0-4.5-2.3-6.2-4.5s-3.4-4.5-6.2-4.5Z" transform="translate(1.3 0)" fill="none" stroke="#f5d0fe" stroke-width="3.2" stroke-linecap="round"/>',
+  yildiz: '<g class="kb-spin-slow" opacity=".45"><path d="M24 2v7M24 39v7M2 24h7M39 24h7M8.5 8.5l5 5M34.5 34.5l5 5M39.5 8.5l-5 5M13.5 34.5l-5 5" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/></g><g class="kb-pulse"><path d="M24 7l4.8 10.2L40 19l-8.2 7.8 2 11.2L24 32.6 14.2 38l2-11.2L8 19l11.2-1.8Z" fill="url(#kbg-yildiz)" stroke="#fef08a" stroke-width="1.3" stroke-linejoin="round"/></g><path class="kb-twinkle1" d="M39 7l1 3 3 1-3 1-1 3-1-3-3-1 3-1Z" fill="#fef08a"/><path class="kb-twinkle2" d="M10 33l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z" fill="#fde047"/>',
+  dev: '<path d="M16 4v4M24 4v4M32 4v4M16 40v4M24 40v4M32 40v4M4 16h4M4 24h4M4 32h4M40 16h4M40 24h4M40 32h4" stroke="#6366f1" stroke-width="2" stroke-linecap="round" opacity=".7"/><rect x="8" y="8" width="32" height="32" rx="8" fill="#0d1122" stroke="url(#kbg-dev)" stroke-width="2.2"/><path class="kb-brk-l" d="M18.5 18.5 13 24l5.5 5.5" stroke="#67e8f9" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path class="kb-brk-r" d="M29.5 18.5 35 24l-5.5 5.5" stroke="#a5b4fc" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line class="kb-blink" x1="22" y1="29" x2="26.5" y2="29" stroke="#d4ff00" stroke-width="2.8" stroke-linecap="round"/>',
+  kurucu: '<rect x="5" y="5" width="38" height="38" rx="12" fill="#1c0d17" stroke="url(#kbg-kurucu)" stroke-width="2"/><path d="M13 35V19h4v3h3v-3h8v3h3v-3h4v16Z" fill="url(#kbg-kurucu)"/><path d="M21 35v-7a3 3 0 0 1 6 0v7Z" fill="#1c0d17"/>',
+  efsane: '<circle cx="24" cy="24" r="19" fill="#1c1509" stroke="url(#kbg-efsane)" stroke-width="2"/><g class="kb-pulse"><path d="M11 19l6.5 5.5L24 14l6.5 10.5L37 19l-2.6 15H13.6Z" fill="url(#kbg-efsane)"/></g><circle cx="24" cy="26" r="2.2" fill="#fff"/>',
+  gece: '<circle cx="24" cy="24" r="19" fill="#130e24" stroke="url(#kbg-gece)" stroke-width="2"/><path d="M28 11a13 13 0 1 0 8.5 21A11 11 0 0 1 28 11Z" fill="url(#kbg-gece)"/><path class="kb-twinkle1" d="M35 12l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1Z" fill="#fef08a"/>',
+  sohbet: '<rect x="5" y="5" width="38" height="38" rx="12" fill="#0d1726" stroke="url(#kbg-sohbet)" stroke-width="2"/><path d="M13 14h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H22l-6 5v-5h-3a3 3 0 0 1-3-3V17a3 3 0 0 1 3-3Z" fill="url(#kbg-sohbet)"/><circle cx="18.5" cy="22.5" r="2" fill="#0d1726"/><circle cx="24" cy="22.5" r="2" fill="#0d1726"/><circle cx="29.5" cy="22.5" r="2" fill="#0d1726"/>',
+  sosyal: '<circle cx="24" cy="24" r="19" fill="#1f0d14" stroke="url(#kbg-sosyal)" stroke-width="2"/><g class="kb-pulse"><path d="M24 35s-11-7-11-14.5A6.2 6.2 0 0 1 24 16.3a6.2 6.2 0 0 1 11 4.2C35 28 24 35 24 35Z" fill="url(#kbg-sosyal)"/></g>',
+  seri7: '<circle cx="24" cy="24" r="19" fill="#1e100a" stroke="url(#kbg-seri)" stroke-width="2"/><g class="kb-pulse"><path d="M24 9c1.6 6 9.5 9.5 9.5 18.5a9.5 9.5 0 0 1-19 0c0-4.2 2-7 4.2-8.8 0 3 1.5 4.4 3 5.2-.8-6 .8-10.8 2.3-14.9Z" fill="url(#kbg-seri)"/><path d="M24 25c2.6 2 4 4 4 6.8a4 4 0 0 1-8 0c0-2 1.2-3.4 2-4.2 0 1.4.6 2 1.3 2 0-2 0-3.2.7-4.6Z" fill="#fef08a"/></g>',
+  xox: '<rect x="5" y="5" width="38" height="38" rx="12" fill="#1e120a" stroke="url(#kbg-xox)" stroke-width="2"/><path d="M14 14l8 8M22 14l-8 8" stroke="#fdba74" stroke-width="3.2" stroke-linecap="round"/><circle cx="30" cy="30" r="4.8" stroke="#fb923c" stroke-width="3.2" fill="none"/>',
+  caylak: '<circle cx="24" cy="24" r="19" fill="#1c190a" stroke="url(#kbg-caylak)" stroke-width="2"/><g class="kb-pulse"><path d="M24 11l3.2 8.8L36 23l-8.8 3.2L24 35l-3.2-8.8L12 23l8.8-3.2Z" fill="url(#kbg-caylak)"/></g>',
+};
 function medal(k, size = 28, locked = false) {
   const d = BADGE_DEF[k]; if (!d) return '';
-  return `<svg class="medal kb r${d.r} ${locked ? 'locked' : ''}" width="${size}" height="${size}" style="width:${size}px;height:${size}px;min-width:${size}px" viewBox="0 0 48 48" aria-hidden="true"><use href="#kb-${k}"/>${locked ? '<g transform="translate(31 31)"><circle cx="7" cy="7" r="7" fill="#1a120c" stroke="#5a4a40"/><path d="M4.6 6.5V5.4a2.4 2.4 0 0 1 4.8 0v1.1M4 6.5h6v4H4z" fill="none" stroke="#a8968a" stroke-width="1.3"/></g>' : ''}</svg>`;
+  return `<svg class="medal kb r${d.r} ${locked ? 'locked' : ''}" width="${size}" height="${size}" style="width:${size}px;height:${size}px;min-width:${size}px" viewBox="0 0 48 48" aria-hidden="true">${KB_ART[k] || ''}${locked ? '<g transform="translate(31 31)"><circle cx="7" cy="7" r="7" fill="#111116" stroke="#52525b"/><path d="M4.6 6.5V5.4a2.4 2.4 0 0 1 4.8 0v1.1M4 6.5h6v4H4z" fill="none" stroke="#a1a1aa" stroke-width="1.3"/></g>' : ''}</svg>`;
 }
 // Üye listesinde ismin yanında gösterilecek tek rozet: en nadir olanı
 const topBadge = u => BADGE_ORDER.find(k => (u?.badges || []).includes(k));
