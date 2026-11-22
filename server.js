@@ -5239,6 +5239,30 @@ io.on('connection', socket => {
   // ----- Arkadaşlar -----
   const U = n => { const u = db.users[n]; if (u) { u.friends ||= []; u.reqIn ||= []; u.reqOut ||= []; u.blocked ||= []; } return u; };
   const pull = (arr, n) => { const i = arr.indexOf(n); if (i >= 0) arr.splice(i, 1); };
+  // ---- Tanıyor olabileceğin kişiler: ortak arkadaş, ortak (özel) sunucu, sohbet ettiğin ama arkadaş olmadığın kişiler ----
+  // Yaş grubu farklıysa (18 altı / 18 üstü) önerilmez. "Gösterme" denenler bir daha çıkmaz.
+  socket.on('friendSuggest', (_ = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (limited('fsug|' + me, 30, 60e3)) return cb({ error: 'Biraz bekle' });
+    const minor = isMinor(u), skip = new Set([me, BOT_NAME, ...(u.friends || []), ...(u.reqOut || []), ...(u.reqIn || []), ...(u.blocked || []), ...(u.fsHide || [])]);
+    const ok = n => { const x = db.users[n]; return !!x && !x.bot && !skip.has(n) && !(x.blocked || []).includes(me) && !x.banned && isMinor(x) === minor; };
+    const chatted = [];
+    for (const d of dmsFor(me)) if (!d.group && ok(d.with)) { const l = msgRaw[d.id] || []; const both = l.some(m => m.author === me) && l.some(m => m.author === d.with); if (both) chatted.push({ name: d.with, last: d.last, n: l.length }); }
+    chatted.sort((a, b) => b.last - a.last);
+    const servers = new Map(), friendsOf = new Map();
+    for (const sv of db.servers) if (!sv.public && sv.members.includes(me) && sv.members.length <= 2000) for (const n of sv.members) if (ok(n)) (servers.get(n) || servers.set(n, []).get(n)).push({ id: sv.id, ad: sv.name });
+    for (const f of u.friends || []) for (const n of db.users[f]?.friends || []) if (ok(n)) friendsOf.set(n, (friendsOf.get(n) || 0) + 1);
+    const seen = new Set(chatted.map(c => c.name));
+    const cand = [...new Set([...servers.keys(), ...friendsOf.keys()])].filter(n => !seen.has(n)).map(n => {
+      const sv = servers.get(n) || [], mf = friendsOf.get(n) || 0;
+      return { name: n, sunucular: sv.slice(0, 3), sunucuSayisi: sv.length, ortakArkadas: mf, puan: mf * 3 + Math.min(sv.length, 5) * 2 + (isOnlineName(n) ? 1 : 0) };
+    }).sort((a, b) => b.puan - a.puan).slice(0, 30);
+    cb({ ok: true, sohbet: chatted.slice(0, 8).map(c => ({ name: c.name, last: c.last, n: c.n })), oneriler: cand });
+  });
+  socket.on('friendSuggestHide', (name, cb = () => {}) => {
+    const u = db.users[me]; if (!u || typeof name !== 'string' || !db.users[name]) return cb({ error: 'Bulunamadı' });
+    u.fsHide = [...new Set([...(u.fsHide || []), name])].slice(-300); save(); cb({ ok: true });
+  });
   socket.on('friendRequest', (name, cb = () => {}) => {
     if (limited('fr|' + me, 20, 3600e3)) return cb({ error: 'Çok fazla istek gönderdin, sonra tekrar dene' });
     const a = U(me), b = U(name);

@@ -3682,6 +3682,30 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   #me #mute.ns-on::after { content: ''; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #3fcf8e; box-shadow: 0 0 0 2px var(--panel); }
   #me .row1 { gap: 6px; } #me .row1 > div:nth-child(2) { margin-left: 4px; }
   .dv-ns b { color: var(--muted); } .dv-ns.on b { color: #3fcf8e; }
+
+  /* Önerilen arkadaşlar */
+  .sg { padding: 4px 0 24px; }
+  .sg-load { padding: 40px 0; text-align: center; color: var(--muted); display: flex; gap: 8px; justify-content: center; align-items: center; }
+  .sg-inv { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); margin-bottom: 18px; flex-wrap: wrap; }
+  .sg-inv b { display: flex; align-items: center; gap: 8px; font-size: 14.5px; } .sg-inv small { display: block; color: var(--muted); margin-top: 3px; font-size: 12.5px; }
+  .sg-inv .primary, .sg-add { width: auto; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; font-size: 13px; }
+  .sg-inv .ic, .sg-add .ic { width: 16px; height: 16px; }
+  .sg-h { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 6px 0 8px; font-weight: 800; }
+  .sg-hrow { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+  .sg-sub { color: var(--muted); font-size: 12.5px; margin: -4px 0 12px; }
+  .sg-chat .frow .sg-addsm { width: auto; display: inline-flex; gap: 5px; align-items: center; padding: 6px 11px; border-radius: 9px; background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: 12.5px; }
+  .sg-chat .frow .sg-addsm .ic { width: 14px; height: 14px; }
+  .sg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+  .sg-card { position: relative; border: 1px solid var(--line); border-radius: 14px; background: var(--card); overflow: hidden; transition: opacity .18s; }
+  .sg-ban { height: 74px; }
+  .sg-av { position: absolute; top: 44px; left: 14px; } .sg-av .av { width: 54px; height: 54px; font-size: 20px; box-shadow: 0 0 0 4px var(--card); }
+  .sg-body { padding: 34px 14px 14px; }
+  .sg-nm { display: block; font-size: 15px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .sg-nm:hover { text-decoration: underline; }
+  .sg-un { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
+  .sg-why { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .sg-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; } .sg-chips span { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; padding: 3px 8px; border-radius: 7px; background: var(--hover); font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .sg-chips .ic { width: 11px; height: 11px; flex: none; }
+  .sg-acts { display: flex; gap: 4px; margin-top: 12px; align-items: center; } .sg-acts .sg-add { flex: 1; min-width: 0; justify-content: center; white-space: nowrap; padding: 8px 10px; } .sg-acts .ibtn { flex: none; width: 34px; height: 34px; }
+  .sg-add.done { background: var(--hover); color: var(--muted); }
 </style>
 </head>
 <body>
@@ -6433,7 +6457,7 @@ function showFriends(tab = friendTab) {
   setWatch(null);
   if (tab === 'home') setHeader(`${ic('home')} Yuva`, `${S.social.friends.length} arkadaş · ${S.social.friends.filter(n => S.online.has(n)).length} çevrimiçi`, false);
   else setHeader(`${ic('users')} Arkadaşlar`, `${S.social.friends.length} arkadaş`, false);
-  $('#head-actions').innerHTML = '';
+  $('#head-actions').innerHTML = tab === 'home' ? `<button class="hbtn" id="add-friend" title="Arkadaş ekle" aria-label="Arkadaş ekle">${ic('userplus')}</button>` : '';
   $('#compose').style.display = 'none'; $('#typing').textContent = '';
   const sc = S.social, f = sc.friends;
   const lists = {
@@ -6445,25 +6469,57 @@ function showFriends(tab = friendTab) {
   if (tab === 'pending') body = lists.pending.map(([d, n]) => row(n, d === 'in' ? 'Gelen arkadaşlık isteği' : 'Gönderilen istek',
     d === 'in' ? `<button data-acc="${esc(n)}" title="Kabul et" aria-label="Kabul et" style="color:var(--green)">${ic('check')}</button><button data-rem="${esc(n)}" title="Reddet" aria-label="Reddet" style="color:var(--red)">${ic('x')}</button>` : `<button data-rem="${esc(n)}" title="Geri çek" aria-label="İsteği geri çek">${ic('x')}</button>`)).join('');
   else if (tab === 'blocked') body = lists.blocked.map(n => row(n, 'Engellendi', `<button data-unb="${esc(n)}" title="Engeli kaldır" aria-label="Engeli kaldır">${ic('unlock')}</button>`)).join('');
-  else if (tab !== 'home') body = lists[tab].map(n => row(n, actLine(n) || esc(S.users[n]?.status || (S.online.has(n) ? 'Çevrimiçi' : 'Çevrimdışı')),
+  else if (tab !== 'home' && tab !== 'suggest') body = lists[tab].map(n => row(n, actLine(n) || esc(S.users[n]?.status || (S.online.has(n) ? 'Çevrimiçi' : 'Çevrimdışı')),
     `<button data-dm="${esc(n)}" title="Mesaj" aria-label="Mesaj gönder">${ic('chat')}</button><button data-rem="${esc(n)}" title="Arkadaşlıktan çıkar" aria-label="Arkadaşlıktan çıkar">${ic('x')}</button>`)).join('');
+  if (tab === 'suggest') body = `<div class="sg-load">${ic('sparkle')} Öneriler hazırlanıyor…</div>`;
   const empty = { online: 'Şu an çevrimiçi arkadaşın yok.', all: 'Henüz arkadaşın yok. Sağ üstten arkadaş ekle!', pending: 'Bekleyen istek yok.', blocked: 'Kimseyi engellemedin.' }[tab];
   $('#callbar')?.remove();
-  $('#messages').innerHTML = `<div class="ftabs">
-      <button class="${tab === 'home' ? 'on' : ''}" data-ft="home">${ic('home')}Yuva</button><button class="${tab === 'online' ? 'on' : ''}" data-ft="online">Çevrimiçi</button><button class="${tab === 'all' ? 'on' : ''}" data-ft="all">Tümü</button>
-      <button class="${tab === 'pending' ? 'on' : ''}" data-ft="pending">Bekleyen${sc.reqIn.length ? `<span class="cnt">${sc.reqIn.length}</span>` : ''}</button><button class="${tab === 'blocked' ? 'on' : ''}" data-ft="blocked">Engellenen</button>
-      <button class="addf" id="add-friend">${ic('userplus')}<span>Arkadaş ekle</span></button></div>
+  $('#messages').innerHTML = (tab === 'home' ? '' : `<div class="ftabs">
+      <button class="${tab === 'online' ? 'on' : ''}" data-ft="online">Çevrimiçi</button><button class="${tab === 'all' ? 'on' : ''}" data-ft="all">Tümü</button>
+      <button class="${tab === 'pending' ? 'on' : ''}" data-ft="pending">Bekleyen${sc.reqIn.length ? `<span class="cnt">${sc.reqIn.length}</span>` : ''}</button><button class="${tab === 'suggest' ? 'on' : ''}" data-ft="suggest">${ic('sparkle')}Önerilen</button><button class="${tab === 'blocked' ? 'on' : ''}" data-ft="blocked">Engellenen</button>
+      <button class="addf" id="add-friend">${ic('userplus')}<span>Arkadaş ekle</span></button></div>`) + `
     <div class="flist ${tab === 'home' ? 'hm' : ''}">${body || `<div class="empty" style="padding:40px 0"><div class="big">${ic('users')}</div>${empty}</div>`}</div>`;
   if (tab === 'home') wireHome();
+  if (tab === 'suggest') loadSuggest($('#messages .flist'));
   $('#messages').querySelectorAll('[data-ft]').forEach(b => b.onclick = () => showFriends(b.dataset.ft));
   $('#messages').querySelectorAll('[data-acc]').forEach(b => b.onclick = () => socket.emit('friendAccept', b.dataset.acc, r => r.error ? toast(r.error) : toast('Artık arkadaşsınız')));
   $('#messages').querySelectorAll('[data-rem]').forEach(b => b.onclick = () => socket.emit('friendRemove', b.dataset.rem, r => r.error && toast(r.error)));
   $('#messages').querySelectorAll('[data-unb]').forEach(b => b.onclick = () => socket.emit('block', { name: b.dataset.unb, on: false }, r => r.error && toast(r.error)));
   $('#messages').querySelectorAll('[data-dm]').forEach(b => b.onclick = () => openDM(b.dataset.dm));
   $('#messages').querySelectorAll('.frow .info').forEach(i => i.onclick = () => showProfile(i.closest('.frow').dataset.n));
-  $('#add-friend').onclick = () => form('Arkadaş ekle', 'Kullanıcı adını tam olarak yaz.', [{ k: 'name', p: 'Kullanıcı adı' }], v => {
+  if ($('#add-friend')) $('#add-friend').onclick = () => form('Arkadaş ekle', 'Kullanıcı adını tam olarak yaz.', [{ k: 'name', p: 'Kullanıcı adı' }], v => {
     const n = Object.keys(S.users).find(x => x.toLowerCase() === v.name.toLowerCase()) || v.name;
     socket.emit('friendRequest', n, r => r.error ? toast(r.error) : toast(r.accepted ? 'Artık arkadaşsınız' : 'İstek gönderildi'));
+  });
+}
+// ================= Önerilen: tanıyor olabileceğin kişiler =================
+function loadSuggest(el) {
+  socket.emit('friendSuggest', {}, r => {
+    if (!el.isConnected) return;
+    if (r.error) { el.innerHTML = `<div class="empty" style="padding:40px 0">${esc(r.error)}</div>`; return; }
+    const why = o => [o.ortakArkadas ? `${o.ortakArkadas} ortak arkadaş` : '', o.sunucuSayisi ? `${o.sunucuSayisi} ortak sunucu` : ''].filter(Boolean).join(' · ') || 'Kanka\'da';
+    const card = o => { const u = S.users[o.name] || {}, nm = dn(o.name);
+      return `<div class="sg-card" data-n="${esc(o.name)}"><div class="sg-ban" style="${banStyle(o.name, u)}"></div>
+        <div class="sg-av">${av(o.name, S.online.has(o.name))}</div>
+        <div class="sg-body"><b class="sg-nm" data-prof="${esc(o.name)}">${esc(nm)}</b>${nm !== o.name ? `<small class="sg-un">${esc(o.name)}</small>` : ''}
+          <div class="sg-why">${why(o)}</div>
+          ${o.sunucular?.length ? `<div class="sg-chips">${o.sunucular.slice(0, 2).map(x => `<span>${ic('hash')}${esc(x.ad)}</span>`).join('')}</div>` : ''}
+          <div class="sg-acts"><button class="primary sg-add" data-add="${esc(o.name)}">${ic('userplus')}Arkadaş ekle</button><button class="ibtn" data-dm="${esc(o.name)}" title="Mesaj gönder" aria-label="Mesaj gönder">${ic('chat')}</button><button class="ibtn" data-hide="${esc(o.name)}" title="Bunu gösterme" aria-label="Bunu gösterme">${ic('x')}</button></div></div></div>`; };
+    const chat = r.sohbet || [], list = r.oneriler || [];
+    el.innerHTML = `<div class="sg">
+      <div class="sg-inv"><div><b>${ic('userplus')} Kankanı davet et</b><small>Linki gönder, hesap açınca buradan arkadaş olun.</small></div><button class="primary" id="sg-inv">${ic('link')}Davet linkini kopyala</button></div>
+      ${chat.length ? `<h5 class="sg-h">Sohbet ettiğin kişiler</h5><div class="sg-chat">${chat.map(c => `<div class="frow" data-n="${esc(c.name)}">${av(c.name, S.online.has(c.name))}<div class="info"><b>${esc(dn(c.name))}</b><small>${c.n} mesaj · ${esc(ago(c.last))}</small></div><button data-dm="${esc(c.name)}" title="Mesaj" aria-label="Mesaj gönder">${ic('chat')}</button><button class="sg-addsm" data-add="${esc(c.name)}">${ic('userplus')}Ekle</button></div>`).join('')}</div>` : ''}
+      <div class="sg-hrow"><h5 class="sg-h">Tanıyor olabileceğin kişiler</h5><button class="ibtn" id="sg-ref" title="Yenile" aria-label="Yenile">${ic('refresh')}</button></div>
+      <p class="sg-sub">Ortak arkadaşlarına ve aynı sunuculardaki kişilere göre seçildi.</p>
+      ${list.length ? `<div class="sg-grid">${list.map(card).join('')}</div>` : `<div class="empty" style="padding:30px 0"><div class="big">${ic('users')}</div>Şimdilik öneri yok. Bir sunucuya katıl ya da arkadaş ekle, öneriler burada belirir.</div>`}
+    </div>`;
+    el.querySelectorAll('[data-add]').forEach(b => b.onclick = () => socket.emit('friendRequest', b.dataset.add, x => { if (x.error) return toast(x.error); b.disabled = true; b.innerHTML = `${ic('check')}${x.accepted ? 'Arkadaşsınız' : 'İstek gönderildi'}`; b.classList.add('done'); }));
+    el.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => openDM(b.dataset.dm));
+    el.querySelectorAll('[data-prof]').forEach(b => b.onclick = () => showProfile(b.dataset.prof));
+    el.querySelectorAll('.sg-chat .info').forEach(i => i.onclick = () => showProfile(i.closest('.frow').dataset.n));
+    el.querySelectorAll('[data-hide]').forEach(b => b.onclick = () => socket.emit('friendSuggestHide', b.dataset.hide, () => { const c = b.closest('.sg-card'); c.style.opacity = '0'; setTimeout(() => c.remove(), 180); }));
+    $('#sg-ref') && ($('#sg-ref').onclick = () => { el.innerHTML = `<div class="sg-load">${ic('sparkle')} Öneriler hazırlanıyor…</div>`; loadSuggest(el); });
+    $('#sg-inv').onclick = () => navigator.clipboard?.writeText(`${PUB}/register`).then(() => toast('Davet linki kopyalandı'));
   });
 }
 // ================= Ana sayfa: şu an seste olanlar, seni bekleyenler, hızlı başlangıç =================
@@ -6673,13 +6729,14 @@ function renderDMSide() {
       setTimeout(() => openGroup(r.id), 300);
     });
   }, 2);
-  $('#side-list').innerHTML = `<div class="room ${!S.channel ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
+  $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div><div class="room ${!S.channel && friendTab !== 'home' ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
     const dnb = !d.group ? nbOf(S.users[d.with]) : null;
     return `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''} ${S.calls?.[d.id]?.length ? 'incall' : ''}${dnb ? ' has-nb nb-' + dnb : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${dnb ? nbLayers(dnb) : ''}${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, S.online.has(d.with))}<span class="nb-dmn">${styledNameHTML(d.with, S.users[d.with]?.nameStyle)}</span>`}</div>`;
   }).join('')
     : `<p style="padding:6px 20px;color:var(--muted);font-size:14px">Henüz sohbet yok.</p>`);
   $('#side-list').querySelectorAll('.room[data-id]').forEach(r => r.onclick = () => openChat(r.dataset.id, r.dataset.w));
-  $('#fr-link').onclick = () => { document.body.classList.remove('drawer'); showFriends(); };
+  $('#fr-link').onclick = () => { document.body.classList.remove('drawer'); showFriends(friendTab === 'home' ? (S.social.reqIn.length ? 'pending' : 'online') : friendTab); };
+  $('#home-link').onclick = () => { document.body.classList.remove('drawer'); showFriends('home'); };
 }
 
 // ================= Oda / mesajlar =================
@@ -7039,7 +7096,7 @@ function enterRoom(id, placeholder, hello) {
     setWatch(r.watch);
     renderMessages(true);
     const nl = $('#messages .newline');
-    if (nl) centerIn(nl);
+    if (nl) { stickBottom = false; stickForce = 0; centerIn(nl); }
     showUnreadBar(lr);
     markRead(id);
 
@@ -7074,7 +7131,18 @@ function renderMessages(toBottom) {
     try { html += msgHTML(m, prev); prev = m; } catch (e) { console.error('Mesaj çizilemedi', m?.id, e); } }
   box.innerHTML = html;
   if (quiet) wireEmpty(box);
-  if (atBottom) box.scrollTop = box.scrollHeight;
+  if (atBottom) { box.scrollTop = box.scrollHeight; stickBottom = true; if (toBottom) stickForce = Date.now() + 5000; }
+}
+// Odaya girince en alttan başla: resimler, GIF'ler, önizlemeler sonradan yüklenip yüksekliği büyütünce de altta kal (kullanıcı yukarı kaydırana kadar)
+let stickBottom = false, stickForce = 0; // stickForce: odaya girdikten sonraki ilk saniyelerde, kullanıcı dokunmadıkça hep altta tut
+{ const box = $('#messages'), pin = () => { if (stickBottom && S.channel) box.scrollTop = box.scrollHeight; };
+  box.addEventListener('load', e => { if (/^(IMG|VIDEO|IFRAME)$/.test(e.target.tagName)) pin(); }, true);
+  box.addEventListener('loadedmetadata', pin, true);
+  // kullanıcı kaydırınca karar ver: en alttaysa yapışık kal, yukarı çıktıysa bırak (resim yüklenince scroll olayı gelmez, o an yapışıklık korunur)
+  box.addEventListener('scroll', () => { stickBottom = Date.now() < stickForce || box.scrollHeight - box.scrollTop - box.clientHeight < 40; }, { passive: true });
+  for (const ev of ['wheel', 'touchstart', 'mousedown', 'keydown']) box.addEventListener(ev, () => { stickForce = 0; }, { passive: true });
+  try { new ResizeObserver(pin).observe(box); } catch {}
+  new MutationObserver(() => requestAnimationFrame(pin)).observe(box, { childList: true, subtree: true });
 }
 const whenTxt = t => { const d = new Date(t), n = new Date(), y = new Date(n - 864e5); return d.toDateString() === n.toDateString() ? hm(t) : d.toDateString() === y.toDateString() ? 'Dün ' + hm(t) : d.toLocaleDateString('tr-TR') + ' ' + hm(t); };
 // ---- Davet kartı: mesajdaki /davet/kod linki sunucu kartı olarak görünür, tek tıkla katılınır ----
