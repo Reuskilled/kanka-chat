@@ -4897,56 +4897,141 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .peffects.pe-3d .pe-pv img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; display: block; }
   .peffects.pe-3d .pe-pv.frost img { filter: hue-rotate(196deg) saturate(1.38) brightness(1.08) contrast(1.14); }
   .peffects.pe-3d .pe-ktag { position: absolute; top: 4px; right: 4px; font-size: 8px; font-weight: 900; letter-spacing: .06em; padding: 2px 4px; border-radius: 4px; background: rgba(9,9,11,.84); color: var(--accent); border: 1px solid rgba(255,255,255,.15); }
-.sp-link .sp-soon{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.6px;padding:2px 7px;border-radius:6px;background:var(--accent);color:#0b0b0c}
-.spark{max-width:1080px;margin:0 auto;padding:18px 22px 60px}
-.sp-hero{position:relative;overflow:hidden;border-radius:28px;padding:44px 44px;display:grid;grid-template-columns:1.25fr .9fr;gap:30px;align-items:center;
-  background:radial-gradient(120% 140% at 100% 0%,rgba(212,255,0,.28),transparent 55%),radial-gradient(90% 120% at 0% 100%,rgba(0,214,255,.18),transparent 60%),linear-gradient(135deg,#121316,#0b0c0d);border:1px solid rgba(212,255,0,.22)}
-.sp-dots{position:absolute;inset:0;pointer-events:none}
-.sp-dots i{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);border-radius:50%;background:var(--accent);opacity:.0;box-shadow:0 0 14px var(--accent);animation:spTw 3.2s var(--d) infinite ease-in-out}
-@keyframes spTw{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:.75;transform:scale(1)}}
-.sp-hl{position:relative;z-index:1}
-.sp-kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:1.2px;color:var(--accent);padding:6px 12px;border-radius:999px;background:rgba(212,255,0,.1);border:1px solid rgba(212,255,0,.3)}
-.sp-kicker .ic{width:15px;height:15px}
-.sp-hero h1{margin:18px 0 10px;font-size:46px;font-weight:900;letter-spacing:-1.5px;line-height:1;color:var(--ink)}
-.sp-me{display:flex;align-items:center;gap:14px}.sp-me .av{width:58px;height:58px;font-size:22px}
-.sp-me b{font-size:38px;font-weight:900;letter-spacing:-1px;background:linear-gradient(90deg,#fff,var(--accent),#7ef9ff,#fff);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:spSh 6s linear infinite}
-@keyframes spSh{to{background-position:300% 0}}
-.sp-hero p{color:var(--muted);font-size:15.5px;line-height:1.55;max-width:470px;margin:18px 0 22px}
-.sp-cta{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.sp-btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:14px;border:0;background:var(--accent);color:#0b0b0c;font:800 15px inherit;font-family:inherit;cursor:pointer;box-shadow:0 8px 30px rgba(212,255,0,.28);transition:transform .15s}
-.sp-btn:hover{transform:translateY(-2px)} .sp-btn .ic{width:18px;height:18px}
-.sp-btn.on{background:rgba(212,255,0,.12);color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
-.sp-count{font-size:13.5px;color:var(--muted);font-weight:600}
-.sp-preview{position:relative;z-index:1;display:flex;justify-content:center}
-.sp-pcard{position:relative;width:260px;border-radius:22px;padding:0 0 18px;background:#15161a;text-align:center;overflow:hidden;
-  box-shadow:0 0 0 2px transparent,0 30px 60px rgba(0,0,0,.5);background-clip:padding-box;transform:rotate(3deg);animation:spFl 5s ease-in-out infinite}
-.sp-pcard::before{content:"";position:absolute;inset:-2px;border-radius:24px;padding:2px;background:conic-gradient(from var(--a,0deg),var(--accent),#7ef9ff,#b18cff,var(--accent));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spRot 4s linear infinite}
-@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
-@keyframes spRot{to{--a:360deg}} @keyframes spFl{50%{transform:rotate(3deg) translateY(-8px)}}
-.sp-pban{height:86px;background:linear-gradient(120deg,var(--accent),#7ef9ff 55%,#b18cff);background-size:200% 200%;animation:spSh 8s linear infinite}
-.sp-pcard .av{width:76px;height:76px;margin:-40px auto 8px;border:5px solid #15161a;font-size:28px;position:relative}
-.sp-pname{display:block;font-size:20px;font-weight:900;background:linear-gradient(90deg,#fff,var(--accent),#7ef9ff,#fff);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:spSh 5s linear infinite}
-.sp-pcard small{color:var(--muted);font-size:13px}
-.sp-pbadge{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:4px 10px;border-radius:999px;background:rgba(212,255,0,.14);color:var(--accent);font-size:12px;font-weight:800}
-.sp-pbadge .ic{width:13px;height:13px}
-.sp-pnote{margin-top:12px;font-size:11.5px;color:var(--muted)}
-.sp-h{margin:40px 4px 16px;font-size:22px;font-weight:900;letter-spacing:-.5px;color:var(--ink)}
-.sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-.sp-perk{padding:20px;border-radius:20px;background:var(--panel,#141518);border:1px solid var(--line,#24252b);display:flex;flex-direction:column;gap:8px;transition:transform .2s,border-color .2s;animation:spIn .5s calc(var(--k) * 60ms) both}
-.sp-perk:hover{transform:translateY(-4px);border-color:rgba(212,255,0,.45)}
-@keyframes spIn{from{opacity:0;transform:translateY(14px)}}
-.sp-pi{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(212,255,0,.12);color:var(--accent)}
-.sp-pi .ic{width:22px;height:22px}
-.sp-perk b,.sp-box b{font-size:16px;color:var(--ink)} .sp-perk small,.sp-box small{color:var(--muted);font-size:13.5px;line-height:1.5}
-.sp-free{margin-top:26px;display:flex;gap:16px;align-items:center;padding:20px 22px;border-radius:20px;background:linear-gradient(90deg,rgba(63,207,142,.12),transparent);border:1px solid rgba(63,207,142,.3)}
-.sp-fi{width:44px;height:44px;flex-shrink:0;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(63,207,142,.16);color:var(--green,#3fcf8e)} .sp-fi .ic{width:22px;height:22px}
-.sp-free b{display:block;color:var(--ink);font-size:15.5px} .sp-free small{color:var(--muted);font-size:13.5px}
-.sp-row{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.sp-box{padding:22px;border-radius:20px;background:var(--panel,#141518);border:1px solid var(--line,#24252b);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
-.sp-btn2{margin-top:6px;padding:10px 16px;border-radius:12px;border:1px solid var(--line,#2a2b31);background:rgba(255,255,255,.05);color:var(--ink);font-weight:700;font-family:inherit;cursor:pointer}
-.sp-btn2:disabled{opacity:.55;cursor:default}
-@media (max-width:860px){.sp-hero{grid-template-columns:1fr;padding:30px 24px}.sp-preview{display:none}.sp-row{grid-template-columns:1fr}.sp-hero h1{font-size:36px}.sp-me b{font-size:30px}}
-@media (prefers-reduced-motion:reduce){.spark *{animation:none!important}}
+
+  /* ===== Kanka Arayüz Toparlama: 3 Sütun Hiza + Sakin DM + Metalik Sıralama + Nitro Tarzı Spark Hub ===== */
+  @media (min-width: 1101px) {
+    #head, body.ui2 #head { min-height: 56px; height: 56px; padding: 0 16px 0 20px; }
+    #side > .shead:not(.has-banner) { min-height: 56px; height: 56px; padding: 0 14px 0 16px; margin: 0; border-radius: 0; border-bottom: 1px solid var(--line); }
+    #side > .shead:not(.has-banner) h3 { font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+    #members .hp-lb { padding: 0 2px 10px; }
+    #members .hp-h { height: 56px; margin: -6px -14px 10px; padding: 0 14px; display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 800; border-bottom: 1px solid var(--line); }
+  }
+  /* Sakin DM listesi & Spark yan menü satırı */
+  #side-list .room.has-nb { border-color: rgba(255,255,255,.05); }
+  #side-list .room.has-nb .nb-bg { opacity: .48; }
+  #side-list .room.has-nb:hover .nb-bg, #side-list .room.has-nb.active .nb-bg { opacity: .82; }
+  .sp-link .ico { background: rgba(212,255,0,.12) !important; color: var(--accent) !important; }
+  .sp-link .sp-soon { margin-left: auto; font-size: 9px; font-weight: 800; letter-spacing: .06em; padding: 2px 6px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  /* Sıralama paneli: kırpılmasız metin + metalik sıra rozetleri */
+  .hp-tabs { padding: 3px; border-radius: 8px; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 55%, var(--card)); }
+  .hp-tabs button { height: 30px; border-radius: 6px; font-size: 12px; font-weight: 700; }
+  .hp-lr { gap: 8px; padding: 6.5px 7px; border-radius: 7px; border: 1px solid transparent; }
+  .hp-lr.me { background: rgba(212,255,0,.07); border-color: color-mix(in srgb, var(--accent) 32%, var(--line)); box-shadow: inset 3px 0 0 var(--accent); }
+  .hp-lr .av, .hp-lr.top .av { width: 30px; height: 30px; font-size: 12px; }
+  .hp-lr .rk { width: 22px; display: grid; place-items: center; }
+  .hp-lr .rkb { width: 21px; height: 21px; border-radius: 6px; display: grid; place-items: center; font-size: 10.5px; font-weight: 900; font-variant-numeric: tabular-nums; background: rgba(255,255,255,.05); color: var(--muted); }
+  .hp-lr .rkb.r1 { background: linear-gradient(135deg, #fde047, #b45309); color: #1a1002; }
+  .hp-lr .rkb.r2 { background: linear-gradient(135deg, #e4e4e7, #71717a); color: #111114; }
+  .hp-lr .rkb.r3 { background: linear-gradient(135deg, #fdba74, #9a3412); color: #1c0a02; }
+  .hp-lr b { font-size: 12.5px; font-weight: 700; }
+  .hp-lr small { font-size: 10.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .hp-lr small .hp-str { color: #fb923c; font-weight: 700; }
+  .hp-lr em { font-size: 10.5px; font-weight: 800; padding: 2.5px 6px; border-radius: 5px; font-variant-numeric: tabular-nums; }
+
+  /* Full-bleed Nitro Hub Tarzı Kanka Spark Hub */
+  #messages:has(> .spark) { padding: 0 !important; }
+  .spark {
+    min-height: 100%; padding: 24px 28px 48px;
+    background:
+      radial-gradient(62% 46% at 8% 0%, rgba(212,255,0,.18) 0%, rgba(163,230,53,.05) 42%, transparent 72%),
+      radial-gradient(50% 42% at 88% 8%, rgba(16,185,129,.16) 0%, rgba(6,78,59,.07) 45%, transparent 74%),
+      linear-gradient(180deg, #12150e 0%, #0d0d11 36%, #0a0a0d 100%);
+  }
+  .sp-inner { max-width: 960px; margin: 0 auto; }
+  .sp-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    padding-bottom: 18px; margin-bottom: 22px; border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .sp-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 900; font-size: 15px; letter-spacing: .04em; font-style: italic; color: var(--ink); }
+  .sp-brand-ic { width: 24px; height: 24px; border-radius: 6px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-style: normal; }
+  .sp-brand-ic .ic { width: 14px; height: 14px; }
+  .sp-bar-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .sp-count { font-size: 12px; color: var(--muted); font-weight: 700; }
+  .sp-top-btn {
+    height: 34px; padding: 0 13px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12);
+    background: rgba(18,18,22,.72); color: var(--ink); font: 700 12px/1 inherit; font-family: inherit;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .14s;
+  }
+  .sp-top-btn .ic { width: 14px; height: 14px; }
+  .sp-top-btn:disabled { opacity: .55; cursor: default; }
+  .sp-top-btn.pri { background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 800; }
+  .sp-top-btn.pri:hover { filter: brightness(1.06); }
+  .sp-top-btn.pri.on { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+
+  .sp-greet-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+  .sp-greet-l h1 { font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: .01em; text-transform: uppercase; color: var(--ink); line-height: 1.1; margin: 0 0 10px; }
+  .sp-user-line { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; margin-bottom: 12px; }
+  .sp-user-line .av { width: 42px; height: 42px; font-size: 16px; border: 2px solid var(--accent); box-shadow: 0 0 22px rgba(212,255,0,.22); }
+  .sp-uname { font-size: 27px; font-weight: 900; letter-spacing: -.02em; color: var(--ink); line-height: 1.1; }
+  .sp-soon-tag { font-size: 10px; font-weight: 900; letter-spacing: .09em; padding: 4px 8px; border-radius: 6px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); }
+  .sp-sub { font-size: 13px; color: var(--muted); max-width: 490px; line-height: 1.55; margin: 0; }
+
+  .sp-float-art { position: relative; width: 216px; height: 130px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .sp-orbit { position: absolute; width: 170px; height: 170px; border-radius: 50%; background: radial-gradient(circle, rgba(212,255,0,.22) 0%, rgba(16,185,129,.12) 45%, transparent 72%); filter: blur(8px); }
+  .sp-crest { position: relative; z-index: 2; width: 88px; height: 88px; border-radius: 20px; background: linear-gradient(145deg, #222618, #0f1014); border: 1.5px solid color-mix(in srgb, var(--accent) 60%, rgba(255,255,255,.15)); box-shadow: 0 18px 42px rgba(0,0,0,.62), 0 0 28px rgba(212,255,0,.16); display: grid; place-items: center; transform: rotate(-6deg); animation: spCrest 4.6s ease-in-out infinite; }
+  .sp-crest .ic { width: 44px; height: 44px; }
+  .sp-mb { position: absolute; z-index: 3; padding: 5px 9px; border-radius: 7px; background: rgba(16,16,22,.88); border: 1px solid rgba(255,255,255,.14); font-size: 10.5px; font-weight: 800; box-shadow: 0 10px 24px rgba(0,0,0,.55); backdrop-filter: blur(8px); }
+  .sp-mb1 { top: 8px; right: 4px; color: var(--accent); border-color: rgba(212,255,0,.4); transform: rotate(5deg); }
+  .sp-mb2 { bottom: 8px; left: 4px; color: #6ee7b7; border-color: rgba(52,211,153,.35); transform: rotate(-4deg); }
+  @keyframes spCrest { 0%,100% { transform: rotate(-6deg) translateY(0); } 50% { transform: rotate(-4deg) translateY(-6px); } }
+
+  .sp-sec { margin-bottom: 26px; }
+  .sp-sec-title { font-size: 15.5px; font-weight: 900; font-style: italic; letter-spacing: .02em; text-transform: uppercase; color: var(--ink); margin: 0 0 4px; }
+  .sp-sec-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 14px; }
+  .sp-sec-sub button { background: none; border: 0; padding: 0; color: var(--accent); font: 700 12.5px inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+
+  .sp-cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .sp-vcard { border-radius: 12px; background: #121217; border: 1px solid rgba(255,255,255,.08); overflow: hidden; display: flex; flex-direction: column; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+  .sp-vcard:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15)); box-shadow: 0 16px 38px rgba(0,0,0,.48); }
+  .sp-vstage { height: 172px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .sp-vstage::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 58%, #121217 100%); }
+  .sp-vbody { padding: 4px 16px 16px; position: relative; z-index: 2; }
+  .sp-vmeta { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); margin-bottom: 5px; }
+  .sp-vbody b { display: block; font-size: 14.5px; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 5px; }
+  .sp-vbody p { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0; }
+
+  .sp-st1 { background: radial-gradient(circle at 50% 30%, #4c1118 0%, #150b12 68%, #121217 100%); }
+  .sp-st-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; opacity: .55; }
+  .sp-mpcard { position: relative; z-index: 2; width: 112px; height: 130px; border-radius: 10px; background: #14141a; border: 1.5px solid rgba(251,146,60,.55); overflow: hidden; transform: rotate(-7deg) translateX(-10px); box-shadow: 0 14px 30px rgba(0,0,0,.75); }
+  .sp-mpcard img { width: 100%; height: 66px; object-fit: cover; object-position: 50% 22%; display: block; }
+  .sp-mpcard-b { padding: 6px 8px; }
+  .sp-mpcard-b i { display: block; width: 22px; height: 22px; border-radius: 50%; background: #1c1630; border: 2px solid var(--accent); margin-top: -18px; position: relative; }
+  .sp-mpcard-b b { display: block; font-size: 10px; color: #fff; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sp-mpcard-b span { display: block; height: 4px; border-radius: 4px; background: rgba(255,255,255,.15); margin-top: 5px; width: 76%; }
+  .sp-mnb { position: absolute; z-index: 3; right: 12px; bottom: 22px; padding: 6px 9px; border-radius: 8px; background: linear-gradient(90deg, rgba(16,18,22,.92), rgba(52,68,14,.92)); border: 1px solid rgba(212,255,0,.5); box-shadow: 0 10px 22px rgba(0,0,0,.65); display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; color: #fff; }
+  .sp-mnb i { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #09090b; display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 900; }
+
+  .sp-st2 { background: radial-gradient(circle at 50% 35%, #064e3b 0%, #091714 68%, #121217 100%); }
+  .sp-st2 .sp-st-bg { opacity: .72; object-position: 50% 25%; }
+  .sp-st2-ic { position: absolute; z-index: 3; right: 14px; top: 14px; width: 34px; height: 34px; border-radius: 9px; background: rgba(9,9,11,.82); border: 1.5px solid #fde047; color: #fde047; display: grid; place-items: center; box-shadow: 0 8px 20px rgba(0,0,0,.6); }
+  .sp-st2-ic .ic { width: 17px; height: 17px; }
+  .sp-st2-tag { position: absolute; z-index: 3; left: 14px; bottom: 20px; padding: 5px 10px; border-radius: 7px; background: rgba(9,9,11,.86); border: 1px solid rgba(52,211,153,.5); font-size: 10.5px; font-weight: 800; color: #6ee7b7; }
+
+  .sp-st3 { background: radial-gradient(circle at 50% 30%, #1e293b 0%, #131024 62%, #121217 100%); }
+  .sp-s3-tiles { position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; }
+  .sp-s3t { width: 68px; height: 82px; border-radius: 10px; background: rgba(20,22,30,.92); border: 1px solid rgba(255,255,255,.14); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 12px 26px rgba(0,0,0,.55); }
+  .sp-s3t.mid { width: 84px; height: 96px; border-color: rgba(212,255,0,.55); background: linear-gradient(160deg, #1d240b, #14141a); transform: translateY(-5px); }
+  .sp-s3t b { font-size: 13px; font-weight: 900; color: var(--accent); }
+  .sp-s3t span { font-size: 9.5px; font-weight: 700; color: var(--muted); }
+
+  .sp-discover3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .sp-dcard { padding: 16px; border-radius: 12px; background: linear-gradient(180deg, #17171d 0%, #121216 100%); border: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .sp-dpill { font-size: 9px; font-weight: 900; letter-spacing: .07em; padding: 3px 7px; border-radius: 5px; background: #fff; color: #09090b; text-transform: uppercase; }
+  .sp-dpill.grn { background: rgba(63,207,142,.18); color: var(--green); border: 1px solid rgba(63,207,142,.4); }
+  .sp-dpill.lim { background: var(--accent); color: var(--on-accent); }
+  .sp-dcard b { font-size: 13.5px; font-weight: 800; color: #fff; }
+  .sp-dcard p { font-size: 12px; color: var(--muted); line-height: 1.48; margin: 0; }
+  .sp-dcard .sp-btn2 { margin-top: auto; padding: 7px 12px; border-radius: 7px; font-size: 12px; }
+
+  body.light .spark { background: radial-gradient(62% 46% at 8% 0%, rgba(163,230,53,.16) 0%, transparent 65%), linear-gradient(180deg, #f4f6ee 0%, #f8fafc 40%, #f1f5f9 100%); }
+  body.light .sp-bar { border-bottom-color: rgba(0,0,0,.08); }
+  body.light .sp-top-btn { background: #fff; border-color: var(--line); color: var(--ink); }
+  body.light .sp-vcard, body.light .sp-dcard { background: #fff; border-color: var(--line); }
+  body.light .sp-vbody b, body.light .sp-dcard b { color: var(--ink); }
+  body.light .sp-vstage::after { background: linear-gradient(180deg, transparent 58%, #fff 100%); }
+
+  @media (max-width: 960px) { .sp-cards3, .sp-discover3 { grid-template-columns: 1fr; } .sp-float-art { display: none; } .spark { padding: 18px 16px 36px; } }
+  @media (prefers-reduced-motion: reduce) { .spark * { animation: none !important; } }
 </style>
 </head>
 <body>
@@ -8182,32 +8267,95 @@ const SPARK_PERKS = [
 function sparkHTML() {
   const hr = new Date().getHours(), greet = hr >= 5 && hr < 12 ? 'Günaydın' : hr >= 12 && hr < 18 ? 'İyi günler' : hr >= 18 && hr < 23 ? 'İyi akşamlar' : 'İyi geceler';
   const me = S.users[S.me] || {}, dname = me.displayName || S.me;
-  const dots = Array.from({ length: 14 }, (_, i) => `<i style="--x:${(i * 73) % 100}%;--y:${(i * 37) % 100}%;--d:${(i % 5) * .6}s;--s:${6 + (i % 4) * 3}px"></i>`).join('');
-  return `<div class="spark">
-    <section class="sp-hero"><div class="sp-dots">${dots}</div>
-      <div class="sp-hl"><span class="sp-kicker">${ic('sparkle')} SPARK · ÇOK YAKINDA</span>
-        <h1>${greet},</h1>
-        <div class="sp-me">${av(S.me)}<b>${esc(dname)}</b></div>
-        <p>Spark, Kanka'nın isteğe bağlı artı paketi. Profilini parlatır, sınırlarını büyütür ve Kanka'nın büyümesine destek olur.</p>
-        <div class="sp-cta"><button class="sp-btn" id="sp-wait">${ic('bell')}<span>Çıkınca haber ver</span></button><span class="sp-count" id="sp-count"></span></div></div>
-      <div class="sp-preview"><div class="sp-pcard"><div class="sp-pban"></div>${av(S.me)}<b class="sp-pname">${esc(dname)}</b><small>@${esc(S.me)}</small>
-        <span class="sp-pbadge">${ic('sparkle')} Spark</span><div class="sp-pnote">Spark ile profilin böyle görünecek</div></div></div>
-    </section>
-    <h2 class="sp-h">Spark ile neler geliyor</h2>
-    <div class="sp-grid">${SPARK_PERKS.map(([i, t, d], k) => `<div class="sp-perk" style="--k:${k}"><span class="sp-pi">${ic(i)}</span><b>${t}</b><small>${d}</small></div>`).join('')}</div>
-    <div class="sp-free"><span class="sp-fi">${ic('heart')}</span><div><b>Kanka'nın kendisi ücretsiz.</b><small>Sohbet, sesli odalar, Arena oyunları, ses paneli ve botlar Spark olmadan da herkese açık. Spark tamamen isteğe bağlı.</small></div></div>
-    <div class="sp-row">
-      <div class="sp-box"><span class="sp-pi">${ic('star')}</span><b>Spark hediye et</b><small>Kankana Spark hediye edebileceksin. Spark çıkınca açılacak.</small><button class="sp-btn2" disabled>Yakında</button></div>
-      <div class="sp-box"><span class="sp-pi">${ic('chat')}</span><b>Ne olsun istersin?</b><small>Liste kesin değil. Spark'ta görmek istediğin şeyi Kanka HQ'da yaz, beraber karar verelim.</small><button class="sp-btn2" id="sp-hq">Kanka HQ'ya git</button></div>
+  return `<div class="spark"><div class="sp-inner">
+    <div class="sp-bar">
+      <div class="sp-brand"><span class="sp-brand-ic">${ic('sparkle')}</span>SPARK</div>
+      <div class="sp-bar-acts">
+        <span class="sp-count" id="sp-count"></span>
+        <button class="sp-top-btn" type="button" disabled title="Spark çıkınca açılacak">${ic('star')}Spark Hediye Et</button>
+        <button class="sp-top-btn pri" id="sp-wait" type="button">${ic('bell')}<span>Çıkınca haber ver</span></button>
+      </div>
     </div>
-  </div>`;
+
+    <div class="sp-greet-row">
+      <div class="sp-greet-l">
+        <h1>${greet},</h1>
+        <div class="sp-user-line">${av(S.me)}<span class="sp-uname">${styledNameHTML(dname, me.nameStyle)}</span><span class="sp-soon-tag">ÇOK YAKINDA</span></div>
+        <p class="sp-sub">Kanka'nın isteğe bağlı artı paketi. Profilini 3D efektler ve özel temalarla özelleştir, sınırlarını büyüt — temel özellikler her zaman ücretsiz.</p>
+      </div>
+      <div class="sp-float-art" aria-hidden="true">
+        <div class="sp-orbit"></div>
+        <div class="sp-crest">${ic('logo')}</div>
+        <div class="sp-mb sp-mb1">✦ 3D VFX</div>
+        <div class="sp-mb sp-mb2">1080p 60fps</div>
+      </div>
+    </div>
+
+    <section class="sp-sec">
+      <div class="sp-sec-title">SPARK İLE NELER GELİYOR</div>
+      <div class="sp-sec-sub">Bekleme listesi açık — önerilerini <button type="button" id="sp-hq-lnk">Kanka HQ</button> sunucusunda paylaşabilirsin.</div>
+      <div class="sp-cards3">
+        <article class="sp-vcard">
+          <div class="sp-vstage sp-st1">
+            <img class="sp-st-bg" src="/effects/dragon_crimson.jpg" alt="" loading="lazy" />
+            <div class="sp-mpcard"><img src="/effects/dragon_crimson.jpg" alt="" loading="lazy" /><div class="sp-mpcard-b"><i></i><b>${esc(dname)}</b><span></span></div></div>
+            <div class="sp-mnb"><i>K</i><span>${esc(dname.slice(0, 12))}</span></div>
+          </div>
+          <div class="sp-vbody">
+            <div class="sp-vmeta">✦ PROFİL 2.0</div>
+            <b>3D Profil Efektleri &amp; Hareketli Afiş</b>
+            <p>GIF avatar, iki renkli profil teması, 3D ejderha efektleri ve parlayan isim stili.</p>
+          </div>
+        </article>
+
+        <article class="sp-vcard">
+          <div class="sp-vstage sp-st2">
+            <img class="sp-st-bg" src="/effects/dragon_jade.jpg" alt="" loading="lazy" />
+            <div class="sp-st2-ic">${ic('crown')}</div>
+            <div class="sp-st2-tag">✦ Zümrüt Ejderha · Spark Rozeti</div>
+          </div>
+          <div class="sp-vbody">
+            <div class="sp-vmeta">👑 KOLEKSİYON</div>
+            <b>Spark Rozeti &amp; Özel Etiket Simgesi</b>
+            <p>Destekçi rozeti, sunucu etiketine özel görsel simge ve her sunucuda özel emojiler.</p>
+          </div>
+        </article>
+
+        <article class="sp-vcard">
+          <div class="sp-vstage sp-st3">
+            <div class="sp-s3-tiles">
+              <div class="sp-s3t"><b>100MB</b><span>Dosya</span></div>
+              <div class="sp-s3t mid"><b>HD 60</b><span>Ekran Yayını</span></div>
+              <div class="sp-s3t"><b>+24</b><span>Ses Paneli</span></div>
+            </div>
+          </div>
+          <div class="sp-vbody">
+            <div class="sp-vmeta">⚡ PERFORMANS</div>
+            <b>Net Ekran Paylaşımı &amp; Büyük Dosyalar</b>
+            <p>Yüksek akıcılıkta yayın, tek seferde büyük video yükleme ve daha dolu ses paneli.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="sp-sec" style="margin-bottom:0">
+      <div class="sp-sec-title">YENİLİKLERİ KEŞFET</div>
+      <div class="sp-discover3">
+        <div class="sp-dcard"><span class="sp-dpill grn">ÜCRETSİZ</span><b>Kanka'nın kendisi ücretsiz</b><p>Sohbet, sesli odalar, Arena oyunları, ses paneli ve botlar Spark olmadan da herkese açık.</p></div>
+        <div class="sp-dcard"><span class="sp-dpill lim">YAKINDA</span><b>Kankana Spark hediye et</b><p>Spark çıktığında arkadaşlarına tek tıkla hediye gönderebileceksin.</p></div>
+        <div class="sp-dcard"><span class="sp-dpill">TOPLULUK</span><b>Ne olsun istersin?</b><p>Liste kesin değil — Spark'ta görmek istediğin özellikleri Kanka HQ'da yaz, beraber karar verelim.</p><button class="sp-btn2" id="sp-hq" type="button">Kanka HQ'ya git</button></div>
+      </div>
+    </section>
+  </div></div>`;
 }
 function wireSpark() {
-  const set = r => { if (!r || r.error) return; const b = $('#sp-wait'); if (!b) return; b.classList.toggle('on', r.bekliyor); b.querySelector('span').textContent = r.bekliyor ? 'Listedesin, çıkınca haber vereceğiz' : 'Çıkınca haber ver';
+  const set = r => { if (!r || r.error) return; const b = $('#sp-wait'); if (!b) return; b.classList.toggle('on', r.bekliyor); b.querySelector('span').textContent = r.bekliyor ? 'Listedesin' : 'Çıkınca haber ver';
     b.firstElementChild.outerHTML = ic(r.bekliyor ? 'check' : 'bell'); $('#sp-count').textContent = r.sayi ? `${r.sayi} kişi bekliyor` : ''; };
   socket.emit('sparkInfo', {}, set);
   $('#sp-wait').onclick = () => { const on = !$('#sp-wait').classList.contains('on'); socket.emit('sparkWait', { on }, r => { if (r?.error) return toast(r.error); set(r); if (on) toast('Spark çıkınca ilk sen duyacaksın ✨', null, false, { type: 'party' }); }); };
-  $('#sp-hq').onclick = () => { const s = S.servers.find(x => x.id === 's1'); if (s) selectServer('s1'); else toast('Kanka HQ\'ya katıl, oradan yazabilirsin'); };
+  const goHq = () => { const s = S.servers.find(x => x.id === 's1'); if (s) selectServer('s1'); else toast('Kanka HQ\'ya katıl, oradan yazabilirsin'); };
+  if ($('#sp-hq')) $('#sp-hq').onclick = goHq;
+  if ($('#sp-hq-lnk')) $('#sp-hq-lnk').onclick = goHq;
 }
 function wireHome() {
   const M = $('#messages');
@@ -9990,13 +10138,14 @@ function homeSidePanel(item, mdrH) {
   dmpClear();
   if (Date.now() - lbAt > 120e3) { lbAt = Date.now(); socket.emit('hqTops', r => { if (r) { hqTops = r; if (S.view === 'dm' && !S.channel) renderMembers(); } }); }
   const t = hqTops, list = t ? (lbTab === 'lvl' ? t.lvl : t.stk) : [];
-  const medal = i => ['🥇', '🥈', '🥉'][i] || `<span class="n">${i + 1}</span>`;
+  const medal = i => `<span class="rkb${i < 3 ? ' r' + (i + 1) : ''}">${i + 1}</span>`;
+  const fmtXp = v => v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 1 : 1).replace(/\.0$/, '') + 'K' : String(v);
   const val = x => lbTab === 'lvl' ? `<em class="lv">Sv ${x.level}</em>` : `<em class="sk">🔥 ${x.streak}</em>`;
-  const sub = x => lbTab === 'lvl' ? `${x.xp.toLocaleString('tr-TR')} XP${x.streak ? ` · 🔥 ${x.streak} gün` : ''}` : `${x.streak} günlük seri · Sv ${x.level}`;
-  const mine = t?.me && !list.some(x => x.name === S.me) ? `<div class="hp-lr me sep" data-n="${esc(S.me)}"><span class="rk"><span class="n">${lbTab === 'lvl' ? t.me.lvlRank : t.me.stkRank}</span></span>${av(S.me, true)}<span class="t"><b>Sen</b><small>${sub(t.me)}</small></span>${val(t.me)}</div>` : '';
+  const sub = x => lbTab === 'lvl' ? `${fmtXp(x.xp)} XP${x.streak ? ` · <span class="hp-str">🔥 ${x.streak}g</span>` : ''}` : `${x.streak}g seri · Sv ${x.level}`;
+  const mine = t?.me && !list.some(x => x.name === S.me) ? `<div class="hp-lr me sep" data-n="${esc(S.me)}"><span class="rk"><span class="rkb">${lbTab === 'lvl' ? t.me.lvlRank : t.me.stkRank}</span></span>${av(S.me, true)}<span class="t"><b>Sen</b><small>${sub(t.me)}</small></span>${val(t.me)}</div>` : '';
   $('#members').innerHTML = mdrH.replace('<b>Üyeler</b>', '<b>Sıralama</b>') + `<div class="hp-lb">
-    <div class="hp-h">🏆 Kanka HQ sıralaması</div>
-    <div class="hp-tabs"><button class="${lbTab === 'lvl' ? 'on' : ''}" data-lb="lvl">⭐ Seviye</button><button class="${lbTab === 'stk' ? 'on' : ''}" data-lb="stk">🔥 Seri</button></div>
+    <div class="hp-h">Kanka HQ sıralaması</div>
+    <div class="hp-tabs"><button class="${lbTab === 'lvl' ? 'on' : ''}" data-lb="lvl">Seviye</button><button class="${lbTab === 'stk' ? 'on' : ''}" data-lb="stk">Seri</button></div>
     ${!t ? '<div class="hp-load">Yükleniyor…</div>' : list.length ? list.map((x, i) => `<div class="hp-lr ${x.name === S.me ? 'me' : ''} ${i < 3 ? 'top' : ''}" data-n="${esc(x.name)}"><span class="rk">${medal(i)}</span>${av(x.name, S.online.has(x.name))}<span class="t"><b>${styledNameHTML(dn(x.name), S.users[x.name]?.nameStyle)}</b><small>${sub(x)}</small></span>${val(x)}</div>`).join('') + mine : '<div class="hp-load">Henüz serisi olan yok. Her gün bir mesaj at, ilk sen ol!</div>'}
     <p class="hp-tip">${lbTab === 'lvl' ? 'Sohbet ederek (dakikada bir 3-6 XP), seste arkadaşlarınla kalarak (dakikada 2 XP) ve her gün gelerek XP kazanırsın. Spam XP getirmez.' : 'Seri, her gün en az bir mesaj atınca büyür. Bir gün atlarsan sıfırlanır.'}</p></div>`;
   $('#members').querySelectorAll('.hp-lr[data-n]').forEach(m => m.onclick = e => { e.stopPropagation(); miniProfile(m.dataset.n, m); });
