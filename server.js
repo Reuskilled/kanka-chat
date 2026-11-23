@@ -3010,7 +3010,7 @@ function reachOf(a, extra) { const set = new Set(); for (const s of botServers(a
 const contentOk = a => !a.verified || !!a.contentOk; // küçük (doğrulanmamış) botlar içeriği görebilir; büyüyenler için onay gerekir
 function appView(a, full) {
   const u = db.users[a.bot] || {};
-  const v = { id: a.id, kullaniciId: uidOf(db.users[a.bot]), ad: a.bot, gorunenAd: u.displayName || a.name, aciklama: a.desc || '', avatar: u.avatar || null, sahip: a.owner, dogrulandi: !!a.verified, olusturuldu: a.createdAt, listede: !!(a.listed && a.verified) };
+  const v = { id: a.id, kullaniciId: uidOf(db.users[a.bot]), ad: a.bot, gorunenAd: u.displayName || a.name, aciklama: a.desc || '', avatar: u.avatar || null, sahip: a.owner, dogrulandi: !!a.verified, olusturuldu: a.createdAt, listede: !!(a.listed && a.verified), eklemeLinki: baseUrl() + '/bot-ekle/' + a.id };
   if (!full) return v;
   return { ...v, emojiler: Object.entries(a.emojis || {}).map(([ad, url]) => ({ ad, url })), tokenVar: !!a.tokenH, tokenAt: a.tokenAt || null, gizlilik: a.privacy || '', etkilesimUrl: a.interUrl || '', dmIzin: a.dmOk !== false, kapali: a.killed || null,
     erisim: reachOf(a), esik: REACH_MAX, sunucular: botServers(a).map(s => ({ id: s.id, ad: s.name, uye: humans(s.members).length })),

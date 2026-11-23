@@ -410,7 +410,7 @@
         <li>Botunun yaptığından sen sorumlusun. Bot üzerinden para toplamak, premium satmak ve bahis/çekiliş yasak. Ayrıntılar: <a href="/kosullar">Kullanım Şartları, bölüm 6</a>.</li>
       </ul>
     </div>
-    <div class="toc"><a href="#baslangic">1. Başlangıç</a><a href="#komutlar">2. Komutlar</a><a href="#bilesenler">3. Butonlar &amp; Menüler</a><a href="#kartlar">4. Kartlar</a><a href="#formlar">5. Formlar</a><a href="#olaylar">6. Olaylar</a><a href="#durum">Durum</a><a href="#kutuphane">Kütüphane rehberi</a><a href="#rest">7. REST API</a><a href="#gateway">8. Gateway</a><a href="#http">9. HTTP Etkileşimleri</a><a href="#sinirlar">10. Sınırlar</a></div>
+    <div class="toc"><a href="#baslangic">1. Başlangıç</a><a href="#ekleme">Sunucuya ekletme</a><a href="#komutlar">2. Komutlar</a><a href="#bilesenler">3. Butonlar &amp; Menüler</a><a href="#kartlar">4. Kartlar</a><a href="#formlar">5. Formlar</a><a href="#olaylar">6. Olaylar</a><a href="#durum">Durum</a><a href="#kutuphane">Kütüphane rehberi</a><a href="#rest">7. REST API</a><a href="#gateway">8. Gateway</a><a href="#http">9. HTTP Etkileşimleri</a><a href="#sinirlar">10. Sınırlar</a></div>
 
     <h2 id="baslangic">1. Beş dakikada ilk bot</h2>
     <ol>
@@ -443,7 +443,44 @@ async def mesaj(m):
 
 bot.calistir()</pre>
     <div class="note">Token botunun şifresidir. Koda yazma, GitHub'a yükleme. Sızarsa portaldan <b>Token'ı yenile</b>; eskisi anında çalışmaz olur.</div>
-    <p>Botu başka sunuculara eklemek için portaldaki <b>Sunucuya ekleme linki</b>ni paylaş: <code>https://kankahq.com/bot-ekle/&lt;uygulama&gt;?izin=manageMessages,kick</code>. Linki açan kişi istenen izinleri görür, onaylar; bot sunucuya kendi rolüyle girer.</p>
+    <h3 id="ekleme">Botunu sunucuya ekletme</h3>
+    <p>Botu bir sunucuya sadece o sunucunun yöneticisi ekleyebilir. Senin işin ona doğru <b>ekleme linkini</b> vermek. Link şu şekildedir:</p>
+    <pre>https://kankahq.com/bot-ekle/&lt;botun-uygulama-kimliği&gt;?izin=manageMessages,kick,timeout</pre>
+    <p><b>Linki nereden alırım?</b> Üç yol var, üçü de aynı linki verir:</p>
+    <table><tr><th>Yol</th><th>Nasıl</th></tr>
+      <tr><td>Portal</td><td>Geliştirici Portalı › botun › <b>Sunucuya ekleme linki</b>. Kutulardan botun gerçekten kullandığı izinleri işaretle, link kendiliğinden güncellenir; kopyala.</td></tr>
+      <tr><td>Koddan (kanka.js 1.4.1+)</td><td><code>bot.eklemeLinki(['manageMessages', 'kick'])</code>: <code>.env</code> dosyasına link yazmana gerek kalmaz.</td></tr>
+      <tr><td>Koddan (kanka.py 1.4.1+)</td><td><code>bot.ekleme_linki("manageMessages", "kick")</code></td></tr>
+    </table>
+    <p>Botuna bir <code>/davet</code> komutu koyup linki oradan vermek en kolayı:</p>
+    <pre>bot.komut('davet', { aciklama: 'Botu kendi sunucuna ekle' }, async k =&gt; {
+  await k.cevapla({ kartlar: [new Kart().baslik('Beni sunucuna ekle 🤖')
+    .aciklama('Butona bas, sunucunu seç, izinleri onayla. Sunucuda "Sunucuyu yönet" yetkin olmalı.')],
+    bilesenler: [[{ tur: 'buton', etiket: 'Sunucuna ekle', url: bot.eklemeLinki(['manageMessages', 'kick', 'timeout']) }]] });
+});</pre>
+    <p><b>Linki açan kişi ne görür?</b> Botun adı ve açıklaması, yönetebildiği sunucuların listesi ve botun istediği izinler. Sunucuyu seçip <b>Sunucuya ekle</b>'ye basar. Bot o anda sunucuya kendi adını taşıyan bir rolle girer. İzinler o role verilir; yönetici bunları sonra Sunucu ayarları › Roller'den değiştirebilir. Bot girince sana <code>SUNUCUYA_EKLENDI</code> olayı gelir (kanka.js: <code>bot.on('sunucuyaEklendi', s =&gt; …)</code>); karşılama mesajını burada atabilirsin. Bot atılırsa <code>SUNUCUDAN_CIKARILDI</code> gelir.</p>
+    <p><b>Hangi izinleri istemeliyim?</b> Sadece kullandıklarını. Uzun bir izin listesi yöneticiyi korkutur ve botun eklenmez. Mesaj göndermek, komutlara cevap vermek ve mesajları görmek için izin gerekmez.</p>
+    <table><tr><th>İzin</th><th>Ne işe yarar</th></tr>
+      <tr><td><code>manageMessages</code></td><td>Başkalarının mesajlarını silmek, toplu silme</td></tr>
+      <tr><td><code>pinMessages</code></td><td>Mesaj sabitlemek</td></tr>
+      <tr><td><code>kick</code>, <code>ban</code>, <code>timeout</code></td><td>Atmak, yasaklamak, susturmak</td></tr>
+      <tr><td><code>manageChannels</code></td><td>Oda ve kategori açmak, düzenlemek, silmek</td></tr>
+      <tr><td><code>manageRoles</code></td><td>Rol vermek ve almak (sadece botun rolünden aşağıdaki roller)</td></tr>
+      <tr><td><code>voiceMute</code>, <code>voiceMove</code></td><td>Seste susturmak, odalar arasında taşımak</td></tr>
+      <tr><td><code>manageEmojis</code>, <code>manageSounds</code>, <code>manageWebhooks</code></td><td>Emoji, ses paneli ve webhook yönetimi</td></tr>
+      <tr><td><code>viewAudit</code>, <code>slowBypass</code>, <code>mentionEveryone</code>, <code>manageServer</code></td><td>Kayıt defteri, yavaş modu aşma, @everyone, sunucu ayarları</td></tr>
+    </table>
+    <p>Yönetici (<code>administrator</code>) izni botlara verilmez. Gerekirse sunucu sahibi botun rolünü elle yükseltir.</p>
+    <p><b>"Eklenemiyor" diyorsa:</b></p>
+    <table><tr><th>Mesaj</th><th>Sebep ve çözüm</th></tr>
+      <tr><td>"Sunucuyu yönet" yetkin olmalı</td><td>Linki açan kişi o sunucunun sahibi ya da yöneticisi değil. Yöneticiden eklemesini iste.</td></tr>
+      <tr><td>Bot henüz doğrulanmadı</td><td>Doğrulanmamış botlar toplamda en fazla 50 farklı kişiye ulaşabilir. Portal'dan <b>doğrulama iste</b>.</td></tr>
+      <tr><td>Herkese açık sunuculara bot eklenemez</td><td>Kanka'nın herkese açık topluluk sunucularına bot eklenmez.</td></tr>
+      <tr><td>En fazla 25 bot</td><td>Sunucudaki bot sayısı sınırda; kullanılmayan bir botu çıkar.</td></tr>
+      <tr><td>Bot bu sunucudan yasaklanmış</td><td>Yönetici önce Sunucu ayarları › Yasaklılar'dan yasağı kaldırmalı.</td></tr>
+      <tr><td>Link açılmıyor / bot bulunamadı</td><td>Linkte kimlik eksik ya da bozuk (sonunda <code>...</code> kalmış, araya dosya yolu yapışmış gibi). Linki Portal'dan ya da <code>bot.eklemeLinki()</code> ile yeniden al, elle yazma.</td></tr>
+    </table>
+    <div class="note">Ekleme linki gizli değildir, istediğin yerde paylaşabilirsin. <b>Token</b> ise gizlidir: linkle karıştırma, ekran görüntüsünde bile gösterme.</div>
 
     <h2 id="komutlar">2. Komutlar</h2>
     <p>Komutlar kullanıcıların <code>/</code> listesinde botun adı ve simgesiyle çıkar. Kanka'nın kendi komutuyla aynı adı taşıyorsa <code>/ad:botadi</code> olarak görünür. Seçenekleri olan bir komutu kullanıcı listeden seçince Kanka seçenekler için bir form açar; <code>/zar 20</code> ya da <code>/zar yuz:20</code> gibi yazmak da olur.</p>

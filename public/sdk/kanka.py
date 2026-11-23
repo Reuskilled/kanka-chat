@@ -15,7 +15,7 @@ import asyncio, time, random, hashlib, hmac, json, re
 from urllib.parse import quote
 import aiohttp
 
-SURUM = "1.4.0"
+SURUM = "1.4.1"
 
 
 class KankaHata(Exception):
@@ -214,6 +214,11 @@ class Bot:
     async def uye(self, sunucu, kisi): return await self.api("GET", f"/sunucular/{sunucu}/uyeler/{quote(str(kisi))}")
     async def oda(self, id): return await self.api("GET", f"/odalar/{quote(str(id))}")
     # Oda yönetimi (botun "manageChannels" izni gerekir). tur: "text" | "voice" | "stage" | "forum"
+    def ekleme_linki(self, *izinler):
+        """Botu sunucuya ekleme linki (Portal'daki linkle aynı). ornek: bot.ekleme_linki("manageMessages", "kick")"""
+        if not self.ben: raise RuntimeError('Önce bağlan: ekleme_linki "hazir" olayından sonra kullanılabilir')
+        l = self.ben.get("eklemeLinki") or f"{self.adres}/bot-ekle/{self.ben['id']}"
+        return f"{l}?izin={','.join(izinler)}" if izinler else l
     async def odalar(self, sunucu): return await self.api("GET", f"/sunucular/{quote(str(sunucu))}/odalar")
     async def oda_olustur(self, sunucu, ad, tur="text", kategori=None, ozel=False, konu=None):
         veri = {"ad": ad, "tur": tur, "ozel": ozel}
