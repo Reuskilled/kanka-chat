@@ -4874,7 +4874,8 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   /* ===== Kurucu Özel: 2 Katmanlı WebGL2 3D & VFX Profil Efektleri ===== */
   .pfx-cv.pfx-gl-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; border-radius: inherit; }
   .pfx-cv.pfx-gl-fg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 7; pointer-events: none; mix-blend-mode: screen; border-radius: inherit; }
-  .dmp.has-vfx3d, .pf-side.has-vfx3d, .vpop.has-vfx3d { background: #0c0c0f !important; position: relative; overflow: hidden; color: #f4f4f5; }
+  .dmp.has-vfx3d, .pf-side.has-vfx3d { background: #0c0c0f !important; position: relative; overflow: hidden; color: #f4f4f5; }
+  .vpop.has-vfx3d { background: #0c0c0f !important; overflow: hidden; color: #f4f4f5; --ring: #0e0e12; }
   .dmp.has-vfx3d .dmp-ban { height: 164px; background: linear-gradient(180deg, rgba(8,8,12,.05) 56%, rgba(12,12,15,.84) 100%) !important; position: relative; z-index: 2; }
   .dmp.has-vfx3d .dmp-ban::after { display: none; }
   .dmp.has-vfx3d .dmp-id { background: linear-gradient(180deg, transparent 0%, rgba(12,12,15,.72) 38%, rgba(12,12,15,.88) 100%); }
@@ -4883,8 +4884,9 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .pf-side.has-vfx3d .pf-ban { height: 152px; background: linear-gradient(180deg, rgba(8,8,12,.05) 56%, rgba(12,12,15,.86) 100%) !important; position: relative; z-index: 2; }
   .pf-side.has-vfx3d .pf-in { position: relative; z-index: 3; background: linear-gradient(180deg, transparent 0%, rgba(12,12,15,.76) 18%, rgba(12,12,15,.92) 48%); }
   .pf-side.has-vfx3d .pav .av, .pf-side.has-vfx3d .pav .pdot { border-color: #0e0e12; }
-  .vpop.has-vfx3d .vp-ban { height: 126px; background: linear-gradient(180deg, rgba(8,8,12,.05) 56%, rgba(12,12,15,.86) 100%) !important; position: relative; z-index: 2; }
-  .vpop.has-vfx3d .vp-top, .vpop.has-vfx3d .vp-body, .vpop.has-vfx3d .vp-in { position: relative; z-index: 3; }
+  .vpop.has-vfx3d .vp-banner { height: 132px; background: linear-gradient(180deg, rgba(8,8,12,.05) 56%, rgba(12,12,15,.86) 100%) !important; position: relative; z-index: 2; }
+  .vpop.has-vfx3d .vp-head { position: relative; z-index: 3; }
+  .vpop.has-vfx3d .vp-in { position: relative; z-index: 3; background: linear-gradient(180deg, rgba(12,12,15,.72) 0%, rgba(12,12,15,.92) 32%); }
 
   /* Profil Stüdyosu Kurucu 3D VFX Seçici */
   .pe-sec-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0 8px; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -10763,7 +10765,7 @@ function mountProfileEffect(el, fx) {
   el.querySelectorAll(':scope > .pfx-cv').forEach(c => { c._stop?.(); c.remove(); });
   el.classList.remove('has-vfx3d');
   if (!fx || fx === 'none' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  if (fx in PFX_3D_MAP) { if (mountWebGL3DEffect(el, PFX_3D_MAP[fx])) return; }
+  if (fx in PFX_3D_MAP) { try { if (mountWebGL3DEffect(el, PFX_3D_MAP[fx])) return; } catch (err) { console.warn('3D pfx fallback:', err); el.classList.remove('has-vfx3d'); } }
   const cv = document.createElement('canvas');
   cv.className = 'pfx-cv';
   cv.setAttribute('aria-hidden', 'true');
