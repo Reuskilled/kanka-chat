@@ -204,7 +204,7 @@ app.get(['/kayit', '/kayit-ol', '/signup'], (req, res) => res.redirect(301, '/re
 app.get('/discord-alternatifi', (req, res) => res.redirect(301, '/sesli-sohbet' + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '')));
 app.get('/davet/:code', (req, res) => res.redirect('/app?davet=' + encodeURIComponent(req.params.code)));
 // Partner sunucuların özel linki: kankahq.com/s/isim
-app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && isStar(x)); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/'); });
+app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && vanityOk(x)); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/'); });
 // İzlenen kısa link: kankahq.com/r/youtube-rozet → kaynak "youtube", kampanya "rozet" (video açıklamalarına koymak için)
 app.get('/r/:tag', (req, res) => { const t = String(req.params.tag).toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 60); const [src, ...rest] = t.split('-'); res.redirect('/?utm_source=' + encodeURIComponent(src || 'link') + (rest.length ? '&utm_campaign=' + encodeURIComponent(rest.join('-')) : '') + '&utm_medium=kisalink'); });
 app.get('/bot-ekle/:id', (req, res) => res.redirect('/app?botekle=' + encodeURIComponent(String(req.params.id).slice(0, 40)) + (req.query.izin ? '&izin=' + encodeURIComponent(String(req.query.izin).slice(0, 300)) : '')));
@@ -1049,7 +1049,7 @@ const TAG = {
   of(u) { if (!u?.tag) return null; const s = db.servers.find(x => x.id === u.tag); return TAG.canUse(u.name, s) ? s.id : null; },
   push() { const d = TAG.defs(); io.emit('tagDefs', d); for (const [sid, n] of online) io.to(sid).emit('tagCan', TAG.canList(n)); io.emit('users', allUsers()); },
 };
-const pubUser = u => ({ id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect && (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner') ? u.effect : null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
+const pubUser = u => ({ sp: sparkOn(u) ? u.spark.since : null, id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect && (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner') ? u.effect : null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), tg: u.bot ? null : TAG.of(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
@@ -1170,7 +1170,7 @@ function chView(s, c, viewer, manager) {
   const ov = ovOf(s, c);
   const P = k => viewer ? chPerm(s, c, viewer, k) : true;
   const v = { id: c.id, name: c.name, type: c.type || 'text', cat: c.cat || null, sync: !!c.sync, icon: CHICON.view(s, c), iconRaw: manager && CHICON.allowed(s) ? c.icon || null : undefined,
-    topic: c.topic || '', slow: c.slow || 0, limit: c.limit || 0, bitrate: c.bitrate || 'std', news: !!c.news, followers: (c.followers || []).length,
+    topic: c.topic || '', slow: c.slow || 0, limit: c.limit || 0, bitrate: c.bitrate === 'studio' && !energyPerk(s, 'studio') ? 'high' : c.bitrate || 'std', news: !!c.news, followers: (c.followers || []).length,
     stage: c.type === 'stage' && stage.has(c.id) ? stageView(c.id) : undefined,
     canAttach: P('attach'), canReact: P('react'), canMention: P('mention'), canManage: P('manage'), canStream: P('stream'), canSpeak: P('speak'), canSound: P('soundboard'),
     canVideo: P('video'), canEmbed: P('embed'), canApps: P('apps'), canThread: P('thread'), canHistory: P('history'),
@@ -1596,7 +1596,7 @@ function activeWeek(s) {
 const hasRules = s => !!(s.welcome?.rules?.length || (s.channels || []).some(c => /kural|rules/i.test(c.name)));
 const srvStats = s => ({ members: membersOf(s).length, days: Math.floor((Date.now() - (s.createdAt || Date.now())) / 864e5), active: activeWeek(s), rules: hasRules(s) });
 const meets = (st, r) => st.members >= r.members && st.days >= r.days && (!r.active || st.active >= r.active) && (!r.rules || st.rules);
-const emojiLimit = s => isStar(s) || s.id === 's1' ? 200 : srvBadges(s).some(b => b.id === 'yukselen') ? 100 : 50;
+const emojiLimit = s => (isStar(s) || s.id === 's1' ? 200 : srvBadges(s).some(b => b.id === 'yukselen') ? 100 : 50) + energyPerk(s, 'emoji');
 function srvBadges(s) {
   const b = [];
   if (s.id === 's1' || (db.devServer && s.id === db.devServer)) b.push({ id: 'resmi', since: s.createdAt || null });
@@ -1607,7 +1607,7 @@ function srvBadges(s) {
   return b;
 }
 const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
-  id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, vanity: isStar(s) ? s.vanity || null : null, public: s.public, roles: s.roles,
+  id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, vanity: vanityOk(s) ? s.vanity || null : null, energy: { total: energyTotal(s), level: energyLevel(s) }, public: s.public, roles: s.roles,
   emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, sounds: s.sounds || [], tag: s.tag || null, tagAllowed: TAG.allowedServer(s), chIconAllowed: CHICON.allowed(s), sbAll: s.sbAll !== false, filter: !!s.filter, slow: s.slow || 0,
   channels: (viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels).map(c => chView(s, c, viewer, viewer && can(s, viewer, 'manageChannels'))),
   categories: (s.categories || []).filter(k => !viewer || can(s, viewer, 'manageChannels') || s.channels.some(c => c.cat === k.id && seesChannel(s, c, viewer)))
@@ -1671,7 +1671,79 @@ const roleOf = (s, n) => s.roles?.[n] || 'member';
 const isAdmin = (s, n) => s.owner === n || roleOf(s, n) === 'admin';
 // Üye sunucudan çıkınca (ayrılma, atılma, yasak, geçici üyelik, ret) sunucudaki rolleri ve kabul bilgisi silinir;
 // geri gelirse yeni üye gibi başlar. Susturma (kaçmak için çık-gir yapılmasın) ve seviye (XP) korunur.
+// ================= Kanka Spark & Energy =================
+// Spark aboneliği her ay 2 Energy verir; her 3 kesintisiz ayda +1 bonus. Energy sunuculara gönderilir, istenince geri çekilir.
+// Abonelik biterse tüm Energy'ler (sunuculardakiler dahil) silinir, sadakat sayacı sıfırlanır.
+const SPARK_MONTH = 30 * 864e5, SPARK_PER_MONTH = 2, SPARK_BONUS_EVERY = 3;
+const ENERGY_LV = [0, 2, 7, 14]; // Energy Level eşikleri (Total Energy)
+const ENERGY_PERKS = [null,
+  { emoji: 50, sb: 10, items: ['+50 özel emoji yeri', '+10 ses paneli yeri', 'Sunucu listesinde Energy rozeti'] },
+  { emoji: 100, sb: 20, studio: true, items: ['+100 özel emoji yeri', '+20 ses paneli yeri', 'Stüdyo ses kalitesi (256 kbps)'] },
+  { emoji: 150, sb: 30, studio: true, vanity: true, items: ['+150 özel emoji yeri', '+30 ses paneli yeri', 'Özel davet linki (kankahq.com/s/…)'] }];
+const sparkOn = u => !!(u?.spark && u.spark.until > Date.now());
+const energyTotal = s => Object.values(s?.energy || {}).reduce((a, b) => a + b, 0);
+const energyLevel = s => { const t = energyTotal(s); let l = 0; for (let i = 1; i < ENERGY_LV.length; i++) if (t >= ENERGY_LV[i]) l = i; return l; };
+const energyPerk = (s, k) => { const l = energyLevel(s); return l ? ENERGY_PERKS[l][k] || 0 : 0; };
+const vanityOk = s => isStar(s) || !!energyPerk(s, 'vanity');
+function energyView(s, viewer) {
+  const t = energyTotal(s), l = energyLevel(s), u = db.users[viewer];
+  return { total: t, level: l, next: ENERGY_LV[l + 1] ?? null, levels: ENERGY_LV, perks: ENERGY_PERKS.map(p => p?.items || []),
+    mine: s.energy?.[viewer] || 0, free: (u?.spark?.energy || []).filter(x => !x.srv).length, spark: sparkOn(u),
+    by: Object.entries(s.energy || {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 50).map(([name, n]) => ({ name, n })) };
+}
+function sparkView(u) {
+  const sp = u?.spark; if (!sp) return { active: false };
+  const e = sp.energy || [], placed = {}; for (const x of e) if (x.srv) placed[x.srv] = (placed[x.srv] || 0) + 1;
+  const done = sp.credited || 0;
+  return { active: sparkOn(u), since: sp.since, until: sp.until, months: done, nextBonusIn: SPARK_BONUS_EVERY - (done % SPARK_BONUS_EVERY),
+    nextCredit: sp.since + done * SPARK_MONTH < sp.until ? sp.since + done * SPARK_MONTH : null, energy: e.length, free: e.filter(x => !x.srv).length,
+    placed: Object.entries(placed).map(([sid, n]) => { const sv = db.servers.find(x => x.id === sid); return { sid, n, name: sv?.name || 'Silinmiş sunucu', icon: sv?.icon || '', iconImg: sv?.iconImg || null, level: sv ? energyLevel(sv) : 0, total: sv ? energyTotal(sv) : 0 }; }) };
+}
+function energyTouch(sids) { for (const sid of new Set(sids)) { const s = db.servers.find(x => x.id === sid); if (s) pushServers(membersOf(s)); } }
+function energyMove(u, s, d) { // d>0: sunucuya gönder, d<0: geri çek
+  const e = u.spark?.energy || []; let moved = 0;
+  if (d > 0) for (const x of e) { if (moved >= d) break; if (!x.srv) { x.srv = s.id; x.sentAt = Date.now(); moved++; } }
+  else for (const x of e) { if (moved >= -d) break; if (x.srv === s.id) { delete x.srv; delete x.sentAt; moved++; } }
+  if (!moved) return 0;
+  s.energy ||= {}; s.energy[u.name] = (s.energy[u.name] || 0) + (d > 0 ? moved : -moved); if (s.energy[u.name] <= 0) delete s.energy[u.name];
+  return moved;
+}
+function energyRelease(name, sid) { // üye sunucudan çıkınca / sunucu silinince Energy sahibine geri döner (boşta kalır)
+  const u = db.users[name], s = db.servers.find(x => x.id === sid) || { id: sid };
+  for (const x of u?.spark?.energy || []) if (x.srv === sid) { delete x.srv; delete x.sentAt; }
+  if (s.energy) delete s.energy[name];
+}
+function sparkCredit(u) { // vadesi gelen ayların Energy'sini ekle (her ay 2, her 3 ayda +1 bonus)
+  const sp = u.spark; if (!sp) return false; sp.energy ||= []; let ch = false;
+  while (sp.since + (sp.credited || 0) * SPARK_MONTH <= Date.now() && sp.since + (sp.credited || 0) * SPARK_MONTH < sp.until) {
+    sp.credited = (sp.credited || 0) + 1; ch = true;
+    for (let i = 0; i < SPARK_PER_MONTH; i++) sp.energy.push({ id: id(), at: Date.now(), src: 'ay' });
+    if (sp.credited % SPARK_BONUS_EVERY === 0) { sp.energy.push({ id: id(), at: Date.now(), src: 'bonus' });
+      botDm(u.name, { title: '⚡ Sadakat bonusu!', tone: 'good', text: `${sp.credited} aydır kesintisiz Kanka Spark'tasın. Teşekkürler! Hesabına 1 bonus Energy eklendi.` }); }
+  }
+  return ch;
+}
+function sparkExpire(u, why = 'Kanka Spark aboneliğin sona erdi') {
+  const sids = (u.spark?.energy || []).map(x => x.srv).filter(Boolean);
+  for (const sid of new Set(sids)) { const s = db.servers.find(x => x.id === sid); if (s?.energy) delete s.energy[u.name]; }
+  delete u.spark; save(); energyTouch(sids); io.to('user:' + u.name).emit('spark', sparkView(u)); io.emit('users', allUsers());
+  botDm(u.name, { title: '⚡ Kanka Spark sona erdi', tone: 'info', text: `${why}. Spark avantajların kaldırıldı; sunuculara gönderdiğin Energy'ler de silindi. Yeniden abone olduğunda her şey sıfırdan başlar.` });
+}
+function sparkGrant(u, months, by) { // ödeme/yenileme ya da ekip tarafından verilen abonelik süresi
+  if (u.spark && !sparkOn(u)) sparkExpire(u, 'Önceki Kanka Spark aboneliğin bitmişti');
+  const fresh = !u.spark;
+  if (fresh) u.spark = { since: Date.now(), until: Date.now(), credited: 0, energy: [] };
+  u.spark.until += months * SPARK_MONTH; (u.spark.log ||= []).push({ at: Date.now(), months, by }); u.spark.log = u.spark.log.slice(-30);
+  sparkCredit(u); save(); io.to('user:' + u.name).emit('spark', sparkView(u)); io.emit('users', allUsers());
+  if (fresh) botDm(u.name, { title: '⚡ Kanka Spark\'a hoş geldin!', tone: 'good', text: `Aboneliğin başladı. Hesabına ${SPARK_PER_MONTH} Energy eklendi: bir sunucunun sayfasında "Sunucuya Energy Gönder" ile destekleyebilirsin. Her ay ${SPARK_PER_MONTH} Energy daha gelir, her 3 ayda bir de bonus.` });
+}
+setInterval(() => { try { // abonelik sayacı: ay dolunca Energy ver, süresi bitince sonlandır
+  let ch = false;
+  for (const u of Object.values(db.users)) { if (!u.spark) continue; if (!sparkOn(u)) sparkExpire(u); else if (sparkCredit(u)) { ch = true; io.to('user:' + u.name).emit('spark', sparkView(u)); } }
+  if (ch) save();
+} catch (e) { console.error('spark', e); } }, 5 * 60e3);
 function wipeMember(s, n) {
+  if (s.energy?.[n]) energyRelease(n, s.id); // çıkan üyenin Energy'si kendisine geri döner
   if (db.users[n]?.tag === s.id) delete db.users[n].tag; // sunucudan çıkan etiketini de bırakır
   delete s.roles?.[n]; delete s.memberRoles?.[n]; delete s.joinedAt?.[n]; delete s.accepted?.[n]; delete s.temp?.[n];
   if (s.applications?.[n]?.st !== 'ret') delete s.applications?.[n];
@@ -4605,6 +4677,7 @@ io.on('connection', socket => {
     if (!ownerCheck(s, password, code, cb)) return;
     voiceKick(s.channels.map(c => c.id), null, `${s.name} sunucusu kapatıldı`);
     const who = membersOf(s);
+    for (const n of Object.keys(s.energy || {})) energyRelease(n, s.id);
     db.servers = db.servers.filter(x => x !== s);
     (db.trash ||= []).push({ server: s, at: Date.now(), by: me });
     audit(s, me, 'Sunucuyu sildi (7 gün çöp kutusunda)');
@@ -4817,7 +4890,7 @@ io.on('connection', socket => {
   });
   // ---- Yönetim paneli: kullanıcılar, ekip, istatistik, kayıtlar ----
   const SM = cb => { if (siteMod(me)) return true; cb({ error: 'Sadece Kanka ekibi' }); return false; };
-  const userCard = u => ({ linked: canStaff(me, 'lookup') ? linkedOf(u) : [], name: u.name, email: canStaff(me, 'email') && u.email ? u.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2') : null, createdAt: u.createdAt, invitedBy: u.invitedBy || null,
+  const userCard = u => ({ spark: u.spark ? { active: sparkOn(u), until: u.spark.until, months: u.spark.credited || 0, energy: (u.spark.energy || []).length } : null, linked: canStaff(me, 'lookup') ? linkedOf(u) : [], name: u.name, email: canStaff(me, 'email') && u.email ? u.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2') : null, createdAt: u.createdAt, invitedBy: u.invitedBy || null,
     banned: isBanned(u) ? u.siteBan : null, reports: db.reports.filter(r => r.target === u.name).length, servers: serversFor(u.name).filter(s => !s.public).length,
     level: level(u.xp), xp: u.xp || 0, msgs: u.msgs || 0, streak: u.streak?.count || 0, age: u.ageLock ? 'locked' : u.dob ? 'ok' : 'none', online: onlineNames().includes(u.name), rank: staffRank(u.name),
     warns: (u.siteWarns || []).slice(-10).reverse().map(w => ({ at: w.at, by: w.by, reason: w.reason, seen: w.seen })) });
@@ -4829,6 +4902,8 @@ io.on('connection', socket => {
     if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); if (staffRank(u.name) && u.name !== me && staffRank(me) !== 'owner') return cb({ error: 'Ekipten birinin şifre linkini sadece kurucu oluşturabilir' }); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/login?sifirla=${resetToken(u.name, 24)}` }); }
     if (action === 'ageReset') { if (!canStaff(me, 'ban')) return deny(); delete u.ageLock; delete u.dob; staffLog(me, 'Yaş kilidini kaldırdı', u.name); save(); io.to('user:' + u.name).emit('ageGate', { locked: false }); return cb({ ok: true, user: userCard(u) }); }
     if (action === 'streak') { if (!canStaff(me, 'ban')) return deny(); const n = Math.min(Math.max(parseInt(days) || 0, 0), 3650); u.streak = { last: ymd(), count: n, best: Math.max(n, u.streak?.best || 0) }; staffLog(me, 'Seriyi düzeltti', u.name, n + ' gün'); save(); io.emit('users', allUsers()); }
+    if (action === 'spark') { if (!canStaff(me, 'ban')) return deny(); const m = Math.min(Math.max(parseInt(days) || 0, 1), 24); sparkGrant(u, m, me); staffLog(me, `Kanka Spark verdi (${m} ay)`, u.name); }
+    if (action === 'sparkOff') { if (!canStaff(me, 'ban')) return deny(); if (!u.spark) return cb({ error: 'Aboneliği yok' }); sparkExpire(u, 'Kanka Spark aboneliğin ekip tarafından sonlandırıldı'); staffLog(me, 'Kanka Spark aboneliğini sonlandırdı', u.name); }
     if (action === 'warn') { if (!canStaff(me, 'warn')) return deny(); if (u.name === me) return cb({ error: 'Kendini uyaramazsın' }); siteWarnUser(u.name, me, reason); }
     if (action === 'suspend') { if (!canStaff(me, 'suspend')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri askıya alınamaz' }); const ms = /^h(1|3|6|12)$/.test(String(days)) ? +String(days).slice(1) * 3600e3 : ([1, 3, 7, 30].includes(+days) ? +days : 1) * 864e5; siteBanUser(u.name, me, reason || 'Kural ihlali', Date.now() + ms); }
     if (action === 'ban') { if (!canStaff(me, 'ban')) return deny(); if (staffRank(u.name)) return cb({ error: 'Ekipten biri kapatılamaz' }); siteBanUser(u.name, me, reason); }
@@ -5960,7 +6035,7 @@ io.on('connection', socket => {
   });
   socket.on('srvVanity', ({ serverId, slug } = {}, cb = () => {}) => {
     const s = db.servers.find(x => x.id === serverId); if (!s || s.owner !== me) return cb({ error: 'Sadece sunucu sahibi değiştirebilir' });
-    if (!isStar(s)) return cb({ error: 'Özel link Yıldız ve Partner sunuculara özel' });
+    if (!vanityOk(s)) return cb({ error: 'Özel link Yıldız/Partner sunuculara ve Energy Level 3 sunuculara özel' });
     slug = String(slug || '').toLowerCase().trim();
     if (!slug) { delete s.vanity; save(); return cb({ ok: true, vanity: null }); }
     if (!/^[a-z0-9](?:[a-z0-9-]{1,22}[a-z0-9])$/.test(slug)) return cb({ error: '3-24 karakter: küçük harf, rakam ve tire (başta/sonda tire olmaz)' });
@@ -6174,7 +6249,7 @@ io.on('connection', socket => {
     if (topic !== undefined) c.topic = clean(topic, 160);
     if (slow !== undefined) c.slow = [0, 5, 10, 15, 30, 60, 120, 300, 600, 900, 3600].includes(+slow) ? +slow : 0;
     if (limit !== undefined) c.limit = Math.max(0, Math.min(99, parseInt(limit) || 0));
-    if (bitrate !== undefined) c.bitrate = bitrate === 'high' ? 'high' : 'std';
+    if (bitrate !== undefined) { if (bitrate === 'studio' && !energyPerk(s, 'studio')) return cb({ error: 'Stüdyo ses kalitesi Energy Level 2 ile açılır' }); c.bitrate = ['high', 'studio'].includes(bitrate) ? bitrate : 'std'; }
     if (news !== undefined && c.type === 'text') { c.news = !!news; if (!c.news) c.followers = []; }
     if (sync === true && catOf(s, c)) { audit(s, me, 'Odayı kategoriyle eşitledi', '#' + c.name); c.sync = true; c.perms = {}; }
     else if (perms !== undefined) { const np = cleanPerms(s, perms), d = permDiff(s, ovOf(s, c), np); if (d) audit(s, me, 'İzinleri değiştirdi', `#${c.name}: ${d}`); c.perms = np; c.sync = false; }
@@ -6759,7 +6834,7 @@ io.on('connection', socket => {
       if (typeof code !== 'string' || code.length > 40) continue;
       if (blockedUntil('u:' + me) || blockedUntil('ip:' + ip) || limited('peek|' + me, 120, 600e3)) { out[code] = null; continue; }
       const vs = /^s:([a-z0-9-]{2,40})$/.exec(code); // özel link: kankahq.com/s/isim
-      const sv = vs ? db.servers.find(x => x.vanity === vs[1] && isStar(x)) : findInvite(code)?.s;
+      const sv = vs ? db.servers.find(x => x.vanity === vs[1] && vanityOk(x)) : findInvite(code)?.s;
       inviteGuard('u:' + me, !!sv); inviteGuard('ip:' + ip, !!sv);
       if (!sv || sv.bans?.[me]) { out[code] = null; continue; }
       const mem = membersOf(sv);
@@ -7011,6 +7086,25 @@ io.on('connection', socket => {
     save(); pushServers(membersOf(s)); TAG.push(); cb({ ok: true, tag: s.tag });
   });
   // Etikete tıklayınca açılan kart
+  // Kanka Spark & Energy
+  socket.on('sparkMe', (_, cb = () => {}) => { if (!me) return cb({ error: 'Giriş yap' }); const u = db.users[me]; if (u.spark && !sparkOn(u)) sparkExpire(u); else if (u.spark && sparkCredit(u)) save();
+    cb({ ...sparkView(u), perMonth: SPARK_PER_MONTH, bonusEvery: SPARK_BONUS_EVERY, levels: ENERGY_LV, perks: ENERGY_PERKS.map(p => p?.items || []) }); });
+  socket.on('energyInfo', ({ serverId } = {}, cb = () => {}) => { const s = db.servers.find(x => x.id === serverId); if (!me || !s || !s.members.includes(me)) return cb({ error: 'Sunucu bulunamadı' }); cb(energyView(s, me)); });
+  socket.on('energyMove', ({ serverId, n = 1, pull } = {}, cb = () => {}) => {
+    const s = db.servers.find(x => x.id === serverId), u = db.users[me];
+    if (!me || !s || !s.members.includes(me)) return cb({ error: 'Bu sunucunun üyesi değilsin' });
+    if (s.public) return cb({ error: 'Herkese açık topluluk sunucularına Energy gönderilmez' });
+    if (!sparkOn(u)) return cb({ error: 'Energy göndermek için Kanka Spark gerekli' });
+    if (limited('energy|' + me, 20, 60e3)) return cb({ error: 'Biraz yavaş: dakikada en fazla 20 işlem' });
+    n = Math.max(1, Math.min(50, parseInt(n) || 1)); const before = energyLevel(s);
+    const moved = energyMove(u, s, pull ? -n : n);
+    if (!moved) return cb({ error: pull ? 'Bu sunucuda geri çekilecek Energy\'n yok' : 'Boşta Energy\'n yok. Önce başka bir sunucudan geri çek.' });
+    audit(s, me, pull ? `Energy'yi geri çekti (${moved})` : `Sunucuya Energy gönderdi (${moved})`);
+    const after = energyLevel(s); save(); pushServers(membersOf(s));
+    if (!pull) { const ch = s.channels.find(c => c.id === s.bot?.welcome?.ch) || s.channels.find(c => (c.type || 'text') === 'text' && !everyoneDenied(ovOf(s, c), 'send'));
+      if (ch) botPost(ch.id, { title: after > before ? `⚡ Energy Level ${after}!` : '⚡ Energy geldi!', tone: 'good', text: `${me} sunucuya ${moved} Energy gönderdi. Total Energy: ${energyTotal(s)}${after > before ? `. Sunucu Energy Level ${after}'e çıktı, yeni ayrıcalıklar açıldı 🎉` : ''}` }); }
+    cb({ ok: true, moved, server: energyView(s, me), me: sparkView(u), levelUp: after > before, levelDown: after < before });
+  });
   // Spark (yakında gelecek artı paket): bekleme listesi
   socket.on('sparkInfo', (_, cb = () => {}) => { if (!me) return cb({ error: 'Giriş yap' }); const w = db.sparkWait || {}; cb({ bekliyor: !!w[me], sayi: Object.keys(w).length }); });
   socket.on('sparkWait', ({ on } = {}, cb = () => {}) => {
@@ -7036,7 +7130,7 @@ io.on('connection', socket => {
     if (typeof cb !== 'function') return; const s = sbServer(serverId, cb); if (!s) return;
     if (!sbCanAdd(s, me)) return cb({ error: 'Bu sunucuya ses ekleme iznin yok' });
     if (limited('sbadd|' + me, 10, 600e3)) return cb({ error: 'Çok fazla ses ekledin, biraz bekle' });
-    if ((s.sounds || []).length >= SB_MAX) return cb({ error: `Bir sunucuda en fazla ${SB_MAX} ses olabilir. Önce birini sil.` });
+    const sbMax = SB_MAX + energyPerk(s, 'sb'); if ((s.sounds || []).length >= sbMax) return cb({ error: `Bir sunucuda en fazla ${sbMax} ses olabilir. Önce birini sil.${sbMax === SB_MAX ? ' Energy Level 1 ile +10 yer açılır.' : ''}` });
     name = clean(name, 24); if (!name) return cb({ error: 'Sese bir ad ver' });
     const m = /^data:audio\/(?:wav|x-wav|wave);base64,(.+)$/.exec(String(data || '')); if (!m) return cb({ error: 'Ses okunamadı' });
     const buf = Buffer.from(m[1], 'base64');
