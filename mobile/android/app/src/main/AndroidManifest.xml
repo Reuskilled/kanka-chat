@@ -41,6 +41,12 @@
         <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/kanka_lime" />
         <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="mesajlar" />
 
+        <!-- Sesli oda ön plan hizmeti (mikrofon arka planda açık kalsın) -->
+        <service
+            android:name=".KankaSesService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -59,6 +65,8 @@
     <!-- Sesli odalar, aramalar ve sesli mesaj -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <!-- Bluetooth kulaklığa ses yönlendirme (Android 12+) -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
