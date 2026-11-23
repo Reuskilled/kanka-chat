@@ -5082,6 +5082,11 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
 .en-hb{display:inline-flex;align-items:center;gap:2px;margin-left:6px;padding:2px 7px 2px 4px;border-radius:8px;background:var(--accent);color:#0b0b0c;font-size:11.5px;font-weight:900;cursor:pointer;flex-shrink:0;vertical-align:middle}.en-hb .ic{width:12px;height:12px;fill:#0b0b0c}
 .sp-badge-ic{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--accent);color:#0b0b0c} .sp-badge-ic .ic{width:13px;height:13px}
 @media (max-width:760px){.en-lvls,.en-sec .en-how,.en-wal{grid-template-columns:1fr}}
+
+/* Mobil uygulama (Capacitor) */
+html.native { -webkit-tap-highlight-color: transparent; }
+html.native body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+html.native input, html.native textarea, html.native [contenteditable], html.native .msg .text, html.native .bubble { -webkit-user-select: text; user-select: text; }
 </style>
 </head>
 <body>
@@ -5176,6 +5181,21 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
 const kDev = (() => { const ck = (document.cookie.match(/(?:^|; )kdid=([a-z0-9-]{16,64})/i) || [])[1]; let d = null; try { d = localStorage.getItem('kanka-did'); } catch {} d = d || ck || (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''));
   try { localStorage.setItem('kanka-did', d); } catch {} try { document.cookie = `kdid=${d}; max-age=${400 * 86400}; path=/; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`; } catch {} return d; })();
 const socket = io({ auth: { d: kDev } });
+// ---- Mobil uygulama (Capacitor: Android / iOS). Tarayıcıda ve Windows uygulamasında NATIVE=false, hiçbir şey değişmez ----
+const NATIVE = !!window.Capacitor?.isNativePlatform?.(), NPLAT = NATIVE ? window.Capacitor.getPlatform() : null;
+if (NATIVE) try {
+  document.documentElement.classList.add('native', 'native-' + NPLAT);
+  const P = window.Capacitor.Plugins || {};
+  // Android geri tuşu: önce sayfanın kendi geçmişi (açık pencere, çekmece, oda) kapanır; en başta uygulama kapanmaz, arka plana alınır
+  P.App?.addListener('backButton', ({ canGoBack }) => { if (canGoBack) history.back(); else P.App.minimizeApp?.(); });
+  // kankahq.com davet / sunucu / bot linkleri uygulamada açılınca ilgili ekrana git
+  P.App?.addListener('appUrlOpen', ({ url }) => { try { const u = new URL(url); if (/(^|\.)kankahq\.com$/.test(u.hostname)) location.href = u.pathname + u.search + u.hash; } catch {} });
+  // Telefon uyuyup uyanınca bağlantıyı hemen tazele (mobil ağlarda kopmalar)
+  P.App?.addListener('appStateChange', ({ isActive }) => { if (isActive && !socket.connected) socket.connect(); });
+  P.StatusBar?.setStyle?.({ style: 'DARK' }).catch?.(() => {});
+  if (NPLAT === 'android') P.StatusBar?.setBackgroundColor?.({ color: '#0b0b0c' }).catch?.(() => {});
+  P.SplashScreen?.hide?.().catch?.(() => {});
+} catch (e) { console.warn('[kanka] mobil köprü', e); }
 const zapSvg = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
 // Telefonda klavye: iOS Safari sayfayı küçültmüyor, üstüne biniyor. Uygulamanın yüksekliğini görünür alana eşitle ki yazı kutusu klavyenin hemen üstünde kalsın.
 if (window.visualViewport && matchMedia('(pointer: coarse)').matches) {
@@ -6948,7 +6968,7 @@ var ovStack = [], popSkip = 0, atBase = false;
 // iPhone/iPad Safari'de kenardan kaydırma = tarayıcının geri/ileri hareketi. Geçmişe sahte kayıt eklersek
 // her kaydırmada Safari sayfayı geri/ileri alıyor, çekmece de art arda açılıp kapanıyordu. Orada geçmişe dokunmuyoruz
 // (ana ekrana eklenmiş uygulamada kenar hareketi yok, orada kalıyor).
-const iosSafari = (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !(navigator.standalone || matchMedia('(display-mode: standalone)').matches);
+const iosSafari = !NATIVE && (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !(navigator.standalone || matchMedia('(display-mode: standalone)').matches);
 const mobileNav = (isTouch || innerWidth <= 1100) && !iosSafari;
 function ovOpen(name, close) {
   if (!mobileNav || !ovStack || ovStack.at(-1)?.name === name) return;
@@ -11728,7 +11748,7 @@ setInterval(() => S.me && pullBackup(), 3 * 3600e3);
 let pushActive = false;
 const pushCan = () => !window.kankaDesktop && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 const isIOS = () => /iPhone|iPad|iPod/i.test(navigator.userAgent);
-const iosNeedsInstall = () => isIOS() && !(navigator.standalone || matchMedia('(display-mode: standalone)').matches);
+const iosNeedsInstall = () => !NATIVE && isIOS() && !(navigator.standalone || matchMedia('(display-mode: standalone)').matches);
 const b64u = s => { const p = '='.repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); };
 async function pushSync() { // izin zaten verildiyse aboneliği sunucuyla eşitle
   if (!pushCan() || Notification.permission !== 'granted') { pushActive = false; return; }
@@ -15661,7 +15681,7 @@ if (window.kankaDesktop?.customTitlebar) { document.body.classList.add('has-tb')
 // ================= Telefona/bilgisayara yükleme (PWA) =================
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 let installEvt = null;
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (S.me && store.get('kanka-install') !== 'no') setTimeout(offerInstall, 4000); });
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); if (NATIVE) return; installEvt = e; if (S.me && store.get('kanka-install') !== 'no') setTimeout(offerInstall, 4000); });
 function offerInstall() {
   if (!installEvt) return;
   toast(`<b>${ic('phone')} Kanka Chat'i yükle</b><br>Ana ekranına ekle, uygulama gibi aç.<small>Yüklemek için dokun</small>`, async () => {

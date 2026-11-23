@@ -195,13 +195,19 @@ app.get('/', (req, res) => {
   // Eski linkler (davet, bildirim, şifre sıfırlama, masaüstü uygulaması) uygulamaya gitmeye devam etsin
   if (q.kayit !== undefined || q.kod) return res.redirect(302, '/register' + qsOf(req));
   if (q.sifirla) return res.redirect(302, '/login' + qsOf(req));
-  if (APP_QS.some(k => q[k] !== undefined) || /Electron\//.test(req.get('user-agent') || '')) return res.redirect(302, '/app' + qsOf(req));
+  if (APP_QS.some(k => q[k] !== undefined) || /Electron\/|KankaMobil\//.test(req.get('user-agent') || '')) return res.redirect(302, '/app' + qsOf(req));
   res.set('Cache-Control', 'no-store'); res.sendFile(PAGE('sesli-sohbet.html'));
 });
 for (const p of ['/app', '/login', '/register']) app.get(p, (req, res) => { res.set('Cache-Control', 'no-store'); res.sendFile(PAGE('index.html')); });
 app.get(['/giris', '/giris-yap'], (req, res) => res.redirect(301, '/login' + qsOf(req)));
 app.get(['/kayit', '/kayit-ol', '/signup'], (req, res) => res.redirect(301, '/register' + qsOf(req)));
 app.get('/discord-alternatifi', (req, res) => res.redirect(301, '/sesli-sohbet' + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '')));
+// Mobil uygulama bağlantıları: Android App Links ve iOS Universal Links doğrulama dosyaları.
+// Değerler gizli değildir ama imzaya bağlıdır: ANDROID_SHA256 (Play imza sertifikası SHA-256, virgülle birden fazla) ve IOS_TEAM_ID ortam değişkenleri yoksa 404 döner.
+app.get('/.well-known/assetlinks.json', (req, res) => { const fp = String(process.env.ANDROID_SHA256 || '').split(',').map(x => x.trim()).filter(Boolean); if (!fp.length) return res.status(404).end();
+  res.json([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: process.env.ANDROID_PACKAGE || 'com.kanka.chat', sha256_cert_fingerprints: fp } }]); });
+app.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (req, res) => { const team = String(process.env.IOS_TEAM_ID || '').trim(); if (!team) return res.status(404).end();
+  res.type('application/json').send(JSON.stringify({ applinks: { details: [{ appIDs: [`${team}.${process.env.IOS_BUNDLE || 'com.kanka.chat'}`], components: ['/davet/*', '/s/*', '/app*', '/bot-ekle/*'].map(p => ({ '/': p })) }] } })); });
 app.get('/davet/:code', (req, res) => res.redirect('/app?davet=' + encodeURIComponent(req.params.code)));
 // Partner sunucuların özel linki: kankahq.com/s/isim
 app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && vanityOk(x)); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/'); });
