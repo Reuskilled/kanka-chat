@@ -42,7 +42,7 @@ Alternatif (arayüzü uygulamanın içine gömmek) her arayüz değişikliğinde
 | Arka planda seste kalma | ⚠️ Faz 3 | ⚠️ Faz 3 | Android: mikrofonlu ön plan hizmeti gerekir. iOS: `audio` arka plan modu eklendi; aramalar için CallKit gerekir |
 | Bluetooth kulaklık, hoparlör seçimi | ⚠️ Faz 3 | ⚠️ Faz 3 | İzinler eklendi; ses yönlendirme için yerel ses oturumu eklentisi gerekir |
 | Gelen arama ekranı | ❌ → Faz 3 | ❌ → Faz 3 | Android ConnectionService / iOS CallKit + PushKit (VoIP) |
-| Push bildirimleri | ❌ → Faz 2 | ❌ → Faz 2 | FCM (Android) + APNs (iOS); sunucuya cihaz jetonu kaydı ve gönderimi eklenecek |
+| Push bildirimleri | ✅ kod hazır | ✅ kod hazır | Anahtarlar yüklenince çalışır (aşağıda) |
 | Ekran paylaşımı | ❌ | ❌ | WebView'larda `getDisplayMedia` yok. Android MediaProjection ve iOS ReplayKit ancak **yerel WebRTC** ile mümkün (büyük iş, Faz 5). O zamana kadar mobilde düğme gizli kalır (zaten `getDisplayMedia` yoksa gizleniyor); izlemek çalışır |
 | Uygulama bağlantıları (davet linkleri) | ✅ hazır, imza bekliyor | ✅ hazır, Team ID bekliyor | Sunucu `assetlinks.json` / `apple-app-site-association` yayınlıyor (ortam değişkenleriyle) |
 | Android geri tuşu | ✅ | — | Açık pencere/çekmece/oda geçmişi kapanır; en başta uygulama arka plana alınır |
@@ -61,7 +61,7 @@ Alternatif (arayüzü uygulamanın içine gömmek) her arayüz değişikliğinde
 | Faz | İçerik | Durum |
 |---|---|---|
 | 1 | Klasör yapısı, Capacitor kurulumu, Android ve iOS projeleri, izinler, simgeler, açılış ekranı, çevrimdışı ekranı, geri tuşu, uygulama bağlantıları, web tarafında korumalı mobil uyum | ✅ yapıldı (cihazda test bekliyor) |
-| 2 | Push: `@capacitor/push-notifications`, sunucuya cihaz jetonu kaydı (`pushNative`), FCM HTTP v1 gönderimi, bildirime basınca ilgili ekrana gitme (DM, istek, bahsetme, sunucu); Keychain'de oturum | sırada |
+| 2 | Push: `@capacitor/push-notifications`, cihaz jetonu kaydı (`pushNative`), Android FCM HTTP v1 + iOS APNs (HTTP/2, .p8) gönderimi, bildirime basınca ilgili ekrana gitme, Android bildirim kanalları, yönetim panelinden anahtar yükleme | ✅ kod hazır · anahtar ve cihaz testi bekliyor |
 | 3 | Ses: Android ön plan hizmeti (mikrofon), iOS ses oturumu, Bluetooth/hoparlör seçimi, CallKit/ConnectionService ile gelen arama, VoIP push | |
 | 4 | Spark ödemesi: Apple IAP + Google Play Billing, sunucuda makbuz doğrulama, mevcut Spark haklarının korunması | |
 | 5 | Ekran paylaşımı (yerel WebRTC + MediaProjection/ReplayKit), mağaza paketleri, gizlilik formları | |
@@ -100,3 +100,20 @@ Sunucuda (VDS) ortam değişkenleri: `ANDROID_SHA256=AA:BB:...` ve `IOS_TEAM_ID=
 - Sunucu: `KankaMobil/` tarayıcı kimliği `/app`'e yönlenir; `assetlinks.json` ve `apple-app-site-association` (ortam değişkenine bağlı).
 - Test edildi: web sürümünde regresyon yok; mobil köprü sahte Capacitor ortamında çalışıyor; sunucu bağlantı dosyaları doğru.
 - **Test edilmedi:** gerçek Android/iOS cihazında çalıştırma (bu ortamda derleme yapılamıyor).
+
+## 9. Faz 2: bildirimler
+
+**Nasıl çalışıyor:** Uygulama girişten sonra bildirim izni ister (ilk girişte bir kez), işletim sisteminden cihaz jetonunu alır ve `pushNative` ile hesaba bağlar (en fazla 10 cihaz; aynı jeton başka hesaptaysa oradan alınır, çıkış yapınca silinir). Sunucu, mevcut bildirim akışında (`sendPush`: özel mesaj, etiketlenme, gelen ve cevapsız arama, arkadaşlık isteği ve kabulü) web aboneliklerine ek olarak telefonlara da gönderir:
+
+- **Android:** Firebase Cloud Messaging HTTP v1 (hizmet hesabıyla JWT → erişim jetonu, 1 saat önbellek). Kanallar: `mesajlar`, `aramalar`, `sosyal`. Küçük simge `ic_stat_kanka`, renk Kanka yeşili.
+- **iOS:** APNs'e doğrudan HTTP/2 (`.p8` anahtarıyla ES256 JWT). Yayın/geliştirme ortamı yanlışsa bir kez diğeri denenir.
+- Geçersiz jetonlar kendiliğinden silinir; hatalar Yönetim paneli › Mobil bildirimler'de görünür.
+- Bildirime basınca ilgili sohbet/sunucu/arkadaş sayfası açılır; uygulama kapalıysa giriş bitince açılır.
+- Kanka açıkken (ekrana bakılıyorsa) bildirim gönderilmez; uygulama içi bildirim zaten gösterilir.
+
+**Kurulum (bir kez):**
+1. Firebase: proje oluştur, `com.kanka.chat` Android uygulamasını ekle. `google-services.json` → `mobile/android/app/` (depoya girmez). Proje ayarları › Hizmet hesapları › yeni özel anahtar → Yönetim paneli › Mobil bildirimler'e yükle.
+2. Apple: Keys › APNs anahtarı (.p8) oluştur → panele yükle, Key ID ve Team ID'yi yaz. Xcode'da **Signing & Capabilities**'te takımını seç (Push Notifications ve Associated Domains `App.entitlements` içinde hazır).
+3. Uygulamada Ayarlar › Bildirimler › **Dene** ile test et.
+
+**Test durumu:** Jeton kaydı, izin akışı, kanal oluşturma, bildirime basınca yönlendirme, anahtar doğrulama ve hata kaydı sahte eklentiyle uçtan uca test edildi. FCM imzası ve istek gövdesi, APNs JWT'si ve HTTP/2 isteği (410/BadDeviceToken dahil) yerel sahte sunucularla test edildi. **Gerçek Google/Apple sunucularına ve telefona gönderim test edilmedi** (anahtar ve cihaz gerekiyor).
