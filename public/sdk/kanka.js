@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.3.1';
+const SURUM = '1.4.0';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -81,6 +81,13 @@ class Kanka extends EventEmitter {
   sunucu(id) { return this.api('GET', `/sunucular/${id}`).then(s => { this.sunucular.set(s.id, s); return s; }); }
   uye(sunucu, kisi) { return this.api('GET', `/sunucular/${sunucu}/uyeler/${kod(kisi)}`); }
   oda(id) { return this.api('GET', `/odalar/${kod(id)}`); }
+  // Oda yönetimi (botun "manageChannels" izni gerekir). tur: 'text' | 'voice' | 'stage' | 'forum'
+  odalar(sunucu) { return this.api('GET', `/sunucular/${kod(sunucu)}/odalar`); }
+  odaOlustur(sunucu, ayar = {}) { if (typeof ayar === 'string') ayar = { ad: ayar }; return this.api('POST', `/sunucular/${kod(sunucu)}/odalar`, ayar); }
+  odaDuzenle(oda, ayar = {}) { return this.api('PATCH', `/odalar/${kod(oda)}`, ayar); }
+  odaSil(oda) { return this.api('DELETE', `/odalar/${kod(oda)}`); }
+  kategoriOlustur(sunucu, ad) { return this.api('POST', `/sunucular/${kod(sunucu)}/kategoriler`, { ad }); }
+  kategoriSil(sunucu, kategori) { return this.api('DELETE', `/sunucular/${kod(sunucu)}/kategoriler/${kod(kategori)}`); }
   mesaj(oda, id) { return this.api('GET', `/odalar/${kod(oda)}/mesajlar/${id}`).then(m => this._mesaj(m)); }
   /** Kullanıcı bilgisi: ad ya da sayısal kimlik */
   kullanici(adVeyaId) { return this.api('GET', `/kullanicilar/${kod(adVeyaId)}`); }
@@ -202,6 +209,9 @@ class Kanka extends EventEmitter {
     if (t === 'UYE_KATILDI') return this.emit('uyeKatildi', d.uye, d.sunucu);
     if (t === 'UYE_AYRILDI') return this.emit('uyeAyrildi', d.uye, d.sunucu);
     if (t === 'UYE_GUNCELLENDI') return this.emit('uyeGuncellendi', d.uye, d.sunucu);
+    if (t === 'ODA_OLUSTU') return this.emit('odaOlustu', d);
+    if (t === 'ODA_GUNCELLENDI') return this.emit('odaGuncellendi', d);
+    if (t === 'ODA_SILINDI') return this.emit('odaSilindi', d);
     if (t === 'TEPKI_EKLENDI') return this.emit('tepki', d);
     if (t === 'TEPKI_KALDIRILDI') return this.emit('tepkiKaldirildi', d);
     if (t === 'SUNUCUYA_EKLENDI') { this.sunucular.set(d.id, d); return this.emit('sunucuyaEklendi', d); }

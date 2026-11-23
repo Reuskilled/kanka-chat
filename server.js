@@ -3783,6 +3783,49 @@ app.get('/api/_durum', (req, res) => {
   let ses = 0; for (const [, m] of voice) ses += m.size;
   res.json({ ses, bagli: io.engine.clientsCount });
 });
+// ---- Oda yönetimi: kullanıcı arayüzü ve Bot API aynı kuralları kullanır ----
+const CH_TYPE_IN = { text: 'text', yazi: 'text', yazili: 'text', 'yazılı': 'text', voice: 'voice', ses: 'voice', sesli: 'voice', stage: 'stage', sahne: 'stage', forum: 'forum' };
+const SLOW_OK = [0, 5, 10, 15, 30, 60, 120, 300, 600, 900, 3600];
+function chBotView(s, c, bot) {
+  return { id: c.id, ad: c.name, tur: c.type || 'text', konu: c.topic || '', kategori: c.cat || null, sunucu: s.id, ozel: everyoneDenied(ovOf(s, c), 'view'),
+    yavasMod: c.slow || 0, limit: c.limit || 0, ...(bot ? { yazabilir: chPerm(s, c, bot, 'send') } : {}) };
+}
+function chEvent(s, t, c) { // botlara oda olayları: ODA_OLUSTU / ODA_GUNCELLENDI / ODA_SILINDI
+  if (!s || s.public) return;
+  for (const n of s.members.filter(isBotUser)) { const a = appOf(n); if (!a || a.killed) continue;
+    if (t === 'ODA_SILINDI') gwDispatch(a.id, t, { id: c.id, sunucu: s.id }); else if (seesChannel(s, c, a.bot)) gwDispatch(a.id, t, chBotView(s, c, a.bot)); }
+}
+function placeInCat(s, c, k) { // odayı kategorinin (ya da kategorisizlerin) sonuna taşı
+  s.channels = s.channels.filter(x => x !== c);
+  const last = s.channels.map(x => x.cat || null).lastIndexOf(k?.id || null);
+  if (last >= 0) s.channels.splice(last + 1, 0, c);
+  else if (k) { const ord = s.categories.indexOf(k); const after = s.channels.findIndex(x => x.cat && s.categories.findIndex(y => y.id === x.cat) > ord); s.channels.splice(after < 0 ? s.channels.length : after, 0, c); }
+  else s.channels.unshift(c);
+}
+function addChannel(s, by, { name, type, cat, priv, topic } = {}) {
+  if (s.channels.length >= 200) return { error: 'En fazla 200 oda olabilir' };
+  type = CH_TYPE_IN[String(type || 'text').toLocaleLowerCase('tr')]; if (!type) return { error: 'Oda türü text, voice, stage ya da forum olmalı' };
+  name = clean(name, 30); if (type === 'text' || type === 'forum') name = name.toLowerCase().replace(/\s+/g, '-');
+  if (!name) return { error: 'Oda adı gerekli' };
+  const k = cat ? s.categories.find(x => x.id === cat) : null; if (cat && !k) return { error: 'Kategori bulunamadı' };
+  const c = { id: id(), name, type, perms: {}, sync: !!k && !priv };
+  if (type === 'stage') c.topic = 'Sahne';
+  if (topic) c.topic = clean(topic, 160);
+  if (k) c.cat = k.id;
+  if (priv) c.perms = { '@everyone': { view: false } };
+  s.channels.push(c); placeInCat(s, c, k);
+  audit(s, by, 'Oda oluşturdu', c.name); save(); pushServers(membersOf(s)); chEvent(s, 'ODA_OLUSTU', c);
+  return { c };
+}
+function removeChannel(s, by, c) {
+  if (c.type === 'text' && s.channels.filter(x => x.type === 'text').length < 2) return { error: 'En az bir yazılı oda kalmalı' };
+  if (nukeCheck(s, by, 'oda silme')) return { error: 'Kanka Bot: Kısa sürede çok fazla oda silindi, işlem durduruldu.' };
+  s.channels = s.channels.filter(x => x !== c); delete db.messages[c.id]; delete db.playlists[c.id];
+  if (s.afk?.ch === c.id) s.afk = null;
+  voiceKick([c.id], null, 'Bulunduğun ses odası silindi');
+  audit(s, by, 'Oda sildi', c.name); save(); pushServers(membersOf(s)); chEvent(s, 'ODA_SILINDI', c);
+  return { ok: true };
+}
 function botServerView(a, s) {
   return { id: s.id, ad: s.name, simge: s.iconImg || null, sahip: s.owner, uyeSayisi: humans(s.members).length,
     odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => ({ id: c.id, ad: c.name, tur: c.type, konu: c.topic || '', kategori: c.cat || null, yazabilir: chPerm(s, c, a.bot, 'send') })),
@@ -4194,6 +4237,54 @@ api.post('/odalar/:cid/mesajlar/toplu-sil', R((a, req) => {
 // Komutlar: tamamını tek seferde yaz (PUT) ya da oku (GET); her yerde geçerli ya da tek sunucuya özel
 api.get('/komutlar', R(a => ({ komutlar: a.cmds || [] })));
 api.put('/komutlar', R((a, req) => { const r = cleanCmds(Array.isArray(req.body) ? req.body : req.body?.komutlar); if (r.error) return r; a.cmds = r.list; save(); for (const s of botServers(a)) pushServers(membersOf(s)); return { komutlar: a.cmds }; }));
+// ---- Oda ve kategori yönetimi (manageChannels izni gerekir) ----
+const botChMgr = (a, s) => s && can(s, a.bot, 'manageChannels');
+api.get('/sunucular/:sid/odalar', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  return { odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => chBotView(s, c, a.bot)), kategoriler: s.categories.map(k => ({ id: k.id, ad: k.name })) }; }));
+api.post('/sunucular/:sid/odalar', R((a, req) => {
+  const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
+  if (limited('botch|' + a.id + '|' + s.id, 10, 60e3)) return { error: 'Çok hızlı oda açıyorsun: dakikada en fazla 10', code: 429 };
+  const b = req.body || {}; const r = addChannel(s, a.bot, { name: b.ad ?? b.name, type: b.tur ?? b.type, cat: b.kategori ?? b.parent ?? null, priv: !!(b.ozel ?? b.private), topic: b.konu ?? b.topic });
+  if (r.error) return r; return chBotView(s, r.c, a.bot);
+}));
+api.patch('/odalar/:cid', R((a, req) => {
+  const f = botChan(a, req.params.cid); if (f.error) return f; if (f.dm) return { error: 'DM düzenlenemez', code: 400 };
+  const { s, c } = f; if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
+  const b = req.body || {}, ch = [];
+  if (b.ad !== undefined) { let n = clean(b.ad, 30); if (c.type === 'text' || c.type === 'forum') n = n.toLowerCase().replace(/\s+/g, '-'); if (!n) return { error: 'Oda adı boş olamaz' }; c.name = n; ch.push('ad'); }
+  if (b.konu !== undefined) { c.topic = clean(b.konu, 160); ch.push('konu'); }
+  if (b.kategori !== undefined) { const k = b.kategori ? s.categories.find(x => x.id === b.kategori) : null; if (b.kategori && !k) return { error: 'Kategori bulunamadı' };
+    if ((c.cat || null) !== (k?.id || null)) { c.cat = k?.id || undefined; if (!k) c.sync = false; placeInCat(s, c, k); } ch.push('kategori'); }
+  if (b.yavasMod !== undefined) { if (!SLOW_OK.includes(+b.yavasMod)) return { error: 'yavasMod şunlardan biri olmalı: ' + SLOW_OK.join(', ') }; c.slow = +b.yavasMod; ch.push('yavasMod'); }
+  if (b.limit !== undefined) { if (!voiceLike(c.type)) return { error: 'Kişi sınırı sadece sesli odalarda olur' }; c.limit = Math.max(0, Math.min(99, parseInt(b.limit) || 0)); ch.push('limit'); }
+  if (b.ozel !== undefined) { if (c.sync) { c.perms = JSON.parse(JSON.stringify(catOf(s, c)?.perms || {})); c.sync = false; } c.perms ||= {}; const e = c.perms['@everyone'] ||= {}; if (b.ozel) e.view = false; else delete e.view; if (!Object.keys(e).length) delete c.perms['@everyone']; ch.push('ozel'); }
+  if (!ch.length) return { error: 'Değiştirilecek alan yok (ad, konu, kategori, yavasMod, limit, ozel)' };
+  audit(s, a.bot, 'Odayı düzenledi', `${c.name} (${ch.join(', ')})`); save(); pushServers(membersOf(s)); chEvent(s, 'ODA_GUNCELLENDI', c);
+  return chBotView(s, c, a.bot);
+}));
+api.delete('/odalar/:cid', R((a, req) => {
+  const f = botChan(a, req.params.cid); if (f.error) return f; if (f.dm) return { error: 'DM silinemez', code: 400 };
+  if (!botChMgr(a, f.s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
+  const r = removeChannel(f.s, a.bot, f.c); return r.error ? { ...r, code: 409 } : r;
+}));
+api.post('/sunucular/:sid/kategoriler', R((a, req) => {
+  const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
+  if (s.categories.length >= 50) return { error: 'En fazla 50 kategori olabilir' };
+  if (limited('botch|' + a.id + '|' + s.id, 10, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 10 oda/kategori', code: 429 };
+  const name = clean(req.body?.ad, 30); if (!name) return { error: 'Kategori adı gerekli' };
+  const k = { id: id(), name, perms: {} }; s.categories.push(k); audit(s, a.bot, 'Kategori oluşturdu', k.name); save(); pushServers(membersOf(s));
+  return { id: k.id, ad: k.name };
+}));
+api.delete('/sunucular/:sid/kategoriler/:kid', R((a, req) => {
+  const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
+  const k = s.categories.find(x => x.id === req.params.kid); if (!k) return { error: 'Kategori bulunamadı', code: 404 };
+  for (const c of s.channels) if (c.cat === k.id) { if (c.sync) { c.perms = { ...(k.perms || {}) }; c.sync = false; } delete c.cat; }
+  s.categories = s.categories.filter(x => x !== k); s.channels = [...s.channels.filter(c => !c.cat), ...s.channels.filter(c => c.cat)];
+  audit(s, a.bot, 'Kategoriyi sildi', k.name); save(); pushServers(membersOf(s)); return { ok: true };
+}));
 api.get('/sunucular/:sid/komutlar', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; return { komutlar: a.srvCmds?.[s.id] || [] }; }));
 api.put('/sunucular/:sid/komutlar', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; const r = cleanCmds(Array.isArray(req.body) ? req.body : req.body?.komutlar); if (r.error) return r; (a.srvCmds ||= {})[s.id] = r.list; save(); pushServers(membersOf(s)); return { komutlar: r.list }; }));
 // Etkileşim cevabı (token'sız da çalışır: etkileşim token'ı yeterli, böylece HTTP botları da kullanabilir)
@@ -6061,11 +6152,7 @@ io.on('connection', socket => {
     if (cat !== undefined) {
       const k = cat && s.categories.find(x => x.id === cat);
       if (cat && !k) return cb({ error: 'Kategori bulunamadı' });
-      if ((c.cat || null) !== (k?.id || null)) { c.cat = k?.id || undefined; if (!k) c.sync = false;
-        // yeni yerine taşı: hedef grubun sonuna
-        s.channels = s.channels.filter(x => x !== c); const last = s.channels.map(x => x.cat || null).lastIndexOf(k?.id || null);
-        if (k && last < 0) { const ord = s.categories.findIndex(x => x.id === k.id); const after = s.channels.findIndex(x => x.cat && s.categories.findIndex(y => y.id === x.cat) > ord); s.channels.splice(after < 0 ? s.channels.length : after, 0, c); }
-        else s.channels.splice(last + 1, 0, c); }
+      if ((c.cat || null) !== (k?.id || null)) { c.cat = k?.id || undefined; if (!k) c.sync = false; placeInCat(s, c, k); }
     }
     if (icon !== undefined) {
       if (!CHICON.allowed(s)) return cb({ error: 'Oda simgesi şimdilik sadece Kanka HQ\'da test ediliyor' });
@@ -6080,7 +6167,7 @@ io.on('connection', socket => {
     if (sync === true && catOf(s, c)) { audit(s, me, 'Odayı kategoriyle eşitledi', '#' + c.name); c.sync = true; c.perms = {}; }
     else if (perms !== undefined) { const np = cleanPerms(s, perms), d = permDiff(s, ovOf(s, c), np); if (d) audit(s, me, 'İzinleri değiştirdi', `#${c.name}: ${d}`); c.perms = np; c.sync = false; }
     if (s.owner === me) setupOf(s).channels = true;
-    audit(s, me, 'Odayı düzenledi', c.name); save(); pushSrv(s); cb({ ok: true });
+    audit(s, me, 'Odayı düzenledi', c.name); save(); pushSrv(s); chEvent(s, 'ODA_GUNCELLENDI', c); cb({ ok: true });
   });
   socket.on('chDuplicate', ({ serverId, channelId } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageChannels'); if (!s) return cb({ error: 'Oda yönetme yetkin yok' });
@@ -6193,13 +6280,7 @@ io.on('connection', socket => {
     const s = adminServer(serverId, false); if (!s) return cb({ error: 'Yetkin yok' });
     const c = s.channels.find(c => c.id === channelId);
     if (!c) return cb({ error: 'Oda bulunamadı' });
-    if (c.type === 'text' && s.channels.filter(x => x.type === 'text').length < 2) return cb({ error: 'En az bir yazılı oda kalmalı' });
-    if (nukeCheck(s, me, 'oda silme')) return cb({ error: 'Kanka Bot: Kısa sürede çok fazla oda sildin, işlem durduruldu.' });
-    s.channels = s.channels.filter(x => x !== c); delete db.messages[c.id]; delete db.playlists[c.id];
-    if (s.afk?.ch === c.id) s.afk = null;
-    voiceKick([c.id], null, 'Bulunduğun ses odası silindi');
-    audit(s, me, 'Oda sildi', c.name);
-    save(); pushServers(membersOf(s)); cb({ ok: true });
+    cb(removeChannel(s, me, c));
   });
   socket.on('renameChannel', ({ serverId, channelId, name } = {}, cb = () => {}) => {
     const s = adminServer(serverId, false); if (!s) return cb({ error: 'Yetkin yok' });
@@ -6558,22 +6639,9 @@ io.on('connection', socket => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || !(s.public || s.members.includes(me))) return cb({ error: 'Yetkin yok' });
     if ((s.customRoles?.length || s.lockChannels) && !can(s, me, 'manageChannels')) return cb({ error: 'Oda açma yetkin yok' });
-    type = ['voice', 'stage', 'forum'].includes(type) ? type : 'text';
-    name = clean(name, 30); if (type === 'text' || type === 'forum') name = name.toLowerCase().replace(/\s+/g, '-');
-    if (!name) return cb({ error: 'Oda adı gerekli' });
-    const k = cat && s.categories.find(x => x.id === cat);
-    const c = { id: id(), name, type, perms: {}, sync: !!k && !priv };
-    if (type === 'stage') c.topic = 'Sahne';
-    if (k) c.cat = k.id;
-    if (priv) c.perms = { '@everyone': { view: false } };
-    const last = s.channels.map(x => x.cat || null).lastIndexOf(k?.id || null);
-    if (last >= 0) s.channels.splice(last + 1, 0, c);
-    else if (k) { const ord = s.categories.indexOf(k); const after = s.channels.findIndex(x => x.cat && s.categories.findIndex(y => y.id === x.cat) > ord); s.channels.splice(after < 0 ? s.channels.length : after, 0, c); }
-    else s.channels.unshift(c);
     if (s.owner === me) setupOf(s).channels = true;
-    audit(s, me, 'Oda oluşturdu', c.name); save();
-    pushServers(membersOf(s));
-    cb(chView(s, c, me, true));
+    const r = addChannel(s, me, { name, type: ['voice', 'stage', 'forum'].includes(type) ? type : 'text', cat, priv }); if (r.error) return cb(r);
+    cb(chView(s, r.c, me, true));
   });
   socket.on('discover', ({ q, cat } = {}, cb = () => {}) => {
     if (!me) return cb([]);

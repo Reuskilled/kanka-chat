@@ -15,7 +15,7 @@ import asyncio, time, random, hashlib, hmac, json, re
 from urllib.parse import quote
 import aiohttp
 
-SURUM = "1.3.1"
+SURUM = "1.4.0"
 
 
 class KankaHata(Exception):
@@ -213,6 +213,17 @@ class Bot:
         s = await self.api("GET", f"/sunucular/{id}"); self.sunucular[s["id"]] = s; return s
     async def uye(self, sunucu, kisi): return await self.api("GET", f"/sunucular/{sunucu}/uyeler/{quote(str(kisi))}")
     async def oda(self, id): return await self.api("GET", f"/odalar/{quote(str(id))}")
+    # Oda yönetimi (botun "manageChannels" izni gerekir). tur: "text" | "voice" | "stage" | "forum"
+    async def odalar(self, sunucu): return await self.api("GET", f"/sunucular/{quote(str(sunucu))}/odalar")
+    async def oda_olustur(self, sunucu, ad, tur="text", kategori=None, ozel=False, konu=None):
+        veri = {"ad": ad, "tur": tur, "ozel": ozel}
+        if kategori: veri["kategori"] = kategori
+        if konu: veri["konu"] = konu
+        return await self.api("POST", f"/sunucular/{quote(str(sunucu))}/odalar", veri)
+    async def oda_duzenle(self, oda, **ayar): return await self.api("PATCH", f"/odalar/{quote(str(oda))}", ayar)
+    async def oda_sil(self, oda): return await self.api("DELETE", f"/odalar/{quote(str(oda))}")
+    async def kategori_olustur(self, sunucu, ad): return await self.api("POST", f"/sunucular/{quote(str(sunucu))}/kategoriler", {"ad": ad})
+    async def kategori_sil(self, sunucu, kategori): return await self.api("DELETE", f"/sunucular/{quote(str(sunucu))}/kategoriler/{quote(str(kategori))}")
     async def mesaj(self, oda, id): return Mesaj(self, await self.api("GET", f"/odalar/{quote(str(oda))}/mesajlar/{id}"))
     async def kullanici(self, ad_veya_id): return await self.api("GET", f"/kullanicilar/{quote(str(ad_veya_id))}")
     async def mesajlar(self, oda, limit=50, once=None):
@@ -365,7 +376,7 @@ class Bot:
         if t == "HAZIR":
             self._oturum_id = d["oturum"]; self.ben = d["bot"]; self.sunucular = {s["id"]: s for s in d["sunucular"]}
             return await self._yay("hazir")
-        adlar = {"MESAJ_DUZENLENDI": "mesaj_duzenlendi", "MESAJ_SILINDI": "mesaj_silindi", "TEPKI_EKLENDI": "tepki", "TEPKI_KALDIRILDI": "tepki_kaldirildi", "SUNUCUYA_EKLENDI": "sunucuya_eklendi", "SUNUCUDAN_CIKARILDI": "sunucudan_cikarildi"}
+        adlar = {"MESAJ_DUZENLENDI": "mesaj_duzenlendi", "MESAJ_SILINDI": "mesaj_silindi", "TEPKI_EKLENDI": "tepki", "TEPKI_KALDIRILDI": "tepki_kaldirildi", "SUNUCUYA_EKLENDI": "sunucuya_eklendi", "SUNUCUDAN_CIKARILDI": "sunucudan_cikarildi", "ODA_OLUSTU": "oda_olustu", "ODA_GUNCELLENDI": "oda_guncellendi", "ODA_SILINDI": "oda_silindi"}
         if t == "MESAJ_GELDI":
             if d.get("yazar") and self.ben and d["yazar"]["ad"] == self.ben["ad"]: return
             m = Mesaj(self, d)
