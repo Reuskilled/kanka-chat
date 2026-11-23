@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.4.0';
+const SURUM = '1.4.1';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -82,6 +82,8 @@ class Kanka extends EventEmitter {
   uye(sunucu, kisi) { return this.api('GET', `/sunucular/${sunucu}/uyeler/${kod(kisi)}`); }
   oda(id) { return this.api('GET', `/odalar/${kod(id)}`); }
   // Oda yönetimi (botun "manageChannels" izni gerekir). tur: 'text' | 'voice' | 'stage' | 'forum'
+  /** Botu sunucuya ekleme linki (Portal'daki linkle aynı). izinler: ['manageMessages', 'kick', ...] */
+  eklemeLinki(izinler = []) { if (!this.ben) throw new Error('Önce bağlan: eklemeLinki "hazir" olayından sonra kullanılabilir'); const l = this.ben.eklemeLinki || `${this.adres}/bot-ekle/${this.ben.id}`; return izinler.length ? `${l}?izin=${izinler.join(',')}` : l; }
   odalar(sunucu) { return this.api('GET', `/sunucular/${kod(sunucu)}/odalar`); }
   odaOlustur(sunucu, ayar = {}) { if (typeof ayar === 'string') ayar = { ad: ayar }; return this.api('POST', `/sunucular/${kod(sunucu)}/odalar`, ayar); }
   odaDuzenle(oda, ayar = {}) { return this.api('PATCH', `/odalar/${kod(oda)}`, ayar); }
