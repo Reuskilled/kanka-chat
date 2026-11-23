@@ -3035,10 +3035,14 @@ const hexColor = c => Number.isInteger(c) ? '#' + (c >>> 0 & 0xffffff).toString(
 const httpsUrl = u => typeof u === 'string' && /^https:\/\/[^\s<>"']{4,400}$/i.test(u) ? u : null;
 // Kart resmi: https adresi ya da Kanka'ya yüklenmiş bir dosya (kimliği, /dosya/... adresi, "dosya:kimlik" ya da "attachment://kimlik").
 // Bot önce POST /dosyalar ile yükleyip dönen id/url'yi kartta kullanabilir (Discord'daki attachment:// gibi).
-let embedWarn = null;
+let embedWarn = null, embedFiles = [], embedUsed = new Set(); // embedFiles: bu mesajın ekleri (attachment://dosya.png ile adla kullanılabilir)
 function cardImg(u, alan) {
   if (u == null || u === '') return null;
   if (typeof u === 'string') {
+    const an = u.match(/^attachment:\/\/(.+)$/)?.[1] ?? (/^[^/:]+\.(png|jpe?g|gif|webp)$/i.test(u) ? u : null); // Discord alışkanlığı: ekteki dosyanın adı
+    if (an && !/^[a-f0-9]{24}$/.test(an)) { const fid = embedFiles.find(x => db.files?.[x]?.name === an || db.files?.[x]?.name === safeName(an));
+      if (fid) { embedUsed.add(fid); if (db.files[fid].kind === 'image') return `/dosya/${fid}/${encodeURIComponent(db.files[fid].name)}`; embedWarn ||= `${alan}: ${an} resim değil`; return null; }
+      embedWarn ||= `${alan}: "${an}" bu mesajın eklerinde yok. Dosyayı POST /dosyalar ile yükleyip ya dönen id'yi yaz ya da ekler: [id] ile birlikte gönder`; return null; }
     const m = u.match(/^(?:https:\/\/[^/]+)?\/dosya\/([a-f0-9]{24})(?:\/|$)/) || u.match(/^(?:dosya:|attachment:\/\/)?([a-f0-9]{24})$/);
     if (m && db.files?.[m[1]]) { const f = db.files[m[1]]; if (f.kind === 'image') return `/dosya/${m[1]}/${encodeURIComponent(f.name)}`; embedWarn ||= `${alan}: bu dosya resim değil`; return null; }
     const h = httpsUrl(u); if (h) return h;
@@ -3078,9 +3082,14 @@ function cleanComps(rows) {
 function msgBody(b) { // REST gövdesinden mesaj alanları (Kanka ve alışık olunan İngilizce adlar)
   // <@kimlik> yazılırsa o kişinin güncel adıyla etiketlenir (bot adı değil kimliği saklar)
   const text = noPing(clean(b?.icerik ?? b?.content ?? '', MSG_MAX).replace(/<@!?(\d{12,20})>/g, (m, id) => { const u = userById(id); return u ? '@' + u.name : m; }));
-  const ek = b?.ekler ?? b?.attachments, files = Array.isArray(ek) ? ek.slice(0, 10).map(x => typeof x === 'string' ? x : x?.id).filter(x => typeof x === 'string' && /^[a-f0-9]{24}$/.test(x)) : [];
-  const embeds = cleanEmbeds(b?.kartlar ?? b?.embeds);
-  return { text, embeds, comps: cleanComps(b?.bilesenler ?? b?.components), files, uyari: embedWarn };
+  let ek = b?.ekler ?? b?.attachments ?? b?.dosyalar ?? b?.files ?? b?.ek; if (ek != null && !Array.isArray(ek)) ek = [ek];
+  const fidOf = x => { const v = typeof x === 'string' ? x : x?.id ?? x?.url; const m = typeof v === 'string' && (v.match(/^[a-f0-9]{24}$/) || v.match(/\/dosya\/([a-f0-9]{24})/)); return m ? (m[1] || m[0]) : null; };
+  let files = (ek || []).slice(0, 10).map(fidOf), bad = files.filter(x => !x).length; files = files.filter(Boolean);
+  embedFiles = files; embedUsed = new Set();
+  let embeds = cleanEmbeds(b?.kartlar ?? b?.embeds ?? (b?.kart ?? b?.embed ? [b.kart ?? b.embed] : undefined));
+  const warn = embedWarn || (bad ? 'ekler: dosya id\'si olmalı (önce POST /dosyalar ile yükle, dönen id\'yi yaz)' : null);
+  files = files.filter(x => !embedUsed.has(x)); embedFiles = [];
+  return { text, embeds, comps: cleanComps(b?.bilesenler ?? b?.components), files, uyari: warn };
 }
 // Botun yüklediği dosyalar (POST /dosyalar) mesaja eklenir; başkasının dosyası eklenemez
 const botFiles = (a, ids) => (ids || []).filter(x => db.files?.[x]?.owner === a.bot).map(x => { const f = db.files[x]; return { id: x, name: f.name, size: f.size, kind: f.kind, url: `/dosya/${x}/${encodeURIComponent(f.name)}` }; });
@@ -3877,6 +3886,7 @@ const appInfoOf = a => ({ id: a.id, ad: a.bot, gorunenAd: db.users[a.bot]?.displ
 function appPost(a, chId, body, extra = {}) {
   const u = db.users[a.bot];
   const files = botFiles(a, body.files), emo = appEmo(a, body.text, body.embeds);
+  if ((body.files?.length || 0) > files.length) body.uyari ||= 'ekler: bazı dosyalar bulunamadı ya da bu bota ait değil (önce bu botla POST /dosyalar ile yükle)';
   const msg = { id: id(), author: a.bot, color: u.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, appInfo: appInfoOf(a), text: body.text || '', ...(files.length ? { files } : {}), ...(emo ? { emo } : {}), ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
   if (!msg.text && !msg.embeds && !msg.comps && !msg.files && !msg.loading) return { error: body?.uyari ? `Mesaj boş kaldı: ${body.uyari}` : 'Boş mesaj: icerik, kartlar, ekler ya da bilesenler gerekli' };
   const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
@@ -4090,7 +4100,7 @@ api.post('/odalar/:cid/yaziyor', R((a, req) => {
 const trAscii = x => String(x ?? '').toLocaleLowerCase('tr').replace(/[çğıöşüâî]/g, c => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u', â: 'a', î: 'i' }[c])).replace(/[^a-z]/g, '');
 const BOT_ST = { cevrimici: 'online', online: 'online', acik: 'online', bosta: 'idle', idle: 'idle', uzakta: 'idle', rahatsizetme: 'dnd', rahatsizetmeyin: 'dnd', mesgul: 'dnd', dnd: 'dnd', gorunmez: 'invisible', invisible: 'invisible', cevrimdisi: 'invisible', offline: 'invisible' };
 const BOT_ACT = { oynuyor: 'Oynuyor', playing: 'Oynuyor', '0': 'Oynuyor', yayinda: 'Yayında', streaming: 'Yayında', '1': 'Yayında', dinliyor: 'Dinliyor', listening: 'Dinliyor', '2': 'Dinliyor',
-  izliyor: 'İzliyor', watching: 'İzliyor', '3': 'İzliyor', ozel: '', custom: '', '4': '', yarisiyor: 'Yarışıyor', competing: 'Yarışıyor', '5': 'Yarışıyor' };
+  izliyor: 'İzliyor', watching: 'İzliyor', '3': 'İzliyor', yayin: 'Yayında', yayinyapiyor: 'Yayında', yayinliyor: 'Yayında', canli: 'Yayında', canliyayin: 'Yayında', live: 'Yayında', stream: 'Yayında', oynamak: 'Oynuyor', oyun: 'Oynuyor', dinle: 'Dinliyor', izle: 'İzliyor', yaris: 'Yarışıyor', ozel: '', custom: '', '4': '', yarisiyor: 'Yarışıyor', competing: 'Yarışıyor', '5': 'Yarışıyor' };
 function botSetPresence(a, b) {
   const u = db.users[a.bot]; if (!u) return { error: 'Bot hesabı yok', code: 404 };
   b = b && typeof b === 'object' ? b : {};
@@ -4099,7 +4109,8 @@ function botSetPresence(a, b) {
   let yazi = b.yazi ?? b.text;
   const act = b.aktivite ?? b.etkinlik ?? (Array.isArray(b.activities) ? b.activities[0] : b.activity);
   if (act && typeof act === 'object') {
-    const ad = String(act.ad ?? act.name ?? act.state ?? '').trim(), tk = trAscii(act.tur ?? act.type ?? 'oynuyor') || String(act.type ?? ''), lab = BOT_ACT[tk] ?? BOT_ACT[String(act.type)] ?? 'Oynuyor';
+    const ad = String(act.ad ?? act.name ?? act.state ?? '').trim(), tk = trAscii(act.tur ?? act.type ?? 'oynuyor') || String(act.type ?? ''), lab = BOT_ACT[tk] ?? BOT_ACT[String(act.type)];
+    if (lab === undefined) return { error: `Bilinmeyen aktivite türü "${String(act.tur ?? act.type).slice(0, 20)}". Kullan: oynuyor, yayinda, dinliyor, izliyor, yarisiyor, ozel`, code: 400 };
     if (ad) yazi = lab ? `${lab}: ${ad}` : ad;
   } else if (typeof act === 'string' && act.trim()) yazi = `Oynuyor: ${act.trim()}`;
   if (!st && yazi === undefined) return { error: 'Gönderilecek bir şey yok: durum, yazi ya da aktivite ver', code: 400 };
