@@ -981,11 +981,12 @@ function srvXp(s, name, n, chId) {
 // Profil: çerçeveler (seviyeyle açılır) ve sosyal bağlantılar
 const FRAMES = { halka: 2, gokkusagi: 5, ates: 10, neon: 15, altin: 25, kurucu: 0 };
 const PEFFECTS = ['glitch', 'matrix', 'starry', 'embers', 'lightning', 'snow', 'rain', 'sakura', 'sparkles'];
+const PEFFECTS_OWNER = ['dragon_crimson', 'dragon_jade', 'dragon_frost', 'vfx_inferno', 'vfx_volt', 'vfx_rift', 'vfx_blackhole', 'vfx_aurora'];
 const NAME_BANNERS = ['cyberlime', 'embers', 'magma', 'frostbite', 'deepsea', 'thunder', 'nebula', 'eclipse', 'prism', 'sakura', 'goldsilk'];
 const SOCIALS = ['instagram', 'tiktok', 'youtube', 'x', 'twitch', 'steam', 'spotify'];
 const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (u.createdAt || 0)).length < 100;
 const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
-const effectOk = (u, ef) => !ef || ef === 'none' || PEFFECTS.includes(ef);
+const effectOk = (u, ef) => !ef || ef === 'none' || PEFFECTS.includes(ef) || (PEFFECTS_OWNER.includes(ef) && staffRank(u.name) === 'owner');
 const nameBannerOk = (u, nb) => !nb || nb === 'none' || NAME_BANNERS.includes(nb);
 const NS_FONTS = ['default', 'serif', 'cinzel', 'rounded', 'script', 'pixel', 'cyber', 'mono'];
 const NS_MODES = ['none', 'solid', 'gradient'];
@@ -1048,7 +1049,7 @@ const TAG = {
   of(u) { if (!u?.tag) return null; const s = db.servers.find(x => x.id === u.tag); return TAG.canUse(u.name, s) ? s.id : null; },
   push() { const d = TAG.defs(); io.emit('tagDefs', d); for (const [sid, n] of online) io.to(sid).emit('tagCan', TAG.canList(n)); io.emit('users', allUsers()); },
 };
-const pubUser = u => ({ id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect || null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
+const pubUser = u => ({ id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect && (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner') ? u.effect : null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), tg: u.bot ? null : TAG.of(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
@@ -5544,7 +5545,7 @@ io.on('connection', socket => {
     if (theme !== undefined) u.theme = Array.isArray(theme) && theme.length === 2 && theme.every(c => HEX.test(c)) ? theme : null;
     if (bannerImg !== undefined) u.bannerImg = bannerImg && UPLOAD_RE.test(bannerImg) ? bannerImg : null;
     if (frame !== undefined) { if (frame && !frameOk(u, frame)) return cb({ error: 'Bu çerçeve henüz açılmadı' }); u.frame = frame && frame !== 'none' ? frame : null; }
-    if (effect !== undefined) { if (effect && !effectOk(u, effect)) return cb({ error: 'Geçersiz profil efekti' }); u.effect = effect && effect !== 'none' ? effect : null; }
+    if (effect !== undefined) { if (effect && !effectOk(u, effect)) return cb({ error: PEFFECTS_OWNER.includes(effect) ? 'Bu 3D profil efekti sadece Kurucu rütbesine özeldir' : 'Geçersiz profil efekti' }); u.effect = effect && effect !== 'none' ? effect : null; }
     if (nameBanner !== undefined) { if (nameBanner && !nameBannerOk(u, nameBanner)) return cb({ error: 'Geçersiz isim afişi' }); u.nameBanner = nameBanner && nameBanner !== 'none' ? nameBanner : null; }
     if (nameStyle !== undefined) { if (nameStyle && staffRank(u.name) !== 'owner') return cb({ error: 'Görünen ad stili sadece Kurucu rütbesine özeldir' }); u.nameStyle = staffRank(u.name) === 'owner' ? cleanNameStyle(nameStyle) : null; }
     if (socials !== undefined) { const o = {}; for (const k of SOCIALS) { const v = clean(socials?.[k], 60).replace(/^https?:\/\/\S+\//, '').replace(/^@/, ''); if (v && /^[\w.\-]{1,40}$/.test(v)) o[k] = v; } u.socials = o; }
