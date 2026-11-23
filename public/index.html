@@ -4669,6 +4669,7 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
 .chi-grid button:hover{background:rgba(255,255,255,.09)} .chi-grid button.on{border-color:var(--accent);background:var(--accent-soft)}
 .chi-grid img{width:24px;height:24px;object-fit:contain}
 .chi-sub{font-size:12px;font-weight:700;color:var(--muted);margin-top:12px}
+.tag-off{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:rgba(255,170,60,.1);border:1px solid rgba(255,170,60,.35);color:var(--ink);font-size:13.5px;margin:6px 0}.tag-off .ic{width:18px;height:18px;color:#ffaa3c;flex-shrink:0;margin-top:1px}
 </style>
 </head>
 <body>
@@ -7020,6 +7021,7 @@ function showServerSettings(s, tab, focus) {
           <div class="st-field"><label>Simge</label><div class="tag-icons" id="tg-i">${TAG_ICONS_C.map(x => `<button type="button" data-i="${x}" class="${x === cur.i ? 'on' : ''}">${x}</button>`).join('')}</div></div>
           <div class="st-field"><label>Renk</label><div class="tag-cols" id="tg-c">${TAG_COLORS_C.map(x => `<button type="button" data-c="${x}" style="background:${x}" class="${x === cur.c ? 'on' : ''}" aria-label="Renk ${x}"></button>`).join('')}</div></div>
           <div class="st-field"><label>Önizleme</label><div class="tag-preview" id="tg-p"></div></div>
+          ${s.tag && cur.on === false ? `<div class="tag-off">${ic('info')}<span><b>Etiket kapalı:</b> şu an kimse takamıyor, takanlarda da görünmüyor. Açmak için aşağıdaki kutuyu işaretleyip kaydet.</span></div>` : ''}
           <label class="switch">Üyeler etiketi takabilsin<input type="checkbox" id="tg-on" ${cur.on !== false ? 'checked' : ''}></label>
           ${S.siteAdmin && S.tagCfg ? `<div class="st-field"><label>Test: kimler takabilir</label><select class="field" id="tg-who"><option value="ekip" ${S.tagCfg.who === 'ekip' ? 'selected' : ''}>Sadece Kanka ekibi</option><option value="uye" ${S.tagCfg.who === 'uye' ? 'selected' : ''}>Sunucunun tüm üyeleri</option></select><small class="hint" id="tg-st"></small></div>` : ''}
           <div><button class="primary" id="tg-save">${ic('check')} Kaydet</button></div></div></div>`;
@@ -13031,7 +13033,12 @@ document.addEventListener('click', e => { const t = e.target.closest('.stag[data
 // Profil ayarlarında: hangi sunucunun etiketini takacağını seç
 function tagPickerHTML() {
   const can = (S.tagCan || []).filter(id => S.tagDefs?.[id]), cur = S.users[S.me]?.tg || null;
-  if (!can.length && !cur) return '';
+  if (!can.length && !cur) {
+    const ts = S.servers.filter(x => x.tagAllowed && x.tag?.t); if (!ts.length) return '';
+    const off = ts.find(x => x.tag.on === false);
+    return `<div class="pf-card"><div class="pf-card-h"><b>Sunucu etiketi</b><small>İsminin yanında küçük bir etiket olarak görünür</small></div>
+      <p class="hint" style="margin:4px 0 0">${off ? `<b>${esc(off.name)}</b> etiketi şu an kapalı, kimse takamıyor.${off.owner === S.me || S.siteAdmin ? ' Açmak için: Sunucu ayarları › Sunucu etiketi › "Üyeler etiketi takabilsin".' : ''}` : 'Etiket test aşamasında: şimdilik sadece Kanka ekibi takabiliyor, yakında herkes takabilecek.'}</p></div>`;
+  }
   return `<div class="pf-card"><div class="pf-card-h"><b>Sunucu etiketi</b><small>İsminin yanında küçük bir etiket olarak görünür</small></div>
     <div class="tagpick" id="st-tagpick"><button type="button" class="${cur ? '' : 'on'}" data-tp="">Etiket gösterme</button>${can.map(id => `<button type="button" class="${cur === id ? 'on' : ''}" data-tp="${esc(id)}">${tagChip(S.tagDefs[id], id, 'tag-prev')}<span>${esc(S.tagDefs[id].ad)}</span></button>`).join('')}</div>
     <p class="hint" style="margin:8px 0 0">Test aşamasında. Etiketi sadece üyesi olduğun sunucular için takabilirsin, sunucudan çıkarsan etiket de kalkar.</p></div>`;
