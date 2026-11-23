@@ -36,6 +36,11 @@
 
         </activity>
 
+        <!-- Bildirim simgesi ve varsayılan kanal (FCM) -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_kanka" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/kanka_lime" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="mesajlar" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

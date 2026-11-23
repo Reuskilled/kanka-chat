@@ -5823,6 +5823,7 @@ function onAuth(res) {
   S.minor = !!res.minor; if (res.needVeli) setTimeout(veliGate, 1500);
   store.set('kanka-token', res.token);
   S.me = res.user.name;
+  if (NPUSH) setTimeout(() => { nativePushInit(!store.get('kanka-npush-sordu')).then(s => { if (s !== 'sor') store.set('kanka-npush-sordu', 1); }); if (npPending) { const f = npPending; npPending = null; setTimeout(f, 400); } }, 1200);
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
   setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {}; setVoiceAge(res.voiceAge);
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
@@ -5924,7 +5925,7 @@ function resumeVoice() {
   muted = r.muted || r.deaf; deaf = r.deaf; deafWasMuted = r.deafWasMuted; applyDeaf(); applyMute();
   joinVoiceNow(r.ch, r).then(ok => { if (!ok) return toast('Sesli odaya geri bağlanılamadı, tekrar katıl'); if (r.reload) { toast('🎧 Sesli odaya geri döndün'); unlockAudio(); } });
 }
-async function logout() { window.kankaDesktop?.logout(); socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); await Promise.race([E2E.wipe(), new Promise(r => setTimeout(r, 800))]); location.replace('/login'); }
+async function logout() { window.kankaDesktop?.logout(); try { NPUSH?.unregister?.(); } catch {} socket.emit('logout', store.get('kanka-token')); store.set('kanka-token', null); await Promise.race([E2E.wipe(), new Promise(r => setTimeout(r, 800))]); location.replace('/login'); }
 // Resim seç ve yükle. Büyük fotoğraflar küçültülür, telefonun HEIC/AVIF/BMP gibi biçimleri tarayıcı açabiliyorsa WebP'ye çevrilir.
 // (Eskiden 4,5 MB üstü resimler bağlantı sınırına takılıp hiçbir hata göstermeden yüklenmiyordu.)
 function readImageFile(f, max = 1920) {
@@ -11787,6 +11788,30 @@ function openFromNotif(d) {
 navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.kankaOpen) openFromNotif(e.data.kankaOpen); });
 try { navigator.serviceWorker?.startMessages?.(); } catch {} // servis çalışanından gelen "şu sohbeti aç" mesajları beklemede kalmasın
 window.kankaDesktop?.onNotifOpen?.(d => { closeModal?.(); openFromNotif(d); });
+// ---- Telefon uygulaması bildirimleri (Android FCM / iOS APNs). Tarayıcıda ve Windows'ta çalışmaz ----
+var NPUSH = NATIVE ? window.Capacitor?.Plugins?.PushNotifications || null : null;
+var npState = 'yok', npPending = null;
+async function nativePushInit(ask) {
+  if (!NPUSH || !S.me) return npState;
+  try {
+    if (NPLAT === 'android') for (const [id, name, importance, description] of [['mesajlar', 'Mesajlar', 4, 'Özel mesajlar ve etiketlenmeler'], ['aramalar', 'Aramalar', 5, 'Gelen sesli ve görüntülü aramalar'], ['sosyal', 'Arkadaşlık', 3, 'Arkadaşlık istekleri']])
+      await NPUSH.createChannel({ id, name, description, importance, vibration: true, visibility: 1 }).catch(() => {});
+    let st = await NPUSH.checkPermissions();
+    if (/^prompt/.test(st.receive)) { if (!ask) return (npState = 'sor'); st = await NPUSH.requestPermissions(); }
+    if (st.receive !== 'granted') return (npState = 'kapali');
+    await NPUSH.register(); return (npState = 'acik');
+  } catch (e) { console.warn('[kanka] bildirim', e); return (npState = 'hata'); }
+}
+if (NPUSH) {
+  NPUSH.addListener('registration', t => socket.emit('pushNative', { token: t.value, platform: NPLAT }, r => { if (r?.error) console.warn('[kanka] bildirim jetonu', r.error); }));
+  NPUSH.addListener('registrationError', e => { npState = 'hata'; console.warn('[kanka] bildirim kaydı', e?.error || e); });
+  NPUSH.addListener('pushNotificationActionPerformed', a => {
+    const d = a?.notification?.data || {}, t = v => v === true || v === '1';
+    const go = () => { closeModal?.(); openFromNotif({ ch: d.ch || null, from: d.from || null, dm: t(d.dm), friend: t(d.friend) }); };
+    if (S.me && authed) go(); else npPending = go; // uygulama kapalıyken bildirime basıldı: giriş bitince aç
+  });
+}
+
 document.addEventListener('visibilitychange', () => { if (S.me) socket.emit('vis', document.visibilityState === 'visible'); });
 // telefonda ekran kilitlenince / uygulama arka plana atılınca 'görünmüyor' bilgisi kaçabiliyor: o zaman bildirim hiç gelmiyordu
 for (const ev of ['pagehide', 'freeze', 'blur']) addEventListener(ev, () => { if (S.me && (ev !== 'blur' || isTouch)) socket.emit('vis', false); }, { capture: true });
@@ -11798,6 +11823,13 @@ function pushSettingsHTML() {
 function wirePushSettings() {
   const box = $('#pk-b'), st = $('#pk-s'); if (!box) return;
   const draw = () => {
+    if (NPUSH) {
+      st.textContent = { acik: 'Açık: Kanka kapalıyken de özel mesaj, etiket, arama ve arkadaşlık bildirimleri gelir.', kapali: 'Kapalı. Telefonun Ayarlar › Uygulamalar › Kanka Chat › Bildirimler bölümünden izin ver.', hata: 'Bildirim kaydı yapılamadı. İnternetini kontrol edip tekrar dene.' }[npState] || 'Kanka kapalıyken de özel mesaj, etiket ve arkadaşlık isteklerinde bildirim gelir.';
+      box.innerHTML = npState === 'acik' ? `<button class="btns2" id="pk-test">Dene</button>` : npState === 'kapali' ? '' : `<button class="primary" id="pk-on">Bildirimleri aç</button>`;
+      $('#pk-on') && ($('#pk-on').onclick = () => nativePushInit(true).then(s => { if (s === 'acik') toast('Bildirimler açıldı 🎉'); draw(); }));
+      $('#pk-test') && ($('#pk-test').onclick = () => socket.emit('pushNativeTest', {}, r => toast(r?.error || 'Deneme bildirimi gönderildi. Birkaç saniye içinde gelmeli (uygulama açıkken gelmeyebilir, arka plana al).')));
+      $('#push-card').classList.toggle('on', npState === 'acik'); return;
+    }
     if (!pushCan()) { st.textContent = 'Bu tarayıcı bildirimleri desteklemiyor. Chrome, Edge, Firefox ya da Safari kullan.'; box.innerHTML = ''; return; }
     if (iosNeedsInstall()) { st.innerHTML = 'iPhone\'da önce <b>Paylaş › Ana Ekrana Ekle</b> ile Kanka\'yı kur, sonra ana ekrandan açıp burayı aç.'; box.innerHTML = ''; return; }
     if (Notification.permission === 'denied') { st.textContent = 'Bildirimler bu site için engellenmiş. Adres çubuğundaki kilit simgesinden izin ver, sonra sayfayı yenile.'; box.innerHTML = ''; return; }
@@ -17732,7 +17764,7 @@ function adminPanel(el, sub = 'overview') {
   const R = S.staff, A = ['owner', 'admin'].includes(R);
   // Her rütbe sadece işlem yapabildiği bölümleri görür (moderatör ve destek botları, rozetleri, ekibi düzenleyemez)
   const subs = [['overview', 'Genel', 'activity'], ['reports', 'Şikayetler', 'flag'], ['users', 'Kullanıcılar', 'users'], ['dev', 'Bot geliştiriciler', 'code'], ['log', 'Kayıtlar', 'clock'],
-    ...(A ? [['team', 'Moderasyon ekibi', 'shield'], ['apps', 'Botlar', 'shield'], ['srvapps', 'Sunucu rozetleri', 'check'], ['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
+    ...(A ? [['team', 'Moderasyon ekibi', 'shield'], ['apps', 'Botlar', 'shield'], ['srvapps', 'Sunucu rozetleri', 'check'], ['analiz', 'Analiz', 'activity'], ['beta', 'Beta ve davetler', 'ticket'], ['mail', 'E-posta', 'mail'], ['gif', 'GIF', 'image'], ['mobil', 'Mobil bildirimler', 'bell'], ['backup', 'Yedekler', 'download'], ['sec', 'Güvenlik', 'lock']] : [])];
   if (!subs.some(x => x[0] === sub)) sub = 'overview';
   el.innerHTML = `<div class="st-page"><h3>Yönetim paneli</h3><p class="hint">Kanka ekibi · rütben: <b>${esc(STAFF_TR[R] || R || '')}</b></p>
     <div class="seg big" id="adm-seg">${subs.map(([k, t, i]) => `<button data-s="${k}" class="${k === sub ? 'on' : ''}">${ic(i)}${t}${k === 'reports' && S.rc?.site ? `<em class="cnt">${S.rc.site}</em>` : ''}</button>`).join('')}</div><div id="adm-body"></div></div>`;
@@ -17810,6 +17842,33 @@ function adminPanel(el, sub = 'overview') {
         setTimeout(re, manual.length ? 60000 : 1500);
       });
     });
+  });
+  if (sub === 'mobil') return socket.emit('adminMobilPush', {}, r => {
+    if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const st = r.stats || {}, cz = r.cihaz || {};
+    B.innerHTML = `<div class="adm-box">
+      <div class="mail-st ${r.fcm && r.apns ? 'ok' : ''}">${ic(r.fcm && r.apns ? 'check' : 'bell')}<b>${r.fcm && r.apns ? 'Android ve iPhone bildirimleri hazır' : r.fcm || r.apns ? 'Kısmen hazır' : 'Mobil bildirimler kapalı'}</b><span>Kayıtlı telefon: ${cz.android || 0} Android · ${cz.ios || 0} iPhone · gönderilen ${st.fcm || 0} FCM, ${st.apns || 0} APNs${st.hata ? ` · ${st.hata} hata` : ''}</span></div>
+      ${st.sonHata ? `<div class="mail-err">Son hata (${esc(st.sonHata.p)}): ${esc(st.sonHata.msg)}</div>` : ''}
+      <h5 class="ax-h">Android · Firebase Cloud Messaging</h5>
+      ${r.fcm ? `<p class="hint">Proje: <b>${esc(r.fcm.project)}</b> · ${esc(r.fcm.email)} <button class="btns2" id="mp-fcmx" style="margin-left:8px">Kaldır</button></p>` : ''}
+      <ol class="steps"><li>console.firebase.google.com › proje oluştur, <b>com.kanka.chat</b> Android uygulamasını ekle (indirilen google-services.json, Android Studio'da <code>mobile/android/app/</code> içine konur, depoya girmez).</li><li>Proje ayarları › Hizmet hesapları › <b>Yeni özel anahtar oluştur</b>. İnen JSON dosyasını aşağıdan seç.</li></ol>
+      <div class="rowb" style="justify-content:flex-start"><label class="btns2" style="cursor:pointer">${ic('upload')} Hizmet hesabı JSON'u seç<input type="file" id="mp-fcm" accept=".json,application/json" hidden></label></div>
+      <h5 class="ax-h" style="margin-top:18px">iPhone · Apple Push Notification service</h5>
+      ${r.apns ? `<p class="hint">Key ID ${esc(r.apns.keyId)} · Team ${esc(r.apns.teamId)} · ${esc(r.apns.bundle)} · ${r.apns.prod ? 'yayın' : 'geliştirme'} <button class="btns2" id="mp-apx" style="margin-left:8px">Kaldır</button></p>` : ''}
+      <ol class="steps"><li>developer.apple.com › Certificates, IDs &amp; Profiles › <b>Keys</b> › + › "Apple Push Notifications service (APNs)". İnen <b>.p8</b> dosyasını aşağıdan seç (bir kez indirilebilir, sakla).</li><li>Key ID ve Team ID'yi (sağ üstte) yaz.</li></ol>
+      <div class="st-field"><label>Key ID</label><input class="field" id="mp-kid" maxlength="10" value="${esc(r.apns?.keyId || '')}" placeholder="ABC123DEFG"></div>
+      <div class="st-field"><label>Team ID</label><input class="field" id="mp-tid" maxlength="10" value="${esc(r.apns?.teamId || '')}" placeholder="XYZ987WVUT"></div>
+      <div class="st-field"><label>Bundle ID</label><input class="field" id="mp-bid" value="${esc(r.apns?.bundle || 'com.kanka.chat')}"></div>
+      <label class="switch" style="margin:6px 0 10px">Yayın ortamı (TestFlight ve App Store)<input type="checkbox" id="mp-prod" ${r.apns?.prod === false ? '' : 'checked'}></label>
+      <div class="rowb" style="justify-content:flex-start"><label class="btns2" style="cursor:pointer">${ic('upload')} .p8 anahtarını seç<input type="file" id="mp-p8" accept=".p8,text/plain" hidden></label><button class="primary" id="mp-asave" style="width:auto;padding:11px 20px">APNs'i kaydet</button></div>
+      <p class="hint" style="margin-top:14px">Anahtarlar sunucunun veri klasöründe saklanır, GitHub'a gitmez. Kendi telefonunda denemek için: uygulamada Ayarlar › Bildirimler › Dene.</p></div>`;
+    let p8 = '';
+    const done = x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Kaydedildi'); adminPanel(el, 'mobil'); };
+    $('#mp-fcm').onchange = async e => { const f = e.target.files?.[0]; if (!f) return; socket.emit('adminMobilPush', { fcm: await f.text() }, done); };
+    $('#mp-p8').onchange = async e => { const f = e.target.files?.[0]; if (!f) return; p8 = await f.text(); toast('.p8 okundu, şimdi kaydet'); const m = /AuthKey_([A-Z0-9]{10})/.exec(f.name); if (m && !$('#mp-kid').value) $('#mp-kid').value = m[1]; };
+    $('#mp-asave').onclick = () => socket.emit('adminMobilPush', { apns: { keyId: $('#mp-kid').value.trim().toUpperCase(), teamId: $('#mp-tid').value.trim().toUpperCase(), bundle: $('#mp-bid').value.trim(), prod: $('#mp-prod').checked, key: p8 } }, done);
+    if ($('#mp-fcmx')) $('#mp-fcmx').onclick = () => socket.emit('adminMobilPush', { clear: 'fcm' }, done);
+    if ($('#mp-apx')) $('#mp-apx').onclick = () => socket.emit('adminMobilPush', { clear: 'apns' }, done);
   });
   if (sub === 'gif') return socket.emit('adminGif', {}, r => {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;

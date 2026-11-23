@@ -31,6 +31,8 @@ const config: CapacitorConfig = {
     SplashScreen: { launchShowDuration: 1200, launchAutoHide: true, backgroundColor: '#0b0b0c', showSpinner: false },
     StatusBar: { style: 'DARK', backgroundColor: '#0b0b0c', overlaysWebView: false },
     Keyboard: { resize: 'native', resizeOnFullScreen: true },
+    // Uygulama açıkken bildirim gösterme: Kanka kendi içinde gösteriyor
+    PushNotifications: { presentationOptions: [] },
   },
 };
 

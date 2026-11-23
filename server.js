@@ -2376,8 +2376,71 @@ function pushOne(u, sub, body, tag) {
     return { ok: false, status: st };
   });
 }
+// ================= Mobil uygulama bildirimleri (Android: FCM HTTP v1, iOS: APNs) =================
+// Anahtarlar depoda değil, sunucunun veri klasöründe (veri/mobil-bildirim.json): Yönetim paneli › Mobil bildirimler'den yüklenir.
+const NPUSH_FILE = path.join(DATA_DIR, 'mobil-bildirim.json');
+let npCfg = {}; try { npCfg = JSON.parse(fs.readFileSync(NPUSH_FILE, 'utf8')); } catch {}
+const npStats = { fcm: 0, apns: 0, hata: 0, sonHata: null };
+const b64u = b => Buffer.from(b).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+let fcmTok = null; // { t, exp }
+async function fcmAccess() {
+  const sa = npCfg.fcm; if (!sa?.private_key) throw new Error('FCM hesabı yok');
+  if (fcmTok && fcmTok.exp > Date.now() + 60e3) return fcmTok.t;
+  const now = Math.floor(Date.now() / 1000), head = b64u(JSON.stringify({ alg: 'RS256', typ: 'JWT' })),
+    body = b64u(JSON.stringify({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/firebase.messaging', aud: sa.token_uri || 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 }));
+  const sig = b64u(crypto.createSign('RSA-SHA256').update(head + '.' + body).sign(sa.private_key));
+  const r = await fetch(sa.token_uri || 'https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: head + '.' + body + '.' + sig }) });
+  const j = await r.json(); if (!j.access_token) throw new Error('FCM giriş: ' + (j.error_description || j.error || r.status));
+  fcmTok = { t: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 }; return fcmTok.t;
+}
+const npData = p => { const d = { ch: p.ch || '', from: p.from || '', dm: p.dm ? '1' : '', friend: p.friend ? '1' : '', tag: p.tag || 'kanka', call: p.call ? '1' : '' }; for (const k in d) if (!d[k]) delete d[k]; return d; };
+async function fcmSend(token, p) {
+  const at = await fcmAccess(), chan = p.call ? 'aramalar' : p.friend ? 'sosyal' : 'mesajlar';
+  const r = await fetch(`https://fcm.googleapis.com/v1/projects/${npCfg.fcm.project_id}/messages:send`, { method: 'POST', headers: { Authorization: 'Bearer ' + at, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: { token, notification: { title: String(p.title || 'Kanka Chat').slice(0, 120), body: String(p.body || '').slice(0, 300) }, data: npData(p),
+      android: { priority: 'HIGH', ttl: p.call ? '45s' : '3600s', collapse_key: (p.tag || 'kanka').slice(0, 60), notification: { channel_id: chan, tag: (p.tag || 'kanka').slice(0, 60), icon: 'ic_stat_kanka', color: '#D4FF00', sound: 'default' } } } }) });
+  if (r.ok) { npStats.fcm++; return { ok: true }; }
+  const j = await r.json().catch(() => ({})), code = j?.error?.details?.find?.(x => x.errorCode)?.errorCode || j?.error?.status;
+  return { ok: false, dead: r.status === 404 || code === 'UNREGISTERED' || (r.status === 400 && code === 'INVALID_ARGUMENT'), msg: `${r.status} ${code || ''} ${j?.error?.message || ''}`.trim() };
+}
+let apnsJwt = null; // { t, at }
+function apnsToken() {
+  const a = npCfg.apns; if (!a?.key) throw new Error('APNs anahtarı yok');
+  if (apnsJwt && Date.now() - apnsJwt.at < 40 * 60e3) return apnsJwt.t;
+  const head = b64u(JSON.stringify({ alg: 'ES256', kid: a.keyId })), body = b64u(JSON.stringify({ iss: a.teamId, iat: Math.floor(Date.now() / 1000) }));
+  const sig = b64u(crypto.sign('sha256', Buffer.from(head + '.' + body), { key: a.key, dsaEncoding: 'ieee-p1363' }));
+  apnsJwt = { t: head + '.' + body + '.' + sig, at: Date.now() }; return apnsJwt.t;
+}
+let apnsConn = null;
+function apnsSend(token, p, sandbox) {
+  const a = npCfg.apns, host = sandbox ? 'https://api.sandbox.push.apple.com' : 'https://api.push.apple.com';
+  return new Promise(res => {
+    try {
+      if (!apnsConn || apnsConn.closed || apnsConn.destroyed || apnsConn._host !== host) { apnsConn = require('http2').connect(host); apnsConn._host = host; apnsConn.on('error', () => { apnsConn = null; }); apnsConn.setTimeout(10 * 60e3, () => { try { apnsConn.close(); } catch {} apnsConn = null; }); }
+      const payload = JSON.stringify({ aps: { alert: { title: String(p.title || 'Kanka Chat').slice(0, 120), body: String(p.body || '').slice(0, 300) }, sound: 'default', 'thread-id': (p.tag || 'kanka').slice(0, 60), 'interruption-level': p.call ? 'time-sensitive' : 'active' }, ...npData(p) });
+      const req = apnsConn.request({ ':method': 'POST', ':path': '/3/device/' + token, authorization: 'bearer ' + apnsToken(), 'apns-topic': a.bundle || 'com.kanka.chat', 'apns-push-type': 'alert', 'apns-priority': '10',
+        'apns-expiration': String(Math.floor(Date.now() / 1000) + (p.call ? 45 : 3600)), 'apns-collapse-id': (p.tag || 'kanka').slice(0, 60) });
+      let st = 0, out = ''; req.on('response', h => { st = h[':status']; }); req.on('data', d => { out += d; });
+      req.on('end', () => { if (st === 200) { npStats.apns++; return res({ ok: true }); } let rsn = ''; try { rsn = JSON.parse(out).reason; } catch {}
+        res({ ok: false, dead: st === 410 || ['BadDeviceToken', 'Unregistered', 'DeviceTokenNotForTopic'].includes(rsn), wrongEnv: rsn === 'BadDeviceToken', msg: `${st} ${rsn}` }); });
+      req.on('error', e => res({ ok: false, msg: e.message })); req.end(payload);
+    } catch (e) { res({ ok: false, msg: e.message }); }
+  });
+}
+async function nativePush(u, p) {
+  for (const d of [...(u.npush || [])]) {
+    let r;
+    try { r = d.p === 'ios' ? (npCfg.apns ? await apnsSend(d.t, p, d.sandbox ?? !npCfg.apns.prod) : { ok: false, msg: 'APNs ayarlı değil' }) : (npCfg.fcm ? await fcmSend(d.t, p) : { ok: false, msg: 'FCM ayarlı değil' }); }
+    catch (e) { r = { ok: false, msg: e.message }; }
+    if (!r.ok && d.p === 'ios' && r.wrongEnv && d.sandbox === undefined) { d.sandbox = !(npCfg.apns.prod === false); r = await apnsSend(d.t, p, d.sandbox); } // geliştirme / yayın ortamı farkı: bir kez diğerini dene
+    if (r.ok) continue;
+    if (r.dead) { u.npush = u.npush.filter(x => x.t !== d.t); save(); continue; }
+    npStats.hata++; npStats.sonHata = { at: Date.now(), p: d.p, msg: String(r.msg || '').slice(0, 160) };
+  }
+}
 function sendPush(name, payload) {
-  const u = db.users[name]; if (!webpush || !u?.push?.length) return;
+  const u = db.users[name]; if (!u || !((webpush && u.push?.length) || u.npush?.length)) return;
   if ((u.presence || 'online') === 'dnd') return;
   if (!pushAllowed(u, payload)) return;
   // Şu an Kanka'ya bakıyorsa gönderme. Ama ekran açık kalıp kişi uzaklaştıysa (boşta) telefona yine gelsin.
@@ -2386,7 +2449,9 @@ function sendPush(name, payload) {
   // Masaüstü uygulaması açıksa bildirimi o zaten gösteriyor: bilgisayardaki tarayıcıya da gönderirsek tıklayınca Chrome açılıyordu.
   // O durumda sadece telefonlara gönder.
   const desk = [...online].some(([sid, n]) => n === name && desktopSockets.has(sid));
-  for (const sub of [...u.push]) {
+  if (u.npush?.length) nativePush(u, payload).catch(e => console.warn('mobil bildirim', e.message)); // telefon uygulaması
+  if (!webpush) return;
+  for (const sub of [...(u.push || [])]) {
     // sadece bilgisayar tarayıcısı olduğunu bildiğimiz abonelikleri atla; eski/bilinmeyen abonelikler (telefon olabilir) yine alır
     if (desk && (sub.dev === 'pc' || (sub.dev == null && sub.mob === false))) { pushStats.masaustu++; continue; }
     pushOne(u, sub, body, payload.tag);
@@ -5011,7 +5076,35 @@ io.on('connection', socket => {
     const u = db.users[me]; if (!u || !['dismissed', 'done', 'seen'].includes(k)) return cb({ error: 'Geçersiz' });
     onbOf(u)[k] = true; save(); cb({ ok: true, onb: u.onb });
   });
-  socket.on('logout', token => { sessDel(token); save(); });
+  // Telefon uygulaması bildirim jetonu (Android FCM / iOS APNs). Aynı jeton başka hesaptaysa oradan alınır (telefonda hesap değiştirme).
+  socket.on('pushNative', ({ token, platform, sandbox } = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' }); token = String(token || '').trim();
+    if (!/^[\w:.\-]{20,4096}$/.test(token) || !['android', 'ios'].includes(platform)) return cb({ error: 'Geçersiz jeton' });
+    if (limited('npush|' + me, 20, 3600e3)) return cb({ error: 'Biraz bekle' });
+    for (const u of Object.values(db.users)) if (u.npush?.some(d => d.t === token) && u.name !== me) u.npush = u.npush.filter(d => d.t !== token);
+    const u = db.users[me]; u.npush = (u.npush || []).filter(d => d.t !== token);
+    u.npush.push({ t: token, p: platform, at: Date.now(), ...(platform === 'ios' && typeof sandbox === 'boolean' ? { sandbox } : {}) }); u.npush = u.npush.slice(-10);
+    socket.data.npTok = token; save(); cb({ ok: true, hazir: platform === 'ios' ? !!npCfg.apns : !!npCfg.fcm });
+  });
+  socket.on('pushNativeOff', ({ token } = {}, cb = () => {}) => { const u = db.users[me]; if (u?.npush) { u.npush = u.npush.filter(d => d.t !== String(token || '')); save(); } cb({ ok: true }); });
+  socket.on('pushNativeTest', (_, cb = () => {}) => { const u = db.users[me]; if (!u?.npush?.length) return cb({ error: 'Bu hesapta kayıtlı telefon yok' }); if (limited('nptest|' + me, 5, 600e3)) return cb({ error: 'Biraz bekle' });
+    nativePush(u, { title: 'Kanka Chat', body: 'Bildirimler çalışıyor 🎉', tag: 'test' }).then(() => cb({ ok: true, ...npStats })); });
+  socket.on('adminMobilPush', ({ fcm, apns, clear } = {}, cb = () => {}) => {
+    if (!SA(cb)) return; if (staffRank(me) !== 'owner' && !siteAdmin(me)) return cb({ error: 'Yetkin yok' });
+    if (clear === 'fcm') delete npCfg.fcm; if (clear === 'apns') delete npCfg.apns;
+    if (fcm) { let j; try { j = typeof fcm === 'string' ? JSON.parse(fcm) : fcm; } catch { return cb({ error: 'Firebase hizmet hesabı JSON dosyası okunamadı' }); }
+      if (j.type !== 'service_account' || !j.project_id || !j.client_email || !/BEGIN PRIVATE KEY/.test(j.private_key || '')) return cb({ error: 'Bu bir Firebase hizmet hesabı anahtarı değil (project_id, client_email, private_key olmalı)' });
+      npCfg.fcm = { project_id: j.project_id, client_email: j.client_email, private_key: j.private_key, token_uri: j.token_uri }; fcmTok = null; }
+    if (apns) { const a = { keyId: clean(apns.keyId, 20), teamId: clean(apns.teamId, 20), bundle: clean(apns.bundle, 100) || 'com.kanka.chat', prod: apns.prod !== false, key: String(apns.key || npCfg.apns?.key || '').trim() };
+      if (!/^[A-Z0-9]{10}$/.test(a.keyId) || !/^[A-Z0-9]{10}$/.test(a.teamId)) return cb({ error: 'Key ID ve Team ID 10 karakter olmalı' });
+      if (!/BEGIN PRIVATE KEY/.test(a.key)) return cb({ error: 'APNs anahtarı (.p8 dosyasının içeriği) gerekli' });
+      try { crypto.createPrivateKey(a.key); } catch { return cb({ error: '.p8 anahtarı okunamadı' }); }
+      npCfg.apns = a; apnsJwt = null; }
+    if (fcm || apns || clear) { try { fs.writeFileSync(NPUSH_FILE, JSON.stringify(npCfg), { mode: 0o600 }); } catch (e) { return cb({ error: 'Kaydedilemedi: ' + e.message }); } staffLog(me, 'Mobil bildirim ayarlarını değiştirdi', '-'); }
+    const cihaz = Object.values(db.users).reduce((a, u) => { for (const d of u.npush || []) a[d.p] = (a[d.p] || 0) + 1; return a; }, {});
+    cb({ ok: true, fcm: npCfg.fcm ? { project: npCfg.fcm.project_id, email: npCfg.fcm.client_email } : null, apns: npCfg.apns ? { keyId: npCfg.apns.keyId, teamId: npCfg.apns.teamId, bundle: npCfg.apns.bundle, prod: npCfg.apns.prod } : null, cihaz, stats: npStats });
+  });
+  socket.on('logout', token => { sessDel(token); if (socket.data.npTok && db.users[me]?.npush) db.users[me].npush = db.users[me].npush.filter(d => d.t !== socket.data.npTok); save(); });
 
   // ----- Kanallar -----
   socket.on('join', (chId, cb = () => {}) => {
@@ -6449,6 +6542,7 @@ io.on('connection', socket => {
       pull(a.reqIn, name); pull(b.reqOut, me); a.friends.push(name); b.friends.push(me);
       save(); pushSocial(me, name); io.emit('users', allUsers());
       io.to('user:' + name).emit('toast', `${me} arkadaşlık isteğini kabul etti`);
+    sendPush(name, { title: me, body: 'arkadaşlık isteğini kabul etti 🎉', tag: 'friends', friend: true, from: me });
       return cb({ ok: true, accepted: true });
     }
     if (!a.reqOut.includes(name)) { a.reqOut.push(name); b.reqIn.push(me); }
