@@ -5226,7 +5226,7 @@ io.on('connection', socket => {
     for (const n of chatMembers(chId)) if (n !== me && !db.users[n]?.blocked?.includes(me))
     { const title = chId.startsWith('g:') ? groupTitle(groupOf(chId)) : me;
       io.to('user:' + n).emit('ring', { from: me, chatId: chId, callId: 'call:' + chId, video: !!video, title });
-      sendPush(n, { title: chId.startsWith('g:') ? `${me} · ${title}` : me, body: video ? '📹 Görüntülü arıyor… Dokun, katıl' : '📞 Sesli arıyor… Dokun, katıl', tag: 'call-' + chId, ch: chId, from: me, dm: true }); }
+      sendPush(n, { title: chId.startsWith('g:') ? `${me} · ${title}` : me, body: video ? '📹 Görüntülü arıyor… Dokun, katıl' : '📞 Sesli arıyor… Dokun, katıl', tag: 'call-' + chId, ch: chId, from: me, dm: true, call: true }); }
   });
   socket.on('ringCancel', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('ringCancel', { chatId: chId }); });
   socket.on('callDecline', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('callDecline', { from: me, chatId: chId }); });

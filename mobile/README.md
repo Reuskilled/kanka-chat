@@ -62,7 +62,7 @@ Alternatif (arayüzü uygulamanın içine gömmek) her arayüz değişikliğinde
 |---|---|---|
 | 1 | Klasör yapısı, Capacitor kurulumu, Android ve iOS projeleri, izinler, simgeler, açılış ekranı, çevrimdışı ekranı, geri tuşu, uygulama bağlantıları, web tarafında korumalı mobil uyum | ✅ yapıldı (cihazda test bekliyor) |
 | 2 | Push: `@capacitor/push-notifications`, cihaz jetonu kaydı (`pushNative`), Android FCM HTTP v1 + iOS APNs (HTTP/2, .p8) gönderimi, bildirime basınca ilgili ekrana gitme, Android bildirim kanalları, yönetim panelinden anahtar yükleme | ✅ kod hazır · anahtar ve cihaz testi bekliyor |
-| 3 | Ses: Android ön plan hizmeti (mikrofon), iOS ses oturumu, Bluetooth/hoparlör seçimi, CallKit/ConnectionService ile gelen arama, VoIP push | |
+| 3 | Ses: Android ön plan hizmeti (mikrofon), iOS ses oturumu, Bluetooth/hoparlör/kulaklık seçimi, gelen arama bildirimi önceliği | ✅ kod hazır · cihaz testi bekliyor (CallKit/tam ekran arama: Faz 3b) |
 | 4 | Spark ödemesi: Apple IAP + Google Play Billing, sunucuda makbuz doğrulama, mevcut Spark haklarının korunması | |
 | 5 | Ekran paylaşımı (yerel WebRTC + MediaProjection/ReplayKit), mağaza paketleri, gizlilik formları | |
 
@@ -117,3 +117,20 @@ Sunucuda (VDS) ortam değişkenleri: `ANDROID_SHA256=AA:BB:...` ve `IOS_TEAM_ID=
 3. Uygulamada Ayarlar › Bildirimler › **Dene** ile test et.
 
 **Test durumu:** Jeton kaydı, izin akışı, kanal oluşturma, bildirime basınca yönlendirme, anahtar doğrulama ve hata kaydı sahte eklentiyle uçtan uca test edildi. FCM imzası ve istek gövdesi, APNs JWT'si ve HTTP/2 isteği (410/BadDeviceToken dahil) yerel sahte sunucularla test edildi. **Gerçek Google/Apple sunucularına ve telefona gönderim test edilmedi** (anahtar ve cihaz gerekiyor).
+
+## 10. Faz 3: telefonda ses
+
+Yerel eklenti **KankaSes** (Android: `KankaSesPlugin.java` + `KankaSesService.java`, iOS: `KankaSes.swift`). Web tarafı sesli odaya/aramaya girince `start`, çıkınca `stop` çağırır.
+
+| | Android | iOS |
+|---|---|---|
+| Uygulama arka plandayken seste kalma | ✅ Mikrofon türünde ön plan hizmeti + "Sesli odadasın · Ayrıl" bildirimi. Uygulama kaydırılıp kapatılınca sesten çıkar | ⚠️ WKWebView, uygulama arka plana geçince mikrofonu durdurur (Apple sınırı). Dönünce kullanıcıya söylenir. Gerçek çözüm yerel WebRTC (Faz 5) |
+| Ses çıkışı seçimi | ✅ Hoparlör / Telefon (kulakta) / Bluetooth / kablolu kulaklık (Android 12+ `setCommunicationDevice`, eski sürümlerde SCO/hoparlör) | ✅ `AVAudioSession` (playAndRecord + voiceChat), hoparlör/ahize/Bluetooth/kulaklık |
+| Kulaklık takılınca / çıkarılınca | ✅ Kendiliğinden ona geçer | ✅ Kendiliğinden ona geçer |
+| Telefon araması gelince | Sistem yönetir | ✅ Arama bitince ses oturumu geri açılır |
+| Gelen Kanka araması | ✅ "Aramalar" kanalı (en yüksek öncelik, açılır bildirim) | ✅ Zaman duyarlı bildirim (Odak modunu deler) |
+| Tam ekran arama ekranı | Faz 3b (ConnectionService + tam ekran niyet) | Faz 3b (CallKit + PushKit VoIP) |
+
+Arayüzde: sesteyken alttaki ses çubuğunda **Ses çıkışı** düğmesi (yalnızca uygulamada).
+
+**Cihazda denenecekler:** odaya gir → uygulamayı arka plana al → karşı taraf seni duyuyor mu (Android) · bildirimdeki Ayrıl · Bluetooth kulaklık bağla/çıkar · ses çıkışı menüsü · telefon araması gelip bitince ses geri geliyor mu · arama bildirimi.

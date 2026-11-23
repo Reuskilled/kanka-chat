@@ -5087,6 +5087,11 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
 html.native { -webkit-tap-highlight-color: transparent; }
 html.native body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
 html.native input, html.native textarea, html.native [contenteditable], html.native .msg .text, html.native .bubble { -webkit-user-select: text; user-select: text; }
+
+.rt-list{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.rt-list .rt{display:flex;align-items:center;gap:10px;justify-content:flex-start;padding:14px 16px;min-height:52px}
+.rt-list .rt b{font-size:15px} .rt-list .rt small{color:var(--muted);font-size:12.5px;margin-left:4px} .rt-list .rt .ic{margin-left:auto;color:var(--accent);width:18px;height:18px}
+.rt-list .rt.on{border-color:var(--accent);background:rgba(212,255,0,.08)}
 </style>
 </head>
 <body>
@@ -11789,6 +11794,37 @@ navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.kankaOpe
 try { navigator.serviceWorker?.startMessages?.(); } catch {} // servis çalışanından gelen "şu sohbeti aç" mesajları beklemede kalmasın
 window.kankaDesktop?.onNotifOpen?.(d => { closeModal?.(); openFromNotif(d); });
 // ---- Telefon uygulaması bildirimleri (Android FCM / iOS APNs). Tarayıcıda ve Windows'ta çalışmaz ----
+// ---- Telefonda sesli oda: Android'de arka planda mikrofon (ön plan hizmeti), ses çıkışı seçimi (hoparlör / telefon / Bluetooth / kulaklık) ----
+var KSES = NATIVE ? window.Capacitor?.Plugins?.KankaSes || null : null, kNatV = null, kNatBg = 0;
+const ROUTE_TR = { hoparlor: 'Hoparlör', ahize: 'Telefon (kulakta)', bluetooth: 'Bluetooth', kablolu: 'Kulaklık' };
+function voiceTitleNative() {
+  const v = myVoice; if (!v) return ''; if (String(v).startsWith('call:')) return '📞 Aramadasın';
+  for (const s of S.servers || []) { const c = s.channels?.find(c => c.id === v); if (c) return `🔊 ${c.name} · ${s.name}`; } return '🔊 Sesli odadasın';
+}
+function updRouteBtn(r) { const b = $('#vroute'); if (!b || !r) return; b.title = 'Ses çıkışı: ' + (ROUTE_TR[r.secili] || 'otomatik'); b.dataset.r = r.secili || ''; }
+function openRouteMenu() {
+  KSES.routes().then(r => {
+    modal(`<h3>${ic('volume')} Ses çıkışı</h3><div class="rt-list">${(r.cikislar || []).map(x => `<button class="lrow rt ${x.tur === r.secili ? 'on' : ''}" data-rt="${esc(x.tur)}"><b>${esc(ROUTE_TR[x.tur] || x.tur)}</b>${x.tur === 'bluetooth' || x.tur === 'kablolu' ? `<small>${esc(x.ad || '')}</small>` : ''}${x.tur === r.secili ? ic('check') : ''}</button>`).join('')}</div><div class="rowb"><button id="mx">Kapat</button></div>`);
+    $('#mx').onclick = closeModal;
+    $('#modal-box').querySelectorAll('[data-rt]').forEach(b => b.onclick = () => KSES.setRoute({ tur: b.dataset.rt }).then(x => { updRouteBtn(x); closeModal(); toast('Ses: ' + (ROUTE_TR[b.dataset.rt] || b.dataset.rt)); }).catch(e => toast(e?.message || 'Değiştirilemedi')));
+  }).catch(() => toast('Ses çıkışları okunamadı'));
+}
+if (KSES) {
+  setInterval(() => {
+    const v = myVoice || null; if (v === kNatV) return; kNatV = v;
+    if (v) KSES.start({ baslik: voiceTitleNative(), metin: 'Kanka Chat · dokun, uygulamaya dön' }).then(updRouteBtn).catch(e => console.warn('[kanka] ses hizmeti', e));
+    else KSES.stop().catch(() => {});
+    const bs = document.querySelector('#voicebar .btns');
+    if (v && bs && !$('#vroute')) { const b = document.createElement('button'); b.id = 'vroute'; b.setAttribute('aria-label', 'Ses çıkışı'); b.innerHTML = ic('volume'); b.onclick = openRouteMenu; bs.insertBefore(b, $('#vleave')); }
+  }, 800);
+  KSES.addListener('ayril', () => { if (myVoice) leaveVoice(); toast('Sesten ayrıldın'); });
+  KSES.addListener('cikis', updRouteBtn);
+  // iOS uygulama arka plana geçince WKWebView mikrofonu durdurur: döndüğünde haber ver
+  if (NPLAT === 'ios') window.Capacitor.Plugins.App?.addListener('appStateChange', ({ isActive }) => {
+    if (!isActive && myVoice) kNatBg = Date.now();
+    else if (isActive && kNatBg) { if (myVoice && Date.now() - kNatBg > 3000) toast('Uygulama arka plandayken iPhone mikrofonunu kapatır. Konuşmak için Kanka açık kalmalı.'); kNatBg = 0; }
+  });
+}
 var NPUSH = NATIVE ? window.Capacitor?.Plugins?.PushNotifications || null : null;
 var npState = 'yok', npPending = null;
 async function nativePushInit(ask) {
