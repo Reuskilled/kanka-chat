@@ -1145,10 +1145,29 @@ function viewersOf(s, c) {
   if (hit && now - hit.t < 2000) return hit.v;
   const v = membersOf(s).filter(n => seesChannel(s, c, n)); viewersCache.set(k, { t: now, v }); return v;
 }
+// Oda simgesi (test: sadece etiket testindeki sunucular, yani şimdilik Kanka HQ). c.icon: emoji | ':ozelEmoji:' | '/uploads/...'
+const CHICON = {
+  allowed: s => TAG.allowedServer(s),
+  EMO_RE: /^(?=.*\p{Extended_Pictographic}|.*\p{Regional_Indicator}|.*\u20e3)[\p{Extended_Pictographic}\p{Emoji_Component}\p{Regional_Indicator}\u200d\ufe0f\u20e3]+$/u,
+  clean(s, v) {
+    if (v === null || v === '' || v === undefined) return { ok: true, v: undefined };
+    v = String(v).trim();
+    if (UPLOAD_RE.test(v)) return { ok: true, v };
+    const m = /^:([a-z0-9_]{2,24}):$/.exec(v); if (m) return s.emojis?.[m[1]] ? { ok: true, v } : { error: 'Bu özel emoji sunucuda yok' };
+    if (v.length <= 24 && [...v].length <= 10 && CHICON.EMO_RE.test(v)) return { ok: true, v };
+    return { error: 'Simge tek bir emoji, sunucunun özel emojisi ya da yüklenen bir resim olmalı' };
+  },
+  view(s, c) {
+    if (!c.icon || !CHICON.allowed(s)) return null;
+    if (c.icon.startsWith('/uploads/')) return { u: c.icon };
+    const m = /^:([a-z0-9_]+):$/.exec(c.icon); if (m) return s.emojis?.[m[1]] ? { u: s.emojis[m[1]] } : null;
+    return { e: c.icon };
+  },
+};
 function chView(s, c, viewer, manager) {
   const ov = ovOf(s, c);
   const P = k => viewer ? chPerm(s, c, viewer, k) : true;
-  const v = { id: c.id, name: c.name, type: c.type || 'text', cat: c.cat || null, sync: !!c.sync,
+  const v = { id: c.id, name: c.name, type: c.type || 'text', cat: c.cat || null, sync: !!c.sync, icon: CHICON.view(s, c), iconRaw: manager && CHICON.allowed(s) ? c.icon || null : undefined,
     topic: c.topic || '', slow: c.slow || 0, limit: c.limit || 0, bitrate: c.bitrate || 'std', news: !!c.news, followers: (c.followers || []).length,
     stage: c.type === 'stage' && stage.has(c.id) ? stageView(c.id) : undefined,
     canAttach: P('attach'), canReact: P('react'), canMention: P('mention'), canManage: P('manage'), canStream: P('stream'), canSpeak: P('speak'), canSound: P('soundboard'),
@@ -1587,7 +1606,7 @@ function srvBadges(s) {
 }
 const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
   id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, vanity: isStar(s) ? s.vanity || null : null, public: s.public, roles: s.roles,
-  emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, sounds: s.sounds || [], tag: s.tag || null, tagAllowed: TAG.allowedServer(s), sbAll: s.sbAll !== false, filter: !!s.filter, slow: s.slow || 0,
+  emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, sounds: s.sounds || [], tag: s.tag || null, tagAllowed: TAG.allowedServer(s), chIconAllowed: CHICON.allowed(s), sbAll: s.sbAll !== false, filter: !!s.filter, slow: s.slow || 0,
   channels: (viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels).map(c => chView(s, c, viewer, viewer && can(s, viewer, 'manageChannels'))),
   categories: (s.categories || []).filter(k => !viewer || can(s, viewer, 'manageChannels') || s.channels.some(c => c.cat === k.id && seesChannel(s, c, viewer)))
     .map(k => ({ id: k.id, name: k.name, ...(viewer && can(s, viewer, 'manageChannels') ? { perms: k.perms || {} } : {}) })), members: s.public ? Object.keys(db.users) : s.members,
@@ -6034,7 +6053,7 @@ io.on('connection', socket => {
     if (want.length) s.memberRoles[name] = want; else delete s.memberRoles[name];
     audit(s, me, 'Rollerini değiştirdi', name); pushSrv(s); botMember(s, name, 'update'); cb({ ok: true });
   });
-  socket.on('channelSave', ({ serverId, channelId, name, cat, perms, sync, topic, slow, limit, bitrate, news } = {}, cb = () => {}) => {
+  socket.on('channelSave', ({ serverId, channelId, name, cat, perms, sync, topic, slow, limit, bitrate, news, icon } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageChannels'); if (!s) return cb({ error: 'Oda yönetme yetkin yok' });
     const c = s.channels.find(x => x.id === channelId); if (!c) return cb({ error: 'Oda bulunamadı' });
     if (name !== undefined) { name = clean(name, 30); if (c.type === 'text' || c.type === 'forum') name = name.toLowerCase().replace(/\s+/g, '-'); if (name) c.name = name; }
@@ -6046,6 +6065,11 @@ io.on('connection', socket => {
         s.channels = s.channels.filter(x => x !== c); const last = s.channels.map(x => x.cat || null).lastIndexOf(k?.id || null);
         if (k && last < 0) { const ord = s.categories.findIndex(x => x.id === k.id); const after = s.channels.findIndex(x => x.cat && s.categories.findIndex(y => y.id === x.cat) > ord); s.channels.splice(after < 0 ? s.channels.length : after, 0, c); }
         else s.channels.splice(last + 1, 0, c); }
+    }
+    if (icon !== undefined) {
+      if (!CHICON.allowed(s)) return cb({ error: 'Oda simgesi şimdilik sadece Kanka HQ\'da test ediliyor' });
+      const r = CHICON.clean(s, icon); if (r.error) return cb({ error: r.error });
+      if ((c.icon || undefined) !== r.v) { if (r.v) c.icon = r.v; else delete c.icon; audit(s, me, r.v ? 'Oda simgesini değiştirdi' : 'Oda simgesini kaldırdı', c.name); }
     }
     if (topic !== undefined) c.topic = clean(topic, 160);
     if (slow !== undefined) c.slow = [0, 5, 10, 15, 30, 60, 120, 300, 600, 900, 3600].includes(+slow) ? +slow : 0;

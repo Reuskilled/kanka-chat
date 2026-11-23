@@ -4654,6 +4654,21 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .md-q { border-left: 3px solid color-mix(in srgb, var(--muted) 55%, transparent); padding: 1px 0 1px 10px; margin: 2px 0; color: color-mix(in srgb, var(--ink, #fff) 86%, var(--muted)); }
   .yt { aspect-ratio: 16 / 9; background: #0b0b0e center / 64px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 68 48'%3E%3Cpath fill='%23ff0033' d='M66.5 7.7A8.5 8.5 0 0 0 60.5 1.7C55.2.3 34 .3 34 .3S12.8.3 7.5 1.7A8.5 8.5 0 0 0 1.5 7.7C.1 13 .1 24 .1 24s0 11 1.4 16.3a8.5 8.5 0 0 0 6 6C12.8 47.7 34 47.7 34 47.7s21.2 0 26.5-1.4a8.5 8.5 0 0 0 6-6C67.9 35 67.9 24 67.9 24s0-11-1.4-16.3z'/%3E%3Cpath fill='%23fff' d='M45 24 27 14v20z'/%3E%3C/svg%3E"); }
   .yt img { height: 100%; object-fit: cover; }
+
+.ic.chemo{display:inline-flex;align-items:center;justify-content:center;font-style:normal;line-height:1;font-size:15px;color:inherit;flex-shrink:0;font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif}
+img.ic.chemo{object-fit:contain;border-radius:4px}
+.room .ico .ic.chemo{font-size:16px}
+.chi-test{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:6px;background:var(--accent-soft);color:var(--accent);margin-left:6px;vertical-align:middle}
+.chi-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chi-cur{width:40px;height:40px;border-radius:12px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chi-cur .ic{width:20px;height:20px;color:var(--accent)} .chi-cur .ic.chemo{font-size:20px} .chi-cur img.ic.chemo{width:24px;height:24px}
+.chi-in{flex:1;min-width:150px;width:auto;padding:10px 14px}
+.chi-up{cursor:pointer;display:inline-flex;align-items:center;gap:6px} .chi-up.busy{opacity:.5;pointer-events:none}
+.chi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px;margin-top:10px}
+.chi-grid button{height:38px;border-radius:10px;border:1px solid transparent;background:rgba(255,255,255,.04);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif}
+.chi-grid button:hover{background:rgba(255,255,255,.09)} .chi-grid button.on{border-color:var(--accent);background:var(--accent-soft)}
+.chi-grid img{width:24px;height:24px;object-fit:contain}
+.chi-sub{font-size:12px;font-weight:700;color:var(--muted);margin-top:12px}
 </style>
 </head>
 <body>
@@ -4949,7 +4964,23 @@ const S = {
 const typers = new Map();
 const EMOJIS = ['👍', '😂', '❤️', '🔥', '😮', '😢', '🎉', '💯'];
 const ROOM_MAP = { genel: 'chat', sohbet: 'chat', duyurular: 'megaphone', duyuru: 'megaphone', oyun: 'gamepad', oyunlar: 'gamepad', muzik: 'music', 'müzik': 'music', film: 'tv', dizi: 'tv', 'film-gecesi': 'tv', foto: 'camera', resim: 'image', etkinlik: 'calendar', kurallar: 'shield' };
-const roomIcon = c => ic(c.type === 'voice' ? 'volume' : c.type === 'stage' ? 'stage' : c.type === 'forum' ? 'forum' : c.news ? 'megaphone' : ROOM_MAP[c.name] || 'hash');
+const chIconHTML = x => x?.u ? `<img class="ic chemo" src="${esc(x.u)}" alt="" loading="lazy">` : x?.e ? `<span class="ic chemo">${esc(x.e)}</span>` : '';
+// Oda simgesi seçimini (emoji | :ozel: | /uploads/...) görünüme çevirir
+const chIconRes = (s, v) => !v ? null : v.startsWith('/uploads/') ? { u: v } : /^:[a-z0-9_]+:$/.test(v) ? (s?.emojis?.[v.slice(1, -1)] ? { u: s.emojis[v.slice(1, -1)] } : null) : { e: v };
+const CHI_EMO_RE = /^(?=.*\p{Extended_Pictographic}|.*\p{Regional_Indicator}|.*\u20e3)[\p{Extended_Pictographic}\p{Emoji_Component}\p{Regional_Indicator}\u200d\ufe0f\u20e3]+$/u;
+const CHI_PRESETS = ['📌', '📜', '📢', '👋', '💬', '🎮', '🎧', '🎵', '🎬', '📸', '🖼️', '😂', '🔥', '⭐', '🏆', '🎉', '💡', '❓', '🛠️', '🐞', '🤖', '🔒', '📅', '🎁', '💰', '🦝', '❤️', '🌙', '⚽', '📚'];
+function chIconField(s, st) {
+  const cur = chIconRes(s, st.icon), em = Object.keys(s.emojis || {}).slice(0, 60);
+  return `<div class="st-field chi"><label>Oda simgesi <em class="chi-test">TEST</em></label>
+    <div class="chi-row"><span class="chi-cur">${cur ? chIconHTML(cur) : ic('hash')}</span>
+      <input id="cs-ie" class="fp-b chi-in" maxlength="16" placeholder="Emoji yaz ya da yapıştır" autocomplete="off">
+      <label class="btns2 chi-up" id="cs-iup">${ic('upload')}<span>Resim yükle</span><input type="file" id="cs-iu" accept="image/png,image/jpeg,image/gif,image/webp" hidden></label>
+      ${st.icon ? `<button class="btns2" id="cs-ix">${ic('x')}<span>Kaldır</span></button>` : '<button id="cs-ix" hidden></button>'}</div>
+    <div class="chi-grid">${CHI_PRESETS.map(e => `<button data-chi="${e}" class="${st.icon === e ? 'on' : ''}" title="${e}">${e}</button>`).join('')}</div>
+    ${em.length ? `<div class="chi-sub">Sunucunun emojileri</div><div class="chi-grid">${em.map(n => `<button data-chi=":${esc(n)}:" class="${st.icon === ':' + n + ':' ? 'on' : ''}" title=":${esc(n)}:"><img src="${esc(s.emojis[n])}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+    <p class="hint">Soldaki oda listesinde # yerine görünür. Hareketli GIF de olur. Şimdilik sadece Kanka HQ'da test ediliyor.</p></div>`;
+}
+const roomIcon = c => c.icon ? chIconHTML(c.icon) : ic(c.type === 'voice' ? 'volume' : c.type === 'stage' ? 'stage' : c.type === 'forum' ? 'forum' : c.news ? 'megaphone' : ROOM_MAP[c.name] || 'hash');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hm = t => new Date(t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 const userColor = n => S.users[n]?.color || '#8a7362';
@@ -15433,10 +15464,10 @@ function showChSettings(s, kind, id, tab = 'general', back) {
   const cat = !isCat && obj.cat ? catsOf(s).find(k => k.id === obj.cat) : null;
   const keys = isCat ? KEYS_BY.cat : KEYS_BY[obj.type] || KEYS_BY.text;
   const basePerms = () => JSON.parse(JSON.stringify(!isCat && obj.sync && cat ? cat.perms || {} : obj.perms || {}));
-  const st = chsOpen?.key === kind + id ? chsOpen : { key: kind + id, name: obj.name, cat: obj.cat || '', topic: obj.topic || '', slow: obj.slow || 0, limit: obj.limit || 0, bitrate: obj.bitrate || 'std', news: !!obj.news, perms: basePerms(), target: '@everyone', permsDirty: false };
+  const st = chsOpen?.key === kind + id ? chsOpen : { key: kind + id, name: obj.name, cat: obj.cat || '', topic: obj.topic || '', slow: obj.slow || 0, limit: obj.limit || 0, bitrate: obj.bitrate || 'std', news: !!obj.news, icon: obj.iconRaw || '', perms: basePerms(), target: '@everyone', permsDirty: false };
   chsOpen = st;
   const roles = s.customRoles || [];
-  const extra = ['topic', 'slow', 'limit', 'bitrate', 'news'], dirty = () => st.name !== obj.name || (!isCat && ((st.cat || '') !== (obj.cat || '') || extra.some(k => st[k] !== (k === 'topic' ? obj.topic || '' : k === 'bitrate' ? obj.bitrate || 'std' : k === 'news' ? !!obj.news : obj[k] || 0)))) || st.permsDirty;
+  const extra = ['topic', 'slow', 'limit', 'bitrate', 'news', 'icon'], dirty = () => st.name !== obj.name || (!isCat && ((st.cat || '') !== (obj.cat || '') || extra.some(k => st[k] !== (k === 'topic' ? obj.topic || '' : k === 'bitrate' ? obj.bitrate || 'std' : k === 'news' ? !!obj.news : k === 'icon' ? obj.iconRaw || '' : obj[k] || 0)))) || st.permsDirty;
   const members = s.public ? Object.keys(S.users) : s.members || [];
   const render = () => {
     const title = isCat ? esc(obj.name.toUpperCase()) : `${voiceLike(obj.type) ? '' : '#'}${esc(obj.name)}`;
@@ -15450,7 +15481,8 @@ function showChSettings(s, kind, id, tab = 'general', back) {
     const synced = !isCat && obj.sync && cat && !st.permsDirty;
     const pages = {
       general: `<div class="st-page"><h3>${isCat ? 'Kategori' : { voice: 'Sesli oda', stage: 'Sahne odası', forum: 'Forum odası' }[obj.type] || (obj.news ? 'Duyuru odası' : 'Yazılı oda')}</h3><p class="hint">${isCat ? 'Kategorinin adı listede büyük harfle görünür.' : 'Odanın adını ve hangi kategoride duracağını seç.'}</p>
-        <div class="st-field"><label>${isCat ? 'Kategori adı' : 'Oda adı'}</label><div class="cname"><i>${isCat ? ic('grid') : chIcon(obj)}</i><input id="cs-name" maxlength="30" value="${esc(st.name)}"></div></div>
+        <div class="st-field"><label>${isCat ? 'Kategori adı' : 'Oda adı'}</label><div class="cname"><i>${isCat ? ic('grid') : roomIcon({ ...obj, icon: chIconRes(s, st.icon) })}</i><input id="cs-name" maxlength="30" value="${esc(st.name)}"></div></div>
+        ${!isCat && s.chIconAllowed && obj.iconRaw !== undefined ? chIconField(s, st) : ''}
         ${isCat ? `<div class="st-field"><label>İçindeki odalar</label><div class="cs-list">${s.channels.filter(c => c.cat === obj.id).map(c => `<button data-goch="${c.id}">${chIcon(c)}<span>${esc(c.name)}</span>${c.sync ? '<em class="sync">eşitli</em>' : ''}</button>`).join('') || '<p class="hint">Bu kategoride oda yok. Kenar çubuğunda bir odayı sürükleyip buraya bırakabilirsin.</p>'}</div></div>`
           : `<div class="st-field"><label>Kategori</label><select class="msel" id="cs-cat"><option value="">Kategorisiz (en üstte)</option>${catsOf(s).map(k => `<option value="${k.id}" ${k.id === st.cat ? 'selected' : ''}>${esc(k.name)}</option>`).join('')}</select></div>
           ${obj.type !== 'voice' ? `<div class="st-field"><label>${obj.type === 'stage' ? 'Sahne konusu' : 'Oda konusu'}</label><textarea class="fp-b" id="cs-topic" maxlength="160" rows="2" placeholder="${obj.type === 'stage' ? 'Bu akşam ne konuşuluyor?' : 'Bu oda ne için? Başlıkta görünür.'}">${esc(st.topic)}</textarea></div>` : ''}
@@ -15489,7 +15521,7 @@ function showChSettings(s, kind, id, tab = 'general', back) {
         <div class="st-save cs-save ${dirty() ? 'dirty show' : ''}"><i class="sv-ic">${ic('info')}</i><span>${SAVE_TXT}</span><button class="sv-reset" id="cs-reset">Sıfırla</button><button class="primary" id="cs-save">Değişiklikleri kaydet<kbd>Ctrl S</kbd></button></div></div>
       <aside class="st-prev"><div class="prev-head"><h4>ÖNİZLEME</h4><button class="st-close" id="st-x" aria-label="Kapat"><span>${ic('x')}</span>ESC</button></div>
         <div class="cs-prev"><div class="cs-pc">${isCat ? `<div class="label cat-label">${ic('chevron')}${esc(st.name)}</div>${s.channels.filter(c => c.cat === obj.id).slice(0, 4).map(c => `<div class="room">${chIcon(c)}${esc(c.name)}</div>`).join('')}`
-          : `<div class="room active">${chIcon(obj)}${esc(voiceLike(obj.type) ? st.name : st.name.toLocaleLowerCase('tr').replace(/\s+/g, '-'))}${st.perms['@everyone']?.view === false ? ic('lock', 'lockic') : st.perms['@everyone']?.send === false ? ic('megaphone', 'lockic') : ''}</div>`}</div>
+          : `<div class="room active">${roomIcon({ ...obj, icon: chIconRes(s, st.icon) })}${esc(voiceLike(obj.type) ? st.name : st.name.toLocaleLowerCase('tr').replace(/\s+/g, '-'))}${st.perms['@everyone']?.view === false ? ic('lock', 'lockic') : st.perms['@everyone']?.send === false ? ic('megaphone', 'lockic') : ''}</div>`}</div>
           <div class="cs-stat"><b>${viewN}</b><span>/${members.length} üye görebilir</span></div></div></aside>`, 'settings chset');
     keepSel.forEach((q, i) => { const el = $('#modal-box ' + q); if (el && !tabChanged) el.scrollTop = keep[i]; });
     if (tabChanged) freshPage($('#modal-box .st-main'));
@@ -15517,6 +15549,14 @@ function showChSettings(s, kind, id, tab = 'general', back) {
     if ($('#cs-slow')) $('#cs-slow').onchange = e => { st.slow = +e.target.value; bar(); };
     if ($('#cs-limit')) $('#cs-limit').oninput = e => { st.limit = +e.target.value; $('#cs-limv').textContent = st.limit ? st.limit + ' kişi' : 'Sınırsız'; bar(); };
     $('#modal-box').querySelectorAll('[data-br]').forEach(b => b.onclick = () => { st.bitrate = b.dataset.br; $('#modal-box').querySelectorAll('[data-br]').forEach(x => x.classList.toggle('on', x === b)); bar(); });
+    if ($('#cs-ie')) {
+      const setI = v => { st.icon = v; render(); };
+      $('#cs-ie').onchange = e => { const v = e.target.value.trim(); if (!v) return; if (!CHI_EMO_RE.test(v) || [...v].length > 10) { toast('Buraya tek bir emoji yaz'); e.target.value = ''; return; } setI(v); };
+      $('#modal-box').querySelectorAll('[data-chi]').forEach(b => b.onclick = () => setI(b.dataset.chi));
+      $('#cs-ix').onclick = () => setI('');
+      $('#cs-iu').onchange = async e => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
+        $('#cs-iup').classList.add('busy'); try { setI(await readImageFile(f, 96)); } catch (err) { if (!err?.shown) toast('Resim yüklenemedi'); $('#cs-iup')?.classList.remove('busy'); } };
+    }
     if ($('#cs-news')) $('#cs-news').onclick = () => { st.news = !st.news; $('#cs-news .ksw').classList.toggle('on', st.news); bar(); };
     if ($('#cs-dup')) $('#cs-dup').onclick = () => socket.emit('chDuplicate', { serverId: s.id, channelId: obj.id }, r => { if (r?.error) return toast(r.error); toast('Oda çoğaltıldı'); chsOpen = null; setTimeout(() => showChSettings(s, 'ch', r.id, 'general', back), 200); });
     if ($('#cs-del')) $('#cs-del').onclick = () => (isCat ? askDeleteCat : askDeleteCh)(s, obj, () => { chsOpen = null; closeModal(); back && setTimeout(back, 240); });
@@ -15552,7 +15592,7 @@ function showChSettings(s, kind, id, tab = 'general', back) {
       if (isCat) socket.emit('catSave', { serverId: s.id, catId: obj.id, name, perms: st.permsDirty ? st.perms : undefined }, done);
       else socket.emit('channelSave', { serverId: s.id, channelId: obj.id, name, cat: (st.cat || '') !== (obj.cat || '') ? st.cat || null : undefined, perms: st.permsDirty ? st.perms : undefined,
         topic: st.topic !== (obj.topic || '') ? st.topic : undefined, slow: st.slow !== (obj.slow || 0) ? st.slow : undefined, limit: st.limit !== (obj.limit || 0) ? st.limit : undefined,
-        bitrate: st.bitrate !== (obj.bitrate || 'std') ? st.bitrate : undefined, news: st.news !== !!obj.news ? st.news : undefined }, done);
+        bitrate: st.bitrate !== (obj.bitrate || 'std') ? st.bitrate : undefined, news: st.news !== !!obj.news ? st.news : undefined, icon: (st.icon || '') !== (obj.iconRaw || '') && obj.iconRaw !== undefined ? st.icon || null : undefined }, done);
     };
   };
   render();
