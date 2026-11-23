@@ -4703,7 +4703,173 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
     body.k-resizing { cursor: col-resize !important; user-select: none; }
     body.k-resizing * { cursor: col-resize !important; transition: none !important; }
     body.k-mem-off #members, body.k-mem-off #sp-mem { display: none !important; }
+    #members.dmp-mode, body.ui2 #members.dmp-mode { width: var(--k-mem-w, 304px); }
   }
+
+  /* ===== 1'e 1 DM Tam Boy Sağ Profil Paneli ===== */
+  #members.dmp-mode, body.ui2 #members.dmp-mode { padding: 0; overflow-x: hidden; }
+  .dmp {
+    position: relative; min-height: 100%; display: flex; flex-direction: column;
+    background: var(--panel); overflow: hidden;
+  }
+  .dmp.themed {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--t1) 20%, var(--panel)) 0%, var(--panel) 40%, color-mix(in srgb, var(--t2) 18%, var(--panel)) 100%);
+  }
+  .dmp-ban {
+    position: relative; height: 116px; flex-shrink: 0; overflow: hidden;
+  }
+  .dmp-ban::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(17,17,20,.62) 100%);
+  }
+  .dmp-top-acts {
+    position: absolute; top: 10px; right: 10px; z-index: 7; display: flex; gap: 5px;
+  }
+  .dmp-ico {
+    width: 28px; height: 28px; border-radius: 7px; border: 1px solid rgba(255,255,255,.16);
+    background: rgba(9,9,11,.66); backdrop-filter: blur(8px); color: #f4f4f5;
+    display: grid; place-items: center; cursor: pointer; transition: all .14s; padding: 0;
+  }
+  .dmp-ico .ic { width: 14px; height: 14px; }
+  .dmp-ico:hover { background: rgba(9,9,11,.92); border-color: var(--accent); color: var(--accent); }
+
+  .dmp-av-row {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
+    padding: 0 14px; margin-top: -39px; position: relative; z-index: 3;
+  }
+  .dmp-av-btn {
+    background: none; border: 0; padding: 0; cursor: pointer; border-radius: 50%; flex-shrink: 0;
+    transition: transform .15s ease;
+  }
+  .dmp-av-btn:hover { transform: scale(1.03); }
+  .dmp .pav .av { border: 5px solid var(--panel); }
+  .dmp .pav .pdot { border-color: var(--panel); }
+  .dmp.themed .pav .av, .dmp.themed .pav .pdot { border-color: color-mix(in srgb, var(--t1) 18%, var(--panel)); }
+  .dmp-badges {
+    display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 3px;
+    padding: 4px 7px; border-radius: 8px; background: rgba(9,9,11,.68); border: 1px solid var(--line);
+    margin-bottom: 4px; max-width: calc(100% - 88px);
+  }
+  .dmp-badges:empty { display: none; }
+  .dmp-badges .mchip { width: 22px; height: 22px; }
+
+  .dmp-id { padding: 10px 14px 12px; position: relative; z-index: 2; }
+  .dmp-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .dmp-dn {
+    font-size: 17.5px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);
+    line-height: 1.2; cursor: pointer; word-break: break-word;
+  }
+  .dmp-dn:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .dmp-handle {
+    font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; align-items: center;
+    gap: 5px; flex-wrap: wrap;
+  }
+  .dmp-handle i { font-style: normal; opacity: .5; }
+  .dmp-st { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+  .dmp-st em { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dmp-status {
+    margin-top: 8px; padding: 7px 10px; border-radius: 8px;
+    background: rgba(255,255,255,.04); border: 1px solid var(--line);
+    font-size: 12.5px; color: var(--ink); line-height: 1.4; word-break: break-word;
+  }
+
+  .dmp-acts {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    padding: 0 14px 12px; position: relative; z-index: 2;
+  }
+  .dmp-acts.bot-only { grid-template-columns: 1fr; }
+  .dmp-act {
+    padding: 8px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--card);
+    color: var(--ink); font: 700 11.5px/1 inherit; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px; transition: all .14s;
+  }
+  .dmp-act .ic { width: 14px; height: 14px; flex-shrink: 0; }
+  .dmp-act:hover { background: var(--hover); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); color: var(--accent); }
+
+  .dmp-body {
+    padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px;
+    flex: 1; position: relative; z-index: 2;
+  }
+  .dmp-card {
+    padding: 11px 12px; border-radius: 9px;
+    background: color-mix(in srgb, var(--card) 86%, transparent);
+    border: 1px solid var(--line);
+  }
+  .dmp-card h5 {
+    font-size: 10.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 7px; display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  }
+  .dmp-card h5 small { font-size: 10px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--dim); }
+  .dmp-bio { font-size: 12.5px; line-height: 1.5; color: var(--ink); opacity: .92; word-break: break-word; }
+  .dmp-bday { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+  .dmp-bday .ic { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
+
+  .dmp-actc .pc-sec { margin: 0; padding: 0; border: 0; background: none; }
+  .dmp-actc .pc-sec > h5 { margin-bottom: 8px; }
+  .dmp-actc .act-card { padding: 8px; border-radius: 8px; background: rgba(9,9,11,.36); border: 1px solid var(--line); }
+  .dmp-actc .act-card + .act-card { margin-top: 7px; }
+  .dmp-actc .act-art { width: 44px; height: 44px; border-radius: 8px; }
+
+  .dmp-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .dmp-kv small { display: block; font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+  .dmp-kv b { display: block; font-size: 12.5px; color: var(--ink); margin-top: 2px; font-weight: 700; }
+  .dmp-card .xpbar { height: 5px; margin-top: 2px; }
+  .dmp-card .xpinfo { font-size: 10.5px; margin-top: 5px; }
+  .dmp-streak { display: inline-flex; align-items: center; gap: 3px; color: #ff9c42; font-size: 11px; font-weight: 800; text-transform: none; letter-spacing: 0; }
+  .dmp-streak .ic { width: 12px; height: 12px; }
+
+  .dmp-card .psocs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dmp-card .psoc { padding: 5px 8px; border-radius: 7px; font-size: 11.5px; }
+
+  .dmp-mut { display: flex; flex-direction: column; gap: 5px; }
+  .dmp-srv {
+    width: 100%; display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 7px;
+    border: 1px solid transparent; background: transparent; color: var(--ink);
+    font: 600 12.5px/1.2 inherit; cursor: pointer; text-align: left; transition: all .14s;
+  }
+  .dmp-srv:hover { background: var(--hover); border-color: var(--line); }
+  .dmp-srv .ds-ic {
+    width: 24px; height: 24px; border-radius: 6px; background: var(--hover); border: 1px solid var(--line);
+    display: grid; place-items: center; font-size: 11px; font-weight: 800; color: var(--accent);
+    overflow: hidden; flex-shrink: 0;
+  }
+  .dmp-srv .ds-ic img { width: 100%; height: 100%; object-fit: cover; }
+  .dmp-srv .ds-nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dmp-srv .ic { width: 13px; height: 13px; color: var(--muted); transform: rotate(-90deg); flex-shrink: 0; }
+  .dmp-mut-fr {
+    margin-top: 6px; padding-top: 7px; border-top: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11.5px; color: var(--muted); cursor: pointer; background: none; border-left: 0; border-right: 0; border-bottom: 0; width: 100%; font-family: inherit;
+  }
+  .dmp-mut-fr:hover { color: var(--accent); }
+
+  .dmp-note {
+    width: 100%; min-height: 48px; resize: vertical; max-height: 140px;
+    border: 1px solid transparent; border-radius: 7px;
+    background: rgba(9,9,11,.42); color: var(--ink); font: inherit; font-size: 12px;
+    line-height: 1.45; padding: 7px 9px; outline: none; transition: border-color .14s;
+  }
+  .dmp-note:focus { border-color: var(--accent); }
+  .dmp-note::placeholder { color: var(--muted); opacity: .7; }
+  .dmp-saved { color: var(--green) !important; opacity: 0; transition: opacity .2s; }
+  .dmp-saved.on { opacity: 1; }
+
+  .dmp-foot {
+    margin-top: auto; padding: 10px 14px 12px; border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 45%, transparent); position: relative; z-index: 2;
+  }
+  .dmp-fullbtn {
+    width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); font: 700 12.5px/1 inherit; cursor: pointer;
+    transition: all .14s;
+  }
+  .dmp-fullbtn:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
+
+  body.light .dmp-ban::after { background: linear-gradient(180deg, rgba(255,255,255,.02) 0%, rgba(255,255,255,.55) 100%); }
+  body.light .dmp-badges { background: rgba(255,255,255,.86); }
+  body.light .dmp-status { background: rgba(0,0,0,.035); }
+  body.light .dmp-note { background: rgba(0,0,0,.04); }
+  body.light .dmp-actc .act-card { background: rgba(0,0,0,.03); }
 </style>
 </head>
 <body>
@@ -9487,7 +9653,7 @@ socket.on('typing', ({ channelId, name, long }) => {
 
 // ================= Üyeler =================
 function renderMembers() {
-  if (S.view === 'discover') return;
+  if (S.view === 'discover') { dmpClear(); return; }
   let names;
   if (S.view === 'dm') names = S.channel?.group ? S.channel.members : S.channel?.with ? [S.me, S.channel.with] : [S.me];
   else names = S.server?.members || [];
@@ -9516,6 +9682,8 @@ function renderMembers() {
   const mb = $('#mem-btn'); mb.classList.toggle('show', !!(srv && S.channel) || !!S.channel?.group); mb.querySelector('.mb-n').textContent = onl ? (onl > 99 ? '99+' : onl) : '';
   const mdrH = `<div class="mdr-h"><span style="flex:1"><b>Üyeler</b><small>${S.channel ? (srv ? '#' + esc(S.channel.name) + ' · ' : '') : ''}${onl} çevrimiçi · ${names.length} kişi</small></span><button id="mdr-x" aria-label="Kapat">${ic('x')}</button></div>`;
   if (S.view === 'dm' && !S.channel) return homeSidePanel(item, mdrH);
+  if (S.view === 'dm' && S.channel?.with && !S.channel?.group) return dmProfilePanel(S.channel.with);
+  dmpClear();
   const botStatus = srv?.bot?.added ? [...[srv.bot.mod?.on && 'Moderasyon', srv.bot.welcome?.on && 'Karşılama', srv.bot.ticket?.on && 'Destek'].filter(Boolean), ...rolesOf(srv, BOT_NAME).map(r => r.name)].join(' · ') || '/yardım yaz' : '';
   memSet(mdrH +
     groups.map(([t, f]) => { const g = names.filter(f); return g.length ? `<div class="label" style="padding:14px 8px 6px">${t} — ${g.length}</div>` + g.map(n => item(n, botStatus)).join('') : ''; }).join(''));
@@ -9525,9 +9693,171 @@ function renderMembers() {
   memTyping();
   window.kLayoutSync?.();
 }
+const dmpMutCache = new Map();
+function dmpClear() {
+  const M = $('#members'); if (!M) return;
+  if (M.classList.contains('dmp-mode')) {
+    M.querySelectorAll('.pfx-cv').forEach(c => { c._stop?.(); c.remove(); });
+    M.classList.remove('dmp-mode');
+    delete M.dataset.dmpUser; delete M.dataset.dmpSig;
+  }
+}
+function dmpRenderMutuals(n, mut) {
+  const slot = $('#dmp-mut-slot');
+  if (!slot || $('#members')?.dataset.dmpUser !== n) return;
+  const srvs = mut?.servers || [], frs = mut?.friends || [];
+  if (!srvs.length && !frs.length) { slot.innerHTML = ''; return; }
+  slot.innerHTML = `<div class="dmp-card">
+    <h5><span>Ortak Sunucular</span><small>${srvs.length}</small></h5>
+    ${srvs.length ? `<div class="dmp-mut">${srvs.slice(0, 6).map(s => `<button type="button" class="dmp-srv" data-gs="${esc(s.id)}"><span class="ds-ic">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon || (s.name || '?')[0])}</span><span class="ds-nm">${esc(s.name)}</span>${ic('chevron')}</button>`).join('')}</div>` : '<div class="dmp-bio" style="opacity:.6">Ortak sunucu yok</div>'}
+    ${frs.length ? `<button type="button" class="dmp-mut-fr" id="dmp-mfr"><span>${frs.length} ortak arkadaş</span><span>Gör →</span></button>` : ''}
+  </div>`;
+  slot.querySelectorAll('[data-gs]').forEach(b => b.onclick = () => selectServer(b.dataset.gs));
+  slot.querySelector('#dmp-mfr')?.addEventListener('click', () => showProfile(n, 'friends'));
+}
+function dmProfilePanel(n) {
+  const M = $('#members'); if (!M) return;
+  const u = S.users[n] || { name: n, level: 1, xp: 0 }, on = S.online.has(n);
+  const sig = JSON.stringify([dn(n), on, on ? stOf(n) : 'off', isMob(n), u.avatar, u.color, u.frame, u.effect, u.bannerImg, u.banner, u.theme, u.nameStyle, u.status, u.pronouns, u.bio, u.birthday, u.music, u.level, u.xp, u.streak, u.createdAt, u.badges, u.socials, u.activities, u.bot, u.tagServer]);
+  if (M.classList.contains('dmp-mode') && M.dataset.dmpUser === n && M.dataset.dmpSig === sig) {
+    window.kLayoutSync?.(); return;
+  }
+  const same = M.classList.contains('dmp-mode') && M.dataset.dmpUser === n;
+  const prevScroll = same ? M.scrollTop : 0;
+  const activeNote = same && document.activeElement?.id === 'dmp-note' ? {
+    val: document.activeElement.value, s: document.activeElement.selectionStart, e: document.activeElement.selectionEnd
+  } : null;
+
+  M.querySelectorAll('.pfx-cv').forEach(c => { c._stop?.(); c.remove(); });
+  M.classList.add('dmp-mode');
+  M.dataset.dmpUser = n;
+  M.dataset.dmpSig = sig;
+
+  const isMe = n === S.me, isBot = !!u.bot;
+  const ac = actCards(u);
+  const socs = socialsHTML(u);
+  const bdg = !isBot ? badgeChips(u, 20) : '';
+  const stTxt = on ? stLabel(n) : 'Çevrimdışı';
+  const bdayTxt = u.birthday ? new Date('2000-' + u.birthday + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '';
+
+  M.innerHTML = `<div class="dmp ${themeOf(u) ? 'themed' : ''}" style="${themeVars(u)}">
+    <div class="dmp-ban" style="${banStyle(n, u)}">
+      <div class="dmp-top-acts">
+        <button type="button" class="dmp-ico" id="dmp-exp" title="Tam Profili Aç" aria-label="Tam Profili Aç">${ic('expand')}</button>
+        <button type="button" class="dmp-ico" id="dmp-hide" title="Paneli Gizle (Ctrl + \\)" aria-label="Paneli Gizle">${ic('x')}</button>
+      </div>
+    </div>
+
+    <div class="dmp-av-row">
+      <button type="button" class="dmp-av-btn" id="dmp-av" title="Tam Profili Aç">${pAv(n, u, 76, true)}</button>
+      ${bdg ? `<div class="dmp-badges">${bdg}</div>` : ''}
+    </div>
+
+    <div class="dmp-id">
+      <div class="dmp-name-row">
+        <span class="dmp-dn" id="dmp-dn" role="button" tabindex="0">${styledNameHTML(dn(n), u.nameStyle)}</span>
+        ${srvTag(n)}${isBot ? botTag(n) : ''}
+      </div>
+      <div class="dmp-handle">
+        <span>@${esc(n)}</span>
+        ${u.pronouns ? `<i>•</i><span>${esc(u.pronouns)}</span>` : ''}
+        <i>•</i><span class="dmp-st"><em style="background:${dotColor(n)}"></em>${esc(stTxt)}</span>
+      </div>
+      ${u.status ? `<div class="dmp-status">${esc(u.status)}</div>` : ''}
+    </div>
+
+    <div class="dmp-acts ${isBot || isMe ? 'bot-only' : ''}">
+      ${isBot || isMe ? '' : `<button type="button" class="dmp-act" id="dmp-call">${ic('phoneCall')}Ara</button><button type="button" class="dmp-act" id="dmp-vid">${ic('video')}Video</button>`}
+      <button type="button" class="dmp-act" id="dmp-prof">${ic('user')}Profil</button>
+    </div>
+
+    <div class="dmp-body">
+      ${ac ? `<div class="dmp-card dmp-actc">${ac}</div>` : ''}
+      ${u.bio || bdayTxt ? `<div class="dmp-card">
+        <h5>Hakkında</h5>
+        ${u.bio ? `<div class="dmp-bio">${bioFmt(u.bio)}</div>` : ''}
+        ${bdayTxt ? `<div class="dmp-bday" style="${u.bio ? '' : 'margin-top:0;padding-top:0;border-top:0'}">${ic('cake')}<span>Doğum günü: <b>${esc(bdayTxt)}</b></span></div>` : ''}
+      </div>` : ''}
+      ${u.music ? `<div class="dmp-card">
+        <h5>Profil Şarkısı</h5>
+        <a class="music-card" href="${esc(u.music)}" target="_blank" rel="noopener">${ytId(u.music) ? `<img src="https://img.youtube.com/vi/${ytId(u.music)}/mqdefault.jpg" alt="">` : `<span class="mc-ic">${ic('music')}</span>`}<span><b>Şarkıyı aç</b><small>${esc(u.music.replace(/^https?:\/\/(www\.)?/, '').slice(0, 36))}</small></span></a>
+      </div>` : ''}
+      <div class="dmp-card">
+        <h5><span>Kanka Üyesi</span>${u.streak ? `<span class="dmp-streak">${ic('fire')}${u.streak} gün</span>` : ''}</h5>
+        <div class="dmp-meta-grid">
+          <div class="dmp-kv"><small>Katılım</small><b>${esc(since(u.createdAt))}</b></div>
+          <div class="dmp-kv"><small>Seviye</small><b>Seviye ${u.level || 1}</b></div>
+        </div>
+        ${xpBar({ level: u.level || 1, xp: u.xp || 0 })}
+      </div>
+      ${socs ? `<div class="dmp-card"><h5>Bağlantılar</h5><div class="psocs">${socs}</div></div>` : ''}
+      ${isMe || isBot ? '' : `<div id="dmp-mut-slot"></div>`}
+      ${isMe ? '' : `<div class="dmp-card">
+        <h5><span>Notun (sadece sen)</span><small class="dmp-saved" id="dmp-saved">Kaydedildi</small></h5>
+        <textarea class="dmp-note" id="dmp-note" maxlength="300" placeholder="${esc(dn(n))} hakkında kendine özel not yaz…">${esc(activeNote ? activeNote.val : (uNotes[n] || ''))}</textarea>
+      </div>`}
+    </div>
+
+    <div class="dmp-foot">
+      <button type="button" class="dmp-fullbtn" id="dmp-full">Tüm Profili &amp; Rozetleri Gör →</button>
+    </div>
+  </div>`;
+
+  mountProfileEffect(M.querySelector('.dmp'), u.effect);
+  M.querySelectorAll('.xpbar i[data-w]').forEach(i => i.style.width = i.dataset.w + '%');
+  if (same) M.scrollTop = prevScroll;
+
+  const openP = () => showProfile(n);
+  M.querySelector('#dmp-exp')?.addEventListener('click', openP);
+  M.querySelector('#dmp-av')?.addEventListener('click', openP);
+  M.querySelector('#dmp-dn')?.addEventListener('click', openP);
+  M.querySelector('#dmp-prof')?.addEventListener('click', openP);
+  M.querySelector('#dmp-full')?.addEventListener('click', openP);
+  M.querySelector('#dmp-call')?.addEventListener('click', () => startCall(false));
+  M.querySelector('#dmp-vid')?.addEventListener('click', () => startCall(true));
+  M.querySelector('#dmp-hide')?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (innerWidth <= 1100) closeMembers();
+    else window.kLayoutToggleRight?.();
+  });
+
+  const noteEl = M.querySelector('#dmp-note'), savedEl = M.querySelector('#dmp-saved');
+  if (noteEl) {
+    let nt = null;
+    noteEl.addEventListener('input', () => {
+      clearTimeout(nt);
+      nt = setTimeout(() => {
+        const v = noteEl.value.trim();
+        if (v) uNotes[n] = v; else delete uNotes[n];
+        saveU();
+        if (savedEl) { savedEl.classList.add('on'); setTimeout(() => savedEl.classList.remove('on'), 1200); }
+      }, 320);
+    });
+    if (activeNote) {
+      noteEl.focus();
+      try { noteEl.setSelectionRange(activeNote.s, activeNote.e); } catch {}
+    }
+  }
+
+  if (!isMe && !isBot) {
+    const cached = dmpMutCache.get(n);
+    if (cached && Date.now() - cached.at < 60000) {
+      dmpRenderMutuals(n, cached.data);
+    } else {
+      if (cached) dmpRenderMutuals(n, cached.data);
+      socket.emit('mutuals', n, x => {
+        const data = x || { servers: [], friends: [] };
+        dmpMutCache.set(n, { at: Date.now(), data });
+        dmpRenderMutuals(n, data);
+      });
+    }
+  }
+  window.kLayoutSync?.();
+}
 // Yuva'da sağ panel: arkadaşlar ne yapıyor (seste / oyunda / çevrimiçi) + Kanka HQ haftanın en aktifleri
 let hqTops = null, lbAt = 0, lbTab = 'lvl';
 function homeSidePanel(item, mdrH) {
+  dmpClear();
   if (Date.now() - lbAt > 120e3) { lbAt = Date.now(); socket.emit('hqTops', r => { if (r) { hqTops = r; if (S.view === 'dm' && !S.channel) renderMembers(); } }); }
   const t = hqTops, list = t ? (lbTab === 'lvl' ? t.lvl : t.stk) : [];
   const medal = i => ['🥇', '🥈', '🥉'][i] || `<span class="n">${i + 1}</span>`;
@@ -17101,6 +17431,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (saveGu
     saveCfg(); sync();
   };
   window.kLayoutSync = sync;
+  window.kLayoutToggleRight = toggleRight;
   applyWidths(); sync();
   $('#mem-dtog')?.addEventListener('click', e => { e.stopPropagation(); toggleRight(); });
   document.addEventListener('keydown', e => {
@@ -17129,7 +17460,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (saveGu
             toast('Sağ panel gizlendi · Ctrl + \\ veya üst butonla geri açabilirsin');
             up(); return;
           }
-          cfg.memW = Math.max(175, Math.min(380, nw));
+          cfg.memW = Math.max(175, Math.min(420, nw));
           applyWidths();
         }
       };
