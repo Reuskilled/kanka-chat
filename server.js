@@ -7011,6 +7011,13 @@ io.on('connection', socket => {
     save(); pushServers(membersOf(s)); TAG.push(); cb({ ok: true, tag: s.tag });
   });
   // Etikete tıklayınca açılan kart
+  // Spark (yakında gelecek artı paket): bekleme listesi
+  socket.on('sparkInfo', (_, cb = () => {}) => { if (!me) return cb({ error: 'Giriş yap' }); const w = db.sparkWait || {}; cb({ bekliyor: !!w[me], sayi: Object.keys(w).length }); });
+  socket.on('sparkWait', ({ on } = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' }); if (limited('spark|' + me, 10, 60e3)) return cb({ error: 'Biraz bekle' });
+    db.sparkWait ||= {}; if (on) db.sparkWait[me] = Date.now(); else delete db.sparkWait[me]; save();
+    cb({ bekliyor: !!db.sparkWait[me], sayi: Object.keys(db.sparkWait).length });
+  });
   socket.on('tagInfo', (sid, cb = () => {}) => {
     if (typeof cb !== 'function') return; const s = db.servers.find(x => x.id === sid), d = TAG.defOf(s); if (!d) return cb(null);
     const users = Object.values(db.users).filter(u => TAG.of(u) === s.id);

@@ -4895,6 +4895,56 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .peffects.pe-3d .pe-pv img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; display: block; }
   .peffects.pe-3d .pe-pv.frost img { filter: hue-rotate(196deg) saturate(1.38) brightness(1.08) contrast(1.14); }
   .peffects.pe-3d .pe-ktag { position: absolute; top: 4px; right: 4px; font-size: 8px; font-weight: 900; letter-spacing: .06em; padding: 2px 4px; border-radius: 4px; background: rgba(9,9,11,.84); color: var(--accent); border: 1px solid rgba(255,255,255,.15); }
+.sp-link .sp-soon{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.6px;padding:2px 7px;border-radius:6px;background:var(--accent);color:#0b0b0c}
+.spark{max-width:1080px;margin:0 auto;padding:18px 22px 60px}
+.sp-hero{position:relative;overflow:hidden;border-radius:28px;padding:44px 44px;display:grid;grid-template-columns:1.25fr .9fr;gap:30px;align-items:center;
+  background:radial-gradient(120% 140% at 100% 0%,rgba(212,255,0,.28),transparent 55%),radial-gradient(90% 120% at 0% 100%,rgba(0,214,255,.18),transparent 60%),linear-gradient(135deg,#121316,#0b0c0d);border:1px solid rgba(212,255,0,.22)}
+.sp-dots{position:absolute;inset:0;pointer-events:none}
+.sp-dots i{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);border-radius:50%;background:var(--accent);opacity:.0;box-shadow:0 0 14px var(--accent);animation:spTw 3.2s var(--d) infinite ease-in-out}
+@keyframes spTw{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:.75;transform:scale(1)}}
+.sp-hl{position:relative;z-index:1}
+.sp-kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:1.2px;color:var(--accent);padding:6px 12px;border-radius:999px;background:rgba(212,255,0,.1);border:1px solid rgba(212,255,0,.3)}
+.sp-kicker .ic{width:15px;height:15px}
+.sp-hero h1{margin:18px 0 10px;font-size:46px;font-weight:900;letter-spacing:-1.5px;line-height:1;color:var(--ink)}
+.sp-me{display:flex;align-items:center;gap:14px}.sp-me .av{width:58px;height:58px;font-size:22px}
+.sp-me b{font-size:38px;font-weight:900;letter-spacing:-1px;background:linear-gradient(90deg,#fff,var(--accent),#7ef9ff,#fff);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:spSh 6s linear infinite}
+@keyframes spSh{to{background-position:300% 0}}
+.sp-hero p{color:var(--muted);font-size:15.5px;line-height:1.55;max-width:470px;margin:18px 0 22px}
+.sp-cta{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.sp-btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:14px;border:0;background:var(--accent);color:#0b0b0c;font:800 15px inherit;font-family:inherit;cursor:pointer;box-shadow:0 8px 30px rgba(212,255,0,.28);transition:transform .15s}
+.sp-btn:hover{transform:translateY(-2px)} .sp-btn .ic{width:18px;height:18px}
+.sp-btn.on{background:rgba(212,255,0,.12);color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.sp-count{font-size:13.5px;color:var(--muted);font-weight:600}
+.sp-preview{position:relative;z-index:1;display:flex;justify-content:center}
+.sp-pcard{position:relative;width:260px;border-radius:22px;padding:0 0 18px;background:#15161a;text-align:center;overflow:hidden;
+  box-shadow:0 0 0 2px transparent,0 30px 60px rgba(0,0,0,.5);background-clip:padding-box;transform:rotate(3deg);animation:spFl 5s ease-in-out infinite}
+.sp-pcard::before{content:"";position:absolute;inset:-2px;border-radius:24px;padding:2px;background:conic-gradient(from var(--a,0deg),var(--accent),#7ef9ff,#b18cff,var(--accent));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spRot 4s linear infinite}
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes spRot{to{--a:360deg}} @keyframes spFl{50%{transform:rotate(3deg) translateY(-8px)}}
+.sp-pban{height:86px;background:linear-gradient(120deg,var(--accent),#7ef9ff 55%,#b18cff);background-size:200% 200%;animation:spSh 8s linear infinite}
+.sp-pcard .av{width:76px;height:76px;margin:-40px auto 8px;border:5px solid #15161a;font-size:28px;position:relative}
+.sp-pname{display:block;font-size:20px;font-weight:900;background:linear-gradient(90deg,#fff,var(--accent),#7ef9ff,#fff);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:spSh 5s linear infinite}
+.sp-pcard small{color:var(--muted);font-size:13px}
+.sp-pbadge{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:4px 10px;border-radius:999px;background:rgba(212,255,0,.14);color:var(--accent);font-size:12px;font-weight:800}
+.sp-pbadge .ic{width:13px;height:13px}
+.sp-pnote{margin-top:12px;font-size:11.5px;color:var(--muted)}
+.sp-h{margin:40px 4px 16px;font-size:22px;font-weight:900;letter-spacing:-.5px;color:var(--ink)}
+.sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.sp-perk{padding:20px;border-radius:20px;background:var(--panel,#141518);border:1px solid var(--line,#24252b);display:flex;flex-direction:column;gap:8px;transition:transform .2s,border-color .2s;animation:spIn .5s calc(var(--k) * 60ms) both}
+.sp-perk:hover{transform:translateY(-4px);border-color:rgba(212,255,0,.45)}
+@keyframes spIn{from{opacity:0;transform:translateY(14px)}}
+.sp-pi{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(212,255,0,.12);color:var(--accent)}
+.sp-pi .ic{width:22px;height:22px}
+.sp-perk b,.sp-box b{font-size:16px;color:var(--ink)} .sp-perk small,.sp-box small{color:var(--muted);font-size:13.5px;line-height:1.5}
+.sp-free{margin-top:26px;display:flex;gap:16px;align-items:center;padding:20px 22px;border-radius:20px;background:linear-gradient(90deg,rgba(63,207,142,.12),transparent);border:1px solid rgba(63,207,142,.3)}
+.sp-fi{width:44px;height:44px;flex-shrink:0;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(63,207,142,.16);color:var(--green,#3fcf8e)} .sp-fi .ic{width:22px;height:22px}
+.sp-free b{display:block;color:var(--ink);font-size:15.5px} .sp-free small{color:var(--muted);font-size:13.5px}
+.sp-row{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sp-box{padding:22px;border-radius:20px;background:var(--panel,#141518);border:1px solid var(--line,#24252b);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.sp-btn2{margin-top:6px;padding:10px 16px;border-radius:12px;border:1px solid var(--line,#2a2b31);background:rgba(255,255,255,.05);color:var(--ink);font-weight:700;font-family:inherit;cursor:pointer}
+.sp-btn2:disabled{opacity:.55;cursor:default}
+@media (max-width:860px){.sp-hero{grid-template-columns:1fr;padding:30px 24px}.sp-preview{display:none}.sp-row{grid-template-columns:1fr}.sp-hero h1{font-size:36px}.sp-me b{font-size:30px}}
+@media (prefers-reduced-motion:reduce){.spark *{animation:none!important}}
 </style>
 </head>
 <body>
@@ -7933,7 +7983,8 @@ function showFriends(tab = friendTab) {
   friendTab = tab;
   S.view = 'dm'; S.channel = null; draftFor = null; roomLoading = null; joinSeq++; renderRail(); renderDMSide(); renderMembers();
   setWatch(null);
-  if (tab === 'home') setHeader(`${ic('home')} Yuva`, `${S.social.friends.length} arkadaş · ${S.social.friends.filter(n => S.online.has(n)).length} çevrimiçi`, false);
+  if (tab === 'spark') setHeader(`${ic('sparkle')} Spark`, 'Kanka\'nın artı paketi · çok yakında', false);
+  else if (tab === 'home') setHeader(`${ic('home')} Yuva`, `${S.social.friends.length} arkadaş · ${S.social.friends.filter(n => S.online.has(n)).length} çevrimiçi`, false);
   else setHeader(`${ic('users')} Arkadaşlar`, `${S.social.friends.length} arkadaş`, false);
   $('#head-actions').innerHTML = tab === 'home' ? `<button class="hbtn" id="add-friend" title="Arkadaş ekle" aria-label="Arkadaş ekle">${ic('userplus')}</button>` : '';
   $('#compose').style.display = 'none'; $('#typing').textContent = '';
@@ -7944,6 +7995,7 @@ function showFriends(tab = friendTab) {
   const row = (n, extra, btns) => `<div class="frow" data-n="${esc(n)}">${av(n, S.online.has(n))}<div class="info"><b>${esc(n)}</b><small>${extra}</small></div>${btns}</div>`;
   let body;
   if (tab === 'home') body = homeHTML();
+  if (tab === 'spark') { $('#callbar')?.remove(); $('#messages').innerHTML = sparkHTML(); wireSpark(); return; }
   if (tab === 'pending') body = lists.pending.map(([d, n]) => row(n, d === 'in' ? 'Gelen arkadaşlık isteği' : 'Gönderilen istek',
     d === 'in' ? `<button data-acc="${esc(n)}" title="Kabul et" aria-label="Kabul et" style="color:var(--green)">${ic('check')}</button><button data-rem="${esc(n)}" title="Reddet" aria-label="Reddet" style="color:var(--red)">${ic('x')}</button>` : `<button data-rem="${esc(n)}" title="Geri çek" aria-label="İsteği geri çek">${ic('x')}</button>`)).join('');
   else if (tab === 'blocked') body = lists.blocked.map(n => row(n, 'Engellendi', `<button data-unb="${esc(n)}" title="Engeli kaldır" aria-label="Engeli kaldır">${ic('unlock')}</button>`)).join('');
@@ -8113,6 +8165,48 @@ function yuvaHTML({ rooms, items, startSec, botSec }) {
     ${botSec}${startSec}
   </div>`;
 }
+
+// ---- Spark: Kanka'nın artı paketi (şimdilik "yakında" sayfası ve bekleme listesi) ----
+const SPARK_PERKS = [
+  ['image', 'Hareketli profil', 'GIF avatar ve hareketli kapak resmi. Profilin canlı dursun.'],
+  ['palette', 'Profil temaları', 'İki renkli profil teması ve isminde parıltı efekti.'],
+  ['upload', 'Büyük dosyalar', 'Daha büyük video ve dosyaları tek seferde gönder.'],
+  ['tag', 'Kendi etiket simgen', 'Sunucu etiketine emoji yerine kendi resmini koy.'],
+  ['volume', 'Daha dolu ses paneli', 'Ses paneline daha çok kendi sesini yükle, her sunucuda kullan.'],
+  ['screen', 'Net ekran paylaşımı', 'Yayınlarını daha yüksek kalitede ve akıcı paylaş.'],
+  ['crown', 'Spark rozeti', 'Profilinde, ne zamandan beri desteklediğini gösteren rozet.'],
+  ['smile', 'Her yerde emojiler', 'Sunucuların özel emojilerini her yerde kullan.'],
+];
+function sparkHTML() {
+  const hr = new Date().getHours(), greet = hr >= 5 && hr < 12 ? 'Günaydın' : hr >= 12 && hr < 18 ? 'İyi günler' : hr >= 18 && hr < 23 ? 'İyi akşamlar' : 'İyi geceler';
+  const me = S.users[S.me] || {}, dname = me.displayName || S.me;
+  const dots = Array.from({ length: 14 }, (_, i) => `<i style="--x:${(i * 73) % 100}%;--y:${(i * 37) % 100}%;--d:${(i % 5) * .6}s;--s:${6 + (i % 4) * 3}px"></i>`).join('');
+  return `<div class="spark">
+    <section class="sp-hero"><div class="sp-dots">${dots}</div>
+      <div class="sp-hl"><span class="sp-kicker">${ic('sparkle')} SPARK · ÇOK YAKINDA</span>
+        <h1>${greet},</h1>
+        <div class="sp-me">${av(S.me)}<b>${esc(dname)}</b></div>
+        <p>Spark, Kanka'nın isteğe bağlı artı paketi. Profilini parlatır, sınırlarını büyütür ve Kanka'nın büyümesine destek olur.</p>
+        <div class="sp-cta"><button class="sp-btn" id="sp-wait">${ic('bell')}<span>Çıkınca haber ver</span></button><span class="sp-count" id="sp-count"></span></div></div>
+      <div class="sp-preview"><div class="sp-pcard"><div class="sp-pban"></div>${av(S.me)}<b class="sp-pname">${esc(dname)}</b><small>@${esc(S.me)}</small>
+        <span class="sp-pbadge">${ic('sparkle')} Spark</span><div class="sp-pnote">Spark ile profilin böyle görünecek</div></div></div>
+    </section>
+    <h2 class="sp-h">Spark ile neler geliyor</h2>
+    <div class="sp-grid">${SPARK_PERKS.map(([i, t, d], k) => `<div class="sp-perk" style="--k:${k}"><span class="sp-pi">${ic(i)}</span><b>${t}</b><small>${d}</small></div>`).join('')}</div>
+    <div class="sp-free"><span class="sp-fi">${ic('heart')}</span><div><b>Kanka'nın kendisi ücretsiz.</b><small>Sohbet, sesli odalar, Arena oyunları, ses paneli ve botlar Spark olmadan da herkese açık. Spark tamamen isteğe bağlı.</small></div></div>
+    <div class="sp-row">
+      <div class="sp-box"><span class="sp-pi">${ic('star')}</span><b>Spark hediye et</b><small>Kankana Spark hediye edebileceksin. Spark çıkınca açılacak.</small><button class="sp-btn2" disabled>Yakında</button></div>
+      <div class="sp-box"><span class="sp-pi">${ic('chat')}</span><b>Ne olsun istersin?</b><small>Liste kesin değil. Spark'ta görmek istediğin şeyi Kanka HQ'da yaz, beraber karar verelim.</small><button class="sp-btn2" id="sp-hq">Kanka HQ'ya git</button></div>
+    </div>
+  </div>`;
+}
+function wireSpark() {
+  const set = r => { if (!r || r.error) return; const b = $('#sp-wait'); if (!b) return; b.classList.toggle('on', r.bekliyor); b.querySelector('span').textContent = r.bekliyor ? 'Listedesin, çıkınca haber vereceğiz' : 'Çıkınca haber ver';
+    b.firstElementChild.outerHTML = ic(r.bekliyor ? 'check' : 'bell'); $('#sp-count').textContent = r.sayi ? `${r.sayi} kişi bekliyor` : ''; };
+  socket.emit('sparkInfo', {}, set);
+  $('#sp-wait').onclick = () => { const on = !$('#sp-wait').classList.contains('on'); socket.emit('sparkWait', { on }, r => { if (r?.error) return toast(r.error); set(r); if (on) toast('Spark çıkınca ilk sen duyacaksın ✨', null, false, { type: 'party' }); }); };
+  $('#sp-hq').onclick = () => { const s = S.servers.find(x => x.id === 's1'); if (s) selectServer('s1'); else toast('Kanka HQ\'ya katıl, oradan yazabilirsin'); };
+}
 function wireHome() {
   const M = $('#messages');
   M.querySelectorAll('[data-jv]').forEach(b => b.onclick = e => { e.stopPropagation(); selectServer(b.dataset.sv); setTimeout(() => joinVoice(b.dataset.jv), 150); });
@@ -8215,14 +8309,15 @@ function renderDMSide() {
       setTimeout(() => openGroup(r.id), 300);
     });
   }, 2);
-  $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div><div class="room ${!S.channel && friendTab !== 'home' ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
+  $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div><div class="room sp-link ${!S.channel && friendTab === 'spark' ? 'active' : ''}" id="sp-link"><div class="ico">${ic('sparkle')}</div>Spark<span class="sp-soon">YAKINDA</span></div><div class="room ${!S.channel && friendTab !== 'home' && friendTab !== 'spark' ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
     const dnb = !d.group ? nbOf(S.users[d.with]) : null;
     return `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''} ${S.calls?.[d.id]?.length ? 'incall' : ''}${dnb ? ' has-nb nb-' + dnb : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${dnb ? nbLayers(dnb) : ''}${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, S.online.has(d.with))}<span class="nb-dmn">${styledNameHTML(d.with, S.users[d.with]?.nameStyle)}</span>`}</div>`;
   }).join('')
     : `<p style="padding:6px 20px;color:var(--muted);font-size:14px">Henüz sohbet yok.</p>`);
   $('#side-list').querySelectorAll('.room[data-id]').forEach(r => r.onclick = () => openChat(r.dataset.id, r.dataset.w));
-  $('#fr-link').onclick = () => { document.body.classList.remove('drawer'); showFriends(friendTab === 'home' ? (S.social.reqIn.length ? 'pending' : 'online') : friendTab); };
+  $('#fr-link').onclick = () => { document.body.classList.remove('drawer'); showFriends(friendTab === 'home' || friendTab === 'spark' ? (S.social.reqIn.length ? 'pending' : 'online') : friendTab); };
   $('#home-link').onclick = () => { document.body.classList.remove('drawer'); showFriends('home'); };
+  $('#sp-link').onclick = () => { document.body.classList.remove('drawer'); showFriends('spark'); };
 }
 
 // ================= Oda / mesajlar =================
