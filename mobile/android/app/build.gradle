@@ -7,8 +7,9 @@ android {
         applicationId "com.kanka.chat"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Sürüm: CI'da KANKA_VERSION_CODE (derleme numarası) ve KANKA_VERSION_NAME verilir
+        versionCode (System.getenv("KANKA_VERSION_CODE") ?: "1").toInteger()
+        versionName System.getenv("KANKA_VERSION_NAME") ?: "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +17,30 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // İmza: anahtar dosyası ve şifreler depoda DEĞİL; CI'da GitHub gizli değişkenlerinden, yerelde ortam değişkenlerinden gelir.
+    // Yoksa release derlemesi hata ayıklama anahtarıyla imzalanır (sadece test için).
+    signingConfigs {
+        // Sadece test: herkesin bildiği "android" şifreli hata ayıklama anahtarı. Her derleme aynı anahtarla imzalanır ki
+        // test APK'ları birbirinin üstüne kurulabilsin. Play Store'a bununla gönderilemez (gerçek yükleme anahtarı gizli değişkenden gelir).
+        debug {
+            storeFile file('test-debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        kanka {
+            def ks = System.getenv("KANKA_KEYSTORE")
+            if (ks && file(ks).exists()) {
+                storeFile file(ks)
+                storePassword System.getenv("KANKA_KEYSTORE_PASS")
+                keyAlias System.getenv("KANKA_KEY_ALIAS") ?: "kanka"
+                keyPassword System.getenv("KANKA_KEY_PASS") ?: System.getenv("KANKA_KEYSTORE_PASS")
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig (System.getenv("KANKA_KEYSTORE") && file(System.getenv("KANKA_KEYSTORE")).exists()) ? signingConfigs.kanka : signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
