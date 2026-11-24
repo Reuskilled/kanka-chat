@@ -5828,6 +5828,7 @@ function onAuth(res) {
   S.minor = !!res.minor; if (res.needVeli) setTimeout(veliGate, 1500);
   store.set('kanka-token', res.token);
   S.me = res.user.name;
+  S.npReady = res.npReady || {};
   if (NPUSH) setTimeout(() => { nativePushInit(!store.get('kanka-npush-sordu')).then(s => { if (s !== 'sor') store.set('kanka-npush-sordu', 1); }); if (npPending) { const f = npPending; npPending = null; setTimeout(f, 400); } }, 1200);
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
   setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {}; setVoiceAge(res.voiceAge);
@@ -11829,6 +11830,9 @@ var NPUSH = NATIVE ? window.Capacitor?.Plugins?.PushNotifications || null : null
 var npState = 'yok', npPending = null;
 async function nativePushInit(ask) {
   if (!NPUSH || !S.me) return npState;
+  // Android'de Firebase kurulmadan (google-services.json) kayıt denemesi uygulamayı çökertir: sunucuda FCM açık değilse hiç deneme
+  if (NPLAT === 'android' && !S.npReady?.fcm) return (npState = 'hazirdegil');
+  if (NPLAT === 'ios' && !S.npReady?.apns) return (npState = 'hazirdegil');
   try {
     if (NPLAT === 'android') for (const [id, name, importance, description] of [['mesajlar', 'Mesajlar', 4, 'Özel mesajlar ve etiketlenmeler'], ['aramalar', 'Aramalar', 5, 'Gelen sesli ve görüntülü aramalar'], ['sosyal', 'Arkadaşlık', 3, 'Arkadaşlık istekleri']])
       await NPUSH.createChannel({ id, name, description, importance, vibration: true, visibility: 1 }).catch(() => {});
@@ -11860,8 +11864,8 @@ function wirePushSettings() {
   const box = $('#pk-b'), st = $('#pk-s'); if (!box) return;
   const draw = () => {
     if (NPUSH) {
-      st.textContent = { acik: 'Açık: Kanka kapalıyken de özel mesaj, etiket, arama ve arkadaşlık bildirimleri gelir.', kapali: 'Kapalı. Telefonun Ayarlar › Uygulamalar › Kanka Chat › Bildirimler bölümünden izin ver.', hata: 'Bildirim kaydı yapılamadı. İnternetini kontrol edip tekrar dene.' }[npState] || 'Kanka kapalıyken de özel mesaj, etiket ve arkadaşlık isteklerinde bildirim gelir.';
-      box.innerHTML = npState === 'acik' ? `<button class="btns2" id="pk-test">Dene</button>` : npState === 'kapali' ? '' : `<button class="primary" id="pk-on">Bildirimleri aç</button>`;
+      st.textContent = { acik: 'Açık: Kanka kapalıyken de özel mesaj, etiket, arama ve arkadaşlık bildirimleri gelir.', kapali: 'Kapalı. Telefonun Ayarlar › Uygulamalar › Kanka Chat › Bildirimler bölümünden izin ver.', hazirdegil: 'Telefon bildirimleri çok yakında açılacak. Şimdilik uygulama açıkken bildirim görürsün.', hata: 'Bildirim kaydı yapılamadı. İnternetini kontrol edip tekrar dene.' }[npState] || 'Kanka kapalıyken de özel mesaj, etiket ve arkadaşlık isteklerinde bildirim gelir.';
+      box.innerHTML = npState === 'acik' ? `<button class="btns2" id="pk-test">Dene</button>` : npState === 'kapali' || npState === 'hazirdegil' ? '' : `<button class="primary" id="pk-on">Bildirimleri aç</button>`;
       $('#pk-on') && ($('#pk-on').onclick = () => nativePushInit(true).then(s => { if (s === 'acik') toast('Bildirimler açıldı 🎉'); draw(); }));
       $('#pk-test') && ($('#pk-test').onclick = () => socket.emit('pushNativeTest', {}, r => toast(r?.error || 'Deneme bildirimi gönderildi. Birkaç saniye içinde gelmeli (uygulama açıkken gelmeyebilir, arka plana al).')));
       $('#push-card').classList.toggle('on', npState === 'acik'); return;
