@@ -32,6 +32,11 @@ jobs:
         run: |
           npm ci
           npx cap sync android
+      - name: Firebase yapılandırması (varsa)
+        env:
+          GS_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GS_JSON" ]; then echo "$GS_JSON" > android/app/google-services.json; else echo "::warning::GOOGLE_SERVICES_JSON yok, bildirimler bu derlemede çalışmaz"; fi
       - name: İmza anahtarı (varsa)
         env:
           KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
