@@ -8,7 +8,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Sürüm: CI'da KANKA_VERSION_CODE (derleme numarası) ve KANKA_VERSION_NAME verilir
-        versionCode (System.getenv("KANKA_VERSION_CODE") ?: "1").toInteger()
+        versionCode Integer.parseInt(System.getenv("KANKA_VERSION_CODE") ?: "1")
         versionName System.getenv("KANKA_VERSION_NAME") ?: "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -40,7 +40,7 @@ android {
     }
     buildTypes {
         release {
-            signingConfig (System.getenv("KANKA_KEYSTORE") && file(System.getenv("KANKA_KEYSTORE")).exists()) ? signingConfigs.kanka : signingConfigs.debug
+            signingConfig = (System.getenv("KANKA_KEYSTORE") && file(System.getenv("KANKA_KEYSTORE")).exists()) ? signingConfigs.kanka : signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
