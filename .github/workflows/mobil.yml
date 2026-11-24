@@ -1,0 +1,63 @@
+# Android uygulamasını (mobile/) derler ve "android-v<sürüm>-<no>" adıyla GitHub Release olarak yayınlar.
+# Bu sürüm "en son sürüm" yapılmaz (masaüstü güncellemesi etkilenmez). kankahq.com sunucusu APK'yı
+# buradan kendisi indirip /indir/KankaChat.apk adresine koyar.
+name: Android derleme
+on:
+  push:
+    branches: [main]
+    paths: ['mobile/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: android-derleme
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Paketler ve Capacitor eşitleme
+        run: |
+          npm ci
+          npx cap sync android
+      - name: İmza anahtarı (varsa)
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS_B64" ]; then echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/kanka.jks"; echo "KANKA_KEYSTORE=$RUNNER_TEMP/kanka.jks" >> "$GITHUB_ENV"; else echo "::warning::ANDROID_KEYSTORE_B64 yok, test anahtarıyla imzalanacak"; fi
+      - name: Derle (APK)
+        working-directory: mobile/android
+        env:
+          KANKA_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          KANKA_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KANKA_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+          KANKA_VERSION_CODE: ${{ github.run_number }}
+        run: |
+          export KANKA_VERSION_NAME="$(node -p "require('../package.json').version").${{ github.run_number }}"
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/KankaChat.apk"
+          ls -la "$RUNNER_TEMP/KankaChat.apk"
+      - name: İmza parmak izi (App Links için)
+        run: |
+          "$ANDROID_HOME"/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner verify --print-certs "$RUNNER_TEMP/KankaChat.apk" | grep -i "SHA-256" || true
+      - name: Yayınla
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="$(node -p "require('./package.json').version")"
+          gh release create "android-v$V-${{ github.run_number }}" --repo "${{ github.repository }}" --latest=false --prerelease \
+            --title "Kanka Chat Android $V (${{ github.run_number }})" --notes "Otomatik derleme · ${{ github.sha }}" \
+            "$RUNNER_TEMP/KankaChat.apk"

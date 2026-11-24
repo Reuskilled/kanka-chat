@@ -134,3 +134,10 @@ Yerel eklenti **KankaSes** (Android: `KankaSesPlugin.java` + `KankaSesService.ja
 Arayüzde: sesteyken alttaki ses çubuğunda **Ses çıkışı** düğmesi (yalnızca uygulamada).
 
 **Cihazda denenecekler:** odaya gir → uygulamayı arka plana al → karşı taraf seni duyuyor mu (Android) · bildirimdeki Ayrıl · Bluetooth kulaklık bağla/çıkar · ses çıkışı menüsü · telefon araması gelip bitince ses geri geliyor mu · arama bildirimi.
+
+## 11. Test APK'sı (Android)
+
+- `.github/workflows/mobil.yml`: `mobile/` değişince (ya da elle "Run workflow") GitHub Actions APK derler, `android-v<sürüm>-<no>` adıyla ön sürüm olarak yayınlar (masaüstünün "en son sürüm"ünü etkilemez).
+- Sunucudaki güncelleyici 5 dakikada bir bakar, yeni APK'yı `indir/KankaChat.apk`'ye çeker → **https://kankahq.com/indir/KankaChat.apk**
+- İmza: gizli değişken `ANDROID_KEYSTORE_B64` (+ `ANDROID_KEYSTORE_PASS`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASS`) varsa onunla; yoksa depodaki **test anahtarıyla** (`android/app/test-debug.keystore`, şifre `android`). Test anahtarıyla imzalı APK'lar birbirinin üstüne kurulur ama Play Store'a gönderilemez.
+- Play Store için: yükleme anahtarını kendi bilgisayarında oluştur (`keytool -genkeypair -keystore kanka-upload.jks -alias kanka -keyalg RSA -keysize 4096 -validity 10000`), dosyayı güvenli sakla, base64'ünü ve şifresini GitHub › Settings › Secrets › Actions'a ekle.

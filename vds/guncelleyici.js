@@ -253,6 +253,25 @@ async function checkDesktop() {
   save();
 }
 
+// Android uygulaması: "android-v..." etiketli en yeni sürümdeki KankaChat.apk → indir/KankaChat.apk (kankahq.com/indir/KankaChat.apk)
+async function checkAndroid() {
+  const h = { ...H }; if (st.apkEtag) h['If-None-Match'] = st.apkEtag;
+  const r = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=15`, { headers: h, signal: AbortSignal.timeout(20000) });
+  if (r.status === 304 || !r.ok) return;
+  st.apkEtag = r.headers.get('etag');
+  const rel = (await r.json()).find(x => /^android-v/.test(x.tag_name) && !x.draft);
+  const a = rel?.assets?.find(x => x.name === 'KankaChat.apk'); if (!a) return save();
+  if (st.apkTag === rel.tag_name) return save();
+  const dir = path.join(APP, 'indir'); fs.mkdirSync(dir, { recursive: true });
+  log(`Android sürümü indiriliyor: ${rel.tag_name} (${Math.round(a.size / 1048576)} MB)`);
+  const d = await fetch(a.browser_download_url, { headers: { 'User-Agent': H['User-Agent'] }, redirect: 'follow', signal: AbortSignal.timeout(30 * 60e3) });
+  if (!d.ok) return log('APK indirilemedi: ' + d.status);
+  const buf = Buffer.from(await d.arrayBuffer()); if (buf.length !== a.size) return log('APK eksik indi');
+  const dst = path.join(dir, 'KankaChat.apk'); fs.writeFileSync(dst + '.indiriliyor', buf); fs.renameSync(dst + '.indiriliyor', dst);
+  fs.writeFileSync(path.join(dir, 'android.json'), JSON.stringify({ surum: rel.tag_name, boyut: a.size, tarih: new Date().toISOString() }));
+  st.apkTag = rel.tag_name; save(); log(`Android ${rel.tag_name} hazır: /indir/KankaChat.apk`);
+}
+
 // Yedek yol: GitHub Releases kullanılamazsa 'masaustu' dalındaki parçalı dosyalar (manifest.json)
 async function checkDesktopBranch() {
   const raw = p => `https://raw.githubusercontent.com/${REPO}/masaustu/${p}`;
@@ -298,6 +317,7 @@ async function tick() {
   try { await checkCode(); } catch (e) { log('Hata (kod): ' + e.message); }
   if (n++ % 30 === 0) { try { await checkDesktop(); } catch (e) { log('Hata (masaüstü): ' + e.message); } // GitHub API sınırı için 30 dakikada bir
     try { await checkDesktopBranch(); } catch (e) { log('Hata (masaüstü dalı): ' + e.message); } }
+  if (n % 5 === 1) { try { await checkAndroid(); } catch (e) { log('Hata (Android): ' + e.message); } } // 5 dakikada bir
   busy = false;
 }
 log('Güncelleyici çalışıyor');
