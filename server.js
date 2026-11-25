@@ -2003,6 +2003,20 @@ function botPost(chId, { title, text, tone = 'info', fields } = {}) {
   save(); io.to(chId).emit('message', { channelId: chId, msg });
   return msg;
 }
+// Değişiklik günlüğü: depodaki degisiklik-gunlugu.json'a eklenen her kayıt, geliştirici sunucusunun #değişiklik-günlüğü odasına
+// Kanka Bot tarafından bir kez yazılır (yayınlananlar db.clPosted'da). Dosya dakikada bir kontrol edilir; sunucuyu yeniden başlatmaya gerek yok.
+const CL_FILE = path.join(__dirname, 'degisiklik-gunlugu.json'); let clMtime = 0;
+function changelogSync(force) {
+  let st; try { st = fs.statSync(CL_FILE); } catch { return; } if (!force && st.mtimeMs === clMtime) return;
+  let list; try { list = JSON.parse(fs.readFileSync(CL_FILE, 'utf8')); } catch (e) { console.error('degisiklik-gunlugu.json okunamadı:', e.message); return; }
+  const targets = db.servers.filter(s => s.template === 'gelistirici').flatMap(s => s.channels.filter(c => c.name === 'değişiklik-günlüğü').map(c => c.id));
+  if (!targets.length) return; clMtime = st.mtimeMs;
+  const done = (db.clPosted ||= []); let any = false;
+  for (const e of Array.isArray(list) ? list : []) { if (!e?.id || done.includes(e.id)) continue;
+    for (const ch of targets) botPost(ch, { title: e.baslik || 'Güncelleme', text: e.metin || '', tone: e.ton || 'info' }); done.push(e.id); any = true; }
+  if (any) { db.clPosted = done.slice(-500); save(); }
+}
+setTimeout(() => changelogSync(true), 20e3); setInterval(changelogSync, 60e3);
 // Sadece komutu yazana görünen cevap (kaydedilmez)
 const botWhisper = (sock, chId, o) => sock.emit('message', { channelId: chId, msg: { id: 'w' + id(), author: BOT_NAME, kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: clean(o.title, 80), text: clean(o.text, 1500), tone: o.tone || 'info', fields: o.fields || [] }, reactions: {} } });
 function modLog(s, o) {
@@ -2702,7 +2716,8 @@ function callEnded(chId) {
 function pushServers(names) {
   viewersCache.clear(); // izin değişmiş olabilir: listeyi baştan hesapla, aynı gönderimde tekrar kullan
   roomCheck();
-  for (const n of names) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n)));
+  const rooms = io.sockets.adapter.rooms;
+  for (const n of new Set(names)) if (rooms.has('user:' + n)) io.to('user:' + n).emit('servers', serversFor(n).map(s => serverView(s, n))); // çevrimdışı kişi için hesaplama (açık sunucuda herkes üye sayılır); tekrarlı isimler tek sefer
   if (voice.size) { const on = new Set(online.values()); voiceTo([...new Set(names)].filter(n => on.has(n))); } // erişim değişti: ses odaları da yeniden süzülsün
 }
 const membersOf = s => s.public ? Object.keys(db.users) : s.members;
