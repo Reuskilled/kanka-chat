@@ -14,7 +14,6 @@
 	<string>Sohbetteki resimleri galerine kaydetmek için.</string>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>audio</string>
 		<string>remote-notification</string>
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>

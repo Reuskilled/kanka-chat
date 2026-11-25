@@ -141,3 +141,11 @@ Arayüzde: sesteyken alttaki ses çubuğunda **Ses çıkışı** düğmesi (yaln
 - Sunucudaki güncelleyici 5 dakikada bir bakar, yeni APK'yı `indir/KankaChat.apk`'ye çeker → **https://kankahq.com/indir/KankaChat.apk**
 - İmza: gizli değişken `ANDROID_KEYSTORE_B64` (+ `ANDROID_KEYSTORE_PASS`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASS`) varsa onunla; yoksa depodaki **test anahtarıyla** (`android/app/test-debug.keystore`, şifre `android`). Test anahtarıyla imzalı APK'lar birbirinin üstüne kurulur ama Play Store'a gönderilemez.
 - Play Store için: yükleme anahtarını kendi bilgisayarında oluştur (`keytool -genkeypair -keystore kanka-upload.jks -alias kanka -keyalg RSA -keysize 4096 -validity 10000`), dosyayı güvenli sakla, base64'ünü ve şifresini GitHub › Settings › Secrets › Actions'a ekle.
+
+## App Store denetimi (25 Kasım 2026)
+
+- `ios/App/App/PrivacyInfo.xcprivacy` eklendi (toplanan veri türleri + UserDefaults CA92.1). App Store Connect'teki gizlilik etiketleri bununla ve `kankahq.com/gizlilik` ile birebir aynı tutulmalı.
+- `UIBackgroundModes` içinden `audio` kaldırıldı: WKWebView arka planda mikrofonu durdurduğu için arka planda ses çalmıyorduk (Apple 2.5.4 ret sebebi). Yerel WebRTC/CallKit ile arka planda seste kalma gerçekten çalışınca geri eklenmeli.
+- iOS uygulamasında Spark ("yakında", bekleme listesi) gizlendi (`IOS_APP`); satış Apple IAP ile Faz 4'te.
+- Kullanım Şartları sürüm 5: uygunsuz içeriğe sıfır tolerans ve şikayetlere 24 saat içinde işlem (Apple 1.2).
+- Gönderimden önce hâlâ gerekenler: Faz 3'ün gerçek cihazda testi + CallKit (Apple 4.2), inceleme notlarında demo hesap, gizlilik etiketleri, 2026 yaş anketi, ilk sürümde sadece Türkiye, mağaza metninde "Discord"/"VPN" geçmemesi.
