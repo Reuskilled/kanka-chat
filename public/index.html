@@ -4950,6 +4950,20 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
       linear-gradient(180deg, #12150e 0%, #0d0d11 36%, #0a0a0d 100%);
   }
   .sp-inner { max-width: 960px; margin: 0 auto; }
+  .sps .sps-card { background: var(--bg2, rgba(255,255,255,.04)); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-top: 10px; }
+  .sps .sps-card h2 { margin: 0 0 8px; font-size: 22px; display: flex; align-items: center; gap: 8px; }
+  .sps .sps-card.on { border-color: rgba(212,255,0,.45); }
+  .sps .sps-card p { color: var(--muted); margin: 6px 0; line-height: 1.5; }
+  .sps .sps-price b { font-size: 30px; } .sps .sps-price span { color: var(--muted); }
+  .sps .sps-intro { font-size: 13px; }
+  .sps #sps-buy { width: 100%; margin-top: 12px; padding: 14px; font-size: 16px; }
+  .sps .sps-legal { font-size: 12px !important; margin-top: 12px !important; }
+  .sps .sps-legal a { color: inherit; text-decoration: underline; }
+  .sps .sps-perks { display: grid; gap: 10px; }
+  .sps .sps-perk { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; }
+  .sps .sps-perk p { margin: 3px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+  .sps .sps-pi { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 10px; background: rgba(212,255,0,.12); color: #d4ff00; }
+  .sps .sps-pi svg { width: 18px; height: 18px; }
   .sp-bar {
     display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
     padding-bottom: 18px; margin-bottom: 22px; border-bottom: 1px solid rgba(255,255,255,.07);
@@ -5909,7 +5923,7 @@ function onAuth(res) {
   if (location.pathname !== APP_PATH) try { history.replaceState(null, '', APP_PATH + location.search); } catch {}
   if (vcHold) setTimeout(voiceRejoin, 150); else if (vcResume) setTimeout(resumeVoice, 300);
   if (AR.lobby) setTimeout(() => AR.lobby && arOpenLobby(AR.lobby.id), 600); // güncellemeden sonra açık oyuna yeniden bağlan
-  S.minor = !!res.minor; if (res.needVeli) setTimeout(veliGate, 1500); S.inboxUnseen = res.inboxUnseen || 0; setTimeout(() => { try { mtabsSync(); } catch {} }, 0);
+  S.minor = !!res.minor; if (PLAY_BILL) setTimeout(() => playRestore(false), 4000); if (res.needVeli) setTimeout(veliGate, 1500); S.inboxUnseen = res.inboxUnseen || 0; setTimeout(() => { try { mtabsSync(); } catch {} }, 0);
   store.set('kanka-token', res.token);
   S.me = res.user.name;
   S.npReady = res.npReady || {};
@@ -8292,8 +8306,11 @@ let friendTab = 'home';
 // Mağaza uygulamalarında (iOS ve Android) Spark (henüz satılmayan abonelik) gösterilmez: Apple 2.1/3.1.1, Google Play Ödemeler politikası.
 // Satış açılınca mağazanın kendi uygulama içi satın alma sistemiyle gelecek.
 const STORE_APP = NATIVE;
+// Android uygulamasında Spark Google Play Faturalandırma ile satılır (KankaOdeme eklentisi olan sürümlerde). iOS'ta StoreKit gelene kadar gizli.
+const PLAY_BILL = NATIVE && NPLAT === 'android' && !!window.Capacitor?.isPluginAvailable?.('KankaOdeme');
+const SPARK_HIDE = STORE_APP && !PLAY_BILL;
 function showFriends(tab = friendTab) {
-  if (STORE_APP && tab === 'spark') tab = 'home';
+  if (SPARK_HIDE && tab === 'spark') tab = 'home';
   hideSuggest(); $('#cmdhint').style.display = 'none';
   document.body.classList.remove('discover', 'vview', 'forumv'); renderPip();
   $('#compose')?.classList.remove('ro-bot');
@@ -8312,7 +8329,7 @@ function showFriends(tab = friendTab) {
   const row = (n, extra, btns) => `<div class="frow" data-n="${esc(n)}">${av(n, S.online.has(n))}<div class="info"><b>${esc(n)}</b><small>${extra}</small></div>${btns}</div>`;
   let body;
   if (tab === 'home') body = homeHTML();
-  if (tab === 'spark') { $('#callbar')?.remove(); $('#messages').innerHTML = sparkHTML(); wireSpark(); return; }
+  if (tab === 'spark') { $('#callbar')?.remove(); if (PLAY_BILL) return sparkStore(); $('#messages').innerHTML = sparkHTML(); wireSpark(); return; }
   if (tab === 'pending') body = lists.pending.map(([d, n]) => row(n, d === 'in' ? 'Gelen arkadaşlık isteği' : 'Gönderilen istek',
     d === 'in' ? `<button data-acc="${esc(n)}" title="Kabul et" aria-label="Kabul et" style="color:var(--green)">${ic('check')}</button><button data-rem="${esc(n)}" title="Reddet" aria-label="Reddet" style="color:var(--red)">${ic('x')}</button>` : `<button data-rem="${esc(n)}" title="Geri çek" aria-label="İsteği geri çek">${ic('x')}</button>`)).join('');
   else if (tab === 'blocked') body = lists.blocked.map(n => row(n, 'Engellendi', `<button data-unb="${esc(n)}" title="Engeli kaldır" aria-label="Engeli kaldır">${ic('unlock')}</button>`)).join('');
@@ -8599,7 +8616,7 @@ function openEnergy(s) {
         <div class="en-acts">${r.spark ? `<button class="en-btn" id="en-send" ${r.free ? '' : 'disabled'}>${enIc()}<span>Sunucuya Energy Gönder</span></button>
             ${r.mine ? `<button class="en-pull" id="en-pull">Energy'yi Geri Çek</button>` : ''}
             <small class="en-note">Boşta <b>${r.free}</b> Energy'n var${r.mine ? ` · Bu sunucuda senin <b>${r.mine}</b> Energy'n` : ''}</small>`
-          : STORE_APP ? '' : `<button class="en-btn" id="en-spark">${ic('sparkle')}<span>Kanka Spark ile Energy kazan</span></button><small class="en-note">Kanka Spark abonelerine her ay 2 Energy verilir.</small>`}</div>
+          : SPARK_HIDE ? '' : `<button class="en-btn" id="en-spark">${ic('sparkle')}<span>Kanka Spark ile Energy kazan</span></button><small class="en-note">Kanka Spark abonelerine her ay 2 Energy verilir.</small>`}</div>
         <h4 class="en-h">Seviyeler ve ayrıcalıklar</h4>${energyLevelsHTML(r)}
         ${r.level >= 3 && s.owner === S.me ? `<div class="en-van"><label>Özel davet linki</label><div class="pt-vrow"><span>kankahq.com/s/</span><input class="field" id="en-slug" maxlength="24" value="${esc(s.vanity || '')}" placeholder="sunucun"><button class="en-pull" id="en-vsave">Kaydet</button></div></div>` : ''}
         <h4 class="en-h">Destekçiler</h4>
@@ -8655,6 +8672,84 @@ function wireSpark() {
   const goHq = () => { const s = S.servers.find(x => x.id === 's1'); if (s) selectServer('s1'); else toast('Kanka HQ\'ya katıl, oradan yazabilirsin'); };
   if ($('#sp-hq')) $('#sp-hq').onclick = goHq;
   if ($('#sp-hq-lnk')) $('#sp-hq-lnk').onclick = goHq;
+}
+// ---- Android: Google Play üzerinden Kanka Spark aboneliği ----
+// Sadece bugün gerçekten çalışan Spark avantajları listelenir (mağaza kuralı: satılan şey açıkça ve doğru anlatılmalı).
+const PLAY_MANAGE = u => `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(u || 'kanka_spark')}&package=com.kanka.chat`;
+const playDonem = p => ({ P1W: 'hafta', P1M: 'ay', P3M: '3 ay', P6M: '6 ay', P1Y: 'yıl' })[p] || p;
+let playLisOk = false;
+function playListen() {
+  if (playLisOk || !PLAY_BILL) return; playLisOk = true;
+  window.Capacitor.Plugins.KankaOdeme.addListener('satinAlim', ev => {
+    if (ev.durum === 'iptal') return;
+    if (ev.durum === 'zaten') return playRestore(true);
+    if (ev.durum !== 'tamam') return toast('Satın alma tamamlanamadı' + (ev.mesaj ? ': ' + ev.mesaj : ''), null, false, { type: 'err' });
+    for (const x of ev.satinAlimlar || []) {
+      if (x.durum === 'bekliyor') { toast('Ödemen onay bekliyor. Google onaylayınca Spark kendiliğinden açılır.'); continue; }
+      if (x.durum !== 'alindi') continue;
+      socket.emit('playBuy', { token: x.token }, r => {
+        if (r?.error) return toast(r.error, null, false, { type: 'err' });
+        if (r.pending) return toast('Ödemen onay bekliyor. Google onaylayınca Spark kendiliğinden açılır.');
+        if (r.active) toast('⚡ Kanka Spark açıldı! Hoş geldin.', null, false, { type: 'party' });
+        if (friendTab === 'spark' && !S.channel) sparkStore();
+      });
+    }
+  });
+}
+function playRestore(loud) { // uygulama açılışında: onaylanmamış / başka cihazdan alınmış aboneliği hesaba bağla
+  if (!PLAY_BILL || !S.me) return;
+  window.Capacitor.Plugins.KankaOdeme.mevcutlar().then(r => {
+    const tokens = (r.satinAlimlar || []).filter(x => x.durum === 'alindi').map(x => x.token);
+    if (!tokens.length) return loud && toast('Bu Google hesabında Kanka Spark aboneliği bulunamadı');
+    socket.emit('playRestore', { tokens }, x => { const e = x?.sonuc?.find(y => y.error); if (loud) toast(e ? e.error : x?.me?.active ? 'Spark aboneliğin geri yüklendi ⚡' : 'Aktif abonelik yok'); if (friendTab === 'spark' && !S.channel) sparkStore(); });
+  }).catch(e => loud && toast('Google Play\'e bağlanılamadı: ' + (e?.message || e)));
+}
+function sparkStore() {
+  playListen();
+  const M = $('#messages'); if (!M) return;
+  M.innerHTML = `<div class="spark sps"><div class="sp-inner"><div class="sp-bar"><div class="sp-brand"><span class="sp-brand-ic">${ic('sparkle')}</span>SPARK</div></div><div id="sps-b"><p class="hint" style="padding:30px 0">Yükleniyor…</p></div></div></div>`;
+  socket.emit('sparkMe', {}, async m => {
+    const B = $('#sps-b'); if (!B || m?.error) return;
+    let prod = null, off = null, err = '';
+    if (!m.active && m.playHazir) {
+      try { prod = (await window.Capacitor.Plugins.KankaOdeme.urunler({ ids: [m.playUrun] })).urunler?.[0] || null; } catch (e) { err = e?.message || String(e); }
+      const offs = prod?.teklifler || [];
+      off = offs.find(o => !o.teklif) || offs[0] || null; // önce temel plan; deneme/indirim teklifi varsa Google uygunluğa göre gösterir
+    }
+    if (!$('#sps-b')) return;
+    const ph = off?.fazlar || [], rec = ph.find(f => f.tekrar === 1) || ph[ph.length - 1], intro = ph.length > 1 ? ph[0] : null;
+    const perks = [
+      [ic('crown'), 'Spark rozeti', 'Profilinde ve üye listesinde, ne zamandan beri destekçi olduğunu gösteren rozet.'],
+      [zapSvg, `Her ay ${m.perMonth} Energy`, `Sevdiğin sunuculara gönder, istediğin zaman geri çek. Her ${m.bonusEvery} kesintisiz ayda +1 bonus Energy.`],
+      [ic('star'), 'Sunuculara seviye kazandır', (m.perks || []).slice(1).map((p, i) => `Level ${i + 1}: ${p.join(', ')}`).join(' · ')],
+    ];
+    const perkHTML = `<div class="sps-perks">${perks.map(([i, b, t]) => `<div class="sps-perk"><span class="sps-pi">${i}</span><div><b>${esc(b)}</b><p>${esc(t)}</p></div></div>`).join('')}</div>
+      <p class="hint" style="margin:10px 0 0">Sohbet, sesli odalar, aramalar ve botlar Spark olmadan da tamamen ücretsiz.</p>`;
+    let top;
+    if (m.active) top = `<div class="sps-card on"><h2>${ic('check')} Spark'ın açık</h2>
+        <p>${m.play ? (m.playYenile === false ? `Aboneliğin iptal edildi, <b>${esc(new Date(m.until).toLocaleDateString('tr-TR'))}</b> tarihine kadar açık kalır.` : `Google Play üzerinden her dönem otomatik yenilenir. Sonraki yenileme: <b>${esc(new Date(m.until).toLocaleDateString('tr-TR'))}</b>`) : `<b>${esc(new Date(m.until).toLocaleDateString('tr-TR'))}</b> tarihine kadar açık.`}</p>
+        <p>Boşta <b>${m.free}</b> Energy'n var · toplam ${m.energy}. Bir sunucunun adına dokunup "Energy" bölümünden gönderebilirsin.</p>
+        ${m.play ? `<button class="btns2" id="sps-man">${ic('gear')} Aboneliği yönet / iptal et (Google Play)</button>` : ''}</div>`;
+    else if (!m.playHazir) top = `<div class="sps-card"><h2>Kanka Spark</h2><p>Abonelik çok yakında bu ekrandan açılacak.</p></div>`;
+    else if (!off || !rec) top = `<div class="sps-card"><h2>Kanka Spark</h2><p>Abonelik bilgisi Google Play'den alınamadı${err ? ` (${esc(err)})` : ''}. İnternet bağlantını ve Google Play'de oturum açtığını kontrol edip tekrar dene.</p><button class="btns2" id="sps-re">Tekrar dene</button></div>`;
+    else top = `<div class="sps-card"><h2>Kanka Spark</h2>
+        <div class="sps-price"><b>${esc(rec.fiyat)}</b><span> / ${esc(playDonem(rec.donem))}</span></div>
+        ${intro ? `<p class="sps-intro">${intro.mikro === 0 ? `İlk ${esc(playDonem(intro.donem))}${intro.sayi > 1 ? ` × ${intro.sayi}` : ''} ücretsiz` : `İlk ${intro.sayi > 1 ? intro.sayi + ' ' : ''}${esc(playDonem(intro.donem))} ${esc(intro.fiyat)}`}, sonra ${esc(rec.fiyat)} / ${esc(playDonem(rec.donem))}. Uygunluğu Google Play belirler.</p>` : ''}
+        ${S.minor ? `<label class="chk" style="margin:10px 0"><input type="checkbox" id="sps-veli"><span>18 yaşından küçüğüm, bu satın alma için <b>velimin izni var</b>.</span></label>` : ''}
+        <button class="primary" id="sps-buy" ${S.minor ? 'disabled' : ''}>${ic('sparkle')} Abone ol</button>
+        <p class="sps-legal">Ödeme Google Play hesabından alınır. Abonelik, iptal etmediğin sürece her ${esc(playDonem(rec.donem))} aynı ücretle otomatik yenilenir. İstediğin zaman Google Play › Ödemeler ve abonelikler bölümünden iptal edebilirsin; iptal edersen dönem sonuna kadar Spark açık kalır. Kanka hesabını silmek aboneliği iptal etmez. <a href="/kosullar">Kullanım Şartları</a> · <a href="/gizlilik">Gizlilik</a></p></div>`;
+    B.innerHTML = `${top}<div class="sp-sec-title" style="margin:22px 0 10px">SPARK'TA NELER VAR</div>${perkHTML}
+      <div class="rowb" style="justify-content:flex-start;margin-top:16px"><button class="btns2" id="sps-rest">Satın alımları geri yükle</button></div>`;
+    const go = url => { location.href = url; };
+    if ($('#sps-man')) $('#sps-man').onclick = () => go(PLAY_MANAGE(m.playUrun));
+    if ($('#sps-re')) $('#sps-re').onclick = sparkStore;
+    $('#sps-rest').onclick = () => playRestore(true);
+    if ($('#sps-veli')) $('#sps-veli').onchange = e => { $('#sps-buy').disabled = !e.target.checked; };
+    if ($('#sps-buy')) $('#sps-buy').onclick = () => {
+      $('#sps-buy').disabled = true; setTimeout(() => { if ($('#sps-buy')) $('#sps-buy').disabled = S.minor && !$('#sps-veli')?.checked; }, 2500);
+      window.Capacitor.Plugins.KankaOdeme.satinAl({ urun: prod.id, teklif: off.token, hesap: m.playHesap }).catch(e => toast('Google Play açılamadı: ' + (e?.message || e), null, false, { type: 'err' }));
+    };
+  });
 }
 function wireHome() {
   const M = $('#messages');
@@ -8758,7 +8853,7 @@ function renderDMSide() {
       setTimeout(() => openGroup(r.id), 300);
     });
   }, 2);
-  $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div>${STORE_APP ? '' : `<div class="room sp-link ${!S.channel && friendTab === 'spark' ? 'active' : ''}" id="sp-link"><div class="ico">${ic('sparkle')}</div>Spark<span class="sp-soon">YAKINDA</span></div>`}<div class="room ${!S.channel && friendTab !== 'home' && friendTab !== 'spark' ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
+  $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div>${SPARK_HIDE ? '' : `<div class="room sp-link ${!S.channel && friendTab === 'spark' ? 'active' : ''}" id="sp-link"><div class="ico">${ic('sparkle')}</div>Spark<span class="sp-soon">YAKINDA</span></div>`}<div class="room ${!S.channel && friendTab !== 'home' && friendTab !== 'spark' ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
     const dnb = !d.group ? nbOf(S.users[d.with]) : null;
     return `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''} ${S.calls?.[d.id]?.length ? 'incall' : ''}${dnb ? ' has-nb nb-' + dnb : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${dnb ? nbLayers(dnb) : ''}${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, S.online.has(d.with))}<span class="nb-dmn">${styledNameHTML(d.with, S.users[d.with]?.nameStyle)}</span>`}</div>`;
   }).join('')
@@ -17820,7 +17915,7 @@ function wireAccount() {
   });
   $('#acc-del').onclick = () => {
     modal(`<div class="rp-head del">${ic('trash')}<div><h3>Hesabın silinsin mi?</h3><p class="hint">Bu işlem <b>geri alınamaz</b>.</p></div></div>
-      <ul class="del-list"><li>Profilin, rozetlerin, XP'in ve ayarların silinir</li><li>Gönderdiğin tüm mesajlar ve özel mesajlaşmaların silinir</li><li>Kurduğun sunucular en yetkili üyeye devredilir; üye yoksa silinir</li></ul>
+      <ul class="del-list"><li>Profilin, rozetlerin, XP'in ve ayarların silinir</li><li>Gönderdiğin tüm mesajlar ve özel mesajlaşmaların silinir</li><li>Kurduğun sunucular en yetkili üyeye devredilir; üye yoksa silinir</li>${S.users[S.me]?.sp ? '<li><b>Kanka Spark aboneliğin Google Play\'den ayrıca iptal edilmeli</b>; hesabı silmek ödemeyi durdurmaz</li>' : ''}</ul>
       <label class="rp-lbl">Onaylamak için kullanıcı adını yaz: <b>${esc(S.me)}</b></label><input class="field" id="del-name" autocomplete="off">
       <label class="rp-lbl">Şifren</label><input class="field" id="del-pw" type="password" autocomplete="current-password">${tfaField()}
       <div class="rowb"><button id="mx">Vazgeç</button><button class="primary danger-btn" id="del-go" disabled>Hesabımı kalıcı olarak sil</button></div>`, 'rep');
@@ -18140,6 +18235,11 @@ function adminPanel(el, sub = 'overview') {
       <label class="switch" style="margin:6px 0 10px">Yayın ortamı (TestFlight ve App Store)<input type="checkbox" id="mp-prod" ${r.apns?.prod === false ? '' : 'checked'}></label>
       <div class="rowb" style="justify-content:flex-start"><label class="btns2" style="cursor:pointer">${ic('upload')} .p8 anahtarını seç<input type="file" id="mp-p8" accept=".p8,text/plain" hidden></label><button class="primary" id="mp-asave" style="width:auto;padding:11px 20px">APNs'i kaydet</button></div>
       <p class="hint" style="margin-top:14px">Anahtarlar sunucunun veri klasöründe saklanır, GitHub'a gitmez. Kendi telefonunda denemek için: uygulamada Ayarlar › Bildirimler › Dene. Team ID girilince iOS uygulama bağlantıları (kankahq.com/.well-known/apple-app-site-association) da kendiliğinden açılır.</p>
+      <h5 class="ax-h" style="margin-top:18px">Google Play satın alma doğrulaması (Kanka Spark)</h5>
+      ${r.play ? `<p class="hint">Hizmet hesabı: <b>${esc(r.play.email)}</b> · aktif Play abonesi: <b>${r.play.abone}</b> <button class="btns2" id="mp-plx" style="margin-left:8px">Kaldır</button></p>
+        <div class="st-field"><label>Gerçek zamanlı bildirim adresi (Pub/Sub push)</label><input class="field" readonly value="${esc(r.play.rtdn)}" onclick="this.select()"></div>` : `<p class="hint">Ayarlanana kadar uygulamada "Abone ol" düğmesi görünmez.</p>`}
+      <ol class="steps"><li>console.cloud.google.com › Google Play Android Developer API'yi aç, bir <b>hizmet hesabı</b> oluştur, JSON anahtarını indir.</li><li>Play Console › Kullanıcılar ve izinler › hizmet hesabının e-postasını davet et: <b>Finansal verileri görüntüle</b> ve <b>Siparişleri ve abonelikleri yönet</b> izinleri.</li><li>JSON'u aşağıdan seç. Sonra çıkan bildirim adresini Pub/Sub push aboneliğine, konuyu da Play Console › Para kazanma kurulumu › Gerçek zamanlı geliştirici bildirimleri'ne gir.</li></ol>
+      <div class="rowb" style="justify-content:flex-start"><label class="btns2" style="cursor:pointer">${ic('upload')} Play hizmet hesabı JSON'u seç<input type="file" id="mp-play" accept=".json,application/json" hidden></label></div>
       <h5 class="ax-h" style="margin-top:18px">Mağaza inceleme hesapları</h5>
       <p class="hint">App Store ve Google Play incelemesi için iki demo hesap (<b>appleinceleme</b>, <b>appleinceleme2</b>) kurar: arkadaşlar, ortak bir test sunucusu (yazılı + sesli oda), DM ve örnek mesajlarla. Şifreleri sistem üretir ve sadece burada bir kez gösterir; tekrar basarsan şifreler yenilenir (iki mağazadaki notları da güncelle).</p>
       <div class="rowb" style="justify-content:flex-start"><button class="primary" id="mp-review" style="width:auto">İnceleme hesaplarını hazırla</button></div><div id="mp-review-out"></div></div>`;
@@ -18149,6 +18249,8 @@ function adminPanel(el, sub = 'overview') {
     $('#mp-p8').onchange = async e => { const f = e.target.files?.[0]; if (!f) return; p8 = await f.text(); toast('.p8 okundu, şimdi kaydet'); const m = /AuthKey_([A-Z0-9]{10})/.exec(f.name); if (m && !$('#mp-kid').value) $('#mp-kid').value = m[1]; };
     $('#mp-asave').onclick = () => socket.emit('adminMobilPush', { apns: { keyId: $('#mp-kid').value.trim().toUpperCase(), teamId: $('#mp-tid').value.trim().toUpperCase(), bundle: $('#mp-bid').value.trim(), prod: $('#mp-prod').checked, key: p8 } }, done);
     if ($('#mp-fcmx')) $('#mp-fcmx').onclick = () => socket.emit('adminMobilPush', { clear: 'fcm' }, done);
+    $('#mp-play').onchange = async e => { const f = e.target.files?.[0]; if (!f) return; socket.emit('adminMobilPush', { play: await f.text() }, done); };
+    if ($('#mp-plx')) $('#mp-plx').onclick = () => socket.emit('adminMobilPush', { clear: 'play' }, done);
     if ($('#mp-apx')) $('#mp-apx').onclick = () => socket.emit('adminMobilPush', { clear: 'apns' }, done);
     $('#mp-review').onclick = () => confirmBox('İnceleme hesapları hazırlansın mı? Yoksa kurulur, varsa şifreleri yenilenir; şifreler sadece bir kez gösterilir.', () => socket.emit('adminReviewAccounts', {}, x => {
       if (x.error) return toast(x.error, null, false, { type: 'err' });

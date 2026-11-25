@@ -1688,7 +1688,8 @@ const ENERGY_PERKS = [null,
   { emoji: 50, sb: 10, items: ['+50 özel emoji yeri', '+10 ses paneli yeri', 'Sunucu listesinde Energy rozeti'] },
   { emoji: 100, sb: 20, studio: true, items: ['+100 özel emoji yeri', '+20 ses paneli yeri', 'Stüdyo ses kalitesi (256 kbps)'] },
   { emoji: 150, sb: 30, studio: true, vanity: true, items: ['+150 özel emoji yeri', '+30 ses paneli yeri', 'Özel davet linki (kankahq.com/s/…)'] }];
-const sparkOn = u => !!(u?.spark && u.spark.until > Date.now());
+// Google Play aboneliğinde yenileme bildirimi birkaç saat gecikebilir: bitişten sonra 6 saat açık kalır, kesin kararı playSync verir
+const sparkOn = u => !!(u?.spark && u.spark.until + (u.spark.play ? 6 * 3600e3 : 0) > Date.now());
 const energyTotal = s => Object.values(s?.energy || {}).reduce((a, b) => a + b, 0);
 const energyLevel = s => { const t = energyTotal(s); let l = 0; for (let i = 1; i < ENERGY_LV.length; i++) if (t >= ENERGY_LV[i]) l = i; return l; };
 const energyPerk = (s, k) => { const l = energyLevel(s); return l ? ENERGY_PERKS[l][k] || 0 : 0; };
@@ -1703,7 +1704,7 @@ function sparkView(u) {
   const sp = u?.spark; if (!sp) return { active: false };
   const e = sp.energy || [], placed = {}; for (const x of e) if (x.srv) placed[x.srv] = (placed[x.srv] || 0) + 1;
   const done = sp.credited || 0;
-  return { active: sparkOn(u), since: sp.since, until: sp.until, months: done, nextBonusIn: SPARK_BONUS_EVERY - (done % SPARK_BONUS_EVERY),
+  return { active: sparkOn(u), since: sp.since, until: sp.until, months: done, play: !!sp.play, nextBonusIn: SPARK_BONUS_EVERY - (done % SPARK_BONUS_EVERY),
     nextCredit: sp.since + done * SPARK_MONTH < sp.until ? sp.since + done * SPARK_MONTH : null, energy: e.length, free: e.filter(x => !x.srv).length,
     placed: Object.entries(placed).map(([sid, n]) => { const sv = db.servers.find(x => x.id === sid); return { sid, n, name: sv?.name || 'Silinmiş sunucu', icon: sv?.icon || '', iconImg: sv?.iconImg || null, level: sv ? energyLevel(sv) : 0, total: sv ? energyTotal(sv) : 0 }; }) };
 }
@@ -1751,6 +1752,91 @@ setInterval(() => { try { // abonelik sayacı: ay dolunca Energy ver, süresi bi
   for (const u of Object.values(db.users)) { if (!u.spark) continue; if (!sparkOn(u)) sparkExpire(u); else if (sparkCredit(u)) { ch = true; io.to('user:' + u.name).emit('spark', sparkView(u)); } }
   if (ch) save();
 } catch (e) { console.error('spark', e); } }, 5 * 60e3);
+// ================= Google Play Faturalandırma (Kanka Spark aboneliği, Android uygulaması) =================
+// Satın alma telefonda Google Play ekranında olur. Uygulama purchaseToken'ı gönderir; sunucu Google Play Developer API
+// (purchases.subscriptionsv2) ile doğrular, Spark'ı Google'ın verdiği bitiş tarihine kadar açar ve satın almayı onaylar
+// (3 gün içinde onaylanmayan satın almayı Google iade eder). Yenileme, iptal, askı ve iadeler Google'ın gerçek zamanlı
+// bildirimleriyle (/play/rtdn, Pub/Sub push) ve 30 dakikalık kontrolle güncellenir. Kart bilgisi Kanka'ya hiç gelmez.
+const PLAY_PKG = 'com.kanka.chat', PLAY_SPARK = ['kanka_spark'];
+const PLAY_ON = ['SUBSCRIPTION_STATE_ACTIVE', 'SUBSCRIPTION_STATE_IN_GRACE_PERIOD', 'SUBSCRIPTION_STATE_CANCELED'];
+const playAcct = name => crypto.createHash('sha256').update('kanka-play|' + (uidOf(db.users[name]) || name)).digest('hex').slice(0, 48);
+const playReady = () => !!npCfg.play?.private_key;
+let playTok = null;
+async function playAccess() {
+  const sa = npCfg.play; if (!sa?.private_key) throw new Error('Google Play hizmet hesabı ayarlı değil');
+  if (playTok && playTok.exp > Date.now() + 60e3) return playTok.t;
+  const now = Math.floor(Date.now() / 1000), head = b64u(JSON.stringify({ alg: 'RS256', typ: 'JWT' })),
+    body = b64u(JSON.stringify({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/androidpublisher', aud: sa.token_uri || 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 }));
+  const sig = b64u(crypto.createSign('RSA-SHA256').update(head + '.' + body).sign(sa.private_key));
+  const r = await fetch(sa.token_uri || 'https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: head + '.' + body + '.' + sig }) });
+  const j = await r.json(); if (!j.access_token) throw new Error('Google Play giriş: ' + (j.error_description || j.error || r.status));
+  playTok = { t: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 }; return playTok.t;
+}
+const PLAY_API = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PLAY_PKG}/purchases/subscriptions`;
+async function playGet(token) {
+  const r = await fetch(`${PLAY_API}v2/tokens/${encodeURIComponent(token)}`, { headers: { Authorization: 'Bearer ' + await playAccess() } });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 404 || r.status === 410) return { gone: true };
+  if (!r.ok) throw new Error('Google Play: ' + (j.error?.message || r.status));
+  return j;
+}
+async function playAck(productId, token) {
+  const r = await fetch(`${PLAY_API}/${encodeURIComponent(productId)}/tokens/${encodeURIComponent(token)}:acknowledge`, { method: 'POST', headers: { Authorization: 'Bearer ' + await playAccess(), 'Content-Type': 'application/json' }, body: '{}' });
+  if (!r.ok) throw new Error('Google Play onay: ' + r.status);
+}
+function sparkPlay(u, until, token) { // Google Play aboneliği: bitiş tarihini Google belirler
+  if (!u.spark || !sparkOn(u)) sparkGrant(u, 0, 'google-play'); // yeni abonelik: hoş geldin mesajı ve sayaç
+  const sp = u.spark;
+  if (until > sp.until) sp.until = until;
+  if (sp.play !== token) { sp.play = token; (sp.log ||= []).push({ at: Date.now(), months: 0, by: 'google-play' }); sp.log = sp.log.slice(-30); }
+  sparkCredit(u); save(); io.to('user:' + u.name).emit('spark', sparkView(u)); pushUsers();
+}
+async function playSync(token, claimer = null) { // Google'dan güncel durumu al, Spark'ı aç/kapat, gerekiyorsa onayla
+  db.playSubs ||= {};
+  const info = await playGet(token), rec = db.playSubs[token];
+  if (info.gone) { if (rec) { const u = db.users[rec.u]; if (u?.spark?.play === token) sparkExpire(u, 'Google Play aboneliğin bulunamadı (iade edilmiş ya da silinmiş olabilir)'); delete db.playSubs[token]; save(); } return { error: 'Satın alma Google Play\'de bulunamadı' }; }
+  const li = (info.lineItems || []).find(l => PLAY_SPARK.includes(l.productId));
+  if (!li) return { error: 'Bu satın alma Kanka Spark değil' };
+  const acct = info.externalAccountIdentifiers?.obfuscatedExternalAccountId || '';
+  let owner = rec?.u || null;
+  if (!owner && acct) owner = (claimer && playAcct(claimer) === acct) ? claimer : Object.keys(db.users).find(n => playAcct(n) === acct) || null;
+  if (!owner && claimer && !acct) owner = claimer; // hesap kimliği olmadan yapılmış satın alma (Play Console test satın alması)
+  if (claimer && owner && owner !== claimer) return { error: 'Bu abonelik başka bir Kanka hesabına bağlı. O hesapla giriş yap.' };
+  if (!owner || !db.users[owner]) { if (rec) { delete db.playSubs[token]; save(); } return { error: 'Aboneliğin bağlı olduğu Kanka hesabı bulunamadı' }; }
+  if (info.linkedPurchaseToken && db.playSubs[info.linkedPurchaseToken]?.u === owner) delete db.playSubs[info.linkedPurchaseToken]; // yenilenen/yükseltilen eski abonelik
+  const exp = Date.parse(li.expiryTime || '') || 0, st = info.subscriptionState || '', on = PLAY_ON.includes(st) && exp > Date.now();
+  db.playSubs[token] = { u: owner, p: li.productId, at: rec?.at || Date.now(), st, exp, chk: Date.now(), test: !!info.testPurchase, yenile: !!li.autoRenewingPlan?.autoRenewEnabled };
+  const u = db.users[owner];
+  if (on) sparkPlay(u, exp, token);
+  else if (u.spark?.play === token) sparkExpire(u, st === 'SUBSCRIPTION_STATE_ON_HOLD' ? 'Google Play ödemen alınamadığı için aboneliğin beklemeye alındı. Ödeme yöntemini Google Play\'den güncelleyince Spark geri açılır'
+    : st === 'SUBSCRIPTION_STATE_PAUSED' ? 'Google Play aboneliğin duraklatıldı' : 'Google Play aboneliğin sona erdi');
+  if (on && info.acknowledgementState === 'ACKNOWLEDGEMENT_STATE_PENDING') { try { await playAck(li.productId, token); } catch (e) { console.error('play ack', e.message); } }
+  save();
+  return { ok: true, active: on, until: exp, state: st, pending: st === 'SUBSCRIPTION_STATE_PENDING', me: sparkView(u) };
+}
+app.post('/play/rtdn', express.json({ limit: '16kb' }), (req, res) => { // Google Play gerçek zamanlı geliştirici bildirimleri (Pub/Sub push)
+  if (npCfg.playRtdnKey && req.query.k !== npCfg.playRtdnKey) return res.status(403).end();
+  res.status(204).end();
+  if (!playReady() || limited('play-rtdn', 600, 60e3)) return;
+  let d; try { d = JSON.parse(Buffer.from(String(req.body?.message?.data || ''), 'base64').toString('utf8')); } catch { return; }
+  if (d?.packageName !== PLAY_PKG) return;
+  const pr = d.pendingRefundReviewNotification; // ters ibraz (chargeback) incelemesi: 24 saat içinde görüş bildir. Kanka tarafsız kalır, karar Google'ın
+  if (pr?.pendingRefundToken && pr.orderId) { playAccess().then(at => fetch(`https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PLAY_PKG}/orders/${encodeURIComponent(pr.orderId)}:reviewrefund`, { method: 'POST',
+    headers: { Authorization: 'Bearer ' + at, 'Content-Type': 'application/json' }, body: JSON.stringify({ pendingRefundToken: pr.pendingRefundToken, sampleContentProvided: true, refundPreference: 'NEUTRAL' }) }))
+    .then(r => { if (!r.ok) console.error('play reviewrefund', r.status); }).catch(e => console.error('play reviewrefund', e.message)); return; }
+  const token = d.subscriptionNotification?.purchaseToken || d.voidedPurchaseNotification?.purchaseToken; // sahte bildirim zararsız: durum hep Google'dan okunur
+  if (token && String(token).length < 400) playSync(String(token)).catch(e => console.error('play rtdn', e.message));
+});
+setInterval(async () => { // bildirim kaçarsa: bitişi yaklaşan / beklemedeki abonelikleri yokla
+  if (!playReady()) return;
+  for (const [t, r] of Object.entries(db.playSubs || {})) {
+    if (Date.now() - (r.chk || 0) < 30 * 60e3) continue;
+    const due = r.st === 'SUBSCRIPTION_STATE_PENDING' ? Date.now() - r.at < 4 * 864e5 : PLAY_ON.includes(r.st) || r.st === 'SUBSCRIPTION_STATE_ON_HOLD' ? r.exp < Date.now() + 3 * 3600e3 || r.st === 'SUBSCRIPTION_STATE_ON_HOLD' : false;
+    if (!due) { if (!PLAY_ON.includes(r.st) && r.st !== 'SUBSCRIPTION_STATE_ON_HOLD' && Date.now() - (r.chk || 0) > 90 * 864e5) delete db.playSubs[t]; continue; }
+    try { await playSync(t); } catch (e) { console.error('play sync', e.message); r.chk = Date.now(); }
+  }
+}, 10 * 60e3);
 function wipeMember(s, n) {
   if (s.energy?.[n]) energyRelease(n, s.id); // çıkan üyenin Energy'si kendisine geri döner
   if (db.users[n]?.tag === s.id) delete db.users[n].tag; // sunucudan çıkan etiketini de bırakır
@@ -3177,6 +3263,7 @@ function deleteUserData(name) {
   for (const [c, x] of Object.entries(db.codes)) if (x.by === name && !x.usedBy) delete db.codes[c];
   const em = db.users[name]?.email; if (em) db.waitlist = db.waitlist.filter(w => w.email !== em);
   for (const a of Object.values(db.apps || {})) if (a.owner === name) appRemove(a);
+  for (const [t, r] of Object.entries(db.playSubs || {})) if (r.u === name) delete db.playSubs[t]; // Google Play aboneliğini kullanıcı Play'den iptal eder
   delete db.users[name];
   save();
 }
@@ -5423,9 +5510,13 @@ io.on('connection', socket => {
     save(); pushUsers(); pushServers(names.filter(n => onlineNames().includes(n)));
     cb({ ok: true, accounts: out, server: sv.name });
   });
-  socket.on('adminMobilPush', ({ fcm, apns, clear } = {}, cb = () => {}) => {
+  socket.on('adminMobilPush', ({ fcm, apns, play, clear } = {}, cb = () => {}) => {
     if (!SA(cb)) return; if (staffRank(me) !== 'owner' && !siteAdmin(me)) return cb({ error: 'Yetkin yok' });
     if (clear === 'fcm') delete npCfg.fcm; if (clear === 'apns') delete npCfg.apns;
+    if (clear === 'play') { delete npCfg.play; playTok = null; }
+    if (play) { let j; try { j = typeof play === 'string' ? JSON.parse(play) : play; } catch { return cb({ error: 'Google Play hizmet hesabı JSON dosyası okunamadı' }); }
+      if (j.type !== 'service_account' || !j.client_email || !/BEGIN PRIVATE KEY/.test(j.private_key || '')) return cb({ error: 'Bu bir Google Cloud hizmet hesabı anahtarı değil (client_email, private_key olmalı)' });
+      npCfg.play = { client_email: j.client_email, private_key: j.private_key, token_uri: j.token_uri }; playTok = null; npCfg.playRtdnKey ||= crypto.randomBytes(18).toString('base64url'); }
     if (fcm) { let j; try { j = typeof fcm === 'string' ? JSON.parse(fcm) : fcm; } catch { return cb({ error: 'Firebase hizmet hesabı JSON dosyası okunamadı' }); }
       if (j.type !== 'service_account' || !j.project_id || !j.client_email || !/BEGIN PRIVATE KEY/.test(j.private_key || '')) return cb({ error: 'Bu bir Firebase hizmet hesabı anahtarı değil (project_id, client_email, private_key olmalı)' });
       npCfg.fcm = { project_id: j.project_id, client_email: j.client_email, private_key: j.private_key, token_uri: j.token_uri }; fcmTok = null; }
@@ -5434,9 +5525,10 @@ io.on('connection', socket => {
       if (!/BEGIN PRIVATE KEY/.test(a.key)) return cb({ error: 'APNs anahtarı (.p8 dosyasının içeriği) gerekli' });
       try { crypto.createPrivateKey(a.key); } catch { return cb({ error: '.p8 anahtarı okunamadı' }); }
       npCfg.apns = a; apnsJwt = null; }
-    if (fcm || apns || clear) { try { fs.writeFileSync(NPUSH_FILE, JSON.stringify(npCfg), { mode: 0o600 }); } catch (e) { return cb({ error: 'Kaydedilemedi: ' + e.message }); } staffLog(me, 'Mobil bildirim ayarlarını değiştirdi', '-'); }
+    if (fcm || apns || play || clear) { try { fs.writeFileSync(NPUSH_FILE, JSON.stringify(npCfg), { mode: 0o600 }); } catch (e) { return cb({ error: 'Kaydedilemedi: ' + e.message }); } staffLog(me, 'Mobil bildirim ayarlarını değiştirdi', '-'); }
     const cihaz = Object.values(db.users).reduce((a, u) => { for (const d of u.npush || []) a[d.p] = (a[d.p] || 0) + 1; return a; }, {});
-    cb({ ok: true, fcm: npCfg.fcm ? { project: npCfg.fcm.project_id, email: npCfg.fcm.client_email } : null, apns: npCfg.apns ? { keyId: npCfg.apns.keyId, teamId: npCfg.apns.teamId, bundle: npCfg.apns.bundle, prod: npCfg.apns.prod } : null, cihaz, stats: npStats });
+    cb({ ok: true, fcm: npCfg.fcm ? { project: npCfg.fcm.project_id, email: npCfg.fcm.client_email } : null, apns: npCfg.apns ? { keyId: npCfg.apns.keyId, teamId: npCfg.apns.teamId, bundle: npCfg.apns.bundle, prod: npCfg.apns.prod } : null, cihaz, stats: npStats,
+      play: npCfg.play ? { email: npCfg.play.client_email, rtdn: `${baseUrl()}/play/rtdn?k=${npCfg.playRtdnKey}`, abone: Object.values(db.playSubs || {}).filter(r => PLAY_ON.includes(r.st) && r.exp > Date.now()).length } : null });
   });
   socket.on('logout', token => { sessDel(token); if (socket.data.npTok && db.users[me]?.npush) db.users[me].npush = db.users[me].npush.filter(d => d.t !== socket.data.npTok); save(); });
 
@@ -7512,7 +7604,8 @@ io.on('connection', socket => {
   // Etikete tıklayınca açılan kart
   // Kanka Spark & Energy
   socket.on('sparkMe', (_, cb = () => {}) => { if (!me) return cb({ error: 'Giriş yap' }); const u = db.users[me]; if (u.spark && !sparkOn(u)) sparkExpire(u); else if (u.spark && sparkCredit(u)) save();
-    cb({ ...sparkView(u), perMonth: SPARK_PER_MONTH, bonusEvery: SPARK_BONUS_EVERY, levels: ENERGY_LV, perks: ENERGY_PERKS.map(p => p?.items || []) }); });
+    cb({ ...sparkView(u), perMonth: SPARK_PER_MONTH, bonusEvery: SPARK_BONUS_EVERY, levels: ENERGY_LV, perks: ENERGY_PERKS.map(p => p?.items || []),
+      playHazir: playReady(), playUrun: PLAY_SPARK[0], playHesap: playAcct(me), play: !!u.spark?.play, playYenile: u.spark?.play ? db.playSubs?.[u.spark.play]?.yenile !== false : null }); });
   socket.on('energyInfo', ({ serverId } = {}, cb = () => {}) => { const s = db.servers.find(x => x.id === serverId); if (!me || !s || !s.members.includes(me)) return cb({ error: 'Sunucu bulunamadı' }); cb(energyView(s, me)); });
   socket.on('energyMove', ({ serverId, n = 1, pull } = {}, cb = () => {}) => {
     const s = db.servers.find(x => x.id === serverId), u = db.users[me];
@@ -7530,6 +7623,19 @@ io.on('connection', socket => {
     cb({ ok: true, moved, server: energyView(s, me), me: sparkView(u), levelUp: after > before, levelDown: after < before });
   });
   // Spark (yakında gelecek artı paket): bekleme listesi
+  socket.on('playBuy', async ({ token } = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' }); if (limited('playbuy|' + me, 20, 60e3)) return cb({ error: 'Biraz bekle' });
+    token = String(token || ''); if (!token || token.length > 400) return cb({ error: 'Geçersiz satın alma' });
+    if (!playReady()) return cb({ error: 'Satın alma doğrulaması henüz açık değil. Ödemen alınmadıysa sorun yok; alındıysa birkaç gün içinde Google otomatik iade eder.' });
+    try { const r = await playSync(token, me); if (r.ok && !r.pending) secLog?.('play-satin-alma', me, `${r.active ? 'aktif' : r.state} · ${new Date(r.until).toISOString().slice(0, 10)}`); cb(r); }
+    catch (e) { console.error('playBuy', e.message); cb({ error: 'Google Play ile doğrulanamadı, biraz sonra tekrar dene. Spark açılmazsa uygulama her açılışta tekrar dener.' }); }
+  });
+  socket.on('playRestore', async ({ tokens } = {}, cb = () => {}) => {
+    if (!me || !playReady()) return cb({ ok: false }); if (limited('playrest|' + me, 6, 60e3)) return cb({ ok: false });
+    const out = []; for (const t of (Array.isArray(tokens) ? tokens : []).slice(0, 5)) { if (typeof t !== 'string' || t.length > 400) continue;
+      try { out.push(await playSync(t, me)); } catch (e) { out.push({ error: e.message }); } }
+    cb({ ok: true, sonuc: out, me: sparkView(db.users[me]) });
+  });
   socket.on('sparkInfo', (_, cb = () => {}) => { if (!me) return cb({ error: 'Giriş yap' }); const w = db.sparkWait || {}; cb({ bekliyor: !!w[me], sayi: Object.keys(w).length }); });
   socket.on('sparkWait', ({ on } = {}, cb = () => {}) => {
     if (!me) return cb({ error: 'Giriş yap' }); if (limited('spark|' + me, 10, 60e3)) return cb({ error: 'Biraz bekle' });

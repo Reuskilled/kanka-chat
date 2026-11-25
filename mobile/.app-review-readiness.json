@@ -9,10 +9,10 @@
     "screenshots_match_build": "todo",
     "account_deletion_device_test": "todo",
     "privacy_labels_match_runtime": "todo",
-    "iap_reachable_by_reviewer": "n/a"
+    "iap_reachable_by_reviewer": "todo"
   },
   "notes": {
-    "iap_reachable_by_reviewer": "Uygulama içi satın alma yok; Spark iOS ve Android uygulamalarında gizli (STORE_APP). Satış açılınca Apple IAP / Google Play Billing ile.",
+    "iap_reachable_by_reviewer": "Android: Kanka Spark aboneliği Google Play Billing ile (ürün kanka_spark, temel plan aylik). Mesajlar sekmesi > Spark. iOS'ta gizli (StoreKit gelene kadar). Play Console'da ürün etkin ve sunucuda Play hizmet hesabı yüklü olunca 'pass'.",
     "review_notes": "iOS: mobile/APP-STORE-CONNECT.md 5. bölüm. Android: mobile/GOOGLE-PLAY.md 4. bölüm. Demo hesap şifreleri girilince 'pass' yap.",
     "privacy_labels_match_runtime": "iOS: APP-STORE-CONNECT.md 6. bölüm + PrivacyInfo.xcprivacy. Android Data Safety: GOOGLE-PLAY.md 3. bölüm. Konsola girince 'pass' yap.",
     "account_deletion_device_test": "Uygulama içi: Sen sekmesi > Hesap > Hesabı sil. Web: https://kankahq.com/hesap-silme. Telefonda bir test hesabıyla deneyince 'pass' yap.",
