@@ -1043,12 +1043,24 @@ function migrateUids() { // eski hesaplara, açılış sırasına göre kimlik v
 // TAG.cfg.who = 'ekip' ise sadece Kanka ekibi, 'uye' ise o sunucunun tüm üyeleri takabilir. Ayar site yöneticisinde.
 // Sunucu: s.tag = { t: 'KHQ', i: '🦝', c: '#c8ff00', on: true, at, by } · Kullanıcı: u.tag = sunucu id
 const TAG_ICONS = ['🦝', '🔥', '⚡', '🎮', '👑', '💎', '🌙', '⭐', '🍀', '🐺', '🦊', '🐉', '🎧', '🎯', '🏆', '🚀', '💀', '❤️', '🌊', '🍕', '🎵', '🌸', '🛡️', '⚔️'];
+const TAG_PX_PACKS = {
+  cay: 0, kahve: 0, kulaklik: 0, rakun: 0, kivilcim: 0,
+  nazar: 2, sokakkedisi: 2, galata: 2, simit: 2, durum: 2,
+  nisangah: 3, katana: 3, clutch: 3, mvp: 3, zar: 3,
+  vizor: 3, kaset: 3, kankabot: 3, disk: 3, neonkalp: 3,
+  ejderha: 5, anka: 5, buz: 5, oni: 5, kurt: 5,
+  saturn: 5, astronot: 5, ufo: 5, goktasi: 5, portal: 5,
+};
+const TAG_STYLES = ['soft', 'neon', 'duo'];
+const TAG_FX = ['none', 'shimmer', 'pulse', 'bounce'];
 const TAG_COLORS = ['#c8ff00', '#ff7a59', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#f6c445', '#4cc38a', '#e5484d', '#e4e4e7'];
 const TAG_RESERVED = ['ADMN', 'ADMIN', 'KNKA', 'EKIP', 'EKİP', 'MOD', 'RESMI', 'RESMİ', 'KHQ', 'STAF', 'DEV'];
+const tagPxCost = i => typeof i === 'string' && i.startsWith('px:') && (i.slice(3) in TAG_PX_PACKS) ? TAG_PX_PACKS[i.slice(3)] : null;
+const tagAllFree = (s, n) => s?.id === 's1' || isStar(s) || siteAdmin(n);
 const TAG = {
   cfg() { return (db.tagCfg ||= { servers: ['s1'], who: 'ekip' }); },
   allowedServer: s => !!s && TAG.cfg().servers.includes(s.id),
-  defOf(s) { return s && TAG.allowedServer(s) && s.tag?.on && s.tag.t ? { t: s.tag.t, i: s.tag.i, c: s.tag.c, ad: s.name, simge: s.icon || null, simgeImg: s.iconImg || null } : null; },
+  defOf(s) { return s && TAG.allowedServer(s) && s.tag?.on && s.tag.t ? { t: s.tag.t, i: s.tag.i, c: s.tag.c, st: TAG_STYLES.includes(s.tag.st) ? s.tag.st : 'soft', fx: TAG_FX.includes(s.tag.fx) ? s.tag.fx : 'none', ad: s.name, simge: s.icon || null, simgeImg: s.iconImg || null } : null; },
   defs() { const o = {}; for (const s of db.servers) { const d = TAG.defOf(s); if (d) o[s.id] = d; } return o; },
   canUse(n, s) { const u = db.users[n]; if (!u || u.bot || !s || !TAG.defOf(s)) return false; if (!(s.public || s.members.includes(n)) || s.bans?.[n]) return false; return TAG.cfg().who === 'uye' || !!staffRank(n); },
   canList: n => db.servers.filter(s => TAG.canUse(n, s)).map(s => s.id),
@@ -7666,7 +7678,7 @@ io.on('connection', socket => {
     const s = db.servers.find(x => x.id === sid); if (!TAG.canUse(me, s)) return cb({ error: 'Bu sunucunun etiketini takamazsın' });
     u.tag = s.id; (db.tagStats ||= {})[s.id] = (db.tagStats[s.id] || 0) + 1; save(); pushUsers(); cb({ ok: true, tag: s.id });
   });
-  socket.on('srvTagSave', ({ serverId, t, i, c, on } = {}, cb = () => {}) => {
+  socket.on('srvTagSave', ({ serverId, t, i, c, st, fx, on } = {}, cb = () => {}) => {
     if (typeof cb !== 'function') return; const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || !(s.owner === me || can(s, me, 'manageServer') || (s.public && siteAdmin(me)))) return cb({ error: 'Yetkin yok' });
     if (!TAG.allowedServer(s)) return cb({ error: 'Sunucu etiketi şimdilik test aşamasında, sadece Kanka HQ\'da açık' });
@@ -7674,11 +7686,19 @@ io.on('connection', socket => {
     if (!/^[A-Z0-9ÇĞİÖŞÜ]{2,4}$/u.test(txt)) return cb({ error: 'Etiket 2-4 harf ya da rakam olmalı' });
     BAD_RE.lastIndex = 0; const bad = BAD_RE.test(txt); BAD_RE.lastIndex = 0; if (bad) return cb({ error: 'Bu etiket uygun değil' });
     if (s.id !== 's1' && TAG_RESERVED.includes(txt)) return cb({ error: 'Bu etiket Kanka\'ya ayrılmış' });
-    const icon = TAG_ICONS.includes(i) ? i : s.tag?.i || TAG_ICONS[0], col = TAG_COLORS.includes(c) ? c : s.tag?.c || TAG_COLORS[0];
-    const changed = !s.tag || s.tag.t !== txt || s.tag.i !== icon || s.tag.c !== col;
+    const freeAll = tagAllFree(s, me), en = energyTotal(s);
+    const pxCost = tagPxCost(i);
+    if (pxCost !== null && !freeAll && en < pxCost) return cb({ error: `Bu piksel rozet paketi için sunucuda en az ${pxCost} Energy gerekli (şu an ${en})` });
+    const icon = (pxCost !== null || TAG_ICONS.includes(i)) ? i : s.tag?.i || TAG_ICONS[0];
+    const col = TAG_COLORS.includes(c) ? c : s.tag?.c || TAG_COLORS[0];
+    const style = TAG_STYLES.includes(st) ? st : (TAG_STYLES.includes(s.tag?.st) ? s.tag.st : 'soft');
+    const effect = TAG_FX.includes(fx) ? fx : (TAG_FX.includes(s.tag?.fx) ? s.tag.fx : 'none');
+    if (style !== 'soft' && !freeAll && en < 2) return cb({ error: 'Özel etiket çerçeve stilleri için sunucuda en az 2 Energy gerekli' });
+    if (effect !== 'none' && !freeAll && en < 2) return cb({ error: 'Canlı etiket mikro-efektleri için sunucuda en az 2 Energy gerekli' });
+    const changed = !s.tag || s.tag.t !== txt || s.tag.i !== icon || s.tag.c !== col || (s.tag.st || 'soft') !== style || (s.tag.fx || 'none') !== effect;
     if (changed && s.tag?.at && Date.now() - s.tag.at < 864e5 && !siteAdmin(me)) return cb({ error: 'Etiketi günde bir kez değiştirebilirsin' });
-    s.tag = { t: txt, i: icon, c: col, on: on === undefined ? s.tag?.on ?? true : !!on, at: changed ? Date.now() : s.tag?.at || Date.now(), by: me };
-    audit(s, me, 'Sunucu etiketini değiştirdi', `${icon} ${txt}${s.tag.on ? '' : ' (kapalı)'}`);
+    s.tag = { t: txt, i: icon, c: col, st: style, fx: effect, on: on === undefined ? s.tag?.on ?? true : !!on, at: changed ? Date.now() : s.tag?.at || Date.now(), by: me };
+    audit(s, me, 'Sunucu etiketini değiştirdi', `${icon.startsWith('px:') ? '[' + icon.slice(3) + ']' : icon} ${txt}${s.tag.on ? '' : ' (kapalı)'}`);
     save(); pushServers(membersOf(s)); TAG.push(); cb({ ok: true, tag: s.tag });
   });
   // Etikete tıklayınca açılan kart

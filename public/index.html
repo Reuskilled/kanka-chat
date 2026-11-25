@@ -4173,19 +4173,67 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .sbf-row { display: grid; grid-template-columns: 96px 1fr 58px; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); margin: 6px 0; } .sbf-row input { accent-color: var(--accent); } .sbf-row em { font-style: normal; text-align: right; color: var(--ink); }
   .sbf-2 { display: grid; grid-template-columns: 64px 1fr; gap: 8px; margin-top: 10px; } .sbf-2 .field { margin: 0; } #sbf-emoji { text-align: center; font-size: 18px; }
   #vsb { flex: 0 0 auto; }
-  .stag { --tc: #c8ff00; display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; padding: 1px 6px 1px 4px; border-radius: 6px; font-weight: 800; font-size: 10.5px; line-height: 1.5; letter-spacing: .04em; color: var(--tc); background: color-mix(in srgb, var(--tc) 15%, transparent); border: 1px solid color-mix(in srgb, var(--tc) 40%, transparent); vertical-align: middle; cursor: pointer; white-space: nowrap; flex: none; transition: background .12s; }
-  .stag:hover { background: color-mix(in srgb, var(--tc) 26%, transparent); } .stag i { font-style: normal; font-size: 11px; line-height: 1; }
-  .stag.big { font-size: 13px; padding: 3px 9px 3px 7px; border-radius: 8px; margin: 0; } .stag.big i { font-size: 14px; }
-  .mem .stag { margin-left: 4px; font-size: 9.5px; padding: 0 5px 0 3px; } .vuser .stag { margin-left: 4px; font-size: 9.5px; padding: 0 5px 0 3px; }
-  #stagcard { position: fixed; z-index: 120; width: 270px; padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 20px 50px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 6px; animation: popIn .16s; }
-  .stc-top { display: flex; align-items: center; gap: 10px; } .stc-ic { width: 44px; height: 44px; border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--tc) 20%, var(--hover)); display: grid; place-items: center; font-size: 22px; flex: none; } .stc-ic img { width: 100%; height: 100%; object-fit: cover; }
-  .stc-ad { font-size: 15px; margin-top: 4px; } .stc-sub, .stc-note { color: var(--muted); font-size: 12px; } .stc-acts { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; } .stc-acts button { flex: 1; }
-  .tagpick { display: flex; flex-direction: column; gap: 6px; } .tagpick button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--hover); border: 1.5px solid transparent; text-align: left; font-weight: 700; font-size: 13.5px; color: var(--ink); }
+  .px-svg { image-rendering: pixelated; shape-rendering: crispEdges; display: inline-block; vertical-align: middle; flex-shrink: 0; }
+  .stag { --tc: #c8ff00; --tc2: #4aa8ff; position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 1.5px 6px 1.5px 4px; border-radius: 6px; font-weight: 800; font-size: 10.5px; line-height: 1.45; letter-spacing: .04em; color: var(--tc); background: color-mix(in srgb, var(--tc) 15%, transparent); border: 1px solid color-mix(in srgb, var(--tc) 42%, transparent); vertical-align: middle; cursor: pointer; white-space: nowrap; flex: none; user-select: none; transition: background .14s ease, transform .14s ease, box-shadow .14s ease; }
+  .stag:hover { background: color-mix(in srgb, var(--tc) 25%, transparent); transform: translateY(-.5px); } .stag i { font-style: normal; font-size: 11px; line-height: 1; display: inline-flex; align-items: center; }
+  .stag.big { font-size: 13px; padding: 4px 10px 4px 7px; border-radius: 8px; gap: 6px; margin: 0; } .stag.big i { font-size: 14px; } .stag.big .px-svg { width: 18px; height: 18px; }
+  .mem .stag, .vuser .stag { margin-left: 4px; font-size: 9.5px; padding: 0.5px 5px 0.5px 3.5px; gap: 3px; } .mem .stag .px-svg, .vuser .stag .px-svg { width: 12px; height: 12px; }
+  /* Kanka'ya özgü 3 etiket çerçeve stili + 4 hafif CSS mikro-efekt */
+  .stag.st-neon { background: color-mix(in srgb, var(--tc) 10%, #0b0b0f); border: 1px solid var(--tc); box-shadow: 0 0 10px color-mix(in srgb, var(--tc) 32%, transparent), inset 0 0 6px color-mix(in srgb, var(--tc) 18%, transparent); }
+  .stag.st-duo { background: linear-gradient(115deg, color-mix(in srgb, var(--tc) 24%, transparent), color-mix(in srgb, var(--tc2) 24%, transparent)); border: 1px solid color-mix(in srgb, var(--tc) 50%, var(--tc2)); }
+  .stag.fx-shimmer::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,.3) 50%, transparent 75%); transform: translateX(-140%); animation: tagShimmer 2.8s ease-in-out infinite; pointer-events: none; }
+  @keyframes tagShimmer { 0%, 55% { transform: translateX(-140%); } 100% { transform: translateX(140%); } }
+  .stag.fx-pulse .px-svg, .stag.fx-pulse i { animation: tagPulse 2.2s ease-in-out infinite; }
+  @keyframes tagPulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 transparent); } 50% { transform: scale(1.13); filter: drop-shadow(0 0 4px var(--tc)); } }
+  .stag.fx-bounce:hover .px-svg, .stag.fx-bounce:hover i { animation: tagHop .45s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes tagHop { 0% { transform: translateY(0) rotate(0deg); } 45% { transform: translateY(-3px) rotate(-8deg); } 100% { transform: translateY(0) rotate(0deg); } }
+  @media (prefers-reduced-motion: reduce) { .stag::after, .stag .px-svg, .stag i, .tgp-card .px-svg { animation: none !important; } }
+  #stagcard { position: fixed; z-index: 120; width: 278px; padding: 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 20px 50px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 6px; animation: popIn .16s; }
+  .stc-top { display: flex; align-items: center; gap: 10px; } .stc-ic { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; background: color-mix(in srgb, var(--tc) 20%, var(--hover)); display: grid; place-items: center; font-size: 22px; flex: none; } .stc-ic img { width: 100%; height: 100%; object-fit: cover; }
+  .stc-ad { font-size: 15px; margin-top: 4px; } .stc-sub, .stc-note { color: var(--muted); font-size: 12px; } .stc-acts { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; } .stc-acts button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .stc-pack { font-size: 11.5px; font-weight: 700; color: var(--accent); margin-top: 2px; }
+  .tagpick { display: flex; flex-direction: column; gap: 6px; } .tagpick button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--hover); border: 1.5px solid transparent; text-align: left; font-weight: 700; font-size: 13.5px; color: var(--ink); }
   .tagpick button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--hover)); } .tagpick button .stag { margin: 0; pointer-events: none; }
-  .tag-set { display: grid; gap: 14px; } .tag-icons { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; } .tag-icons button { aspect-ratio: 1; border-radius: 9px; background: var(--hover); font-size: 17px; border: 1.5px solid transparent; } .tag-icons button.on { border-color: var(--accent); }
-  .tag-cols { display: flex; gap: 6px; flex-wrap: wrap; } .tag-cols button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; } .tag-cols button.on { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
-  .tag-preview { padding: 14px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 12px; } .tag-preview .tp-msg { display: flex; gap: 10px; } .tag-preview .tp-msg p { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; } .tag-preview .tp-mem { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; } .tag-preview .stag { pointer-events: none; }
-  .tag-in { text-transform: uppercase; font-weight: 900; letter-spacing: .12em; font-size: 18px; width: 120px; text-align: center; }
+  .tag-set { display: grid; gap: 14px; } .tag-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 5px; } .tag-icons button { aspect-ratio: 1; border-radius: 8px; background: var(--hover); font-size: 17px; border: 1.5px solid transparent; display: grid; place-items: center; } .tag-icons button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--hover)); }
+  .tag-cols { display: flex; gap: 7px; flex-wrap: wrap; } .tag-cols button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; transition: transform .12s; } .tag-cols button:hover { transform: scale(1.1); } .tag-cols button.on { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+  .tag-preview { padding: 14px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 12px; } .tag-preview .tp-msg { display: flex; gap: 10px; } .tag-preview .tp-msg p { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; } .tag-preview .tp-mem { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; } .tag-preview .stag { pointer-events: none; }
+  .tag-in { text-transform: uppercase; font-weight: 900; letter-spacing: .12em; font-size: 18px; width: 124px; text-align: center; }
+  /* Sunucu Ayarları: Kanka Piksel Rozet Paketleri & Etiket Stüdyosu */
+  .tgp-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .tgp-tabs { display: inline-flex; gap: 3px; padding: 3px; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); }
+  .tgp-tabs button { padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--muted); } .tgp-tabs button.on { background: var(--hover); color: var(--ink); }
+  .tgp-rnd { padding: 6px 11px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 16%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); font-size: 12px; font-weight: 800; }
+  .tgp-rnd:hover { background: var(--accent); color: var(--on-accent); }
+  .tgp-packs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .tgp-packs { grid-template-columns: 1fr; } }
+  .tgp-card { border-radius: 11px; border: 1.5px solid var(--line); background: var(--card); overflow: hidden; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; text-align: left; }
+  .tgp-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .tgp-card.on { border-color: var(--accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .tgp-card.lock { opacity: .68; }
+  .tgp-stage { padding: 12px 10px; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--glow, #c8ff00) 18%, transparent), transparent 74%), var(--bg); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .tgp-srow { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .tgp-srow button { padding: 4px; border-radius: 7px; background: transparent; transition: transform .14s, background .14s; }
+  .tgp-srow button:hover { background: rgba(255,255,255,.09); transform: scale(1.12); }
+  .tgp-meta { padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .tgp-meta b { display: block; font-size: 12.5px; font-weight: 800; color: var(--ink); }
+  .tgp-cost { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; margin-top: 2px; color: var(--accent); }
+  .tgp-cost.free { color: var(--green); }
+  .tgp-sel { font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); flex-shrink: 0; }
+  .tgp-active { padding: 12px; border-radius: 11px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 9px; }
+  .tgp-ah { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .tgp-ah b { font-size: 13px; } .tgp-ah small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .tgp-bname { font-size: 11.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); color: var(--ink); }
+  .tgp-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .tgp-row button { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px; border-radius: 9px; border: 1.5px solid var(--line); background: var(--card); color: var(--muted); font-size: 10.5px; font-weight: 700; transition: all .12s; }
+  .tgp-row button:hover { transform: translateY(-1px); color: var(--ink); }
+  .tgp-row button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--ink); }
+  .tgp-row button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tgp-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tgp-seg.s4 { grid-template-columns: repeat(4, 1fr); }
+  .tgp-seg button { padding: 8px 6px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--card); color: var(--muted); font-size: 12px; font-weight: 700; transition: all .12s; }
+  .tgp-seg button:hover { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+  .tgp-seg button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); font-weight: 800; }
+  .tgp-seg button.lock { opacity: .6; }
   .box.tagi { max-width: 420px; text-align: center; } .ti-prev { padding: 14px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); margin-bottom: 14px; text-align: left; } .ti-row { display: flex; gap: 10px; } .ti-row small { color: var(--muted); font-size: 11px; margin-left: 6px; } .ti-row p { margin: 2px 0 0; } .tag-intro .stag { pointer-events: none; }
   /* ===== Kanka Wrapped ===== */
   #wr { position: fixed; inset: 0; z-index: 95; background: #000; display: grid; place-items: center; animation: fadeIn .2s; outline: none; }
@@ -7832,25 +7880,117 @@ function showServerSettings(s, tab, focus) {
   const roleChecks = (sel, name) => (s.customRoles || []).filter(r => !r.bot).map(r => `<label class="chk"><input type="checkbox" name="${name}" value="${r.id}" ${sel.includes(r.id) ? 'checked' : ''}><span class="rdot" style="background:${r.color}"></span>${esc(r.name)}</label>`).join('') || '<p class="hint">Henüz rol yok. Önce Roller sekmesinden rol oluştur.</p>';
   const page = {
     tag: () => {
-      const cur = s.tag || { t: '', i: TAG_ICONS_C[0], c: TAG_COLORS_C[0], on: true }, d = { ...cur };
-      main.innerHTML = `<div class="st-page"><h3>Sunucu etiketi <span class="beta-pill">TEST</span></h3><p class="hint">Üyeler bu etiketi isimlerinin yanına takabilir; herkes etikete tıklayıp sunucunu görür. Etiketi günde bir kez değiştirebilirsin.</p>
-        <div class="tag-set"><div class="st-field"><label>Etiket (2-4 harf ya da rakam)</label><input class="field tag-in" id="tg-t" maxlength="4" value="${esc(cur.t)}" autocomplete="off" spellcheck="false"></div>
-          <div class="st-field"><label>Simge</label><div class="tag-icons" id="tg-i">${TAG_ICONS_C.map(x => `<button type="button" data-i="${x}" class="${x === cur.i ? 'on' : ''}">${x}</button>`).join('')}</div></div>
-          <div class="st-field"><label>Renk</label><div class="tag-cols" id="tg-c">${TAG_COLORS_C.map(x => `<button type="button" data-c="${x}" style="background:${x}" class="${x === cur.c ? 'on' : ''}" aria-label="Renk ${x}"></button>`).join('')}</div></div>
+      const cur = s.tag || { t: '', i: 'px:cay', c: TAG_COLORS_C[0], st: 'soft', fx: 'none', on: true };
+      const d = { t: cur.t || '', i: cur.i || 'px:cay', c: cur.c || TAG_COLORS_C[0], st: cur.st || 'soft', fx: cur.fx || 'none', on: cur.on !== false };
+      const freeAll = s.id === 's1' || S.siteAdmin || (s.badges || []).some(b => b.id === 'yildiz');
+      const en = s.energy?.total || 0;
+      const canCost = cost => freeAll || !cost || en >= cost;
+      let mode = tagPxId(d.i) ? 'px' : (s.tag ? 'emoji' : 'px');
+      let actPack = (tagPackOf(d.i) || TAG_PX_PACKS[0]).id;
+      main.innerHTML = `<div class="st-page"><h3>Sunucu etiketi <span class="beta-pill">TEST</span></h3><p class="hint">Üyeler bu etiketi isimlerinin yanına takabilir; herkes etikete tıklayıp sunucunu görür. 6 Kanka piksel paketi (30 rozet), 3 çerçeve stili ve 4 hafif mikro-efekt. Etiketi günde bir kez değiştirebilirsin.</p>
+        <div class="tag-set"><div class="st-field"><label>Etiket (2-4 harf ya da rakam)</label><input class="field tag-in" id="tg-t" maxlength="4" value="${esc(cur.t || '')}" autocomplete="off" spellcheck="false" placeholder="KHQ"></div>
+          <div class="st-field"><label>Simge</label>
+            <div class="tgp-top"><div class="tgp-tabs" id="tg-tabs"><button type="button" data-tm="px" class="${mode === 'px' ? 'on' : ''}">Piksel Rozetler (30)</button><button type="button" data-tm="emoji" class="${mode === 'emoji' ? 'on' : ''}">Klasik Emojiler (24)</button></div><button type="button" class="tgp-rnd" id="tg-rnd">✦ Rastgele</button></div>
+            <div id="tg-px-wrap" style="${mode === 'px' ? 'display:grid;gap:10px;margin-top:8px' : 'display:none'}"><div class="tgp-packs" id="tg-packs"></div><div class="tgp-active" id="tg-act"></div></div>
+            <div class="tag-icons" id="tg-i" style="${mode === 'emoji' ? 'margin-top:8px' : 'display:none'}">${TAG_ICONS_C.map(x => `<button type="button" data-i="${x}" class="${x === d.i ? 'on' : ''}">${x}</button>`).join('')}</div>
+          </div>
+          <div class="st-field"><label>Çerçeve Stili${!canCost(2) ? ' <span class="hint" style="font-weight:600">(Neon &amp; Çift Renk: 2 Energy)</span>' : ''}</label><div class="tgp-seg" id="tg-st"></div></div>
+          <div class="st-field"><label>Canlı Mikro-Efekt${!canCost(2) ? ' <span class="hint" style="font-weight:600">(Efektler: 2 Energy)</span>' : ''}</label><div class="tgp-seg s4" id="tg-fx"></div></div>
+          <div class="st-field"><label>Renk</label><div class="tag-cols" id="tg-c">${TAG_COLORS_C.map(x => `<button type="button" data-c="${x}" style="background:${x}" class="${x === d.c ? 'on' : ''}" aria-label="Renk ${x}"></button>`).join('')}</div></div>
           <div class="st-field"><label>Önizleme</label><div class="tag-preview" id="tg-p"></div></div>
           ${s.tag && cur.on === false ? `<div class="tag-off">${ic('info')}<span><b>Etiket kapalı:</b> şu an kimse takamıyor, takanlarda da görünmüyor. Açmak için aşağıdaki kutuyu işaretleyip kaydet.</span></div>` : ''}
           <label class="switch">Üyeler etiketi takabilsin<input type="checkbox" id="tg-on" ${cur.on !== false ? 'checked' : ''}></label>
-          ${S.siteAdmin && S.tagCfg ? `<div class="st-field"><label>Test: kimler takabilir</label><select class="field" id="tg-who"><option value="ekip" ${S.tagCfg.who === 'ekip' ? 'selected' : ''}>Sadece Kanka ekibi</option><option value="uye" ${S.tagCfg.who === 'uye' ? 'selected' : ''}>Sunucunun tüm üyeleri</option></select><small class="hint" id="tg-st"></small></div>` : ''}
+          ${S.siteAdmin && S.tagCfg ? `<div class="st-field"><label>Test: kimler takabilir</label><select class="field" id="tg-who"><option value="ekip" ${S.tagCfg.who === 'ekip' ? 'selected' : ''}>Sadece Kanka ekibi</option><option value="uye" ${S.tagCfg.who === 'uye' ? 'selected' : ''}>Sunucunun tüm üyeleri</option></select><small class="hint" id="tg-st-info"></small></div>` : ''}
           <div><button class="primary" id="tg-save">${ic('check')} Kaydet</button></div></div></div>`;
-      const prev = () => { const t = ($('#tg-t').value || 'ETKT').toLocaleUpperCase('tr'), chip = tagChip({ t, i: d.i, c: d.c, ad: s.name }, s.id, 'tag-prev');
-        $('#tg-p').innerHTML = `<div class="tp-msg">${av(S.me)}<div><b style="color:${userColor(S.me)}">${esc(dn(S.me))}</b>${chip}<p>bu akşam turnuva var, kimler geliyor?</p></div></div><div class="tp-mem">${av(S.me)}<span>${esc(dn(S.me))}</span>${chip}</div>`; };
+      const prev = () => {
+        const t = ($('#tg-t').value || 'ETKT').toLocaleUpperCase('tr');
+        const td = { t, i: d.i, c: d.c, st: d.st, fx: d.fx, ad: s.name };
+        const chip = tagChip(td, s.id, 'tag-prev'), big = tagChip(td, s.id, 'tag-prev big');
+        $('#tg-p').innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">${big}<small class="hint">${tagPxId(d.i) ? esc(TAG_PX_SPRITES[tagPxId(d.i)].name) : 'Klasik Emoji'}</small></div>
+          <div class="tp-msg">${av(S.me)}<div><b style="color:${userColor(S.me)}">${esc(dn(S.me))}</b>${chip}<p>bu akşam turnuva var, kimler geliyor?</p></div></div>
+          <div class="tp-mem">${av(S.me)}<span>${esc(dn(S.me))}</span>${chip}</div>`;
+      };
+      const renderPacks = () => {
+        const curPx = tagPxId(d.i);
+        $('#tg-packs').innerHTML = TAG_PX_PACKS.map(pk => {
+          const ok = canCost(pk.cost), on = actPack === pk.id;
+          const costHtml = !pk.cost ? '<span class="tgp-cost free">Ücretsiz</span>' : ok ? `<span class="tgp-cost free">⚡ ${pk.cost} Energy · Açık</span>` : `<span class="tgp-cost">🔒 ${pk.cost} Energy</span>`;
+          return `<div class="tgp-card${on ? ' on' : ''}${ok ? '' : ' lock'}" data-pk="${pk.id}" style="--glow:${pk.glow}" role="button" tabindex="0">
+            <div class="tgp-stage">
+              <div class="tgp-srow">${pk.items.slice(0, 3).map(id => `<button type="button" data-px="${id}" title="${esc(TAG_PX_SPRITES[id].name)}">${renderPixelSVG(id, 28)}</button>`).join('')}</div>
+              <div class="tgp-srow">${pk.items.slice(3).map(id => `<button type="button" data-px="${id}" title="${esc(TAG_PX_SPRITES[id].name)}">${renderPixelSVG(id, 28)}</button>`).join('')}</div>
+            </div>
+            <div class="tgp-meta"><div><b>${esc(pk.title)}</b>${costHtml}</div>${on ? '<span class="tgp-sel">Seçili</span>' : ''}</div>
+          </div>`;
+        }).join('');
+        const pk = TAG_PX_PACKS.find(p => p.id === actPack) || TAG_PX_PACKS[0];
+        const selId = curPx && pk.items.includes(curPx) ? curPx : null;
+        $('#tg-act').innerHTML = `<div class="tgp-ah"><div><b>${esc(pk.title)}</b><small>${esc(pk.desc)}</small></div>${selId ? `<span class="tgp-bname">${esc(TAG_PX_SPRITES[selId].name)}</span>` : ''}</div>
+          <div class="tgp-row">${pk.items.map(id => `<button type="button" data-pxb="${id}" class="${curPx === id ? 'on' : ''}" title="${esc(TAG_PX_SPRITES[id].name)}">${renderPixelSVG(id, 26)}<span>${esc(TAG_PX_SPRITES[id].name.split(' ').slice(-1)[0])}</span></button>`).join('')}</div>`;
+        const pickPx = (pkObj, id) => {
+          if (!canCost(pkObj.cost)) return toast(`Bu piksel rozet paketi için sunucuda en az ${pkObj.cost} Energy gerekli (şu an ${en})`);
+          actPack = pkObj.id; d.i = 'px:' + id; renderPacks(); prev();
+        };
+        $('#tg-packs').querySelectorAll('[data-pk]').forEach(card => {
+          const pkObj = TAG_PX_PACKS.find(p => p.id === card.dataset.pk);
+          card.onclick = e => {
+            const btn = e.target.closest('[data-px]');
+            if (btn) { e.stopPropagation(); pickPx(pkObj, btn.dataset.px); return; }
+            if (!canCost(pkObj.cost)) return toast(`Bu piksel rozet paketi için sunucuda en az ${pkObj.cost} Energy gerekli (şu an ${en})`);
+            actPack = pkObj.id; if (!pkObj.items.includes(tagPxId(d.i))) d.i = 'px:' + pkObj.items[0];
+            renderPacks(); prev();
+          };
+        });
+        $('#tg-act').querySelectorAll('[data-pxb]').forEach(b => b.onclick = () => pickPx(pk, b.dataset.pxb));
+      };
+      const renderSegs = () => {
+        $('#tg-st').innerHTML = TAG_STYLES_C.map(x => {
+          const ok = canCost(x.cost);
+          return `<button type="button" data-st="${x.id}" class="${d.st === x.id ? 'on' : ''}${ok ? '' : ' lock'}">${x.label}${!ok ? ' 🔒' : ''}</button>`;
+        }).join('');
+        $('#tg-fx').innerHTML = TAG_FX_C.map(x => {
+          const ok = canCost(x.cost);
+          return `<button type="button" data-fx="${x.id}" class="${d.fx === x.id ? 'on' : ''}${ok ? '' : ' lock'}">${x.label}${!ok ? ' 🔒' : ''}</button>`;
+        }).join('');
+        $('#tg-st').querySelectorAll('[data-st]').forEach(b => b.onclick = () => {
+          const item = TAG_STYLES_C.find(x => x.id === b.dataset.st);
+          if (!canCost(item.cost)) return toast(`Özel çerçeve stilleri için sunucuda en az ${item.cost} Energy gerekli (şu an ${en})`);
+          d.st = item.id; renderSegs(); prev();
+        });
+        $('#tg-fx').querySelectorAll('[data-fx]').forEach(b => b.onclick = () => {
+          const item = TAG_FX_C.find(x => x.id === b.dataset.fx);
+          if (!canCost(item.cost)) return toast(`Canlı mikro-efektler için sunucuda en az ${item.cost} Energy gerekli (şu an ${en})`);
+          d.fx = item.id; renderSegs(); prev();
+        });
+      };
+      const setMode = m => {
+        mode = m;
+        $('#tg-tabs').querySelectorAll('[data-tm]').forEach(b => b.classList.toggle('on', b.dataset.tm === m));
+        $('#tg-px-wrap').style.display = m === 'px' ? 'grid' : 'none';
+        $('#tg-i').style.display = m === 'emoji' ? 'grid' : 'none';
+        if (m === 'px') renderPacks();
+      };
+      $('#tg-tabs').querySelectorAll('[data-tm]').forEach(b => b.onclick = () => setMode(b.dataset.tm));
+      $('#tg-rnd').onclick = () => {
+        const availPacks = TAG_PX_PACKS.filter(p => canCost(p.cost));
+        const pk = availPacks[Math.floor(Math.random() * availPacks.length)] || TAG_PX_PACKS[0];
+        actPack = pk.id;
+        d.i = 'px:' + pk.items[Math.floor(Math.random() * pk.items.length)];
+        d.c = TAG_COLORS_C[Math.floor(Math.random() * TAG_COLORS_C.length)];
+        const avSt = TAG_STYLES_C.filter(x => canCost(x.cost));
+        const avFx = TAG_FX_C.filter(x => canCost(x.cost));
+        d.st = avSt[Math.floor(Math.random() * avSt.length)].id;
+        d.fx = avFx[Math.floor(Math.random() * avFx.length)].id;
+        $('#tg-c').querySelectorAll('[data-c]').forEach(x => x.classList.toggle('on', x.dataset.c === d.c));
+        setMode('px'); renderSegs(); prev();
+      };
       $('#tg-t').oninput = e => { e.target.value = e.target.value.toLocaleUpperCase('tr').replace(/[^A-Z0-9ÇĞİÖŞÜ]/gu, ''); prev(); };
       $('#tg-i').querySelectorAll('[data-i]').forEach(b => b.onclick = () => { d.i = b.dataset.i; $('#tg-i').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); prev(); });
       $('#tg-c').querySelectorAll('[data-c]').forEach(b => b.onclick = () => { d.c = b.dataset.c; $('#tg-c').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); prev(); });
-      $('#tg-save').onclick = () => socket.emit('srvTagSave', { serverId: s.id, t: $('#tg-t').value, i: d.i, c: d.c, on: $('#tg-on').checked }, done('Sunucu etiketi kaydedildi'));
+      $('#tg-save').onclick = () => socket.emit('srvTagSave', { serverId: s.id, t: $('#tg-t').value, i: d.i, c: d.c, st: d.st, fx: d.fx, on: $('#tg-on').checked }, done('Sunucu etiketi kaydedildi'));
       if ($('#tg-who')) { $('#tg-who').onchange = e => socket.emit('tagCfgSet', { who: e.target.value }, r => { if (r?.error) return toast(r.error); S.tagCfg = r.cfg; toast(r.cfg.who === 'uye' ? 'Artık tüm üyeler etiketi takabilir' : 'Artık sadece Kanka ekibi takabilir'); });
-        socket.emit('tagInfo', s.id, x => { if (x && $('#tg-st')) $('#tg-st').textContent = `${x.takan} kişi takıyor · toplam ${x.tiklama || 0} kez takıldı`; }); }
-      prev();
+        socket.emit('tagInfo', s.id, x => { if (x && $('#tg-st-info')) $('#tg-st-info').textContent = `${x.takan} kişi takıyor · toplam ${x.tiklama || 0} kez takıldı`; }); }
+      renderPacks(); renderSegs(); prev();
     },
     bot: () => {
       const b = s.bot || {}, m = b.mod || {};
@@ -14872,10 +15012,215 @@ function wrNudge() {
   $('#wrn-no').onclick = closeModal; $('#wrn-go').onclick = () => { closeModal(); openWrapped({ year: y }); };
 }
 // ================= Sunucu etiketi =================
-// İsmin yanında küçük etiket: [🦝 KHQ]. Tıklayınca sunucu kartı açılır. Test aşamasında sadece Kanka HQ.
+// İsmin yanında küçük etiket: [piksel rozet / emoji + KHQ]. Tıklayınca sunucu kartı açılır.
 const TAG_ICONS_C = ['🦝', '🔥', '⚡', '🎮', '👑', '💎', '🌙', '⭐', '🍀', '🐺', '🦊', '🐉', '🎧', '🎯', '🏆', '🚀', '💀', '❤️', '🌊', '🍕', '🎵', '🌸', '🛡️', '⚔️'];
 const TAG_COLORS_C = ['#c8ff00', '#ff7a59', '#4aa8ff', '#b07cff', '#ff6b9a', '#2fd3c3', '#f6c445', '#4cc38a', '#e5484d', '#e4e4e7'];
-const tagChip = (d, sid, cls = '') => d ? `<span class="stag ${cls}" data-stag="${esc(sid)}" style="--tc:${esc(d.c)}" title="${esc(d.ad)} etiketi" role="button" tabindex="0"><i>${esc(d.i)}</i>${esc(d.t)}</span>` : '';
+const TAG_DUO_PAIR = {
+  '#c8ff00': '#2fd3c3', '#ff7a59': '#f6c445', '#4aa8ff': '#b07cff', '#b07cff': '#ff6b9a', '#ff6b9a': '#ff7a59',
+  '#2fd3c3': '#4aa8ff', '#f6c445': '#ff7a59', '#4cc38a': '#c8ff00', '#e5484d': '#b07cff', '#e4e4e7': '#4aa8ff',
+};
+const TAG_STYLES_C = [
+  { id: 'soft', label: 'Klasik Cam', cost: 0 },
+  { id: 'neon', label: 'Neon Hat', cost: 2 },
+  { id: 'duo', label: 'Çift Renk', cost: 2 },
+];
+const TAG_FX_C = [
+  { id: 'none', label: 'Sade', cost: 0 },
+  { id: 'shimmer', label: 'Parıltı', cost: 2 },
+  { id: 'pulse', label: 'Nabız', cost: 2 },
+  { id: 'bounce', label: 'Hover', cost: 2 },
+];
+// 30 özgün 16x16 Kanka Piksel Rozeti (6 paket)
+const TAG_PX_SPRITES = {
+  cay: {
+    name: 'İnce Belli Çay',
+    pal: { k: '#09090d', w: '#e2e8f0', s: '#94a3b8', r: '#dc2626', h: '#f87171', d: '#991b1b', c: '#cbd5e1' },
+    grid: ['................','......c..c......','.....c..c.......','....kkkkkkkk....','...kwwwwwwwwk...','....kwrhrrwk....','....kwrrrrwk....','.....kwrrwk.....','....kwrhrrwk....','...kwrrrrddwk...','...kwrrrdddwk...','....kddddddk....','..kksssssssskk..','.kwwwwwwwwwwwwk.','..kkkkkkkkkkkk..','................']
+  },
+  kahve: {
+    name: 'Gece Kahvesi',
+    pal: { k: '#09090d', w: '#f8fafc', s: '#cbd5e1', b: '#78350f', l: '#d97706', c: '#e2e8f0', a: '#c8ff00' },
+    grid: ['................','.....c...c......','......c.c.......','................','..kkkkkkkkkk....','.kwwbbbbbbwwk...','.kwbllllllbwkkk.','.kwwwwwwwwwwk.wk','.kwwssaaasswk.wk','.kwwssaaasswk.wk','.kwwwwwwwwwwkkk.','.kwwsssssswwk...','..kssssssssk....','...kkkkkkkk.....','................','................']
+  },
+  kulaklik: {
+    name: 'Gece Kulaklığı',
+    pal: { k: '#09090d', d: '#27272a', g: '#52525b', l: '#a1a1aa', a: '#c8ff00', c: '#84cc16' },
+    grid: ['................','....kkkkkkkk....','...kggggggggk...','..kgllggggllgk..','..kgk.kkkk.kgk..','.kgk........kgk.','.kgk........kgk.','kddk........kddk','kdak........kadk','kdak........kadk','kdck........kcdk','kddk........kddk','.kk..k.......kk.','......kk........','................','................']
+  },
+  rakun: {
+    name: 'Kanka Rakunu',
+    pal: { k: '#09090d', g: '#71717a', l: '#d4d4d8', w: '#fafafa', d: '#27272a', a: '#c8ff00' },
+    grid: ['................','..kk........kk..','.kwwk......kwwk.','.kwgk.kkkk.kgwk.','.kggkkggggkkggk.','.kggllggggllggk.','.kdddkwggwkdddk.','.kddadwggwdaddk.','.kdddkwggwkdddk.','..kllwwwwwwllk..','...kwwwkkwwwk...','....kwwwwwwk....','.....kkkkkk.....','................','................','................']
+  },
+  kivilcim: {
+    name: 'Kanka Kıvılcımı',
+    pal: { k: '#09090d', a: '#c8ff00', w: '#f7fee7', g: '#84cc16', d: '#4d7c0f' },
+    grid: ['................','.......kk.......','......kaak......','......kawk......','.....kawawk.....','....kawwwaak....','.kkkkawwwaakkkk.','kaawwwwwwwwwwaak','.kkkkawwwaakkkk.','....kgwwwagk....','.....kgwagk.....','......kdgk......','......kdk.......','.......k........','................','................']
+  },
+  nazar: {
+    name: 'Nazar Boncuğu',
+    pal: { k: '#09090d', b: '#1d4ed8', m: '#2563eb', c: '#38bdf8', w: '#f8fafc', y: '#fde047' },
+    grid: ['................','................','....kkkkkkkk....','...kbbbbbbbbk...','..kbbmwwwwmbbk..','..kbmwccccwmbk..','.kbbmwckkcwmbbk.','.kbbmwcwkcwmbbk.','.kbbmwckkcwmbbk.','.kbbmwccccwmbbk.','..kbmwwccwwmbk..','..kbbmmwwmmbbk..','...kbbbbbbbbk...','....kkkkkkkk....','................','................']
+  },
+  sokakkedisi: {
+    name: 'Cool Sokak Kedisi',
+    pal: { k: '#09090d', o: '#f59e0b', h: '#fbbf24', d: '#b45309', w: '#fef3c7', c: '#38bdf8', p: '#f472b6' },
+    grid: ['................','..kk........k...','.kooh......kok..','.koph.kkkk.kok..','.koohkdoookook..','.koooohhhhoook..','kkkkkkkkkkkkkkkk','kckckkhhhhkkckck','.kkkkhwwwwhkkkk.','.kwwwwhppwhwwwk.','..kwwwwkkwwwwk..','...kwwwwwwwwk...','....kkkkkkkk....','................','................','................']
+  },
+  galata: {
+    name: 'Galata Kulesi',
+    pal: { k: '#09090d', r: '#7c2d12', o: '#9a3412', s: '#d6d3d1', d: '#a8a29e', y: '#fde047', b: '#1e293b' },
+    grid: ['.......y........','......kkk.......','.....krrrk......','....krroork.....','...krrooork.....','..kkkkkkkkkk....','...kssyyssk.....','...kssddssk.....','..kkkkkkkkkk....','...kssddssk.....','...ksyyddsk.....','...kssddssk.....','...kssddssk.....','..kssddddssk....','..kkkkkkkkkk....','................']
+  },
+  simit: {
+    name: 'Çıtır Simit',
+    pal: { k: '#09090d', o: '#d97706', h: '#f59e0b', d: '#92400e', w: '#fef3c7' },
+    grid: ['................','....kkkkkkkk....','...khhwohhwhk...','..khwoohhoowhk..','.khhoookkoohhdk.','.kwook....koowk.','.khok......khok.','.khok......khok.','.kdwk......kdwk.','.kdook....koodk.','..kdoookkooddk..','...kddwddwddk...','....kkkkkkkk....','................','................','................']
+  },
+  durum: {
+    name: 'Gece Dürümü',
+    pal: { k: '#09090d', c: '#fde68a', o: '#d97706', w: '#f8fafc', r: '#ef4444', g: '#22c55e', b: '#78350f' },
+    grid: ['................','.........kkkk...','........kgrrbk..','.......kgbbbrbk.','......kccgrbbk..','.....kccoccck...','....kccoccck....','...kccoccck.....','..kwwcccck......','..kwwwcck.......','..kwwwwk........','...kwwk.........','....kk..........','................','................','................']
+  },
+  nisangah: {
+    name: 'Headshot Nişangâh',
+    pal: { k: '#09090d', a: '#c8ff00', g: '#84cc16', r: '#ef4444', w: '#ffffff' },
+    grid: ['................','.......kk.......','......kaak......','....kkkaakkk....','...kaagkkgagk...','..kagk.kk.kgak..','.kagk......kgak.','kagk..krrk..kgak','kagk..krwk..kgak','.kagk......kgak.','..kagk.kk.kgak..','...kaagkkgagk...','....kkkaakkk....','......kaak......','.......kk.......','................']
+  },
+  katana: {
+    name: 'Siber Katana',
+    pal: { k: '#09090d', c: '#67e8f9', b: '#06b6d4', w: '#ffffff', p: '#a855f7', y: '#facc15', d: '#312e81' },
+    grid: ['................','............kkk.','...........kwwk.','..........kwwck.','.........kwwck..','........kwwck...','.......kwwbk....','......kwwbk.....','.....kwwbk......','...kkyyykk......','....kyppk.......','...kdpdk........','..kdpdk.........','.kddyk..........','..kkk...........','................']
+  },
+  clutch: {
+    name: 'Clutch Alevi',
+    pal: { k: '#09090d', r: '#ef4444', o: '#f97316', y: '#fde047', w: '#ffffff', a: '#c8ff00' },
+    grid: ['................','......kk..k.....','.....krrk.rk....','....krrookrk....','...krrrooyork...','..krrooyyyyork..','..krrokyykoyrk..','..krrkayyakyork.','..krrkkyykkyork.','..krrooywyoorok.','...krrooyyyork..','....krrrooyrk...','.....kkrrkkk....','.......kk.......','................','................']
+  },
+  mvp: {
+    name: 'MVP Madalyası',
+    pal: { k: '#09090d', p: '#9333ea', l: '#c084fc', y: '#facc15', h: '#fef08a', o: '#d97706', w: '#ffffff' },
+    grid: ['................','...kkk....kkk...','..kpplk..klppk..','...kpplkkplpk...','....kppkkppk....','.....kkkkkk.....','....khyyyyok....','...khyywwyyok...','...khywwwwyok...','...khyywwyyok...','...khyyyyyyok...','....koyyyyok....','.....koooook....','......kkkk......','................','................']
+  },
+  zar: {
+    name: 'Arena Zarı',
+    pal: { k: '#09090d', w: '#f8fafc', s: '#cbd5e1', d: '#64748b', a: '#c8ff00', r: '#e11d48' },
+    grid: ['................','................','..kkkkkkkkkkkk..','.kwwwwwwwwwwwwk.','.kwrrwwwwwwrrwk.','.kwrrwwwwwwrrwk.','.kwwwwwwwwwwwwk.','.kwwwwwrrwwwwwk.','.kwwwwwrrwwwwwk.','.kwwwwwwwwwwwwk.','.kwrrwwwwwwrrwk.','.kwrrwwwwwwrrwk.','.kssssssssssssk.','..kkkkkkkkkkkk..','................','................']
+  },
+  vizor: {
+    name: 'Neon Vizör',
+    pal: { k: '#09090d', p: '#a855f7', m: '#ec4899', c: '#22d3ee', w: '#ffffff', d: '#3b0764' },
+    grid: ['................','................','................','................','.kkkkkkkkkkkkkk.','kppppppppppppppk','kpwwcccmmmmmpppk','kpcwccccmmmmpppk','kpcccccmmmmmpppk','kdddddkkkdddddkk','.kkkkk...kkkkk..','................','................','................','................','................']
+  },
+  kaset: {
+    name: 'Retro Kaset',
+    pal: { k: '#09090d', d: '#1e1b4b', p: '#ec4899', c: '#22d3ee', w: '#f8fafc', y: '#fde047', g: '#475569' },
+    grid: ['................','................','.kkkkkkkkkkkkkk.','kddddddddddddddk','kdppppppppppppdk','kdccccccccccccdk','kddkwwkddkwwkddk','kddkwykddkwykddk','kddkwwkddkwwkddk','kddddddddddddddk','kdddkggggggkdddk','kddkgkggggkgkddk','.kkkkkkkkkkkkkk.','................','................','................']
+  },
+  kankabot: {
+    name: 'Kanka Bot',
+    pal: { k: '#09090d', d: '#18181b', g: '#52525b', l: '#a1a1aa', a: '#c8ff00', w: '#ecfccb' },
+    grid: ['................','.......kk.......','......kaak......','.......kk.......','...kkkkkkkkkk...','..kllllllllllk..','.klkkkkkkkkkklk.','.klkddddddddklk.','kgkdaawddwaadkgk','kgkdaaddddaakkgk','.klkddddddddklk.','.klkddaaaaddklk.','..kggggggggggk..','...kkkkkkkkkk...','................','................']
+  },
+  disk: {
+    name: 'Holo CD',
+    pal: { k: '#09090d', s: '#cbd5e1', w: '#ffffff', c: '#67e8f9', p: '#f472b6', a: '#c8ff00', d: '#64748b' },
+    grid: ['................','....kkkkkkkk....','...ksswwccssk...','..ksswwccpppsk..','.ksswwccppaaask.','.kswwcckksaaask.','.ksscck..kaassk.','.kssppk..kssssk.','.kssppkkssssssk.','.kssaaassccsssk.','..ksssssccwwsk..','...kssccwwssk...','....kkkkkkkk....','................','................','................']
+  },
+  neonkalp: {
+    name: 'Elektrik Kalp',
+    pal: { k: '#09090d', m: '#ec4899', h: '#f9a8d4', d: '#9d174d', a: '#c8ff00', w: '#ffffff' },
+    grid: ['................','................','..kkkk....kkkk..','.khhmmk..kmmmmk.','khhmmmmkkmmammkk','khmmmmmmmmwaammk','kmmmmmmmmwaammmk','kmmmmmmwaaammmmk','.kmmmmaaammmmdk.','..kmmmaammmmdk..','...kmmammmmdk...','....kmmmmmddk...','.....kmmmddk....','......kmddk.....','.......kkk......','................']
+  },
+  ejderha: {
+    name: 'Zümrüt Ejderha',
+    pal: { k: '#09090d', g: '#10b981', l: '#6ee7b7', d: '#047857', y: '#fde047', r: '#f97316' },
+    grid: ['................','..kk......kk....','..kyk....kyk....','...kyk..kyk.....','...kggkkggk.....','..kggllllggkk...','.kggllggllgggk..','.kgglgyyggggggk.','.kggggggggggggk.','..kdddgggglgggk.','...kkdggggkkkk..','....kdggggrr....','....kddddgrr....','.....kkkk.......','................','................']
+  },
+  anka: {
+    name: 'Anka Kuşu',
+    pal: { k: '#09090d', r: '#ef4444', o: '#f97316', y: '#facc15', w: '#fef9c3', d: '#991b1b' },
+    grid: ['................','......kkk.......','..kk.kyyyk.kk...','.krrkkywykkrrk..','kroor.kyy.roork.','krooykkyykoyork.','.krooyyyyoyork..','..kdrooyyyordk..','...kkdroyrdkk...','.....koyyok.....','....krryyrrk....','...krk.ky.krk...','...kk..kk..kk...','................','................','................']
+  },
+  buz: {
+    name: 'Arktik Kristal',
+    pal: { k: '#09090d', w: '#ffffff', c: '#bae6fd', b: '#38bdf8', m: '#0284c7', d: '#0369a1' },
+    grid: ['................','.......kk.......','......kwwk......','.....kwwcbk.....','....kwwccbbk....','..kkwwccbbmmkk..','.kwwcccbbbbmmmk.','.kccccbbbbbmmmk.','..kccbbbbbmmmk..','...kccbbbmmmk...','....kccbbmmk....','.....kcbmdk.....','......kbdk......','.......kk.......','................','................']
+  },
+  oni: {
+    name: 'Kızıl Oni Maskesi',
+    pal: { k: '#09090d', r: '#dc2626', h: '#f87171', d: '#7f1d1d', y: '#fde047', w: '#ffffff' },
+    grid: ['................','..kk........kk..','..kyk......kyk..','...kyk.kk.kyk...','...krrkrrkrrk...','..krrhrrrrhrrk..','..krrkrrrrkrrk..','..krkykrrkykrk..','..krrrrrrrrrrk..','..kddrkrrkrddk..','...kdrrrrrrdk...','...kdwkwwkwdk...','....kdwwwwdk....','.....kkkkkk.....','................','................']
+  },
+  kurt: {
+    name: 'Gölge Kurt',
+    pal: { k: '#09090d', d: '#334155', g: '#64748b', l: '#cbd5e1', w: '#f8fafc', c: '#38bdf8' },
+    grid: ['................','..kk........kk..','.kddk......kddk.','.kdgk.kkkk.kgdk.','.kddkkggggkkddk.','.kddggggggggddk.','.kdgckggggkcgdk.','.kddggggggggddk.','..kdgllllllgdk..','...kllwwwwllk...','....kwwkkwwk....','.....kwwwwk.....','......kkkk......','................','................','................']
+  },
+  saturn: {
+    name: 'Altın Satürn',
+    pal: { k: '#09090d', p: '#a855f7', l: '#d8b4fe', d: '#6b21a8', y: '#fde047', o: '#f59e0b' },
+    grid: ['................','................','.....kkkkkk.....','....kllppppk....','...klppppppdk...','..kppppppppdkkk.','..kppppppkoyyok.','.kkpppkkoyyook..','koyykkoyyookkk..','koyyoyyookddk...','.kkoyookppdk....','...kkkddddk.....','.....kkkkk......','................','................','................']
+  },
+  astronot: {
+    name: 'Astronot Kaskı',
+    pal: { k: '#09090d', w: '#f8fafc', s: '#cbd5e1', y: '#f59e0b', h: '#fde047', o: '#b45309', c: '#38bdf8' },
+    grid: ['................','....kkkkkkkk....','...kwwwwwwwwk...','..kwwwwwwwwwwk..','.kwwkkkkkkkkwwk.','.kwkhhhyyyyykwk.','.kwkhhyyyyyokwk.','.kwkyyyyyyookwk.','.kwwkkkkkkkkwwk.','.ksswwwwwwwwssk.','..ksswwccwwssk..','...kssssssssk...','....kkkkkkkk....','................','................','................']
+  },
+  ufo: {
+    name: 'Neon UFO',
+    pal: { k: '#09090d', c: '#67e8f9', w: '#ffffff', g: '#94a3b8', d: '#475569', a: '#c8ff00', l: '#ecfccb' },
+    grid: ['................','.....kkkkkk.....','....kwwcccck....','...kwwcccccck...','..kkkkkkkkkkkk..','.kggggggggggggk.','kggaggagggaggagk','.kddddddddddddk.','..kkkkkkkkkkkk..','....kaallaak....','...kaal..laak...','..kaal....laak..','..kaa......aak..','................','................','................']
+  },
+  goktasi: {
+    name: 'Kuyruklu Yıldız',
+    pal: { k: '#09090d', w: '#ffffff', y: '#fde047', c: '#38bdf8', b: '#2563eb', a: '#c8ff00' },
+    grid: ['................','..........bb....','........bbcc....','.......bcccw....','.....bbcccy.....','....bcccyy..c...','...kccyykk......','..kcyywwyk......','..kywwwwyk......','..kyywwyyk......','...kkyykk.......','.....kk.........','................','................','................','................']
+  },
+  portal: {
+    name: 'Kozmik Portal',
+    pal: { k: '#09090d', p: '#9333ea', l: '#c084fc', c: '#22d3ee', a: '#c8ff00', w: '#ffffff' },
+    grid: ['................','.....kkkkkk.....','...kkpppppkk....','..kpplllllppk...','..kplccccclpk...','.kplcwaaawclpk..','.kplcawwwaclpk..','.kplcawwwaclpk..','.kplcwaaawclpk..','..kplccccclpk...','..kpplllllppk...','...kkpppppkk....','.....kkkkkk.....','................','................','................']
+  },
+};
+const TAG_PX_PACKS = [
+  { id: 'muhabbet', title: 'Çay & Gece Muhabbeti', cost: 0, glow: '#c8ff00', desc: 'Her sunucuda açık: ince belli çay, gece kahvesi, oyuncu kulaklığı, Kanka Rakunu ve Kıvılcım.', items: ['cay', 'kahve', 'kulaklik', 'rakun', 'kivilcim'] },
+  { id: 'sokak', title: 'Anadolu & Sokak Efsaneleri', cost: 2, glow: '#38bdf8', desc: 'Sadece Kanka\'da: nazar boncuğu, gözlüklü sokak kedisi, Galata Kulesi, çıtır simit ve gece dürümü.', items: ['nazar', 'sokakkedisi', 'galata', 'simit', 'durum'] },
+  { id: 'arena', title: 'E-Spor & Kanka Arena', cost: 3, glow: '#ef4444', desc: 'Rekabetçi sunucular için: nişangâh, siber katana, clutch alevi, MVP madalyası ve Arena zarı.', items: ['nisangah', 'katana', 'clutch', 'mvp', 'zar'] },
+  { id: 'siber', title: 'Siber & Neon Gece', cost: 3, glow: '#ec4899', desc: 'Karanlık tema severlere: neon vizör, retro kaset, Kanka Bot, holo CD ve elektrik kalp.', items: ['vizor', 'kaset', 'kankabot', 'disk', 'neonkalp'] },
+  { id: 'mitoloji', title: 'Mitoloji & Ejderha', cost: 5, glow: '#10b981', desc: 'Spark evreninden: Zümrüt Ejderha, Anka kuşu, arktik kristal, kızıl Oni maskesi ve gölge kurt.', items: ['ejderha', 'anka', 'buz', 'oni', 'kurt'] },
+  { id: 'kozmos', title: 'Uzay & Kozmos', cost: 5, glow: '#a855f7', desc: 'Gece kuşlarına: altın Satürn, astronot kaskı, neon UFO, kuyruklu yıldız ve kozmik portal.', items: ['saturn', 'astronot', 'ufo', 'goktasi', 'portal'] },
+];
+const PX_SVG_CACHE = new Map();
+function renderPixelSVG(id, size = 14) {
+  const key = id + ':' + size;
+  const hit = PX_SVG_CACHE.get(key); if (hit) return hit;
+  const sp = TAG_PX_SPRITES[id]; if (!sp) return '';
+  const rects = [];
+  for (let y = 0; y < sp.grid.length; y++) {
+    const row = sp.grid[y]; let x = 0;
+    while (x < row.length) {
+      const ch = row[x]; if (ch === '.' || !sp.pal[ch]) { x++; continue; }
+      let w = 1; while (x + w < row.length && row[x + w] === ch) w++;
+      rects.push(`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${sp.pal[ch]}"/>`);
+      x += w;
+    }
+  }
+  const svg = `<svg class="px-svg" width="${size}" height="${size}" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${rects.join('')}</svg>`;
+  PX_SVG_CACHE.set(key, svg); return svg;
+}
+const tagPxId = i => typeof i === 'string' && i.startsWith('px:') && TAG_PX_SPRITES[i.slice(3)] ? i.slice(3) : null;
+const tagPackOf = i => { const id = tagPxId(i); return id ? TAG_PX_PACKS.find(p => p.items.includes(id)) || null : null; };
+const tagIconHTML = (i, sz = 14) => { const id = tagPxId(i); return id ? renderPixelSVG(id, sz) : `<i>${esc(i || '🦝')}</i>`; };
+const tagIconText = i => { const id = tagPxId(i); return id ? (TAG_PX_SPRITES[id]?.name || '✦') : (i || ''); };
+const tagChip = (d, sid, cls = '') => {
+  if (!d) return '';
+  const st = d.st === 'neon' || d.st === 'duo' ? 'st-' + d.st : '';
+  const fx = d.fx && d.fx !== 'none' ? 'fx-' + d.fx : '';
+  const c2 = TAG_DUO_PAIR[d.c] || '#4aa8ff';
+  const sz = cls.includes('big') ? 18 : 14;
+  return `<span class="stag ${st} ${fx} ${cls}" data-stag="${esc(sid)}" style="--tc:${esc(d.c)};--tc2:${c2}" title="${esc(d.ad)} etiketi" role="button" tabindex="0">${tagIconHTML(d.i, sz)}<span>${esc(d.t)}</span></span>`;
+};
 const srvTag = (n, cls = '') => { const sid = S.users?.[n]?.tg; return sid ? tagChip(S.tagDefs?.[sid], sid, cls) : ''; };
 socket.on('tagDefs', d => { S.tagDefs = d || {}; tagRefresh(); });
 socket.on('tagCan', l => { S.tagCan = l || []; });
@@ -14887,15 +15232,16 @@ function openTagCard(sid, anchor) {
   socket.emit('tagInfo', sid, x => {
     if (!x) return toast('Bu etiket artık kullanılmıyor');
     const el = document.createElement('div'); el.id = 'stagcard'; el.setAttribute('role', 'dialog');
-    const icon = x.simgeImg ? `<img src="${esc(x.simgeImg)}" alt="">` : `<span>${esc(x.simge || x.ad[0])}</span>`;
+    const pxId = tagPxId(x.i), pk = tagPackOf(x.i);
+    const icon = x.simgeImg ? `<img src="${esc(x.simgeImg)}" alt="">` : (pxId ? renderPixelSVG(pxId, 28) : `<span>${esc(x.simge || x.ad[0])}</span>`);
     el.innerHTML = `<div class="stc-top" style="--tc:${esc(x.c)}"><div class="stc-ic">${icon}</div>${tagChip(x, sid, 'big')}</div>
-      <b class="stc-ad">${esc(x.ad)}</b><small class="stc-sub">${x.uye.toLocaleString('tr-TR')} üye · ${x.takan.toLocaleString('tr-TR')} kişi bu etiketi takıyor${x.tiklama != null ? ` · ${x.tiklama} kez takıldı` : ''}</small>
-      <div class="stc-acts">${x.mine ? `<button class="btns2" id="stc-off">Etiketi çıkar</button>` : x.canUse ? `<button class="primary" id="stc-on">${esc(x.i)} Bu etiketi tak</button>` : ''}${x.member ? `<button class="btns2" id="stc-go">Sunucuya git</button>` : ''}</div>
+      <b class="stc-ad">${esc(x.ad)}</b>${pk ? `<small class="stc-pack">✦ ${esc(pk.title)} · ${esc(TAG_PX_SPRITES[pxId].name)}</small>` : ''}<small class="stc-sub">${x.uye.toLocaleString('tr-TR')} üye · ${x.takan.toLocaleString('tr-TR')} kişi bu etiketi takıyor${x.tiklama != null ? ` · ${x.tiklama} kez takıldı` : ''}</small>
+      <div class="stc-acts">${x.mine ? `<button class="btns2" id="stc-off">Etiketi çıkar</button>` : x.canUse ? `<button class="primary" id="stc-on">${tagIconHTML(x.i, 14)} Bu etiketi tak</button>` : ''}${x.member ? `<button class="btns2" id="stc-go">Sunucuya git</button>` : ''}</div>
       ${!x.canUse && !x.mine && x.member ? '<small class="stc-note">Etiket şimdilik test aşamasında, yakında herkes takabilecek.</small>' : ''}`;
     document.body.appendChild(el);
     const r = anchor.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
     el.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + 'px'; el.style.top = (r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 8) : r.bottom + 6) + 'px';
-    const set = v => socket.emit('tagSet', v, y => { if (y?.error) return toast(y.error); toast(v ? `${x.i} ${x.t} etiketin isminin yanında görünüyor` : 'Etiket çıkarıldı'); closeTagCard(); });
+    const set = v => socket.emit('tagSet', v, y => { if (y?.error) return toast(y.error); toast(v ? `${pxId ? '' : x.i + ' '}${x.t} etiketin isminin yanında görünüyor` : 'Etiket çıkarıldı'); closeTagCard(); });
     $('#stc-on') && ($('#stc-on').onclick = () => set(sid)); $('#stc-off') && ($('#stc-off').onclick = () => set(null));
     $('#stc-go') && ($('#stc-go').onclick = () => { closeTagCard(); closeModal?.(); selectServer(sid); });
     setTimeout(() => addEventListener('pointerdown', tagOut, true), 0);
@@ -14923,11 +15269,11 @@ function wireTagPicker() {
 // İlk kez: etiketi takabilen birine bir kez tanıtım
 function tagIntro() {
   const id = (S.tagCan || []).find(x => S.tagDefs?.[x]); if (!id || S.users[S.me]?.tg || store.get('kanka-tag-tanitim') || $('#modal').classList.contains('open')) return;
-  store.set('kanka-tag-tanitim', '1'); const d = S.tagDefs[id];
+  store.set('kanka-tag-tanitim', '1'); const d = S.tagDefs[id], pxId = tagPxId(d.i);
   modal(`<div class="tag-intro"><div class="ti-prev"><div class="ti-row">${av(S.me)}<div><b>${esc(dn(S.me))}</b>${tagChip(d, id, 'tag-prev')}<small>bugün 21:30</small><p>selam kankalar 👋</p></div></div></div>
-    <h3>${esc(d.ad)} etiketi geldi ${esc(d.i)}</h3><p class="hint">İsminin yanında herkesin göreceği küçük bir etiket. İstediğin zaman Ayarlar › Profil'den çıkarabilirsin. Şimdilik test aşamasında, ilk takanlardan ol!</p>
-    <div class="actions"><button class="btns2" id="ti-no">Şimdi değil</button><button class="primary" id="ti-go">${esc(d.i)} Etiketi tak</button></div></div>`, 'tagi');
-  $('#ti-no').onclick = closeModal; $('#ti-go').onclick = () => socket.emit('tagSet', id, r => { closeModal(); toast(r?.error || `${d.i} ${d.t} etiketin takıldı`); });
+    <h3>${esc(d.ad)} etiketi geldi ${tagIconHTML(d.i, 18)}</h3><p class="hint">İsminin yanında herkesin göreceği küçük bir etiket. İstediğin zaman Ayarlar › Profil'den çıkarabilirsin. Şimdilik test aşamasında, ilk takanlardan ol!</p>
+    <div class="actions"><button class="btns2" id="ti-no">Şimdi değil</button><button class="primary" id="ti-go">${tagIconHTML(d.i, 15)} Etiketi tak</button></div></div>`, 'tagi');
+  $('#ti-no').onclick = closeModal; $('#ti-go').onclick = () => socket.emit('tagSet', id, r => { closeModal(); toast(r?.error || `${pxId ? '' : d.i + ' '}${d.t} etiketin takıldı`); });
 }
 function cleanupVoice(keepState) { Object.keys(peers).forEach(closePeer); myVoice = null; pttPageDown = pttHookDown = pttDown = false; pttSync(); myVoiceAt = 0; dmCallMin = false; dmCallSig = ''; dmCallEver = false; if (deaf && !keepState) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
