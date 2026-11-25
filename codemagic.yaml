@@ -34,3 +34,36 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: false   # iç test grubuna (sen) inceleme beklemeden gelir
+
+  # Android APK (GitHub Actions kilitliyken). Bildirimler için Codemagic > Environment variables'ta
+  # "firebase" grubuna GOOGLE_SERVICES_JSON (google-services.json dosyasının içeriği) eklenmeli.
+  # İmza: "android" grubuna ANDROID_KEYSTORE_B64, ANDROID_KEYSTORE_PASS, ANDROID_KEY_ALIAS, ANDROID_KEY_PASS (yoksa test anahtarı).
+  android-apk:
+    name: Android APK
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        - firebase
+        - android
+      node: 22
+      java: 21
+    scripts:
+      - name: Paketler ve Capacitor eşitleme
+        script: cd mobile && npm ci && npx cap sync android
+      - name: Firebase yapılandırması
+        script: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then echo "$GOOGLE_SERVICES_JSON" > mobile/android/app/google-services.json; echo "google-services.json eklendi";
+          else echo "UYARI: GOOGLE_SERVICES_JSON yok, bu APK'da bildirimler çalışmaz"; fi
+      - name: İmza anahtarı
+        script: |
+          if [ -n "$ANDROID_KEYSTORE_B64" ]; then echo "$ANDROID_KEYSTORE_B64" | base64 --decode > /tmp/kanka.jks; echo "KANKA_KEYSTORE=/tmp/kanka.jks" >> $CM_ENV; fi
+      - name: Derle
+        script: |
+          cd mobile/android
+          export KANKA_KEYSTORE_PASS="$ANDROID_KEYSTORE_PASS" KANKA_KEY_ALIAS="$ANDROID_KEY_ALIAS" KANKA_KEY_PASS="$ANDROID_KEY_PASS"
+          export KANKA_VERSION_CODE=$((1000 + BUILD_NUMBER)) KANKA_VERSION_NAME="$(node -p "require('../package.json').version").$BUILD_NUMBER"
+          chmod +x gradlew && ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk ../../KankaChat.apk
+    artifacts:
+      - KankaChat.apk
