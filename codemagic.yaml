@@ -1,0 +1,36 @@
+# Kanka Chat iOS: Mac olmadan bulutta derle, TestFlight'a gönder.
+# Codemagic'te "Start new build" > ios-testflight. Otomatik tetik yok, sadece elle başlar
+# (ayda 500 ücretsiz dakikayı boşa harcamasın).
+workflows:
+  ios-testflight:
+    name: iOS TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Kanka        # Codemagic > Team integrations'ta API anahtarına verdiğin ad
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.kanka.chat
+      node: 22
+      xcode: latest
+    scripts:
+      - name: Bağımlılıklar
+        script: cd mobile && npm ci
+      - name: Capacitor iOS senkronu
+        script: cd mobile && npx cap sync ios
+      - name: İmza profillerini uygula
+        script: xcode-project use-profiles --project mobile/ios/App/App.xcodeproj
+      - name: IPA derle
+        script: |
+          xcode-project build-ipa \
+            --project mobile/ios/App/App.xcodeproj \
+            --scheme App \
+            --archive-xcargs "CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false   # iç test grubuna (sen) inceleme beklemeden gelir
