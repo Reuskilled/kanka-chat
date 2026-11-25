@@ -209,8 +209,16 @@ app.get('/.well-known/assetlinks.json', (req, res) => { const fp = String(proces
 app.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (req, res) => { const team = String(process.env.IOS_TEAM_ID || npCfg.apns?.teamId || '').trim(); if (!team) return res.status(404).end(); // Team ID: ortam değişkeni ya da Yönetim › Mobil bildirimler'deki APNs ayarı
   res.type('application/json').send(JSON.stringify({ applinks: { details: [{ appIDs: [`${team}.${process.env.IOS_BUNDLE || npCfg.apns?.bundle || 'com.kanka.chat'}`], components: ['/davet/*', '/s/*', '/app*', '/bot-ekle/*'].map(p => ({ '/': p })) }] } })); });
 app.get('/davet/:code', (req, res) => res.redirect('/app?davet=' + encodeURIComponent(req.params.code)));
-// Partner sunucuların özel linki: kankahq.com/s/isim
-app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && vanityOk(x)); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/'); });
+// Özel davet linki (Discord'daki discord.gg/isim gibi): kankahq.com/isim. Eski kankahq.com/s/isim de çalışmaya devam eder.
+const vanityOf = slug => db.servers.find(x => x.vanity && x.vanity === String(slug || '').toLowerCase() && vanityOk(x));
+app.get('/s/:slug', (req, res) => { const s = vanityOf(req.params.slug); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/'); });
+// Kökteki isim sitedeki bir sayfa ya da dosyayla çakışmasın: genel klasör içeriği + kayıtlı yolların ilk parçası
+const PUBLIC_DIR = path.join(__dirname, 'public');
+function slugTaken(slug) {
+  try { const f = fs.readdirSync(PUBLIC_DIR).map(x => x.toLowerCase().replace(/\.[a-z0-9]+$/, '')); if (f.includes(slug)) return true; } catch {}
+  for (const l of app._router?.stack || []) { const p = l.route?.path; for (const x of Array.isArray(p) ? p : [p]) if (typeof x === 'string' && x.split('/')[1]?.toLowerCase() === slug) return true; }
+  return ['app', 'api', 'uploads', 'indir', 's', 'r', 'davet', 'socket.io', 'well-known', 'admin', 'login', 'giris', 'kayit', 'ayarlar', 'yardim', 'blog', 'help', 'status', 'durum', 'www', 'mail'].includes(slug);
+}
 // İzlenen kısa link: kankahq.com/r/youtube-rozet → kaynak "youtube", kampanya "rozet" (video açıklamalarına koymak için)
 app.get('/r/:tag', (req, res) => { const t = String(req.params.tag).toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 60); const [src, ...rest] = t.split('-'); res.redirect('/?utm_source=' + encodeURIComponent(src || 'link') + (rest.length ? '&utm_campaign=' + encodeURIComponent(rest.join('-')) : '') + '&utm_medium=kisalink'); });
 app.get('/bot-ekle/:id', (req, res) => res.redirect('/app?botekle=' + encodeURIComponent(String(req.params.id).slice(0, 40)) + (req.query.izin ? '&izin=' + encodeURIComponent(String(req.query.izin).slice(0, 300)) : '')));
@@ -6660,7 +6668,7 @@ io.on('connection', socket => {
     slug = String(slug || '').toLowerCase().trim();
     if (!slug) { delete s.vanity; save(); return cb({ ok: true, vanity: null }); }
     if (!/^[a-z0-9](?:[a-z0-9-]{1,22}[a-z0-9])$/.test(slug)) return cb({ error: '3-24 karakter: küçük harf, rakam ve tire (başta/sonda tire olmaz)' });
-    if (['kanka', 'kankahq', 'admin', 'yonetim', 'destek', 'resmi', 'partner', 'yildiz', 'api', 'davet', 'kod'].includes(slug)) return cb({ error: 'Bu isim ayrılmış' });
+    if (['kanka', 'kankahq', 'admin', 'yonetim', 'destek', 'resmi', 'partner', 'yildiz', 'api', 'davet', 'kod'].includes(slug) || slugTaken(slug)) return cb({ error: 'Bu isim ayrılmış (sitede aynı adlı bir sayfa var)' });
     if (db.servers.some(x => x !== s && x.vanity === slug)) return cb({ error: 'Bu link alınmış' });
     if (limited('vanity|' + me, 6, 3600e3)) return cb({ error: 'Biraz bekle' });
     s.vanity = slug; audit(s, me, 'Özel linki değiştirdi', slug); save(); cb({ ok: true, vanity: slug });
@@ -7442,7 +7450,7 @@ io.on('connection', socket => {
       if (blockedUntil('u:' + me) || blockedUntil('ip:' + ip) || limited('peek|' + me, 120, 600e3)) { out[code] = null; continue; }
       const vs = /^s:([a-z0-9-]{2,40})$/.exec(code); // özel link: kankahq.com/s/isim
       const sv = vs ? db.servers.find(x => x.vanity === vs[1] && vanityOk(x)) : findInvite(code)?.s;
-      inviteGuard('u:' + me, !!sv); inviteGuard('ip:' + ip, !!sv);
+      if (!vs) { inviteGuard('u:' + me, !!sv); inviteGuard('ip:' + ip, !!sv); } // özel link aramaları (kankahq.com/isim) tahmin sayılmaz
       if (!sv || sv.bans?.[me]) { out[code] = null; continue; }
       const mem = membersOf(sv);
       out[code] = { id: sv.id, name: sv.name, icon: sv.icon, iconImg: sv.iconImg || null, banner: sv.banner || null, bannerColor: sv.bannerColor || null, badges: srvBadges(sv),
@@ -7959,4 +7967,6 @@ setInterval(() => {
   if (ch) save();
 }, 60e3);
 migrateUids();
+// En sonda: başka hiçbir sayfa/dosya eşleşmediyse kankahq.com/isim → o sunucunun daveti
+app.get(/^\/([a-z0-9](?:[a-z0-9-]{1,22}[a-z0-9]))\/?$/i, (req, res, next) => { const s = vanityOf(req.params[0]); if (!s) return next(); res.redirect('/app?davet=' + encodeURIComponent(s.invite)); });
 server.listen(PORT, () => console.log(`Kanka Chat çalışıyor: http://localhost:${PORT}`));

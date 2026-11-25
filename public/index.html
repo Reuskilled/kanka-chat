@@ -8099,7 +8099,7 @@ function showServerSettings(s, tab, focus) {
         <label class="switch">Yavaş mod (üyeler için mesaj arası bekleme)<select class="field" id="sv-slow" style="width:120px;margin:0">${[[0, 'Kapalı'], [5, '5 sn'], [10, '10 sn'], [30, '30 sn'], [60, '1 dk'], [300, '5 dk']].map(([v, t]) => `<option value="${v}" ${s.slow === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
         <label class="switch">AFK odası (hareketsiz kalanlar taşınır)<select class="field" id="sv-afk" style="width:170px;margin:0"><option value="">Kapalı</option>${s.channels.filter(c => c.type === 'voice').map(c => `<option value="${c.id}" ${s.afk?.ch === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
         <label class="switch">AFK süresi<select class="field" id="sv-afkm" style="width:120px;margin:0">${[1, 5, 10, 15, 30, 60].map(v => `<option value="${v}" ${(s.afk?.min || 10) === v ? 'selected' : ''}>${v} dk</option>`).join('')}</select></label></div>
-        ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${s.vanity ? `${PUB}/s/${esc(s.vanity)}` : `${PUB}/davet/${esc(s.invite)}`}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}
+        ${s.public ? '' : `<div class="st-field"><label>Davet linki</label><div style="display:flex;gap:8px"><input class="field" readonly value="${s.vanity ? `${PUB}/${esc(s.vanity)}` : `${PUB}/davet/${esc(s.invite)}`}" style="margin:0" onclick="this.select()"><button class="lrow" id="sv-copy" style="margin:0">${ic('link')}Kopyala</button></div></div>`}
         ${!s.public && s.owner === S.me ? `<div class="st-sec danger" style="margin-top:22px">Tehlikeli bölge</div>
           <div class="acc-danger"><span><b>Sahipliği devret</b>Sunucuyu başka bir üyeye verirsin. Sen yönetici olarak kalmazsın, istersen yeni sahip sana rol verir.</span><button class="btns2" id="sv-xfer">Devret</button></div>
           <div class="acc-danger" style="margin-top:8px"><span><b>Sunucuyu sil</b>Sunucu herkesten kaldırılır ve 7 gün boyunca çöp kutusunda durur. Bu sürede Ayarlar → Hesap'tan geri getirebilirsin, sonra kalıcı silinir.</span><button class="danger-btn btns2" id="sv-del">Sunucuyu sil</button></div>` : ''}</div>`;
@@ -8143,7 +8143,7 @@ function showServerSettings(s, tab, focus) {
       const afkSave = () => socket.emit('updateServer', { serverId: s.id, afkCh: $('#sv-afk').value || null, afkMin: +$('#sv-afkm').value }, r => r.error ? toast(r.error) : toast($('#sv-afk').value ? 'AFK odası ayarlandı' : 'AFK kapatıldı'));
       $('#sv-afk').onchange = afkSave; $('#sv-afkm').onchange = afkSave;
       $('#sv-slow').onchange = e => socket.emit('updateServer', { serverId: s.id, slow: +e.target.value }, r => r.error ? toast(r.error) : toast('Yavaş mod güncellendi'));
-      if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(s.vanity ? `${PUB}/s/${s.vanity}` : `${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
+      if ($('#sv-copy')) $('#sv-copy').onclick = () => navigator.clipboard?.writeText(s.vanity ? `${PUB}/${s.vanity}` : `${PUB}/davet/${s.invite}`).then(() => toast('Link kopyalandı'));
     },
     levels: () => {
       main.innerHTML = `<div class="st-page"><h3>Seviyeler</h3><p class="hint">Üyeler bu sunucuda sohbet ettikçe ve seste kaldıkça sunucuya özel seviye kazanır. Belli seviyelere rol ödülü koyarak aktif üyeleri öne çıkarabilirsin. Spam XP getirmez: mesaj XP'si dakikada birdir.</p><div id="lv-root"><p class="hint">Yükleniyor…</p></div></div>`;
@@ -8222,18 +8222,18 @@ function showServerSettings(s, tab, focus) {
         const T = r.tiers, st = r.info, order = ['topluluk', 'yukselen', 'yildiz'], cur = order.indexOf(r.tier);
         const PERKS = { topluluk: ['Keşfet\'te listelenirken öne çıkar', 'Sunucu adının yanında Topluluk rozeti'],
           yukselen: ['Keşfet\'te daha üstte + Yükselen rozeti', '100 özel emoji (normalde 50)', 'Yıldız başvurusuna bir adım'],
-          yildiz: ['Keşfet\'te en üstte, YILDIZ etiketiyle', 'Yuva\'da "Haftanın yıldızı" vitrini', 'Özel davet linki: kankahq.com/s/isim', '200 özel emoji', 'Sahibine profilde Yıldız Sunucu rozeti', 'Kanka HQ\'da Yıldız Sunucu rolü ve yildiz-salonu odası'] };
+          yildiz: ['Keşfet\'te en üstte, YILDIZ etiketiyle', 'Yuva\'da "Haftanın yıldızı" vitrini', 'Özel davet linki: kankahq.com/isim', '200 özel emoji', 'Sahibine profilde Yıldız Sunucu rozeti', 'Kanka HQ\'da Yıldız Sunucu rolü ve yildiz-salonu odası'] };
         const bar = (v, max, label, unit) => { const ok = v >= max, pc = Math.min(100, Math.round(v / max * 100)); return `<div class="pt-req ${ok ? 'ok' : ''}"><div class="pt-rl"><span>${ok ? ic('check') : ''}${label}</span><b>${Math.min(v, max)} / ${max}${unit ? ' ' + unit : ''}</b></div><div class="pt-bar"><i style="width:${pc}%"></i></div></div>`; };
         const reqs = id => { const q = T[id]; return bar(st.members, q.members, 'Üye', '') + bar(st.days, q.days, 'Sunucu yaşı', 'gün') + (q.active ? bar(st.active, q.active, 'Haftalık aktif üye', '') + `<p class="pt-note">Son 7 günde en az bir mesaj yazan farklı üyeler. Etkinlik yap, sohbeti canlı tut.</p>` : '') + (q.rules ? `<div class="pt-req ${st.rules ? 'ok' : ''}"><div class="pt-rl"><span>${st.rules ? ic('check') : ''}Kurallar</span><b>${st.rules ? 'var' : 'yok'}</b></div>${st.rules ? '' : `<p class="pt-note">Karşılama ekranına kural ekle ya da adında "kurallar" geçen bir oda aç.</p>`}</div>` : ''); };
         const step = (id, i) => { const done = i <= cur, next = i === cur + 1, b = SRV_BADGES[id];
           return `<div class="pt-step ${done ? 'done' : ''} ${next ? 'next' : ''}" style="--pc:${b.c}"><div class="pt-sh">${badgeSvg(id, 44)}<div><small>${i + 1}. kademe${id === 'yildiz' ? ' · başvuru' : ' · otomatik'}</small><b>${b.t}</b></div><span class="pt-tag">${done ? 'Kazanıldı' : next ? 'Sıradaki' : 'Kilitli'}</span></div>
             ${!done ? `<div class="pt-reqs">${reqs(id)}</div>` : ''}<ul class="pt-perks">${PERKS[id].map(x => `<li>${ic(done ? 'check' : 'lock')}${x}</li>`).join('')}</ul>${id === 'yildiz' && !done ? '<div id="pt-apply"></div>' : ''}
-            ${id === 'yildiz' && done ? `<div class="pt-van"><label>Özel davet linkin</label><div class="pt-vrow"><span>kankahq.com/s/</span><input class="field" id="pt-slug" maxlength="24" value="${esc(r.vanity || '')}" placeholder="sunucuadi"><button class="primary" id="pt-vsave" style="width:auto;padding:10px 16px">Kaydet</button></div>${r.vanity ? `<button class="btns2" id="pt-vcopy" style="margin-top:8px">${ic('copy')} ${PUB.replace(/^https?:\/\//, '')}/s/${esc(r.vanity)} kopyala</button>` : ''}</div>` : ''}</div>`; };
+            ${id === 'yildiz' && done ? `<div class="pt-van"><label>Özel davet linkin</label><div class="pt-vrow"><span>kankahq.com/</span><input class="field" id="pt-slug" maxlength="24" value="${esc(r.vanity || '')}" placeholder="sunucuadi"><button class="primary" id="pt-vsave" style="width:auto;padding:10px 16px">Kaydet</button></div>${r.vanity ? `<button class="btns2" id="pt-vcopy" style="margin-top:8px">${ic('copy')} ${PUB.replace(/^https?:\/\//, '')}/s/${esc(r.vanity)} kopyala</button>` : ''}</div>` : ''}</div>`; };
         const head = `<div class="pt-hero"><div><small>Şu anki kademe</small><b>${r.tier ? SRV_BADGES[r.tier].t : 'Henüz yok'}</b><span>Emoji: ${r.emoji.used} / ${r.emoji.max}</span></div><div class="pt-dots">${order.map((id, i) => `<i class="${i <= cur ? 'on' : ''}" style="--pc:${SRV_BADGES[id].c}">${badgeSvg(id, 28)}</i>`).join('<b></b>')}</div></div>`;
         root.innerHTML = head + `<div class="pt-path">${order.map(step).join('')}</div><div class="st-sec">Diğer rozetler</div>` + card('dogrulanmis') + `<div class="sb-card"><div class="sb-h">${badgeSvg('partner', 40)}<div><b>${SRV_BADGES.partner.t}</b><small>${SB_HOW.partner}</small></div></div>${r.partner ? `<div class="sb-st" style="--c:#4cc38a">${ic('check')} Sunucun Kanka Partner</div>` : ''}</div>`;
         if ($('#pt-apply')) $('#pt-apply').innerHTML = card('yildiz').replace(/^<div class="sb-card[^>]*>[\s\S]*?<\/div><\/div>/, '').replace(/<\/div>$/, '');
         if ($('#pt-vsave')) $('#pt-vsave').onclick = () => socket.emit('srvVanity', { serverId: s.id, slug: $('#pt-slug').value }, x => { if (x.error) return toast(x.error); toast(x.vanity ? 'Özel link hazır 🎉' : 'Özel link kaldırıldı', null, false, { type: 'ok' }); s.vanity = x.vanity; page.badges(); });
-        if ($('#pt-vcopy')) $('#pt-vcopy').onclick = () => navigator.clipboard?.writeText(`${PUB}/s/${r.vanity}`).then(() => toast('Link kopyalandı'));
+        if ($('#pt-vcopy')) $('#pt-vcopy').onclick = () => navigator.clipboard?.writeText(`${PUB}/${r.vanity}`).then(() => toast('Link kopyalandı'));
         if (false) root.innerHTML = `<div class="sb-card"><div class="sb-h">${badgeSvg('topluluk', 40)}<div><b>${SRV_BADGES.topluluk.t}</b><small>${SB_HOW.topluluk}</small></div></div>${(s.badges || []).some(x => x.id === 'topluluk') ? `<div class="sb-st" style="--c:#4cc38a">${ic('check')} Sunucunda bu rozet var</div>` : `<ul class="sb-req">${reqRow(r.info.members >= 15, `En az 15 üye <small>(şu an ${r.info.members})</small>`)}${reqRow(r.info.days >= 7, `En az 7 günlük sunucu <small>(şu an ${r.info.days} gün)</small>`)}</ul>`}</div>` + card('dogrulanmis') + card('partner');
         root.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => navigator.clipboard?.writeText(b.dataset.copy).then(() => toast('Kopyalandı')));
         root.querySelectorAll('[data-sbf]').forEach(f => f.onsubmit = e => { e.preventDefault(); const bt = f.querySelector('button'); bt.disabled = true;
@@ -8981,7 +8981,7 @@ function openEnergy(s) {
             <small class="en-note">Boşta <b>${r.free}</b> Energy'n var${r.mine ? ` · Bu sunucuda senin <b>${r.mine}</b> Energy'n` : ''}</small>`
           : SPARK_HIDE ? '' : `<button class="en-btn" id="en-spark">${ic('sparkle')}<span>Kanka Spark ile Energy kazan</span></button><small class="en-note">Kanka Spark abonelerine her ay 2 Energy verilir.</small>`}</div>
         <h4 class="en-h">Seviyeler ve ayrıcalıklar</h4>${energyLevelsHTML(r)}
-        ${r.level >= 3 && s.owner === S.me ? `<div class="en-van"><label>Özel davet linki</label><div class="pt-vrow"><span>kankahq.com/s/</span><input class="field" id="en-slug" maxlength="24" value="${esc(s.vanity || '')}" placeholder="sunucun"><button class="en-pull" id="en-vsave">Kaydet</button></div></div>` : ''}
+        ${r.level >= 3 && s.owner === S.me ? `<div class="en-van"><label>Özel davet linki</label><div class="pt-vrow"><span>kankahq.com/</span><input class="field" id="en-slug" maxlength="24" value="${esc(s.vanity || '')}" placeholder="sunucun"><button class="en-pull" id="en-vsave">Kaydet</button></div></div>` : ''}
         <h4 class="en-h">Destekçiler</h4>
         <div class="en-sup">${r.by.length ? r.by.map(x => `<div class="en-sr">${x.name === '@kanka' ? '<div class="av"><img src="/icon-192.png" alt=""></div><b>Kanka Ekibi</b>' : `${av(x.name)}<b>${esc(dn(x.name))}</b>`}<span>${enIc()} ${x.n}</span></div>`).join('') : '<p class="hint">Henüz kimse Energy göndermedi. İlk destekçi sen ol!</p>'}</div>
       </div>`);
@@ -8991,7 +8991,7 @@ function openEnergy(s) {
       if ($('#en-send')) $('#en-send').onclick = () => mv(false);
       if ($('#en-pull')) $('#en-pull').onclick = () => confirmBox(`${s.name} sunucusundan 1 Energy geri çekilsin mi? Sunucunun Total Energy'si düşer${r.next !== null || r.level ? ', seviye gereksiniminin altına inerse ayrıcalıklar kapanır' : ''}.`, () => mv(true));
       if ($('#en-spark')) $('#en-spark').onclick = () => { closeModal(); openDMHome(); showFriends('spark'); };
-      if ($('#en-vsave')) $('#en-vsave').onclick = () => socket.emit('srvVanity', { serverId: s.id, slug: $('#en-slug').value }, x => x.error ? toast(x.error) : toast(x.vanity ? 'Özel link kaydedildi: kankahq.com/s/' + x.vanity : 'Özel link kaldırıldı'));
+      if ($('#en-vsave')) $('#en-vsave').onclick = () => socket.emit('srvVanity', { serverId: s.id, slug: $('#en-slug').value }, x => x.error ? toast(x.error) : toast(x.vanity ? 'Özel link kaydedildi: kankahq.com/' + x.vanity : 'Özel link kaldırıldı'));
     };
     draw(r);
   });
@@ -9679,9 +9679,13 @@ const whenTxt = t => { const d = new Date(t), n = new Date(), y = new Date(n - 8
 const INV_RE = /(?:https?:\/\/[^\s/]+)?\/davet\/([A-Za-z0-9]{6,16})\b|[?&]davet=([A-Za-z0-9]{6,16})\b/g;
 const invCodes = t => [...new Set([...String(t || '').matchAll(INV_RE)].map(x => x[1] || x[2]))].slice(0, 3);
 // Profildeki davet linkleri (özel /s/isim linkleri dahil) katıl kartı olarak görünür
-const VAN_RE = /(?:https?:\/\/)?(?:www\.)?kankahq\.com\/s\/([a-z0-9-]{2,40})\b/gi;
+const VAN_RE = /(?:https?:\/\/)?(?:www\.)?kankahq\.com\/(?:s\/)?([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(?![\w./?#-])/gi;
+// Sitedeki sayfalar özel link sayılmaz (kankahq.com/gizlilik gibi)
+const SITE_PATHS = new Set(['app', 'davet', 'gizlilik', 'kosullar', 'destek', 'hesap-silme', 'hesap-sil', 'gelistirici', 'beta', 'indir', 'uploads', 'api', 'sesli-sohbet', 'guvenli', 'bot-ekle', 'marka', 'sdk', 'vendor', 'arena', 'avatar', 'effects', 'ses-paneli', 'index', 'manifest', 'sw', 'logo', 'favicon', 'legal']);
+const vanCodes = t => [...new Set([...String(t || '').matchAll(VAN_RE)].map(x => x[1].toLowerCase()).filter(x => !SITE_PATHS.has(x)).map(x => 's:' + x))];
+const allInvCodes = t => [...new Set([...invCodes(t), ...vanCodes(t)])].slice(0, 3);
 const BIO_INV_STRIP = /(?:https?:\/\/[^\s/]+)?\/davet\/[A-Za-z0-9]{6,16}\b|(?:https?:\/\/)?(?:www\.)?kankahq\.com\/s\/[a-z0-9-]{2,40}\b|\S*[?&]davet=[A-Za-z0-9]{6,16}\b/gi;
-const bioInvCodes = t => [...new Set([...invCodes(t), ...[...String(t || '').matchAll(VAN_RE)].map(x => 's:' + x[1].toLowerCase())])].slice(0, 2);
+const bioInvCodes = t => allInvCodes(t).slice(0, 2);
 const bioFmt = t => {
   const codes = bioInvCodes(t);
   const clean = codes.length ? String(t || '').replace(BIO_INV_STRIP, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim() : String(t || '').trim();
@@ -9692,6 +9696,7 @@ const invCache = {}; let invAsk = new Set(), invT = null;
 function invCardHTML(code) {
   const v = invCache[code];
   if (v === undefined) { invAsk.add(code); clearTimeout(invT); invT = setTimeout(invFetch, 30); return `<div class="invc load" data-inv="${code}"><div class="ic-top"><small>Sunucu daveti</small></div><div class="ic-row"><span class="ic-icon sk"></span><span class="ic-t"><b class="sk">&nbsp;</b><small class="sk">&nbsp;</small></span></div></div>`; }
+  if (!v && code.startsWith('s:')) return ''; // kankahq.com/isim bir sunucuya ait değilse normal link olarak kalsın
   if (!v) return `<div class="invc bad" data-inv="${code}"><div class="ic-top"><small>Sunucu daveti</small></div><div class="ic-row"><span class="ic-icon">${ic('x')}</span><span class="ic-t"><b>Geçersiz davet</b><small>Bu davet linki artık çalışmıyor ya da sunucu silinmiş.</small></span></div></div>`;
   const bg = v.banner ? `background-image:url('${esc(v.banner)}')` : `background:${esc(v.bannerColor || 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 55%, #000), var(--card))')}`;
   return `<div class="invc" data-inv="${code}"><div class="ic-ban" style="${bg}"></div><div class="ic-top"><small>${v.joined ? 'Bu sunucudasın' : 'Bir sunucuya davet edildin'}</small></div>
@@ -9743,7 +9748,7 @@ function invGo(code) {
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-invgo]'); if (go) { e.preventDefault(); e.stopPropagation(); return invGo(go.dataset.invgo); }
   const a = e.target.closest('#messages a[href], #thread a[href], .pf-bio a[href], .pc-bio a[href], .vp-bio a[href]'); if (!a) return;
-  const c = invCodes(a.getAttribute('href'))[0] || (a.closest('.pf-bio, .pc-bio, .vp-bio') ? bioInvCodes(a.getAttribute('href'))[0] : null);
+  const c = invCodes(a.getAttribute('href'))[0] || (ownHost(a.host) && invCache[vanCodes(a.getAttribute('href'))[0]] ? vanCodes(a.getAttribute('href'))[0] : null);
   if (c && (ownHost(a.host) || /\/davet\//.test(a.pathname))) { e.preventDefault(); e.stopPropagation(); invGo(c); } // linki tarayıcıda açma, uygulamanın içinde katıl
 }, true);
 function previewHTML(p) {
@@ -10000,7 +10005,7 @@ function msgHTML(m, prev) {
     const fimgs = (m.files || []).filter(f => f.kind === 'image');
     const onlyImg = (m.image || m.gif || (m.files?.length && fimgs.length === m.files.length)) && !m.text && !m.replyTo;
     const jumbo = !m.image && !m.audio && m.text && isJumbo(m.text);
-    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : m._auPend ? `<div class="e2e-ph sm">${ic('mic')}<span>Ses mesajı açılıyor…</span></div>` : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.gif ? gifHTML(m.gif) : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${invCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !invCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener" aria-label="YouTube videosunu aç"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
+    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : m._auPend ? `<div class="e2e-ph sm">${ic('mic')}<span>Ses mesajı açılıyor…</span></div>` : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.gif ? gifHTML(m.gif) : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${allInvCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !allInvCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener" aria-label="YouTube videosunu aç"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
   }
   if (m.thread?.length) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
@@ -17014,7 +17019,7 @@ function tip(key, sel, title, text, place = 'top', tries = 0) {
 // --- Davet penceresi (Discord tarzı arkadaş listesi + tek tıkla DM davet + hızlı link) ---
 function showInvite(s) {
   if (!s?.invite) return toast('Bu sunucunun davet linki yok.');
-  const link = s.vanity ? `${PUB}/s/${s.vanity}` : `${PUB}/davet/${s.invite}`, text = `${s.name} sunucusuna gel, Kanka Chat'te buluşalım!`;
+  const link = s.vanity ? `${PUB}/${s.vanity}` : `${PUB}/davet/${s.invite}`, text = `${s.name} sunucusuna gel, Kanka Chat'te buluşalım!`;
   const mark = () => socket.emit('onbMark', { k: 'invite', serverId: s.id }, () => {});
   const enc = encodeURIComponent, memSet = new Set(s.members || []);
   const curCh = S.view === 'server' && S.server?.id === s.id ? S.channel : null;
