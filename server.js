@@ -4890,7 +4890,8 @@ io.on('connection', socket => {
   }
   // Tek bir bağlantıdan olağandışı yoğunlukta istek gelirse (betik/saldırı) bağlantıyı kes
   { let n = 0, t0 = Date.now();
-    socket.onAny(() => { const now = Date.now(); if (now - t0 > 10e3) { n = 0; t0 = now; } if (++n === 400) { secLog('istek-seli', socket.data?.me || 'bağlantı', '10 saniyede 400+ istek, bağlantı kesildi'); socket.disconnect(true); } }); }
+    // Gerçek zamanlı oyun girdisi (masa hokeyi 60Hz) sayılmaz: kendi sınırı var (arenaIn), yoksa oyuncu bağlantıdan ve sesten düşer
+    socket.onAny(ev => { if (ev === 'arenaIn') return; const now = Date.now(); if (now - t0 > 10e3) { n = 0; t0 = now; } if (++n === 400) { secLog('istek-seli', socket.data?.me || 'bağlantı', '10 saniyede 400+ istek, bağlantı kesildi'); socket.disconnect(true); } }); }
   socket.emit('build', build); if (buildParts) socket.emit('buildParts', buildParts);
   // Eski sayfa (büyük güncellemeden önce açılmış) yenile uyarısını bilmiyor: ona birkaç kez yazılı haber ver.
   // Yeni sayfalar bağlanınca 'yeniIstemci' der; demeyenler eski sayfadır.
@@ -7559,7 +7560,8 @@ io.on('connection', socket => {
     if (limited('arm|' + me, 12, 3e3)) return cb({ error: 'Çok hızlı' });
     const err = arenaMove(L, me, mv && typeof mv === 'object' ? mv : {}); cb(err ? { error: err } : { ok: true });
   });
-  socket.on('arenaIn', ({ id: lid, ...inp } = {}) => { const L = arenas.get(lid); if (!L || L.state !== 'play' || !me) return; const E = ARENA_GAMES[L.game]; if (E.rt) E.input(L.st, me, inp); });
+  let arInT = 0, arInN = 0; // oyun girdisi: saniyede en çok 150 (fazlası sessizce atlanır, bağlantı kesilmez)
+  socket.on('arenaIn', ({ id: lid, ...inp } = {}) => { const now = Date.now(); if (now - arInT > 1000) { arInT = now; arInN = 0; } if (++arInN > 150) return; const L = arenas.get(lid); if (!L || L.state !== 'play' || !me) return; const E = ARENA_GAMES[L.game]; if (E.rt) E.input(L.st, me, inp); });
   socket.on('arenaRematch', ({ id: lid } = {}, cb = () => {}) => {
     if (typeof cb !== 'function') cb = () => {};
     const L = arenas.get(lid); if (!L || L.state !== 'end' || !me) return cb({ error: 'Rövanş yapılamaz' });

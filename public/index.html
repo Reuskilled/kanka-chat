@@ -14289,7 +14289,7 @@ AR_R.hokey = {
       st.mine = [x, y]; st.dirty = true;
       const now = performance.now();
       const moved = st.sentX != null ? Math.hypot(x - st.sentX, y - st.sentY) : 1;
-      if (now - st.lastSend >= 15 || (moved > 0.022 && now - st.lastSend >= 8)) emitNow();
+      if (now - st.lastSend >= 16 || (moved > 0.03 && now - st.lastSend >= 12)) emitNow(); // en çok ~60-80/sn
     };
     c.onpointermove = sample;
     c.onpointerdown = e => { HOK_SFX.wake(); c.setPointerCapture(e.pointerId); sample(e); };
