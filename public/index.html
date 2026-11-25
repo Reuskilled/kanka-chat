@@ -14289,11 +14289,11 @@ AR_R.hokey = {
       st.mine = [x, y]; st.dirty = true;
       const now = performance.now();
       const moved = st.sentX != null ? Math.hypot(x - st.sentX, y - st.sentY) : 1;
-      if (now - st.lastSend >= 16 || (moved > 0.03 && now - st.lastSend >= 12)) emitNow(); // en çok ~60-80/sn
+      if (now - st.lastSend >= 33) emitNow(); // en çok ~30/sn (sunucu da 30Hz yayınlıyor)
     };
     c.onpointermove = sample;
     c.onpointerdown = e => { HOK_SFX.wake(); c.setPointerCapture(e.pointerId); sample(e); };
-    st.iv = setInterval(() => { if (st.dirty) emitNow(); }, 16);
+    st.iv = setInterval(() => { if (st.dirty && performance.now() - st.lastSend >= 33) emitNow(); }, 34);
     const loop = () => { st.raf = requestAnimationFrame(loop); AR_R.hokey.draw(st, flip()); }; loop();
   },
   update(L, st) { if (!AR.rt && L.g) AR.rt = L.g; },
@@ -14319,7 +14319,7 @@ AR_R.hokey = {
     // 2. 60/120/144Hz Hız-Tahminli Pak İnterpolasyonu (0 takılma!)
     const tk = toLocal(g.k);
     const kv = g.kv ? (flip ? [-g.kv[0], -g.kv[1]] : g.kv) : [0, 0];
-    const age = Math.min(0.032, Math.max(0, (now - (AR.rtAt || now)) / 1000));
+    const age = Math.min(0.06, Math.max(0, (now - (AR.rtAt || now)) / 1000)); // 30Hz güncelleme arası tahminle dolar
     const predK = [
       Math.max(0.042, Math.min(1 - 0.042, tk[0] + kv[0] * age)),
       Math.max(-0.04, Math.min(1.64, tk[1] + kv[1] * age))

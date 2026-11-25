@@ -3911,15 +3911,15 @@ const BILEK = {
   },
   leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
 };
-// ---------- Masa hokeyi (gerçek zamanlı · 60Hz yüksek hassasiyet) ----------
+// ---------- Masa hokeyi (gerçek zamanlı · 30Hz yayın, 8 alt adımlı fizik; istemci arayı tahminle doldurur) ----------
 // Masa 1 x 1.6; ilk oyuncu altta, ikinci üstte. İstemci kendi tarafını hep altta görür (ikinci oyuncu için çevrilir).
-const HOK = { W: 1, H: 1.6, PR: 0.075, KR: 0.042, GOAL: 0.36, POST: 0.014, MAXV: 3.6, PADV: 11.5, WIN: 7 };
+const HOK = { W: 1, H: 1.6, PR: 0.075, KR: 0.042, GOAL: 0.36, POST: 0.014, MAXV: 2.7, PADV: 9, WIN: 7 }; // biraz yavaşlatıldı (pak 3.6→2.7, tokmak 11.5→9)
 const HOK_POSTS = [
   [0.5 - HOK.GOAL / 2, 0], [0.5 + HOK.GOAL / 2, 0],
   [0.5 - HOK.GOAL / 2, HOK.H], [0.5 + HOK.GOAL / 2, HOK.H],
 ];
 const HOKEY = {
-  ad: 'Masa Hokeyi', emoji: '🏒', min: 2, max: 2, rt: true, hz: 60,
+  ad: 'Masa Hokeyi', emoji: '🏒', min: 2, max: 2, rt: true, hz: 30,
   init(ps) { return { ps, k: { x: 0.5, y: 1.05, vx: 0, vy: 0 }, pd: [{ x: 0.5, y: 1.4, tx: 0.5, ty: 1.4, vx: 0, vy: 0 }, { x: 0.5, y: 0.2, tx: 0.5, ty: 0.2, vx: 0, vy: 0 }], sc: [0, 0], pause: 1.6, serve: 0, last: null, ev: null, evSeq: 0 }; },
   input(st, p, inp) { const i = st.ps.indexOf(p); if (i < 0) return; let x = +inp?.x, y = +inp?.y; if (!isFinite(x) || !isFinite(y)) return;
     if (i === 1) { x = HOK.W - x; y = HOK.H - y; } // ikinci oyuncu masayı ters görür
@@ -4084,12 +4084,12 @@ setInterval(() => {
   setInterval(() => {
     const now = Date.now(), dt = Math.min(0.05, (now - lastRt) / 1000); lastRt = now;
     acc10 += dt; const slow10 = acc10 >= 0.1; if (slow10) acc10 = 0;
-    acc30 += dt; const tick30 = acc30 >= 0.033; if (tick30) acc30 = 0;
+    acc30 += dt; const tick30 = acc30 >= 0.031, dt30 = Math.min(0.06, acc30); if (tick30) acc30 = 0; // geçen gerçek süre kadar ilerle (oyun hızı yayın sıklığına bağlı kalmasın)
     for (const L of arenas.values()) {
       const E = ARENA_GAMES[L.game]; if (!E.rt || L.state !== 'play') continue;
       if (E.hz === 10 && !slow10) continue;
       if (E.hz === 30 && !tick30) continue;
-      E.tick(L.st, E.hz === 10 ? 0.1 : E.hz === 30 ? 0.033 : dt);
+      E.tick(L.st, E.hz === 10 ? 0.1 : E.hz === 30 ? dt30 : dt);
       io.to('ar:' + L.id).volatile.emit('arT', { id: L.id, g: E.view(L.st) });
       if (L.st.over) arenaFinish(L);
     }
