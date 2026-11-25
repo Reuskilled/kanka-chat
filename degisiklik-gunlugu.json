@@ -13,5 +13,10 @@
     "id": "2026-11-25-ince-ayar",
     "baslik": "🔧 İnce ayarlar",
     "metin": "• Biri profilini değiştirince artık herkese tüm kullanıcı listesi değil sadece değişen kişi gidiyor (usersPatch), 1,5 sn içindeki değişiklikler tek pakette\n• Çevrimiçi listesi (presence) toplanarak ve sadece değişince gönderiliyor\n• Sunucu listesi güncellemeleri sadece bağlı kişiler için hesaplanıyor\n• \"Yetki doğrulanamadı\" sorunları için /izinler cevabında botunUstunde alanı: true ise botun rolünü yukarı sürükleyin\n• Mobilde mesaj başlığında isim, etiket, seviye ve tarih artık kendi içinde bölünmüyor"
+  },
+  {
+    "id": "2026-11-25-satir-bosluk",
+    "baslik": "🔧 Bot mesajlarında satır ve boşluklar",
+    "metin": "• Kart açıklaması, alan değerleri ve alt yazıdaki satır sonları (\\n) ve fazladan boşluklar artık korunuyor; önceden hepsi tek satıra bitişiyordu\n• Mesajda liste, başlık ya da alıntı varken araya koyulan boş satırlar artık kayboluyor değil, olduğu gibi görünüyor\n• Bot tarafında değişiklik gerekmez, sayfayı yenilemek yeterli"
   }
 ]
