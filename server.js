@@ -2382,7 +2382,8 @@ function pushAllowed(u, n) {
   if (n.dm || n.friend || !chId) return true;
   const f = findChannel(chId); if (!f) return true;
   if ((pr.muted || []).includes(f.s.id) && !n.direct) return false;
-  return (pr.ch || {})[chId] !== 'none';
+  const cm = (pr.ch || {})[chId]; if (cm === 'none') return false;
+  return !(cm == null && pr.srv?.[f.s.id]?.lvl === 'none');
 }
 // Bildirim gönderim sayaçları (/api/surum'da görünür): sorun olduğunda nerede takıldığını görmek için
 const pushStats = { gonderildi: 0, hata: 0, gorunur: 0, masaustu: 0, sonHata: null };
@@ -2414,12 +2415,12 @@ async function fcmAccess() {
   const j = await r.json(); if (!j.access_token) throw new Error('FCM giriş: ' + (j.error_description || j.error || r.status));
   fcmTok = { t: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 }; return fcmTok.t;
 }
-const npData = p => { const d = { ch: p.ch || '', from: p.from || '', dm: p.dm ? '1' : '', friend: p.friend ? '1' : '', tag: p.tag || 'kanka', call: p.call ? '1' : '' }; for (const k in d) if (!d[k]) delete d[k]; return d; };
+const npData = p => { const d = { ch: p.ch || '', from: p.from || '', dm: p.dm ? '1' : '', friend: p.friend ? '1' : '', tag: p.tag || 'kanka', call: p.call ? '1' : '', mid: p.mid || '' }; for (const k in d) if (!d[k]) delete d[k]; return d; };
 async function fcmSend(token, p) {
   const at = await fcmAccess(), chan = p.call ? 'aramalar' : p.friend ? 'sosyal' : 'mesajlar';
   const r = await fetch(`https://fcm.googleapis.com/v1/projects/${npCfg.fcm.project_id}/messages:send`, { method: 'POST', headers: { Authorization: 'Bearer ' + at, 'Content-Type': 'application/json' },
     body: JSON.stringify({ message: { token, notification: { title: String(p.title || 'Kanka Chat').slice(0, 120), body: String(p.body || '').slice(0, 300) }, data: npData(p),
-      android: { priority: 'HIGH', ttl: p.call ? '45s' : '3600s', collapse_key: (p.tag || 'kanka').slice(0, 60), notification: { channel_id: chan, tag: (p.tag || 'kanka').slice(0, 60), icon: 'ic_stat_kanka', color: '#D4FF00', sound: 'default' } } } }) });
+      android: { priority: 'HIGH', ttl: p.call ? '45s' : '3600s', collapse_key: (p.tag || 'kanka').slice(0, 60), notification: { channel_id: chan, tag: (p.tag || 'kanka').slice(0, 60), icon: 'ic_stat_kanka', color: '#D4FF00', sound: 'default', ...(p.badge ? { notification_count: p.badge } : {}) } } } }) });
   if (r.ok) { npStats.fcm++; return { ok: true }; }
   const j = await r.json().catch(() => ({})), code = j?.error?.details?.find?.(x => x.errorCode)?.errorCode || j?.error?.status;
   return { ok: false, dead: r.status === 404 || code === 'UNREGISTERED' || (r.status === 400 && code === 'INVALID_ARGUMENT'), msg: `${r.status} ${code || ''} ${j?.error?.message || ''}`.trim() };
@@ -2438,7 +2439,7 @@ function apnsSend(token, p, sandbox, voip) {
   return new Promise(res => {
     try {
       if (!apnsConn || apnsConn.closed || apnsConn.destroyed || apnsConn._host !== host) { apnsConn = require('http2').connect(host); apnsConn._host = host; apnsConn.on('error', () => { apnsConn = null; }); apnsConn.setTimeout(10 * 60e3, () => { try { apnsConn.close(); } catch {} apnsConn = null; }); }
-      const payload = voip ? JSON.stringify({ aps: {}, k: { ch: p.ch || '', from: p.from || '', title: String(p.callTitle || p.title || '').slice(0, 80), video: p.video ? '1' : '' } }) : JSON.stringify({ aps: { alert: { title: String(p.title || 'Kanka Chat').slice(0, 120), body: String(p.body || '').slice(0, 300) }, sound: 'default', 'thread-id': (p.tag || 'kanka').slice(0, 60), 'interruption-level': p.call ? 'time-sensitive' : 'active' }, ...npData(p) });
+      const payload = voip ? JSON.stringify({ aps: {}, k: { ch: p.ch || '', from: p.from || '', title: String(p.callTitle || p.title || '').slice(0, 80), video: p.video ? '1' : '' } }) : JSON.stringify({ aps: { alert: { title: String(p.title || 'Kanka Chat').slice(0, 120), body: String(p.body || '').slice(0, 300) }, sound: 'default', 'thread-id': (p.tag || 'kanka').slice(0, 60), 'interruption-level': p.call ? 'time-sensitive' : 'active', ...(p.badge != null ? { badge: p.badge } : {}) }, ...npData(p) });
       const req = apnsConn.request({ ':method': 'POST', ':path': '/3/device/' + token, authorization: 'bearer ' + apnsToken(), 'apns-topic': (a.bundle || 'com.kanka.chat') + (voip ? '.voip' : ''), 'apns-push-type': voip ? 'voip' : 'alert', 'apns-priority': '10',
         'apns-expiration': String(Math.floor(Date.now() / 1000) + (p.call ? 45 : 3600)), 'apns-collapse-id': (p.tag || 'kanka').slice(0, 60) });
       let st = 0, out = ''; req.on('response', h => { st = h[':status']; }); req.on('data', d => { out += d; });
@@ -2481,11 +2482,21 @@ function sendPush(name, payload) {
     pushOne(u, sub, body, payload.tag);
   }
 }
+// Bildirim kutusu (Discord'un Bildirimler sekmesi): bahsetme, yanıt, @everyone, rol, arkadaşlık isteği. Her cihazda aynı, son 60 kayıt.
+function inboxAdd(name, n) {
+  const u = db.users[name]; if (!u || u.bot) return null;
+  const e = { id: id(), t: n.friend ? 'friend' : n.kind || 'direct', from: n.from, text: String(n.text || '').slice(0, 160), ch: n.channelId || null, sid: n.sid || null, mid: n.mid || null, where: n.where || '', at: Date.now() };
+  u.inbox = [e, ...(u.inbox || []).filter(x => !(e.mid && x.mid === e.mid))].slice(0, 60); save();
+  io.to('user:' + name).emit('inbox+', e); return e;
+}
+const inboxUnseen = u => (u.inbox || []).filter(x => x.at > (u.inboxSeen || 0)).length;
+const badgeOf = u => Math.min(99, inboxUnseen(u) + (u.dmPend || 0)); // uygulama simgesindeki sayı
 function notifyUser(name, n) {
   io.to('user:' + name).emit('notify', n);
-  const title = n.friend ? n.from : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? n.from : `${n.from} seni etiketledi`;
+  { const u = db.users[name]; if (u && !n.dm) inboxAdd(name, n); else if (u && n.dm) u.dmPend = Math.min(99, (u.dmPend || 0) + 1); }
+  const title = n.friend ? n.from : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? n.from : n.kind === 'reply' ? `${n.from} sana yanıt verdi` : n.kind === 'everyone' ? `${n.from} · @everyone` : n.kind === 'role' ? `${n.from} rolünü etiketledi` : `${n.from} seni etiketledi`;
   sendPush(name, { direct: !!n.mention, title, body: n.friend ? 'sana arkadaşlık isteği gönderdi' : String(n.text || '').slice(0, 160) + (n.dm ? '' : n.where ? `\n${n.where}` : ''),
-    tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend,
+    tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend, mid: n.mid || undefined, badge: badgeOf(db.users[name] || {}),
     e: n.e && n.e.enc.ct.length <= 2400 ? n.e : undefined }); // bildirim boyutu sınırlı: kısa şifreli mesaj telefonda çözülüp gösterilir
 }
 const presenceList = () => [...onlineNames().map(n => { const st = statusOf(n); return st && onMobile(n) ? [n, st, 'm'] : [n, st]; }).filter(x => x[1]),
@@ -2841,16 +2852,21 @@ function postMessage(me, chId, p = {}) {
     for (const n of membersOf(f.s)) if (n !== me && canAccess(n, chId)) {
       io.to('user:' + n).emit('chanActivity', { channelId: chId, serverId: f.s.id });
       const pr = prefsOf(db.users[n]);
-      if (pr.ch?.[chId] === 'all' && !(pr.muted || []).includes(f.s.id) && seesChannel(f.s, f.c, n) && !(msg.text || '').includes('@' + n))
+      if ((pr.ch?.[chId] === 'all' || (pr.ch?.[chId] == null && pr.srv?.[f.s.id]?.lvl === 'all')) && !(pr.muted || []).includes(f.s.id) && seesChannel(f.s, f.c, n) && !(msg.text || '').includes('@' + n) && msg.replyTo?.author !== n)
         sendPush(n, { title: `${me} · #${f.c.name}`, body: (msg.text || (msg.files?.length ? 'dosya gönderdi' : 'görsel gönderdi')).slice(0, 160), tag: chId, ch: chId, from: me });
     }
     const noUrl = (msg.text || '').replace(/https?:\/\/\S+/g, ' '); // link içindeki @ad etiket sayılmaz
-    const mentioned = new Set([...noUrl.matchAll(/@([\p{L}\p{N}_.-]+)/gu)].map(m => m[1]));
-    if (/@(everyone|herkes)\b/i.test(noUrl) && can(f.s, me, 'mentionEveryone')) { membersOf(f.s).forEach(n => mentioned.add(n)); msg.everyone = true; }
-    for (const r of f.s.customRoles || []) if (noUrl.includes('@' + r.name) && (r.mentionable !== false || can(f.s, me, 'mentionEveryone'))) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) mentioned.add(n);
-    for (const n of mentioned) {
-      if (n !== me && db.users[n] && canAccess(n, chId))
-        notifyUser(n, { from: me, text: preview, channelId: chId, where, mention: true });
+    // Kim nasıl bahsedildi: doğrudan > rol > @everyone. Kişi sunucu ayarında @everyone / rol bahsetmelerini bastırdıysa bildirim gitmez (Discord gibi)
+    const how = new Map(); const put = (n, k) => { const o = { direct: 3, role: 2, everyone: 1 }; if ((o[k] || 0) > (o[how.get(n)] || 0)) how.set(n, k); };
+    for (const m of noUrl.matchAll(/@([\p{L}\p{N}_.-]+)/gu)) put(m[1], 'direct');
+    if (/@(everyone|herkes)\b/i.test(noUrl) && can(f.s, me, 'mentionEveryone')) { membersOf(f.s).forEach(n => put(n, 'everyone')); msg.everyone = true; }
+    for (const r of f.s.customRoles || []) if (noUrl.includes('@' + r.name) && (r.mentionable !== false || can(f.s, me, 'mentionEveryone'))) for (const [n, rs] of Object.entries(f.s.memberRoles)) if (rs.includes(r.id)) put(n, 'role');
+    const ra = msg.replyTo?.author; if (ra && ra !== me && !how.has(ra) && f.s.members.includes(ra)) how.set(ra, 'reply');
+    for (const [n, k] of how) {
+      if (n === me || !db.users[n] || !canAccess(n, chId)) continue;
+      const sp = prefsOf(db.users[n]).srv?.[f.s.id] || {};
+      if ((k === 'everyone' && sp.ev) || (k === 'role' && sp.rol)) continue;
+      notifyUser(n, { from: me, text: preview, channelId: chId, where, mention: true, kind: k, mid: msg.id, sid: f.s.id });
     }
   }
   onbFlag(me, 'msg');
@@ -4806,7 +4822,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: seenBy(flagsState(), name), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: seenBy(voiceState(), name), voiceAge: seenBy(voiceAges(), name), calls: callsFor(name), live: seenBy(liveState(), name), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      needVeli: needVeli(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, tagDefs: TAG.defs(), tagCan: TAG.canList(name), npReady: { fcm: !!npCfg.fcm, apns: !!npCfg.apns }, tagCfg: siteAdmin(name) ? TAG.cfg() : null, arenaRooms: arenaRoomsFor(name), entrySound: db.users[name].entrySound || null, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
+      needVeli: needVeli(db.users[name]), inboxUnseen: inboxUnseen(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, tagDefs: TAG.defs(), tagCan: TAG.canList(name), npReady: { fcm: !!npCfg.fcm, apns: !!npCfg.apns }, tagCfg: siteAdmin(name) ? TAG.cfg() : null, arenaRooms: arenaRoomsFor(name), entrySound: db.users[name].entrySound || null, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 
@@ -5457,12 +5473,14 @@ io.on('connection', socket => {
       const ch = {}; for (const [k, v] of Object.entries(p.ch || {}).slice(0, 500)) if (typeof k === 'string' && k.length < 80 && ['all', 'none'].includes(v)) ch[k] = v;
       const ids = a => (Array.isArray(a) ? a : []).filter(x => typeof x === 'string' && x.length < 40).slice(0, 200);
       const mu = {}; for (const [k, v] of Object.entries(p.muteUntil || {}).slice(0, 200)) if (typeof k === 'string' && k.length < 40 && +v > Date.now()) mu[k] = +v;
-      u.prefs = { notif: p.notif !== false, muted: ids(p.muted), ch, order: p.order ? ids(p.order) : u.prefs?.order || [], muteUntil: mu,
+      const srv = {}; for (const [k, v] of Object.entries(p.srv && typeof p.srv === 'object' ? p.srv : (u.prefs?.srv || {})).slice(0, 200)) if (typeof k === 'string' && k.length < 40 && v && typeof v === 'object') {
+        const o = {}; if (['all', 'mentions', 'none'].includes(v.lvl) && v.lvl !== 'mentions') o.lvl = v.lvl; if (v.ev) o.ev = 1; if (v.rol) o.rol = 1; if (Object.keys(o).length) srv[k] = o; }
+      u.prefs = { notif: p.notif !== false, muted: ids(p.muted), ch, srv, order: p.order ? ids(p.order) : u.prefs?.order || [], muteUntil: mu,
         read: u.prefs?.read || {}, emoji: p.emoji === undefined ? (u.prefs?.emoji || { fav: [], use: {} }) : saneEmojiPrefs(p.emoji), at: Date.now() };
       save();
-      for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('prefs', { notif: u.prefs.notif, muted: u.prefs.muted, ch, order: u.prefs.order, muteUntil: mu, emoji: u.prefs.emoji });
+      for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('prefs', { notif: u.prefs.notif, muted: u.prefs.muted, ch, srv, order: u.prefs.order, muteUntil: mu, emoji: u.prefs.emoji });
     }
-    cb(u.prefs ? { notif: u.prefs.notif, muted: u.prefs.muted, ch: u.prefs.ch, order: u.prefs.order || [], muteUntil: u.prefs.muteUntil || {}, read: u.prefs.read || {}, emoji: u.prefs.emoji || { fav: [], use: {} }, at: u.prefs.at } : null);
+    cb(u.prefs ? { notif: u.prefs.notif, muted: u.prefs.muted, ch: u.prefs.ch, srv: u.prefs.srv || {}, order: u.prefs.order || [], muteUntil: u.prefs.muteUntil || {}, read: u.prefs.read || {}, emoji: u.prefs.emoji || { fav: [], use: {} }, at: u.prefs.at } : null);
   });
   socket.on('read', id => { // okundu bilgisi her cihazda aynı olsun
     const u = db.users[me]; if (!u || typeof id !== 'string' || id.length > 80) return;
@@ -5471,7 +5489,12 @@ io.on('connection', socket => {
     save();
     for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('readSync', { id, t });
   });
-  socket.on('vis', on => { on ? visibleSockets.add(socket.id) : visibleSockets.delete(socket.id); });
+  socket.on('vis', on => { on ? visibleSockets.add(socket.id) : visibleSockets.delete(socket.id); const u = me && db.users[me]; if (on && u?.dmPend) { u.dmPend = 0; save(); } });
+  // Bildirimler sekmesi
+  socket.on('inbox', (_, cb = () => {}) => { const u = me && db.users[me]; if (!u) return cb({ list: [] });
+    cb({ list: (u.inbox || []).map(e => ({ ...e, seen: e.at <= (u.inboxSeen || 0) })), unseen: inboxUnseen(u) }); });
+  socket.on('inboxSeen', () => { const u = me && db.users[me]; if (!u) return; u.inboxSeen = Date.now(); u.dmPend = 0; save(); io.to('user:' + me).emit('inboxSeen', u.inboxSeen); });
+  socket.on('inboxDel', (eid, cb = () => {}) => { const u = me && db.users[me]; if (!u) return cb({}); u.inbox = (u.inbox || []).filter(e => eid === '*' ? false : e.id !== eid); save(); io.to('user:' + me).emit('inboxDel', eid); cb({ ok: true }); });
   socket.on('pushKey', (cb = () => {}) => cb(webpush && vapid ? vapid.publicKey : null));
   socket.on('pushSub', (sub, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });

@@ -5124,6 +5124,29 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   #mtabs .mt-av img { width: 100%; height: 100%; object-fit: cover; } #mtabs button.on .mt-av { box-shadow: 0 0 0 2px var(--accent); }
   #mtabs .mt-dot { position: absolute; top: 7px; left: calc(50% + 7px); min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #f23f43; color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center; border: 2px solid #0b0b0e; }
 }
+/* Bildirimler (kutu) */
+#inboxp { position: fixed; z-index: 60; right: 16px; top: 70px; width: 420px; max-height: min(640px, calc(100vh - 100px)); display: flex; flex-direction: column; background: #141418; border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,.6); overflow: hidden; }
+#inboxp[hidden] { display: none; }
+#inboxp .ib-h { display: flex; align-items: center; gap: 8px; padding: 16px 14px 8px 18px; } #inboxp .ib-h b { font-size: 20px; font-weight: 900; flex: 1; }
+#inboxp .ib-h button { background: none; border: none; color: var(--muted); font: 600 13px inherit; font-family: inherit; padding: 8px 10px; border-radius: 10px; }
+#inboxp .ib-close .ic { width: 20px; height: 20px; }
+#inboxp .ib-f { display: flex; gap: 6px; padding: 4px 14px 10px; overflow-x: auto; scrollbar-width: none; }
+#inboxp .ib-f button { flex: none; padding: 8px 14px; border-radius: 999px; background: #1d1d23; border: 1px solid transparent; color: #c9c9d1; font: 700 13px inherit; font-family: inherit; }
+#inboxp .ib-f button.on { background: rgba(212,255,0,.12); border-color: rgba(212,255,0,.4); color: #fff; }
+#inboxp .ib-l { overflow-y: auto; flex: 1; padding: 0 8px 12px; overscroll-behavior: contain; }
+#inboxp .ib-e { display: flex; gap: 12px; padding: 12px 10px; border-radius: 14px; position: relative; cursor: pointer; }
+#inboxp .ib-e:active, #inboxp .ib-e:hover { background: rgba(255,255,255,.04); }
+#inboxp .ib-e.new::before { content: ''; position: absolute; left: 0; top: 18px; width: 4px; height: 24px; border-radius: 2px; background: var(--accent); }
+#inboxp .ib-e .av { width: 40px; height: 40px; flex: none; font-size: 16px; }
+#inboxp .ib-b { flex: 1; min-width: 0; } #inboxp .ib-t { font-size: 14px; color: #c9c9d1; line-height: 1.35; } #inboxp .ib-t b { color: #fff; }
+#inboxp .ib-w { font-size: 12px; color: var(--muted); margin-top: 2px; } #inboxp .ib-m { margin-top: 6px; font-size: 14px; color: #e6e6eb; background: #1b1b21; border-radius: 12px; padding: 8px 12px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: pre-wrap; word-break: break-word; }
+#inboxp .ib-k { position: absolute; left: 38px; top: 38px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: #6c78ff; border: 2px solid #141418; } #inboxp .ib-k .ic { width: 11px; height: 11px; color: #fff; }
+#inboxp .ib-k.reply { background: #2f9e65; } #inboxp .ib-k.friend { background: #e8a33d; } #inboxp .ib-k.everyone, #inboxp .ib-k.role { background: #d64545; }
+#inboxp .ib-empty { text-align: center; color: var(--muted); padding: 60px 20px; font-size: 14px; } #inboxp .ib-empty .ic { width: 44px; height: 44px; color: #3a3a44; display: block; margin: 0 auto 12px; }
+@media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
+  #inboxp { left: 0; right: 0; top: 0; width: auto; max-height: none; bottom: var(--tabh, 0px); border-radius: 0; border: none; padding-top: env(safe-area-inset-top); box-shadow: none; z-index: 19; background: #0f0f13; }
+  html:not(.mapp) #inboxp { bottom: 0; z-index: 60; }
+}
 /* Mobil uygulama (Capacitor) */
 html.native { -webkit-tap-highlight-color: transparent; }
 html.native body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
@@ -5205,9 +5228,14 @@ html.native input, html.native textarea, html.native [contenteditable], html.nat
   <nav id="mtabs" aria-label="Sekmeler">
     <button type="button" data-mt="srv"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg><span>Sunucular</span></button>
     <button type="button" data-mt="dm"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg><span>Mesajlar</span></button>
-    <button type="button" data-mt="fr"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.8.8 2.9 2.6 3.1 5.2"/></svg><span>Arkadaşlar</span></button>
+    <button type="button" data-mt="nt"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg><span>Bildirimler</span></button>
     <button type="button" data-mt="me"><span class="mt-av" id="mt-av"></span><span>Sen</span></button>
   </nav>
+  <div id="inboxp" role="dialog" aria-label="Bildirimler" hidden>
+    <div class="ib-h"><b>Bildirimler</b><button type="button" id="ib-all">Temizle</button><button type="button" class="ib-close" id="ib-close" aria-label="Kapat"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="ib-f" id="ib-f"><button type="button" data-f="" class="on">Tümü</button><button type="button" data-f="direct">Bahsetmeler</button><button type="button" data-f="reply">Yanıtlar</button><button type="button" data-f="friend">İstekler</button></div>
+    <div class="ib-l" id="ib-l"></div>
+  </div>
   <div id="vdock" aria-label="Ses kontrolleri"><button class="vd-info" id="vd-info"><span class="vd-dot"></span><span class="vd-t"><b id="vd-name">Seste</b><small id="vd-sub">Dokun: odayı aç</small></span></button><button class="vd-b" id="vd-mute" aria-label="Mikrofon"></button><button class="vd-b vd-x" id="vd-cam" aria-label="Kamera"></button><button class="vd-b vd-x" id="vd-scr" aria-label="Ekran paylaş"></button><button class="vd-b vd-x" id="vd-ar" aria-label="Kanka Arena" data-arcount=""></button><button class="vd-b vd-x" id="vd-sb" aria-label="Ses paneli" data-sbopen></button><button class="vd-b vd-x" id="vd-chat" aria-label="Oda sohbeti"></button><button class="vd-b vd-leave" id="vd-leave" aria-label="Ayrıl"></button></div>
   <div id="msheet" aria-hidden="true"><div class="ms-bg"></div><div class="ms-p" role="dialog" aria-label="Mesaj işlemleri"></div></div>
 </div>
@@ -5881,7 +5909,7 @@ function onAuth(res) {
   if (location.pathname !== APP_PATH) try { history.replaceState(null, '', APP_PATH + location.search); } catch {}
   if (vcHold) setTimeout(voiceRejoin, 150); else if (vcResume) setTimeout(resumeVoice, 300);
   if (AR.lobby) setTimeout(() => AR.lobby && arOpenLobby(AR.lobby.id), 600); // güncellemeden sonra açık oyuna yeniden bağlan
-  S.minor = !!res.minor; if (res.needVeli) setTimeout(veliGate, 1500);
+  S.minor = !!res.minor; if (res.needVeli) setTimeout(veliGate, 1500); S.inboxUnseen = res.inboxUnseen || 0; setTimeout(() => { try { mtabsSync(); } catch {} }, 0);
   store.set('kanka-token', res.token);
   S.me = res.user.name;
   S.npReady = res.npReady || {};
@@ -6690,24 +6718,54 @@ function showWelcome(s, force) {
 
 // ================= Sunucu görünümü =================
 let lastDM = null; // sunucuya geçmeden önce açık olan özel sohbet
+// ---- Bildirimler sekmesi (Discord gibi): bahsetmeler, yanıtlar, @everyone, rol, arkadaşlık istekleri. Liste sunucuda, her cihazda aynı ----
+let inboxList = [], inboxF = '';
+const IB_ICON = { direct: 'at', reply: 'reply', everyone: 'at', role: 'at', friend: 'userplus' };
+const ibText = e => e.t === 'friend' ? `<b>${esc(dn(e.from))}</b> sana arkadaşlık isteği gönderdi` : e.t === 'reply' ? `<b>${esc(dn(e.from))}</b> mesajına yanıt verdi` : e.t === 'everyone' ? `<b>${esc(dn(e.from))}</b> herkesi etiketledi` : e.t === 'role' ? `<b>${esc(dn(e.from))}</b> rolünü etiketledi` : `<b>${esc(dn(e.from))}</b> seni etiketledi`;
+function renderInbox() {
+  const l = $('#ib-l'), list = inboxList.filter(e => !inboxF || (inboxF === 'direct' ? ['direct', 'everyone', 'role'].includes(e.t) : e.t === inboxF));
+  $('#ib-f').querySelectorAll('[data-f]').forEach(b => b.classList.toggle('on', b.dataset.f === inboxF));
+  l.innerHTML = list.length ? list.map(e => `<div class="ib-e ${e.seen ? '' : 'new'}" data-ib="${esc(e.id)}">${av(e.from)}<span class="ib-k ${e.t}">${ic(IB_ICON[e.t] || 'bell')}</span><div class="ib-b"><div class="ib-t">${ibText(e)}</div><div class="ib-w">${esc(e.where || '')}${e.where ? ' · ' : ''}${ago(e.at)}</div>${e.text && e.t !== 'friend' ? `<div class="ib-m">${esc(e.text)}</div>` : ''}</div></div>`).join('')
+    : `<div class="ib-empty">${ic('bell')}${inboxF ? 'Bu türde bildirimin yok.' : 'Henüz bildirimin yok.<br>Biri seni etiketleyince ya da mesajına yanıt verince burada görürsün.'}</div>`;
+}
+function showInbox() {
+  const p = $('#inboxp'); p.hidden = false; renderInbox(); mtabsSync();
+  socket.emit('inbox', null, r => { inboxList = r?.list || []; renderInbox(); socket.emit('inboxSeen'); S.inboxUnseen = 0; mtabsSync(); });
+  ovOpen('inbox', () => { $('#inboxp').hidden = true; mtabsSync(); });
+}
+function closeInbox() { const p = $('#inboxp'); if (p.hidden) return; p.hidden = true; ovClosed('inbox'); mtabsSync(); }
+$('#ib-close').onclick = () => closeInbox();
+$('#ib-f').onclick = e => { const b = e.target.closest('[data-f]'); if (!b) return; inboxF = b.dataset.f; renderInbox(); };
+$('#ib-all').onclick = () => { socket.emit('inboxDel', '*'); inboxList = []; renderInbox(); };
+$('#ib-l').onclick = e => {
+  const x = e.target.closest('[data-ib]'); if (!x) return; const en = inboxList.find(i => i.id === x.dataset.ib); if (!en) return;
+  closeInbox(); openFromNotif({ ch: en.ch, from: en.from, friend: en.t === 'friend', mid: en.mid });
+};
+socket.on('inbox+', e => { S.inboxUnseen = (S.inboxUnseen || 0) + 1; inboxList = [e, ...inboxList.filter(x => x.mid !== e.mid || !e.mid)]; if (!$('#inboxp').hidden) { e.seen = false; renderInbox(); socket.emit('inboxSeen'); S.inboxUnseen = 0; } mtabsSync(); });
+socket.on('inboxSeen', () => { S.inboxUnseen = 0; mtabsSync(); });
+socket.on('inboxDel', id => { inboxList = id === '*' ? [] : inboxList.filter(x => x.id !== id); if (!$('#inboxp').hidden) renderInbox(); });
+document.addEventListener('click', e => { const p = $('#inboxp'); if (!p.hidden && !p.contains(e.target) && !e.target.closest('#mtabs, #ib-btn') && !narrow()) closeInbox(); });
+// Bildirimden ya da kutudan gelince mesaj yüklenene kadar bekleyip ona git
+function jumpWhenLoaded(mid, tries = 0) { if (!mid) return; if (document.querySelector(`.row[data-id="${CSS.escape(mid)}"]`)) return jumpTo(mid); if (tries < 25) setTimeout(() => jumpWhenLoaded(mid, tries + 1), 150); }
 // ---- Uygulama görünümü alt sekmeleri ----
 let mtLastSrv = null;
 function mtabsSync() {
   if (!MAPP) return; const bar = $('#mtabs'); if (!bar) return;
-  const on = S.view === 'server' ? 'srv' : S.view === 'dm' ? (!S.channel && !document.body.classList.contains('drawer') && friendTab !== 'home' ? 'fr' : 'dm') : '';
+  const on = !$('#inboxp').hidden ? 'nt' : S.view === 'server' ? 'srv' : S.view === 'dm' ? 'dm' : '';
   bar.querySelectorAll('[data-mt]').forEach(b => b.classList.toggle('on', b.dataset.mt === on));
   const srvUnread = S.unreadServers?.size || 0, dmUnread = S.unreadDM ? 1 : 0;
   const dot = (k, n) => { const b = bar.querySelector(`[data-mt="${k}"]`); let d = b.querySelector('.mt-dot'); if (!n) return d?.remove(); if (!d) { d = document.createElement('span'); d.className = 'mt-dot'; b.appendChild(d); } d.textContent = n > 9 ? '9+' : n; };
-  dot('srv', srvUnread); dot('dm', dmUnread); dot('fr', S.social?.reqIn?.length || 0);
+  dot('srv', srvUnread); dot('dm', dmUnread); dot('nt', S.inboxUnseen || 0);
   const me = S.users?.[S.me]; if (me) { const av = $('#mt-av'), html = me.avatar ? `<img src="${esc(me.avatar)}" alt="">` : esc((me.displayName || S.me).slice(0, 1).toUpperCase()); if (av.dataset.h !== html) { av.innerHTML = html; av.dataset.h = html; } }
 }
 if (MAPP) {
   $('#mtabs').onclick = e => {
     const b = e.target.closest('[data-mt]'); if (!b) return; buzz?.(6);
     const t = b.dataset.mt;
+    if (t !== 'nt') closeInbox();
+    if (t === 'nt') { if ($('#inboxp').hidden) { openDrawer(); showInbox(); } else closeInbox(); }
     if (t === 'srv') { const id = (S.view === 'server' && S.server?.id) || mtLastSrv || orderedServers()[0]?.id; if (id && !(S.view === 'server' && S.server?.id === id)) selectServer(id); setTimeout(openDrawer, 0); }
     if (t === 'dm') { if (S.view !== 'dm') openDMHome(); setTimeout(openDrawer, 0); }
-    if (t === 'fr') { showFriends(S.social?.reqIn?.length ? 'pending' : 'online'); }
     if (t === 'me') showSettings();
     setTimeout(mtabsSync, 50);
   };
@@ -8199,7 +8257,7 @@ document.addEventListener('click', e => {
   // Çekmece içinde bir şeye basınca (ör. kategori başlığını aç/kapa) liste yeniden çizilir ve tıklanan öğe DOM'dan kopar;
   // kopmuş öğenin "üstü" olmadığı için eskiden burası "dışarı tıklandı" sanıp çekmeceyi kapatıyordu (telefonda sohbetten atıyordu). Kopmuşsa dokunma.
   if (!e.target.isConnected) return;
-  if (document.body.classList.contains('drawer') && !e.target.closest('#rail, #side, #menu-btn, #modal, #msheet')) closeDrawer();
+  if (document.body.classList.contains('drawer') && !e.target.closest('#rail, #side, #menu-btn, #modal, #msheet, #mtabs, #inboxp, .umenu')) closeDrawer();
   if (document.body.classList.contains('mdrawer') && !e.target.closest('#members, #mem-btn, #modal, .umenu, .vpop, #msheet')) closeMembers();
 });
 function selectChannel(id) {
@@ -9023,14 +9081,14 @@ function countEmojiUsage(text) {
 }
 const freqKeys = () => Object.entries(eUse).filter(([, v]) => v?.n > 0).map(([k, v]) => [k, v.n / (1 + Math.max(0, Date.now() - (v.t || 0)) / 1209600e3)]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
 // Bildirim tercihleri hesapta: bir cihazda değişince hepsinde geçerli, telefon bildirimi de uyar
-const prefsNow = () => ({ notif: notifOn(), muted: [...mutedServers], ch: Object.fromEntries(Object.entries(chNotif()).filter(([, v]) => v === 'all' || v === 'none')), order: srvOrder(), muteUntil: muteUntil(), emoji: { fav: eFav, use: eUse } });
+const prefsNow = () => ({ notif: notifOn(), muted: [...mutedServers], ch: Object.fromEntries(Object.entries(chNotif()).filter(([, v]) => v === 'all' || v === 'none')), srv: srvNotif(), order: srvOrder(), muteUntil: muteUntil(), emoji: { fav: eFav, use: eUse } });
 let prefsT = null;
 const syncPrefs = () => { clearTimeout(prefsT); prefsT = setTimeout(() => socket.emit('prefs', prefsNow()), 300); };
 function applyServerPrefs(p) {
   if (!p) return;
   store.set('kanka-notif', p.notif === false ? 'off' : null);
   mutedServers.clear(); (p.muted || []).forEach(x => mutedServers.add(x)); store.set('kanka-muted', JSON.stringify([...mutedServers]));
-  store.set('kanka-chnotif', JSON.stringify(p.ch || {}));
+  store.set('kanka-chnotif', JSON.stringify(p.ch || {})); if (p.srv) store.set('kanka-srvnotif', JSON.stringify(p.srv));
   if (Array.isArray(p.order)) store.set('kanka-srvorder', JSON.stringify(p.order));
   if (p.muteUntil) store.set('kanka-muteuntil', JSON.stringify(p.muteUntil));
   if (p.emoji) applyEmojiPrefs(p.emoji);
@@ -11929,7 +11987,7 @@ function openFromNotif(d) {
   if (d.friend) return showFriends('pending');
   if (!d.ch) return;
   if (d.dm || /^(dm|g):/.test(d.ch)) return openChat(d.ch, d.from);
-  const s = S.servers.find(s => s.channels.some(c => c.id === d.ch)); if (s) selectServer(s.id, d.ch);
+  const s = S.servers.find(s => s.channels.some(c => c.id === d.ch)); if (s) { selectServer(s.id, d.ch); if (d.mid) jumpWhenLoaded(d.mid); }
 }
 navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.kankaOpen) openFromNotif(e.data.kankaOpen); });
 try { navigator.serviceWorker?.startMessages?.(); } catch {} // servis çalışanından gelen "şu sohbeti aç" mesajları beklemede kalmasın
@@ -12006,7 +12064,7 @@ if (NPUSH) {
   NPUSH.addListener('registrationError', e => { npState = 'hata'; console.warn('[kanka] bildirim kaydı', e?.error || e); });
   NPUSH.addListener('pushNotificationActionPerformed', a => {
     const d = a?.notification?.data || {}, t = v => v === true || v === '1';
-    const go = () => { closeModal?.(); openFromNotif({ ch: d.ch || null, from: d.from || null, dm: t(d.dm), friend: t(d.friend) }); };
+    const go = () => { closeModal?.(); openFromNotif({ ch: d.ch || null, from: d.from || null, dm: t(d.dm), friend: t(d.friend), mid: d.mid || null }); };
     if (S.me && authed) go(); else npPending = go; // uygulama kapalıyken bildirime basıldı: giriş bitince aç
   });
 }
@@ -16616,7 +16674,9 @@ function railMenu(s, x, y) {
   const list = orderedServers(), i = list.findIndex(x => x.id === s.id), ids = list.map(x => x.id);
   const move = to => { const a = ids.filter(x => x !== s.id); a.splice(Math.max(0, Math.min(a.length, to)), 0, s.id); setSrvOrder(a); };
   const modes = s.channels.filter(c => !voiceLike(c.type)).map(c => notifMode(c.id)), allM = modes.length && modes.every(v => v === modes[0]) ? modes[0] : null;
-  const setAll = v => { s.channels.filter(c => !voiceLike(c.type)).forEach(c => setChNotif(c.id, v)); if (S.view === 'server') renderSide(); toast('Bildirim ayarı tüm odalara uygulandı'); };
+  // Sunucu varsayılanı (sonradan açılan odalar da uyar); odalardaki özel ayarlar temizlenir
+  const setAll = v => { const o = chNotif(); s.channels.forEach(c => delete o[c.id]); store.set('kanka-chnotif', JSON.stringify(o)); setSrvNotif(s.id, { lvl: v }); if (S.view === 'server') renderSide(); toast('Sunucunun bildirim ayarı güncellendi'); };
+  const sp = srvNotif()[s.id] || {};
   const until = mu ? new Date(mu).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + (new Date(mu).toDateString() !== new Date().toDateString() ? ' (yarın)' : '') : '';
   ctxMenu(x, y, [
     { t: 'Okundu olarak işaretle', icon: 'check', act: () => { s.channels.forEach(c => { if (S.unread.has(c.id) || mentCountCh(c.id)) markRead(c.id); S.unread.delete(c.id); }); S.unreadServers.delete(s.id); renderRail(); if (S.view === 'server') renderSide(); toast('Hepsi okundu'); } },
@@ -16625,6 +16685,8 @@ function railMenu(s, x, y) {
     muted ? { t: 'Sunucunun sesini aç', icon: 'bell', sub2: mu ? `${until} saatine kadar sessizde` : 'Sen açana kadar sessizde', act: () => { muteServerFor(s.id, 0); toast('Sunucunun sesi açıldı'); } }
       : { t: 'Sunucuyu sessize al', icon: 'bell', sub: [[15, '15 dakika'], [60, '1 saat'], [480, '8 saat'], [1440, '24 saat'], [0, 'Ben açana kadar']].map(([m, t]) => ({ t, icon: 'clock', act: () => { muteServerFor(s.id, m ? m * 60e3 : Infinity); toast(`${s.name} ${m ? t + ' sessizde' : 'sessize alındı'}. Etiketlenince yine haber veririz.`); } })) },
     { t: 'Bildirim ayarları', icon: 'bell', sub2: allM === 'all' ? 'Tüm mesajlar' : allM === 'none' ? 'Hiçbiri' : allM === 'mentions' ? 'Sadece @bahsetmeler' : 'Odalara göre farklı', sub: [
+      { t: '@everyone ve @herkes bahsetmelerini bastır', icon: 'at', on: !!sp.ev, act: () => { setSrvNotif(s.id, { ev: !sp.ev }); toast(sp.ev ? '@everyone bildirimleri açık' : '@everyone bildirimleri bastırıldı'); } },
+      { t: 'Rol bahsetmelerini bastır', icon: 'at', on: !!sp.rol, act: () => { setSrvNotif(s.id, { rol: !sp.rol }); toast(sp.rol ? 'Rol bildirimleri açık' : 'Rol bildirimleri bastırıldı'); } }, '-',
       { t: 'Tüm mesajlar', icon: 'chat', on: allM === 'all', act: () => setAll('all') }, { t: 'Sadece @bahsetmeler', icon: 'at', on: allM === 'mentions', act: () => setAll('mentions') }, { t: 'Hiçbiri', icon: 'bell', on: allM === 'none', act: () => setAll('none') }] },
     '-',
     { t: 'Şuraya taşı', icon: 'grid', sub: [
@@ -17000,7 +17062,9 @@ Object.assign(PERM_ROWS, {
 });
 const chNotif = () => { try { return JSON.parse(store.get('kanka-chnotif') || '{}'); } catch { return {}; } };
 const setChNotif = (id, v) => { const o = chNotif(); v === 'mentions' ? delete o[id] : o[id] = v; store.set('kanka-chnotif', JSON.stringify(o)); syncPrefs(); };
-const notifMode = id => chNotif()[id] || 'mentions';
+const srvNotif = () => { try { return JSON.parse(store.get('kanka-srvnotif') || '{}'); } catch { return {}; } };
+const setSrvNotif = (sid, patch) => { const o = srvNotif(), v = { ...(o[sid] || {}), ...patch }; for (const k in v) if (!v[k] || v[k] === 'mentions') delete v[k]; if (Object.keys(v).length) o[sid] = v; else delete o[sid]; store.set('kanka-srvnotif', JSON.stringify(o)); syncPrefs(); };
+const notifMode = id => { const m = chNotif()[id]; if (m) return m; const sv = S.servers?.find(s => s.channels.some(c => c.id === id)); return (sv && srvNotif()[sv.id]?.lvl) || 'mentions'; };
 const vch = () => { if (!myVoice) return null; for (const s of S.servers) { const c = s.channels.find(x => x.id === myVoice); if (c) return { s, c }; } return null; };
 let stageSt = {};
 let srvMutedNow = false; // yetkili seni seste susturduysa
