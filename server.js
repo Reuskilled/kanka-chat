@@ -2785,7 +2785,7 @@ function voiceTo(names) {
 const pushVoice = () => { voiceTo(new Set(online.values())); pushCalls(); botVoiceTap(); };
 // Özel arama günlüğü: sohbete "arama başladı / bitti / cevapsız" yazar, 3 dakika yalnız kalana Kanka seslenir
 const callSess = new Map();
-const CALL_ALONE_MS = +process.env.CALL_ALONE_MS || 180e3;
+const CALL_ALONE_MS = +process.env.CALL_ALONE_MS || 300e3;
 function callMsg(chId, call) {
   const msg = { id: id(), kind: 'call', time: Date.now(), call, reactions: {} };
   const list = (db.messages[chId] ||= []); list.push(msg); if (list.length > 2000) list.shift();
@@ -2798,23 +2798,26 @@ function callSessOf(chId) {
   if (!s) { s = { by: null, start: Date.now(), rangAt: 0, max: 0, names: new Set(), aloneT: null }; callSess.set(chId, s); }
   return s;
 }
+// Aramada tek kişi kalırsa (diğeri çıktı ya da bağlantısı koptu) arama hemen bitmez: karşı taraf geri dönebilir.
+// CALL_ALONE_MS (5 dk) boyunca kimse gelmezse arama sunucu tarafında kapatılır; 1 dakika kala uyarılır.
 function callAloneWatch(chId) {
   const s = callSess.get(chId); if (!s) return;
-  clearTimeout(s.aloneT); s.aloneT = null;
+  clearTimeout(s.aloneT); clearTimeout(s.warnT); s.aloneT = s.warnT = null;
   const room = voice.get('call:' + chId);
-  if (!room || room.size !== 1) return;
-  const [[, name]] = room;
+  if (!room || new Set(room.values()).size !== 1) return;
+  const name = [...room.values()][0], alone = () => { const r = voice.get('call:' + chId); return r && new Set(r.values()).size === 1 && [...r.values()][0] === name; };
+  const mins = Math.max(1, Math.round(CALL_ALONE_MS / 60e3));
+  if (CALL_ALONE_MS > 90e3) { s.warnT = setTimeout(() => { if (alone()) io.to('user:' + name).emit('toast', 'Aramada tek başınasın. 1 dakika içinde kimse gelmezse arama kapanacak.'); }, CALL_ALONE_MS - 60e3); s.warnT.unref?.(); }
   s.aloneT = setTimeout(() => {
-    const r = voice.get('call:' + chId);
-    if (!r || r.size !== 1 || ![...r.values()].includes(name)) return;
-    io.to('user:' + name).emit('message', { channelId: chId, msg: { id: 'w' + id(), author: BOT_NAME, kind: 'bot', time: Date.now(), ephemeral: true, bot: { title: 'Kanka fark etti', text: 'Üç dakikadır odada senden başka kimse yok kanka. Mikrofonu kapatsan da kimse fark etmez, benden söylemesi 🙂 Kapatmak istersen kapat gitsin; ben buradayım.', tone: 'warn' }, reactions: {} } });
-    io.to('user:' + name).emit('toast', '3 dakikadır tek başınasın kanka. Boş odaysa kapat gitsin.');
+    if (!alone()) return;
+    voiceKick(['call:' + chId], null, `${mins} dakikadır aramada tek başınaydın, arama kapatıldı`);
+    callEnded(chId);
   }, CALL_ALONE_MS);
   s.aloneT.unref?.();
 }
 function callEnded(chId) {
   const s = callSess.get(chId); if (!s) return;
-  clearTimeout(s.aloneT); callSess.delete(chId);
+  clearTimeout(s.aloneT); clearTimeout(s.warnT); callSess.delete(chId);
   const ms = Date.now() - s.start;
   if (s.max >= 2) return callMsg(chId, { state: 'end', by: s.by, ms, members: [...s.names].filter(n => n !== s.by).slice(0, 9) });
   if (!s.rangAt) return;

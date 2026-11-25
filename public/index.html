@@ -12592,11 +12592,13 @@ function closePeer(sid) {
 }
 socket.on('voiceLeft', sid => {
   closePeer(sid); playSound('leave');
-  // Birebir aramada karşı taraf kapatınca görüşme de biter; grup aramasında kalanlar devam eder
-  if (myVoice?.startsWith('call:dm:') && !Object.keys(peers).length) {
-    const d = S.dms.find(x => 'call:' + x.id === myVoice);
-    toast(`${d?.with ? dn(d.with) : 'Karşı taraf'} aramadan ayrıldı`);
-    leaveVoice(false); renderStage();
+  // Aramada tek kalınca görüşme hemen bitmez (karşı taraf bağlantı kopmasından ya da yanlışlıkla çıkıp dönebilir).
+  // 5 dakika kimse gelmezse sunucu aramayı kapatır (voiceKicked).
+  if (myVoice?.startsWith('call:') && !Object.keys(peers).length) {
+    outgoing = null; // "Cevap yok" zamanlayıcısı görüşmüş aramayı kapatmasın
+    const d = myVoice.startsWith('call:dm:') ? S.dms.find(x => 'call:' + x.id === myVoice) : null;
+    toast(`${d?.with ? dn(d.with) : 'Herkes'} aramadan ayrıldı. 5 dakika içinde kimse gelmezse arama kapanır.`);
+    renderStage();
   }
 });
 // ================= Ses paneli =================
