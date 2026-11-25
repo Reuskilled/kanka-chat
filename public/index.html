@@ -6313,7 +6313,7 @@ function onAuth(res) {
   hideBoot();
   if (!res.error) { authed = true; setTimeout(flushSendQ, 50); clearTimeout(restartToast); if (restartShown && Date.now() - restartingAt < 120e3) toast('✅ Kanka güncellendi'); restartingAt = 0; restartShown = false; }
   if (res.error) { vcResume = null; store.set('kanka-token', null); showAuth(); return setTimeout(() => $('#auth-err') && authErr(res), 0); }
-  if (location.pathname !== APP_PATH) try { history.replaceState(null, '', APP_PATH + location.search); } catch {}
+  if (location.pathname !== APP_PATH && !location.pathname.startsWith('/kanal/')) try { history.replaceState(null, '', APP_PATH + location.search); } catch {}
   if (vcHold) setTimeout(voiceRejoin, 150); else if (vcResume) setTimeout(resumeVoice, 300);
   if (AR.lobby) setTimeout(() => AR.lobby && arOpenLobby(AR.lobby.id), 600); // güncellemeden sonra açık oyuna yeniden bağlan
   S.minor = !!res.minor; if (PLAY_BILL) setTimeout(() => playRestore(false), 4000); if (res.needVeli) setTimeout(veliGate, 1500); S.inboxUnseen = res.inboxUnseen || 0; setTimeout(() => { try { mtabsSync(); } catch {} }, 0);
@@ -6353,7 +6353,7 @@ function onAuth(res) {
   const last = S.view === 'dm' ? null : S.server && S.servers.find(s => s.id === S.server.id);
   // Yeniden bağlanma (ör. sunucu güncellendi): açık sohbet silinip baştan yüklenmesin, yerinde tazelensin
   const reAuth = everAuthed === S.me; if (reAuth) softUntil = Date.now() + 3000; everAuthed = S.me;
-  if (!reAuth && !S.server && !S.channel && restoreView()) return;
+  if (!reAuth && !S.server && !S.channel && (routeOpen() || restoreView())) return;
   if (S.view === 'dm' && S.channel) openChat(S.channel.id, S.channel.with);
   else if (S.view === 'dm') showFriends(friendTab);
   else if (S.view === 'discover') showDiscover();
@@ -7903,7 +7903,7 @@ socket.on('noteChanged', ({ key }) => { if (key === noteKey && document.activeEl
 addEventListener('beforeunload', noteFlush);
 // --- Başlıktaki fazla düğmeler telefonda ⋯ menüsüne ---
 function headFit() {
-  notesBtn(); notesSync();
+  notesBtn(); notesSync(); setTimeout(urlSync, 0);
   const box = $('#head-actions'), btns = [...box.children].filter(b => b.tagName === 'BUTTON' || b.classList.contains('hbtn'));
   const keep = S.view === 'dm' && S.channel && !S.channel.group ? 2 : 1;
   btns.forEach((b, i) => b.classList.toggle('hx', i >= keep));
@@ -11833,7 +11833,7 @@ void main(){
     float fadeY=smoothstep(0.62,0.18,uv.y);
     fragColor=vec4(col*fadeY,clamp(max(col.r,max(col.g,col.b))*1.15*fadeY,0.0,0.96)); return;
   }
-  vec2 tuv=vec2(uv.x,uv.y*1.32);
+  vec2 tuv=vec2(uv.x,uv.y*0.7494*u_res.y/max(1.0,u_res.x)); // resim oranı (640x854) korunur: kart genişliğine sığar, dikeyde basık/uzamış görünmez
   float zoom=1.0+intro*intro*0.15;
   tuv=(tuv-vec2(0.5,0.28))/zoom+vec2(0.5,0.28);
   if(u_mode==0||u_mode==2){
@@ -17012,6 +17012,29 @@ async function safeReload() {
 $('#upd-later').onclick = () => { $('#updbar').classList.remove('on'); const k = updKind; updKind = null; if (k === 'web') pendingAt = Date.now(); }; // sessiz yenileme beklemeye devam eder, 45 dk sonra tekrar hatırlatır
 // Sayfa yenilenince kaldığın yere dön (sessiz güncelleme ve "Yenile" düğmesi için)
 function saveView() { try { sessionStorage.setItem('kanka-geri', JSON.stringify({ v: S.view, sid: S.server?.id || null, cid: S.channel?.id || null, w: S.channel?.with || null, ft: typeof friendTab !== 'undefined' ? friendTab : null, at: Date.now() })); } catch {} }
+// ---- Adres çubuğu: Discord gibi her yerin kendi adresi ----
+// /kanal/<sunucu>/<oda> · /kanal/@me (arkadaşlar) · /kanal/@me/<sohbet>. Yenileyince ya da link paylaşınca aynı yer açılır.
+// Geçmişe kayıt eklenmez (replaceState): telefonda geri tuşunun davranışı değişmez.
+function viewPath() {
+  if (S.view === 'server' && S.server) return `/kanal/${encodeURIComponent(S.server.id)}${S.channel?.id ? '/' + encodeURIComponent(S.channel.id) : ''}`;
+  if (S.view === 'dm') return S.channel?.id ? `/kanal/@me/${encodeURIComponent(S.channel.id)}` : '/kanal/@me';
+  return APP_PATH;
+}
+function urlSync() {
+  if (!authed || $('#auth')?.style.display !== 'none' && $('#auth')) return;
+  const p = viewPath(); if (location.pathname === p) return;
+  try { history.replaceState(null, '', p + (p === APP_PATH ? location.search : '')); } catch {}
+}
+setInterval(urlSync, 700); // gezinme birçok yerden olur: adresi düzenli eşitle (sadece fark varsa yazar)
+function routeOpen() {
+  const m = /^\/kanal\/([^/]+)(?:\/([^/]+))?\/?$/.exec(location.pathname); if (!m) return false;
+  const a = decodeURIComponent(m[1]), b = m[2] ? decodeURIComponent(m[2]) : null;
+  try {
+    if (a === '@me') { if (b && (S.dms || []).some(d => d.id === b)) { S.view = 'dm'; const d = S.dms.find(x => x.id === b); openChat(b, d.with); } else { openDMHome(); } return true; }
+    const sv = S.servers.find(x => x.id === a); if (!sv) { history.replaceState(null, '', APP_PATH); return false; }
+    selectServer(sv.id, b && sv.channels?.some(c => c.id === b) ? b : undefined); return true;
+  } catch { return false; }
+}
 function restoreView() {
   let g = null; try { g = JSON.parse(sessionStorage.getItem('kanka-geri') || 'null'); sessionStorage.removeItem('kanka-geri'); } catch {}
   if (!g || Date.now() - g.at > 5 * 60e3) return false;
@@ -17050,8 +17073,10 @@ let myParts = null, cssBusy = false;
 async function swapCss(want) {
   if (cssBusy) return; cssBusy = true;
   try {
-    const t = await (await fetch(APP_PATH, { cache: 'no-store' })).text(), m = t.match(/<style[^>]*>([\s\S]*?)<\/style>/), el = $('#kcss');
-    if (m && el) { el.textContent = m[1]; myParts.css = want; }
+    const el = $('#kcss'); if (!el) return;
+    const r = await fetch(`/_k/${want}.css`); // stil ayrı dosyada (sunucu paketi); yoksa eski yol: sayfanın içindeki <style>
+    if (r.ok) { el.textContent = await r.text(); $('#kcssl')?.remove(); myParts.css = want; }
+    else { const t = await (await fetch(APP_PATH, { cache: 'no-store' })).text(), m = t.match(/<style id="kcss">([\s\S]*?)<\/style>/); if (m?.[1]) { el.textContent = m[1]; $('#kcssl')?.remove(); myParts.css = want; } }
   } catch {} finally { cssBusy = false; }
 }
 socket.on('buildParts', p => {

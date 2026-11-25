@@ -198,7 +198,9 @@ app.get('/', (req, res) => {
   if (APP_QS.some(k => q[k] !== undefined) || /Electron\/|KankaMobil\//.test(req.get('user-agent') || '')) return res.redirect(302, '/app' + qsOf(req));
   res.set('Cache-Control', 'no-store'); res.sendFile(PAGE('sesli-sohbet.html'));
 });
-for (const p of ['/app', '/login', '/register']) app.get(p, (req, res) => { res.set('Cache-Control', 'no-store'); res.sendFile(PAGE('index.html')); });
+// Uygulama kabuğu. /kanal/... : Discord'daki gibi her sunucu/oda/sohbetin kendi adresi (yenileyince aynı yere döner)
+app.get(['/app', '/login', '/register', /^\/kanal(\/.*)?$/], (req, res) => { res.set('Cache-Control', 'no-store'); if (KB.shell) return kbSend(req, res, KB.shell); res.sendFile(PAGE('index.html')); });
+app.get('/_k/:f', (req, res) => { const f = KB.files.get(req.params.f); if (!f) return res.status(404).end(); res.set('Cache-Control', 'public, max-age=31536000, immutable'); kbSend(req, res, f); });
 app.get(['/giris', '/giris-yap'], (req, res) => res.redirect(301, '/login' + qsOf(req)));
 app.get(['/kayit', '/kayit-ol', '/signup'], (req, res) => res.redirect(301, '/register' + qsOf(req)));
 app.get('/discord-alternatifi', (req, res) => res.redirect(301, '/sesli-sohbet' + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '')));
@@ -3312,9 +3314,35 @@ build = readBuild();
 const sh = x => crypto.createHash('sha1').update(x).digest('hex').slice(0, 12);
 const readParts = () => { try { const t = fs.readFileSync(INDEX, 'utf8'), m = t.match(/<style[^>]*>([\s\S]*?)<\/style>/); return { b: sh(t), css: sh(m ? m[1] : ''), js: sh(m ? t.replace(m[0], '') : t), major: /<meta name="kanka-buyuk" content="([^"]+)"/.exec(t)?.[1] || null }; } catch { return null; } };
 let buildParts = readParts();
+// ---------- Uygulama paketi ----------
+// index.html tek dosya olarak yazılmaya devam eder; sunulurken stil ve kod ayrı dosyalara bölünür:
+// /_k/<özet>.css ve /_k/<özet>.js bir yıl önbellekte kalır (içerik değişince adı değişir), brotli/gzip ile sıkıştırılır.
+// Böylece her açılışta 2 MB yerine birkaç KB'lık kabuk iner, tarayıcı kodu derlenmiş haliyle önbellekten çalıştırır.
+const KB = { shell: null, files: new Map() };
+const kbPack = (type, body) => { const raw = Buffer.from(body); return { type, raw, gz: zlib.gzipSync(raw, { level: 9 }), br: zlib.brotliCompressSync(raw, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9, [zlib.constants.BROTLI_PARAM_SIZE_HINT]: raw.length } }) }; };
+function kbBuild() {
+  try {
+    const t = fs.readFileSync(INDEX, 'utf8'), sm = t.match(/<style id="kcss">([\s\S]*?)<\/style>/);
+    let best = null; for (const m of t.matchAll(/<script>([\s\S]*?)<\/script>/g)) if (!best || m[1].length > best[1].length) best = m;
+    if (!sm || !best || best[1].length < 1e5) { KB.shell = null; return; }
+    const ch = sh(sm[1]), jh = sh(best[1]);
+    if (!KB.files.has(ch + '.css')) KB.files.set(ch + '.css', kbPack('text/css; charset=utf-8', sm[1]));
+    if (!KB.files.has(jh + '.js')) KB.files.set(jh + '.js', kbPack('application/javascript; charset=utf-8', best[1]));
+    while (KB.files.size > 10) KB.files.delete(KB.files.keys().next().value); // yenilenmemiş eski sekmeler için birkaç eski sürüm
+    const shell = t.replace(best[0], () => `<script src="/_k/${jh}.js"></script>`).replace(sm[0], () => `<link rel="stylesheet" href="/_k/${ch}.css" id="kcssl"><style id="kcss"></style>`);
+    KB.shell = kbPack('text/html; charset=utf-8', shell);
+  } catch (e) { console.error('Uygulama paketi:', e.message); KB.shell = null; }
+}
+kbBuild();
+function kbSend(req, res, f) {
+  const ae = req.get('accept-encoding') || ''; res.set('Vary', 'Accept-Encoding'); res.type(f.type);
+  if (/\bbr\b/.test(ae)) { res.set('Content-Encoding', 'br'); return res.end(f.br); }
+  if (/\bgzip\b/.test(ae)) { res.set('Content-Encoding', 'gzip'); return res.end(f.gz); }
+  res.end(f.raw);
+}
 let buildTimer = null;
 try {
-  fs.watch(path.dirname(INDEX), (ev, file) => { if (file && file !== 'index.html') return; clearTimeout(buildTimer); buildTimer = setTimeout(() => { const b = readBuild(); if (b && b !== build) { build = b; buildParts = readParts(); io.emit('build', build); if (buildParts) io.emit('buildParts', buildParts); } }, 25000); }); // güncelleyici dosyaları yazıp sunucuyu yeniden başlatır: "yenile" uyarısı yeni sunucu açıldıktan sonra (yeniden bağlanınca) gelsin, kapanırken basılıp boş ekranda kalınmasın
+  fs.watch(path.dirname(INDEX), (ev, file) => { if (file && file !== 'index.html') return; clearTimeout(buildTimer); buildTimer = setTimeout(() => { const b = readBuild(); if (b && b !== build) { build = b; buildParts = readParts(); kbBuild(); io.emit('build', build); if (buildParts) io.emit('buildParts', buildParts); } }, 25000); }); // güncelleyici dosyaları yazıp sunucuyu yeniden başlatır: "yenile" uyarısı yeni sunucu açıldıktan sonra (yeniden bağlanınca) gelsin, kapanırken basılıp boş ekranda kalınmasın
 } catch {}
 
 // =====================================================================
