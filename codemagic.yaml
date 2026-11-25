@@ -39,7 +39,7 @@ workflows:
   # "firebase" grubuna GOOGLE_SERVICES_JSON (google-services.json dosyasının içeriği) eklenmeli.
   # İmza: "android" grubuna ANDROID_KEYSTORE_B64, ANDROID_KEYSTORE_PASS, ANDROID_KEY_ALIAS, ANDROID_KEY_PASS (yoksa test anahtarı).
   android-apk:
-    name: Android APK
+    name: Android APK + AAB (Google Play)
     max_build_duration: 45
     instance_type: mac_mini_m2
     environment:
@@ -63,7 +63,11 @@ workflows:
           cd mobile/android
           export KANKA_KEYSTORE_PASS="$ANDROID_KEYSTORE_PASS" KANKA_KEY_ALIAS="$ANDROID_KEY_ALIAS" KANKA_KEY_PASS="$ANDROID_KEY_PASS"
           export KANKA_VERSION_CODE=$((1000 + BUILD_NUMBER)) KANKA_VERSION_NAME="$(node -p "require('../package.json').version").$BUILD_NUMBER"
-          chmod +x gradlew && ./gradlew --no-daemon assembleRelease
+          [ -z "$ANDROID_KEYSTORE_B64" ] && echo "UYARI: imza anahtarı yok, bu derleme hata ayıklama anahtarıyla imzalanır ve Google Playe yüklenemez"
+          chmod +x gradlew && ./gradlew --no-daemon assembleRelease bundleRelease
           cp app/build/outputs/apk/release/app-release.apk ../../KankaChat.apk
+          # Google Play yalnızca .aab kabul eder; APK elle kurup denemek için
+          cp app/build/outputs/bundle/release/app-release.aab ../../KankaChat.aab
     artifacts:
       - KankaChat.apk
+      - KankaChat.aab

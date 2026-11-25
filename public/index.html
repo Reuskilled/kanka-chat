@@ -8289,10 +8289,11 @@ function openDMHome() {
   showFriends('home');
 }
 let friendTab = 'home';
-// iOS uygulamasında Spark (henüz satılmayan abonelik) gösterilmez: Apple 2.1/3.1.1. Satış açılınca Apple uygulama içi satın almayla gelecek.
-const IOS_APP = NATIVE && NPLAT === 'ios';
+// Mağaza uygulamalarında (iOS ve Android) Spark (henüz satılmayan abonelik) gösterilmez: Apple 2.1/3.1.1, Google Play Ödemeler politikası.
+// Satış açılınca mağazanın kendi uygulama içi satın alma sistemiyle gelecek.
+const STORE_APP = NATIVE;
 function showFriends(tab = friendTab) {
-  if (IOS_APP && tab === 'spark') tab = 'home';
+  if (STORE_APP && tab === 'spark') tab = 'home';
   hideSuggest(); $('#cmdhint').style.display = 'none';
   document.body.classList.remove('discover', 'vview', 'forumv'); renderPip();
   $('#compose')?.classList.remove('ro-bot');
@@ -8598,7 +8599,7 @@ function openEnergy(s) {
         <div class="en-acts">${r.spark ? `<button class="en-btn" id="en-send" ${r.free ? '' : 'disabled'}>${enIc()}<span>Sunucuya Energy Gönder</span></button>
             ${r.mine ? `<button class="en-pull" id="en-pull">Energy'yi Geri Çek</button>` : ''}
             <small class="en-note">Boşta <b>${r.free}</b> Energy'n var${r.mine ? ` · Bu sunucuda senin <b>${r.mine}</b> Energy'n` : ''}</small>`
-          : `<button class="en-btn" id="en-spark">${ic('sparkle')}<span>Kanka Spark ile Energy kazan</span></button><small class="en-note">Kanka Spark abonelerine her ay 2 Energy verilir.</small>`}</div>
+          : STORE_APP ? '' : `<button class="en-btn" id="en-spark">${ic('sparkle')}<span>Kanka Spark ile Energy kazan</span></button><small class="en-note">Kanka Spark abonelerine her ay 2 Energy verilir.</small>`}</div>
         <h4 class="en-h">Seviyeler ve ayrıcalıklar</h4>${energyLevelsHTML(r)}
         ${r.level >= 3 && s.owner === S.me ? `<div class="en-van"><label>Özel davet linki</label><div class="pt-vrow"><span>kankahq.com/s/</span><input class="field" id="en-slug" maxlength="24" value="${esc(s.vanity || '')}" placeholder="sunucun"><button class="en-pull" id="en-vsave">Kaydet</button></div></div>` : ''}
         <h4 class="en-h">Destekçiler</h4>
@@ -8757,7 +8758,7 @@ function renderDMSide() {
       setTimeout(() => openGroup(r.id), 300);
     });
   }, 2);
-  $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div><div class="room sp-link ${!S.channel && friendTab === 'spark' ? 'active' : ''}" id="sp-link"><div class="ico">${ic('sparkle')}</div>Spark<span class="sp-soon">YAKINDA</span></div><div class="room ${!S.channel && friendTab !== 'home' && friendTab !== 'spark' ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
+  $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div>${STORE_APP ? '' : `<div class="room sp-link ${!S.channel && friendTab === 'spark' ? 'active' : ''}" id="sp-link"><div class="ico">${ic('sparkle')}</div>Spark<span class="sp-soon">YAKINDA</span></div>`}<div class="room ${!S.channel && friendTab !== 'home' && friendTab !== 'spark' ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
     const dnb = !d.group ? nbOf(S.users[d.with]) : null;
     return `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''} ${S.calls?.[d.id]?.length ? 'incall' : ''}${dnb ? ' has-nb nb-' + dnb : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${dnb ? nbLayers(dnb) : ''}${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, S.online.has(d.with))}<span class="nb-dmn">${styledNameHTML(d.with, S.users[d.with]?.nameStyle)}</span>`}</div>`;
   }).join('')
@@ -8765,7 +8766,7 @@ function renderDMSide() {
   $('#side-list').querySelectorAll('.room[data-id]').forEach(r => r.onclick = () => openChat(r.dataset.id, r.dataset.w));
   $('#fr-link').onclick = () => { document.body.classList.remove('drawer'); showFriends(friendTab === 'home' || friendTab === 'spark' ? (S.social.reqIn.length ? 'pending' : 'online') : friendTab); };
   $('#home-link').onclick = () => { document.body.classList.remove('drawer'); showFriends('home'); };
-  $('#sp-link').onclick = () => { document.body.classList.remove('drawer'); showFriends('spark'); };
+  if ($('#sp-link')) $('#sp-link').onclick = () => { document.body.classList.remove('drawer'); showFriends('spark'); };
 }
 
 // ================= Oda / mesajlar =================
@@ -18139,9 +18140,9 @@ function adminPanel(el, sub = 'overview') {
       <label class="switch" style="margin:6px 0 10px">Yayın ortamı (TestFlight ve App Store)<input type="checkbox" id="mp-prod" ${r.apns?.prod === false ? '' : 'checked'}></label>
       <div class="rowb" style="justify-content:flex-start"><label class="btns2" style="cursor:pointer">${ic('upload')} .p8 anahtarını seç<input type="file" id="mp-p8" accept=".p8,text/plain" hidden></label><button class="primary" id="mp-asave" style="width:auto;padding:11px 20px">APNs'i kaydet</button></div>
       <p class="hint" style="margin-top:14px">Anahtarlar sunucunun veri klasöründe saklanır, GitHub'a gitmez. Kendi telefonunda denemek için: uygulamada Ayarlar › Bildirimler › Dene. Team ID girilince iOS uygulama bağlantıları (kankahq.com/.well-known/apple-app-site-association) da kendiliğinden açılır.</p>
-      <h5 class="ax-h" style="margin-top:18px">Apple inceleme hesapları</h5>
-      <p class="hint">App Store incelemesi için iki demo hesap (<b>appleinceleme</b>, <b>appleinceleme2</b>) kurar: arkadaşlar, ortak bir test sunucusu (yazılı + sesli oda), DM ve örnek mesajlarla. Şifreleri sistem üretir ve sadece burada bir kez gösterir; tekrar basarsan şifreler yenilenir.</p>
-      <div class="rowb" style="justify-content:flex-start"><button class="primary" id="mp-review" style="width:auto">Apple inceleme hesaplarını hazırla</button></div><div id="mp-review-out"></div></div>`;
+      <h5 class="ax-h" style="margin-top:18px">Mağaza inceleme hesapları</h5>
+      <p class="hint">App Store ve Google Play incelemesi için iki demo hesap (<b>appleinceleme</b>, <b>appleinceleme2</b>) kurar: arkadaşlar, ortak bir test sunucusu (yazılı + sesli oda), DM ve örnek mesajlarla. Şifreleri sistem üretir ve sadece burada bir kez gösterir; tekrar basarsan şifreler yenilenir (iki mağazadaki notları da güncelle).</p>
+      <div class="rowb" style="justify-content:flex-start"><button class="primary" id="mp-review" style="width:auto">İnceleme hesaplarını hazırla</button></div><div id="mp-review-out"></div></div>`;
     let p8 = '';
     const done = x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Kaydedildi'); adminPanel(el, 'mobil'); };
     $('#mp-fcm').onchange = async e => { const f = e.target.files?.[0]; if (!f) return; socket.emit('adminMobilPush', { fcm: await f.text() }, done); };

@@ -258,7 +258,7 @@ async function deskSync() {
 setTimeout(deskSync, 20e3); setInterval(deskSync, 10 * 60e3);
 app.get('/api/indir-bilgi', (req, res) => res.json(exeInfo() || {}));
 app.get('/guvenli', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guvenli.html')));
-for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/sesli-sohbet', 'sesli-sohbet.html'], ['/destek', 'destek.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/sesli-sohbet', 'sesli-sohbet.html'], ['/destek', 'destek.html'], ['/hesap-silme', 'hesap-silme.html'], ['/hesap-sil', 'hesap-silme.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 // ---------- Beta kayıt sayfası (/beta) ----------
 // Sayfadan gelen kayıt uygulamanın bekleme listesine (db.waitlist) girer. Kontenjan doluysa yedekte bekler;
 // değilse hemen davet kodu üretilir, ekranda gösterilir ve e-postayla da gönderilir.

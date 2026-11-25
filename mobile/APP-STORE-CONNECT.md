@@ -36,7 +36,7 @@ Açıklama, anahtar kelimeler, tanıtım metni: `fastlane/metadata/tr/`. **Mağa
 
 Kayıt kapalı betada davet koduna bağlı. İncelemeci kendisi hesap açamaz, hazır hesap vermelisin. Bu artık tek tuş:
 
-1. Yönetim paneli › Mobil › **Apple inceleme hesaplarını hazırla**.
+1. Yönetim paneli › Mobil › **İnceleme hesaplarını hazırla**.
 2. Düğme `appleinceleme` ve `appleinceleme2` hesaplarını (2FA kapalı, yetişkin, arkadaş) ve içinde yazılı + sesli oda, örnek mesajlar ve aralarında DM olan "Apple İnceleme" sunucusunu kurar, şifreleri ekranda gösterir.
 3. Gösterilen iki şifreyi aşağıdaki notlara yapıştır. Düğmeye tekrar basarsan şifreler yenilenir, notları da güncelle.
 4. İstersen bir hesapla girip bir resim gönder (incelemeci medya paylaşımını görsün).
