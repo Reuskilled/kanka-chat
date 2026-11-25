@@ -1,0 +1,19 @@
+{
+  "build": "1.0.0 (1)",
+  "checked_on": "2026-11-25",
+  "enforce": false,
+  "checks": {
+    "demo_account": "todo",
+    "live_backend": "todo",
+    "review_notes": "todo",
+    "screenshots_match_build": "todo",
+    "account_deletion_device_test": "todo",
+    "privacy_labels_match_runtime": "todo",
+    "iap_reachable_by_reviewer": "n/a"
+  },
+  "notes": {
+    "iap_reachable_by_reviewer": "Uygulama içi satın alma yok; Spark iOS'ta gizli (IOS_APP). Satış Faz 4'te Apple IAP ile.",
+    "review_notes": "Metin hazır: mobile/APP-STORE-CONNECT.md bölüm 5. Demo hesap şifreleri girilince 'pass' yap.",
+    "privacy_labels_match_runtime": "Tablo: mobile/APP-STORE-CONNECT.md bölüm 6, PrivacyInfo.xcprivacy ile aynı. App Store Connect'e girince 'pass' yap."
+  }
+}

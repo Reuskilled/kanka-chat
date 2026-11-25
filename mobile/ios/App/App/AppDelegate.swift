@@ -7,7 +7,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Gelen aramalar: uygulama kapalıyken gelen VoIP bildirimini alabilmek için PushKit kaydı açılışta yapılır
+        KankaCallManager.shared.start()
         return true
     }
 

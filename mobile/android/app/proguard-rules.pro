@@ -19,3 +19,16 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ---- Kanka ----
+# Kendi yerel kodumuz (ses eklentisi, ön plan hizmeti, ana aktivite) yansıma / manifest ile çağrılır: küçültmede silinmesin
+-keep class com.kanka.chat.** { *; }
+# Capacitor eklentileri ve köprüsü (eklenti sınıfları ve @PluginMethod metotları yansıma ile bulunur)
+-keep class com.getcapacitor.** { *; }
+-keep @com.getcapacitor.annotation.CapacitorPlugin public class * { *; }
+-keepclassmembers class * { @com.getcapacitor.PluginMethod public <methods>; }
+-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+# Firebase (bildirimler)
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**

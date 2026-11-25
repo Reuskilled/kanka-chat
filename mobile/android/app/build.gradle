@@ -41,8 +41,9 @@ android {
     buildTypes {
         release {
             signingConfig = (System.getenv("KANKA_KEYSTORE") && file(System.getenv("KANKA_KEYSTORE")).exists()) ? signingConfigs.kanka : signingConfigs.debug
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true      // R8: Google Play kalite şartı (Şubat 2027)
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

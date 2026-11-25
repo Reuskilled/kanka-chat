@@ -1,0 +1,1 @@
+İlk sürüm: sunucular, sesli odalar, özel mesajlar ve gelen arama ekranı.

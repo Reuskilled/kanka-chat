@@ -258,7 +258,7 @@ async function deskSync() {
 setTimeout(deskSync, 20e3); setInterval(deskSync, 10 * 60e3);
 app.get('/api/indir-bilgi', (req, res) => res.json(exeInfo() || {}));
 app.get('/guvenli', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guvenli.html')));
-for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/sesli-sohbet', 'sesli-sohbet.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+for (const [u, f] of [['/gizlilik', 'gizlilik.html'], ['/kosullar', 'kosullar.html'], ['/kvkk', 'gizlilik.html'], ['/sesli-sohbet', 'sesli-sohbet.html'], ['/destek', 'destek.html']]) app.get(u, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 // ---------- Beta kayıt sayfası (/beta) ----------
 // Sayfadan gelen kayıt uygulamanın bekleme listesine (db.waitlist) girer. Kontenjan doluysa yedekte bekler;
 // değilse hemen davet kodu üretilir, ekranda gösterilir ve e-postayla da gönderilir.
@@ -2413,13 +2413,13 @@ function apnsToken() {
   apnsJwt = { t: head + '.' + body + '.' + sig, at: Date.now() }; return apnsJwt.t;
 }
 let apnsConn = null;
-function apnsSend(token, p, sandbox) {
+function apnsSend(token, p, sandbox, voip) {
   const a = npCfg.apns, host = sandbox ? 'https://api.sandbox.push.apple.com' : 'https://api.push.apple.com';
   return new Promise(res => {
     try {
       if (!apnsConn || apnsConn.closed || apnsConn.destroyed || apnsConn._host !== host) { apnsConn = require('http2').connect(host); apnsConn._host = host; apnsConn.on('error', () => { apnsConn = null; }); apnsConn.setTimeout(10 * 60e3, () => { try { apnsConn.close(); } catch {} apnsConn = null; }); }
-      const payload = JSON.stringify({ aps: { alert: { title: String(p.title || 'Kanka Chat').slice(0, 120), body: String(p.body || '').slice(0, 300) }, sound: 'default', 'thread-id': (p.tag || 'kanka').slice(0, 60), 'interruption-level': p.call ? 'time-sensitive' : 'active' }, ...npData(p) });
-      const req = apnsConn.request({ ':method': 'POST', ':path': '/3/device/' + token, authorization: 'bearer ' + apnsToken(), 'apns-topic': a.bundle || 'com.kanka.chat', 'apns-push-type': 'alert', 'apns-priority': '10',
+      const payload = voip ? JSON.stringify({ aps: {}, k: { ch: p.ch || '', from: p.from || '', title: String(p.callTitle || p.title || '').slice(0, 80), video: p.video ? '1' : '' } }) : JSON.stringify({ aps: { alert: { title: String(p.title || 'Kanka Chat').slice(0, 120), body: String(p.body || '').slice(0, 300) }, sound: 'default', 'thread-id': (p.tag || 'kanka').slice(0, 60), 'interruption-level': p.call ? 'time-sensitive' : 'active' }, ...npData(p) });
+      const req = apnsConn.request({ ':method': 'POST', ':path': '/3/device/' + token, authorization: 'bearer ' + apnsToken(), 'apns-topic': (a.bundle || 'com.kanka.chat') + (voip ? '.voip' : ''), 'apns-push-type': voip ? 'voip' : 'alert', 'apns-priority': '10',
         'apns-expiration': String(Math.floor(Date.now() / 1000) + (p.call ? 45 : 3600)), 'apns-collapse-id': (p.tag || 'kanka').slice(0, 60) });
       let st = 0, out = ''; req.on('response', h => { st = h[':status']; }); req.on('data', d => { out += d; });
       req.on('end', () => { if (st === 200) { npStats.apns++; return res({ ok: true }); } let rsn = ''; try { rsn = JSON.parse(out).reason; } catch {}
@@ -2429,11 +2429,15 @@ function apnsSend(token, p, sandbox) {
   });
 }
 async function nativePush(u, p) {
+  // iOS: VoIP jetonu olan cihaza arama, telefonun kendi arama ekranıyla (CallKit) gelir; aynı aramayı normal bildirimle tekrar göndermeyiz.
+  // VoIP jetonuna arama dışında hiçbir şey gönderilmez (Apple kuralı: her VoIP bildirimi bir arama olmalı).
+  const voipOn = p.call && (u.npush || []).some(d => d.voip);
   for (const d of [...(u.npush || [])]) {
+    if (d.voip ? !p.call : (voipOn && d.p === 'ios')) continue;
     let r;
-    try { r = d.p === 'ios' ? (npCfg.apns ? await apnsSend(d.t, p, d.sandbox ?? !npCfg.apns.prod) : { ok: false, msg: 'APNs ayarlı değil' }) : (npCfg.fcm ? await fcmSend(d.t, p) : { ok: false, msg: 'FCM ayarlı değil' }); }
+    try { r = d.p === 'ios' ? (npCfg.apns ? await apnsSend(d.t, p, d.sandbox ?? !npCfg.apns.prod, !!d.voip) : { ok: false, msg: 'APNs ayarlı değil' }) : (npCfg.fcm ? await fcmSend(d.t, p) : { ok: false, msg: 'FCM ayarlı değil' }); }
     catch (e) { r = { ok: false, msg: e.message }; }
-    if (!r.ok && d.p === 'ios' && r.wrongEnv && d.sandbox === undefined) { d.sandbox = !(npCfg.apns.prod === false); r = await apnsSend(d.t, p, d.sandbox); } // geliştirme / yayın ortamı farkı: bir kez diğerini dene
+    if (!r.ok && d.p === 'ios' && r.wrongEnv && d.sandbox === undefined) { d.sandbox = !(npCfg.apns.prod === false); r = await apnsSend(d.t, p, d.sandbox, !!d.voip); } // geliştirme / yayın ortamı farkı: bir kez diğerini dene
     if (r.ok) continue;
     if (r.dead) { u.npush = u.npush.filter(x => x.t !== d.t); save(); continue; }
     npStats.hata++; npStats.sonHata = { at: Date.now(), p: d.p, msg: String(r.msg || '').slice(0, 160) };
@@ -5077,13 +5081,13 @@ io.on('connection', socket => {
     onbOf(u)[k] = true; save(); cb({ ok: true, onb: u.onb });
   });
   // Telefon uygulaması bildirim jetonu (Android FCM / iOS APNs). Aynı jeton başka hesaptaysa oradan alınır (telefonda hesap değiştirme).
-  socket.on('pushNative', ({ token, platform, sandbox } = {}, cb = () => {}) => {
+  socket.on('pushNative', ({ token, platform, sandbox, voip } = {}, cb = () => {}) => {
     if (!me) return cb({ error: 'Giriş yap' }); token = String(token || '').trim();
     if (!/^[\w:.\-]{20,4096}$/.test(token) || !['android', 'ios'].includes(platform)) return cb({ error: 'Geçersiz jeton' });
     if (limited('npush|' + me, 20, 3600e3)) return cb({ error: 'Biraz bekle' });
     for (const u of Object.values(db.users)) if (u.npush?.some(d => d.t === token) && u.name !== me) u.npush = u.npush.filter(d => d.t !== token);
     const u = db.users[me]; u.npush = (u.npush || []).filter(d => d.t !== token);
-    u.npush.push({ t: token, p: platform, at: Date.now(), ...(platform === 'ios' && typeof sandbox === 'boolean' ? { sandbox } : {}) }); u.npush = u.npush.slice(-10);
+    u.npush.push({ t: token, p: platform, at: Date.now(), ...(platform === 'ios' && typeof sandbox === 'boolean' ? { sandbox } : {}), ...(platform === 'ios' && voip === true ? { voip: true } : {}) }); u.npush = u.npush.slice(-10);
     socket.data.npTok = token; save(); cb({ ok: true, hazir: platform === 'ios' ? !!npCfg.apns : !!npCfg.fcm });
   });
   socket.on('pushNativeOff', ({ token } = {}, cb = () => {}) => { const u = db.users[me]; if (u?.npush) { u.npush = u.npush.filter(d => d.t !== String(token || '')); save(); } cb({ ok: true }); });
@@ -5226,7 +5230,7 @@ io.on('connection', socket => {
     for (const n of chatMembers(chId)) if (n !== me && !db.users[n]?.blocked?.includes(me))
     { const title = chId.startsWith('g:') ? groupTitle(groupOf(chId)) : me;
       io.to('user:' + n).emit('ring', { from: me, chatId: chId, callId: 'call:' + chId, video: !!video, title });
-      sendPush(n, { title: chId.startsWith('g:') ? `${me} · ${title}` : me, body: video ? '📹 Görüntülü arıyor… Dokun, katıl' : '📞 Sesli arıyor… Dokun, katıl', tag: 'call-' + chId, ch: chId, from: me, dm: true, call: true }); }
+      sendPush(n, { title: chId.startsWith('g:') ? `${me} · ${title}` : me, body: video ? '📹 Görüntülü arıyor… Dokun, katıl' : '📞 Sesli arıyor… Dokun, katıl', tag: 'call-' + chId, ch: chId, from: me, dm: true, call: true, video: !!video, callTitle: title }); }
   });
   socket.on('ringCancel', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('ringCancel', { chatId: chId }); });
   socket.on('callDecline', chId => { if (canAccess(me, chId)) for (const n of chatMembers(chId)) if (n !== me) io.to('user:' + n).emit('callDecline', { from: me, chatId: chId }); });

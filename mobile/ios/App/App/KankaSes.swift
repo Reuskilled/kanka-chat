@@ -6,6 +6,7 @@ import Capacitor
 class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(KankaSesPlugin())
+        bridge?.registerPluginInstance(KankaCallPlugin())
     }
 }
 

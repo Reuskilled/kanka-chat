@@ -5831,6 +5831,7 @@ function onAuth(res) {
   store.set('kanka-token', res.token);
   S.me = res.user.name;
   S.npReady = res.npReady || {};
+  if (KCALL) setTimeout(kCallInit, 1200);
   if (NPUSH) setTimeout(() => { nativePushInit(!store.get('kanka-npush-sordu')).then(s => { if (s !== 'sor') store.set('kanka-npush-sordu', 1); }); if (npPending) { const f = npPending; npPending = null; setTimeout(f, 400); } }, 1200);
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
   setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {}; setVoiceAge(res.voiceAge);
@@ -11832,6 +11833,25 @@ if (KSES) {
   });
 }
 var NPUSH = NATIVE ? window.Capacitor?.Plugins?.PushNotifications || null : null;
+// iOS gelen arama ekranı (CallKit + PushKit VoIP). Yerel taraf: mobile/ios/App/App/KankaCall.swift
+var KCALL = NATIVE && NPLAT === 'ios' ? window.Capacitor?.Plugins?.KankaCall || null : null, kCallOn = false;
+function kCallAct(a) {
+  if (!a?.chId) return;
+  const callId = 'call:' + a.chId, vid = a.video === true || a.video === '1';
+  if (a.action === 'answer') { stopRing?.(); openChat(a.chId, a.from); if (myVoice !== callId) joinVoice(callId).then(ok => { if (ok && vid) setTimeout(() => startVideo('cam'), 600); else if (!ok) KCALL?.end({ chId: a.chId }); }); }
+  else if (a.action === 'decline') { stopRing?.(); socket.emit('callDecline', a.chId); }
+  else if (a.action === 'hangup') { if (myVoice === callId) leaveVoice(); }
+}
+async function kCallInit() {
+  if (!KCALL || kCallOn || !S.npReady?.apns) return; kCallOn = true;
+  try {
+    const send = t => t && socket.emit('pushNative', { token: t, platform: 'ios', voip: true }, r => { if (r?.error) console.warn('[kanka] arama jetonu', r.error); });
+    KCALL.addListener('voipToken', e => send(e?.token));
+    KCALL.addListener('callAction', a => kCallAct(a));
+    const r = await KCALL.register(); send(r?.token);
+    const p = await KCALL.pending(); for (const a of p?.actions || []) kCallAct(a); // uygulama kapalıyken cevaplanan / reddedilen arama
+  } catch (e) { kCallOn = false; console.warn('[kanka] arama ekranı', e); }
+}
 var npState = 'yok', npPending = null;
 async function nativePushInit(ask) {
   if (!NPUSH || !S.me) return npState;
@@ -14266,6 +14286,7 @@ function cleanupVoice(keepState) { Object.keys(peers).forEach(closePeer); myVoic
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
+  if (KCALL && myVoice?.startsWith('call:')) KCALL.end({ chId: myVoice.slice(5) }); // iPhone arama ekranını da kapat
   srvMutedNow = false;
   socket.emit('voiceLeave'); cleanupVoice(); bgRaw = false;
   if (!switching) {
@@ -14307,7 +14328,7 @@ socket.on('ring', r => {
   };
   if (!document.hasFocus() && 'Notification' in window && Notification.permission === 'granted') new Notification(`${r.title} arıyor`, { body: r.video ? 'Görüntülü arama' : 'Sesli arama', icon: '/icon-192.png', tag: 'call' });
 });
-socket.on('ringCancel', ({ chatId }) => { if (ringing?.chatId === chatId) { stopRing(); toast('Cevapsız arama'); } });
+socket.on('ringCancel', ({ chatId }) => { KCALL?.end({ chId: chatId }); if (ringing?.chatId === chatId) { stopRing(); toast('Cevapsız arama'); } });
 socket.on('callDecline', ({ from, chatId }) => { if (outgoing?.chatId === chatId) { toast(`${from} aramayı reddetti`); if (!S.channel?.group) { outgoing = null; leaveVoice(false); } } });
 
 // --- Kamera / ekran paylaşımı ---
