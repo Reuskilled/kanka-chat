@@ -5365,6 +5365,54 @@ io.on('connection', socket => {
     banned: isBanned(u) ? u.siteBan : null, reports: db.reports.filter(r => r.target === u.name).length, servers: serversFor(u.name).filter(s => !s.public).length,
     level: level(u.xp), xp: u.xp || 0, msgs: u.msgs || 0, streak: u.streak?.count || 0, age: u.ageLock ? 'locked' : u.dob ? 'ok' : 'none', online: onlineNames().includes(u.name), rank: staffRank(u.name),
     warns: (u.siteWarns || []).slice(-10).reverse().map(w => ({ at: w.at, by: w.by, reason: w.reason, seen: w.seen })) });
+  // ---- Spark & Energy basma (kurucu ve yöneticiler): kullanıcıya Spark süresi / Energy, sunucuya doğrudan Energy ----
+  // Sunucuya basılan Energy '@kanka' adıyla tutulur: seviyeye sayılır, kimsenin hesabından düşmez, Spark bitince silinmez.
+  const mintLog = (kind, target, n, note) => { (db.mintLog ||= []).push({ at: Date.now(), by: me, kind, target, n, note: note || '' }); db.mintLog = db.mintLog.slice(-200); };
+  socket.on('adminMint', ({ act, user, server, n, months, note } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') cb = () => {};
+    if (!SM(cb)) return; if (!canStaff(me, 'ban')) return cb({ error: 'Spark ve Energy basma yetkin yok' });
+    note = clean(note, 120);
+    if (act === 'list') {
+      const srvLite = sv => ({ id: sv.id, name: sv.name, icon: sv.icon, iconImg: sv.iconImg || null, members: membersOf(sv).length, total: energyTotal(sv), level: energyLevel(sv), kanka: sv.energy?.['@kanka'] || 0 });
+      const q = clean(server, 60).toLocaleLowerCase('tr');
+      const srvs = q ? db.servers.filter(sv => !sv.public && (sv.id === q || sv.invite === q || sv.vanity === q || sv.name.toLocaleLowerCase('tr').includes(q))).slice(0, 12).map(srvLite) : [];
+      const sparks = Object.values(db.users).filter(u => sparkOn(u)).map(u => ({ name: u.name, until: u.spark.until, play: !!u.spark.play, energy: (u.spark.energy || []).length, free: (u.spark.energy || []).filter(x => !x.srv).length })).sort((a, b) => b.until - a.until);
+      const boosted = db.servers.filter(sv => energyTotal(sv) > 0).map(srvLite).sort((a, b) => b.total - a.total).slice(0, 30);
+      return cb({ ok: true, srvs, sparks, boosted, levels: ENERGY_LV, log: (db.mintLog || []).slice(-60).reverse() });
+    }
+    if (act === 'spark' || act === 'energy') {
+      const u = findUserBy(user); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
+      if (act === 'spark') {
+        const m = Math.max(-24, Math.min(24, parseInt(months) || 0)); if (!m) return cb({ error: 'Ay sayısı gir (1-24, kısaltmak için eksi)' });
+        if (m < 0) { if (!sparkOn(u)) return cb({ error: 'Aktif Spark aboneliği yok' }); if (u.spark.play) return cb({ error: 'Bu abonelik Google Play üzerinden, süresi oradan yönetilir' });
+          u.spark.until += m * SPARK_MONTH; if (u.spark.until <= Date.now()) sparkExpire(u, 'Kanka Spark aboneliğin ekip tarafından sonlandırıldı'); else { save(); io.to('user:' + u.name).emit('spark', sparkView(u)); pushUsers(); } }
+        else sparkGrant(u, m, me);
+        staffLog(me, `Kanka Spark ${m > 0 ? 'verdi' : 'kısalttı'} (${m} ay)`, u.name); mintLog('spark', u.name, m, note);
+        return cb({ ok: true, until: u.spark?.until || null });
+      }
+      const k = Math.max(-100, Math.min(100, parseInt(n) || 0)); if (!k) return cb({ error: 'Energy miktarı gir (1-100, geri almak için eksi)' });
+      if (!sparkOn(u)) return cb({ error: 'Energy sadece Spark üyelerinin hesabında durur. Önce Spark ver ya da Energy\'yi doğrudan sunucuya bas.' });
+      const e = (u.spark.energy ||= []);
+      if (k > 0) for (let i = 0; i < k; i++) e.push({ id: id(), at: Date.now(), src: 'ekip' });
+      else { let left = -k; for (let i = e.length - 1; i >= 0 && left; i--) if (!e[i].srv) { e.splice(i, 1); left--; } if (left === -k) return cb({ error: 'Boşta Energy yok (sunucudakiler önce geri çekilmeli)' }); }
+      save(); io.to('user:' + u.name).emit('spark', sparkView(u));
+      if (k > 0) botDm(u.name, { title: '⚡ Hediye Energy!', tone: 'good', text: `Kanka ekibi hesabına ${k} Energy ekledi${note ? `: ${note}` : ''}. Bir sunucunun sayfasında "Sunucuya Energy Gönder" ile kullanabilirsin.` });
+      staffLog(me, `Energy ${k > 0 ? 'verdi' : 'aldı'} (${Math.abs(k)})`, u.name); mintLog('energy', u.name, k, note);
+      return cb({ ok: true, energy: e.length });
+    }
+    if (act === 'server') {
+      const sv = db.servers.find(x => x.id === server); if (!sv || sv.public) return cb({ error: 'Sunucu bulunamadı' });
+      const k = Math.max(-500, Math.min(500, parseInt(n) || 0)); if (!k) return cb({ error: 'Energy miktarı gir (geri almak için eksi)' });
+      sv.energy ||= {}; const before = energyLevel(sv), cur = sv.energy['@kanka'] || 0, nv = Math.max(0, cur + k);
+      if (nv) sv.energy['@kanka'] = nv; else delete sv.energy['@kanka'];
+      save(); pushServers(membersOf(sv));
+      const after = energyLevel(sv);
+      if (after > before && sv.owner) botDm(sv.owner, { title: `⚡ ${sv.name} Energy Level ${after} oldu!`, tone: 'good', text: `Kanka ekibi sunucuna ${nv - cur} Energy hediye etti${note ? `: ${note}` : ''}. Yeni avantajlar sunucu ayarlarında açıldı.` });
+      staffLog(me, `Sunucuya Energy ${k > 0 ? 'bastı' : 'geri aldı'} (${Math.abs(nv - cur)})`, sv.name); mintLog('server', sv.name, nv - cur, note);
+      return cb({ ok: true, total: energyTotal(sv), level: after, kanka: nv });
+    }
+    cb({ error: 'Bilinmeyen işlem' });
+  });
   socket.on('adminUser', ({ name, action, reason, days, confirm } = {}, cb = () => {}) => {
     if (!SM(cb)) return;
     const u = findUserBy(name); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
