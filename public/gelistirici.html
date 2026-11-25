@@ -354,7 +354,7 @@
 
   <div class="card">
     <h1>Kanka için bot yaz</h1>
-    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.5, kanka.py 1.5</div>
+    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.6, kanka.py 1.5</div>
     <a class="comm-cta" href="/gelistirici-topluluk"><b>💬 Kanka Geliştiriciler sunucusu</b><span>Soru sor, API duyurularını takip et, botunu tanıt. Katıl →</span></a>
 
     <!-- ===== CANLI İNTERAKTİF BOT PLAYGROUND ===== -->
@@ -410,7 +410,7 @@
         <li>Botunun yaptığından sen sorumlusun. Bot üzerinden para toplamak, premium satmak ve bahis/çekiliş yasak. Ayrıntılar: <a href="/kosullar">Kullanım Şartları, bölüm 6</a>.</li>
       </ul>
     </div>
-    <div class="toc"><a href="#baslangic">1. Başlangıç</a><a href="#ekleme">Sunucuya ekletme</a><a href="#komutlar">2. Komutlar</a><a href="#bilesenler">3. Butonlar &amp; Menüler</a><a href="#secici">Üye seçici</a><a href="#gizli">Gizli mesaj</a><a href="#yetki">Yetki kontrolü</a><a href="#kartlar">4. Kartlar</a><a href="#formlar">5. Formlar</a><a href="#olaylar">6. Olaylar</a><a href="#durum">Durum</a><a href="#kutuphane">Kütüphane rehberi</a><a href="#rest">7. REST API</a><a href="#gateway">8. Gateway</a><a href="#http">9. HTTP Etkileşimleri</a><a href="#sinirlar">10. Sınırlar</a></div>
+    <div class="toc"><a href="#baslangic">1. Başlangıç</a><a href="#ekleme">Sunucuya ekletme</a><a href="#komutlar">2. Komutlar</a><a href="#bilesenler">3. Butonlar &amp; Menüler</a><a href="#secici">Üye seçici</a><a href="#gizli">Gizli mesaj</a><a href="#yetki">Yetki kontrolü</a><a href="#muzik">Sesli oda / müzik</a><a href="#kartlar">4. Kartlar</a><a href="#formlar">5. Formlar</a><a href="#olaylar">6. Olaylar</a><a href="#durum">Durum</a><a href="#kutuphane">Kütüphane rehberi</a><a href="#rest">7. REST API</a><a href="#gateway">8. Gateway</a><a href="#http">9. HTTP Etkileşimleri</a><a href="#sinirlar">10. Sınırlar</a></div>
 
     <h2 id="baslangic">1. Beş dakikada ilk bot</h2>
     <ol>
@@ -542,6 +542,20 @@ k.cevapla({ kartlar: [ new Kart().baslik('Sunucu durumu').aciklama('Her şey yol
 }));
 bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!', gizli: true }));</pre>
 
+    <h3 id="muzik">Sesli odada çalma (müzik botu)</h3>
+    <p>Bot sesli odaya girip ses çalabilir. Ses bottan dinleyenlere <b>doğrudan</b> gider (WebRTC); Kanka sunucusu sadece bağlantıyı kurar. Bu yüzden botun çalıştığı bilgisayarda iki şey gerekir: <code>ffmpeg</code> (şarkıyı çözmek için) ve <code>npm i werift</code> (sesi göndermek için). Botun o odada <b>bağlanma</b> ve <b>konuşma</b> izni olmalı. Şimdilik kanka.js'te var.</p>
+<pre>const ses = await bot.sesliOdayaKatil(odaId);
+await ses.cal('sarki.mp3');                 // dosya yolu, https adresi ya da okunabilir akış (stream)
+ses.siraya('a.mp3'); ses.siraya('b.mp3');   // sırayla çalar
+ses.gec(); ses.duraklat(); ses.devam(); ses.durdur();
+ses.cal('radyo.mp3', { ses: 0.5, baslangic: 30 }); // ses düzeyi, kaçıncı saniyeden
+ses.on('bitti', x => ...); ses.on('kisiKatildi', k => ...); ses.on('ayrildi', x => ...); // x.sebep: "sahip seni sesli odadan çıkardı" vb.
+bot.sestenAyril();</pre>
+    <ul><li>Bir bot aynı anda bir sesli odada olur; başka odaya girince eskisinden çıkar. Sahne odalarına giremez.</li>
+      <li>Yetkililer botu da diğer üyeler gibi sesten çıkarabilir, taşıyabilir ve susturabilir. Susturulunca ses gitmez (<code>susturma</code> olayı gelir).</li>
+      <li>Bağlantı koparsa bot sesten düşer; kanka.js yeniden bağlanınca odaya kendiliğinden döner ve çalmaya devam eder.</li>
+      <li>Ses her dinleyiciye ayrı gönderildiği için kalabalık odalarda botun internet yükü artar (dinleyici başına yaklaşık 100 kbps).</li></ul>
+
     <h2 id="olaylar">6. Olaylar</h2>
     <p>Bağlanırken hangi olayları istediğini <b>niyetler</b> ile söylersin: <code>new Kanka({ token, niyetler: ['mesajlar', 'uyeler'] })</code>.</p>
     <table><tr><th>Niyet</th><th>Gelen olaylar (kanka.js adı)</th></tr>
@@ -579,7 +593,7 @@ print(await bot.durumu_getir())</pre>
     <p>Etkinlik türleri: <code>oynuyor</code>, <code>dinliyor</code>, <code>izliyor</code>, <code>yayinda</code> (ya da <code>yayın</code>, <code>canlı</code>), <code>yarisiyor</code>, <code>ozel</code> (önüne bir şey eklenmez). Bilinmeyen tür artık hata verir. Yazı en fazla 80 karakter; durum dakikada en fazla 10 kez değişir. Durum ve yazı, bot ağ geçidine bağlıyken görünür; bağlı değilken bot çevrimdışı görünür.</p>
     <p>Kütüphane kullanmıyorsan: <code>PATCH /api/v1/ben/durum</code> ile <code>{ "durum": "bosta", "aktivite": { "tur": "izliyor", "ad": "YouTube" } }</code>, ya da ağ geçidinde <code>{ "op": 3, "d": { ... } }</code> gönder (cevap olarak <code>DURUM_GUNCELLENDI</code> gelir). Tanıtırken (<code>op 2</code>) <code>d.durum</code> da verebilirsin. Discord'daki <code>{ status: 'dnd', activities: [{ name, type }] }</code> biçimi de kabul edilir.</p>
 
-    <h2 id="kutuphane">Kütüphane rehberi (kanka.js / kanka.py 1.5)</h2>
+    <h2 id="kutuphane">Kütüphane rehberi (kanka.js 1.6 / kanka.py 1.5)</h2>
     <p>Python'da adlar alt çizgilidir (<code>bot.topluSil</code> → <code>bot.toplu_sil</code>) ve hepsi <code>await</code> ile çağrılır.</p>
     <table><tr><th>Ne</th><th>Nasıl (kanka.js)</th></tr>
       <tr><td>Mesaj gönder / DM</td><td><code>bot.gonder(oda, 'selam')</code>, <code>bot.gonder(oda, new Kart().baslik('...'))</code>, <code>bot.dm('ahmet', '...')</code></td></tr>
@@ -671,6 +685,8 @@ await bot.durum('cevrimici', 'Oynuyor: /yardim');</pre>
       <tr><td>3 DURUM</td><td>Sen gönderirsin: <code>{ durum, yazi, aktivite }</code>; cevap <code>DURUM_GUNCELLENDI</code> ya da <code>HATA</code></td></tr>
       <tr><td>1 NABIZ / 11 NABIZ_ALINDI</td><td>Her <code>nabizAraligi</code> ms'de bir 1 gönder; 75 saniye gelmezse bağlantı kapanır</td></tr>
       <tr><td>0 OLAY</td><td><code>t</code>: <code>HAZIR</code>, <code>MESAJ_GELDI</code>, <code>MESAJ_DUZENLENDI</code>, <code>MESAJ_SILINDI</code>, <code>KOMUT</code>, <code>BUTON</code>, <code>SECIM</code>, <code>FORM</code>, <code>UYE_KATILDI</code>, <code>UYE_AYRILDI</code>, <code>UYE_GUNCELLENDI</code>, <code>TEPKI_EKLENDI</code>, <code>TEPKI_KALDIRILDI</code>, <code>SUNUCUYA_EKLENDI</code>, <code>SUNUCUDAN_CIKARILDI</code>, <code>ODA_OLUSTU</code>, <code>ODA_GUNCELLENDI</code>, <code>ODA_SILINDI</code>; <code>s</code> sıra numarası</td></tr>
+      <tr><td>4 SES</td><td>Sen gönderirsin: <code>{ oda }</code> sesli odaya gir, <code>{ oda: null }</code> çık. Cevap <code>SES_BAGLANDI { sid, ice, kisiler: [{ sid, ad }] }</code>. Sonra <code>SES_SINYAL { kimden, veri }</code>, <code>SES_KISI_KATILDI</code>, <code>SES_KISI_AYRILDI</code>, <code>SES_SUSTURMA</code>, <code>SES_AYRILDI</code> gelir</td></tr>
+      <tr><td>5 SİNYAL</td><td>Sen gönderirsin: <code>{ kime: sid, veri: { sdp } | { ice } }</code>. WebRTC teklif/cevap ve ICE adayları. Kişilere sen teklif gönderirsin; sonradan gelen kişi sana teklif gönderir. Çakışmada kendi teklifinde kal (tarayıcı geri çekilir). Ses: Opus 48 kHz stereo</td></tr>
       <tr><td>6 DEVAM</td><td>Koptuktan sonra 2 dakika içinde: <code>{ token, oturum, sira }</code>; kaçırdığın olaylar gelir. Sunucu güncellemesinden sonra da çalışır</td></tr>
       <tr><td>7 YENİDEN_BAĞLAN</td><td>Sunucu gönderir: <code>{ bekle: 4000 }</code>. Sunucu birkaç saniyeliğine güncelleniyor; <code>bekle</code> ms sonra yeniden bağlan ve <b>6 DEVAM</b> ile aynı oturuma dön</td></tr></table>
     <p><b>Güncellemede kopma:</b> Kanka güncellenirken bağlantı <code>1012</code> koduyla kapanır ve REST birkaç saniye <code>502/503</code> dönebilir. Bağlantı kopunca her zaman yeniden bağlan (bekleme 1 sn'den başlayıp en çok 15 sn'ye çıksın), REST'te 502/503/504 gelirse 1-2 sn bekleyip tekrar dene. <code>kanka.js</code> ve <code>kanka.py</code> (1.2.0 ve sonrası) bunların hepsini kendisi yapar; eski sürümü kullanıyorsan güncelle.</p>

@@ -2618,6 +2618,7 @@ function voiceKick(chIds, onlyName, reason) {
     for (const [sid, n] of [...room]) {
       if (onlyName && n !== onlyName) continue;
       any = true; room.delete(sid); voiceMedia.delete(sid); voiceFlags.delete(sid); liveMeta.delete(sid);
+      if (botVoice.has(sid)) { const bv = botVoice.get(sid); botVoice.delete(sid); gwSend(bv.conn, { op: 0, t: 'SES_AYRILDI', d: { oda: ch, sebep: reason || 'sesten çıkarıldı' } }); }
       io.to(sid).emit('voiceKicked', { ch, reason });
       io.sockets.sockets.get(sid)?.leave('v:' + ch);
       io.to('v:' + ch).emit('voiceLeft', sid);
@@ -3336,13 +3337,32 @@ function gwConnection(ws, req) {
       return;
     }
     // op 3: durum / etkinlik güncelle (Discord'daki presence update gibi)
+    // op 4: sesli odaya katıl / ayrıl { oda } (oda null ise ayrıl) · op 5: WebRTC sinyali { kime, veri }
+    if (m.op === 4) {
+      if (!conn.ready || !conn.app) return ws.close(4003, 'Önce kimlik doğrula (op 2)');
+      if (limited('gwses|' + conn.app.id, 20, 60e3)) return gwSend(conn, { op: 0, t: 'HATA', d: { islem: 'ses', hata: 'Çok sık sese girip çıkıyorsun' } });
+      const oda = m.d?.oda ?? m.d?.channel ?? null;
+      if (!oda) { botVoiceLeave(conn.app.id, 'bot ayrıldı'); return; }
+      const r = botVoiceJoin(conn.app, String(oda), conn);
+      if (r.error) gwSend(conn, { op: 0, t: 'HATA', d: { islem: 'ses', oda, hata: r.error } });
+      return;
+    }
+    if (m.op === 5) {
+      if (!conn.ready || !conn.app) return;
+      const bv = botVoiceOfApp(conn.app.id), to = String(m.d?.kime ?? m.d?.to ?? '');
+      if (!bv || !voice.get(bv.ch)?.has(to) || to === bv.sid) return;
+      const data = m.d?.veri ?? m.d?.data; if (!data || typeof data !== 'object' || JSON.stringify(data).length > 20000) return;
+      if (botVoice.has(to)) return; // bot ↔ bot ses bağlantısı yok
+      io.to(to).emit('signal', { from: bv.sid, data: data.sdp ? { sdp: { type: String(data.sdp.type), sdp: String(data.sdp.sdp) } } : data.ice ? { ice: data.ice } : {} });
+      return;
+    }
     if (m.op === 3) {
       if (!conn.ready || !conn.app) return ws.close(4003, 'Önce kimlik doğrula (op 2)');
       const r = botSetPresence(conn.app, m.d || {});
       return gwSend(conn, r.error ? { op: 0, t: 'HATA', d: { islem: 'durum', hata: r.error } } : { op: 0, t: 'DURUM_GUNCELLENDI', d: r });
     }
   });
-  ws.on('close', () => { clearTimeout(kill); clearInterval(hb); if (conn.app) { botConns.get(conn.app.id)?.delete(conn); if (conn.ready) setTimeout(pushPresence, 0); const s = botSessions.get(conn.session); if (s) s.closedAt = Date.now(); } });
+  ws.on('close', () => { clearTimeout(kill); clearInterval(hb); if (conn.app) { const bv = botVoiceOfApp(conn.app.id); if (bv?.conn === conn) botVoiceLeave(conn.app.id, 'bağlantı koptu'); botConns.get(conn.app.id)?.delete(conn); if (conn.ready) setTimeout(pushPresence, 0); const s = botSessions.get(conn.session); if (s) s.closedAt = Date.now(); } });
   ws.on('error', () => {});
 }
 setInterval(() => { for (const [k, s] of botSessions) if (s.closedAt && Date.now() - s.closedAt > 120e3) botSessions.delete(k); }, 60e3);
@@ -4010,6 +4030,7 @@ function voiceModDo(s, me, name, action, to) { // kullanıcı arayüzü ve Bot A
   if (action === 'mute' || action === 'unmute') {
     const on = action === 'mute';
     on ? srvMuted.add(s.id + '|' + name) : srvMuted.delete(s.id + '|' + name);
+    for (const [sid, n] of voice.get(cur) || []) if (n === name && botVoice.has(sid)) gwSend(botVoice.get(sid).conn, { op: 0, t: 'SES_SUSTURMA', d: { susturuldu: on, kim: me } });
     for (const [sid, n] of voice.get(cur) || []) if (n === name) { io.to(sid).emit('srvMute', { on, by: me }); if (on) { voiceFlags.set(sid, { ...(voiceFlags.get(sid) || {}), m: true }); } }
     pushFlags();
     audit(s, me, on ? 'Seste susturdu' : 'Ses susturmasını kaldırdı', name);
@@ -4022,7 +4043,8 @@ function voiceModDo(s, me, name, action, to) { // kullanıcı arayüzü ve Bot A
     if (timedOut(s, name)) return ({ error: `${name} susturulduğu için sesli odaya giremiyor` });
     if (c.limit && (voice.get(c.id)?.size || 0) >= c.limit) return ({ error: `${c.name} dolu` });
     const pass = !chPerm(s, c, name, 'connect');
-    for (const [sid, n] of voice.get(cur) || []) if (n === name) {
+    for (const [sid, n] of voice.get(cur) || []) if (n === name && botVoice.has(sid)) { const a = db.apps?.[botVoice.get(sid).appId]; if (a) botVoiceJoin(a, c.id, botVoice.get(sid).conn, true); }
+    for (const [sid, n] of voice.get(cur) || []) if (n === name && !botVoice.has(sid)) {
       if (pass) voicePass.set(sid, { ch: c.id, until: Date.now() + 60000 });
       io.to(sid).emit('voiceMoveTo', { ch: c.id, by: me });
     }
@@ -4061,6 +4083,41 @@ function botVoiceView(a, s) {
       out[c.id].push({ id: u ? uidOf(u) : null, ad: n, mikKapali: !!f.m, sagir: !!f.d, sunucuSusturdu: srvMuted.has(s.id + '|' + n), kamera: !!md.cam, yayin: !!md.screen }); } }
   return out;
 }
+// ---- Botlar sesli odada (müzik vb.): bot sanal bir katılımcı olur. Ses bottan kullanıcılara doğrudan (WebRTC) gider,
+// Kanka sunucusu sadece bağlantı bilgisini (sinyal) taşır; ses verisi sunucudan geçmez. sid '~' ile başlar ki tarayıcı her zaman "kibar" taraf olsun.
+const botVoice = new Map(); // sid -> { appId, ch, conn, name }
+const botVoiceOfApp = appId => { for (const [sid, v] of botVoice) if (v.appId === appId) return { sid, ...v }; return null; };
+function botVoiceJoin(a, chId, conn, moved) {
+  const f = findChannel(chId); if (!f || f.s.public || !f.s.members.includes(a.bot)) return { error: 'Oda bulunamadı' };
+  const { s, c } = f; if (c.type !== 'voice') return { error: 'Bot sadece sesli odalara (voice) girebilir' };
+  if (!seesChannel(s, c, a.bot)) return { error: 'Bot bu odayı göremiyor' };
+  if (!moved && !chPerm(s, c, a.bot, 'connect')) return { error: 'Botun bu odaya bağlanma izni yok' };
+  if (!chPerm(s, c, a.bot, 'speak')) return { error: 'Botun bu odada konuşma izni yok' };
+  if (timedOut(s, a.bot)) return { error: 'Bot bu sunucuda susturulmuş' };
+  const old = botVoiceOfApp(a.id);
+  if (old?.ch === chId) return { ok: true };
+  if (!moved && c.limit && (voice.get(chId)?.size || 0) >= c.limit && !can(s, a.bot, 'manageChannels')) return { error: `Oda dolu (${c.limit}/${c.limit})` };
+  if (old) botVoiceLeave(a.id, moved ? 'taşındı' : 'başka odaya geçti', true);
+  const sid = '~' + a.id + crypto.randomBytes(4).toString('hex'), room = voice.get(chId) || new Map();
+  const peers = [...room].filter(([x]) => !botVoice.has(x)).map(([x, name]) => ({ sid: x, ad: name }));
+  room.set(sid, a.bot); voice.set(chId, room); botVoice.set(sid, { appId: a.id, ch: chId, conn, name: a.bot });
+  io.to('v:' + chId).emit('voiceJoined', { sid, name: a.bot });
+  pushVoice();
+  gwSend(conn, { op: 0, t: 'SES_BAGLANDI', d: { oda: chId, sunucu: s.id, sid, ice: iceServers(), kisiler: peers, tasindi: !!moved } });
+  if (srvMuted.has(s.id + '|' + a.bot)) gwSend(conn, { op: 0, t: 'SES_SUSTURMA', d: { susturuldu: true } });
+  return { ok: true };
+}
+function botVoiceLeave(appId, why, quiet) {
+  const bv = botVoiceOfApp(appId); if (!bv) return;
+  botVoice.delete(bv.sid); const room = voice.get(bv.ch); if (room) { room.delete(bv.sid); if (!room.size) voice.delete(bv.ch); }
+  io.to('v:' + bv.ch).emit('voiceLeft', bv.sid); pushVoice();
+  if (!quiet || why) gwSend(bv.conn, { op: 0, t: 'SES_AYRILDI', d: { oda: bv.ch, sebep: why || '' } });
+}
+function botVoiceTapPeers(ch, ev, d, except) { // odaya giren/çıkan kullanıcıyı sesteki bota bildir
+  for (const [sid, bv] of botVoice) { if (bv.ch !== ch) continue;
+    if (ev === 'voiceLeft') { if (d !== sid) gwSend(bv.conn, { op: 0, t: 'SES_KISI_AYRILDI', d: { sid: d } }); }
+    else if (d?.sid && d.sid !== sid && !botVoice.has(d.sid)) gwSend(bv.conn, { op: 0, t: ev === 'voiceRekey' ? 'SES_KISI_YENILENDI' : 'SES_KISI_KATILDI', d: { sid: d.sid, ad: d.name, eski: d.old || null } }); }
+}
 const voiceSig = new Map();
 function botVoiceTap() { // ses durumu değişince "ses" niyetiyle bağlı botlara SES_DURUMU (sadece değişen sunucular)
   if (!botConns.size) return;
@@ -4082,6 +4139,7 @@ const lastBotText = new Map();
   BO.emit = function (ev, ...args) {
     const d = args[0];
     if ((ev === 'message' || ev === 'update' || ev === 'remove') && d && typeof d.channelId === 'string' && this.rooms?.has?.(d.channelId) && !d.msg?.ephemeral) { try { botTap(ev, d); } catch (e) { logCrash('botTap', e); } }
+    if (botVoice.size && (ev === 'voiceJoined' || ev === 'voiceLeft' || ev === 'voiceRekey')) { try { for (const r of this.rooms || []) if (typeof r === 'string' && r.startsWith('v:')) botVoiceTapPeers(r.slice(2), ev, d, this.exceptRooms); } catch (e) { logCrash('botVoicePeers', e); } }
     return orig.call(this, ev, ...args);
   };
 }
@@ -7486,6 +7544,7 @@ io.on('connection', socket => {
     const pv = voiceFlags.get(socket.id) || {}; voiceFlags.set(socket.id, { m: !!m, d: !!d }); if (!!pv.m !== !!m || !!pv.d !== !!d) pushFlags(); });
   socket.on('signal', ({ to, data } = {}) => {
     if (!myVoice || !voice.get(myVoice)?.has(to)) return;
+    if (botVoice.has(to)) { const bv = botVoice.get(to); if (data && typeof data === 'object' && JSON.stringify(data).length < 20000) gwSend(bv.conn, { op: 0, t: 'SES_SINYAL', d: { kimden: socket.id, veri: data } }); return; }
     io.to(to).emit('signal', { from: socket.id, data });
   });
 

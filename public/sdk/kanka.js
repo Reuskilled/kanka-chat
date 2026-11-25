@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.5.0';
+const SURUM = '1.6.0';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -142,6 +142,28 @@ class Kanka extends EventEmitter {
   yasakla(sunucu, kisi, sebep = '') { return this.api('PUT', `/sunucular/${sunucu}/yasaklar/${encodeURIComponent(kisi)}`, { sebep }); }
   yasakKaldir(sunucu, kisi) { return this.api('DELETE', `/sunucular/${sunucu}/yasaklar/${encodeURIComponent(kisi)}`); }
   yasaklar(sunucu) { return this.api('GET', `/sunucular/${sunucu}/yasaklar`).then(r => r.yasaklar); }
+  // ---------- Ses (müzik botu vb.) ----------
+  /**
+   * Sesli odaya gir. Ses bottan kullanıcılara doğrudan gider (WebRTC); bilgisayarında ffmpeg ve `npm i werift` gerekir.
+   *   const ses = await bot.sesliOdayaKatil(odaId);
+   *   await ses.cal('sarki.mp3');            // dosya, https adresi ya da okunabilir akış
+   *   ses.on('bitti', () => ...);            // şarkı bitince
+   *   ses.siraya('a.mp3'); ses.siraya('b.mp3'); // sırayla çalar · ses.gec() sonrakine geçer
+   * Botun bu odada "bağlanma" ve "konuşma" izni olmalı.
+   */
+  sesliOdayaKatil(oda) {
+    if (!this._gonder || !this.ben) return Promise.reject(new KankaHata('Önce bağlan: sesliOdayaKatil "hazir" olayından sonra kullanılabilir'));
+    werift(); // kurulu değilse hemen anlaşılır hata ver
+    this._ses ||= new SesBaglantisi(this);
+    const ses = this._ses; ses._istenen = oda;
+    return new Promise((ok, no) => {
+      const t = setTimeout(() => { this._sesBekle = null; no(new KankaHata('Sese girilemedi: zaman aşımı', 408)); }, 10000);
+      this._sesBekle = { ok: x => { clearTimeout(t); ok(x); }, no: e => { clearTimeout(t); no(e); } };
+      this._gonder({ op: 4, d: { oda } });
+    });
+  }
+  /** Sesten çık (çalan şarkı durur) */
+  sestenAyril() { if (this._ses) { this._ses.durdur(); this._ses._istenen = null; this._ses.oda = null; } this._gonder && this._gonder({ op: 4, d: { oda: null } }); }
   // ---------- Yardımcılar ----------
   /**
    * Bir süre "yazıyor…" göster. İkinci değer: iş fonksiyonu, bir Promise ya da milisaniye.
@@ -203,7 +225,7 @@ class Kanka extends EventEmitter {
   _ac() {
     const WS = globalThis.WebSocket || require('ws');
     const ws = this._ws = new WS(this.adres.replace(/^http/, 'ws') + '/bot/gateway');
-    const gonder = o => { try { ws.send(JSON.stringify(o)); } catch {} };
+    const gonder = o => { try { ws.send(JSON.stringify(o)); } catch {} }; this._gonder = gonder;
     const al = async veri => {
       let m; try { m = JSON.parse(typeof veri === 'string' ? veri : veri.data !== undefined ? veri.data : String(veri)); } catch { return; }
       if (m.op === 10) {
@@ -227,8 +249,11 @@ class Kanka extends EventEmitter {
     else { ws.onmessage = al; ws.onclose = e => kapandi(e.code, e.reason); ws.onerror = () => {}; }
   }
   async _olay(t, d) {
+    if (t === 'HAZIR' && this._ses && this._ses.oda) setTimeout(() => this._gonder({ op: 4, d: { oda: this._ses.oda } }), 500); // yeniden bağlanınca sese geri dön
     if (t === 'HAZIR') { this._oturum = d.oturum; this._deneme = 0; this.ben = d.bot; for (const s of d.sunucular) this.sunucular.set(s.id, s); if (!d.icerikIzni && this.niyetler.includes('icerik')) this.emit('uyari', 'Mesaj içeriği izni yok: sadece komutlar ve botun etiketlendiği mesajların içeriği gelir. Doğrulanan botlar için Kanka ekibi bu izni ayrıca verir.'); return this.emit('hazir', this); }
-    if (t === 'DEVAM_EDILDI') { this._deneme = 0; return this.emit('devam'); }
+    if (t === 'DEVAM_EDILDI') { this._deneme = 0; if (this._ses && this._ses.oda) this._gonder({ op: 4, d: { oda: this._ses.oda } }); return this.emit('devam'); }
+    if (t.startsWith('SES_') && t !== 'SES_DURUMU') return this._ses && this._ses._olay(t, d);
+    if (t === 'HATA' && d && d.islem === 'ses' && this._sesBekle) { const b = this._sesBekle; this._sesBekle = null; return b.no(new KankaHata(d.hata || 'Sese girilemedi', 400, d)); }
     if (t === 'MESAJ_GELDI') { const m = this._mesaj(d); if (m.yazar && this.ben && m.yazar.ad === this.ben.ad) return; if (this._bekleyeneVer('mesaj', m)) return; return this.emit('mesaj', m); }
     if (t === 'DURUM_GUNCELLENDI') return this.emit('durum', d);
     if (t === 'HATA') return this.emit('hata', new KankaHata(d.hata || 'Sunucu hatası', 400, d));
@@ -307,6 +332,133 @@ class Etkilesim {
   /** Ek mesaj gönder */
   takip(icerik) { return fetch(`${this._bot.adres}/api/v1/etkilesim/${this.id}/${this.token}/takip`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde(icerik)) }).then(r => r.json()); }
 }
+// ---------- Ses bağlantısı ----------
+let _werift = null;
+function werift() {
+  if (_werift) return _werift;
+  try { _werift = require('werift'); } catch { throw new KankaHata('Ses için werift paketi gerekli: npm i werift'); }
+  return _werift;
+}
+// Ogg kabından Opus paketlerini çıkar (ffmpeg -c:a libopus -f ogg çıktısı)
+class OggOpus {
+  constructor(paket) { this.buf = Buffer.alloc(0); this.parca = []; this.paket = paket; this.n = 0; }
+  yaz(veri) {
+    this.buf = Buffer.concat([this.buf, veri]);
+    while (this.buf.length >= 27) {
+      if (this.buf.readUInt32BE(0) !== 0x4f676753) { const i = this.buf.indexOf('OggS', 1); if (i < 0) { this.buf = Buffer.alloc(0); return; } this.buf = this.buf.subarray(i); continue; }
+      const seg = this.buf[26]; if (this.buf.length < 27 + seg) return;
+      const tablo = this.buf.subarray(27, 27 + seg); let uzun = 0; for (const x of tablo) uzun += x;
+      if (this.buf.length < 27 + seg + uzun) return;
+      let o = 27 + seg;
+      for (const x of tablo) { this.parca.push(this.buf.subarray(o, o + x)); o += x; if (x < 255) { const p = Buffer.concat(this.parca); this.parca = []; if (this.n++ >= 2) this.paket(p); } } // ilk iki paket: OpusHead, OpusTags
+      this.buf = this.buf.subarray(o);
+    }
+  }
+}
+class SesBaglantisi extends EventEmitter {
+  constructor(bot) { super(); this.bot = bot; this.oda = null; this.sid = null; this.ice = []; this.esler = new Map(); this.kuyruk = []; this.sira = []; this.susturuldu = false; this.duraklatildi = false; this.caliyor = null; this._seq = Math.floor(Math.random() * 60000); this._ts = Math.floor(Math.random() * 1e9); this._ssrc = 1 + Math.floor(Math.random() * 2 ** 31); }
+  get kisiSayisi() { return this.esler.size; }
+  _sinyal(kime, veri) { this.bot._gonder({ op: 5, d: { kime, veri } }); }
+  _iz() { if (!this._track) { const { MediaStreamTrack } = werift(); this._track = new MediaStreamTrack({ kind: 'audio' }); } return this._track; }
+  _es(sid) {
+    if (this.esler.has(sid)) return this.esler.get(sid);
+    const { RTCPeerConnection, RTCRtpCodecParameters } = werift();
+    const ice = []; for (const x of this.ice || []) for (const u of [].concat(x.urls)) ice.push({ urls: u, ...(x.username ? { username: x.username, credential: x.credential } : {}) });
+    const pc = new RTCPeerConnection({ iceServers: ice, codecs: { audio: [new RTCRtpCodecParameters({ mimeType: 'audio/opus', clockRate: 48000, channels: 2 })], video: [] } });
+    pc._making = false; this.esler.set(sid, pc);
+    pc.addTransceiver(this._iz(), { direction: 'sendrecv' });
+    pc.onicecandidate = e => { if (e && e.candidate) this._sinyal(sid, { ice: typeof e.candidate.toJSON === 'function' ? e.candidate.toJSON() : e.candidate }); };
+    pc.connectionStateChange.subscribe(st => { this.bot._log('ses', sid, st); if (st === 'failed' || st === 'closed') this._kapat(sid); });
+    return pc;
+  }
+  async _teklif(sid) {
+    const pc = this._es(sid);
+    try { pc._making = true; await pc.setLocalDescription(await pc.createOffer()); this._sinyal(sid, { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }); }
+    catch (e) { this.bot.emit('hata', e); } finally { pc._making = false; }
+  }
+  _kapat(sid) { const pc = this.esler.get(sid); if (!pc) return; this.esler.delete(sid); try { pc.close(); } catch {} }
+  _hepsiniKapat() { for (const sid of [...this.esler.keys()]) this._kapat(sid); }
+  async _olay(t, d) {
+    if (t === 'SES_BAGLANDI') {
+      this._hepsiniKapat(); this.oda = d.oda; this.sunucu = d.sunucu; this.sid = d.sid; this.ice = d.ice || [];
+      for (const k of d.kisiler || []) this._teklif(k.sid);
+      const b = this.bot._sesBekle; if (b) { this.bot._sesBekle = null; b.ok(this); }
+      return this.emit(d.tasindi ? 'tasindi' : 'baglandi', d);
+    }
+    if (t === 'SES_SINYAL') {
+      const { kimden, veri } = d; if (!veri) return;
+      const pc = this._es(kimden);
+      try {
+        if (veri.sdp) {
+          const carpisma = veri.sdp.type === 'offer' && (pc._making || pc.signalingState !== 'stable');
+          pc._yoksay = carpisma; if (carpisma) return; // bot "kaba" taraf: çakışmada kendi teklifinde kalır, tarayıcı geri çekilir
+          await pc.setRemoteDescription(veri.sdp);
+          if (veri.sdp.type === 'offer') { await pc.setLocalDescription(await pc.createAnswer()); this._sinyal(kimden, { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }); }
+        } else if (veri.ice && !pc._yoksay) { await pc.addIceCandidate(veri.ice).catch(() => {}); }
+      } catch (e) { this.bot._log('ses sinyal hatası', e.message); }
+      return;
+    }
+    if (t === 'SES_KISI_KATILDI') return this.emit('kisiKatildi', d);
+    if (t === 'SES_KISI_AYRILDI') { this._kapat(d.sid); return this.emit('kisiAyrildi', d); }
+    if (t === 'SES_KISI_YENILENDI') { if (d.eski) this._kapat(d.eski); return; }
+    if (t === 'SES_SUSTURMA') { this.susturuldu = !!d.susturuldu; return this.emit('susturma', d); }
+    if (t === 'SES_AYRILDI') { this._hepsiniKapat(); const o = this.oda; this.oda = null; this.durdur(); return this.emit('ayrildi', { oda: o, sebep: d.sebep }); }
+  }
+  /**
+   * Çal. kaynak: dosya yolu, https adresi ya da okunabilir akış (Readable).
+   * ayar: { ses: 0.5 (ses düzeyi), baslangic: 30 (saniye), ffmpeg: 'ffmpeg yolu', bitHizi: 96 (kbps) }
+   * Döner: şarkı bitince ya da durdurulunca çözülen Promise.
+   */
+  cal(kaynak, ayar = {}) {
+    this.durdur(true); werift();
+    const { spawn } = require('child_process');
+    const akis = kaynak && typeof kaynak.pipe === 'function';
+    const ff = ayar.ffmpeg || process.env.FFMPEG_PATH || (() => { try { return require('ffmpeg-static'); } catch { return 'ffmpeg'; } })();
+    const args = ['-hide_banner', '-loglevel', 'error', ...(ayar.baslangic ? ['-ss', String(ayar.baslangic)] : []), '-i', akis ? 'pipe:0' : String(kaynak), '-vn',
+      ...(ayar.ses != null && ayar.ses !== 1 ? ['-af', `volume=${Math.max(0, Math.min(2, +ayar.ses))}`] : []),
+      '-ac', '2', '-ar', '48000', '-c:a', 'libopus', '-b:a', `${ayar.bitHizi || 96}k`, '-frame_duration', '20', '-application', 'audio', '-f', 'ogg', 'pipe:1'];
+    const p = spawn(ff, args, { stdio: [akis ? 'pipe' : 'ignore', 'pipe', 'pipe'] });
+    let hataYazi = ''; p.stderr.on('data', x => { hataYazi = (hataYazi + x).slice(-500); });
+    if (akis) { kaynak.pipe(p.stdin); p.stdin.on('error', () => {}); }
+    const ogg = new OggOpus(pk => { this.kuyruk.push(pk); if (this.kuyruk.length > 250) p.stdout.pause(); });
+    p.stdout.on('data', x => ogg.yaz(x));
+    const c = this.caliyor = { p, bitti: false, kaynak };
+    p.on('error', e => { c.bitti = true; this.emit('hata', new KankaHata(e.code === 'ENOENT' ? 'ffmpeg bulunamadı: bilgisayarına ffmpeg kur (ya da npm i ffmpeg-static)' : e.message)); });
+    p.on('close', kod => { c.bitti = true; if (kod && !c.durduruldu && !this.kuyruk.length) this.emit('hata', new KankaHata('ffmpeg: ' + (hataYazi.trim() || 'çalınamadı (kod ' + kod + ')'))); });
+    const { RtpPacket, RtpHeader } = werift();
+    let bas = Date.now(), gonderilen = 0;
+    c.zamanlayici = setInterval(() => {
+      if (this.duraklatildi) { bas = Date.now() - gonderilen * 20; return; }
+      const hedef = Math.floor((Date.now() - bas) / 20);
+      while (gonderilen < hedef) {
+        const pk = this.kuyruk.shift();
+        if (!pk) { if (c.bitti) return this._bitir(c); bas = Date.now() - gonderilen * 20; break; } // veri gelmedi: beklerken zamanı kaydır
+        gonderilen++;
+        if (this.kuyruk.length < 100 && p.stdout.isPaused()) p.stdout.resume();
+        if (this.susturuldu || !this._track) continue;
+        this._seq = (this._seq + 1) & 0xffff; this._ts = (this._ts + 960) >>> 0;
+        this._track.writeRtp(new RtpPacket(new RtpHeader({ payloadType: 111, sequenceNumber: this._seq, timestamp: this._ts, ssrc: this._ssrc, marker: false }), pk));
+      }
+    }, 10);
+    this.emit('basladi', { kaynak });
+    return new Promise(r => { c.coz = r; });
+  }
+  _bitir(c, durduruldu) {
+    if (c.son) return; c.son = true; clearInterval(c.zamanlayici); try { c.p.kill('SIGKILL'); } catch {}
+    if (this.caliyor === c) { this.caliyor = null; this.kuyruk = []; }
+    c.coz && c.coz({ durduruldu: !!durduruldu });
+    if (!durduruldu) { this.emit('bitti', { kaynak: c.kaynak }); if (this.sira.length) { const s = this.sira.shift(); this.cal(s.kaynak, s.ayar); } }
+  }
+  /** Sıraya ekle; bir şey çalmıyorsa hemen başlar */
+  siraya(kaynak, ayar = {}) { if (!this.caliyor) { this.cal(kaynak, ayar); return 0; } this.sira.push({ kaynak, ayar }); return this.sira.length; }
+  /** Sonraki şarkıya geç */
+  gec() { const c = this.caliyor; if (c) { c.durduruldu = true; this._bitir(c, true); } if (this.sira.length) { const s = this.sira.shift(); this.cal(s.kaynak, s.ayar); } }
+  duraklat() { this.duraklatildi = true; }
+  devam() { this.duraklatildi = false; }
+  /** Çalanı durdur (sıra da temizlenir) */
+  durdur(siraKalsin) { const c = this.caliyor; if (c) { c.durduruldu = true; this._bitir(c, true); } if (!siraKalsin) this.sira = []; this.duraklatildi = false; }
+  ayril() { this.bot.sestenAyril(); }
+}
 // Kart (embed) oluşturucu: new Kart().baslik('...').aciklama('...').renk('#ff8a4c').alan('ad', 'değer', true)
 class Kart {
   constructor() { this.v = {}; }
@@ -333,4 +485,4 @@ function imzaDogrula(sir, zaman, govdeMetni, imza) {
   const h = crypto.createHmac('sha256', sir).update(zaman + '.' + govdeMetni).digest('hex');
   return typeof imza === 'string' && imza.length === h.length && crypto.timingSafeEqual(Buffer.from(h), Buffer.from(imza));
 }
-module.exports = { Kanka, Kart, Buton, LinkButon, Secim, KisiSecici, RolSecici, OdaSecici, Satir, KankaHata, imzaDogrula, SURUM };
+module.exports = { SesBaglantisi, Kanka, Kart, Buton, LinkButon, Secim, KisiSecici, RolSecici, OdaSecici, Satir, KankaHata, imzaDogrula, SURUM };
