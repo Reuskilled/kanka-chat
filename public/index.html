@@ -18559,21 +18559,21 @@ function admMint(B) {
     if (!$('#mn-ul')) B.insertAdjacentHTML('beforeend', `<datalist id="mn-ul">${Object.keys(S.users || {}).filter(n => !S.users[n]?.bot).slice(0, 500).map(n => `<option value="${esc(n)}">${esc(S.users[n]?.displayName || '')}</option>`).join('')}</datalist>`);
     B.querySelectorAll('[data-self]').forEach(b => b.onclick = () => { $('#' + b.dataset.self).value = S.me; });
     let sm = 1; B.querySelectorAll('#mn-sm [data-m]').forEach(b => b.onclick = () => { sm = +b.dataset.m; B.querySelectorAll('#mn-sm [data-m]').forEach(x => x.classList.toggle('on', x === b)); });
-    $('#mn-sgo').onclick = () => { const u = $('#mn-su').value.trim(); if (!u) return toast('Kullanıcı adı yaz');
-      confirmBox(`${u} hesabına ${sm} ay Kanka Spark verilsin mi?`, () => socket.emit('adminMint', { act: 'spark', user: u, months: sm, note: $('#mn-sn').value }, done(`${u}: ${sm} ay Spark verildi ⚡`))); };
+    armBtn($('#mn-sgo'), 'Emin misin? Tekrar bas', () => { const u = $('#mn-su').value.trim(), note = $('#mn-sn').value; if (!u) return toast('Kullanıcı adı yaz');
+      socket.emit('adminMint', { act: 'spark', user: u, months: sm, note }, done(`${u}: ${sm} ay Spark verildi ⚡`)); });
     B.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { const i = $('#mn-en'); i.value = Math.max(-100, Math.min(100, (+i.value || 0) + +b.dataset.d)); });
-    $('#mn-ego').onclick = () => { const u = $('#mn-eu').value.trim(), k = +$('#mn-en').value || 0; if (!u || !k) return toast('Kullanıcı ve miktar gir');
-      confirmBox(`${u} hesabına ${k > 0 ? k + ' Energy eklensin' : -k + ' Energy silinsin'} mi?`, () => socket.emit('adminMint', { act: 'energy', user: u, n: k, note: $('#mn-enn').value }, done(`${u}: ${k > 0 ? '+' : ''}${k} Energy`))); };
+    armBtn($('#mn-ego'), 'Emin misin? Tekrar bas', () => { const u = $('#mn-eu').value.trim(), k = +$('#mn-en').value || 0, note = $('#mn-enn').value; if (!u || !k) return toast('Kullanıcı ve miktar gir');
+      socket.emit('adminMint', { act: 'energy', user: u, n: k, note }, done(`${u}: ${k > 0 ? '+' : ''}${k} Energy`)); });
     let qT; $('#mn-sq').oninput = e => { clearTimeout(qT); qT = setTimeout(() => { srvQ = e.target.value.trim(); const pos = e.target.selectionStart; draw(); setTimeout(() => { const n = $('#mn-sq'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 60); }, 350); };
     B.querySelectorAll('[data-sv]').forEach(b => b.onclick = () => { pick = [...r.srvs, ...r.boosted].find(x => x.id === b.dataset.sv); draw(); });
-    B.querySelectorAll('[data-cut]').forEach(b => b.onclick = () => confirmBox(`${b.dataset.cut} aboneliği 1 ay kısaltılsın mı? Süre biterse Spark ve Energy'leri kalkar.`, () => socket.emit('adminMint', { act: 'spark', user: b.dataset.cut, months: -1 }, done('Abonelik kısaltıldı'))));
+    B.querySelectorAll('[data-cut]').forEach(b => armBtn(b, 'Emin misin?', () => socket.emit('adminMint', { act: 'spark', user: b.dataset.cut, months: -1 }, done('Abonelik kısaltıldı'))));
     if (pick) {
       const inp = $('#mn-sn2'), prev = () => { const t = Math.max(0, pick.total + (+inp.value || 0)); $('#mn-prev').textContent = `Sonra: ${t} Energy · Level ${lvOf(t, r.levels)}`; };
       inp.oninput = prev; prev();
       B.querySelectorAll('[data-d2]').forEach(b => b.onclick = () => { inp.value = (+inp.value || 0) + +b.dataset.d2; prev(); });
       B.querySelectorAll('[data-to]').forEach(b => b.onclick = () => { inp.value = Math.max(+b.dataset.to - pick.total, -pick.kanka); prev(); });
-      $('#mn-svgo').onclick = () => { const k = +inp.value || 0; if (!k) return toast('Miktar gir');
-        confirmBox(`${pick.name} sunucusuna ${k > 0 ? k + ' Energy basılsın' : -k + ' Energy geri alınsın'} mı?`, () => socket.emit('adminMint', { act: 'server', server: pick.id, n: k, note: $('#mn-svn').value }, x => { if (x?.error) return toast(x.error, null, false, { type: 'err' }); toast(`${pick.name}: ${x.total} Energy · Level ${x.level} ⚡`, null, false, { type: 'ok' }); draw(); })); };
+      armBtn($('#mn-svgo'), 'Emin misin? Tekrar bas', () => { const k = +inp.value || 0, note = $('#mn-svn').value; if (!k) return toast('Miktar gir');
+        socket.emit('adminMint', { act: 'server', server: pick.id, n: k, note }, x => { if (x?.error) return toast(x.error, null, false, { type: 'err' }); toast(`${pick.name}: ${x.total} Energy · Level ${x.level} ⚡`, null, false, { type: 'ok' }); draw(); }); });
     }
   });
   draw();
