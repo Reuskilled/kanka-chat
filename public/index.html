@@ -5254,6 +5254,18 @@ html.native input, html.native textarea, html.native [contenteditable], html.nat
   #np-list button span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #np-list small { color: var(--muted); font-size: 11px; } #np-list .ic { width: 14px; height: 14px; color: var(--muted); }
   .np-f { margin: 0; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; } .np-f .ic { width: 12px; height: 12px; }
   #notes-btn.on { color: var(--accent); }
+  /* Spark üyeliği görünürlüğü */
+  .spk-tag { display: inline-flex; align-items: center; gap: 3px; height: 19px; padding: 0 7px 0 5px; border-radius: 6px; font-size: 10.5px; font-weight: 900; letter-spacing: .06em; color: #09090b; background: linear-gradient(135deg, #d4ff00, #00f5d4); box-shadow: 0 0 12px rgba(212,255,0,.35); vertical-align: middle; margin-left: 6px; white-space: nowrap; flex: none; }
+  .spk-tag svg { width: 11px; height: 11px; stroke-width: 2.6; }
+  .is-spark { position: relative; }
+  .dmp.is-spark, .vpop.is-spark, .pf-side.is-spark { box-shadow: 0 0 0 1.5px rgba(212,255,0,.55), 0 0 28px rgba(0,245,212,.16); }
+  .dmp.is-spark::before, .vpop.is-spark::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; z-index: 5; background: linear-gradient(90deg, #d4ff00, #00f5d4, #d4ff00); background-size: 200% 100%; animation: spkFlow 4s linear infinite; border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  @keyframes spkFlow { to { background-position: -200% 0; } }
+  .dmp-spk { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, rgba(212,255,0,.12), rgba(0,245,212,.06)) !important; border-color: rgba(212,255,0,.3) !important; }
+  .dmp-spk > svg { width: 22px; height: 22px; color: #d4ff00; flex: none; filter: drop-shadow(0 0 6px rgba(212,255,0,.5)); }
+  .dmp-spk span { display: grid; gap: 1px; } .dmp-spk b { font-size: 13.5px; } .dmp-spk small { font-size: 12px; color: var(--muted); }
+  .pf-spk span { display: inline-flex; align-items: center; gap: 5px; color: #d4ff00 !important; } .pf-spk svg { width: 13px; height: 13px; }
+  @media (prefers-reduced-motion: reduce) { .dmp.is-spark::before, .vpop.is-spark::before { animation: none; } }
 </style>
 </head>
 <body>
@@ -10637,7 +10649,7 @@ function dmpRenderMutuals(n, mut) {
 function dmProfilePanel(n) {
   const M = $('#members'); if (!M) return;
   const u = S.users[n] || { name: n, level: 1, xp: 0 }, on = S.online.has(n);
-  const sig = JSON.stringify([dn(n), on, on ? stOf(n) : 'off', isMob(n), u.avatar, u.color, u.frame, u.effect, u.bannerImg, u.banner, u.theme, u.nameStyle, u.status, u.pronouns, u.bio, u.birthday, u.music, u.level, u.xp, u.streak, u.createdAt, u.badges, u.socials, u.activities, u.bot, u.tagServer]);
+  const sig = JSON.stringify([dn(n), on, on ? stOf(n) : 'off', isMob(n), u.sp, u.intro, u.avatar, u.color, u.frame, u.effect, u.bannerImg, u.banner, u.theme, u.nameStyle, u.status, u.pronouns, u.bio, u.birthday, u.music, u.level, u.xp, u.streak, u.createdAt, u.badges, u.socials, u.activities, u.bot, u.tagServer]);
   if (M.classList.contains('dmp-mode') && M.dataset.dmpUser === n && M.dataset.dmpSig === sig) {
     window.kLayoutSync?.(); return;
   }
@@ -10655,11 +10667,11 @@ function dmProfilePanel(n) {
   const isMe = n === S.me, isBot = !!u.bot;
   const ac = actCards(u);
   const socs = socialsHTML(u);
-  const bdg = !isBot ? badgeChips(u, 20) : '';
+  const bdg = !isBot ? badgesHTML(u, 'sm') : '';
   const stTxt = on ? stLabel(n) : 'Çevrimdışı';
   const bdayTxt = u.birthday ? new Date('2000-' + u.birthday + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '';
 
-  M.innerHTML = `<div class="dmp ${themeOf(u) ? 'themed' : ''}" style="${themeVars(u)}">
+  M.innerHTML = `<div class="dmp ${themeOf(u) ? 'themed' : ''} ${u.sp ? 'is-spark' : ''}" style="${themeVars(u)}">
     <div class="dmp-ban" style="${banStyle(n, u)}">
       <div class="dmp-top-acts">
         <button type="button" class="dmp-ico" id="dmp-exp" title="Tam Profili Aç" aria-label="Tam Profili Aç">${ic('expand')}</button>
@@ -10675,7 +10687,7 @@ function dmProfilePanel(n) {
     <div class="dmp-id">
       <div class="dmp-name-row">
         <span class="dmp-dn" id="dmp-dn" role="button" tabindex="0">${styledNameHTML(dn(n), u.nameStyle)}</span>
-        ${srvTag(n)}${isBot ? botTag(n) : ''}
+        ${sparkTag(u)}${srvTag(n)}${isBot ? botTag(n) : ''}
       </div>
       <div class="dmp-handle">
         <span>@${esc(n)}</span>
@@ -10692,6 +10704,7 @@ function dmProfilePanel(n) {
 
     <div class="dmp-body">
       ${ac ? `<div class="dmp-card dmp-actc">${ac}</div>` : ''}
+      ${u.sp ? `<div class="dmp-card dmp-spk">${zapSvg}<span><b>Kanka Spark üyesi</b><small>${esc(spSince(u))}'dan beri destekçi</small></span></div>` : ''}
       ${u.bio || bdayTxt ? `<div class="dmp-card">
         <h5>Hakkında</h5>
         ${u.bio ? `<div class="dmp-bio">${bioFmt(u.bio)}</div>` : ''}
@@ -10722,7 +10735,7 @@ function dmProfilePanel(n) {
     </div>
   </div>`;
 
-  mountProfileEffect(M.querySelector('.dmp'), u.effect);
+  mountProfileEffect(M.querySelector('.dmp'), u.effect); if (u.intro && dmpIntro !== n) { dmpIntro = n; playIntro(M.querySelector('.dmp'), u.intro, u); }
   M.querySelectorAll('.xpbar i[data-w]').forEach(i => i.style.width = i.dataset.w + '%');
   if (same) M.scrollTop = prevScroll;
 
@@ -11738,21 +11751,25 @@ const themeOf = u => u?.theme?.length === 2 ? u.theme : null;
 const banStyle = (n, u) => u?.bannerImg ? `background:url('${esc(u.bannerImg)}') center/cover` : themeOf(u) ? `background:linear-gradient(135deg, ${u.theme[0]}, ${u.theme[1]})` : bannerBg(n, u);
 const dotColor = n => S.online.has(n) ? STATUS[stOf(n)][1] : '#80848e';
 const pAv = (n, u, size, dot = true) => `<div class="pav ${u?.frame ? 'fr-' + u.frame : ''}" style="--s:${size}px"><div class="av" style="background:${u?.color || userColor(n)}">${u?.avatar ? `<img src="${esc(u.avatar)}" alt="">` : initial(n)}</div>${dot ? `<i class="pdot ${isMob(n) ? 'mob' : ''}" style="background:${dotColor(n)}" title="${S.online.has(n) ? stLabel(n) : 'Çevrimdışı'}"></i>` : ''}</div>`;
+// Spark üyeliği profilin her yerinde hemen belli olsun: isim yanında etiket, kartta parıltılı kenar, "Spark üyesi" satırı
+let dmpIntro = null; // DM yan panelinde açılış efekti kişi başına bir kez
+const spSince = u => u?.sp ? new Date(u.sp).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }) : '';
+const sparkTag = u => u?.sp ? `<span class="spk-tag" title="Kanka Spark abonesi · ${esc(spSince(u))}'dan beri">${zapSvg}SPARK</span>` : '';
 const badgesHTML = (u, sz = '') => (u?.sp ? `<span class="mchip spk" title="Kanka Spark abonesi · ${esc(new Date(u.sp).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }))}'dan beri"><span class="sp-badge-ic" style="width:${sz === 'sm' ? 18 : 22}px;height:${sz === 'sm' ? 18 : 22}px">${zapSvg}</span></span>` : '') + badgeChips(u, sz === 'sm' ? 20 : 24);
 const socialsHTML = u => Object.entries(u?.socials || {}).filter(([k]) => SOCIAL_META[k]).map(([k, h]) => `<a class="psoc" href="${esc(SOCIAL_META[k][2](h))}" target="_blank" rel="noopener noreferrer" style="--c:${SOCIAL_META[k][1]}"><i></i><b>${SOCIAL_META[k][0]}</b><span>${esc(h)}</span>${ic('link')}</a>`).join('');
 const themeVars = u => themeOf(u) ? `--t1:${u.theme[0]};--t2:${u.theme[1]}` : '';
 const ago2 = t => { if (!t) return '—'; const d = Math.floor((Date.now() - t) / 864e5); return d < 1 ? 'bugün' : d < 30 ? d + ' gün' : d < 365 ? Math.floor(d / 30) + ' ay' : Math.floor(d / 365) + ' yıl'; };
 function profSideHTML(n, u, { srv, preview } = {}) {
   const r = roleOf(srv, n), roles = srv ? (srv.memberRoles?.[n] || []).map(id => (srv.customRoles || []).find(x => x.id === id)).filter(Boolean) : [];
-  return `<div class="pf-side ${themeOf(u) ? 'themed' : ''}" style="${themeVars(u)}">
+  return `<div class="pf-side ${themeOf(u) ? 'themed' : ''} ${u?.sp ? 'is-spark' : ''}" style="${themeVars(u)}">
     <div class="pf-ban" style="${banStyle(n, u)}"></div>
     <div class="pf-in">
       <div class="pf-top">${pAv(n, u, 108, !preview || true)}<div class="pf-badges">${badgesHTML(u)}</div></div>
-      <h2 class="pf-dn">${styledNameHTML(u?.displayName || n, u?.nameStyle)}${srv?.owner === n ? ownerCrown() : ''}${badge(r)}${srvTag(n)}</h2>
+      <h2 class="pf-dn">${styledNameHTML(u?.displayName || n, u?.nameStyle)}${srv?.owner === n ? ownerCrown() : ''}${badge(r)}${sparkTag(u)}${srvTag(n)}</h2>
       <div class="pf-un">@${esc(n)}${u?.pronouns ? `<i>•</i>${esc(u.pronouns)}` : ''}</div>
       ${u?.status ? `<div class="pf-bubble">${esc(u.status)}</div>` : ''}
       <div class="pf-actslot"></div>
-      <div class="pf-meta"><div><span>Kanka üyesi</span><b>${since(u?.createdAt) || '—'}</b></div>${srv && !srv.public ? `<div id="pf-jrow" hidden><span>Bu sunucuda</span><b id="pf-joined"></b></div>` : ''}</div>
+      <div class="pf-meta"><div><span>Kanka üyesi</span><b>${since(u?.createdAt) || '—'}</b></div>${u?.sp ? `<div class="pf-spk"><span>${zapSvg}Spark üyesi</span><b>${since(u.sp)}</b></div>` : ''}${srv && !srv.public ? `<div id="pf-jrow" hidden><span>Bu sunucuda</span><b id="pf-joined"></b></div>` : ''}</div>
       ${roles.length ? `<div class="pf-roles"><h5>Roller</h5><div>${roles.map(x => `<span><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join('')}${srv && perm(srv, 'manageRoles') && !preview && (n !== srv.owner || S.me === srv.owner) ? `<button id="pf-addrole" title="Rolleri düzenle">${ic('plus')}</button>` : ''}</div></div>`
         : srv && !srv.public && perm(srv, 'manageRoles') && !preview && (n !== srv.owner || S.me === srv.owner) && (n !== S.me || S.me === srv.owner) ? `<div class="pf-roles"><h5>Roller</h5><div><button id="pf-addrole" class="wide">${ic('plus')} Rol ver</button></div></div>` : ''}
     </div></div>`;
@@ -11961,13 +11978,14 @@ function voicePop(n, anchor, chId) {
   const tags = [speaking.has(n) && `<span class="vt-on">${ic('volume')} Konuşuyor</span>`, fl.m && `<span class="vt-m">${ic('micoff')} Mikrofonu kapalı</span>`, live && `<span class="vt-l">● Yayında</span>`, fl.cam && `<span>${ic('video')} Kamerası açık</span>`, stg && `<span>${ic('stage')} ${onStage ? 'Konuşmacı' : 'Dinleyici'}</span>`].filter(Boolean).join('');
   const p = document.createElement('div'); p.className = 'vpop'; p.setAttribute('role', 'dialog');
   if (themeOf(u)) { p.classList.add('themed'); p.style.cssText = themeVars(u); }
-  const hasB = !!badgeChips(u, 22), act = !inVc && actCards(u), dshort = t => new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (u.sp) p.classList.add('is-spark');
+  const hasB = !!badgeChips(u, 22) || !!u.sp, act = !inVc && actCards(u), dshort = t => new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
   const stTxt = online ? stLabel(n) : 'Çevrimdışı';
   p.innerHTML = `<div class="vp-banner" style="${banStyle(n, u)}"><button class="vp-ico" id="vp-prof" title="Tam profili aç" aria-label="Tam profili aç">${ic('expand')}</button></div>
     <div class="vp-head"><button class="vp-avw ${speaking.has(n) ? 'vp-spk' : ''}" id="vp-avb" aria-label="Tam profili aç">${pAv(n, u, 88)}<span class="vp-avh">${ic('user')}Profili<br>görüntüle</span></button>
       ${u.status ? `<div class="vp-bub" title="${esc(u.status)}"><span>${esc(u.status)}</span></div>` : ''}</div>
     <div class="vp-in">
-      <button class="vp-name" id="vp-nm">${styledNameHTML(dn(n), u?.nameStyle)}</button>${srvTag(n)}
+      <button class="vp-name" id="vp-nm">${styledNameHTML(dn(n), u?.nameStyle)}</button>${sparkTag(u)}${srvTag(n)}
       <div class="vp-un"><span>@${esc(n)}</span>${u.pronouns ? `<i>•</i><span>${esc(u.pronouns)}</span>` : ''}<i>•</i><span class="vp-st"><b style="background:${dotColor(n)}"></b>${esc(stTxt)}</span>${badge(roleOf(srv, n))}</div>
       ${hasB ? `<div class="vp-badges">${badgesHTML(u, 'sm')}</div>` : ''}
       ${tags ? `<div class="vp-tags">${tags}</div>` : ''}
