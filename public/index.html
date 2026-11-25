@@ -5171,6 +5171,9 @@ html.native input, html.native textarea, html.native [contenteditable], html.nat
 .rt-list .rt b{font-size:15px} .rt-list .rt small{color:var(--muted);font-size:12.5px;margin-left:4px} .rt-list .rt .ic{margin-left:auto;color:var(--accent);width:18px;height:18px}
 .rt-list .rt.on{border-color:var(--accent);background:rgba(212,255,0,.08)}
   html.native-ios .sp-link, html.native-ios #sp-link, html.native-ios #en-spark, html.native-ios .sp-sec { display: none !important; }
+  /* Dokunmatik: çift dokunma yakınlaştırma beklemesi olmasın, basınca anında tepki görünsün */
+  @media (pointer: coarse) { button, a, [role="button"], .room, .dm-row, .rl-row, label, summary { touch-action: manipulation; } html { -webkit-tap-highlight-color: transparent; }
+    button:active:not(:disabled), [role="button"]:active, .room:active { filter: brightness(1.18); } }
 </style>
 </head>
 <body>
@@ -11643,7 +11646,7 @@ function openLiveCard(n, ch, anchor) {
     const img = card.querySelector('.lc-img'), qd = GO_Q[x.q];
     if (x.thumb) { img.src = x.thumb; img.hidden = false; card.querySelector('.lc-ph').hidden = true; }
     const t = card.querySelector('.lc-time'); if (x.since) { const m = Math.floor((Date.now() - x.since) / 60000); t.hidden = false; t.textContent = m < 1 ? 'yeni başladı' : m < 60 ? `${m} dk` : `${Math.floor(m / 60)} sa ${m % 60} dk`; }
-    const q = card.querySelector('.lc-q'); if (qd) { q.hidden = false; q.innerHTML = `${qd[4]} · ${qd[5].replace(/^1440p /, '')}${x.audio ? ' · ' + ic('volume') : ''}`; }
+    const q = card.querySelector('.lc-q'); if (qd) { q.hidden = false; q.innerHTML = `${qd[4]} · ${qd[5]}${x.audio ? ' · ' + ic('volume') : ''}`; }
     const v = card.querySelector('.lc-v'); v.hidden = false; v.querySelector('em').textContent = x.viewers;
   });
   fill(); liveCardT = setInterval(fill, 5000);
@@ -14625,8 +14628,11 @@ socket.on('callDecline', ({ from, chatId }) => { if (outgoing?.chatId === chatId
 // --- Kamera / ekran paylaşımı ---
 // --- Kamera ve canlı yayın (Discord'daki "Yayın Başlat" gibi) ---
 // Kalite: [genişlik, yükseklik, FPS, kbps]. Yayın sadece "İzle"ye basanlara gönderilir; izlemeyenin internetini yemez.
-const GO_Q = { '720p30': [1280, 720, 30, 2500, '720p', '30 FPS'], '1080p30': [1920, 1080, 30, 4500, '1080p', '30 FPS'], '1080p60': [1920, 1080, 60, 8000, '1080p', '60 FPS'], 'src60': [2560, 1440, 60, 12000, 'Kaynak', '1440p 60 FPS'] };
-let goOpts = { q: '1080p30', audio: true, motion: true }; try { goOpts = { ...goOpts, ...JSON.parse(store.get('kanka-golive') || '{}') }; } catch {}
+// Discord'daki gibi: çözünürlük (720p / 1080p / Kaynak) × kare hızı (15 / 30 / 60). [genişlik, yükseklik, FPS, kbps, etiket, FPS etiketi]
+const GO_RES = { '720p': [1280, 720, '720p', { 15: 1500, 30: 2500, 60: 4000 }], '1080p': [1920, 1080, '1080p', { 15: 2500, 30: 4500, 60: 8000 }], src: [2560, 1440, 'Kaynak', { 15: 4000, 30: 7000, 60: 12000 }] };
+const GO_Q = {}; for (const [rk, [w, h, lb, br]] of Object.entries(GO_RES)) for (const f of [15, 30, 60]) GO_Q[rk + f] = [w, h, f, br[f], lb, f + ' FPS'];
+const goSplit = q => { const m = /^(720p|1080p|src)(15|30|60)$/.exec(q || '') || [, '1080p', '30']; return [m[1], +m[2]]; };
+let goOpts = { q: '1080p30', audio: true, motion: true }; try { goOpts = { ...goOpts, ...JSON.parse(store.get('kanka-golive') || '{}') }; } catch {} if (!GO_Q[goOpts.q]) goOpts.q = '1080p30';
 let sendStats = null, goCur = null, screenAudio = null, watching = null, autoWatch = null;
 const watchers = new Set();
 const mediaState = () => ({ cam: videoKind === 'cam', screen: videoKind === 'screen', streamId: videoStream?.id || null, viewers: watchers.size, q: videoKind === 'screen' ? goCur?.q : null, audio: !!screenAudio });
@@ -14657,21 +14663,25 @@ async function sendInfo(pc) {
 }
 // Bant genişliği yetmeyince Chrome bloklu (kare kare) görüntü gönderiyor. Bunun yerine kullanılabilir yükleme hızına göre
 // çözünürlüğü / FPS'i kendimiz basamak basamak düşürüp yükseltiyoruz: daha küçük ama temiz görüntü, büyük ama bloklu görüntüden iyidir.
-function adaptSend(pc, x) {
+// İşlemci yetmezse (her izleyici için ayrı kodlama yapılır) ya da yükleme hattı dolarsa (izleyiciler aynı hattı paylaşır)
+// Chrome'un kendi düşürmesini beklemeden biz düşürürüz: Discord gibi, önce bulanıklık değil kontrollü küçülme.
+function adaptSend(pc, x, all = {}) {
   if (videoKind !== 'screen' || !x.avail || !pc._vsender) return;
+  if (all.loss > x.loss) x = { ...x, loss: all.loss }; // bir izleyicide kayıp varsa hat dolu demektir: hepsi için geçerli
+  const cpu = x.lim === 'cpu';
   const [, , fps, kbps] = GO_Q[goCur?.q] || GO_Q['1080p30'], target = kbps * 1000;
   const budget = Math.min(target, x.avail * 0.9) - (screenAudio ? 160e3 : 0);
   const steps = goCur?.motion
-    ? [[1, fps], [1.5, fps], [1.5, Math.min(fps, 30)], [2, Math.min(fps, 30)], [3, 30], [4, 24]]            // oyun: önce çözünürlük, akıcılık korunur
-    : [[1, Math.min(fps, 30)], [1, 15], [1, 10], [1.5, 10], [2, 8]];                                         // metin/kod: netlik korunur, FPS düşer
+    ? [[1, fps], [1.5, fps], [1.5, Math.min(fps, 30)], [2, Math.min(fps, 30)], [3, Math.min(fps, 30)], [4, Math.min(fps, 24)]] // oyun: önce çözünürlük, akıcılık korunur
+    : [[1, fps], [1, Math.min(fps, 30)], [1, Math.min(fps, 15)], [1, 10], [1.5, 10], [2, 8]];                                         // metin/kod: netlik korunur, FPS düşer
   // Her basamağın ihtiyacı, seçilen kalitenin bit hızına göre (piksel × FPS oranıyla): ilk basamak hedefin %75'iyle temiz görünür
   const need = ([sc, f]) => target * 0.75 * (f / steps[0][1]) / (sc * sc);
   let want = steps.findIndex(st => need(st) <= budget); if (want < 0) want = steps.length - 1;
   const a = pc._ad ||= { i: 0, scale: 1, fps: steps[0][1], ok: 0, bad: 0, t0: Date.now() };
   if (Date.now() - a.t0 < 8000) return; // başlangıçta hız ölçümü yükselirken erken düşürme
   const atCap = x.avail >= target * 0.95;
-  if (want > a.i || x.loss > 6) { if (++a.bad >= 2) { a.i = Math.min(steps.length - 1, Math.max(want, a.i + (x.loss > 6 ? 1 : 0))); a.bad = 0; a.ok = 0; } } // 2 kötü ölçümde düş
-  else if (a.i > 0 && (atCap || budget >= need(steps[a.i - 1]) * 1.15) && x.loss < 2) { a.bad = 0; if (++a.ok >= 3) { a.i--; a.ok = 0; } } // 6 sn iyi giderse bir basamak çık
+  if (want > a.i || x.loss > 4 || cpu) { if (++a.bad >= 2) { a.i = Math.min(steps.length - 1, Math.max(want, a.i + (x.loss > 4 || cpu ? 1 : 0))); a.bad = 0; a.ok = 0; a.cpuAt = cpu ? Date.now() : a.cpuAt; } } // 2 kötü ölçümde düş
+  else if (a.i > 0 && (atCap || budget >= need(steps[a.i - 1]) * 1.15) && x.loss < 2 && Date.now() - (a.cpuAt || 0) > 30e3) { a.bad = 0; if (++a.ok >= 3) { a.i--; a.ok = 0; } } // 6 sn iyi giderse bir basamak çık
   else { a.ok = 0; a.bad = 0; }
   const [sc, f] = steps[a.i]; if (sc === a.scale && f === a.fps) return;
   a.scale = sc; a.fps = f; tuneSender(pc);
@@ -14737,12 +14747,13 @@ async function showGoLive() {
     modal(`<div class="gl-tabs">${tabs.map(([k, t, i]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${ic(i)}${t}</button>`).join('')}</div>
       <div class="gl-body">${body()}</div>
       <div class="gl-set" ${gear ? '' : 'hidden'}>
-        <div><h4>YAYIN KALİTESİ</h4><div class="pills" id="gl-q">${Object.entries(GO_Q).map(([k, v]) => `<button data-q="${k}" class="${o.q === k ? 'on' : ''}">${v[4]}<small>${v[5]}</small></button>`).join('')}</div>
+        <div><h4>ÇÖZÜNÜRLÜK</h4><div class="pills" id="gl-r">${Object.entries(GO_RES).map(([k, v]) => `<button data-r="${k}" class="${goSplit(o.q)[0] === k ? 'on' : ''}">${v[2]}<small>${k === 'src' ? 'en fazla 1440p' : k === '1080p' ? 'Full HD' : 'HD'}</small></button>`).join('')}</div>
+          <h4 style="margin-top:12px">KARE HIZI</h4><div class="pills" id="gl-f">${[15, 30, 60].map(f => `<button data-f="${f}" class="${goSplit(o.q)[1] === f ? 'on' : ''}">${f} FPS<small>${f === 15 ? 'sunum, kod' : f === 30 ? 'genel' : 'oyun, video'}</small></button>`).join('')}</div>
           <p class="hint" style="margin-top:6px">Her izleyici için ~${(q[3] / 1000).toFixed(1)} Mbps yükleme gerekir. İnternetin yavaşsa 720p seç.</p></div>
         <div><h4>İÇERİK</h4><div class="pills" id="gl-m"><button data-m="1" class="${o.motion ? 'on' : ''}">Oyun / video<small>Akıcılık öncelikli</small></button><button data-m="0" class="${o.motion ? '' : 'on'}">Metin / kod<small>Netlik öncelikli</small></button></div>
           <label class="chk" style="margin-top:8px"><input type="checkbox" id="gl-a" ${o.audio ? 'checked' : ''}><span>Bilgisayar sesini de paylaş<small>Oyun ve video sesi yayına eklenir</small></span></label></div>
       </div>
-      <div class="gl-foot"><div><b>${o.motion ? 'Oyun' : 'Metin'}</b><small>${q[4]} · ${q[5].replace(/^1440p /, '')}${o.audio ? ' · Sesli' : ''}</small></div>
+      <div class="gl-foot"><div><b>${o.motion ? 'Oyun' : 'Metin'}</b><small>${q[4]} · ${q[5]}${o.audio ? ' · Sesli' : ''}</small></div>
         <button class="gl-gear ${gear ? 'on' : ''}" id="gl-gear" title="Yayın ayarları" aria-label="Yayın ayarları">${ic('gear')}</button><button class="gl-x" id="mx" title="Kapat" aria-label="Kapat">${ic('x')}</button></div>`, 'golive');
     $('#mx').onclick = closeModal;
     $('#modal-box').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; draw(); });
@@ -14751,7 +14762,8 @@ async function showGoLive() {
     if ($('#gl-go')) $('#gl-go').onclick = () => start(null);
     if ($('#gl-upd')) $('#gl-upd').onclick = () => window.kankaDesktop.installUpdate?.();
     $('#gl-gear').onclick = () => { gear = !gear; draw(); };
-    $('#gl-q').onclick = e => { const b = e.target.closest('[data-q]'); if (b) { o.q = b.dataset.q; draw(); } };
+    $('#gl-r').onclick = e => { const b = e.target.closest('[data-r]'); if (b) { o.q = b.dataset.r + goSplit(o.q)[1]; draw(); } };
+    $('#gl-f').onclick = e => { const b = e.target.closest('[data-f]'); if (b) { o.q = goSplit(o.q)[0] + b.dataset.f; draw(); } };
     $('#gl-m').onclick = e => { const b = e.target.closest('[data-m]'); if (b) { o.motion = b.dataset.m === '1'; draw(); } };
     $('#gl-a').onchange = e => { o.audio = e.target.checked; draw(); };
   };
@@ -15263,7 +15275,7 @@ function renderStage() {
     el.querySelector('.tav').innerHTML = av(t.name);
     el.querySelector('.tname').innerHTML = styledNameHTML(dn(t.name), S.users[t.name]?.nameStyle) + (t.sid === 'me' ? ' <small style="opacity:.75;font-weight:700">(sen)</small>' : '');
     const viewers = t.sid === 'me' ? watchers.size : t.m?.viewers || 0, q = GO_Q[t.sid === 'me' ? goCur?.q : t.m?.q];
-    el.querySelector('.tbadge').innerHTML = live ? `<span class="red">${ic('live')}CANLI</span><span title="İzleyen">${ic('eye')}${viewers}</span>${q && t.sid !== watching ? `<span>${q[4]} · ${q[5].replace(/^1440p /, '')}</span>` : ''}${t.sid === watching ? '<span class="fpsx" hidden></span>' : ''}${t.sid === 'me' ? '<span class="sendq" hidden></span>' : ''}` : '';
+    el.querySelector('.tbadge').innerHTML = live ? `<span class="red">${ic('live')}CANLI</span><span title="İzleyen">${ic('eye')}${viewers}</span>${q && t.sid !== watching ? `<span>${q[4]} · ${q[5]}</span>` : ''}${t.sid === watching ? '<span class="fpsx" hidden></span>' : ''}${t.sid === 'me' ? '<span class="sendq" hidden></span>' : ''}` : '';
     const ov = el.querySelector('.live-ov');
     ov.hidden = !(live && t.sid !== 'me' && watching !== t.sid);
     if (!ov.hidden) { ov.innerHTML = `${ic('live')}<b>${esc(t.name)} yayında</b><button>Yayını izle</button>`; ov.querySelector('button').onclick = e => { e.stopPropagation(); watchStream(t.sid); }; }
@@ -15292,7 +15304,9 @@ function renderStage() {
     const f = st.querySelector('.tile[data-sid="me"] .sendq');
     const pcs = [...watchers].map(w => peers[w]).filter(Boolean); if (!pcs.length) { if (f) f.hidden = true; return; }
     let worst = null;
-    for (const pc of pcs) { const x = await sendInfo(pc); if (!x) continue; adaptSend(pc, x); if (!worst || x.h < worst.h || (x.h === worst.h && x.mbps < worst.mbps)) worst = x; }
+    const xs = []; for (const pc of pcs) { const x = await sendInfo(pc); if (x) xs.push([pc, x]); }
+    const all = { loss: Math.max(0, ...xs.map(([, x]) => x.loss)) };
+    for (const [pc, x] of xs) { adaptSend(pc, x, all); if (!worst || x.h < worst.h || (x.h === worst.h && x.mbps < worst.mbps)) worst = x; }
     if (!worst || !f) return;
     const why = { cpu: 'işlemci yetmiyor', bandwidth: 'internet yükleme hızı yetmiyor' }[worst.lim] || (worst.loss > 3 ? 'bağlantıda kayıp var' : '');
     f.hidden = false; f.className = 'sendq' + (why ? ' warn' : '');
@@ -18692,6 +18706,22 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (saveGu
   bindSplit($('#sp-side'), 'side');
   bindSplit($('#sp-mem'), 'mem');
 })();
+
+// ---- Dokunmatikte basılan düğme kaybolmasın ----
+// Parmak ekrandayken (ör. çevrimiçi durumu ya da ses odası değişince) liste yeniden çizilirse, altındaki düğme yenisiyle
+// değişir ve dokunuş "basmamış" gibi kaybolur. Parmak kalkıp tıklama işlenene kadar bu çizimleri biraz erteliyoruz.
+if (isTouch) {
+  let down = false, upAt = 0, flushT = 0; const q = new Map();
+  const busy = () => down || (upAt && performance.now() - upAt < 400);
+  const flush = () => { clearTimeout(flushT); upAt = 0; if (down || !q.size) return; const fns = [...q.values()]; q.clear(); for (const f of fns) try { f(); } catch (e) { console.warn(e); } };
+  addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' && e.isPrimary) { down = true; upAt = 0; } }, true);
+  const up = e => { if (e.pointerType === 'mouse' || !e.isPrimary) return; down = false; upAt = performance.now(); clearTimeout(flushT); flushT = setTimeout(flush, 420); };
+  addEventListener('pointerup', up, true); addEventListener('pointercancel', up, true);
+  addEventListener('click', () => { if (!down) { upAt = 0; setTimeout(flush, 0); } }, true); // tıklama geldi: işleyicisi kendi çizimini hemen yapabilir, bekleyenler hemen ardından
+  const wrap = (name, fn) => function (...a) { if (busy()) { q.set(name, () => fn.apply(this, a)); return; } return fn.apply(this, a); };
+  renderSide = wrap('side', renderSide); renderDMSide = wrap('dmside', renderDMSide); renderRail = wrap('rail', renderRail);
+  renderMembers = wrap('members', renderMembers); renderCallBar = wrap('callbar', renderCallBar); renderInbox = wrap('inbox', renderInbox);
+}
 </script>
 </body>
 </html>
