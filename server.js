@@ -209,9 +209,9 @@ app.get('/.well-known/assetlinks.json', (req, res) => { const fp = String(proces
 app.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (req, res) => { const team = String(process.env.IOS_TEAM_ID || npCfg.apns?.teamId || '').trim(); if (!team) return res.status(404).end(); // Team ID: ortam değişkeni ya da Yönetim › Mobil bildirimler'deki APNs ayarı
   res.type('application/json').send(JSON.stringify({ applinks: { details: [{ appIDs: [`${team}.${process.env.IOS_BUNDLE || npCfg.apns?.bundle || 'com.kanka.chat'}`], components: ['/davet/*', '/s/*', '/app*', '/bot-ekle/*'].map(p => ({ '/': p })) }] } })); });
 app.get('/davet/:code', (req, res) => res.redirect('/app?davet=' + encodeURIComponent(req.params.code)));
-// Özel davet linki (Discord'daki discord.gg/isim gibi): kankahq.com/isim. Eski kankahq.com/s/isim de çalışmaya devam eder.
+// Özel davet linki (Discord'daki discord.gg/isim gibi): kankahq.com/isim.
 const vanityOf = slug => db.servers.find(x => x.vanity && x.vanity === String(slug || '').toLowerCase() && vanityOk(x));
-app.get('/s/:slug', (req, res) => { const s = vanityOf(req.params.slug); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/'); });
+app.get('/s/:slug', (req, res) => res.redirect(301, '/' + encodeURIComponent(String(req.params.slug).toLowerCase()))); // eski biçim: önceden paylaşılan linkler kırılmasın, yeni adrese taşınır
 // Kökteki isim sitedeki bir sayfa ya da dosyayla çakışmasın: genel klasör içeriği + kayıtlı yolların ilk parçası
 const PUBLIC_DIR = path.join(__dirname, 'public');
 function slugTaken(slug) {
@@ -1710,7 +1710,7 @@ const EP1 = { chIcon: true, chColor: true, roleEmoji: true }, EP2 = { ...EP1, th
 const ENERGY_PERKS = [null,
   { emoji: 50, sb: 10, ...EP1, items: ['+50 özel emoji yeri', '+10 ses paneli yeri', 'Sunucu listesinde Energy rozeti', 'Oda simgeleri (emoji)', 'Oda adı rengi', 'Rollere özel emoji simgesi'] },
   { emoji: 100, sb: 20, studio: true, ...EP2, items: ['+100 özel emoji yeri', '+20 ses paneli yeri', 'Stüdyo ses kalitesi (256 kbps)', 'Sunucu renk teması', 'Oda adı yazı tipi', 'Rol renk geçişi ve yazı tipi'] },
-  { emoji: 150, sb: 30, studio: true, vanity: true, ...EP3, items: ['+150 özel emoji yeri', '+30 ses paneli yeri', 'Özel davet linki (kankahq.com/s/…)', 'Sohbet arka plan fotoğrafı'] }];
+  { emoji: 150, sb: 30, studio: true, vanity: true, ...EP3, items: ['+150 özel emoji yeri', '+30 ses paneli yeri', 'Özel davet linki (kankahq.com/…)', 'Sohbet arka plan fotoğrafı'] }];
 const PERK_KEYS = ['chIcon', 'chColor', 'chFont', 'theme', 'chatBg', 'roleGrad', 'roleFont', 'roleEmoji'];
 const PERK_LV = Object.fromEntries(PERK_KEYS.map(k => [k, ENERGY_PERKS.findIndex(p => p?.[k])]));
 const perkOn = (s, k) => !!energyPerk(s, k) || isStar(s) || s?.id === 's1'; // Yıldız sunucular ve Kanka HQ hepsini kullanır
@@ -7448,7 +7448,7 @@ io.on('connection', socket => {
     for (const code of codes.slice(0, 10)) {
       if (typeof code !== 'string' || code.length > 40) continue;
       if (blockedUntil('u:' + me) || blockedUntil('ip:' + ip) || limited('peek|' + me, 120, 600e3)) { out[code] = null; continue; }
-      const vs = /^s:([a-z0-9-]{2,40})$/.exec(code); // özel link: kankahq.com/s/isim
+      const vs = /^s:([a-z0-9-]{2,40})$/.exec(code); // özel link: kankahq.com/isim
       const sv = vs ? db.servers.find(x => x.vanity === vs[1] && vanityOk(x)) : findInvite(code)?.s;
       if (!vs) { inviteGuard('u:' + me, !!sv); inviteGuard('ip:' + ip, !!sv); } // özel link aramaları (kankahq.com/isim) tahmin sayılmaz
       if (!sv || sv.bans?.[me]) { out[code] = null; continue; }

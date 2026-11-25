@@ -9678,7 +9678,7 @@ const whenTxt = t => { const d = new Date(t), n = new Date(), y = new Date(n - 8
 // ---- Davet kartı: mesajdaki /davet/kod linki sunucu kartı olarak görünür, tek tıkla katılınır ----
 const INV_RE = /(?:https?:\/\/[^\s/]+)?\/davet\/([A-Za-z0-9]{6,16})\b|[?&]davet=([A-Za-z0-9]{6,16})\b/g;
 const invCodes = t => [...new Set([...String(t || '').matchAll(INV_RE)].map(x => x[1] || x[2]))].slice(0, 3);
-// Profildeki davet linkleri (özel /s/isim linkleri dahil) katıl kartı olarak görünür
+// Profildeki davet linkleri (kankahq.com/isim özel linkleri dahil) katıl kartı olarak görünür
 const VAN_RE = /(?:https?:\/\/)?(?:www\.)?kankahq\.com\/(?:s\/)?([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(?![\w./?#-])/gi;
 // Sitedeki sayfalar özel link sayılmaz (kankahq.com/gizlilik gibi)
 const SITE_PATHS = new Set(['app', 'davet', 'gizlilik', 'kosullar', 'destek', 'hesap-silme', 'hesap-sil', 'gelistirici', 'beta', 'indir', 'uploads', 'api', 'sesli-sohbet', 'guvenli', 'bot-ekle', 'marka', 'sdk', 'vendor', 'arena', 'avatar', 'effects', 'ses-paneli', 'index', 'manifest', 'sw', 'logo', 'favicon', 'legal']);
