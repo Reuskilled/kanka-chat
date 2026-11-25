@@ -11676,15 +11676,19 @@ function renderMe() {
 function setPresence(list) {
   const pairs = (list || []).map(x => Array.isArray(x) ? x : [x, 'online']);
   S.status = new Map(pairs); S.online = new Set(pairs.map(p => p[0])); S.dev = new Map(pairs.filter(p => p[2]).map(p => [p[0], p[2]]));
+  presMap = new Map(pairs.map(p => [p[0], p]));
   if (S.me && S.myStatus === 'invisible') S.online.add(S.me);
 }
-let presSig = '';
-socket.on('presence', list => {
+let presSig = '', presMap = new Map();
+// Sunucu artık sadece durumu değişenleri gönderiyor
+socket.on('presenceDiff', ({ set = [], del = [] } = {}) => { for (const p of set) presMap.set(p[0], p); for (const n of del) presMap.delete(n); presenceApply([...presMap.values()]); });
+socket.on('presence', list => presenceApply(list));
+function presenceApply(list) {
   const sig = JSON.stringify(list); if (sig === presSig && S.me) return; presSig = sig; // aynı durum tekrar geldiyse hiçbir şeyi yeniden çizme
   setPresence(list); renderMembers(); if (S.me) renderMe();
   if (S.view === 'dm' && !S.channel) showFriends();
   if (S.view === 'dm') { renderDMSide(); if (S.channel?.with) $('#subtitle').textContent = S.online.has(S.channel.with) ? stLabel(S.channel.with) : 'Çevrimdışı'; }
-});
+}
 let usersT, lastVoiceUsersSig = '';
 const voiceUsersSig = () => {
   const names = new Set();

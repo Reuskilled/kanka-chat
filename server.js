@@ -2624,7 +2624,12 @@ function voiceAges() {
 const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.startsWith('call:')).map(([k, m]) => [k, [...new Set(m.values())]]));
 // Durum listesi: kısa sürede gelen değişiklikler tek gönderimde toplanır, değişmediyse hiç gönderilmez
 let presT = null, lastPres = '';
-const pushPresence = () => { if (presT) return; presT = setTimeout(() => { presT = null; const l = presenceList(), j = JSON.stringify(l); if (j === lastPres) return; lastPres = j; io.emit('presence', l); }, 400); };
+// Yeni istemcilere tüm liste değil sadece değişenler gider (presenceDiff: { set: [[ad, durum, 'm'?]], del: [ad] }); eski istemciler tüm listeyi alır
+let presMap = new Map();
+const pushPresence = () => { if (presT) return; presT = setTimeout(() => { presT = null; const l = presenceList(), j = JSON.stringify(l); if (j === lastPres) return; lastPres = j;
+  const m = new Map(l.map(e => [e[0], JSON.stringify(e)])), set = l.filter(e => presMap.get(e[0]) !== m.get(e[0])), del = [...presMap.keys()].filter(n => !m.has(n)); presMap = m;
+  if (set.length || del.length) io.to('up2').emit('presenceDiff', { set, del });
+  if (io.sockets.sockets.size > (io.sockets.adapter.rooms.get('up2')?.size || 0)) io.except('up2').emit('presence', l); }, 400); };
 // Kullanıcı bilgileri: herkese tüm liste yerine sadece değişen kişiler gider (1,5 sn'de bir toplanır). Eski istemciler tüm listeyi almaya devam eder.
 const usersCache = new Map(); let usersT = null;
 function pushUsers() { if (!usersT) usersT = setTimeout(flushUsers, 1500); }
