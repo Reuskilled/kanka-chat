@@ -354,7 +354,7 @@
 
   <div class="card">
     <h1>Kanka için bot yaz</h1>
-    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.4, kanka.py 1.4</div>
+    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.5, kanka.py 1.5</div>
     <a class="comm-cta" href="/gelistirici-topluluk"><b>💬 Kanka Geliştiriciler sunucusu</b><span>Soru sor, API duyurularını takip et, botunu tanıt. Katıl →</span></a>
 
     <!-- ===== CANLI İNTERAKTİF BOT PLAYGROUND ===== -->
@@ -410,7 +410,7 @@
         <li>Botunun yaptığından sen sorumlusun. Bot üzerinden para toplamak, premium satmak ve bahis/çekiliş yasak. Ayrıntılar: <a href="/kosullar">Kullanım Şartları, bölüm 6</a>.</li>
       </ul>
     </div>
-    <div class="toc"><a href="#baslangic">1. Başlangıç</a><a href="#ekleme">Sunucuya ekletme</a><a href="#komutlar">2. Komutlar</a><a href="#bilesenler">3. Butonlar &amp; Menüler</a><a href="#kartlar">4. Kartlar</a><a href="#formlar">5. Formlar</a><a href="#olaylar">6. Olaylar</a><a href="#durum">Durum</a><a href="#kutuphane">Kütüphane rehberi</a><a href="#rest">7. REST API</a><a href="#gateway">8. Gateway</a><a href="#http">9. HTTP Etkileşimleri</a><a href="#sinirlar">10. Sınırlar</a></div>
+    <div class="toc"><a href="#baslangic">1. Başlangıç</a><a href="#ekleme">Sunucuya ekletme</a><a href="#komutlar">2. Komutlar</a><a href="#bilesenler">3. Butonlar &amp; Menüler</a><a href="#secici">Üye seçici</a><a href="#gizli">Gizli mesaj</a><a href="#yetki">Yetki kontrolü</a><a href="#kartlar">4. Kartlar</a><a href="#formlar">5. Formlar</a><a href="#olaylar">6. Olaylar</a><a href="#durum">Durum</a><a href="#kutuphane">Kütüphane rehberi</a><a href="#rest">7. REST API</a><a href="#gateway">8. Gateway</a><a href="#http">9. HTTP Etkileşimleri</a><a href="#sinirlar">10. Sınırlar</a></div>
 
     <h2 id="baslangic">1. Beş dakikada ilk bot</h2>
     <ol>
@@ -511,6 +511,24 @@ bot.komut('oylama', { aciklama: 'Hızlı oylama' }, k => k.cevapla({
 bot.buton(/^(evet|hayir)$/, e => e.guncelle(`${e.kullanici.gorunenAd}: ${e.veri.id}`)); // mesajı yerinde değiştirir
 bot.secim('oyun', e => e.cevapla({ icerik: `Seçtiğin: ${e.degerler[0]}`, gizli: true }));</pre>
 
+    <h3 id="secici">Üye, rol ve oda seçici</h3>
+    <p>İsim yazdırmak yerine kullanıcıya listeden seçtir: kişi sunucudaki üyeler arasında arar, tıklar. Yanlış yazılmış isim, olmayan kişi derdi yok. Liste Kanka'dan gelir, botun seçenek göndermesine gerek yok. Ticket, etkinlik ve rol botları için birebir.</p>
+<pre>const { KisiSecici, RolSecici, OdaSecici } = require('./kanka.js');
+k.cevapla({ icerik: 'Bilete kimi ekleyelim?', bilesenler: [[KisiSecici('ekle', { max: 3, yerTutucu: 'Üye ara…' })]] });
+bot.secim('ekle', async e => {
+  for (const u of e.secilenler.kullanicilar) await bot.odaIzni(e.oda, u.ad, { view: true, send: true });
+  e.cevapla({ icerik: `${e.degerler.join(', ')} bilete eklendi`, gizli: true });
+});
+// RolSecici('rol') → e.secilenler.roller · OdaSecici('oda', { odaTuru: 'voice' }) → e.secilenler.odalar</pre>
+    <p>Seçilen değerler <code>e.degerler</code>'de (kişi adı, rol id'si, oda id'si), tam bilgileri <code>e.secilenler</code>'de gelir (üyenin rolleri, izinleri, Energy'si). Kanka seçimi kendisi doğrular: sunucuda olmayan biri seçilemez. Formlarda da kullanılır: alan <code>tur: 'kisi'</code> (ya da <code>'rol'</code>, <code>'oda'</code>) olunca formda arama kutusu çıkar, sonucu <code>e.secilenler.alanId</code>.</p>
+
+    <h3 id="gizli">Sadece bir kişinin gördüğü mesaj</h3>
+    <p><code>e.gizliCevapla()</code> 15 dakika sonra kaybolur. Kalıcı olsun istersen (ticket paneli, kişiye özel bilgi): <code>e.kaliciGizliCevapla(icerik)</code> ya da etkileşim olmadan <code>bot.ozelGonder(oda, 'ali', icerik)</code>. Mesaj odada sadece o kişiye görünür, sayfa yenilense de kalır; kişi "Kapat" diyene ya da bot <code>bot.ozelSil(oda, id)</code> diyene kadar durur. Üzerindeki butonlar ve seçiciler çalışır. Bir odada kişi başı en çok 30 tane tutulur, eskisi silinir.</p>
+
+    <h3 id="yetki">Kişinin yetkisini kontrol etme</h3>
+    <p>Etkileşimde basan kişinin sunucu yetkileri zaten gelir: <code>e.yetkisiVar('manageMessages')</code> (yönetici ve sahip her zaman evet). Etkileşim dışında: <code>await bot.yetkisiVar(sunucu, 'ali', 'kick')</code>, odaya özel izin için <code>await bot.yetkisiVar(sunucu, 'ali', 'send', oda)</code>. Ayrıntılı hâli <code>bot.yetkiler(sunucu, 'ali', oda)</code>: <code>{ sahip, yonetici, izinler, roller, oda: { view, send, ... } }</code>. Rollerin izinleri <code>bot.roller(sunucu)</code>'da, botu sunucuya kimin eklediği <code>bot.sunucu(id).ekleyen</code>'de.</p>
+    <div class="note"><b>Bot "yetki doğrulanamadı" diyorsa:</b> bota ne yapacaksa o izni sunucuya eklerken vermek gerekir (ekleme linkindeki kutular) ve botun rolü, işlem yapacağı kişinin en yüksek rolünden <b>üstte</b> olmalı (Sunucu ayarları › Roller'de sürükle). <code>bot.yetkiler()</code> cevabındaki <code>botunUstunde: true</code> bu sorunu gösterir. Sunucu sahibine bot hiçbir şey yapamaz.</div>
+
     <h2 id="kartlar">4. Kartlar</h2>
 <pre>const { Kart } = require('./kanka.js');
 k.cevapla({ kartlar: [ new Kart().baslik('Sunucu durumu').aciklama('Her şey yolunda ✅').renk('#2f9e65')
@@ -529,9 +547,10 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
     <table><tr><th>Niyet</th><th>Gelen olaylar (kanka.js adı)</th></tr>
       <tr><td><code>mesajlar</code></td><td><code>mesaj</code>, <code>mesajDuzenlendi</code>, <code>mesajSilindi</code> (botun görebildiği odalarda)</td></tr>
       <tr><td><code>icerik</code></td><td>Yukarıdaki mesajların içeriği. Yoksa içerik sadece bot etiketlendiğinde ya da DM'de gelir.</td></tr>
-      <tr><td><code>uyeler</code></td><td><code>uyeKatildi</code>, <code>uyeAyrildi</code>, <code>uyeGuncellendi</code></td></tr>
+      <tr><td><code>uyeler</code></td><td><code>uyeKatildi</code>, <code>uyeAyrildi</code>, <code>uyeGuncellendi</code>, <code>energy</code> (biri sunucuya Energy gönderince ya da geri çekince: <code>{ uye, adet, tur: 'gonderildi' | 'geriCekildi', uyeninToplami, toplam, seviye }</code>)</td></tr>
       <tr><td><code>tepkiler</code></td><td><code>tepki</code>, <code>tepkiKaldirildi</code></td></tr>
       <tr><td><code>dm</code></td><td>Bota yazılan özel mesajlar</td></tr>
+      <tr><td><code>ses</code></td><td><code>sesDurumu</code>: sesli odalara giren/çıkan, mikrofonu kapatan biri olunca o sunucunun güncel ses durumu</td></tr>
       <tr><td>(her zaman)</td><td><code>hazir</code>, <code>sunucuyaEklendi</code>, <code>sunucudanCikarildi</code>, komut ve bileşen etkileşimleri</td></tr></table>
     <div class="note">Doğrulanmamış botlar <code>icerik</code> niyetini serbestçe kullanabilir. Doğrulanan botlar için mesaj içeriği izni doğrulama sırasında ayrıca verilir.</div>
     <p>Ek olaylar: <code>etkilesim</code> (her komut/buton/seçim/form), <code>durum</code> (durum değişince), <code>koptu</code> ve <code>devam</code> (bağlantı), <code>uyari</code> ve <code>hata</code>. Python'da adlar alt çizgili: <code>@bot.olay("uye_katildi")</code>.</p>
@@ -560,7 +579,7 @@ print(await bot.durumu_getir())</pre>
     <p>Etkinlik türleri: <code>oynuyor</code>, <code>dinliyor</code>, <code>izliyor</code>, <code>yayinda</code> (ya da <code>yayın</code>, <code>canlı</code>), <code>yarisiyor</code>, <code>ozel</code> (önüne bir şey eklenmez). Bilinmeyen tür artık hata verir. Yazı en fazla 80 karakter; durum dakikada en fazla 10 kez değişir. Durum ve yazı, bot ağ geçidine bağlıyken görünür; bağlı değilken bot çevrimdışı görünür.</p>
     <p>Kütüphane kullanmıyorsan: <code>PATCH /api/v1/ben/durum</code> ile <code>{ "durum": "bosta", "aktivite": { "tur": "izliyor", "ad": "YouTube" } }</code>, ya da ağ geçidinde <code>{ "op": 3, "d": { ... } }</code> gönder (cevap olarak <code>DURUM_GUNCELLENDI</code> gelir). Tanıtırken (<code>op 2</code>) <code>d.durum</code> da verebilirsin. Discord'daki <code>{ status: 'dnd', activities: [{ name, type }] }</code> biçimi de kabul edilir.</p>
 
-    <h2 id="kutuphane">Kütüphane rehberi (kanka.js / kanka.py 1.4)</h2>
+    <h2 id="kutuphane">Kütüphane rehberi (kanka.js / kanka.py 1.5)</h2>
     <p>Python'da adlar alt çizgilidir (<code>bot.topluSil</code> → <code>bot.toplu_sil</code>) ve hepsi <code>await</code> ile çağrılır.</p>
     <table><tr><th>Ne</th><th>Nasıl (kanka.js)</th></tr>
       <tr><td>Mesaj gönder / DM</td><td><code>bot.gonder(oda, 'selam')</code>, <code>bot.gonder(oda, new Kart().baslik('...'))</code>, <code>bot.dm('ahmet', '...')</code></td></tr>
@@ -598,8 +617,16 @@ bot.komut('temizle', { aciklama: 'Son mesajları sil', secenekler: [{ ad: 'adet'
     <p>Adres: <code>https://kankahq.com/api/v1</code> · Başlık: <code>Authorization: Bot &lt;token&gt;</code> · Gövde JSON. Hata olursa <code>{ "hata": "..." }</code> döner. Alışık olduğun adlar da kabul edilir: <code>content</code>, <code>embeds</code>, <code>components</code>.</p>
     <table><tr><th>Uç nokta</th><th>Ne yapar</th></tr>
       <tr><td><code>GET /ben</code></td><td>Botun bilgisi, erişim (kaç kişi), doğrulama durumu</td></tr>
-      <tr><td><code>GET /sunucular</code>, <code>GET /sunucular/:id</code></td><td>Sunucular, odalar, roller, botun izinleri</td></tr>
-      <tr><td><code>GET /sunucular/:id/uyeler[/:ad]</code></td><td>Üyeler</td></tr>
+      <tr><td><code>GET /sunucular</code>, <code>GET /sunucular/:id</code></td><td>Sunucular (id'leri dahil), odalar ve izin ayarları, roller ve izinleri, botun izinleri, botu kimin eklediği (<code>ekleyen</code>), Energy seviyesi</td></tr>
+      <tr><td><code>GET /sunucular/:id/uyeler[/:ad]</code></td><td>Üyeler (rolleri, izinleri, sahip mi, Energy'si, hangi sesli odada)</td></tr>
+      <tr><td><code>GET /sunucular/:id/uyeler?ara=ahm&amp;limit=25</code></td><td>Üye ara (ad ya da görünen ad)</td></tr>
+      <tr><td><code>GET /sunucular/:id/uyeler/:ad/izinler?oda=&lt;id&gt;</code></td><td>Kişinin yetkileri ve (oda verilirse) o odadaki izinleri</td></tr>
+      <tr><td><code>GET /sunucular/:id/roller</code></td><td>Roller ve her rolün izinleri</td></tr>
+      <tr><td><code>GET /sunucular/:id/energy</code></td><td>Energy (boost): <code>{ toplam, seviye, gonderenler: [{ ad, adet }] }</code>. Kendi "destekçi" rolünü vermek için</td></tr>
+      <tr><td><code>GET /sunucular/:id/ses</code></td><td>Sesli odalarda kim var, mikrofon/kulaklık/kamera durumu</td></tr>
+      <tr><td><code>POST /sunucular/:id/uyeler/:ad/ses</code></td><td><code>{ islem: 'tasi' | 'cikar' | 'sustur' | 'ac', oda }</code>: sesteki kişiyi taşı / çıkar / sustur (<code>voiceMove</code> / <code>voiceMute</code>)</td></tr>
+      <tr><td><code>PUT</code> / <code>DELETE /odalar/:id/izinler/:hedef</code></td><td>Oda izni (gizli oda, ticket): hedef <code>herkes</code>, rol id'si ya da kişi; gövde <code>{ view: true, send: false, ... }</code> (null: devral). <code>manageChannels</code> gerekir</td></tr>
+      <tr><td><code>POST /odalar/:id/ozel-mesajlar</code>, <code>PATCH</code> / <code>DELETE .../:mid</code></td><td>Kalıcı gizli mesaj: <code>{ kisi, icerik, kartlar, bilesenler }</code>, odada sadece o kişi görür</td></tr>
       <tr><td><code>GET /odalar/:id/mesajlar?limit=50&amp;once=&lt;id&gt;</code></td><td>Mesaj geçmişi</td></tr>
       <tr><td><code>POST /odalar/:id/mesajlar</code></td><td>Mesaj gönder: <code>{ icerik, kartlar, bilesenler, yanit }</code></td></tr>
       <tr><td><code>PATCH</code> / <code>DELETE /odalar/:id/mesajlar/:mid</code></td><td>Düzenle / sil (başkasınınkini silmek için "Mesajları yönet")</td></tr>

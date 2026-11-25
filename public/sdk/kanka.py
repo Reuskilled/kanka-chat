@@ -15,7 +15,7 @@ import asyncio, time, random, hashlib, hmac, json, re
 from urllib.parse import quote
 import aiohttp
 
-SURUM = "1.4.1"
+SURUM = "1.5.0"
 
 
 class KankaHata(Exception):
@@ -39,6 +39,20 @@ def Buton(id, etiket, stil="ana", emoji=None, kapali=False):
 
 def LinkButon(url, etiket):
     return {"tur": "buton", "stil": "link", "url": url, "etiket": etiket}
+
+
+def KisiSecici(id, yer_tutucu="Üye ara…", min=1, max=1):
+    """Üye seçici: kullanıcı sunucudaki üyeler arasında arayıp seçer"""
+    return {"tur": "kisi", "id": id, "yerTutucu": yer_tutucu, "min": min, "max": max}
+
+
+def RolSecici(id, yer_tutucu="Rol seç…", min=1, max=1):
+    return {"tur": "rol", "id": id, "yerTutucu": yer_tutucu, "min": min, "max": max}
+
+
+def OdaSecici(id, yer_tutucu="Oda seç…", min=1, max=1, oda_turu=None):
+    """oda_turu: text | voice | stage | forum"""
+    return {"tur": "oda", "id": id, "yerTutucu": yer_tutucu, "min": min, "max": max, **({"odaTuru": oda_turu} if oda_turu else {})}
 
 
 def Secim(id, secenekler, yer_tutucu="Bir seçenek seç", min=1, max=1):
@@ -115,15 +129,22 @@ class Etkilesim(dict):
     @property
     def alanlar(self): return (self.get("veri") or {}).get("alanlar", {})
     @property
+    def secilenler(self):
+        """Kişi/rol/oda seçicide ve formlarda seçilenlerin bilgisi"""
+        return (self.get("veri") or {}).get("cozulmus", {})
+    def yetkisi_var(self, izin):
+        """Butona basan / komutu kullanan kişinin yetkisi var mı? (yönetici her zaman evet)"""
+        iz = (self.get("kullanici") or {}).get("izinler", []); return "administrator" in iz or izin in iz
+    @property
     def kullanici(self): return self["kullanici"]
     async def _istek(self, yontem, yol, veri):
         async with self._bot._oturum.request(yontem, f"{self._bot.adres}/api/v1/etkilesim/{self['id']}/{self['token']}{yol}", json=veri) as r:
             j = await r.json(content_type=None)
             if r.status >= 400: raise KankaHata((j or {}).get("hata", f"HTTP {r.status}"), r.status, j)
             return j
-    async def cevapla(self, icerik, gizli=False):
-        """3 saniye içinde cevap ver. gizli=True ise sadece komutu kullanan görür."""
-        self.cevaplandi = True; return await self._istek("POST", "/cevap", {"tur": "mesaj", **_govde(icerik), **({"gizli": True} if gizli else {})})
+    async def cevapla(self, icerik, gizli=False, kalici=False):
+        """3 saniye içinde cevap ver. gizli=True ise sadece komutu kullanan görür; kalici=True ise o gizli mesaj 15 dakikada kaybolmaz."""
+        self.cevaplandi = True; return await self._istek("POST", "/cevap", {"tur": "mesaj", **_govde(icerik), **({"gizli": True} if gizli else {}), **({"kalici": True} if kalici else {})})
     async def bekle(self, gizli=False):
         """Uzun işler için: önce 'düşünüyor…', sonra duzenle() ile bitir (15 dakika)."""
         self.cevaplandi = True; return await self._istek("POST", "/cevap", {"tur": "bekle", "gizli": gizli})
@@ -248,6 +269,30 @@ class Bot:
         if kisi: g["kisi"] = kisi
         return (await self.api("POST", f"/odalar/{oda}/mesajlar/toplu-sil", g))["silinen"]
     async def uyeler(self, sunucu): return (await self.api("GET", f"/sunucular/{sunucu}/uyeler"))["uyeler"]
+    async def uye_ara(self, sunucu, ara, limit=25): return (await self.api("GET", f"/sunucular/{sunucu}/uyeler?ara={quote(str(ara))}&limit={limit}"))["uyeler"]
+    async def yetkiler(self, sunucu, kisi, oda=None):
+        """{ sahip, yonetici, izinler: [...], oda: { view, send, ... } }"""
+        return await self.api("GET", f"/sunucular/{sunucu}/uyeler/{quote(str(kisi))}/izinler" + (f"?oda={quote(str(oda))}" if oda else ""))
+    async def yetkisi_var(self, sunucu, kisi, izin, oda=None):
+        y = await self.yetkiler(sunucu, kisi, oda)
+        if oda and izin in (y.get("oda") or {}): return bool(y["oda"][izin])
+        return y["sahip"] or y["yonetici"] or izin in y["izinler"]
+    async def roller(self, sunucu): return (await self.api("GET", f"/sunucular/{sunucu}/roller"))["roller"]
+    async def energy(self, sunucu):
+        """Energy (boost): { toplam, seviye, gonderenler: [{ ad, adet }] }"""
+        return await self.api("GET", f"/sunucular/{sunucu}/energy")
+    async def ses(self, sunucu): return (await self.api("GET", f"/sunucular/{sunucu}/ses"))["odalar"]
+    async def ses_islem(self, sunucu, kisi, islem, oda=None):
+        """islem: tasi (oda gerekir) | cikar | sustur | ac"""
+        return await self.api("POST", f"/sunucular/{sunucu}/uyeler/{quote(str(kisi))}/ses", {"islem": islem, **({"oda": oda} if oda else {})})
+    async def oda_izni(self, oda, hedef, izinler):
+        """hedef: "herkes" | rol id'si | kişi adı. izinler: {"view": True, "send": False} (None = devral)"""
+        return await self.api("PUT", f"/odalar/{oda}/izinler/{quote(str(hedef))}", izinler)
+    async def oda_izni_kaldir(self, oda, hedef): return await self.api("DELETE", f"/odalar/{oda}/izinler/{quote(str(hedef))}")
+    async def ozel_gonder(self, oda, kisi, icerik):
+        """Kalıcı gizli mesaj: odada sadece kisi görür"""
+        return await self.api("POST", f"/odalar/{oda}/ozel-mesajlar", {**_govde(icerik), "kisi": kisi})
+    async def ozel_sil(self, oda, mesaj): return await self.api("DELETE", f"/odalar/{oda}/ozel-mesajlar/{mesaj}")
     async def dm(self, kullanici, icerik):
         return Mesaj(self, (await self.api("POST", f"/kullanicilar/{quote(str(kullanici))}/dm", _govde(icerik)))["mesaj"])
     async def rol_ver(self, sunucu, kisi, rol): return await self.api("PUT", f"/sunucular/{sunucu}/uyeler/{kisi}/roller/{rol}")
@@ -381,7 +426,7 @@ class Bot:
         if t == "HAZIR":
             self._oturum_id = d["oturum"]; self.ben = d["bot"]; self.sunucular = {s["id"]: s for s in d["sunucular"]}
             return await self._yay("hazir")
-        adlar = {"MESAJ_DUZENLENDI": "mesaj_duzenlendi", "MESAJ_SILINDI": "mesaj_silindi", "TEPKI_EKLENDI": "tepki", "TEPKI_KALDIRILDI": "tepki_kaldirildi", "SUNUCUYA_EKLENDI": "sunucuya_eklendi", "SUNUCUDAN_CIKARILDI": "sunucudan_cikarildi", "ODA_OLUSTU": "oda_olustu", "ODA_GUNCELLENDI": "oda_guncellendi", "ODA_SILINDI": "oda_silindi"}
+        adlar = {"MESAJ_DUZENLENDI": "mesaj_duzenlendi", "MESAJ_SILINDI": "mesaj_silindi", "TEPKI_EKLENDI": "tepki", "TEPKI_KALDIRILDI": "tepki_kaldirildi", "SUNUCUYA_EKLENDI": "sunucuya_eklendi", "SUNUCUDAN_CIKARILDI": "sunucudan_cikarildi", "ODA_OLUSTU": "oda_olustu", "ODA_GUNCELLENDI": "oda_guncellendi", "ODA_SILINDI": "oda_silindi", "SES_DURUMU": "ses_durumu", "ENERGY_GONDERILDI": "energy_gonderildi", "ENERGY_GERI_CEKILDI": "energy_geri_cekildi"}
         if t == "MESAJ_GELDI":
             if d.get("yazar") and self.ben and d["yazar"]["ad"] == self.ben["ad"]: return
             m = Mesaj(self, d)

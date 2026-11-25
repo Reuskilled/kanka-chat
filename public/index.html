@@ -626,6 +626,14 @@
   .abtn.ana { background: #6f78ff; color: #fff; } .abtn.ikincil, .abtn.link { background: var(--hover); color: var(--ink); } .abtn.basari { background: #2f9e65; color: #fff; } .abtn.tehlike { background: #d6453d; color: #fff; }
   .abtn.link .ic { width: 14px; height: 14px; } .abtn .ab-e { font-size: 16px; } .abtn.busy, .asel.busy, .amulti.busy { opacity: .6; pointer-events: none; }
   .asel { max-width: 420px; width: 100%; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-size: 14px; }
+  .apick { display: grid; gap: 6px; max-width: 420px; width: 100%; } .apick.busy { opacity: .6; pointer-events: none; }
+  .apick .ap-in { max-width: none; } .ap-chips { display: flex; flex-wrap: wrap; gap: 5px; } .ap-chips:empty { display: none; }
+  .ap-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 6px 3px 4px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); font-size: 13px; font-weight: 700; border: 0; font-family: inherit; cursor: pointer; }
+  .ap-chip .av { width: 20px; height: 20px; font-size: 9px; } .ap-chip .x { opacity: .6; font-weight: 900; padding: 0 2px; }
+  .ap-list { max-height: 232px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: 4px; }
+  .ap-it { display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 8px; border: 0; border-radius: 7px; background: none; color: var(--ink); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+  .ap-it:hover, .ap-it.on { background: var(--accent-soft); } .ap-it .av { width: 26px; height: 26px; font-size: 11px; flex-shrink: 0; } .ap-it small { color: var(--muted); font-size: 12px; margin-left: auto; white-space: nowrap; }
+  .ap-it .rdot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; } .ap-empty { padding: 10px; color: var(--muted); font-size: 13px; }
   .amulti { display: grid; gap: 6px; max-width: 460px; padding: 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); } .amulti small { color: var(--muted); font-size: 12px; } .amulti small em { font-style: normal; }
   .amulti > div { display: flex; flex-wrap: wrap; gap: 6px; } .am-o { padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
   .am-o.on { background: #6f78ff; border-color: #6f78ff; color: #fff; } .amulti .am-go { justify-self: start; }
@@ -9170,10 +9178,54 @@ function embedHTML(e) {
 function compHTML(m, c) {
   const lab = `${c.emoji ? `<span class="ab-e">${esc(c.emoji)}</span>` : ''}${esc(c.etiket || '')}`;
   if (c.tur === 'buton') return c.stil === 'link' ? `<a class="abtn link" href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${lab}${ic('link')}</a>` : `<button type="button" class="abtn ${esc(c.stil)}" data-acomp="${esc(m.id)}" data-cid="${esc(c.id)}" ${c.kapali ? 'disabled' : ''}>${lab}</button>`;
+  if (['kisi', 'rol', 'oda'].includes(c.tur)) return pickHTML({ kind: c.tur, min: c.min, max: c.max, ot: c.odaTuru, ph: c.yerTutucu, off: c.kapali, attrs: `data-acomp="${esc(m.id)}" data-cid="${esc(c.id)}"` });
   if (c.tur === 'secim' && c.max <= 1) return `<select class="asel" data-acomp="${esc(m.id)}" data-cid="${esc(c.id)}" ${c.kapali ? 'disabled' : ''} aria-label="${esc(c.yerTutucu)}"><option value="" selected disabled>${esc(c.yerTutucu)}</option>${c.secenekler.map(o => `<option value="${esc(o.deger)}">${o.emoji ? esc(o.emoji) + ' ' : ''}${esc(o.etiket)}${o.aciklama ? ' · ' + esc(o.aciklama) : ''}</option>`).join('')}</select>`;
   if (c.tur === 'secim') return `<div class="amulti" data-acomp="${esc(m.id)}" data-cid="${esc(c.id)}" data-min="${c.min}" data-max="${c.max}"><small>${esc(c.yerTutucu)} <em>(${c.min === c.max ? c.max : `${c.min}-${c.max}`} seçim)</em></small><div>${c.secenekler.map(o => `<button type="button" class="am-o" data-v="${esc(o.deger)}" ${c.kapali ? 'disabled' : ''}>${o.emoji ? esc(o.emoji) + ' ' : ''}${esc(o.etiket)}</button>`).join('')}</div><button type="button" class="abtn ana am-go" ${c.kapali ? 'disabled' : ''}>Gönder</button></div>`;
   return '';
 }
+// Kişi / rol / oda seçici (bot bileşeni ve bot formu): sunucudaki listeden arayıp seç
+function pickHTML({ kind, min = 1, max = 1, ot = '', ph = '', off = false, attrs = '', name = '' }) {
+  return `<div class="apick" ${attrs} data-kind="${kind}" data-min="${min}" data-max="${max}" data-ot="${esc(ot || '')}"${name ? ` data-name="${esc(name)}"` : ''}><div class="ap-chips"></div><input class="asel ap-in" type="search" autocomplete="off" enterkeyhint="search" placeholder="${esc(ph || { kisi: 'Üye ara…', rol: 'Rol seç…', oda: 'Oda seç…' }[kind])}" ${off ? 'disabled' : ''}><div class="ap-list" hidden></div>${max > 1 && !name ? `<button type="button" class="abtn ana ap-go" ${off ? 'disabled' : ''}>Gönder${min ? '' : ''}</button>` : ''}</div>`;
+}
+function pickItems(kind, ot, q) {
+  q = (q || '').toLocaleLowerCase('tr').replace(/^[@#]/, '');
+  const has = (...xs) => !q || xs.some(x => String(x || '').toLocaleLowerCase('tr').includes(q));
+  if (kind === 'kisi') {
+    const list = S.view === 'server' ? (S.server?.members || []) : S.channel?.group ? (S.channel.members || []) : [S.channel?.with, S.me].filter(Boolean);
+    return list.filter(n => has(n, dn(n))).sort((a, b) => (dn(a).toLocaleLowerCase('tr').startsWith(q) ? 0 : 1) - (dn(b).toLocaleLowerCase('tr').startsWith(q) ? 0 : 1) || dn(a).localeCompare(dn(b), 'tr')).slice(0, 40)
+      .map(n => ({ v: n, html: `${av(n)}<span>${esc(dn(n))}</span>${dn(n) !== n ? `<small>@${esc(n)}</small>` : ''}`, chip: `${av(n)}${esc(dn(n))}` }));
+  }
+  if (S.view !== 'server' || !S.server) return [];
+  if (kind === 'rol') return (S.server.customRoles || []).filter(r => !r.managed && has(r.name)).slice(0, 60).map(r => ({ v: r.id, html: `<span class="rdot" style="background:${esc(r.color || '#99a')}"></span><span>${esc(r.name)}</span>`, chip: `<span class="rdot" style="background:${esc(r.color || '#99a')}"></span>@${esc(r.name)}` }));
+  return (S.server.channels || []).filter(c => (!ot || (c.type || 'text') === ot) && has(c.name)).slice(0, 60).map(c => ({ v: c.id, html: `${ic(voiceLikeC(c) ? 'mic' : 'hash')}<span>${esc(c.name)}</span>`, chip: `${voiceLikeC(c) ? '🔊' : '#'}${esc(c.name)}` }));
+}
+const voiceLikeC = c => c.type === 'voice' || c.type === 'stage';
+function pickSel(box) { return box._sel ||= new Map(); }
+function pickRender(box) {
+  const sel = pickSel(box), max = +box.dataset.max;
+  box.querySelector('.ap-chips').innerHTML = [...sel].map(([v, ch]) => `<button type="button" class="ap-chip" data-apx="${esc(v)}">${ch}<span class="x">×</span></button>`).join('');
+  const inp = box.querySelector('.ap-in'); inp.style.display = max <= 1 && sel.size && box.dataset.name ? 'none' : '';
+  const h = box.querySelector('input[type=hidden]'); if (h) h.value = [...sel.keys()][0] || '';
+}
+function pickList(box) {
+  const l = box.querySelector('.ap-list'), sel = pickSel(box), items = pickItems(box.dataset.kind, box.dataset.ot, box.querySelector('.ap-in').value);
+  l.hidden = false; l.innerHTML = items.length ? items.map(it => `<button type="button" class="ap-it ${sel.has(it.v) ? 'on' : ''}" data-apv="${esc(it.v)}">${it.html}</button>`).join('') : `<div class="ap-empty">Sonuç yok</div>`;
+  box._items = new Map(items.map(it => [it.v, it.chip]));
+}
+document.addEventListener('focusin', e => { const i = e.target.closest('.apick .ap-in'); if (i) pickList(i.closest('.apick')); });
+document.addEventListener('input', e => { const i = e.target.closest('.apick .ap-in'); if (i) pickList(i.closest('.apick')); });
+document.addEventListener('click', e => {
+  for (const b of document.querySelectorAll('.apick .ap-list:not([hidden])')) if (!b.closest('.apick').contains(e.target)) b.hidden = true;
+  const x = e.target.closest('.apick [data-apx]'); if (x) { const box = x.closest('.apick'); pickSel(box).delete(x.dataset.apx); pickRender(box); return; }
+  const it = e.target.closest('.apick [data-apv]'); if (it) {
+    const box = it.closest('.apick'), sel = pickSel(box), v = it.dataset.apv, max = +box.dataset.max;
+    if (sel.has(v)) sel.delete(v); else { if (max <= 1) sel.clear(); else if (sel.size >= max) return toast(`En fazla ${max} seçebilirsin`); sel.set(v, box._items?.get(v) || esc(v)); }
+    pickRender(box); const inp = box.querySelector('.ap-in'); inp.value = '';
+    if (max <= 1) { box.querySelector('.ap-list').hidden = true; if (box.dataset.acomp) appComp(box, [v]); } else pickList(box);
+    return;
+  }
+  const g = e.target.closest('.apick .ap-go'); if (g) { const box = g.closest('.apick'), v = [...pickSel(box).keys()]; if (v.length < +box.dataset.min) return toast(`En az ${box.dataset.min} seçmelisin`); return appComp(box, v); }
+});
 function appBodyHTML(m) {
   fmtEmo = m.emo || null; try { return appBodyInner(m); } finally { fmtEmo = null; }
 }
@@ -9187,7 +9239,7 @@ function appComp(el, values) {
   socket.emit('appComp', { chId: S.channel?.id, msgId: mid, cid, values }, r => { if (r?.error) toast(r.error, null, false, { type: 'err' }); });
 }
 document.addEventListener('click', e => {
-  const x = e.target.closest('[data-ephx]'); if (x) { const id = x.dataset.ephx; S.msgs = S.msgs.filter(m => m.id !== id); document.querySelector(`.row[data-id="${CSS.escape(id)}"]`)?.remove(); return; }
+  const x = e.target.closest('[data-ephx]'); if (x) { const id = x.dataset.ephx; if (S.msgs.find(m => m.id === id)?.kalici) socket.emit('ozelKapat', id); S.msgs = S.msgs.filter(m => m.id !== id); document.querySelector(`.row[data-id="${CSS.escape(id)}"]`)?.remove(); return; }
   const b = e.target.closest('button.abtn[data-acomp]'); if (b && !b.disabled) return appComp(b);
   const o = e.target.closest('.amulti .am-o'); if (o) { const box = o.closest('.amulti'), max = +box.dataset.max; if (!o.classList.contains('on') && box.querySelectorAll('.am-o.on').length >= max) return toast(`En fazla ${max} seçebilirsin`); o.classList.toggle('on'); return; }
   const g = e.target.closest('.amulti .am-go'); if (g) { const box = g.closest('.amulti'), v = [...box.querySelectorAll('.am-o.on')].map(x => x.dataset.v); if (v.length < +box.dataset.min) return toast(`En az ${box.dataset.min} seçmelisin`); return appComp(box, v); }
@@ -9196,11 +9248,11 @@ document.addEventListener('change', e => { const s = e.target.closest('select.as
 // Botun açtığı form penceresi
 socket.on('appForm', f => {
   modal(`<form id="af-form" class="af-form"><div class="af-h">${av(f.bot)}<div><h3>${esc(f.baslik)}</h3><small>${esc(f.bot)} <span class="botbadge app">BOT</span></small></div></div>
-    ${f.alanlar.map(a => `<label class="af-l"><span>${esc(a.etiket)}${a.zorunlu ? ' <em>*</em>' : ''}</span>${a.tur === 'uzun' ? `<textarea class="field" name="${esc(a.id)}" rows="4" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}">${esc(a.deger)}</textarea>` : `<input class="field" name="${esc(a.id)}" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}" value="${esc(a.deger)}" autocomplete="off">`}</label>`).join('')}
+    ${f.alanlar.map(a => `<label class="af-l"><span>${esc(a.etiket)}${a.zorunlu ? ' <em>*</em>' : ''}</span>${['kisi', 'rol', 'oda'].includes(a.tur) ? pickHTML({ kind: a.tur, ph: a.yerTutucu, name: a.id }).replace('<div class="ap-chips">', `<input type="hidden" name="${esc(a.id)}"><div class="ap-chips">`) : a.tur === 'uzun' ? `<textarea class="field" name="${esc(a.id)}" rows="4" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}">${esc(a.deger)}</textarea>` : `<input class="field" name="${esc(a.id)}" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}" value="${esc(a.deger)}" autocomplete="off">`}</label>`).join('')}
     <p class="hint" style="font-size:12px">Yazdıkların ${esc(f.bot)} botuna ve sahibine gönderilir.</p>
     <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="btnp" type="submit">${ic('send')} Gönder</button></div></form>`);
   $('#mx').onclick = closeModal; setTimeout(() => $('#af-form [name]')?.focus(), 50);
-  $('#af-form').onsubmit = e => { e.preventDefault(); const vals = Object.fromEntries(f.alanlar.map(a => [a.id, $('#af-form').querySelector(`[name="${CSS.escape(a.id)}"]`).value]));
+  $('#af-form').onsubmit = e => { e.preventDefault(); const miss = f.alanlar.find(a => a.zorunlu && ['kisi', 'rol', 'oda'].includes(a.tur) && !$('#af-form').querySelector(`input[type=hidden][name="${CSS.escape(a.id)}"]`).value); if (miss) return toast(`${miss.etiket}: bir seçim yap`); const vals = Object.fromEntries(f.alanlar.map(a => [a.id, $('#af-form').querySelector(`[name="${CSS.escape(a.id)}"]`).value]));
     socket.emit('appFormSubmit', { iid: f.iid, values: vals }, r => { if (r?.error) return toast(r.error, null, false, { type: 'err' }); closeModal(); }); };
 });
 // ---- Komutlar: / listesinde botların komutları ----

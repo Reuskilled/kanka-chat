@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.4.1';
+const SURUM = '1.5.0';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -18,7 +18,7 @@ class Kanka extends EventEmitter {
   /**
    * @param {object} ayar
    * @param {string} ayar.token  Geliştirici Portalı'ndan aldığın bot token'ı
-   * @param {string[]} [ayar.niyetler]  'mesajlar', 'icerik', 'uyeler', 'tepkiler', 'dm'
+   * @param {string[]} [ayar.niyetler]  'mesajlar', 'icerik', 'uyeler', 'tepkiler', 'dm', 'ses' (sesli oda olayları)
    * @param {string} [ayar.adres]  Varsayılan https://kankahq.com
    * @param {object} [ayar.durum]  Bağlanınca ayarlanacak durum: { durum: 'cevrimici'|'bosta'|'rahatsizetme'|'gorunmez', yazi, aktivite: { tur: 'oynuyor'|'dinliyor'|'izliyor'|'yayinda'|'yarisiyor', ad } }
    * @param {boolean} [ayar.hataAyikla]  true ise bağlantı olaylarını konsola yazar
@@ -108,6 +108,32 @@ class Kanka extends EventEmitter {
   topluSil(oda, adetVeyaIdler, { kisi } = {}) { return this.api('POST', `/odalar/${oda}/mesajlar/toplu-sil`, { ...(Array.isArray(adetVeyaIdler) ? { mesajlar: adetVeyaIdler } : { adet: adetVeyaIdler }), ...(kisi ? { kisi } : {}) }).then(r => r.silinen); }
   mesajlar(oda, { limit = 50, once } = {}) { return this.api('GET', `/odalar/${oda}/mesajlar?limit=${limit}${once ? '&once=' + once : ''}`).then(r => r.mesajlar.map(m => this._mesaj(m))); }
   uyeler(sunucu) { return this.api('GET', `/sunucular/${sunucu}/uyeler`).then(r => r.uyeler); }
+  /** Üye ara (ad ya da görünen ad): bot.uyeAra(sunucu, 'ahm') */
+  uyeAra(sunucu, ara, limit = 25) { return this.api('GET', `/sunucular/${kod(sunucu)}/uyeler?ara=${kod(ara)}&limit=${limit}`).then(r => r.uyeler); }
+  /** Kişinin yetkileri: { sahip, yonetici, izinler: [...], oda: { view, send, ... } } (oda verilirse o odadaki izinleri de gelir) */
+  yetkiler(sunucu, kisi, oda) { return this.api('GET', `/sunucular/${kod(sunucu)}/uyeler/${kod(kisi)}/izinler${oda ? '?oda=' + kod(oda) : ''}`); }
+  /** Kişinin bu yetkisi var mı? bot.yetkisiVar(sunucu, 'ali', 'kick') · oda izni için: bot.yetkisiVar(sunucu, 'ali', 'send', oda) */
+  async yetkisiVar(sunucu, kisi, izin, oda) { const y = await this.yetkiler(sunucu, kisi, oda); if (oda && y.oda && izin in y.oda) return !!y.oda[izin]; return y.sahip || y.yonetici || y.izinler.includes(izin); }
+  roller(sunucu) { return this.api('GET', `/sunucular/${kod(sunucu)}/roller`).then(r => r.roller); }
+  /** Sunucunun Energy (boost) durumu: { toplam, seviye, gonderenler: [{ ad, adet }] } */
+  energy(sunucu) { return this.api('GET', `/sunucular/${kod(sunucu)}/energy`); }
+  /** Sesli odalarda kim var: { odalar: { odaId: [{ ad, mikKapali, sagir, kamera, yayin }] } } */
+  ses(sunucu) { return this.api('GET', `/sunucular/${kod(sunucu)}/ses`).then(r => r.odalar); }
+  /** Sesteki kişiyi yönet. islem: 'tasi' (oda gerekir) | 'cikar' | 'sustur' | 'ac' */
+  sesIslem(sunucu, kisi, islem, oda) { return this.api('POST', `/sunucular/${kod(sunucu)}/uyeler/${kod(kisi)}/ses`, { islem, ...(oda ? { oda } : {}) }); }
+  sesteTasi(sunucu, kisi, oda) { return this.sesIslem(sunucu, kisi, 'tasi', oda); }
+  sestenCikar(sunucu, kisi) { return this.sesIslem(sunucu, kisi, 'cikar'); }
+  /**
+   * Oda izni ver/kapat (gizli oda, ticket odası). hedef: 'herkes' | rol id'si | kişi adı
+   * bot.odaIzni(oda, 'herkes', { view: false }); bot.odaIzni(oda, 'ali', { view: true, send: true })
+   * Değer null ise o izin "devral"a döner. "manageChannels" izni gerekir.
+   */
+  odaIzni(oda, hedef, izinler) { return this.api('PUT', `/odalar/${kod(oda)}/izinler/${kod(hedef)}`, izinler); }
+  odaIzniKaldir(oda, hedef) { return this.api('DELETE', `/odalar/${kod(oda)}/izinler/${kod(hedef)}`); }
+  /** Kalıcı gizli mesaj: odada sadece "kisi" görür, sayfa yenilense de kalır. Döner: { mesaj: id } */
+  ozelGonder(oda, kisi, icerik) { return this.api('POST', `/odalar/${kod(oda)}/ozel-mesajlar`, { ...govde(icerik), kisi }); }
+  ozelDuzenle(oda, mesaj, icerik) { return this.api('PATCH', `/odalar/${kod(oda)}/ozel-mesajlar/${kod(mesaj)}`, govde(icerik)); }
+  ozelSil(oda, mesaj) { return this.api('DELETE', `/odalar/${kod(oda)}/ozel-mesajlar/${kod(mesaj)}`); }
   rolVer(sunucu, kisi, rol) { return this.api('PUT', `/sunucular/${sunucu}/uyeler/${encodeURIComponent(kisi)}/roller/${rol}`); }
   rolAl(sunucu, kisi, rol) { return this.api('DELETE', `/sunucular/${sunucu}/uyeler/${encodeURIComponent(kisi)}/roller/${rol}`); }
   sustur(sunucu, kisi, dakika = 10, sebep = '') { return this.api('POST', `/sunucular/${sunucu}/uyeler/${encodeURIComponent(kisi)}/sustur`, { dakika, sebep }); }
@@ -216,6 +242,8 @@ class Kanka extends EventEmitter {
     if (t === 'ODA_SILINDI') return this.emit('odaSilindi', d);
     if (t === 'TEPKI_EKLENDI') return this.emit('tepki', d);
     if (t === 'TEPKI_KALDIRILDI') return this.emit('tepkiKaldirildi', d);
+    if (t === 'SES_DURUMU') return this.emit('sesDurumu', d);
+    if (t === 'ENERGY_GONDERILDI' || t === 'ENERGY_GERI_CEKILDI') { const x = { ...d, tur: t === 'ENERGY_GONDERILDI' ? 'gonderildi' : 'geriCekildi' }; this.emit('energy', x); return this.emit(t === 'ENERGY_GONDERILDI' ? 'energyGonderildi' : 'energyGeriCekildi', x); }
     if (t === 'SUNUCUYA_EKLENDI') { this.sunucular.set(d.id, d); return this.emit('sunucuyaEklendi', d); }
     if (t === 'SUNUCUDAN_CIKARILDI') { this.sunucular.delete(d.id); return this.emit('sunucudanCikarildi', d); }
     if (['KOMUT', 'BUTON', 'SECIM', 'FORM'].includes(t)) {
@@ -256,12 +284,18 @@ class Etkilesim {
   /** Seçenek değeri (komutlarda) */
   secenek(ad, varsayilan) { const v = this.veri && this.veri.secenekler ? this.veri.secenekler[ad] : undefined; return v === undefined ? varsayilan : v; }
   get degerler() { return (this.veri && this.veri.degerler) || []; }
+  /** Kişi/rol/oda seçicide ve formlarda seçilenlerin bilgisi: { kullanicilar: [...] } | { roller } | { odalar } · formda { alanId: {...} } */
+  get secilenler() { return (this.veri && this.veri.cozulmus) || {}; }
+  /** Butona basan / komutu kullanan kişinin yetkisi var mı? e.yetkisiVar('manageMessages') (sahip ve yönetici her zaman evet) */
+  yetkisiVar(izin) { const k = this.kullanici || {}; return (k.izinler || []).includes('administrator') || (k.izinler || []).includes(izin); }
   get alanlar() { return (this.veri && this.veri.alanlar) || {}; }
   _c(govdeVeri) { this.cevaplandi = true; return fetch(`${this._bot.adres}/api/v1/etkilesim/${this.id}/${this.token}/cevap`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govdeVeri) }).then(async r => { const j = await r.json().catch(() => null); if (!r.ok) throw new KankaHata((j && j.hata) || 'Cevap verilemedi', r.status, j); return j; }); }
   /** Cevap ver (3 saniye içinde). gizli: true ise sadece komutu kullanan görür */
   cevapla(icerik) { return this._c({ tur: 'mesaj', ...govde(icerik) }); }
   /** Sadece komutu kullanan görür */
   gizliCevapla(icerik) { return this.cevapla({ ...govde(icerik), gizli: true }); }
+  /** Sadece o kişi görür ama 15 dakikada kaybolmaz; kişi "Kapat" diyene kadar odada kalır (ticket paneli vb.) */
+  kaliciGizliCevapla(icerik) { return this.cevapla({ ...govde(icerik), gizli: true, kalici: true }); }
   /** Uzun sürecek işler için: önce "düşünüyor…" göster, sonra duzenle() ile bitir (15 dakika) */
   bekle({ gizli = false } = {}) { return this._c({ tur: 'bekle', gizli }); }
   /** Butona basılan mesajı yerinde değiştir */
@@ -287,6 +321,11 @@ const Buton = (id, etiket, stil = 'ana', ek = {}) => ({ tur: 'buton', id, etiket
 const LinkButon = (url, etiket) => ({ tur: 'buton', stil: 'link', url, etiket });
 /** Butonları bir satırda topla: bilesenler: [Satir(Buton(...), Buton(...)), Satir(Secim(...))] */
 const Satir = (...ogeler) => ogeler.flat();
+/** Üye seçici: kullanıcı sunucudaki üyeler arasında arayıp seçer. KisiSecici('kim', { max: 3, yerTutucu: 'Kimi ekleyelim?' }) */
+const KisiSecici = (id, ek = {}) => ({ tur: 'kisi', id, ...ek });
+const RolSecici = (id, ek = {}) => ({ tur: 'rol', id, ...ek });
+/** odaTuru: 'text' | 'voice' | 'stage' | 'forum' ile sınırlanabilir */
+const OdaSecici = (id, ek = {}) => ({ tur: 'oda', id, ...ek });
 const Secim = (id, secenekler, ek = {}) => ({ tur: 'secim', id, secenekler: secenekler.map(o => typeof o === 'string' ? { etiket: o, deger: o } : o), ...ek });
 // HTTP etkileşim imzasını doğrula (sürekli bağlantı yerine adres kullanıyorsan)
 function imzaDogrula(sir, zaman, govdeMetni, imza) {
@@ -294,4 +333,4 @@ function imzaDogrula(sir, zaman, govdeMetni, imza) {
   const h = crypto.createHmac('sha256', sir).update(zaman + '.' + govdeMetni).digest('hex');
   return typeof imza === 'string' && imza.length === h.length && crypto.timingSafeEqual(Buffer.from(h), Buffer.from(imza));
 }
-module.exports = { Kanka, Kart, Buton, LinkButon, Secim, Satir, KankaHata, imzaDogrula, SURUM };
+module.exports = { Kanka, Kart, Buton, LinkButon, Secim, KisiSecici, RolSecici, OdaSecici, Satir, KankaHata, imzaDogrula, SURUM };

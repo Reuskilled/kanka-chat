@@ -1146,6 +1146,8 @@ function migrateCats(s) {
 }
 // Oda görünümü (izleyene göre)
 const everyoneDenied = (ov, k) => ov['@everyone']?.[k] === false;
+// Oda izin ayarları bot görünümü: [{ hedef, tur: 'herkes'|'rol'|'kisi', izin: { view: false, ... } }]
+const ovView = ov => Object.entries(ov || {}).map(([k, v]) => k === '@everyone' ? { hedef: 'herkes', tur: 'herkes', izin: v } : k.startsWith('u:') ? { hedef: k.slice(2), tur: 'kisi', id: db.users[k.slice(2)] ? uidOf(db.users[k.slice(2)]) : null, izin: v } : { hedef: k, tur: 'rol', izin: v });
 // Görme izni kısıtlı odayı kimler görebiliyor? Herkese açık (çok üyeli) sunucuda da hızlı olsun diye 2 sn önbellek
 const viewersCache = new Map();
 function viewersOf(s, c) {
@@ -1712,12 +1714,13 @@ function energyMove(u, s, d) { // d>0: sunucuya gönder, d<0: geri çek
   else for (const x of e) { if (moved >= -d) break; if (x.srv === s.id) { delete x.srv; delete x.sentAt; moved++; } }
   if (!moved) return 0;
   s.energy ||= {}; s.energy[u.name] = (s.energy[u.name] || 0) + (d > 0 ? moved : -moved); if (s.energy[u.name] <= 0) delete s.energy[u.name];
+  botEnergy(s, u.name, d > 0 ? moved : -moved);
   return moved;
 }
 function energyRelease(name, sid) { // üye sunucudan çıkınca / sunucu silinince Energy sahibine geri döner (boşta kalır)
   const u = db.users[name], s = db.servers.find(x => x.id === sid) || { id: sid };
   for (const x of u?.spark?.energy || []) if (x.srv === sid) { delete x.srv; delete x.sentAt; }
-  if (s.energy) delete s.energy[name];
+  const had = s.energy?.[name] || 0; if (s.energy) delete s.energy[name]; if (had && s.members) botEnergy(s, name, -had);
 }
 function sparkCredit(u) { // vadesi gelen ayların Energy'sini ekle (her ay 2, her 3 ayda +1 bonus)
   const sp = u.spark; if (!sp) return false; sp.energy ||= []; let ch = false;
@@ -2637,12 +2640,12 @@ function pushCalls() {
 // Ses odası bilgisi sadece o odayı görebilene: özel sunucunun / gizli odanın kimlerle dolu olduğu dışarı sızmasın
 const seenBy = (o, n) => { const r = {}; for (const k in o) if (canAccess(n, k)) r[k] = o[k]; return r; };
 const eachOnline = fn => { for (const n of new Set(online.values())) fn(n); };
-const pushFlags = () => { const F = flagsState(); eachOnline(n => io.to('user:' + n).emit('voiceFlags', seenBy(F, n))); };
+const pushFlags = () => { const F = flagsState(); eachOnline(n => io.to('user:' + n).emit('voiceFlags', seenBy(F, n))); botVoiceTap(); };
 function voiceTo(names) {
   const V = voiceState(), A = voiceAges(), L = liveState(), F = flagsState();
   for (const n of names) { const t = io.to('user:' + n); t.emit('voiceState', seenBy(V, n)); t.emit('voiceAge', seenBy(A, n)); t.emit('voiceLive', seenBy(L, n)); t.emit('voiceFlags', seenBy(F, n)); }
 }
-const pushVoice = () => { voiceTo(new Set(online.values())); pushCalls(); };
+const pushVoice = () => { voiceTo(new Set(online.values())); pushCalls(); botVoiceTap(); };
 // Özel arama günlüğü: sohbete "arama başladı / bitti / cevapsız" yazar, 3 dakika yalnız kalana Kanka seslenir
 const callSess = new Map();
 const CALL_ALONE_MS = +process.env.CALL_ALONE_MS || 180e3;
@@ -3143,7 +3146,7 @@ try {
 // Doğrulanmamış bir bot en fazla REACH_MAX farklı kişiye ulaşabilir; fazlası için Kanka ekibinin onayı (doğrulama) gerekir.
 // =====================================================================
 const REACH_MAX = 50, APP_MAX = 5, CMD_MAX = 50, INTER_TTL = 15 * 60e3, INTER_WAIT = 3000;
-const BOT_INTENTS = ['mesajlar', 'icerik', 'uyeler', 'tepkiler', 'dm'];
+const BOT_INTENTS = ['mesajlar', 'icerik', 'uyeler', 'tepkiler', 'dm', 'ses'];
 const OPT_TYPES = ['yazi', 'sayi', 'tamsayi', 'kisi', 'oda', 'rol', 'evethayir'];
 const BTN_STYLES = ['ana', 'ikincil', 'basari', 'tehlike', 'link'];
 const BOT_PERMS = PERMS.filter(p => p !== 'administrator'); // yönetici yetkisi bota verilmez, sunucu sahibi isterse rolü elle yükseltir
@@ -3207,11 +3210,34 @@ function cleanEmbeds(list) {
       resim: cardImg(e.resim ?? e.image?.url ?? e.image, 'resim'), kucukResim: cardImg(e.kucukResim ?? e.thumbnail?.url ?? e.thumbnail, 'kucukResim'), altyazi: noPing(clean(e.altyazi ?? e.footer?.text ?? e.footer, 200)) };
     return k.baslik || k.aciklama || k.alanlar.length || k.resim ? k : null; }).filter(Boolean);
 }
+const PICK_TUR = { kisi: 'kisi', uye: 'kisi', kullanici: 'kisi', kisiSecim: 'kisi', user: 'kisi', rol: 'rol', rolSecim: 'rol', role: 'rol', oda: 'oda', odaSecim: 'oda', channel: 'oda' };
+// Seçicide gelen değerleri doğrula ve bota çözülmüş hâlini ver (kişi → üye bilgisi, rol → rol bilgisi, oda → oda bilgisi)
+function pickVals(kind, raw, s, chId, me, { min = 1, max = 1, odaTuru = null } = {}) {
+  const vals = [...new Set((Array.isArray(raw) ? raw : [raw]).filter(v => typeof v === 'string' && v && v.length < 80))];
+  if (vals.length < min || vals.length > max) return { error: min === max ? `${max} seçim yapmalısın` : `${min}-${max} arası seçim yapmalısın` };
+  if (kind === 'kisi') {
+    const ok = n => s ? s.members.includes(n) : dmPeers(chId).includes(n);
+    const names = vals.map(v => ok(v) ? v : nameOfRef(v)).filter(n => n && ok(n)); if (names.length !== vals.length) return { error: 'Seçilen kişi bu sunucuda değil' };
+    return { vals: names, coz: { kullanicilar: names.map(n => s ? memberView(s, n) : { id: uidOf(db.users[n] || {}), ad: n, gorunenAd: db.users[n]?.displayName || n }) } };
+  }
+  if (!s) return { error: 'Bu seçici sadece sunucuda çalışır' };
+  if (kind === 'rol') { const rs = vals.map(v => s.customRoles.find(r => r.id === v)); if (rs.some(r => !r)) return { error: 'Rol bulunamadı' }; return { vals, coz: { roller: rs.map(r => roleView(r, s.customRoles.indexOf(r))) } }; }
+  const cs = vals.map(v => s.channels.find(c => c.id === v)); if (cs.some(c => !c || !seesChannel(s, c, me) || (odaTuru && (c.type || 'text') !== odaTuru))) return { error: 'Oda bulunamadı' };
+  return { vals, coz: { odalar: cs.map(c => chBotView(s, c)) } };
+}
 function cleanComps(rows) {
   if (!Array.isArray(rows)) return [];
   const ids = new Set();
   return rows.slice(0, 5).map(r => (Array.isArray(r) ? r : Array.isArray(r?.bilesenler ?? r?.components) ? (r.bilesenler ?? r.components) : [r]).slice(0, 5).map(c => {
-    if (!c || typeof c !== 'object') return null; const tur = c.tur ?? (c.type === 3 ? 'secim' : 'buton');
+    if (!c || typeof c !== 'object') return null;
+    const pk = PICK_TUR[c.tur] || (c.tur == null && { 5: 'kisi', 6: 'rol', 8: 'oda' }[c.type]);
+    if (pk) { // kişi / rol / oda seçici: liste Kanka'dan gelir, kullanıcı arayarak seçer
+      const id = clean(c.id ?? c.custom_id, 100); if (!id || ids.has(id)) return null; ids.add(id);
+      const min = Math.min(Math.max(parseInt(c.min ?? c.min_values) ?? 1, 0), 25), max = Math.min(Math.max(parseInt(c.max ?? c.max_values) || 1, min || 1), 25);
+      const ot = ['text', 'voice', 'stage', 'forum'].includes(c.odaTuru) ? c.odaTuru : null;
+      return { tur: pk, id, yerTutucu: clean(c.yerTutucu ?? c.placeholder, 100) || { kisi: 'Üye ara…', rol: 'Rol seç…', oda: 'Oda seç…' }[pk], min: Number.isNaN(min) ? 1 : min, max, ...(pk === 'oda' && ot ? { odaTuru: ot } : {}), kapali: !!(c.kapali ?? c.disabled) };
+    }
+    const tur = c.tur ?? (c.type === 3 ? 'secim' : 'buton');
     if (tur === 'buton') {
       const stil = BTN_STYLES.includes(c.stil) ? c.stil : c.url ? 'link' : 'ana', b = { tur, stil, etiket: clean(c.etiket ?? c.label, 80), emoji: clean(c.emoji, 16) || null, kapali: !!(c.kapali ?? c.disabled) };
       if (stil === 'link') { b.url = httpsUrl(c.url); if (!b.url) return null; } else { b.id = clean(c.id ?? c.custom_id, 100); if (!b.id || ids.has(b.id)) return null; ids.add(b.id); }
@@ -3945,7 +3971,7 @@ const CH_TYPE_IN = { text: 'text', yazi: 'text', yazili: 'text', 'yazılı': 'te
 const SLOW_OK = [0, 5, 10, 15, 30, 60, 120, 300, 600, 900, 3600];
 function chBotView(s, c, bot) {
   return { id: c.id, ad: c.name, tur: c.type || 'text', konu: c.topic || '', kategori: c.cat || null, sunucu: s.id, ozel: everyoneDenied(ovOf(s, c), 'view'),
-    yavasMod: c.slow || 0, limit: c.limit || 0, ...(bot ? { yazabilir: chPerm(s, c, bot, 'send') } : {}) };
+    yavasMod: c.slow || 0, limit: c.limit || 0, kategoriyleEsit: !!(c.sync && c.cat), izinAyarlari: ovView(ovOf(s, c)), ...(bot ? { yazabilir: chPerm(s, c, bot, 'send') } : {}) };
 }
 function chEvent(s, t, c) { // botlara oda olayları: ODA_OLUSTU / ODA_GUNCELLENDI / ODA_SILINDI
   if (!s || s.public) return;
@@ -3974,21 +4000,81 @@ function addChannel(s, by, { name, type, cat, priv, topic } = {}) {
   audit(s, by, 'Oda oluşturdu', c.name); save(); pushServers(membersOf(s)); chEvent(s, 'ODA_OLUSTU', c);
   return { c };
 }
+function voiceModDo(s, me, name, action, to) { // kullanıcı arayüzü ve Bot API aynı kuralları kullanır
+  const need = action === 'mute' || action === 'unmute' ? 'voiceMute' : 'voiceMove';
+  if (!can(s, me, need)) return ({ error: need === 'voiceMute' ? 'Seste susturma yetkin yok' : 'Seste taşıma yetkin yok' });
+  if (name !== me && (name === s.owner || !outranks(s, me, name))) return ({ error: 'Bu kişiye bunu yapamazsın' });
+  const chIds = s.channels.filter(c => voiceLike(c.type)).map(c => c.id);
+  const cur = chIds.find(ch => [...(voice.get(ch)?.values() || [])].includes(name));
+  if (!cur) return ({ error: 'Bu kişi şu an bu sunucuda seste değil' });
+  if (action === 'mute' || action === 'unmute') {
+    const on = action === 'mute';
+    on ? srvMuted.add(s.id + '|' + name) : srvMuted.delete(s.id + '|' + name);
+    for (const [sid, n] of voice.get(cur) || []) if (n === name) { io.to(sid).emit('srvMute', { on, by: me }); if (on) { voiceFlags.set(sid, { ...(voiceFlags.get(sid) || {}), m: true }); } }
+    pushFlags();
+    audit(s, me, on ? 'Seste susturdu' : 'Ses susturmasını kaldırdı', name);
+  } else if (action === 'disconnect') {
+    voiceKick([cur], name, `${me} seni sesli odadan çıkardı`); audit(s, me, 'Sesten çıkardı', name);
+  } else if (action === 'move') {
+    const c = s.channels.find(x => x.id === to && voiceLike(x.type)); if (!c || c.id === cur) return ({ error: 'Geçersiz oda' });
+    if (!chPerm(s, c, me, 'connect')) return ({ error: 'Bu odaya giriş yetkin yok' });
+    if (!seesChannel(s, c, name)) return ({ error: `${name} bu odayı göremiyor` });
+    if (timedOut(s, name)) return ({ error: `${name} susturulduğu için sesli odaya giremiyor` });
+    if (c.limit && (voice.get(c.id)?.size || 0) >= c.limit) return ({ error: `${c.name} dolu` });
+    const pass = !chPerm(s, c, name, 'connect');
+    for (const [sid, n] of voice.get(cur) || []) if (n === name) {
+      if (pass) voicePass.set(sid, { ch: c.id, until: Date.now() + 60000 });
+      io.to(sid).emit('voiceMoveTo', { ch: c.id, by: me });
+    }
+    audit(s, me, 'Sesli odaya taşıdı', `${name} → ${c.name}`);
+  } else return ({ error: 'Geçersiz işlem' });
+  save(); return { ok: true };
+}
 function removeChannel(s, by, c) {
   if (c.type === 'text' && s.channels.filter(x => x.type === 'text').length < 2) return { error: 'En az bir yazılı oda kalmalı' };
   if (nukeCheck(s, by, 'oda silme')) return { error: 'Kanka Bot: Kısa sürede çok fazla oda silindi, işlem durduruldu.' };
   s.channels = s.channels.filter(x => x !== c); delete db.messages[c.id]; delete db.playlists[c.id];
+  for (const x of db.ozel?.[c.id] || []) ozelIdx.delete(x.msg.id); if (db.ozel) delete db.ozel[c.id];
   if (s.afk?.ch === c.id) s.afk = null;
   voiceKick([c.id], null, 'Bulunduğun ses odası silindi');
   audit(s, by, 'Oda sildi', c.name); save(); pushServers(membersOf(s)); chEvent(s, 'ODA_SILINDI', c);
   return { ok: true };
 }
 function botServerView(a, s) {
-  return { id: s.id, ad: s.name, simge: s.iconImg || null, sahip: s.owner, uyeSayisi: humans(s.members).length,
-    odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => ({ id: c.id, ad: c.name, tur: c.type, konu: c.topic || '', kategori: c.cat || null, yazabilir: chPerm(s, c, a.bot, 'send') })),
-    roller: (s.customRoles || []).map((r, i) => ({ id: r.id, ad: r.name, renk: r.color || null, sira: i, bot: r.managed || null })), izinler: [...permsOf(s, a.bot)] };
+  return { id: s.id, ad: s.name, simge: s.iconImg || null, sahip: s.owner, uyeSayisi: humans(s.members).length, ekleyen: botAdder(s, a.bot),
+    energy: { toplam: energyTotal(s), seviye: energyLevel(s) },
+    odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => ({ id: c.id, ad: c.name, tur: c.type, konu: c.topic || '', kategori: c.cat || null, yazabilir: chPerm(s, c, a.bot, 'send'), ozel: everyoneDenied(ovOf(s, c), 'view') })),
+    roller: (s.customRoles || []).map(roleView), izinler: [...permsOf(s, a.bot)] };
 }
-const memberView = (s, n) => { const u = db.users[n] || {}; return { id: db.users[n] ? uidOf(u) : null, ad: n, gorunenAd: u.displayName || n, bot: !!u.bot, avatar: u.avatar || null, roller: s.memberRoles?.[n] || [], katildi: s.joinedAt?.[n] || null, susturulduBitis: (s.timeouts?.[n] || 0) > Date.now() ? s.timeouts[n] : null }; };
+const roleView = (r, i, all) => ({ id: r.id, ad: r.name, renk: r.color || null, sira: i, simge: r.icon || null, ayriGoster: !!r.hoist, etiketlenebilir: r.mentionable !== false, izinler: r.perms || [], bot: r.managed || null });
+// Botu kim ekledi: yeni eklemelerde kayıtlı, eskilerde denetim kaydından bulunur
+function botAdder(s, bot) {
+  const b = s.botBy?.[bot] || (() => { const x = (s.audit || []).find(e => e.action === 'Bot ekledi' && e.target === bot); return x ? { by: x.by, at: x.time } : null; })();
+  if (!b) return null; const u = db.users[b.by]; return { id: u ? uidOf(u) : null, ad: b.by, gorunenAd: u?.displayName || b.by, zaman: b.at };
+}
+// Sunucudaki sesli odalar: kim hangi odada, mikrofon/kulaklık/kamera/yayın durumu
+function botVoiceView(a, s) {
+  const out = {};
+  for (const c of s.channels) { if (!voiceLike(c.type) || !seesChannel(s, c, a.bot)) continue; const room = voice.get(c.id); if (!room?.size) continue;
+    const seen = new Set(); out[c.id] = [];
+    for (const [sid, n] of room) { if (seen.has(n)) continue; seen.add(n); const f = voiceFlags.get(sid) || {}, md = voiceMedia.get(sid) || {}, u = db.users[n];
+      out[c.id].push({ id: u ? uidOf(u) : null, ad: n, mikKapali: !!f.m, sagir: !!f.d, sunucuSusturdu: srvMuted.has(s.id + '|' + n), kamera: !!md.cam, yayin: !!md.screen }); } }
+  return out;
+}
+const voiceSig = new Map();
+function botVoiceTap() { // ses durumu değişince "ses" niyetiyle bağlı botlara SES_DURUMU (sadece değişen sunucular)
+  if (!botConns.size) return;
+  for (const [appId, set] of botConns) { if (![...set].some(c => c.ready && c.intents.has('ses'))) continue; const a = db.apps?.[appId]; if (!a || a.killed) continue;
+    for (const s of botServers(a)) { const v = botVoiceView(a, s), sig = JSON.stringify(v), k = appId + '|' + s.id;
+      if ((voiceSig.get(k) ?? '{}') === sig) continue; voiceSig.set(k, sig); if (voiceSig.size > 20000) voiceSig.clear();
+      gwDispatch(appId, 'SES_DURUMU', { sunucu: s.id, odalar: v }, c => c.intents.has('ses')); } }
+}
+function botEnergy(s, name, delta) { // Energy (boost) gönderildi / geri çekildi
+  if (!s || s.public || !delta) return; const u = db.users[name];
+  for (const n of (s.members || []).filter(isBotUser)) { const a = appOf(n); if (!a || a.killed) continue;
+    gwDispatch(a.id, delta > 0 ? 'ENERGY_GONDERILDI' : 'ENERGY_GERI_CEKILDI', { sunucu: s.id, uye: { id: u ? uidOf(u) : null, ad: name }, adet: Math.abs(delta), uyeninToplami: s.energy?.[name] || 0, toplam: energyTotal(s), seviye: energyLevel(s) }, c => c.intents.has('uyeler')); }
+}
+const memberView = (s, n) => { const u = db.users[n] || {}, vc = voiceRoomOf(n); return { id: db.users[n] ? uidOf(u) : null, ad: n, gorunenAd: u.displayName || n, bot: !!u.bot, avatar: u.avatar || null, roller: s.memberRoles?.[n] || [], izinler: [...permsOf(s, n)], sahip: s.owner === n, yonetici: permsOf(s, n).has('administrator') || s.owner === n, energy: s.energy?.[n] || 0, sesOdasi: vc && s.channels.some(c => c.id === vc) ? vc : null, katildi: s.joinedAt?.[n] || null, susturulduBitis: (s.timeouts?.[n] || 0) > Date.now() ? s.timeouts[n] : null }; };
 // Mesaj olaylarını botlara ilet: socket.io yayınlarına kanca (her yerden atılan mesaj, düzenleme ve silme yakalanır)
 const lastBotText = new Map();
 {
@@ -4021,7 +4107,7 @@ function botReact(chId, msg, emoji, user, added) {
 }
 function botMember(s, name, kind) { // üye katıldı / ayrıldı / güncellendi; bot atıldıysa kendisine bildir
   if (!s || s.public) return;
-  if (kind === 'leave' && isBotUser(name)) { const a = appOf(name); if (a) { s.customRoles = (s.customRoles || []).filter(r => r.managed !== a.id); gwDispatch(a.id, 'SUNUCUDAN_CIKARILDI', { id: s.id, ad: s.name }); devStatsSync(a.owner); } return; }
+  if (kind === 'leave' && isBotUser(name)) { if (s.botBy) delete s.botBy[name]; const a = appOf(name); if (a) { s.customRoles = (s.customRoles || []).filter(r => r.managed !== a.id); gwDispatch(a.id, 'SUNUCUDAN_CIKARILDI', { id: s.id, ad: s.name }); devStatsSync(a.owner); } return; }
   for (const n of s.members.filter(isBotUser)) { const a = appOf(n); if (!a || a.killed || n === name) continue;
     const t = kind === 'join' ? 'UYE_KATILDI' : kind === 'leave' ? 'UYE_AYRILDI' : 'UYE_GUNCELLENDI';
     gwDispatch(a.id, t, { sunucu: s.id, uye: kind === 'leave' ? { id: db.users[name] ? uidOf(db.users[name]) : null, ad: name } : memberView(s, name) }, c => c.intents.has('uyeler'));
@@ -4052,6 +4138,25 @@ function ephPost(a, chId, user, body, extra = {}) { // sadece tek kişinin göre
   return msg;
 }
 const ephMsgs = new Map();
+// Kalıcı gizli mesaj: sadece bir kişi görür ama 15 dakikada silinmez (ticket paneli, kişiye özel bilgi). db.ozel[oda] = [{ user, msg }]
+const OZEL_PER_CH = 300, OZEL_PER_USER = 30;
+const ozelIdx = new Map(); for (const [ch, l] of Object.entries(db.ozel || {})) for (const x of l) ozelIdx.set(x.msg.id, { msg: x.msg, chId: ch, user: x.user, kalici: true });
+const ephGet = mid => ephMsgs.get(mid) || ozelIdx.get(mid);
+function ozelPost(a, chId, user, body, extra = {}) {
+  const emo = appEmo(a, body.text, body.embeds), files = botFiles(a, body.files);
+  const msg = { id: 'k' + id(), author: a.bot, color: db.users[a.bot]?.color, time: Date.now(), kind: 'text', reactions: {}, app: a.id, appInfo: appInfoOf(a), ephemeral: true, kalici: true, text: body.text || '', ...(emo ? { emo } : {}), ...(files.length ? { files } : {}), ...(body.embeds?.length ? { embeds: body.embeds } : {}), ...(body.comps?.length ? { comps: body.comps } : {}), ...extra };
+  db.ozel ||= {}; const mine = (db.ozel[chId] || []).filter(x => x.user === user); if (mine.length >= OZEL_PER_USER) ozelDel(mine[0].msg.id);
+  if ((db.ozel[chId] || []).length >= OZEL_PER_CH) ozelDel(db.ozel[chId][0].msg.id);
+  (db.ozel[chId] ||= []).push({ user, msg }); ozelIdx.set(msg.id, { msg, chId, user, kalici: true }); save();
+  io.to('user:' + user).emit('message', { channelId: chId, msg });
+  return msg;
+}
+function ozelDel(mid) {
+  const e = ozelIdx.get(mid); if (!e) return false; ozelIdx.delete(mid);
+  const l = db.ozel?.[e.chId]; if (l) { const i = l.findIndex(x => x.msg.id === mid); if (i >= 0) l.splice(i, 1); if (!l.length) delete db.ozel[e.chId]; }
+  save(); io.to('user:' + e.user).emit('remove', { channelId: e.chId, msgId: mid }); return true;
+}
+const ozelFor = (chId, user) => (db.ozel?.[chId] || []).filter(x => x.user === user).map(x => x.msg);
 // ---- Etkileşimler (komut, buton, seçim, form) ----
 const inters = new Map();
 setInterval(() => { const now = Date.now(); for (const [k, x] of inters) if (now - x.at > INTER_TTL) inters.delete(k); for (const [k, x] of ephMsgs) if (now - x.at > INTER_TTL) ephMsgs.delete(k); }, 60e3);
@@ -4084,14 +4189,14 @@ function interHttp(a, payload) {
 }
 function interRespond(it, b) {
   const a = db.apps[it.app]; if (!a) return { error: 'Uygulama yok', code: 404 };
-  const tur = b?.tur ?? b?.type ?? 'mesaj', body = msgBody(b?.veri ?? b?.data ?? b), gizli = !!(b?.gizli ?? b?.ephemeral ?? (b?.veri ?? b?.data)?.gizli);
+  const tur = b?.tur ?? b?.type ?? 'mesaj', body = msgBody(b?.veri ?? b?.data ?? b), gizli = !!(b?.gizli ?? b?.ephemeral ?? (b?.veri ?? b?.data)?.gizli), kalici = !!(b?.kalici ?? (b?.veri ?? b?.data)?.kalici) && !it.chId.startsWith('dm:');
   if (tur === 'PONG') return { ok: true };
   if (tur === 'form') {
     if (it.done) return { error: 'Bu etkileşim zaten cevaplandı', code: 400 };
     const f = b?.form ?? b?.veri ?? b;
-    const alanlar = (Array.isArray(f?.alanlar) ? f.alanlar : []).slice(0, 5).map(x => ({ id: clean(x?.id, 60), etiket: clean(x?.etiket, 60), tur: x?.tur === 'uzun' ? 'uzun' : 'kisa', zorunlu: x?.zorunlu !== false, yerTutucu: clean(x?.yerTutucu, 100), min: Math.max(0, parseInt(x?.min) || 0), max: Math.min(4000, parseInt(x?.max) || 400), deger: clean(x?.deger, 4000) })).filter(x => x.id && x.etiket);
+    const alanlar = (Array.isArray(f?.alanlar) ? f.alanlar : []).slice(0, 5).map(x => ({ id: clean(x?.id, 60), etiket: clean(x?.etiket, 60), tur: x?.tur === 'uzun' ? 'uzun' : PICK_TUR[x?.tur] || 'kisa', zorunlu: x?.zorunlu !== false, yerTutucu: clean(x?.yerTutucu, 100), min: Math.max(0, parseInt(x?.min) || 0), max: Math.min(4000, parseInt(x?.max) || 400), deger: clean(x?.deger, 4000) })).filter(x => x.id && x.etiket);
     if (!alanlar.length) return { error: 'Form için en az bir alan gerekli', code: 400 };
-    it.done = true; it.form = { id: clean(f?.id, 100) || 'form', baslik: clean(f?.baslik, 60) || a.bot };
+    it.done = true; it.form = { id: clean(f?.id, 100) || 'form', baslik: clean(f?.baslik, 60) || a.bot, tipler: Object.fromEntries(alanlar.map(x => [x.id, x.tur])), zorunlu: alanlar.filter(x => x.zorunlu).map(x => x.id) };
     io.to('user:' + it.user).emit('appForm', { iid: it.id, app: a.id, bot: a.bot, baslik: it.form.baslik, alanlar });
     return { ok: true };
   }
@@ -4109,14 +4214,14 @@ function interRespond(it, b) {
   if (!body.text && !body.embeds.length && !body.comps.length) return { error: 'Boş cevap', code: 400 };
   it.done = true;
   const inter = it.type === 'KOMUT' ? { user: it.user, cmd: it.data?.ad } : undefined;
-  if (gizli) { ephPost(a, it.chId, it.user, body, { inter }); return { ok: true }; }
+  if (gizli) { const em = (kalici ? ozelPost : ephPost)(a, it.chId, it.user, body, { inter }); return { ok: true, mesaj: em.id }; }
   const f = findChannel(it.chId); if (f && !chPerm(f.s, f.c, a.bot, 'send')) { ephPost(a, it.chId, it.user, body, { inter }); return { ok: true, not: 'Botun bu odada yazma izni yok, cevap sadece kullanıcıya gösterildi' }; }
   const r = appPost(a, it.chId, body, { inter }); return r.error ? { error: r.error, code: 400 } : { ok: true, mesaj: r.msg.id };
 }
 function editAppMsg(a, chId, msgId, b, user) {
-  const body = msgBody(b), e = ephMsgs.get(msgId);
+  const body = msgBody(b), e = ephGet(msgId);
   if (e) { const m = e.msg; if (m.app !== a.id) return { error: 'Bu mesaj botun değil', code: 403 }; Object.assign(m, { text: body.text, embeds: body.embeds.length ? body.embeds : undefined, comps: body.comps.length || Array.isArray(b?.bilesenler ?? b?.components) ? body.comps : m.comps, loading: false, edited: !!m.text });
-    io.to('user:' + e.user).emit('update', { channelId: e.chId, msg: m }); return { ok: true }; }
+    if (e.kalici) save(); io.to('user:' + e.user).emit('update', { channelId: e.chId, msg: m }); return { ok: true }; }
   const m = findMsg(chId, msgId); if (!m || m.author !== a.bot) return { error: 'Mesaj bulunamadı ya da botun değil', code: 404 };
   if (!body.text && !body.embeds.length && !body.comps.length && !Array.isArray(b?.bilesenler ?? b?.components)) return { error: body.uyari ? `Mesaj boş kaldı: ${body.uyari}` : 'Boş mesaj', code: 400 };
   m.text = body.text; m.emo = appEmo(a, body.text, body.embeds); if (body.embeds.length || Array.isArray(b?.kartlar ?? b?.embeds)) m.embeds = body.embeds; if (Array.isArray(b?.bilesenler ?? b?.components)) m.comps = body.comps;
@@ -4275,7 +4380,28 @@ api.get('/ben/durum', R(a => { const u = db.users[a.bot] || {}; return { durum: 
 api.get('/ben', R(a => ({ bot: appView(a), sunucuSayisi: botServers(a).length, erisim: reachOf(a), esik: REACH_MAX, dogrulandi: !!a.verified, icerikIzni: contentOk(a) })));
 api.get('/sunucular', R(a => ({ sunucular: botServers(a).map(s => botServerView(a, s)) })));
 api.get('/sunucular/:sid', R((a, req) => { const s = botSrv(a, req.params.sid); return s ? botServerView(a, s) : { error: 'Sunucu bulunamadı', code: 404 }; }));
-api.get('/sunucular/:sid/uyeler', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; return { uyeler: s.members.slice(0, 2000).map(n => memberView(s, n)) }; }));
+api.get('/sunucular/:sid/uyeler', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  const q = String(req.query.ara ?? req.query.q ?? '').trim().toLocaleLowerCase('tr').slice(0, 40), lim = Math.min(Math.max(parseInt(req.query.limit) || (q ? 25 : 2000), 1), 2000);
+  if (!q) return { uyeler: s.members.slice(0, lim).map(n => memberView(s, n)) };
+  const hit = n => { const d = (db.users[n]?.displayName || '').toLocaleLowerCase('tr'), l = n.toLocaleLowerCase('tr'); return l.startsWith(q) || d.startsWith(q) ? 2 : l.includes(q) || d.includes(q) ? 1 : 0; };
+  return { uyeler: s.members.map(n => [n, hit(n)]).filter(x => x[1]).sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0], 'tr')).slice(0, lim).map(x => memberView(s, x[0])) }; }));
+// Kişinin yetkileri: sunucu yetkileri + (oda verilirse) o odadaki izinleri. Bot kendi kontrolünü buna göre yapar.
+api.get('/sunucular/:sid/uyeler/:ad/izinler', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s || !s.members.includes(req.params.ad)) return { error: 'Üye bulunamadı', code: 404 };
+  const n = req.params.ad, out = { ad: n, sahip: s.owner === n, yonetici: s.owner === n || can(s, n, 'administrator'), izinler: [...permsOf(s, n)], roller: s.memberRoles?.[n] || [], botunUstunde: !outranks(s, a.bot, n) };
+  const cid = req.query.oda; if (cid) { const c = s.channels.find(x => x.id === cid); if (!c || !seesChannel(s, c, a.bot)) return { error: 'Oda bulunamadı', code: 404 }; out.oda = { id: c.id, ...Object.fromEntries(CH_KEYS.map(k => [k, chPerm(s, c, n, k)])) }; }
+  return out; }));
+api.get('/sunucular/:sid/roller', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; return { roller: (s.customRoles || []).map(roleView), izinListesi: PERMS }; }));
+// Energy (boost): toplam, seviye ve kimin kaç Energy gönderdiği. Bot bunu kullanarak kendi "destekçi" rolünü verebilir.
+api.get('/sunucular/:sid/energy', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  return { toplam: energyTotal(s), seviye: energyLevel(s), sonrakiSeviye: ENERGY_LV[energyLevel(s) + 1] ?? null, gonderenler: Object.entries(s.energy || {}).filter(([n, k]) => k > 0 && s.members.includes(n)).sort((x, y) => y[1] - x[1]).map(([n, k]) => ({ id: db.users[n] ? uidOf(db.users[n]) : null, ad: n, adet: k })) }; }));
+// Sesli odalar: kim nerede, mikrofon/kulaklık durumu. Değişiklikler "ses" niyetiyle SES_DURUMU olayı olarak gelir.
+api.get('/sunucular/:sid/ses', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; return { sunucu: s.id, odalar: botVoiceView(a, s) }; }));
+// Sesteki kişiyi taşı / sesten çıkar / sunucuda sustur / susturmayı kaldır (voiceMove / voiceMute izni gerekir)
+api.post('/sunucular/:sid/uyeler/:ad/ses', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s || !s.members.includes(req.params.ad)) return { error: 'Üye bulunamadı', code: 404 };
+  const b = req.body || {}, act = { tasi: 'move', cikar: 'disconnect', sustur: 'mute', ac: 'unmute', move: 'move', disconnect: 'disconnect', mute: 'mute', unmute: 'unmute' }[b.islem ?? b.action];
+  if (!act) return { error: 'islem şunlardan biri olmalı: tasi, cikar, sustur, ac' };
+  if (limited('botvc|' + a.id, 30, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 30 ses işlemi', code: 429 };
+  const r = voiceModDo(s, a.bot, req.params.ad, act, b.oda ?? b.channel); return r.error ? { error: r.error.replace(/yetkin yok/, 'botun izni yok (voiceMute / voiceMove)'), code: 403 } : r; }));
 api.get('/sunucular/:sid/uyeler/:ad', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s || !s.members.includes(req.params.ad)) return { error: 'Üye bulunamadı', code: 404 }; return memberView(s, req.params.ad); }));
 api.get('/odalar/:cid', R((a, req) => { const f = botChan(a, req.params.cid); if (f.error) return f; if (f.dm) return { id: req.params.cid, tur: 'dm', kisiler: dmPeers(req.params.cid) }; return { id: f.c.id, ad: f.c.name, tur: f.c.type, konu: f.c.topic || '', sunucu: f.s.id, yazabilir: chPerm(f.s, f.c, a.bot, 'send') }; }));
 api.get('/odalar/:cid/mesajlar', R((a, req) => {
@@ -4407,6 +4533,42 @@ api.post('/sunucular/:sid/odalar', R((a, req) => {
   const b = req.body || {}; const r = addChannel(s, a.bot, { name: b.ad ?? b.name, type: b.tur ?? b.type, cat: b.kategori ?? b.parent ?? null, priv: !!(b.ozel ?? b.private), topic: b.konu ?? b.topic });
   if (r.error) return r; return chBotView(s, r.c, a.bot);
 }));
+// Oda izinleri (gizli oda, ticket odası): hedef = herkes | rol id'si | kişi adı/kimliği. Gövde: { view: true, send: false, ... } (null = devral)
+const OV_TR = { gor: 'view', gorme: 'view', yaz: 'send', yazma: 'send', gecmis: 'history', baglan: 'connect', baglanma: 'connect', dosya: 'attach', tepki: 'react', konus: 'speak', konusma: 'speak', kamera: 'video', yayin: 'stream' };
+function ovTarget(s, h) {
+  h = String(h || ''); if (['herkes', '@everyone', 'everyone', s.id].includes(h)) return '@everyone';
+  if (s.customRoles.some(r => r.id === h)) return h; const n = nameOfRef(h.replace(/^(u:|kisi:)/, '')) || h.replace(/^(u:|kisi:)/, ''); return s.members.includes(n) ? 'u:' + n : null;
+}
+function ovSet(a, req, del) {
+  const f = botChan(a, req.params.cid); if (f.error) return f; if (f.dm) return { error: 'DM için izin yok', code: 400 };
+  const { s, c } = f; if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
+  const t = ovTarget(s, req.params.hedef); if (!t) return { error: 'Hedef bulunamadı: herkes, bir rol id\'si ya da sunucudaki bir kişi olmalı', code: 404 };
+  if (limited('botov|' + a.id, 60, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 60 izin değişikliği', code: 429 };
+  if (c.sync) { c.perms = JSON.parse(JSON.stringify(catOf(s, c)?.perms || {})); c.sync = false; } c.perms ||= {};
+  if (del) delete c.perms[t];
+  else { const cur = { ...(c.perms[t] || {}) }; let n = 0;
+    for (const [k0, v] of Object.entries(req.body || {})) { const k = OV_TR[k0] || k0; if (!CH_KEYS.includes(k)) return { error: `Bilinmeyen izin: ${k0}. Geçerli: ${CH_KEYS.join(', ')}` }; if (v === null) delete cur[k]; else if (typeof v === 'boolean') cur[k] = v; else return { error: `${k0}: true, false ya da null olmalı` }; n++; }
+    if (!n) return { error: 'Gövdede en az bir izin olmalı, ör. { "view": true, "send": true }' };
+    if (t === 'u:' + a.bot && cur.view === false) return { error: 'Bot kendi görme iznini kapatamaz' };
+    if (Object.keys(cur).length) c.perms[t] = cur; else delete c.perms[t]; }
+  audit(s, a.bot, 'Oda izinlerini düzenledi', `${c.name} (${t === '@everyone' ? 'herkes' : t.startsWith('u:') ? t.slice(2) : s.customRoles.find(r => r.id === t)?.name || t})`);
+  save(); pushServers(membersOf(s)); chEvent(s, 'ODA_GUNCELLENDI', c);
+  return chBotView(s, c, a.bot);
+}
+api.put('/odalar/:cid/izinler/:hedef', R((a, req) => ovSet(a, req, false)));
+api.patch('/odalar/:cid/izinler/:hedef', R((a, req) => ovSet(a, req, false)));
+api.delete('/odalar/:cid/izinler/:hedef', R((a, req) => ovSet(a, req, true)));
+// Kalıcı gizli mesaj: odada sadece "kisi" görür, sayfayı yenileyince de kaybolmaz (kişi "Kapat" diyene ya da bot silene kadar)
+api.post('/odalar/:cid/ozel-mesajlar', R((a, req) => {
+  const f = botChan(a, req.params.cid); if (f.error) return f; if (f.dm) return { error: 'DM zaten özel; normal mesaj gönder', code: 400 };
+  const b = req.body || {}, n = nameOfRef(String(b.kisi ?? b.user ?? '')) || String(b.kisi ?? b.user ?? '');
+  if (!f.s.members.includes(n) || isBotUser(n) || !seesChannel(f.s, f.c, n)) return { error: 'kisi: bu odayı gören bir üye olmalı', code: 404 };
+  if (limited('botozel|' + a.id, 60, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 60 gizli mesaj', code: 429 };
+  const body = msgBody(b); if (!body.text && !body.embeds.length && !body.comps.length && !body.files.length) return { error: 'Boş mesaj' };
+  const m = ozelPost(a, req.params.cid, n, body); return { ok: true, mesaj: m.id, ...(body.uyari ? { uyari: body.uyari } : {}) };
+}));
+api.delete('/odalar/:cid/ozel-mesajlar/:mid', R((a, req) => { const e = ozelIdx.get(req.params.mid); if (!e || e.chId !== req.params.cid || e.msg.app !== a.id) return { error: 'Mesaj yok', code: 404 }; ozelDel(req.params.mid); return { ok: true }; }));
+api.patch('/odalar/:cid/ozel-mesajlar/:mid', R((a, req) => { const e = ozelIdx.get(req.params.mid); if (!e || e.chId !== req.params.cid) return { error: 'Mesaj yok', code: 404 }; return editAppMsg(a, req.params.cid, req.params.mid, req.body || {}); }));
 api.patch('/odalar/:cid', R((a, req) => {
   const f = botChan(a, req.params.cid); if (f.error) return f; if (f.dm) return { error: 'DM düzenlenemez', code: 400 };
   const { s, c } = f; if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
@@ -4456,14 +4618,14 @@ const interRoute = fn => (req, res) => {
 };
 api.post('/etkilesim/:iid/:tok/cevap', interRoute((it, b) => interRespond(it, b)));
 api.patch('/etkilesim/:iid/:tok/mesaj', interRoute((it, b) => { if (!it.deferred && !it.done) return { error: 'Önce cevap ver', code: 400 }; const a = db.apps[it.app]; const mid = it.deferred?.id || it.msgId; if (!mid) return { error: 'Düzenlenecek mesaj yok', code: 400 }; return editAppMsg(a, it.chId, mid, b, it.user); }));
-api.post('/etkilesim/:iid/:tok/takip', interRoute((it, b) => { const a = db.apps[it.app]; const body = msgBody(b); if (b.gizli ?? b.ephemeral) { ephPost(a, it.chId, it.user, body); return { ok: true }; } const r = appPost(a, it.chId, body); return r.error ? r : { ok: true, mesaj: r.msg.id }; }));
+api.post('/etkilesim/:iid/:tok/takip', interRoute((it, b) => { const a = db.apps[it.app]; const body = msgBody(b); if (b.gizli ?? b.ephemeral) { const em = (b.kalici && !it.chId.startsWith('dm:') ? ozelPost : ephPost)(a, it.chId, it.user, body); return { ok: true, mesaj: em.id }; } const r = appPost(a, it.chId, body); return r.error ? r : { ok: true, mesaj: r.msg.id }; }));
 api.use((req, res) => res.status(404).json({ hata: 'Böyle bir uç nokta yok. Belgeler: /gelistirici' }));
 app.use('/api/v1', api);
 function botJoin(a, s, perms, by) {
   s.members.push(a.bot); (s.joinedAt ||= {})[a.bot] = Date.now();
   const role = { id: id(), name: a.bot, color: '#8b93ff', perms: perms.filter(p => BOT_PERMS.includes(p)), hoist: false, managed: a.id, mentionable: false };
   (s.customRoles ||= []).push(role); (s.memberRoles ||= {})[a.bot] = [role.id];
-  audit(s, by, 'Bot ekledi', a.bot);
+  audit(s, by, 'Bot ekledi', a.bot); (s.botBy ||= {})[a.bot] = { by, at: Date.now() };
   gwDispatch(a.id, 'SUNUCUYA_EKLENDI', botServerView(a, s));
   devStatsSync(a.owner);
 }
@@ -5153,7 +5315,9 @@ io.on('connection', socket => {
     cur = chId; socket.join(chId); socket.data.cur = chId; socket.data.name = me;
     const s = serverOf(chId); if (s) try { dailyQuestion(s); } catch (e) { console.error('dailyQuestion', e); } // hata olsa da oda açılsın
     const fj = findChannel(chId), noHist = fj && !chPerm(fj.s, fj.c, me, 'history');
-    cb({ messages: noHist ? (db.messages[chId] || []).filter(m => m.pinned || m.author === me).slice(-30) : (db.messages[chId] || []).slice(-150), noHistory: noHist || undefined, playlist: db.playlists[chId] || [], watch: watch.get(chId) || null });
+    let msgs = noHist ? (db.messages[chId] || []).filter(m => m.pinned || m.author === me).slice(-30) : (db.messages[chId] || []).slice(-150);
+    { const oz = ozelFor(chId, me); if (oz.length) { const full = !noHist && (db.messages[chId] || []).length > 150, from = full ? msgs[0]?.time || 0 : 0; msgs = [...msgs, ...oz.filter(m => m.time >= from)].sort((x, y) => x.time - y.time); } }
+    cb({ messages: msgs, noHistory: noHist || undefined, playlist: db.playlists[chId] || [], watch: watch.get(chId) || null });
   });
 
   // ----- Durum -----
@@ -6079,23 +6243,30 @@ io.on('connection', socket => {
   socket.on('appComp', ({ chId, msgId, cid, values } = {}, cb = () => {}) => {
     if (!me || typeof chId !== 'string' || !canAccess(me, chId)) return cb({ error: 'Erişim yok' });
     if (limited('appcomp|' + me, 30, 60e3)) return cb({ error: 'Çok hızlı' });
-    const e = ephMsgs.get(msgId); if (e && e.user !== me) return cb({ error: 'Bu mesaj sana ait değil' });
+    const e = ephGet(msgId); if (e && e.user !== me) return cb({ error: 'Bu mesaj sana ait değil' });
     const m = e ? e.msg : findMsg(chId, msgId); if (!m?.app) return cb({ error: 'Mesaj bulunamadı' });
     const a = db.apps[m.app]; if (!a || a.killed) return cb({ error: 'Bot kullanılamıyor' });
     const comp = (m.comps || []).flat().find(c => c.id === cid); if (!comp || comp.kapali) return cb({ error: 'Bu düğme artık kullanılamıyor' });
     const f = isPrivateChat(chId) ? null : findChannel(chId); if (f && timedOut(f.s, me)) return cb({ error: 'Susturulmuşken kullanamazsın' });
     if (f && !chPerm(f.s, f.c, me, 'apps')) return cb({ error: 'Bu odada uygulama kullanma iznin yok' });
     let data = { id: cid };
+    if (PICK_TUR[comp.tur]) { const r = pickVals(comp.tur, values, f?.s || null, chId, me, comp); if (r.error) return cb(r); data.degerler = r.vals; data.cozulmus = r.coz; }
     if (comp.tur === 'secim') { const vals = (Array.isArray(values) ? values : []).map(String).filter(v => comp.secenekler.some(o => o.deger === v)); if (vals.length < comp.min || vals.length > comp.max) return cb({ error: 'Geçersiz seçim' }); data.degerler = vals; }
-    newInter(a, comp.tur === 'secim' ? 'SECIM' : 'BUTON', me, chId, data, m); cb({ ok: true });
+    newInter(a, comp.tur === 'buton' ? 'BUTON' : 'SECIM', me, chId, data, m); cb({ ok: true });
   });
   socket.on('appFormSubmit', ({ iid, values } = {}, cb = () => {}) => {
     const it = inters.get(iid); if (!me || !it || it.user !== me || !it.form) return cb({ error: 'Form süresi doldu' });
     const a = db.apps[it.app]; if (!a || a.killed) return cb({ error: 'Bot kullanılamıyor' });
     const vals = {}; for (const [k, v] of Object.entries(values && typeof values === 'object' ? values : {}).slice(0, 5)) vals[clean(k, 60)] = clean(v, 4000);
-    const f2 = it.form; it.form = null;
-    newInter(a, 'FORM', me, it.chId, { id: f2.id, alanlar: vals }, it.msgId ? findMsg(it.chId, it.msgId) || ephMsgs.get(it.msgId)?.msg : null); cb({ ok: true });
+    const f2 = it.form, coz = {}, fs = isPrivateChat(it.chId) ? null : findChannel(it.chId)?.s || null;
+    for (const [k, t] of Object.entries(f2.tipler || {})) if (PICK_TUR[t]) {
+      if (!vals[k]) { if (f2.zorunlu?.includes(k)) return cb({ error: 'Bir seçim yapmalısın' }); continue; }
+      const r = pickVals(t, vals[k], fs, it.chId, me); if (r.error) return cb(r); vals[k] = r.vals[0]; coz[k] = Object.values(r.coz)[0][0];
+    }
+    it.form = null;
+    newInter(a, 'FORM', me, it.chId, { id: f2.id, alanlar: vals, ...(Object.keys(coz).length ? { cozulmus: coz } : {}) }, it.msgId ? findMsg(it.chId, it.msgId) || ephGet(it.msgId)?.msg : null); cb({ ok: true });
   });
+  socket.on('ozelKapat', (mid, cb = () => {}) => { const e = typeof mid === 'string' && ozelIdx.get(mid); if (!me || !e || e.user !== me) return cb({ error: 'Mesaj yok' }); ozelDel(mid); cb({ ok: true }); });
   socket.on('appDmCmds', (bot, cb = () => {}) => cb({ komutlar: me && typeof bot === 'string' && isBotUser(bot) ? dmCmdsFor(bot) : [] }));
   socket.on('setBotDm', (on, cb = () => {}) => { const u = db.users[me]; if (!u) return cb({}); u.botDmOff = !on; save(); cb({ ok: true, on: !u.botDmOff }); });
   socket.on('appDirectory', (_ = {}, cb = () => {}) => cb({ ok: true, apps: Object.values(db.apps || {}).filter(a => a.verified && a.listed && !a.killed).map(a => ({ ...appView(a), sunucu: botServers(a).length, erisim: reachOf(a) })).sort((x, y) => y.erisim - x.erisim) }));
@@ -6331,34 +6502,7 @@ io.on('connection', socket => {
   // Sesli oda moderasyonu: sunucuda sustur, bağlantıyı kes, başka odaya taşı
   socket.on('voiceMod', ({ serverId, name, action, to } = {}, cb = () => {}) => {
     const s = db.servers.find(x => x.id === serverId); if (!me || !s) return cb({ error: 'Yetkin yok' });
-    const need = action === 'mute' || action === 'unmute' ? 'voiceMute' : 'voiceMove';
-    if (!can(s, me, need)) return cb({ error: need === 'voiceMute' ? 'Seste susturma yetkin yok' : 'Seste taşıma yetkin yok' });
-    if (name !== me && (name === s.owner || !outranks(s, me, name))) return cb({ error: 'Bu kişiye bunu yapamazsın' });
-    const chIds = s.channels.filter(c => voiceLike(c.type)).map(c => c.id);
-    const cur = chIds.find(ch => [...(voice.get(ch)?.values() || [])].includes(name));
-    if (!cur) return cb({ error: 'Bu kişi şu an bu sunucuda seste değil' });
-    if (action === 'mute' || action === 'unmute') {
-      const on = action === 'mute';
-      on ? srvMuted.add(s.id + '|' + name) : srvMuted.delete(s.id + '|' + name);
-      for (const [sid, n] of voice.get(cur) || []) if (n === name) { io.to(sid).emit('srvMute', { on, by: me }); if (on) { voiceFlags.set(sid, { ...(voiceFlags.get(sid) || {}), m: true }); } }
-      pushFlags();
-      audit(s, me, on ? 'Seste susturdu' : 'Ses susturmasını kaldırdı', name);
-    } else if (action === 'disconnect') {
-      voiceKick([cur], name, `${me} seni sesli odadan çıkardı`); audit(s, me, 'Sesten çıkardı', name);
-    } else if (action === 'move') {
-      const c = s.channels.find(x => x.id === to && voiceLike(x.type)); if (!c || c.id === cur) return cb({ error: 'Geçersiz oda' });
-      if (!chPerm(s, c, me, 'connect')) return cb({ error: 'Bu odaya giriş yetkin yok' });
-      if (!seesChannel(s, c, name)) return cb({ error: `${name} bu odayı göremiyor` });
-      if (timedOut(s, name)) return cb({ error: `${name} susturulduğu için sesli odaya giremiyor` });
-      if (c.limit && (voice.get(c.id)?.size || 0) >= c.limit) return cb({ error: `${c.name} dolu` });
-      const pass = !chPerm(s, c, name, 'connect');
-      for (const [sid, n] of voice.get(cur) || []) if (n === name) {
-        if (pass) voicePass.set(sid, { ch: c.id, until: Date.now() + 60000 });
-        io.to(sid).emit('voiceMoveTo', { ch: c.id, by: me });
-      }
-      audit(s, me, 'Sesli odaya taşıdı', `${name} → ${c.name}`);
-    } else return cb({ error: 'Geçersiz işlem' });
-    save(); cb({ ok: true });
+    cb(voiceModDo(s, me, name, action, to));
   });
   socket.on('memberRoles', ({ serverId, name, roles } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageRoles'); if (!s || !roleTarget(s, name)) return cb({ error: 'Yetkin yok' });
