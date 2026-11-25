@@ -5141,7 +5141,7 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
 #inboxp .ib-b { flex: 1; min-width: 0; } #inboxp .ib-t { font-size: 14px; color: #c9c9d1; line-height: 1.35; } #inboxp .ib-t b { color: #fff; }
 #inboxp .ib-w { font-size: 12px; color: var(--muted); margin-top: 2px; } #inboxp .ib-m { margin-top: 6px; font-size: 14px; color: #e6e6eb; background: #1b1b21; border-radius: 12px; padding: 8px 12px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: pre-wrap; word-break: break-word; }
 #inboxp .ib-k { position: absolute; left: 38px; top: 38px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: #6c78ff; border: 2px solid #141418; } #inboxp .ib-k .ic { width: 11px; height: 11px; color: #fff; }
-#inboxp .ib-k.reply { background: #2f9e65; } #inboxp .ib-k.friend { background: #e8a33d; } #inboxp .ib-k.everyone, #inboxp .ib-k.role { background: #d64545; }
+#inboxp .ib-k.reply { background: #2f9e65; } #inboxp .ib-k.dm { background: #4aa8ff; } #inboxp .ib-n { display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px; background: #f23f43; color: #fff; font-size: 11px; font-weight: 800; } #inboxp .ib-k.friend { background: #e8a33d; } #inboxp .ib-k.everyone, #inboxp .ib-k.role { background: #d64545; }
 #inboxp .ib-empty { text-align: center; color: var(--muted); padding: 60px 20px; font-size: 14px; } #inboxp .ib-empty .ic { width: 44px; height: 44px; color: #3a3a44; display: block; margin: 0 auto 12px; }
 @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
   #inboxp { left: 0; right: 0; top: 0; width: auto; max-height: none; bottom: var(--tabh, 0px); border-radius: 0; border: none; padding-top: env(safe-area-inset-top); box-shadow: none; z-index: 19; background: #0f0f13; }
@@ -5233,7 +5233,7 @@ html.native input, html.native textarea, html.native [contenteditable], html.nat
   </nav>
   <div id="inboxp" role="dialog" aria-label="Bildirimler" hidden>
     <div class="ib-h"><b>Bildirimler</b><button type="button" id="ib-all">Temizle</button><button type="button" class="ib-close" id="ib-close" aria-label="Kapat"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-    <div class="ib-f" id="ib-f"><button type="button" data-f="" class="on">Tümü</button><button type="button" data-f="direct">Bahsetmeler</button><button type="button" data-f="reply">Yanıtlar</button><button type="button" data-f="friend">İstekler</button></div>
+    <div class="ib-f" id="ib-f"><button type="button" data-f="" class="on">Tümü</button><button type="button" data-f="direct">Bahsetmeler</button><button type="button" data-f="dm">Mesajlar</button><button type="button" data-f="reply">Yanıtlar</button><button type="button" data-f="friend">İstekler</button></div>
     <div class="ib-l" id="ib-l"></div>
   </div>
   <div id="vdock" aria-label="Ses kontrolleri"><button class="vd-info" id="vd-info"><span class="vd-dot"></span><span class="vd-t"><b id="vd-name">Seste</b><small id="vd-sub">Dokun: odayı aç</small></span></button><button class="vd-b" id="vd-mute" aria-label="Mikrofon"></button><button class="vd-b vd-x" id="vd-cam" aria-label="Kamera"></button><button class="vd-b vd-x" id="vd-scr" aria-label="Ekran paylaş"></button><button class="vd-b vd-x" id="vd-ar" aria-label="Kanka Arena" data-arcount=""></button><button class="vd-b vd-x" id="vd-sb" aria-label="Ses paneli" data-sbopen></button><button class="vd-b vd-x" id="vd-chat" aria-label="Oda sohbeti"></button><button class="vd-b vd-leave" id="vd-leave" aria-label="Ayrıl"></button></div>
@@ -6720,12 +6720,12 @@ function showWelcome(s, force) {
 let lastDM = null; // sunucuya geçmeden önce açık olan özel sohbet
 // ---- Bildirimler sekmesi (Discord gibi): bahsetmeler, yanıtlar, @everyone, rol, arkadaşlık istekleri. Liste sunucuda, her cihazda aynı ----
 let inboxList = [], inboxF = '';
-const IB_ICON = { direct: 'at', reply: 'reply', everyone: 'at', role: 'at', friend: 'userplus' };
-const ibText = e => e.t === 'friend' ? `<b>${esc(dn(e.from))}</b> sana arkadaşlık isteği gönderdi` : e.t === 'reply' ? `<b>${esc(dn(e.from))}</b> mesajına yanıt verdi` : e.t === 'everyone' ? `<b>${esc(dn(e.from))}</b> herkesi etiketledi` : e.t === 'role' ? `<b>${esc(dn(e.from))}</b> rolünü etiketledi` : `<b>${esc(dn(e.from))}</b> seni etiketledi`;
+const IB_ICON = { direct: 'at', reply: 'reply', everyone: 'at', role: 'at', friend: 'userplus', dm: 'chat' };
+const ibText = e => e.t === 'dm' ? `<b>${esc(dn(e.from))}</b> ${e.grp ? 'gruba yazdı' : 'sana mesaj gönderdi'}${e.n > 1 ? ` <span class="ib-n">${e.n} yeni</span>` : ''}` : e.t === 'friend' ? `<b>${esc(dn(e.from))}</b> sana arkadaşlık isteği gönderdi` : e.t === 'reply' ? `<b>${esc(dn(e.from))}</b> mesajına yanıt verdi` : e.t === 'everyone' ? `<b>${esc(dn(e.from))}</b> herkesi etiketledi` : e.t === 'role' ? `<b>${esc(dn(e.from))}</b> rolünü etiketledi` : `<b>${esc(dn(e.from))}</b> seni etiketledi`;
 function renderInbox() {
   const l = $('#ib-l'), list = inboxList.filter(e => !inboxF || (inboxF === 'direct' ? ['direct', 'everyone', 'role'].includes(e.t) : e.t === inboxF));
   $('#ib-f').querySelectorAll('[data-f]').forEach(b => b.classList.toggle('on', b.dataset.f === inboxF));
-  l.innerHTML = list.length ? list.map(e => `<div class="ib-e ${e.seen ? '' : 'new'}" data-ib="${esc(e.id)}">${av(e.from)}<span class="ib-k ${e.t}">${ic(IB_ICON[e.t] || 'bell')}</span><div class="ib-b"><div class="ib-t">${ibText(e)}</div><div class="ib-w">${esc(e.where || '')}${e.where ? ' · ' : ''}${ago(e.at)}</div>${e.text && e.t !== 'friend' ? `<div class="ib-m">${esc(e.text)}</div>` : ''}</div></div>`).join('')
+  l.innerHTML = list.length ? list.map(e => `<div class="ib-e ${e.seen ? '' : 'new'}" data-ib="${esc(e.id)}">${av(e.from)}<span class="ib-k ${e.t}">${ic(IB_ICON[e.t] || 'bell')}</span><div class="ib-b"><div class="ib-t">${ibText(e)}</div><div class="ib-w">${e.t === 'dm' && !e.grp ? 'Özel mesaj' : esc(e.where || '')} · ${ago(e.at)}</div>${e.text && e.t !== 'friend' ? `<div class="ib-m">${esc(e.text)}</div>` : ''}</div></div>`).join('')
     : `<div class="ib-empty">${ic('bell')}${inboxF ? 'Bu türde bildirimin yok.' : 'Henüz bildirimin yok.<br>Biri seni etiketleyince ya da mesajına yanıt verince burada görürsün.'}</div>`;
 }
 function showInbox() {
@@ -6739,10 +6739,11 @@ $('#ib-f').onclick = e => { const b = e.target.closest('[data-f]'); if (!b) retu
 $('#ib-all').onclick = () => { socket.emit('inboxDel', '*'); inboxList = []; renderInbox(); };
 $('#ib-l').onclick = e => {
   const x = e.target.closest('[data-ib]'); if (!x) return; const en = inboxList.find(i => i.id === x.dataset.ib); if (!en) return;
-  closeInbox(); openFromNotif({ ch: en.ch, from: en.from, friend: en.t === 'friend', mid: en.mid });
+  closeInbox(); openFromNotif({ ch: en.ch, from: en.from, friend: en.t === 'friend', dm: en.t === 'dm', mid: en.mid });
 };
-socket.on('inbox+', e => { S.inboxUnseen = (S.inboxUnseen || 0) + 1; inboxList = [e, ...inboxList.filter(x => x.mid !== e.mid || !e.mid)]; if (!$('#inboxp').hidden) { e.seen = false; renderInbox(); socket.emit('inboxSeen'); S.inboxUnseen = 0; } mtabsSync(); });
+socket.on('inbox+', e => { const was = inboxList.find(x => x.id === e.id); if (!(was && !was.seen)) S.inboxUnseen = (S.inboxUnseen || 0) + 1; inboxList = [e, ...inboxList.filter(x => x.id !== e.id && (x.mid !== e.mid || !e.mid))]; if (!$('#inboxp').hidden) { e.seen = false; renderInbox(); socket.emit('inboxSeen'); S.inboxUnseen = 0; } mtabsSync(); });
 socket.on('inboxSeen', () => { S.inboxUnseen = 0; mtabsSync(); });
+socket.on('inboxRead', ({ ch, unseen }) => { S.inboxUnseen = unseen || 0; inboxList.forEach(x => { if (x.ch === ch) x.seen = true; }); if (!$('#inboxp').hidden) renderInbox(); mtabsSync(); });
 socket.on('inboxDel', id => { inboxList = id === '*' ? [] : inboxList.filter(x => x.id !== id); if (!$('#inboxp').hidden) renderInbox(); });
 document.addEventListener('click', e => { const p = $('#inboxp'); if (!p.hidden && !p.contains(e.target) && !e.target.closest('#mtabs, #ib-btn') && !narrow()) closeInbox(); });
 // Bildirimden ya da kutudan gelince mesaj yüklenene kadar bekleyip ona git

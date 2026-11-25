@@ -2485,15 +2485,18 @@ function sendPush(name, payload) {
 // Bildirim kutusu (Discord'un Bildirimler sekmesi): bahsetme, yanıt, @everyone, rol, arkadaşlık isteği. Her cihazda aynı, son 60 kayıt.
 function inboxAdd(name, n) {
   const u = db.users[name]; if (!u || u.bot) return null;
-  const e = { id: id(), t: n.friend ? 'friend' : n.kind || 'direct', from: n.from, text: String(n.text || '').slice(0, 160), ch: n.channelId || null, sid: n.sid || null, mid: n.mid || null, where: n.where || '', at: Date.now() };
-  u.inbox = [e, ...(u.inbox || []).filter(x => !(e.mid && x.mid === e.mid))].slice(0, 60); save();
+  const t = n.friend ? 'friend' : n.dm ? 'dm' : n.kind || 'direct', now = Date.now();
+  // Özel mesajlar: aynı sohbetten okunmamış kayıt varsa yenisi onu günceller (sayı artar), liste sel olmaz
+  const old = t === 'dm' ? (u.inbox || []).find(x => x.t === 'dm' && x.ch === n.channelId && !x.r) : null;
+  const e = { id: old?.id || id(), t, from: n.from, text: String(n.text || '').slice(0, 160), ch: n.channelId || null, sid: n.sid || null, mid: n.mid || null, where: n.where || '', at: now, ...(t === 'dm' ? { n: (old?.n || 0) + 1, grp: n.channelId?.startsWith('g:') ? 1 : undefined } : {}) };
+  u.inbox = [e, ...(u.inbox || []).filter(x => x.id !== e.id && !(e.mid && x.mid === e.mid))].slice(0, 80); save();
   io.to('user:' + name).emit('inbox+', e); return e;
 }
-const inboxUnseen = u => (u.inbox || []).filter(x => x.at > (u.inboxSeen || 0)).length;
-const badgeOf = u => Math.min(99, inboxUnseen(u) + (u.dmPend || 0)); // uygulama simgesindeki sayı
+const inboxUnseen = u => (u.inbox || []).filter(x => !x.r && x.at > (u.inboxSeen || 0)).length;
+const badgeOf = u => Math.min(99, inboxUnseen(u)); // uygulama simgesindeki sayı
 function notifyUser(name, n) {
   io.to('user:' + name).emit('notify', n);
-  { const u = db.users[name]; if (u && !n.dm) inboxAdd(name, n); else if (u && n.dm) u.dmPend = Math.min(99, (u.dmPend || 0) + 1); }
+  if (db.users[name]) inboxAdd(name, n);
   const title = n.friend ? n.from : n.dm && n.channelId?.startsWith('g:') ? `${n.from} · ${n.where}` : n.dm ? n.from : n.kind === 'reply' ? `${n.from} sana yanıt verdi` : n.kind === 'everyone' ? `${n.from} · @everyone` : n.kind === 'role' ? `${n.from} rolünü etiketledi` : `${n.from} seni etiketledi`;
   sendPush(name, { direct: !!n.mention, title, body: n.friend ? 'sana arkadaşlık isteği gönderdi' : String(n.text || '').slice(0, 160) + (n.dm ? '' : n.where ? `\n${n.where}` : ''),
     tag: n.channelId || (n.friend ? 'friends' : 'kanka'), ch: n.channelId || null, from: n.from, dm: !!n.dm, friend: !!n.friend, mid: n.mid || undefined, badge: badgeOf(db.users[name] || {}),
@@ -5485,15 +5488,16 @@ io.on('connection', socket => {
   socket.on('read', id => { // okundu bilgisi her cihazda aynı olsun
     const u = db.users[me]; if (!u || typeof id !== 'string' || id.length > 80) return;
     const t = Date.now(); u.prefs ||= {}; u.prefs.read ||= {}; u.prefs.read[id] = t;
+    { let ch = false; for (const e of u.inbox || []) if (e.ch === id && !e.r) { e.r = 1; ch = true; } if (ch) io.to('user:' + me).emit('inboxRead', { ch: id, unseen: inboxUnseen(u) }); }
     const keys = Object.keys(u.prefs.read); if (keys.length > 600) for (const k of keys.sort((a, b) => u.prefs.read[a] - u.prefs.read[b]).slice(0, 100)) delete u.prefs.read[k];
     save();
     for (const [sid, n] of online) if (n === me && sid !== socket.id) io.to(sid).emit('readSync', { id, t });
   });
-  socket.on('vis', on => { on ? visibleSockets.add(socket.id) : visibleSockets.delete(socket.id); const u = me && db.users[me]; if (on && u?.dmPend) { u.dmPend = 0; save(); } });
+  socket.on('vis', on => { on ? visibleSockets.add(socket.id) : visibleSockets.delete(socket.id); });
   // Bildirimler sekmesi
   socket.on('inbox', (_, cb = () => {}) => { const u = me && db.users[me]; if (!u) return cb({ list: [] });
-    cb({ list: (u.inbox || []).map(e => ({ ...e, seen: e.at <= (u.inboxSeen || 0) })), unseen: inboxUnseen(u) }); });
-  socket.on('inboxSeen', () => { const u = me && db.users[me]; if (!u) return; u.inboxSeen = Date.now(); u.dmPend = 0; save(); io.to('user:' + me).emit('inboxSeen', u.inboxSeen); });
+    cb({ list: (u.inbox || []).map(e => ({ ...e, seen: !!e.r || e.at <= (u.inboxSeen || 0) })), unseen: inboxUnseen(u) }); });
+  socket.on('inboxSeen', () => { const u = me && db.users[me]; if (!u) return; u.inboxSeen = Date.now(); save(); io.to('user:' + me).emit('inboxSeen', u.inboxSeen); });
   socket.on('inboxDel', (eid, cb = () => {}) => { const u = me && db.users[me]; if (!u) return cb({}); u.inbox = (u.inbox || []).filter(e => eid === '*' ? false : e.id !== eid); save(); io.to('user:' + me).emit('inboxDel', eid); cb({ ok: true }); });
   socket.on('pushKey', (cb = () => {}) => cb(webpush && vapid ? vapid.publicKey : null));
   socket.on('pushSub', (sub, cb = () => {}) => {
