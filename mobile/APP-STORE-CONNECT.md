@@ -7,7 +7,7 @@ App Store Connect'e girilecek her şey burada. Mağaza metinleri `fastlane/metad
 1. **Gerçek iPhone'da test:** sesli oda, özel arama, gelen arama ekranı (CallKit), bildirimler, fotoğraf gönderme, hesap silme.
 2. **APNs:** Yönetim paneli › Mobil bildirimler'e Apple'dan aldığın `.p8` anahtarını yükle. Aynı anahtar hem normal bildirimler hem gelen aramalar (VoIP, `com.kanka.chat.voip`) için çalışır, ayrı sertifika gerekmez.
 3. **Xcode:** Signing & Capabilities'te *Push Notifications* ve *Background Modes › Voice over IP + Remote notifications* açık olmalı (Info.plist'te var). Archive alırken `aps-environment` production olur.
-4. **Universal link:** VDS'te `IOS_TEAM_ID` ortam değişkenine Apple Team ID'ni yaz (yoksa `kankahq.com/.well-known/apple-app-site-association` 404 döner ve linkler uygulamada açılmaz). Tarayıcıda o adresi açıp JSON göründüğünü kontrol et.
+4. **Universal link:** Team ID artık 2. adımda yüklediğin APNs anahtarındaki Team ID'den otomatik alınıyor (istersen VDS'te `IOS_TEAM_ID` ile ezebilirsin). Anahtarı yükledikten sonra tarayıcıda `kankahq.com/.well-known/apple-app-site-association` adresini açıp JSON göründüğünü kontrol et.
 5. **Demo hesap** (aşağıda, 4. bölüm).
 6. **Ülkeler:** Pricing and Availability › sadece **Türkiye**. ABD/AB yaş doğrulama yasaları ve Çin'in şifreli mesajlaşma beyanı böylece ilk sürüme uygulanmaz.
 
@@ -34,12 +34,12 @@ Açıklama, anahtar kelimeler, tanıtım metni: `fastlane/metadata/tr/`. **Mağa
 
 ## 4. Demo hesap (inceleme için zorunlu)
 
-Kayıt kapalı betada davet koduna bağlı. İncelemeci kendisi hesap açamaz, hazır hesap vermelisin:
+Kayıt kapalı betada davet koduna bağlı. İncelemeci kendisi hesap açamaz, hazır hesap vermelisin. Bu artık tek tuş:
 
-1. Yönetim paneli › Davet kodları › **1 kod üret** (not: "Apple inceleme").
-2. Bu kodla kayıt ol: kullanıcı adı `appleinceleme`, doğum tarihi 1990, güçlü bir şifre. **İki adımlı doğrulamayı açma.**
-3. Hesabı doldur: bir test sunucusu kur (yazılı + sesli oda, birkaç mesaj), ikinci bir test hesabıyla arkadaş ol ve DM'leş, bir resim gönder.
-4. İkinci test hesabını da notlarda ver ki incelemeci arama ve DM deneyebilsin.
+1. Yönetim paneli › Mobil › **Apple inceleme hesaplarını hazırla**.
+2. Düğme `appleinceleme` ve `appleinceleme2` hesaplarını (2FA kapalı, yetişkin, arkadaş) ve içinde yazılı + sesli oda, örnek mesajlar ve aralarında DM olan "Apple İnceleme" sunucusunu kurar, şifreleri ekranda gösterir.
+3. Gösterilen iki şifreyi aşağıdaki notlara yapıştır. Düğmeye tekrar basarsan şifreler yenilenir, notları da güncelle.
+4. İstersen bir hesapla girip bir resim gönder (incelemeci medya paylaşımını görsün).
 5. İnceleme süresince (birkaç gün) sunucunun açık kalacağından emin ol. Bu sürede büyük sunucu güncellemesi yapma.
 
 ## 5. İnceleme notları (App Review Information › Notes, İngilizce)

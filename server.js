@@ -206,8 +206,8 @@ app.get('/discord-alternatifi', (req, res) => res.redirect(301, '/sesli-sohbet' 
 // Değerler gizli değildir ama imzaya bağlıdır: ANDROID_SHA256 (Play imza sertifikası SHA-256, virgülle birden fazla) ve IOS_TEAM_ID ortam değişkenleri yoksa 404 döner.
 app.get('/.well-known/assetlinks.json', (req, res) => { const fp = String(process.env.ANDROID_SHA256 || '').split(',').map(x => x.trim()).filter(Boolean); if (!fp.length) return res.status(404).end();
   res.json([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: process.env.ANDROID_PACKAGE || 'com.kanka.chat', sha256_cert_fingerprints: fp } }]); });
-app.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (req, res) => { const team = String(process.env.IOS_TEAM_ID || '').trim(); if (!team) return res.status(404).end();
-  res.type('application/json').send(JSON.stringify({ applinks: { details: [{ appIDs: [`${team}.${process.env.IOS_BUNDLE || 'com.kanka.chat'}`], components: ['/davet/*', '/s/*', '/app*', '/bot-ekle/*'].map(p => ({ '/': p })) }] } })); });
+app.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (req, res) => { const team = String(process.env.IOS_TEAM_ID || npCfg.apns?.teamId || '').trim(); if (!team) return res.status(404).end(); // Team ID: ortam değişkeni ya da Yönetim › Mobil bildirimler'deki APNs ayarı
+  res.type('application/json').send(JSON.stringify({ applinks: { details: [{ appIDs: [`${team}.${process.env.IOS_BUNDLE || npCfg.apns?.bundle || 'com.kanka.chat'}`], components: ['/davet/*', '/s/*', '/app*', '/bot-ekle/*'].map(p => ({ '/': p })) }] } })); });
 app.get('/davet/:code', (req, res) => res.redirect('/app?davet=' + encodeURIComponent(req.params.code)));
 // Partner sunucuların özel linki: kankahq.com/s/isim
 app.get('/s/:slug', (req, res) => { const s = db.servers.find(x => x.vanity && x.vanity === String(req.params.slug).toLowerCase() && vanityOk(x)); res.redirect(s ? '/app?davet=' + encodeURIComponent(s.invite) : '/'); });
@@ -5093,6 +5093,41 @@ io.on('connection', socket => {
   socket.on('pushNativeOff', ({ token } = {}, cb = () => {}) => { const u = db.users[me]; if (u?.npush) { u.npush = u.npush.filter(d => d.t !== String(token || '')); save(); } cb({ ok: true }); });
   socket.on('pushNativeTest', (_, cb = () => {}) => { const u = db.users[me]; if (!u?.npush?.length) return cb({ error: 'Bu hesapta kayıtlı telefon yok' }); if (limited('nptest|' + me, 5, 600e3)) return cb({ error: 'Biraz bekle' });
     nativePush(u, { title: 'Kanka Chat', body: 'Bildirimler çalışıyor 🎉', tag: 'test' }).then(() => cb({ ok: true, ...npStats })); });
+  // Apple incelemesi için iki demo hesap: arkadaş, ortak test sunucusu, DM ve örnek mesajlarla hazır. Şifreleri sistem üretir, sadece yöneticiye bir kez gösterilir.
+  // Var olan hesaplarda şifre yenilenir. İki adımlı doğrulama kapalı tutulur (incelemeci geçemez).
+  socket.on('adminReviewAccounts', (_ = {}, cb = () => {}) => {
+    if (!SA(cb)) return;
+    const pw = () => crypto.randomBytes(9).toString('base64').replace(/[+/=]/g, '').slice(0, 12) + '7k';
+    const names = ['appleinceleme', 'appleinceleme2'], out = [];
+    for (const [i, name] of names.entries()) {
+      const password = pw(), salt = crypto.randomBytes(16).toString('hex');
+      let u = db.users[name];
+      if (!u) { u = db.users[name] = { name, email: null, terms: { v: 1, at: Date.now() }, color: COLORS[i % COLORS.length], xp: 0, createdAt: Date.now(), avatar: pickPresetAv(), onb: { rewarded: true }, displayName: i ? 'Apple Test 2' : 'Apple Test', review: true }; uidOf(u); }
+      u.salt = salt; u.hash = hashPw(password, salt); u.dob = '1990-01-01'; u.birthday = '01-01'; delete u.ageLock; delete u.tfa; delete u.siteBan;
+      u.friends ||= []; u.reqIn ||= []; u.reqOut ||= [];
+      out.push({ name, password });
+    }
+    const [a, b] = names.map(n => db.users[n]);
+    if (!a.friends.includes(b.name)) a.friends.push(b.name); if (!b.friends.includes(a.name)) b.friends.push(a.name);
+    let sv = db.servers.find(x => x.owner === a.name && x.reviewDemo);
+    if (!sv) {
+      const t = id(), v = id(), g = id();
+      sv = { id: id(), name: 'Apple İnceleme', icon: 'A', owner: a.name, members: [a.name, b.name], joinedAt: { [a.name]: Date.now(), [b.name]: Date.now() }, createdAt: Date.now(), setup: {}, roles: {}, customRoles: [], memberRoles: {}, bans: {}, timeouts: {},
+        channels: [{ id: t, name: 'genel', type: 'text' }, { id: g, name: 'oyun', type: 'text' }, { id: v, name: 'Sohbet', type: 'voice' }], template: 'bos', reviewDemo: true };
+      migrateCats(sv); db.servers.push(sv);
+      const say = (who, ch, text) => { try { postMessage(who, ch, { text }); } catch (e) { console.warn('inceleme mesajı', e.message); } };
+      say(a.name, t, 'Merhaba! Bu, Apple incelemesi için hazırlanmış bir test sunucusu 👋', 9e5);
+      say(b.name, t, 'Selam! Akşam sesli odaya gelir misin?', 6e5);
+      say(a.name, t, 'Olur, 21:00 gibi Sohbet odasındayım 🎧', 3e5);
+      say(b.name, g, 'Bu akşam maç var mı?', 2e5);
+      const dm = dmId(a.name, b.name);
+      say(b.name, dm, 'Selam, bu bir özel mesaj. Buradan arama da yapabilirsin 📞', 4e5);
+      say(a.name, dm, 'Harika, birazdan ararım.', 1e5);
+    } else for (const n of names) if (!sv.members.includes(n)) sv.members.push(n);
+    secLog?.('apple-inceleme', me, 'inceleme hesapları hazırlandı / şifreler yenilendi');
+    save(); io.emit('users', allUsers()); pushServers(names.filter(n => onlineNames().includes(n)));
+    cb({ ok: true, accounts: out, server: sv.name });
+  });
   socket.on('adminMobilPush', ({ fcm, apns, clear } = {}, cb = () => {}) => {
     if (!SA(cb)) return; if (staffRank(me) !== 'owner' && !siteAdmin(me)) return cb({ error: 'Yetkin yok' });
     if (clear === 'fcm') delete npCfg.fcm; if (clear === 'apns') delete npCfg.apns;

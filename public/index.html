@@ -17939,7 +17939,10 @@ function adminPanel(el, sub = 'overview') {
       <div class="st-field"><label>Bundle ID</label><input class="field" id="mp-bid" value="${esc(r.apns?.bundle || 'com.kanka.chat')}"></div>
       <label class="switch" style="margin:6px 0 10px">Yayın ortamı (TestFlight ve App Store)<input type="checkbox" id="mp-prod" ${r.apns?.prod === false ? '' : 'checked'}></label>
       <div class="rowb" style="justify-content:flex-start"><label class="btns2" style="cursor:pointer">${ic('upload')} .p8 anahtarını seç<input type="file" id="mp-p8" accept=".p8,text/plain" hidden></label><button class="primary" id="mp-asave" style="width:auto;padding:11px 20px">APNs'i kaydet</button></div>
-      <p class="hint" style="margin-top:14px">Anahtarlar sunucunun veri klasöründe saklanır, GitHub'a gitmez. Kendi telefonunda denemek için: uygulamada Ayarlar › Bildirimler › Dene.</p></div>`;
+      <p class="hint" style="margin-top:14px">Anahtarlar sunucunun veri klasöründe saklanır, GitHub'a gitmez. Kendi telefonunda denemek için: uygulamada Ayarlar › Bildirimler › Dene. Team ID girilince iOS uygulama bağlantıları (kankahq.com/.well-known/apple-app-site-association) da kendiliğinden açılır.</p>
+      <h5 class="ax-h" style="margin-top:18px">Apple inceleme hesapları</h5>
+      <p class="hint">App Store incelemesi için iki demo hesap (<b>appleinceleme</b>, <b>appleinceleme2</b>) kurar: arkadaşlar, ortak bir test sunucusu (yazılı + sesli oda), DM ve örnek mesajlarla. Şifreleri sistem üretir ve sadece burada bir kez gösterir; tekrar basarsan şifreler yenilenir.</p>
+      <div class="rowb" style="justify-content:flex-start"><button class="primary" id="mp-review" style="width:auto">Apple inceleme hesaplarını hazırla</button></div><div id="mp-review-out"></div></div>`;
     let p8 = '';
     const done = x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); toast('Kaydedildi'); adminPanel(el, 'mobil'); };
     $('#mp-fcm').onchange = async e => { const f = e.target.files?.[0]; if (!f) return; socket.emit('adminMobilPush', { fcm: await f.text() }, done); };
@@ -17947,6 +17950,12 @@ function adminPanel(el, sub = 'overview') {
     $('#mp-asave').onclick = () => socket.emit('adminMobilPush', { apns: { keyId: $('#mp-kid').value.trim().toUpperCase(), teamId: $('#mp-tid').value.trim().toUpperCase(), bundle: $('#mp-bid').value.trim(), prod: $('#mp-prod').checked, key: p8 } }, done);
     if ($('#mp-fcmx')) $('#mp-fcmx').onclick = () => socket.emit('adminMobilPush', { clear: 'fcm' }, done);
     if ($('#mp-apx')) $('#mp-apx').onclick = () => socket.emit('adminMobilPush', { clear: 'apns' }, done);
+    $('#mp-review').onclick = () => confirmBox('İnceleme hesapları hazırlansın mı? Yoksa kurulur, varsa şifreleri yenilenir; şifreler sadece bir kez gösterilir.', () => socket.emit('adminReviewAccounts', {}, x => {
+      if (x.error) return toast(x.error, null, false, { type: 'err' });
+      const [a1, a2] = x.accounts, note = `DEMO ACCOUNTS (no 2FA)\n  Account 1: ${a1.name} / ${a1.password}\n  Account 2: ${a2.name} / ${a2.password}`;
+      $('#mp-review-out').innerHTML = `<div class="mail-st ok" style="margin-top:10px">${ic('check')}<b>Hazır · sunucu: ${esc(x.server)}</b><span>Bu şifreler bir daha gösterilmez. App Store Connect › App Review Information › Notes'a yapıştır.</span></div><pre class="field" style="white-space:pre-wrap;user-select:all;margin-top:8px">${esc(note)}</pre><div class="rowb" style="justify-content:flex-start"><button class="btns2" id="mp-review-copy">Kopyala</button></div>`;
+      $('#mp-review-copy').onclick = () => navigator.clipboard?.writeText(note).then(() => toast('Kopyalandı'));
+    }));
   });
   if (sub === 'gif') return socket.emit('adminGif', {}, r => {
     if (r.error) return B.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
