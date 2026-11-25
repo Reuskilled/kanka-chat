@@ -11659,7 +11659,7 @@ async function idleCheck() {
   setIdle(idleFor > IDLE_MS && !myVoice);
 }
 setInterval(idleCheck, 15e3);
-socket.on('connect', () => { idleSent = false; setTimeout(idleCheck, 2000); });
+socket.on('connect', () => { socket.emit('usersPatchOk'); idleSent = false; setTimeout(idleCheck, 2000); });
 function renderMe() {
   const u = S.users[S.me];
   { const h = av(S.me, true); if ($('#me-av').innerHTML !== h) $('#me-av').innerHTML = h; } // değişmediyse yeniden çizme (resim titremesin)
@@ -11688,15 +11688,18 @@ const voiceUsersSig = () => {
   for (const l of Object.values(S.voice || {})) for (const n of l || []) names.add(n);
   return JSON.stringify([...names].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.nameBanner, u.nameStyle, u.tg]; }));
 };
-socket.on('users', list => {
-  S.users = Object.fromEntries(list.map(u => [u.name, u]));
+socket.on('users', list => { S.users = Object.fromEntries(list.map(u => [u.name, u])); usersChanged(); });
+// Sunucu artık sadece değişen kişileri gönderiyor (tüm liste yerine)
+socket.on('usersPatch', ({ upd = [], del = [] } = {}) => { for (const u of upd) S.users[u.name] = u; for (const n of del) delete S.users[n]; usersChanged(); });
+function usersChanged() {
   if (!S.me || !S.users[S.me]) return;
   renderMe(); renderMembers(); if (S.view === 'dm') renderDMSide();
   const vsig = voiceUsersSig();
   if (vsig !== lastVoiceUsersSig) { lastVoiceUsersSig = vsig; if (S.view === 'server' && S.server) renderSide(); if (myVoice) renderStage(); }
   // Mesajları sadece ekrandaki yazarların adı/rengi/resmi/seviyesi değiştiyse yeniden çiz (her XP artışında değil)
   clearTimeout(usersT); usersT = setTimeout(() => { if (!S.msgs.length) return; const sig = msgUsersSig(); if (sig !== lastMsgUsersSig) { lastMsgUsersSig = sig; renderMessages(); } }, 300);
-});
+
+}
 socket.on('toast', t => toast(t));
 socket.on('social', soc => {
   const newReq = soc.reqIn.length > S.social.reqIn.length;

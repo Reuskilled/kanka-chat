@@ -1053,7 +1053,7 @@ const TAG = {
   canUse(n, s) { const u = db.users[n]; if (!u || u.bot || !s || !TAG.defOf(s)) return false; if (!(s.public || s.members.includes(n)) || s.bans?.[n]) return false; return TAG.cfg().who === 'uye' || !!staffRank(n); },
   canList: n => db.servers.filter(s => TAG.canUse(n, s)).map(s => s.id),
   of(u) { if (!u?.tag) return null; const s = db.servers.find(x => x.id === u.tag); return TAG.canUse(u.name, s) ? s.id : null; },
-  push() { const d = TAG.defs(); io.emit('tagDefs', d); for (const [sid, n] of online) io.to(sid).emit('tagCan', TAG.canList(n)); io.emit('users', allUsers()); },
+  push() { const d = TAG.defs(); io.emit('tagDefs', d); for (const [sid, n] of online) io.to(sid).emit('tagCan', TAG.canList(n)); pushUsers(); },
 };
 const pubUser = u => ({ sp: sparkOn(u) ? u.spark.since : null, id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect && (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner') ? u.effect : null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), tg: u.bot ? null : TAG.of(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
@@ -1518,7 +1518,7 @@ function partnerPerks() {
     for (const n of Object.keys(db.users)) { const l = hq.memberRoles[n] || [], has = l.includes(r.id), want = owners.has(n);
       if (want && !has) hq.memberRoles[n] = [...l, r.id];
       else if (!want && has) { hq.memberRoles[n] = l.filter(x => x !== r.id); if (!hq.memberRoles[n].length) delete hq.memberRoles[n]; } } }
-  save(); pushServers(membersOf(hq)); io.emit('users', allUsers()); // sahibin profil rozeti güncellensin
+  save(); pushServers(membersOf(hq)); pushUsers(); // sahibin profil rozeti güncellensin
 }
 // ================= Uçtan uca şifreleme (DM ve grup DM) =================
 // Sunucu anahtarları hiç görmez: her hesabın ECDH (P-256) anahtar çifti cihazda üretilir; gizli anahtar kullanıcının
@@ -1583,7 +1583,7 @@ function devCheck(name) {
 }
 function devAward(name, by) {
   const u = db.users[name]; if (!u) return; u.devEarned = true; (u.badgeAt ||= {}).dev = Date.now(); const a = db.devApps?.[name]; if (a) { a.earnedAt = Date.now(); a.earnedBy = by; }
-  save(); io.emit('users', allUsers()); devPerks();
+  save(); pushUsers(); devPerks();
   botDm(name, { title: '🛠️ Bot Geliştirici rozeti senin!', tone: 'good', text: 'botun gerçekten kullanılıyor, eline sağlık! profilinde artık bot geliştirici rozeti var. kanka\'yı birlikte büyütüyoruz 🧡' });
 }
 setTimeout(() => { // bir kerelik: eski kuralla rozet alanlar rozetlerini korur
@@ -1735,7 +1735,7 @@ function sparkCredit(u) { // vadesi gelen ayların Energy'sini ekle (her ay 2, h
 function sparkExpire(u, why = 'Kanka Spark aboneliğin sona erdi') {
   const sids = (u.spark?.energy || []).map(x => x.srv).filter(Boolean);
   for (const sid of new Set(sids)) { const s = db.servers.find(x => x.id === sid); if (s?.energy) delete s.energy[u.name]; }
-  delete u.spark; save(); energyTouch(sids); io.to('user:' + u.name).emit('spark', sparkView(u)); io.emit('users', allUsers());
+  delete u.spark; save(); energyTouch(sids); io.to('user:' + u.name).emit('spark', sparkView(u)); pushUsers();
   botDm(u.name, { title: '⚡ Kanka Spark sona erdi', tone: 'info', text: `${why}. Spark avantajların kaldırıldı; sunuculara gönderdiğin Energy'ler de silindi. Yeniden abone olduğunda her şey sıfırdan başlar.` });
 }
 function sparkGrant(u, months, by) { // ödeme/yenileme ya da ekip tarafından verilen abonelik süresi
@@ -1743,7 +1743,7 @@ function sparkGrant(u, months, by) { // ödeme/yenileme ya da ekip tarafından v
   const fresh = !u.spark;
   if (fresh) u.spark = { since: Date.now(), until: Date.now(), credited: 0, energy: [] };
   u.spark.until += months * SPARK_MONTH; (u.spark.log ||= []).push({ at: Date.now(), months, by }); u.spark.log = u.spark.log.slice(-30);
-  sparkCredit(u); save(); io.to('user:' + u.name).emit('spark', sparkView(u)); io.emit('users', allUsers());
+  sparkCredit(u); save(); io.to('user:' + u.name).emit('spark', sparkView(u)); pushUsers();
   if (fresh) botDm(u.name, { title: '⚡ Kanka Spark\'a hoş geldin!', tone: 'good', text: `Aboneliğin başladı. Hesabına ${SPARK_PER_MONTH} Energy eklendi: bir sunucunun sayfasında "Sunucuya Energy Gönder" ile destekleyebilirsin. Her ay ${SPARK_PER_MONTH} Energy daha gelir, her 3 ayda bir de bonus.` });
 }
 setInterval(() => { try { // abonelik sayacı: ay dolunca Energy ver, süresi bitince sonlandır
@@ -1781,7 +1781,7 @@ function onbAward(name) {
   const u = db.users[name]; if (!u) return; const ob = onbOf(u); if (ob.rewarded) return;
   const st = onbSteps(u); if (!Object.values(st).every(Boolean)) return;
   ob.rewarded = true; addXp(u.name, 100, 'rehber'); save();
-  io.to('user:' + name).emit('onbReward', {}); io.emit('users', allUsers());
+  io.to('user:' + name).emit('onbReward', {}); pushUsers();
 }
 setTimeout(() => { for (const n of Object.keys(db.users)) onbAward(n); }, 5000); // eski hesaplar da hak ettiyse alsın
 const setupOf = s => { if (!s.setup) s.setup = (s.createdAt || 0) < ONB_SINCE || s.public ? { done: true } : {}; return s.setup; };
@@ -2184,7 +2184,7 @@ function touchStreak(name) {
   const bonus = 5 + Math.min(count, 10) * 2;
   u.streak = { last: t, count, best: Math.max(count, u.streak?.best || 0) };
   addXp(name, bonus, 'seri');
-  setTimeout(() => io.emit('users', allUsers()), 100);
+  setTimeout(() => pushUsers(), 100);
   return { count, bonus };
 }
 setInterval(() => { // açık kalan bağlantılar da yeni günü saysın
@@ -2224,7 +2224,7 @@ setTimeout(() => { try {
     while (d.has(cur.toISOString().slice(0, 10))) { n++; cur = new Date(+cur - 864e5); }
     if (n > (u.streak?.count || 0)) { u.streak = { last: start, count: n, best: Math.max(n, u.streak?.best || 0) }; fixed++; }
   }
-  db.streakFix2 = Date.now(); save(); if (fixed) { console.log(`Seri onarımı: ${fixed} kişinin serisi düzeltildi`); io.emit('users', allUsers()); }
+  db.streakFix2 = Date.now(); save(); if (fixed) { console.log(`Seri onarımı: ${fixed} kişinin serisi düzeltildi`); pushUsers(); }
 } catch (e) { console.error('seri onarımı', e); } }, 4000);
 const BADGES = {
   erken: ['🌱', 'Erken kanka', 'İlk 100 üyeden biri'],
@@ -2595,7 +2595,7 @@ setInterval(() => {
     for (const [sid, n] of m) { const u = db.users[n], fl = voiceFlags.get(sid) || {}; if (!u || fl.d) continue;
       const vx = u.vxp?.d === d ? u.vxp : (u.vxp = { d, n: 0 }); if (vx.n >= 240) continue;
       const g = fl.m ? 1 : 2; vx.n += g; addXp(n, g, 'ses', f?.s || null, null); } }
-  save(); if (who.size) io.emit('users', allUsers());
+  save(); if (who.size) pushUsers();
 }, 60e3);
 const voiceStart = new Map();
 function voiceAges() {
@@ -2605,7 +2605,21 @@ function voiceAges() {
   return o;
 }
 const voiceState = () => Object.fromEntries([...voice].filter(([k]) => !k.startsWith('call:')).map(([k, m]) => [k, [...new Set(m.values())]]));
-const pushPresence = () => io.emit('presence', presenceList());
+// Durum listesi: kısa sürede gelen değişiklikler tek gönderimde toplanır, değişmediyse hiç gönderilmez
+let presT = null, lastPres = '';
+const pushPresence = () => { if (presT) return; presT = setTimeout(() => { presT = null; const l = presenceList(), j = JSON.stringify(l); if (j === lastPres) return; lastPres = j; io.emit('presence', l); }, 400); };
+// Kullanıcı bilgileri: herkese tüm liste yerine sadece değişen kişiler gider (1,5 sn'de bir toplanır). Eski istemciler tüm listeyi almaya devam eder.
+const usersCache = new Map(); let usersT = null;
+function pushUsers() { if (!usersT) usersT = setTimeout(flushUsers, 1500); }
+function flushUsers() {
+  usersT = null; const upd = [], seen = new Set();
+  for (const u of Object.values(db.users)) { const p = pubUser(u), j = JSON.stringify(p); seen.add(p.name); if (usersCache.get(p.name) !== j) { usersCache.set(p.name, j); upd.push(p); } }
+  const del = [...usersCache.keys()].filter(n => !seen.has(n)); for (const n of del) usersCache.delete(n);
+  if (!upd.length && !del.length) return;
+  io.to('up2').emit('usersPatch', { upd, del });
+  if (io.sockets.sockets.size > (io.sockets.adapter.rooms.get('up2')?.size || 0)) io.except('up2').emit('users', allUsers());
+}
+setTimeout(() => { for (const u of Object.values(db.users)) { const p = pubUser(u); usersCache.set(p.name, JSON.stringify(p)); } }, 0);
 const voiceMedia = new Map();       // socket.id -> { cam, screen } (yayın rozetleri için)
 const liveMeta = new Map();         // socket.id -> { since, q, viewers, audio, thumb, thumbAt } (yayın önizleme kartı)
 const liveState = () => { const o = {}; for (const [ch, m] of voice) { if (ch.startsWith('call:')) continue; const l = [...m].filter(([sid]) => voiceMedia.get(sid)?.screen).sort((a, b) => (liveMeta.get(a[0])?.since || 0) - (liveMeta.get(b[0])?.since || 0)).map(([, n]) => n); if (l.length) o[ch] = l; } return o; };
@@ -2789,7 +2803,7 @@ function postMessage(me, chId, p = {}) {
   io.to(chId).emit('message', { channelId: chId, msg });
   io.to('user:' + me).emit('users', allUsers());
 
-  if (level(u.xp) > before) io.emit('users', allUsers());
+  if (level(u.xp) > before) pushUsers();
 
   // Bildirimler
   const where = chId.startsWith('dm:') ? 'özel mesaj' : chId.startsWith('g:') ? groupTitle(groupOf(chId)) : (() => { const f = findChannel(chId); return `${f.s.name} › ${f.c.name}`; })();
@@ -2990,7 +3004,7 @@ function renameUser(old, nw) {
   // açık olan her yerde yeni adla yeniden bağlansın
   io.to('user:' + old).emit('renamed', { from: old, to: nw });
   setTimeout(() => io.in('user:' + old).disconnectSockets(true), 1500);
-  io.emit('users', allUsers()); io.emit('presence', presenceList());
+  pushUsers(); pushPresence();
   for (const sv of db.servers) if (sv.members.includes(nw)) pushServers(sv.members);
   const peers = new Set(); for (const k of Object.keys(db.messages)) if (k.startsWith('dm:') && dmPeers(k).includes(nw)) dmPeers(k).forEach(n => peers.add(n));
   for (const g of Object.values(db.groups || {})) if (g.members.includes(nw)) g.members.forEach(n => peers.add(n));
@@ -4429,7 +4443,7 @@ function botSetPresence(a, b) {
   let prof = false;
   if (st) u.presence = st;
   if (yazi !== undefined && yazi !== null) { const t = noPing(clean(yazi, 80)); if (t !== (u.status || '')) { u.status = t; prof = true; } }
-  save(); pushPresence(); if (prof) io.emit('users', allUsers());
+  save(); pushPresence(); if (prof) pushUsers();
   return { durum: { online: 'cevrimici', idle: 'bosta', dnd: 'rahatsizetme', invisible: 'gorunmez' }[u.presence || 'online'], yazi: u.status || '' };
 }
 api.patch('/ben/durum', R((a, req) => botSetPresence(a, req.body)));
@@ -4690,7 +4704,7 @@ function botJoin(a, s, perms, by) {
 function appRemove(a) {
   for (const c of botConnsOf(a.id)) c.ws.close(4004, 'Uygulama silindi');
   for (const s of db.servers) if (s.members.includes(a.bot)) { s.members = s.members.filter(n => n !== a.bot); delete s.memberRoles?.[a.bot]; delete s.joinedAt?.[a.bot]; delete s.roles?.[a.bot]; s.customRoles = (s.customRoles || []).filter(r => r.managed !== a.id); pushServers(membersOf(s)); }
-  delete db.users[a.bot]; delete db.apps[a.id]; save(); io.emit('users', allUsers());
+  delete db.users[a.bot]; delete db.apps[a.id]; save(); pushUsers();
 }
 
 // ---------- Bağlantı ----------
@@ -4703,6 +4717,7 @@ setInterval(() => {
 }, 3600e3);
 const ipConns = new Map();
 io.on('connection', socket => {
+  socket.on('usersPatchOk', () => socket.join('up2'));
   { // aynı IP'den aşırı bağlantı açılmasın (bir evde birkaç cihaz rahatça sığar)
     const ipc = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']), n = (ipConns.get(ipc) || 0) + 1;
     ipConns.set(ipc, n); socket.on('disconnect', () => { const k = (ipConns.get(ipc) || 1) - 1; k ? ipConns.set(ipc, k) : ipConns.delete(ipc); });
@@ -4782,7 +4797,7 @@ io.on('connection', socket => {
     }
     db.waitlist.forEach(x => { if (x.email === email) x.joined = name; });
     ensureOwners(); save();
-    io.emit('users', allUsers());
+    pushUsers();
     pushServers(onlineNames()); // herkese açık sunucunun üye listesi değişti
     cb(start(name));
     for (const sv of db.servers) if (sv.public) setTimeout(() => botWelcome(sv, name), 1500);
@@ -4882,7 +4897,7 @@ io.on('connection', socket => {
     if (ob.rewarded) return cb({ ok: true, already: true, onb: ob });
     if (!Object.values(onbSteps(u)).every(Boolean)) return cb({ error: 'Adımlar henüz bitmedi' });
     ob.rewarded = true; addXp(u.name, 100, 'rehber'); save();
-    io.emit('users', allUsers()); cb({ ok: true, xp: 100, onb: ob });
+    pushUsers(); cb({ ok: true, xp: 100, onb: ob });
   });
   socket.on('setupSet', ({ serverId, k } = {}, cb = () => {}) => {
     const sv = db.servers.find(x => x.id === serverId);
@@ -5011,7 +5026,7 @@ io.on('connection', socket => {
     const name = me, touched = onlineNames();
     deleteUserData(name);
     cb({ ok: true });
-    io.emit('users', allUsers()); pushServers(touched.filter(n => n !== name));
+    pushUsers(); pushServers(touched.filter(n => n !== name));
     setTimeout(() => io.in('user:' + name).disconnectSockets(true), 200);
   });
   socket.on('myCodes', (cb = () => {}) => {
@@ -5196,7 +5211,7 @@ io.on('connection', socket => {
     if (action && u.name !== me && staffRank(u.name) === 'owner') return cb({ error: 'Kurucuya işlem yapılamaz' });
     if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); if (staffRank(u.name) && u.name !== me && staffRank(me) !== 'owner') return cb({ error: 'Ekipten birinin şifre linkini sadece kurucu oluşturabilir' }); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/login?sifirla=${resetToken(u.name, 24)}` }); }
     if (action === 'ageReset') { if (!canStaff(me, 'ban')) return deny(); delete u.ageLock; delete u.dob; staffLog(me, 'Yaş kilidini kaldırdı', u.name); save(); io.to('user:' + u.name).emit('ageGate', { locked: false }); return cb({ ok: true, user: userCard(u) }); }
-    if (action === 'streak') { if (!canStaff(me, 'ban')) return deny(); const n = Math.min(Math.max(parseInt(days) || 0, 0), 3650); u.streak = { last: ymd(), count: n, best: Math.max(n, u.streak?.best || 0) }; staffLog(me, 'Seriyi düzeltti', u.name, n + ' gün'); save(); io.emit('users', allUsers()); }
+    if (action === 'streak') { if (!canStaff(me, 'ban')) return deny(); const n = Math.min(Math.max(parseInt(days) || 0, 0), 3650); u.streak = { last: ymd(), count: n, best: Math.max(n, u.streak?.best || 0) }; staffLog(me, 'Seriyi düzeltti', u.name, n + ' gün'); save(); pushUsers(); }
     if (action === 'spark') { if (!canStaff(me, 'ban')) return deny(); const m = Math.min(Math.max(parseInt(days) || 0, 1), 24); sparkGrant(u, m, me); staffLog(me, `Kanka Spark verdi (${m} ay)`, u.name); }
     if (action === 'sparkOff') { if (!canStaff(me, 'ban')) return deny(); if (!u.spark) return cb({ error: 'Aboneliği yok' }); sparkExpire(u, 'Kanka Spark aboneliğin ekip tarafından sonlandırıldı'); staffLog(me, 'Kanka Spark aboneliğini sonlandırdı', u.name); }
     if (action === 'warn') { if (!canStaff(me, 'warn')) return deny(); if (u.name === me) return cb({ error: 'Kendini uyaramazsın' }); siteWarnUser(u.name, me, reason); }
@@ -5211,7 +5226,7 @@ io.on('connection', socket => {
       io.to('user:' + nm).emit('siteBanned', 'Hesabın Kanka yönetimi tarafından silindi' + (reason ? ': ' + clean(reason, 160) : ''));
       setTimeout(() => io.in('user:' + nm).disconnectSockets(true), 200);
       deleteUserData(nm); staffLog(me, 'Hesabı sildi', nm, reason); save();
-      io.emit('users', allUsers()); pushServers(touched.filter(n => n !== nm));
+      pushUsers(); pushServers(touched.filter(n => n !== nm));
       return cb({ ok: true, deleted: nm });
     }
     save(); cb({ ok: true, user: userCard(u) });
@@ -5290,7 +5305,7 @@ io.on('connection', socket => {
     save();
     io.to('user:' + u.name).emit('staffChanged', { rank: rank || null, by: me });
     if (rank) notifyUser(u.name, { from: me, text: `Seni Kanka ekibine ${STAFF_RANKS[rank]} olarak aldı 🛡️ Ayarlar › Yönetim panelinden başlayabilirsin.`, where: 'Kanka ekibi' });
-    io.emit('users', allUsers());
+    pushUsers();
     cb({ ok: true });
   });
   socket.on('staffLogGet', (cb = () => {}) => { if (!SM(cb)) return; const all = siteAdmin(me); cb({ ok: true, list: (db.staffLog || []).filter(l => all || l.by === me).slice(0, 200) }); });
@@ -5345,7 +5360,7 @@ io.on('connection', socket => {
       say(a.name, dm, 'Harika, birazdan ararım.', 1e5);
     } else for (const n of names) if (!sv.members.includes(n)) sv.members.push(n);
     secLog?.('apple-inceleme', me, 'inceleme hesapları hazırlandı / şifreler yenilendi');
-    save(); io.emit('users', allUsers()); pushServers(names.filter(n => onlineNames().includes(n)));
+    save(); pushUsers(); pushServers(names.filter(n => onlineNames().includes(n)));
     cb({ ok: true, accounts: out, server: sv.name });
   });
   socket.on('adminMobilPush', ({ fcm, apns, clear } = {}, cb = () => {}) => {
@@ -5393,7 +5408,7 @@ io.on('connection', socket => {
     u.status = clean(text, 60); const t = +until;
     u.statusUntil = u.status && t > Date.now() && t < Date.now() + 31 * 864e5 ? t : null;
     if (u.status) onbFlag(me, 'profile');
-    save(); io.emit('users', allUsers()); cb({ ok: true, until: u.statusUntil });
+    save(); pushUsers(); cb({ ok: true, until: u.statusUntil });
   });
   socket.on('prefs', (p, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({});
@@ -5891,7 +5906,7 @@ io.on('connection', socket => {
     if (g.turn === 'o') { if (!g.o && me !== g.x) g.o = me; if (me !== g.o) return; }
     g.board = g.board.slice(0, i) + g.turn + g.board.slice(i + 1);
     g.winner = winnerOf(g.board);
-    if (g.winner === 'x' || g.winner === 'o') { const w = db.users[g.winner === 'x' ? g.x : g.o]; if (w) w.xoxWins = (w.xoxWins || 0) + 1; io.emit('users', allUsers()); }
+    if (g.winner === 'x' || g.winner === 'o') { const w = db.users[g.winner === 'x' ? g.x : g.o]; if (w) w.xoxWins = (w.xoxWins || 0) + 1; pushUsers(); }
     g.turn = g.turn === 'x' ? 'o' : 'x';
     update(cur, msg);
   });
@@ -5985,7 +6000,7 @@ io.on('connection', socket => {
     if (nameStyle !== undefined) { if (nameStyle && staffRank(u.name) !== 'owner') return cb({ error: 'Görünen ad stili sadece Kurucu rütbesine özeldir' }); u.nameStyle = staffRank(u.name) === 'owner' ? cleanNameStyle(nameStyle) : null; }
     if (socials !== undefined) { const o = {}; for (const k of SOCIALS) { const v = clean(socials?.[k], 60).replace(/^https?:\/\/\S+\//, '').replace(/^@/, ''); if (v && /^[\w.\-]{1,40}$/.test(v)) o[k] = v; } u.socials = o; }
     if (u.bio || u.status) onbFlag(me, 'profile');
-    save(); io.emit('users', allUsers()); cb({ ok: true });
+    save(); pushUsers(); cb({ ok: true });
   });
   // Kendi rozet ilerlemen (kazanılmamışlar için)
   socket.on('matchShare', (p, cb = () => {}) => {
@@ -6077,7 +6092,7 @@ io.on('connection', socket => {
     const u = db.users[me]; if (!u || !Array.isArray(hidden)) return cb({ error: 'Geçersiz' });
     const mine = new Set(badgesOf(u)); u.hideBadges = [...new Set(hidden.filter(k => typeof k === 'string' && k in BADGES && mine.has(k)))];
     if (!u.hideBadges.length) delete u.hideBadges;
-    save(); io.emit('users', allUsers()); cb({ ok: true });
+    save(); pushUsers(); cb({ ok: true });
   });
   // ---- Bot geliştirici beta başvuruları (özel: sadece başvuran ve Kanka ekibi görür) ----
   const devApp = n => (db.devApps ||= {})[n];
@@ -6110,7 +6125,7 @@ io.on('connection', socket => {
     const a = devApp(name); if (!a || !['accepted', 'rejected', 'pending'].includes(status)) return cb({ error: 'Geçersiz' });
     a.status = status; a.by = me; a.decidedAt = Date.now(); a.note = String(note || '').slice(0, 300);
     const u = db.users[name]; if (u) { u.devBeta = status === 'accepted' || undefined; if (!u.devBeta) delete u.devBeta; }
-    save(); io.emit('users', allUsers()); devPerks();
+    save(); pushUsers(); devPerks();
     const nt = a.note ? `\n\nekipten not: ${a.note}` : '';
     if (status === 'accepted') botDm(name, { title: '🎉 bot geliştirici başvurun kabul edildi!', tone: 'good',
       text: `hoş geldin! artık kanka'nın bot geliştirici adaylarındansın. kanka hq'da sana özel #bot-gelistirici odası açıldı, duyurular ve sorular orada.${nt}`,
@@ -6120,7 +6135,7 @@ io.on('connection', socket => {
   });
   socket.on('adminDevBadge', ({ name, on } = {}, cb = () => {}) => {
     if (!siteMod(me)) return cb({ error: 'Yetkin yok' }); const u = db.users[name]; if (!u) return cb({ error: 'Kullanıcı yok' });
-    if (on) devAward(name, me); else { delete u.devEarned; if (u.badgeAt) delete u.badgeAt.dev; save(); io.emit('users', allUsers()); devPerks(); }
+    if (on) devAward(name, me); else { delete u.devEarned; if (u.badgeAt) delete u.badgeAt.dev; save(); pushUsers(); devPerks(); }
     staffLog(me, on ? 'Bot geliştirici rozeti verdi' : 'Bot geliştirici rozetini aldı', name); cb({ ok: true });
   });
   // ---------- Uçtan uca şifreleme ----------
@@ -6205,7 +6220,7 @@ io.on('connection', socket => {
         channels: [{ id: id(), name: 'genel', type: 'text', topic: 'Botunu burada dene: / yaz, komutların listede görünür' }, { id: id(), name: 'bot-kayitlari', type: 'text', topic: 'Botunun mesaj attığı ikinci bir oda' }] };
       db.servers.push(s); botJoin(a, s, BOT_PERMS, me); a.testServer = s.id;
     }
-    save(); io.emit('users', allUsers()); pushServers([me]);
+    save(); pushUsers(); pushServers([me]);
     cb({ ok: true, app: appView(a, true), token, sir: a.secret });
   });
   socket.on('appUpdate', async ({ id: aid, desc, displayName, avatar, privacy, dmOk, interUrl, listed } = {}, cb = () => {}) => {
@@ -6223,7 +6238,7 @@ io.on('connection', socket => {
         const old = a.interUrl; a.interUrl = url; const r = await interHttp(a, { tur: 'PING' });
         if (!r || (r.tur ?? r.type) !== 'PONG') { a.interUrl = old || ''; return cb({ error: 'Adres doğrulanamadı: { "tur": "PING" } isteğine 3 saniye içinde { "tur": "PONG" } dönmeli (imzayı da kontrol etmelisin)' }); } }
     }
-    save(); io.emit('users', allUsers()); cb({ ok: true, app: appView(a, true) });
+    save(); pushUsers(); cb({ ok: true, app: appView(a, true) });
   });
   // Geliştirici Portalı: botun kendi emojileri (sadece o bot kullanabilir; mesajda :ad: yazınca görünür)
   socket.on('appEmojiAdd', ({ id: aid, name, url } = {}, cb = () => {}) => {
@@ -6280,7 +6295,7 @@ io.on('connection', socket => {
     if (!a.verified && reachOf(a, s) > REACH_MAX) return cb({ error: `Bu bot henüz doğrulanmadı: doğrulanmamış botlar en fazla ${REACH_MAX} kişiye ulaşabilir (bu sunucuyla ${reachOf(a, s)} olur). Geliştiricisi Kanka'dan doğrulama isteyebilir.`, esik: true });
     if (limited('appauth|' + me, 10, 600e3)) return cb({ error: 'Biraz bekle' });
     botJoin(a, s, (Array.isArray(perms) ? perms : []).filter(p => BOT_PERMS.includes(p)), me);
-    save(); pushServers(membersOf(s)); io.emit('users', allUsers());
+    save(); pushServers(membersOf(s)); pushUsers();
     if (a.owner !== me) botDm(a.owner, { title: `🤖 ${a.bot} yeni bir sunucuya eklendi`, tone: 'good', text: `${s.name} sunucusuna ${me} tarafından eklendi. botun artık ${botServers(a).length} sunucuda, ${reachOf(a)} kişiye ulaşıyor.` });
     cb({ ok: true, serverId: s.id });
   });
@@ -6345,7 +6360,7 @@ io.on('connection', socket => {
     else if (action === 'kill') { a.killed = { at: Date.now(), by: me, reason: note }; for (const c of botConnsOf(a.id)) c.ws.close(4014, 'Bot durduruldu'); botDm(a.owner, { title: `⛔ ${a.bot} durduruldu`, tone: 'danger', text: `botun Kanka ekibi tarafından durduruldu.${note ? ' sebep: ' + note : ''} itiraz için kankahq1@gmail.com` }); staffLog(me, 'Botu durdurdu', a.bot, note); }
     else if (action === 'unkill') { a.killed = null; staffLog(me, 'Botu yeniden açtı', a.bot); }
     else return cb({ error: 'Geçersiz işlem' });
-    save(); io.emit('users', allUsers()); cb({ ok: true, app: appView(a, true) });
+    save(); pushUsers(); cb({ ok: true, app: appView(a, true) });
   });
   socket.on('botInfo', (_ = {}, cb = () => {}) => {
     if (!me) return cb({});
@@ -6362,7 +6377,7 @@ io.on('connection', socket => {
     u.awards ||= {};
     const had = !!u.awards[badge];
     if (on) u.awards[badge] = u.awards[badge] || { by: me, time: Date.now() }; else delete u.awards[badge];
-    save(); io.emit('users', allUsers());
+    save(); pushUsers();
     if (on && !had) {
       io.to('user:' + name).emit('toast', `🎉 Yeni rozet ${BADGES[badge][0]} ${BADGES[badge][1]}! Teşekkürler kanka`);
       io.to('user:' + name).emit('badgeEarned', { badge, by: me });
@@ -6781,7 +6796,7 @@ io.on('connection', socket => {
     if (b.blocked.includes(me)) return cb({ error: 'Bu kişiye istek gönderilemiyor' });
     if (a.reqIn.includes(name)) { // karşı taraf zaten istek göndermişse kabul et
       pull(a.reqIn, name); pull(b.reqOut, me); a.friends.push(name); b.friends.push(me);
-      save(); pushSocial(me, name); io.emit('users', allUsers());
+      save(); pushSocial(me, name); pushUsers();
       io.to('user:' + name).emit('toast', `${me} arkadaşlık isteğini kabul etti`);
     sendPush(name, { title: me, body: 'arkadaşlık isteğini kabul etti 🎉', tag: 'friends', friend: true, from: me });
       return cb({ ok: true, accepted: true });
@@ -6795,14 +6810,14 @@ io.on('connection', socket => {
     const a = U(me), b = U(name);
     if (!a || !b || !a.reqIn.includes(name)) return cb({ error: 'İstek bulunamadı' });
     pull(a.reqIn, name); pull(b.reqOut, me); a.friends.push(name); b.friends.push(me);
-    save(); pushSocial(me, name); io.emit('users', allUsers());
+    save(); pushSocial(me, name); pushUsers();
     io.to('user:' + name).emit('toast', `${me} arkadaşlık isteğini kabul etti`);
     onbFlag(me, 'invite'); onbFlag(name, 'invite'); cb({ ok: true });
   });
   socket.on('friendRemove', (name, cb = () => {}) => { // arkadaşlıktan çıkar / isteği reddet / isteği geri çek
     const a = U(me), b = U(name); if (!a || !b) return cb({ error: 'Kullanıcı bulunamadı' });
     pull(a.friends, name); pull(b.friends, me); pull(a.reqIn, name); pull(a.reqOut, name); pull(b.reqIn, me); pull(b.reqOut, me);
-    save(); pushSocial(me, name); io.emit('users', allUsers()); cb({ ok: true });
+    save(); pushSocial(me, name); pushUsers(); cb({ ok: true });
   });
   socket.on('block', ({ name, on } = {}, cb = () => {}) => {
     const a = U(me), b = U(name); if (!a || !b || name === me) return cb({ error: 'Kullanıcı bulunamadı' });
@@ -6810,7 +6825,7 @@ io.on('connection', socket => {
       if (!a.blocked.includes(name)) a.blocked.push(name);
       pull(a.friends, name); pull(b.friends, me); pull(a.reqIn, name); pull(a.reqOut, name); pull(b.reqIn, me); pull(b.reqOut, me);
     } else pull(a.blocked, name);
-    save(); pushSocial(me, name); io.emit('users', allUsers()); cb({ ok: true });
+    save(); pushSocial(me, name); pushUsers(); cb({ ok: true });
   });
 
   // Yuva (ana sayfa) özeti: bu haftaki ses süresi gün gün, geçen haftanın toplamı, Kanka HQ sıralaması
@@ -7407,9 +7422,9 @@ io.on('connection', socket => {
   socket.on('tagSet', (sid, cb = () => {}) => {
     if (typeof cb !== 'function') return; const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     if (limited('tagset|' + me, 15, 3600e3)) return cb({ error: 'Etiketini çok sık değiştirdin, biraz bekle' });
-    if (sid == null) { delete u.tag; save(); io.emit('users', allUsers()); return cb({ ok: true, tag: null }); }
+    if (sid == null) { delete u.tag; save(); pushUsers(); return cb({ ok: true, tag: null }); }
     const s = db.servers.find(x => x.id === sid); if (!TAG.canUse(me, s)) return cb({ error: 'Bu sunucunun etiketini takamazsın' });
-    u.tag = s.id; (db.tagStats ||= {})[s.id] = (db.tagStats[s.id] || 0) + 1; save(); io.emit('users', allUsers()); cb({ ok: true, tag: s.id });
+    u.tag = s.id; (db.tagStats ||= {})[s.id] = (db.tagStats[s.id] || 0) + 1; save(); pushUsers(); cb({ ok: true, tag: s.id });
   });
   socket.on('srvTagSave', ({ serverId, t, i, c, on } = {}, cb = () => {}) => {
     if (typeof cb !== 'function') return; const s = db.servers.find(x => x.id === serverId);
@@ -7562,7 +7577,7 @@ setInterval(() => {
     if (u.presenceUntil && u.presenceUntil <= now) { u.presence = 'online'; u.presenceUntil = null; pres = true; pushActivity(u); io.to('user:' + u.name).emit('myStatus', { st: 'online', until: null, expired: true }); }
     if (u.statusUntil && u.statusUntil <= now) { u.status = ''; u.statusUntil = null; prof = true; io.to('user:' + u.name).emit('customStatus', { text: '', until: null, expired: true }); }
   }
-  if (pres) pushPresence(); if (prof) io.emit('users', allUsers()); if (pres || prof) save();
+  if (pres) pushPresence(); if (prof) pushUsers(); if (pres || prof) save();
 }, 15e3);
 setInterval(() => {
   const now = Date.now(), due = (db.scheduled || []).filter(x => x.at <= now);
