@@ -12830,6 +12830,7 @@ function openArena(lobbyId) {
     if (embed) {
       AR.el.classList.add('embed'); if (!vview()) setVView(true);
       const st = $('#stage'); st.classList.add('act'); st.insertBefore(AR.el, st.querySelector('.tile') || null);
+      if (st.classList.contains('vfs')) fsOn(false); // tam ekran yayın varken oyun açıldı: yan yana düzene geç
       requestAnimationFrame(layoutStage);
     } else {
       document.body.appendChild(AR.el);
@@ -12849,7 +12850,7 @@ function closeArena(fromBack) {
   window.removeEventListener('keydown', arKey);
   const wasEmbed = AR.el.classList.contains('embed');
   arUnmount(); AR.el.remove(); AR.el = null; AR.q = ''; document.body.classList.remove('arena-open');
-  if (wasEmbed) { $('#stage')?.classList.remove('act'); requestAnimationFrame(layoutStage); }
+  if (wasEmbed) { $('#stage')?.classList.remove('act'); requestAnimationFrame(() => { renderStage(); layoutStage(); }); }
   if (AR.lobby && !arMine()) { socket.emit('arenaClose'); AR.lobby = null; }
   AR.view = 'hub'; if (!fromBack) ovClosed('arena');
 }
@@ -14969,10 +14970,18 @@ function layoutStage() {
   const W = st.clientWidth - pad * 2, H = st.clientHeight - top - pad;
   const size = (el, w, h) => { el.style.width = Math.floor(w) + 'px'; el.style.height = Math.floor(h) + 'px'; };
   const act = st.querySelector('#arena.embed');
-  if (act && W > 0 && H > 0) { // oyun açıkken: oyun büyük, kişiler altta şerit
+  for (const t of tiles) if (t.style.order) t.style.order = '';
+  if (act && W > 0 && H > 0) { // oyun açıkken: oyun büyük, kişiler altta şerit. İzlenen yayın varsa oyunun yanında (dar ekranda altında)
     const dock = innerWidth < 760 && document.body.classList.contains('invoice') ? ($('#vdock')?.offsetHeight || 0) + 22 : 0, H2 = H - dock;
-    const sh = tiles.length ? Math.min(92, Math.max(56, H * 0.14)) : 0, n = tiles.length, tw = n ? Math.min(sh * 16 / 9, (W - gap * (n - 1)) / n) : 0;
-    size(act, W, H2 - (sh ? sh + gap : 0)); tiles.forEach(t => size(t, tw, Math.min(sh, tw * 9 / 16 + 20)));
+    const focus = tiles.find(t => t.classList.contains('focus')), strip = tiles.filter(t => t !== focus);
+    const sh = strip.length ? Math.min(92, Math.max(56, H * 0.14)) : 0, n = strip.length, tw = n ? Math.min(sh * 16 / 9, (W - gap * (n - 1)) / n) : 0;
+    const mainH = Math.max(120, H2 - (sh ? sh + gap : 0));
+    if (focus) {
+      focus.style.order = '-2';
+      if (W >= 820) { const aw = Math.round((W - gap) * 0.58); size(act, aw, mainH); size(focus, W - gap - aw, Math.min(mainH, (W - gap - aw) * 9 / 16 + 40)); }
+      else { const ah = Math.round((mainH - gap) * 0.58); size(act, W, ah); size(focus, W, mainH - gap - ah); }
+    } else size(act, W, mainH);
+    strip.forEach(t => size(t, tw, Math.min(sh, tw * 9 / 16 + 20)));
     st.style.paddingTop = top + 'px'; return;
   }
   if (!tiles.length || W <= 0 || H <= 0) return;
@@ -15294,7 +15303,7 @@ function renderStage() {
     const r = el.querySelector('.tvol'); if (r) r.value = vol[t.name] ?? 1;
   }
   st.querySelectorAll('.tile').forEach(el => { if (!keep.has(el.dataset.sid)) el.remove(); });
-  { const fs = vview() && !!tiles.find(t => t.sid === focusSid && t.kind === 'screen'); if (fs !== st.classList.contains('vfs')) fsOn(fs); }
+  { const fs = vview() && !st.querySelector('#arena.embed') && !!tiles.find(t => t.sid === focusSid && t.kind === 'screen'); if (fs !== st.classList.contains('vfs')) fsOn(fs); } // oyun açıkken yayın tam ekran olmaz: ikisi yan yana
   fsSync();
   layoutStage();
   zChip();
