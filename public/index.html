@@ -5267,6 +5267,7 @@ html.native input, html.native textarea, html.native [contenteditable], html.nat
   @media (prefers-reduced-motion: reduce) { .dmp.is-spark::before, .vpop.is-spark::before { animation: none; } }
   /* Yönetim: Spark & Energy */
   .mn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; } .mn-grid .mn-wide { grid-column: 1 / -1; }
+  .mn-urow { display: flex; gap: 6px; } .mn-urow .field { margin: 0; flex: 1; } .mn-urow .btns2 { white-space: nowrap; }
   .mn-num { display: flex; gap: 6px; align-items: center; } .mn-num input { width: 90px; margin: 0; text-align: center; } .mn-num button { width: 36px; height: 38px; border-radius: 10px; background: var(--hover); border: 1px solid var(--line); font-size: 18px; }
   .mn-srvs { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px; }
   .mn-srv { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--hover); text-align: left; min-width: 0; }
@@ -18527,13 +18528,13 @@ function admMint(B) {
     const LOG_TR = { spark: 'Spark', energy: 'Energy (kişi)', server: 'Energy (sunucu)' };
     B.innerHTML = `<div class="mn-grid">
       <div class="adm-box"><h5 class="ax-h" style="margin-top:0">⚡ Kişiye Spark ver</h5>
-        <div class="st-field"><label>Kullanıcı adı ya da e-posta</label><input class="field" id="mn-su" placeholder="örn. pisago" autocomplete="off"></div>
+        <div class="st-field"><label>Kullanıcı adı ya da e-posta</label><div class="mn-urow"><input class="field" id="mn-su" list="mn-ul" placeholder="örn. pisago" autocomplete="off"><button class="btns2" data-self="mn-su">Kendime</button></div></div>
         <div class="st-field"><label>Süre</label><div class="seg" id="mn-sm">${[1, 3, 6, 12].map((m, i) => `<button data-m="${m}" class="${i ? '' : 'on'}">${m} ay</button>`).join('')}</div>
           <p class="hint" style="margin-top:6px">Aktif aboneliği varsa üstüne eklenir. Her ay için ${'2'} Energy otomatik gelir. Kısaltmak için kişinin satırındaki <b>−1 ay</b>.</p></div>
         <div class="st-field"><label>Not (isteğe bağlı, kayıtlarda görünür)</label><input class="field" id="mn-sn" maxlength="120" placeholder="örn. turnuva ödülü"></div>
         <button class="primary" id="mn-sgo" style="width:auto;padding:11px 20px">${ic('sparkle')} Spark ver</button></div>
       <div class="adm-box"><h5 class="ax-h" style="margin-top:0">${zapSvg} Kişiye Energy ver</h5>
-        <div class="st-field"><label>Kullanıcı adı ya da e-posta</label><input class="field" id="mn-eu" placeholder="örn. pisago" autocomplete="off"></div>
+        <div class="st-field"><label>Kullanıcı adı ya da e-posta</label><div class="mn-urow"><input class="field" id="mn-eu" list="mn-ul" placeholder="örn. pisago" autocomplete="off"><button class="btns2" data-self="mn-eu">Kendime</button></div></div>
         <div class="st-field"><label>Miktar</label><div class="mn-num"><button data-d="-1">−</button><input class="field" id="mn-en" type="number" min="-100" max="100" value="2"><button data-d="1">+</button></div>
           <p class="hint" style="margin-top:6px">Sadece Spark üyesi olanlara verilebilir; kişi istediği sunucuya gönderir. Geri almak için eksi yaz (boştakiler silinir).</p></div>
         <div class="st-field"><label>Not</label><input class="field" id="mn-enn" maxlength="120" placeholder="Kişiye giden mesajda görünür"></div>
@@ -18555,6 +18556,8 @@ function admMint(B) {
         <div class="bk-list">${r.log.map(x => `<div><span style="flex-direction:column;align-items:flex-start;gap:2px"><b>${esc(LOG_TR[x.kind] || x.kind)} · ${x.n > 0 ? '+' : ''}${x.n}${x.kind === 'spark' ? ' ay' : ''} → ${esc(x.target)}</b><small>${esc(x.by)} · ${ago(x.at)}${x.note ? ' · ' + esc(x.note) : ''}</small></span></div>`).join('') || '<p class="hint">Henüz işlem yok.</p>'}</div></div>
     </div>`;
     const done = msg => x => { if (x?.error) return toast(x.error, null, false, { type: 'err' }); toast(msg, null, false, { type: 'ok' }); draw(); };
+    if (!$('#mn-ul')) B.insertAdjacentHTML('beforeend', `<datalist id="mn-ul">${Object.keys(S.users || {}).filter(n => !S.users[n]?.bot).slice(0, 500).map(n => `<option value="${esc(n)}">${esc(S.users[n]?.displayName || '')}</option>`).join('')}</datalist>`);
+    B.querySelectorAll('[data-self]').forEach(b => b.onclick = () => { $('#' + b.dataset.self).value = S.me; });
     let sm = 1; B.querySelectorAll('#mn-sm [data-m]').forEach(b => b.onclick = () => { sm = +b.dataset.m; B.querySelectorAll('#mn-sm [data-m]').forEach(x => x.classList.toggle('on', x === b)); });
     $('#mn-sgo').onclick = () => { const u = $('#mn-su').value.trim(); if (!u) return toast('Kullanıcı adı yaz');
       confirmBox(`${u} hesabına ${sm} ay Kanka Spark verilsin mi?`, () => socket.emit('adminMint', { act: 'spark', user: u, months: sm, note: $('#mn-sn').value }, done(`${u}: ${sm} ay Spark verildi ⚡`))); };

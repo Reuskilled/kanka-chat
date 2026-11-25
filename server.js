@@ -5367,6 +5367,9 @@ io.on('connection', socket => {
     warns: (u.siteWarns || []).slice(-10).reverse().map(w => ({ at: w.at, by: w.by, reason: w.reason, seen: w.seen })) });
   // ---- Spark & Energy basma (kurucu ve yöneticiler): kullanıcıya Spark süresi / Energy, sunucuya doğrudan Energy ----
   // Sunucuya basılan Energy '@kanka' adıyla tutulur: seviyeye sayılır, kimsenin hesabından düşmez, Spark bitince silinmez.
+  const mintUser = who => { const w = clean(who, 190).replace(/^@+/, '').trim(); if (!w) return null; // kullanıcı adı, @ad, e-posta ya da görünen ad
+    const u = findUserBy(w); if (u) return u; const l = w.toLocaleLowerCase('tr');
+    const m = Object.values(db.users).filter(x => !x.bot && (x.displayName || '').toLocaleLowerCase('tr').trim() === l); return m.length === 1 ? m[0] : null; };
   const mintLog = (kind, target, n, note) => { (db.mintLog ||= []).push({ at: Date.now(), by: me, kind, target, n, note: note || '' }); db.mintLog = db.mintLog.slice(-200); };
   socket.on('adminMint', ({ act, user, server, n, months, note } = {}, cb = () => {}) => {
     if (typeof cb !== 'function') cb = () => {};
@@ -5381,7 +5384,7 @@ io.on('connection', socket => {
       return cb({ ok: true, srvs, sparks, boosted, levels: ENERGY_LV, log: (db.mintLog || []).slice(-60).reverse() });
     }
     if (act === 'spark' || act === 'energy') {
-      const u = findUserBy(user); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
+      const u = mintUser(user); if (!u) return cb({ error: 'Kullanıcı bulunamadı (kullanıcı adını @ olmadan yaz)' });
       if (act === 'spark') {
         const m = Math.max(-24, Math.min(24, parseInt(months) || 0)); if (!m) return cb({ error: 'Ay sayısı gir (1-24, kısaltmak için eksi)' });
         if (m < 0) { if (!sparkOn(u)) return cb({ error: 'Aktif Spark aboneliği yok' }); if (u.spark.play) return cb({ error: 'Bu abonelik Google Play üzerinden, süresi oradan yönetilir' });
