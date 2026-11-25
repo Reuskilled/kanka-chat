@@ -5095,6 +5095,35 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
 .sp-badge-ic{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--accent);color:#0b0b0c} .sp-badge-ic .ic{width:13px;height:13px}
 @media (max-width:760px){.en-lvls,.en-sec .en-how,.en-wal{grid-template-columns:1fr}}
 
+/* Uygulama görünümü (html.mapp): liste ekranı + üstüne kayan sohbet + alt sekmeler */
+#mtabs { display: none; }
+@media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
+  html.mapp { --tabh: calc(58px + env(safe-area-inset-bottom)); background: #0b0b0e; }
+  html.mapp #rail, html.mapp #side { transform: none !important; transition: none; bottom: var(--tabh); padding-bottom: 8px; }
+  html.mapp #rail { width: 72px; background: #0b0b0e !important; border: none; box-shadow: none; }
+  html.mapp #side { left: 72px; right: 0; width: auto; border: none; border-radius: 22px 0 0 0; background: #141418 !important; box-shadow: none; }
+  html.mapp body.drawer::after { display: none; }
+  html.mapp #chat { z-index: 17; transform: translateX(0); transition: transform .3s cubic-bezier(.22,.84,.24,1); box-shadow: -16px 0 40px rgba(0,0,0,.5); background: #101014; will-change: transform; }
+  html.mapp body.drawer #chat { transform: translateX(calc(100% + 30px)); box-shadow: none; }
+  html.mapp body.gdrag #chat { transition: none; }
+  html.mapp #members { z-index: 21; } html.mapp body.mdrawer::after { z-index: 20; }
+  html.mapp #me .row1, html.mapp #me-xp { display: none; }
+  html.mapp body:not(.drawer):not(.gdrag) #rail, html.mapp body:not(.drawer):not(.gdrag) #side { visibility: hidden; transition: visibility 0s .3s; } html.mapp #me { border: none; background: transparent; padding-top: 0; }
+  html.mapp #head { background: #101014; border-bottom: 1px solid rgba(255,255,255,.06); min-height: 54px; padding: 6px 8px; gap: 4px; }
+  html.mapp #head .hbtn { background: transparent !important; border: none !important; box-shadow: none !important; width: 40px; height: 40px; border-radius: 12px; color: #c9c9d1; }
+  html.mapp #head .hbtn:active { background: rgba(255,255,255,.08) !important; }
+  html.mapp #menu-btn .ic { width: 26px; height: 26px; }
+  html.mapp #side-list .ch, html.mapp #side-list .dm { min-height: 44px; border-radius: 10px; }
+  html.mapp #mtabs { display: flex; position: fixed; left: 0; right: 0; bottom: 0; height: var(--tabh); padding: 0 6px env(safe-area-inset-bottom); z-index: 18; background: #0b0b0e; border-top: 1px solid rgba(255,255,255,.06);
+    transition: transform .3s cubic-bezier(.22,.84,.24,1); }
+  html.mapp body:not(.drawer) #mtabs { transform: translateY(110%); }
+  html.mapp body.gdrag #mtabs { transition: none; }
+  #mtabs button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: none; color: #8b8b96; font: 600 11px/1 inherit; font-family: inherit; position: relative; }
+  #mtabs button .ic { width: 24px; height: 24px; } #mtabs button.on { color: #fff; } #mtabs button.on .ic { color: var(--accent); }
+  #mtabs .mt-av { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; font-size: 11px; font-weight: 900; background: #2a2a33; color: #fff; }
+  #mtabs .mt-av img { width: 100%; height: 100%; object-fit: cover; } #mtabs button.on .mt-av { box-shadow: 0 0 0 2px var(--accent); }
+  #mtabs .mt-dot { position: absolute; top: 7px; left: calc(50% + 7px); min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #f23f43; color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center; border: 2px solid #0b0b0e; }
+}
 /* Mobil uygulama (Capacitor) */
 html.native { -webkit-tap-highlight-color: transparent; }
 html.native body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
@@ -5173,6 +5202,12 @@ html.native input, html.native textarea, html.native [contenteditable], html.nat
   </main>
   <div class="k-split" id="sp-mem" title="Sürükle: sağ paneli boyutlandır (145px altı gizler · çift tık: sıfırla)"></div>
   <aside id="members" class="panel"></aside>
+  <nav id="mtabs" aria-label="Sekmeler">
+    <button type="button" data-mt="srv"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg><span>Sunucular</span></button>
+    <button type="button" data-mt="dm"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg><span>Mesajlar</span></button>
+    <button type="button" data-mt="fr"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.8.8 2.9 2.6 3.1 5.2"/></svg><span>Arkadaşlar</span></button>
+    <button type="button" data-mt="me"><span class="mt-av" id="mt-av"></span><span>Sen</span></button>
+  </nav>
   <div id="vdock" aria-label="Ses kontrolleri"><button class="vd-info" id="vd-info"><span class="vd-dot"></span><span class="vd-t"><b id="vd-name">Seste</b><small id="vd-sub">Dokun: odayı aç</small></span></button><button class="vd-b" id="vd-mute" aria-label="Mikrofon"></button><button class="vd-b vd-x" id="vd-cam" aria-label="Kamera"></button><button class="vd-b vd-x" id="vd-scr" aria-label="Ekran paylaş"></button><button class="vd-b vd-x" id="vd-ar" aria-label="Kanka Arena" data-arcount=""></button><button class="vd-b vd-x" id="vd-sb" aria-label="Ses paneli" data-sbopen></button><button class="vd-b vd-x" id="vd-chat" aria-label="Oda sohbeti"></button><button class="vd-b vd-leave" id="vd-leave" aria-label="Ayrıl"></button></div>
   <div id="msheet" aria-hidden="true"><div class="ms-bg"></div><div class="ms-p" role="dialog" aria-label="Mesaj işlemleri"></div></div>
 </div>
@@ -5201,6 +5236,11 @@ const kDev = (() => { const ck = (document.cookie.match(/(?:^|; )kdid=([a-z0-9-]
 const socket = io({ auth: { d: kDev } });
 // ---- Mobil uygulama (Capacitor: Android / iOS). Tarayıcıda ve Windows uygulamasında NATIVE=false, hiçbir şey değişmez ----
 const NATIVE = !!window.Capacitor?.isNativePlatform?.(), NPLAT = NATIVE ? window.Capacitor.getPlatform() : null;
+// Uygulama görünümü (Discord mobil gibi: tam ekran liste + üstüne kayan sohbet + alt sekmeler): mobil uygulama, ana ekrana eklenmiş sürüm,
+// ya da denemek için ?uygulama=1 (kapatmak: ?uygulama=0). Sadece dar ekranda etkili, masaüstü/tarayıcı düzeni değişmez.
+const MAPP = (() => { try { const q = new URLSearchParams(location.search).get('uygulama'); if (q === '1' || q === '0') localStorage.setItem('kanka-mapp', q); const v = localStorage.getItem('kanka-mapp');
+  return v === '1' || (v !== '0' && (NATIVE || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true)); } catch { return NATIVE; } })();
+if (MAPP) document.documentElement.classList.add('mapp');
 if (NATIVE) try {
   document.documentElement.classList.add('native', 'native-' + NPLAT);
   const P = window.Capacitor.Plugins || {};
@@ -6444,6 +6484,7 @@ function renderRail() {
     openDMHome();
   };
   $('#rail').querySelectorAll('.srv[data-id]').forEach(b => b.onclick = () => { if (railDragged) return; selectServer(b.dataset.id); });
+  mtabsSync();
   $('#add-srv').onclick = () => showTemplates();
   $('#join-srv').onclick = () => form('Sunucuya katıl', 'Arkadaşının gönderdiği davet linkini ya da kodunu yapıştır.', [{ k: 'code', p: 'Davet linki ya da kodu' }], v => joinInvite(v.code));
 }
@@ -6649,7 +6690,33 @@ function showWelcome(s, force) {
 
 // ================= Sunucu görünümü =================
 let lastDM = null; // sunucuya geçmeden önce açık olan özel sohbet
+// ---- Uygulama görünümü alt sekmeleri ----
+let mtLastSrv = null;
+function mtabsSync() {
+  if (!MAPP) return; const bar = $('#mtabs'); if (!bar) return;
+  const on = S.view === 'server' ? 'srv' : S.view === 'dm' ? (!S.channel && !document.body.classList.contains('drawer') && friendTab !== 'home' ? 'fr' : 'dm') : '';
+  bar.querySelectorAll('[data-mt]').forEach(b => b.classList.toggle('on', b.dataset.mt === on));
+  const srvUnread = S.unreadServers?.size || 0, dmUnread = S.unreadDM ? 1 : 0;
+  const dot = (k, n) => { const b = bar.querySelector(`[data-mt="${k}"]`); let d = b.querySelector('.mt-dot'); if (!n) return d?.remove(); if (!d) { d = document.createElement('span'); d.className = 'mt-dot'; b.appendChild(d); } d.textContent = n > 9 ? '9+' : n; };
+  dot('srv', srvUnread); dot('dm', dmUnread); dot('fr', S.social?.reqIn?.length || 0);
+  const me = S.users?.[S.me]; if (me) { const av = $('#mt-av'), html = me.avatar ? `<img src="${esc(me.avatar)}" alt="">` : esc((me.displayName || S.me).slice(0, 1).toUpperCase()); if (av.dataset.h !== html) { av.innerHTML = html; av.dataset.h = html; } }
+}
+if (MAPP) {
+  $('#mtabs').onclick = e => {
+    const b = e.target.closest('[data-mt]'); if (!b) return; buzz?.(6);
+    const t = b.dataset.mt;
+    if (t === 'srv') { const id = (S.view === 'server' && S.server?.id) || mtLastSrv || orderedServers()[0]?.id; if (id && !(S.view === 'server' && S.server?.id === id)) selectServer(id); setTimeout(openDrawer, 0); }
+    if (t === 'dm') { if (S.view !== 'dm') openDMHome(); setTimeout(openDrawer, 0); }
+    if (t === 'fr') { showFriends(S.social?.reqIn?.length ? 'pending' : 'online'); }
+    if (t === 'me') showSettings();
+    setTimeout(mtabsSync, 50);
+  };
+  // Geri oku: sohbetten listeye dönüş
+  const mb = $('#menu-btn'); if (mb) { mb.innerHTML = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>'; mb.setAttribute('aria-label', 'Geri'); }
+  new MutationObserver(() => mtabsSync()).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+}
 function selectServer(id, channelId) {
+  if (id && id !== '__inv') mtLastSrv = id;
   if (S.view === 'dm') lastDM = S.channel?.id && (S.channel.dm || S.channel.id.startsWith('g:') || S.channel.id.startsWith('dm:')) ? { id: S.channel.id, with: S.channel.with } : null;
   $('#callbar')?.remove();
   closeSrvMenu(); document.body.classList.remove('discover', 'vview');
@@ -7212,13 +7279,15 @@ addEventListener('blur', closeMsgCtx);
   if (!isTouch) return;
   let g = null, lp = null;
   const B = document.body, side = () => $('#side').getBoundingClientRect().right || 356, memW = () => $('#members').offsetWidth || 300;
-  const setDrawerX = x => { for (const el of [$('#rail'), $('#side')]) el.style.transform = `translateX(${x}px)`; };
-  const clearDrag = () => { B.classList.remove('gdrag'); for (const el of [$('#rail'), $('#side'), $('#members')]) el.style.transform = ''; };
+  const setDrawerX = x => {
+    if (MAPP) { const W = side() + 20, k = Math.max(0, Math.min(1, 1 + x / W)); $('#chat').style.transform = `translateX(${Math.round(k * (innerWidth + 30))}px)`; $('#mtabs').style.transform = `translateY(${Math.round((1 - k) * 110)}%)`; return; }
+    for (const el of [$('#rail'), $('#side')]) el.style.transform = `translateX(${x}px)`; };
+  const clearDrag = () => { B.classList.remove('gdrag'); for (const el of [$('#rail'), $('#side'), $('#members'), $('#chat'), $('#mtabs')]) el.style.transform = ''; };
   let bound = null; // dokunmanın başladığı öğe: iOS hareketin geri kalanını hep ona gönderir, öğe silinse bile
   const unbind = () => { if (!bound) return; bound.removeEventListener('touchmove', onMove); bound.removeEventListener('touchend', end); bound.removeEventListener('touchcancel', end); bound = null; };
   document.addEventListener('touchstart', e => {
     // önceki dokunmanın bitişi kaybolduysa (yarıda kalmış çekmece), önce temizle
-    if (g || B.classList.contains('gdrag') || $('#rail').style.transform || $('#side').style.transform || $('#members').style.transform) reset();
+    if (g || B.classList.contains('gdrag') || $('#rail').style.transform || $('#side').style.transform || $('#members').style.transform || $('#chat').style.transform) reset();
     if (e.touches.length !== 1) return;
     const t = e.touches[0], tg = e.target;
     if (tg.closest('#msheet, #modal.open, input, textarea, select, .ftabs, .ptargets, .ax-games, #suggest, .xox, .hm-rooms, video, iframe')) return;
