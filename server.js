@@ -5420,7 +5420,7 @@ io.on('connection', socket => {
     if (!SM(cb)) return;
     const u = findUserBy(name); if (!u) return cb({ error: 'Kullanıcı bulunamadı' });
     const deny = () => cb({ error: 'Bunun için yetkin yok' });
-    if (action && u.name !== me && staffRank(u.name) === 'owner') return cb({ error: 'Kurucuya işlem yapılamaz' });
+    if (action && u.name !== me && staffRank(u.name) === 'owner' && !['spark', 'sparkOff', 'streak'].includes(action)) return cb({ error: 'Kurucuya işlem yapılamaz' }); // Spark ve seri ceza değil: kurucuya ve kendine de verilebilir
     if (action === 'resetLink') { if (!canStaff(me, 'reset')) return deny(); if (staffRank(u.name) && u.name !== me && staffRank(me) !== 'owner') return cb({ error: 'Ekipten birinin şifre linkini sadece kurucu oluşturabilir' }); staffLog(me, 'Şifre linki oluşturdu', u.name); save(); return cb({ ok: true, link: `${baseUrl()}/login?sifirla=${resetToken(u.name, 24)}` }); }
     if (action === 'ageReset') { if (!canStaff(me, 'ban')) return deny(); delete u.ageLock; delete u.dob; staffLog(me, 'Yaş kilidini kaldırdı', u.name); save(); io.to('user:' + u.name).emit('ageGate', { locked: false }); return cb({ ok: true, user: userCard(u) }); }
     if (action === 'streak') { if (!canStaff(me, 'ban')) return deny(); const n = Math.min(Math.max(parseInt(days) || 0, 0), 3650); u.streak = { last: ymd(), count: n, best: Math.max(n, u.streak?.best || 0) }; staffLog(me, 'Seriyi düzeltti', u.name, n + ' gün'); save(); pushUsers(); }
