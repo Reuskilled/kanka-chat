@@ -5157,6 +5157,215 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
 .sp-badge-ic{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--accent);color:#0b0b0c} .sp-badge-ic .ic{width:13px;height:13px}
 @media (max-width:760px){.en-lvls,.en-sec .en-how,.en-wal{grid-template-columns:1fr}}
 
+/* ===== Full-Screen Sunucu Energy Vitrini (.en-fs) ===== */
+#modal .box.en-fs {
+  width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; border: 0; padding: 0;
+  overflow-y: auto; overflow-x: hidden; position: relative;
+  background: radial-gradient(66% 36% at 50% -4%, rgba(200,255,0,.21) 0%, rgba(47,211,195,.09) 34%, rgba(16,18,24,.4) 62%, transparent 80%), #09090d;
+  color: #f4f4f8;
+}
+.enf-x {
+  position: fixed; top: 18px; right: 22px; z-index: 40; width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+  color: #d4d4dc; backdrop-filter: blur(10px); transition: all .15s;
+}
+body.has-tb .enf-x { top: 50px; }
+.enf-x:hover { background: rgba(255,255,255,.15); color: #fff; transform: scale(1.05); }
+.enf-x .ic { width: 18px; height: 18px; }
+.enf-wrap { position: relative; max-width: 1040px; margin: 0 auto; padding: 54px 24px 44px; }
+.enf-hero { position: relative; text-align: center; padding: 14px 12px 42px; display: flex; flex-direction: column; align-items: center; }
+.enf-art { position: absolute; pointer-events: none; user-select: none; filter: drop-shadow(0 18px 42px rgba(200,255,0,.26)); }
+.enf-art.a1 { left: -36px; top: 34px; width: 158px; animation: enfFloat 6.2s ease-in-out infinite; }
+.enf-art.a2 { right: -14px; top: 44px; width: 112px; animation: enfFloat 7.4s ease-in-out -2.4s infinite; }
+.enf-art.a3 { right: 56px; bottom: -14px; width: 58px; opacity: .72; animation: enfFloat 5.6s ease-in-out -1.1s infinite; }
+@keyframes enfFloat { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
+.enf-srv-ic {
+  width: 64px; height: 64px; border-radius: 18px; overflow: hidden; display: grid; place-items: center;
+  background: linear-gradient(145deg, #1b1e16, #121319); font-size: 26px; font-weight: 900; color: #c8ff00;
+  box-shadow: 0 0 0 1px rgba(200,255,0,.35), 0 16px 38px rgba(0,0,0,.55); margin-bottom: 14px;
+}
+.enf-srv-ic img { width: 100%; height: 100%; object-fit: cover; }
+.enf-srv-name { font-size: 13px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; color: #e4e4ec; }
+.enf-srv-stat {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 4px 12px; border-radius: 999px;
+  background: rgba(200,255,0,.11); border: 1px solid rgba(200,255,0,.3); font-size: 12.5px; font-weight: 800; color: #d8ff4d;
+}
+.enf-srv-stat .ic { width: 14px; height: 14px; fill: #c8ff00; }
+.enf-title {
+  margin: 18px 0 22px; max-width: 720px; font-size: clamp(26px, 3.8vw, 44px); font-weight: 900;
+  line-height: 1.07; letter-spacing: -.03em; text-transform: uppercase; color: #fff;
+  text-shadow: 0 4px 36px rgba(200,255,0,.16);
+}
+.enf-ctas { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.enf-cta {
+  display: inline-flex; align-items: center; gap: 9px; padding: 13px 24px; border-radius: 12px; border: 0;
+  background: #fff; color: #09090d; font-size: 14.5px; font-weight: 900; cursor: pointer;
+  box-shadow: 0 0 30px rgba(200,255,0,.44), 0 8px 24px rgba(0,0,0,.45); transition: transform .15s, background .15s, box-shadow .15s;
+}
+.enf-cta:hover { background: #c8ff00; transform: translateY(-2px); box-shadow: 0 0 38px rgba(200,255,0,.62), 0 12px 28px rgba(0,0,0,.5); }
+.enf-cta:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+.enf-cta .ic { width: 17px; height: 17px; fill: #09090d; }
+.enf-cta2 {
+  display: inline-flex; align-items: center; gap: 8px; padding: 13px 20px; border-radius: 12px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15); color: #f4f4f8;
+  font-size: 14px; font-weight: 800; cursor: pointer; transition: all .15s;
+}
+.enf-cta2:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.28); }
+.enf-cta2.danger:hover { border-color: rgba(239,90,90,.6); color: #ff8080; background: rgba(239,90,90,.1); }
+.enf-cta2 .ic { width: 16px; height: 16px; }
+.enf-sub { margin-top: 12px; font-size: 13px; color: #9c9cab; font-weight: 600; }
+.enf-sub b { color: #fff; }
+
+/* 3 Seviye Kartı */
+.enf-lvls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+.enf-lv {
+  position: relative; padding: 20px 20px 22px; border-radius: 18px;
+  background: linear-gradient(180deg, rgba(28,29,36,.92), rgba(18,19,24,.96));
+  border: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; gap: 14px;
+  transition: transform .16s, border-color .16s;
+}
+.enf-lv:hover { transform: translateY(-2px); border-color: rgba(200,255,0,.28); }
+.enf-lv.on { border-color: rgba(200,255,0,.42); box-shadow: inset 0 1px 0 rgba(200,255,0,.25), 0 14px 36px rgba(0,0,0,.35); }
+.enf-lv-track { display: flex; align-items: center; gap: 10px; }
+.enf-lv-emblem {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+  background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.14); color: #9c9cab;
+}
+.enf-lv.on .enf-lv-emblem { background: radial-gradient(circle at 30% 25%, #eaff8f, #c8ff00 55%, #659600); border-color: #c8ff00; color: #09090d; box-shadow: 0 0 18px rgba(200,255,0,.45); }
+.enf-lv-emblem .ic { width: 16px; height: 16px; fill: currentColor; }
+.enf-lv-bar { flex: 1; height: 6px; border-radius: 99px; background: rgba(255,255,255,.09); overflow: hidden; }
+.enf-lv-bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #84cc16, #c8ff00); box-shadow: 0 0 12px rgba(200,255,0,.55); transition: width .35s ease; }
+.enf-lv-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.enf-lv-head b { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -.02em; }
+.enf-lv-pill {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); font-size: 11.5px; font-weight: 800; color: #b5b5c2;
+}
+.enf-lv-pill.ok { background: rgba(76,195,138,.14); border-color: rgba(76,195,138,.4); color: #5ce0a0; }
+.enf-lv-pill .ic { width: 12px; height: 12px; }
+.enf-lv-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.enf-lv-list li { display: flex; align-items: center; gap: 9px; font-size: 13px; color: #d4d4de; font-weight: 600; line-height: 1.35; }
+.enf-lv-list li i { width: 18px; height: 18px; border-radius: 6px; flex-shrink: 0; display: grid; place-items: center; background: rgba(200,255,0,.1); color: #c8ff00; font-style: normal; font-size: 11px; }
+.enf-lv-list li .ic { width: 12px; height: 12px; }
+
+/* Ek Avantajlar — 3 Görsel Vitrin Kartı */
+.enf-sec { margin-top: 56px; }
+.enf-sec-h { text-align: center; margin-bottom: 24px; }
+.enf-sec-h h4 { margin: 0; font-size: clamp(21px, 2.6vw, 28px); font-weight: 900; letter-spacing: -.025em; color: #fff; }
+.enf-sec-h p { margin: 7px 0 0; font-size: 13.5px; color: #9c9cab; }
+.enf-xgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.enf-xcard {
+  border-radius: 18px; overflow: hidden; background: rgba(22,23,29,.94); border: 1px solid rgba(255,255,255,.08);
+  display: flex; flex-direction: column; transition: transform .16s, border-color .16s;
+}
+.enf-xcard:hover { transform: translateY(-3px); border-color: rgba(200,255,0,.32); }
+.enf-xcard.clk { cursor: pointer; }
+.enf-xstage {
+  position: relative; height: 146px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: radial-gradient(76% 85% at 50% 18%, var(--xg, rgba(200,255,0,.22)), transparent 74%), #121319;
+  border-bottom: 1px solid rgba(255,255,255,.06); padding: 14px; overflow: hidden;
+}
+.enf-xbody { padding: 18px 18px 20px; text-align: center; display: flex; flex-direction: column; flex: 1; }
+.enf-xbody b { font-size: 16px; font-weight: 900; color: #fff; }
+.enf-xbody p { margin: 7px 0 16px; font-size: 12.5px; line-height: 1.5; color: #9c9cab; flex: 1; }
+.enf-xpills { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.enf-xp { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 8px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); font-size: 11.5px; font-weight: 800; color: #d4d4de; }
+.enf-xp.ok { background: rgba(76,195,138,.14); border-color: rgba(76,195,138,.4); color: #5ce0a0; }
+.enf-xp .ic { width: 12px; height: 12px; }
+/* Kart 1–3 mini vitrin öğeleri */
+.enf-role-demo { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 12px; background: rgba(9,9,13,.65); border: 1px solid rgba(255,255,255,.1); }
+.enf-role-demo .av-m { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #c8ff00, #2fd3c3); color: #09090d; font-weight: 900; font-size: 14px; }
+.enf-role-grad { font-size: 19px; font-weight: 900; letter-spacing: -.02em; background: linear-gradient(90deg, #c8ff00, #2fd3c3, #b07cff, #c8ff00); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: enfGrad 4s linear infinite; }
+@keyframes enfGrad { to { background-position: 220% 0; } }
+.enf-ch-demo { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; background: rgba(200,255,0,.1); border: 1px solid rgba(200,255,0,.24); font-size: 12px; font-weight: 800; color: #d8ff4d; }
+.enf-tag-stack { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.enf-tag-stack .stag { margin: 0; pointer-events: none; transform: scale(1.18); }
+.enf-tag-stack .t1 { transform: scale(1.22) rotate(-4deg) translateX(10px); }
+.enf-tag-stack .t2 { transform: scale(1.22) rotate(3deg) translateX(-10px); }
+.enf-van-demo { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 11px; background: rgba(9,9,13,.78); border: 1px solid rgba(200,255,0,.45); box-shadow: 0 0 22px rgba(200,255,0,.22); font-size: 13px; font-weight: 800; color: #9c9cab; }
+.enf-van-demo strong { color: #c8ff00; }
+.enf-bg-dots { font-size: 11px; font-weight: 700; color: #8c8ca0; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.06); }
+
+/* Karşılaştırma Matrisi (GÜNCEL sütun çerçevesiyle) */
+.enf-tbl-wrap { overflow-x: auto; padding: 20px 4px 8px; }
+.enf-tbl {
+  position: relative; min-width: 680px; display: grid;
+  grid-template-columns: minmax(210px, 1.55fr) repeat(4, minmax(105px, 1fr));
+  align-items: center;
+}
+.enf-th { padding: 16px 12px 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.08); }
+.enf-th.left { text-align: left; font-size: 15px; font-weight: 900; color: #fff; }
+.enf-th b { display: block; font-size: 15px; font-weight: 900; color: #fff; }
+.enf-th small { display: block; margin-top: 2px; font-size: 11.5px; color: #8e8ea0; font-weight: 700; }
+.enf-td { padding: 13px 12px; text-align: center; font-size: 13px; font-weight: 700; color: #e4e4ec; border-bottom: 1px solid rgba(255,255,255,.06); }
+.enf-td.left { text-align: left; color: #b8b8c8; font-weight: 600; }
+.enf-td.dim { color: #6e6e80; font-weight: 600; }
+.enf-td .ok { color: #c8ff00; font-size: 15px; font-weight: 900; }
+.enf-td .no { color: #464654; font-size: 14px; }
+.enf-col-hi {
+  grid-row: 1 / -1; pointer-events: none; position: relative; align-self: stretch; justify-self: stretch;
+  margin: -2px 4px; border: 2px solid #c8ff00; border-radius: 16px;
+  background: linear-gradient(180deg, rgba(200,255,0,.08), rgba(200,255,0,.02));
+  box-shadow: 0 0 34px rgba(200,255,0,.15);
+}
+.enf-col-hi::before {
+  content: 'GÜNCEL'; position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+  padding: 2px 10px; border-radius: 999px; background: #c8ff00; color: #09090d;
+  font-size: 10px; font-weight: 900; letter-spacing: .08em;
+}
+
+/* Alt Bölüm: Özel Davet Linki & Destekçiler */
+.enf-bot { margin-top: 40px; display: grid; grid-template-columns: 1fr; gap: 16px; }
+.enf-bot.two { grid-template-columns: 1fr 1.35fr; }
+.enf-panel { padding: 20px; border-radius: 18px; background: rgba(22,23,29,.9); border: 1px solid rgba(255,255,255,.08); }
+.enf-panel h5 { margin: 0 0 12px; font-size: 12px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; color: #9c9cab; display: flex; align-items: center; justify-content: space-between; }
+.enf-panel .pt-vrow { display: flex; align-items: center; gap: 8px; }
+.enf-panel .pt-vrow span { color: #9c9cab; font-weight: 700; font-size: 13.5px; }
+.enf-panel .pt-vrow .field { margin: 0; flex: 1; background: #0e0f14; border-color: rgba(255,255,255,.12); color: #fff; }
+.enf-sup-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; max-height: 240px; overflow-y: auto; }
+.enf-sup-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.05); }
+.enf-sup-row .av { width: 32px; height: 32px; flex-shrink: 0; }
+.enf-sup-row b { flex: 1; min-width: 0; font-size: 13.5px; color: #f4f4f8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.enf-sup-row span { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 8px; background: rgba(200,255,0,.12); color: #c8ff00; font-size: 12px; font-weight: 900; flex-shrink: 0; }
+.enf-sup-row span .ic { width: 12px; height: 12px; fill: #c8ff00; }
+
+/* Yapışkan Alt Aksiyon Çubuğu */
+.enf-dock {
+  position: sticky; bottom: 18px; z-index: 15; margin: 34px auto 0; width: fit-content; max-width: calc(100% - 16px);
+  display: flex; align-items: center; gap: 12px; padding: 9px 10px 9px 14px; border-radius: 16px;
+  background: rgba(16,17,22,.84); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,.15);
+  box-shadow: 0 20px 50px rgba(0,0,0,.68);
+}
+.enf-dock-ic { width: 28px; height: 28px; border-radius: 8px; overflow: hidden; display: grid; place-items: center; background: #1c1d24; font-size: 13px; font-weight: 900; color: #c8ff00; flex-shrink: 0; }
+.enf-dock-ic img { width: 100%; height: 100%; object-fit: cover; }
+.enf-dock-name { font-size: 13.5px; font-weight: 900; color: #fff; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.enf-dock .enf-cta { padding: 9px 16px; font-size: 13px; border-radius: 10px; box-shadow: 0 0 18px rgba(200,255,0,.32); }
+.enf-dock .enf-cta2 { padding: 9px 12px; font-size: 12.5px; border-radius: 10px; }
+
+/* Satır İçi Geri Çekme Onay Penceresi */
+.enf-cfm {
+  position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.68); backdrop-filter: blur(6px);
+  display: grid; place-items: center; padding: 16px; animation: fadeIn .14s;
+}
+.enf-cfm-box {
+  width: min(410px, 94vw); padding: 22px; border-radius: 18px; background: #15161c;
+  border: 1px solid rgba(255,255,255,.14); box-shadow: 0 24px 60px rgba(0,0,0,.7); color: #f4f4f8;
+}
+.enf-cfm-box h4 { margin: 0 0 8px; font-size: 17px; font-weight: 900; }
+.enf-cfm-box p { margin: 0 0 18px; font-size: 13.5px; line-height: 1.5; color: #a1a1b2; }
+.enf-cfm-acts { display: flex; gap: 10px; justify-content: flex-end; }
+.enf-cfm-acts button { padding: 10px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 800; cursor: pointer; }
+.enf-cfm-acts .no { background: rgba(255,255,255,.07); color: #e4e4ec; border: 1px solid rgba(255,255,255,.12); }
+.enf-cfm-acts .yes { background: #e5484d; color: #fff; border: 0; }
+
+@media (max-width: 860px) {
+  .enf-lvls, .enf-xgrid, .enf-bot.two { grid-template-columns: 1fr; }
+  .enf-art { display: none; }
+  .enf-wrap { padding: 44px 16px 28px; }
+  .enf-dock-name { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .enf-art, .enf-role-grad { animation: none !important; } }
+
 /* Uygulama görünümü (html.mapp): liste ekranı + üstüne kayan sohbet + alt sekmeler */
 #mtabs { display: none; }
 @media (max-width: 760px), (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 900px) {
@@ -8967,31 +9176,166 @@ function energyLevelsHTML(info) {
     return `<div class="en-lvc ${on ? 'on' : ''} ${info.level + 1 === lv ? 'nx' : ''}"><div class="en-lvh"><b>Energy Level ${lv}</b><span>${on ? `${ic('check')} Açık` : `${need} Energy`}</span></div>
       <ul>${(info.perks[lv] || []).map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>`; }).join('')}</div>`;
 }
+function enCrystalSVG(id, tilt = 0) {
+  return `<svg viewBox="0 0 140 160" fill="none" aria-hidden="true" style="transform:rotate(${tilt}deg)">
+    <defs>
+      <linearGradient id="${id}a" x1="15%" y1="5%" x2="85%" y2="95%"><stop offset="0%" stop-color="#f2ff9e"/><stop offset="45%" stop-color="#c8ff00"/><stop offset="100%" stop-color="#2a6a12"/></linearGradient>
+      <linearGradient id="${id}b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7ef29d" stop-opacity=".95"/><stop offset="100%" stop-color="#143b24"/></linearGradient>
+      <linearGradient id="${id}c" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#c8ff00" stop-opacity=".1"/></linearGradient>
+    </defs>
+    <polygon points="70,8 124,48 106,136 70,154 34,136 16,48" fill="url(#${id}a)" stroke="#e9ff88" stroke-opacity=".55" stroke-width="1.5"/>
+    <polygon points="70,8 124,48 70,68 16,48" fill="url(#${id}c)"/>
+    <polygon points="70,68 124,48 106,136 70,154" fill="url(#${id}b)" fill-opacity=".68"/>
+    <polygon points="70,68 16,48 34,136 70,154" fill="#0d2210" fill-opacity=".35"/>
+    <polygon points="70,22 104,50 70,64 36,50" fill="#ffffff" fill-opacity=".28"/>
+  </svg>`;
+}
 function openEnergy(s) {
   socket.emit('energyInfo', { serverId: s.id }, r => {
     if (r?.error) return toast(r.error);
+    const srvIcon = s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc((s.icon || s.name[0] || '?').slice(0, 2));
+    const isStarSrv = s.id === 's1' || (s.badges || []).some(b => b.id === 'yildiz');
+    const canManage = s.owner === S.me || S.siteAdmin || (typeof hasPerm === 'function' && hasPerm(s, 'manageServer'));
+    const perkRows = [
+      ['Özel Emoji Yuvası', '50', '100', '150', '200'],
+      ['Ses Paneli Yuvası', '8', '+10 (18)', '+20 (28)', '+30 (38)'],
+      ['Ses Kalitesi', 'Standart', 'Standart', '256 kbps Stüdyo', '256 kbps Stüdyo'],
+      ['Sunucu Listesinde Energy Rozeti', false, true, true, true],
+      ['Oda Simgeleri & Oda Adı Rengi', false, true, true, true],
+      ['Rollere Özel Emoji Simgesi', false, true, true, true],
+      ['Piksel Sunucu Etiketi Paketleri', 'Ücretsiz (5)', 'Anadolu + Efektler', 'Tüm 6 Paket (30)', 'Tüm 6 Paket (30)'],
+      ['Sunucu Renk Teması', false, false, true, true],
+      ['Rol Renk Geçişi & Yazı Tipi', false, false, true, true],
+      ['Oda Adı Yazı Tipi', false, false, true, true],
+      ['Özel Davet Linki (kankahq.com/…)', false, false, false, true],
+      ['Sohbet Arka Plan Fotoğrafı', false, false, false, true],
+    ];
+    const cellHTML = (v, dim) => {
+      if (v === true) return `<div class="enf-td"><span class="ok">✓</span></div>`;
+      if (v === false) return `<div class="enf-td"><span class="no">✕</span></div>`;
+      return `<div class="enf-td${dim ? ' dim' : ''}">${esc(v)}</div>`;
+    };
     const draw = r => {
-      const next = r.next, prevNeed = r.levels[r.level] || 0, pct = next ? Math.min(100, Math.round((r.total - prevNeed) / (next - prevNeed) * 100)) : 100;
-      modal(`<div class="en-m"><button class="x" id="mx" aria-label="Kapat">${ic('x')}</button>
-        <div class="en-hero"><div class="en-orb">${enIc()}</div><div><small>${esc(s.name)}</small><h3>Energy Level ${r.level}</h3>
-          <div class="en-tot"><b>${r.total}</b> Total Energy${next ? ` · Level ${r.level + 1} için <b>${next - r.total}</b> Energy daha` : ' · En yüksek seviye 🎉'}</div></div></div>
-        <div class="en-bar"><i style="width:${pct}%"></i>${r.levels.slice(1).map((n, i) => `<span style="left:${Math.min(100, n / r.levels[r.levels.length - 1] * 100)}%" class="${r.total >= n ? 'on' : ''}" title="Level ${i + 1}">${i + 1}</span>`).join('')}</div>
-        <div class="en-acts">${r.spark ? `<button class="en-btn" id="en-send" ${r.free ? '' : 'disabled'}>${enIc()}<span>Sunucuya Energy Gönder</span></button>
-            ${r.mine ? `<button class="en-pull" id="en-pull">Energy'yi Geri Çek</button>` : ''}
-            <small class="en-note">Boşta <b>${r.free}</b> Energy'n var${r.mine ? ` · Bu sunucuda senin <b>${r.mine}</b> Energy'n` : ''}</small>`
-          : SPARK_HIDE ? '' : `<button class="en-btn" id="en-spark">${ic('sparkle')}<span>Kanka Spark ile Energy kazan</span></button><small class="en-note">Kanka Spark abonelerine her ay 2 Energy verilir.</small>`}</div>
-        <h4 class="en-h">Seviyeler ve ayrıcalıklar</h4>${energyLevelsHTML(r)}
-        ${r.level >= 3 && s.owner === S.me ? `<div class="en-van"><label>Özel davet linki</label><div class="pt-vrow"><span>kankahq.com/</span><input class="field" id="en-slug" maxlength="24" value="${esc(s.vanity || '')}" placeholder="sunucun"><button class="en-pull" id="en-vsave">Kaydet</button></div></div>` : ''}
-        <h4 class="en-h">Destekçiler</h4>
-        <div class="en-sup">${r.by.length ? r.by.map(x => `<div class="en-sr">${x.name === '@kanka' ? '<div class="av"><img src="/icon-192.png" alt=""></div><b>Kanka Ekibi</b>' : `${av(x.name)}<b>${esc(dn(x.name))}</b>`}<span>${enIc()} ${x.n}</span></div>`).join('') : '<p class="hint">Henüz kimse Energy göndermedi. İlk destekçi sen ol!</p>'}</div>
-      </div>`);
+      const prevScroll = $('#modal-box')?.classList.contains('en-fs') ? $('#modal-box').scrollTop : 0;
+      const next = r.next, effLv = isStarSrv ? 3 : r.level;
+      const lvlCards = r.levels.slice(1).map((need, i) => {
+        const lv = i + 1, prevN = r.levels[i] || 0, on = r.level >= lv;
+        const pct = on ? 100 : r.total <= prevN ? 0 : Math.min(100, Math.round((r.total - prevN) / (need - prevN) * 100));
+        return `<div class="enf-lv${on ? ' on' : ''}">
+          <div class="enf-lv-track"><div class="enf-lv-emblem">${enIc()}</div><div class="enf-lv-bar"><i style="width:${pct}%"></i></div></div>
+          <div class="enf-lv-head"><b>${lv}. Seviye</b><span class="enf-lv-pill${on ? ' ok' : ''}">${on ? `${ic('check')} Açık` : `${enIc()} ${need} Energy`}</span></div>
+          <ul class="enf-lv-list">${(r.perks[lv] || []).map(p => `<li><i>${ic('check')}</i><span>${esc(p)}</span></li>`).join('')}</ul>
+        </div>`;
+      }).join('');
+      const tagPreview1 = typeof tagChip === 'function' ? tagChip({ t: s.tag?.t || 'KHQ', i: 'px:nazar', c: '#4aa8ff', st: 'neon', fx: 'shimmer', ad: s.name }, s.id, 'tag-prev t1') : '';
+      const tagPreview2 = typeof tagChip === 'function' ? tagChip({ t: 'PRO', i: 'px:ejderha', c: '#4cc38a', st: 'duo', fx: 'none', ad: s.name }, s.id, 'tag-prev t2') : '';
+      const roleOn = effLv >= 2, tagOn = isStarSrv || r.total >= 2, vanOn = effLv >= 3;
+      const canVanity = r.level >= 3 && (s.owner === S.me || S.siteAdmin);
+      const actBtns = (dock = false) => r.spark
+        ? `<button class="enf-cta" data-ensend ${r.free ? '' : 'disabled'}>${enIc()}<span>Sunucuya Energy Gönder</span></button>${r.mine ? `<button class="enf-cta2 danger" data-enpull>${dock ? 'Geri Çek' : "Energy'yi Geri Çek"}</button>` : ''}`
+        : SPARK_HIDE ? '' : `<button class="enf-cta" data-enspark>${ic('sparkle')}<span>Kanka Spark ile Energy Kazan</span></button>`;
+      const tblCells = perkRows.map((row, ri) =>
+        `<div class="enf-td left" style="grid-row:${ri + 2};grid-column:1">${esc(row[0])}</div>` +
+        row.slice(1).map((v, ci) => cellHTML(v, ci === 0).replace('class="enf-td', `style="grid-row:${ri + 2};grid-column:${ci + 2}" class="enf-td`)).join('')
+      ).join('');
+      const hiCol = Math.min(5, Math.max(2, r.level + 2));
+      modal(`<button class="enf-x" id="mx" aria-label="Kapat">${ic('x')}</button>
+        <div class="enf-wrap">
+          <section class="enf-hero">
+            <div class="enf-art a1">${enCrystalSVG('ec1', -18)}</div>
+            <div class="enf-art a2">${enCrystalSVG('ec2', 22)}</div>
+            <div class="enf-art a3">${enCrystalSVG('ec3', 38)}</div>
+            <div class="enf-srv-ic">${srvIcon}</div>
+            <div class="enf-srv-name">${esc(s.name)}</div>
+            <div class="enf-srv-stat">${enIc()}<span>${r.total} Energy · ${r.level}. Seviye${next ? ` (${next - r.total} Energy daha → ${r.level + 1}. Sv.)` : ' · En Yüksek Seviye'}</span></div>
+            <h2 class="enf-title">BU SUNUCUYA ENERGY GÖNDER VE HERKES İÇİN AVANTAJLAR AÇ</h2>
+            <div class="enf-ctas">${actBtns(false)}${!SPARK_HIDE && r.spark ? `<button class="enf-cta2" data-enspark>${ic('sparkle')}<span>Spark Cüzdanım</span></button>` : ''}</div>
+            <div class="enf-sub">${r.spark ? `Boşta <b>${r.free}</b> Energy'n var${r.mine ? ` · Bu sunucuda senin <b>${r.mine}</b> Energy'n bulunuyor` : ''}` : 'Kanka Spark abonelerine her ay 2 Energy verilir; istediğin an başka sunucuya aktarabilirsin.'}</div>
+          </section>
+
+          <section class="enf-lvls">${lvlCards}</section>
+
+          <section class="enf-sec">
+            <div class="enf-sec-h"><h4>Bu sunucuya ek avantajlarla güç kat</h4><p>Energy biriktikçe sunucundaki herkes için yeni görsel stiller, piksel rozetler ve özel link açılır.</p></div>
+            <div class="enf-xgrid">
+              <div class="enf-xcard">
+                <div class="enf-xstage" style="--xg:rgba(200,255,0,.22)">
+                  <div class="enf-role-demo"><span class="av-m">K</span><span class="enf-role-grad">Kanka Kurucu</span></div>
+                  <span class="enf-ch-demo">🔥 #sohbet-odası</span>
+                </div>
+                <div class="enf-xbody">
+                  <b>Geliştirilmiş Rol &amp; Oda Stilleri</b>
+                  <p>Renk geçişli roller, özel yazı tipleri, renkli oda adları ve emoji oda simgeleriyle sunucunu öne çıkar.</p>
+                  <div class="enf-xpills"><span class="enf-xp">${enIc()} 2–7 Energy</span><span class="enf-xp${roleOn ? ' ok' : ''}">${roleOn ? `${ic('check')} Etkin` : '2. Seviye'}</span></div>
+                </div>
+              </div>
+              <div class="enf-xcard${canManage && s.tagAllowed ? ' clk' : ''}" id="enf-tagcard">
+                <div class="enf-xstage" style="--xg:rgba(74,168,255,.26)">
+                  <div class="enf-tag-stack">${tagPreview1}${tagPreview2}</div>
+                </div>
+                <div class="enf-xbody">
+                  <b>Sunucu Etiketi &amp; Piksel Rozetler</b>
+                  <p>6 özgün Kanka paketinde 30 piksel rozet, Neon/Çift Renk çerçeve ve canlı mikro-efektlerle sunucunu temsil et.</p>
+                  <div class="enf-xpills"><span class="enf-xp">${enIc()} 2–5 Energy</span><span class="enf-xp${tagOn ? ' ok' : ''}">${tagOn ? `${ic('check')} Etkin` : '2+ Energy'}</span></div>
+                </div>
+              </div>
+              <div class="enf-xcard">
+                <div class="enf-xstage" style="--xg:rgba(47,211,195,.25)">
+                  <div class="enf-van-demo"><span>kankahq.com/</span><strong>${esc(s.vanity || 'sunucun')}</strong></div>
+                  <span class="enf-bg-dots">✦ Özel Sohbet Arka Plan Fotoğrafı</span>
+                </div>
+                <div class="enf-xbody">
+                  <b>Özel Davet Linki &amp; Arka Plan</b>
+                  <p>Sunucuna akılda kalıcı kısa davet bağlantısı al ve tüm sohbet odalarına özel arka plan fotoğrafı ekle.</p>
+                  <div class="enf-xpills"><span class="enf-xp">${enIc()} 14 Energy</span><span class="enf-xp${vanOn ? ' ok' : ''}">${vanOn ? `${ic('check')} Etkin` : '3. Seviye'}</span></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="enf-sec">
+            <div class="enf-sec-h"><h4>Bu sunucuya en iyi avantajlarla seviye atlat.</h4></div>
+            <div class="enf-tbl-wrap">
+              <div class="enf-tbl">
+                <div class="enf-col-hi" style="grid-column:${hiCol};grid-row:1/${perkRows.length + 2}"></div>
+                <div class="enf-th left" style="grid-row:1;grid-column:1">Avantajlar</div>
+                <div class="enf-th" style="grid-row:1;grid-column:2"><b>Energy Yok</b><small>0 Energy</small></div>
+                <div class="enf-th" style="grid-row:1;grid-column:3"><b>1. Seviye</b><small>2 Energy</small></div>
+                <div class="enf-th" style="grid-row:1;grid-column:4"><b>2. Seviye</b><small>7 Energy</small></div>
+                <div class="enf-th" style="grid-row:1;grid-column:5"><b>3. Seviye</b><small>14 Energy</small></div>
+                ${tblCells}
+              </div>
+            </div>
+          </section>
+
+          <section class="enf-bot${canVanity ? ' two' : ''}">
+            ${canVanity ? `<div class="enf-panel"><h5><span>Özel Davet Linki</span><span>3. Seviye</span></h5><div class="pt-vrow"><span>kankahq.com/</span><input class="field" id="en-slug" maxlength="24" value="${esc(s.vanity || '')}" placeholder="sunucun"><button class="enf-cta2" id="en-vsave">Kaydet</button></div></div>` : ''}
+            <div class="enf-panel"><h5><span>Destekçiler</span><span>${r.by.length} kişi · ${r.total} Energy</span></h5>
+              <div class="enf-sup-grid">${r.by.length ? r.by.map(x => `<div class="enf-sup-row">${x.name === '@kanka' ? '<div class="av"><img src="/icon-192.png" alt=""></div><b>Kanka Ekibi</b>' : `${av(x.name)}<b>${esc(dn(x.name))}</b>`}<span>${enIc()} ${x.n}</span></div>`).join('') : '<p class="hint" style="margin:0">Henüz kimse Energy göndermedi. İlk destekçi sen ol!</p>'}</div>
+            </div>
+          </section>
+
+          ${actBtns(true) ? `<div class="enf-dock"><div class="enf-dock-ic">${srvIcon}</div><span class="enf-dock-name">${esc(s.name)}</span>${actBtns(true)}</div>` : ''}
+        </div>`, 'en-fs');
+      if (prevScroll) $('#modal-box').scrollTop = prevScroll;
       $('#mx').onclick = closeModal;
-      const mv = pull => socket.emit('energyMove', { serverId: s.id, n: 1, pull }, x => { if (x?.error) return toast(x.error); draw(x.server);
-        toast(pull ? '1 Energy geri çekildi, istediğin sunucuya gönderebilirsin' : x.levelUp ? `⚡ ${s.name} Energy Level ${x.server.level}'e çıktı!` : `⚡ ${s.name} sunucusuna 1 Energy gönderdin`, null, false, { type: !pull ? 'party' : undefined }); });
-      if ($('#en-send')) $('#en-send').onclick = () => mv(false);
-      if ($('#en-pull')) $('#en-pull').onclick = () => confirmBox(`${s.name} sunucusundan 1 Energy geri çekilsin mi? Sunucunun Total Energy'si düşer${r.next !== null || r.level ? ', seviye gereksiniminin altına inerse ayrıcalıklar kapanır' : ''}.`, () => mv(true));
-      if ($('#en-spark')) $('#en-spark').onclick = () => { closeModal(); openDMHome(); showFriends('spark'); };
-      if ($('#en-vsave')) $('#en-vsave').onclick = () => socket.emit('srvVanity', { serverId: s.id, slug: $('#en-slug').value }, x => x.error ? toast(x.error) : toast(x.vanity ? 'Özel link kaydedildi: kankahq.com/' + x.vanity : 'Özel link kaldırıldı'));
+      const mv = pull => socket.emit('energyMove', { serverId: s.id, n: 1, pull }, x => {
+        if (x?.error) return toast(x.error); draw(x.server);
+        toast(pull ? '1 Energy geri çekildi, istediğin sunucuya gönderebilirsin' : x.levelUp ? `⚡ ${s.name} Energy Level ${x.server.level}'e çıktı!` : `⚡ ${s.name} sunucusuna 1 Energy gönderdin`, null, false, { type: !pull ? 'party' : undefined });
+      });
+      const askPull = () => {
+        const ov = document.createElement('div'); ov.className = 'enf-cfm';
+        ov.innerHTML = `<div class="enf-cfm-box"><h4>Energy'yi geri çek?</h4><p>${esc(s.name)} sunucusundan 1 Energy geri çekilsin mi? Sunucunun Total Energy'si düşer${r.next !== null || r.level ? ', seviye gereksiniminin altına inerse ayrıcalıklar kapanır' : ''}.</p><div class="enf-cfm-acts"><button type="button" class="no">Vazgeç</button><button type="button" class="yes">Evet, Geri Çek</button></div></div>`;
+        ov.onclick = e => { if (e.target === ov) ov.remove(); };
+        ov.querySelector('.no').onclick = () => ov.remove();
+        ov.querySelector('.yes').onclick = () => { ov.remove(); mv(true); };
+        $('#modal-box').appendChild(ov);
+      };
+      $('#modal-box').querySelectorAll('[data-ensend]').forEach(b => b.onclick = () => mv(false));
+      $('#modal-box').querySelectorAll('[data-enpull]').forEach(b => b.onclick = askPull);
+      $('#modal-box').querySelectorAll('[data-enspark]').forEach(b => b.onclick = () => { closeModal(); openDMHome(); showFriends('spark'); });
+      if ($('#enf-tagcard') && canManage && s.tagAllowed) $('#enf-tagcard').onclick = () => showServerSettings(s, 'tag');
+      if ($('#en-vsave')) $('#en-vsave').onclick = () => socket.emit('srvVanity', { serverId: s.id, slug: $('#en-slug').value }, x => x.error ? toast(x.error) : (s.vanity = x.vanity || '', toast(x.vanity ? 'Özel link kaydedildi: kankahq.com/' + x.vanity : 'Özel link kaldırıldı'), draw(r)));
     };
     draw(r);
   });
