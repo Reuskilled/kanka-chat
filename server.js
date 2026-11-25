@@ -3238,8 +3238,8 @@ function cleanEmbeds(list) {
   embedWarn = null;
   if (!Array.isArray(list)) return [];
   return list.slice(0, 5).map(e => { if (!e || typeof e !== 'object') return null;
-    const k = { baslik: noPing(clean(e.baslik ?? e.title, 200)), aciklama: noPing(clean(e.aciklama ?? e.description, 3000)), renk: hexColor(e.renk ?? e.color), url: httpsUrl(e.url),
-      alanlar: (Array.isArray(e.alanlar ?? e.fields) ? (e.alanlar ?? e.fields) : []).slice(0, 15).map(f => ({ ad: noPing(clean(f?.ad ?? f?.name, 100)), deger: noPing(clean(f?.deger ?? f?.value, 800)), satir: !!(f?.satir ?? f?.inline) })).filter(f => f.ad || f.deger),
+    const k = { baslik: refFix(noPing(clean(e.baslik ?? e.title, 200))), aciklama: refFix(noPing(clean(e.aciklama ?? e.description, 3000))), renk: hexColor(e.renk ?? e.color), url: httpsUrl(e.url),
+      alanlar: (Array.isArray(e.alanlar ?? e.fields) ? (e.alanlar ?? e.fields) : []).slice(0, 15).map(f => ({ ad: refFix(noPing(clean(f?.ad ?? f?.name, 100))), deger: refFix(noPing(clean(f?.deger ?? f?.value, 800))), satir: !!(f?.satir ?? f?.inline) })).filter(f => f.ad || f.deger),
       resim: cardImg(e.resim ?? e.image?.url ?? e.image, 'resim'), kucukResim: cardImg(e.kucukResim ?? e.thumbnail?.url ?? e.thumbnail, 'kucukResim'), altyazi: noPing(clean(e.altyazi ?? e.footer?.text ?? e.footer, 200)) };
     return k.baslik || k.aciklama || k.alanlar.length || k.resim ? k : null; }).filter(Boolean);
 }
@@ -3286,9 +3286,15 @@ function cleanComps(rows) {
     return null;
   }).filter(Boolean)).filter(r => r.length).filter(r => r.every(c => c.tur === 'buton') || r.length === 1);
 }
+// Discord alışkanlığı: <@kimlik> → @ad, <@&rolId> → @RolAdı, <#odaId> → #oda-adı (mesaj metninde ve kartlarda)
+function refFix(t) {
+  return String(t || '').replace(/<@!?(\d{12,20})>/g, (m, id) => { const u = userById(id); return u ? '@' + u.name : m; })
+    .replace(/<@&([a-z0-9]{6,24})>/gi, (m, rid) => { for (const s of db.servers) { const r = s.customRoles?.find(x => x.id === rid); if (r) return '@' + r.name; } return m; })
+    .replace(/<#([a-z0-9]{6,24})>/gi, (m, cid) => { const f = findChannel(cid); return f ? '#' + f.c.name : m; });
+}
 function msgBody(b) { // REST gövdesinden mesaj alanları (Kanka ve alışık olunan İngilizce adlar)
   // <@kimlik> yazılırsa o kişinin güncel adıyla etiketlenir (bot adı değil kimliği saklar)
-  const text = noPing(clean(b?.icerik ?? b?.content ?? '', MSG_MAX).replace(/<@!?(\d{12,20})>/g, (m, id) => { const u = userById(id); return u ? '@' + u.name : m; }));
+  const text = refFix(noPing(clean(b?.icerik ?? b?.content ?? '', MSG_MAX)));
   let ek = b?.ekler ?? b?.attachments ?? b?.dosyalar ?? b?.files ?? b?.ek; if (ek != null && !Array.isArray(ek)) ek = [ek];
   const fidOf = x => { const v = typeof x === 'string' ? x : x?.id ?? x?.url; const m = typeof v === 'string' && (v.match(/^[a-f0-9]{24}$/) || v.match(/\/dosya\/([a-f0-9]{24})/)); return m ? (m[1] || m[0]) : null; };
   let files = (ek || []).slice(0, 10).map(fidOf), bad = files.filter(x => !x).length; files = files.filter(Boolean);
@@ -4195,12 +4201,17 @@ function botTap(ev, d) {
 function botReact(chId, msg, emoji, user, added) {
   for (const { a } of botsIn(chId)) gwDispatch(a.id, added ? 'TEPKI_EKLENDI' : 'TEPKI_KALDIRILDI', { mesaj: msg.id, oda: chId, emoji, kullanici: user }, c => c.intents.has('tepkiler'));
 }
-function botMember(s, name, kind) { // üye katıldı / ayrıldı / güncellendi; bot atıldıysa kendisine bildir
+function botMember(s, name, kind, meta) { // üye katıldı / ayrıldı / güncellendi; bot atıldıysa kendisine ve sahibine bildir. meta: { by, islem: 'atildi'|'yasaklandi'|'ayrildi', sebep }
   if (!s || s.public) return;
-  if (kind === 'leave' && isBotUser(name)) { if (s.botBy) delete s.botBy[name]; const a = appOf(name); if (a) { s.customRoles = (s.customRoles || []).filter(r => r.managed !== a.id); gwDispatch(a.id, 'SUNUCUDAN_CIKARILDI', { id: s.id, ad: s.name }); devStatsSync(a.owner); } return; }
+  const who = meta?.by ? { id: db.users[meta.by] ? uidOf(db.users[meta.by]) : null, ad: meta.by, gorunenAd: db.users[meta.by]?.displayName || meta.by } : null;
+  const why = meta ? { islem: meta.islem || 'ayrildi', kaldiran: who, sebep: meta.sebep || '', zaman: Date.now() } : { islem: 'ayrildi', kaldiran: null, sebep: '', zaman: Date.now() };
+  if (kind === 'leave' && isBotUser(name)) { const ek = botAdder(s, name); if (s.botBy) delete s.botBy[name]; const a = appOf(name);
+    if (a) { s.customRoles = (s.customRoles || []).filter(r => r.managed !== a.id); gwDispatch(a.id, 'SUNUCUDAN_CIKARILDI', { id: s.id, ad: s.name, ekleyen: ek, ...why }); devStatsSync(a.owner);
+      if (a.owner !== meta?.by) botDm(a.owner, { title: `🤖 ${a.bot} bir sunucudan çıkarıldı`, tone: 'warn', text: `${s.name} sunucusundan ${who ? who.ad + ' tarafından ' : ''}${why.islem === 'yasaklandi' ? 'yasaklandı' : 'çıkarıldı'}${why.sebep ? ` (sebep: ${why.sebep})` : ''}. botun artık ${botServers(a).length} sunucuda.` }); }
+    return; }
   for (const n of s.members.filter(isBotUser)) { const a = appOf(n); if (!a || a.killed || n === name) continue;
     const t = kind === 'join' ? 'UYE_KATILDI' : kind === 'leave' ? 'UYE_AYRILDI' : 'UYE_GUNCELLENDI';
-    gwDispatch(a.id, t, { sunucu: s.id, uye: kind === 'leave' ? { id: db.users[name] ? uidOf(db.users[name]) : null, ad: name } : memberView(s, name) }, c => c.intents.has('uyeler'));
+    gwDispatch(a.id, t, { sunucu: s.id, uye: kind === 'leave' ? { id: db.users[name] ? uidOf(db.users[name]) : null, ad: name } : memberView(s, name), ...(kind === 'leave' ? why : {}) }, c => c.intents.has('uyeler'));
     if (kind === 'join' && !a.verified) { const r = reachOf(a); if (r > REACH_MAX && !a.reachWarned) { a.reachWarned = Date.now(); botDm(a.owner, { title: `🤖 ${a.bot} ${REACH_MAX} kişiyi geçti`, tone: 'warn', text: `botun artık ${r} kişiye ulaşıyor. doğrulanmamış botlar yeni sunuculara eklenemez. Geliştirici Portalı'ndan doğrulama isteyebilirsin.` }); } }
   }
 }
@@ -4565,13 +4576,13 @@ api.delete('/sunucular/:sid/uyeler/:ad', R((a, req) => {
   const x = botMod(a, req, 'kick'); if (x.error) return x; const { s, n } = x;
   if (nukeCheck(s, a.bot, 'üye atma')) return { error: 'Kısa sürede çok fazla üye attın, işlem durduruldu', code: 429 };
   s.members = s.members.filter(m => m !== n); wipeMember(s, n); audit(s, a.bot, 'Sunucudan attı (bot)', n + (req.body?.sebep ? ' · ' + clean(req.body.sebep, 120) : ''));
-  voiceKick(s.channels.map(c => c.id), n, 'Sunucudan çıkarıldın'); save(); pushServers([n, ...s.members]); io.to('user:' + n).emit('toast', `${s.name} sunucusundan çıkarıldın`); botMember(s, n, 'leave'); return { ok: true };
+  voiceKick(s.channels.map(c => c.id), n, 'Sunucudan çıkarıldın'); save(); pushServers([n, ...s.members]); io.to('user:' + n).emit('toast', `${s.name} sunucusundan çıkarıldın`); botMember(s, n, 'leave', { by: a.bot, islem: 'atildi', sebep: clean(req.body?.sebep, 120) }); return { ok: true };
 }));
 api.put('/sunucular/:sid/yasaklar/:ad', R((a, req) => {
   const x = botMod(a, req, 'ban'); if (x.error) return x; const { s, n } = x;
   if (nukeCheck(s, a.bot, 'yasaklama')) return { error: 'Kısa sürede çok fazla yasaklama, işlem durduruldu', code: 429 };
   s.bans[n] = { by: a.bot, time: Date.now(), reason: clean(req.body?.sebep, 120) }; s.members = s.members.filter(m => m !== n); wipeMember(s, n);
-  audit(s, a.bot, 'Yasakladı (bot)', n); voiceKick(s.channels.map(c => c.id), n, 'Sunucudan yasaklandın'); save(); pushServers([n, ...s.members]); io.to('user:' + n).emit('toast', `${s.name} sunucusundan yasaklandın`); botMember(s, n, 'leave'); return { ok: true };
+  audit(s, a.bot, 'Yasakladı (bot)', n); voiceKick(s.channels.map(c => c.id), n, 'Sunucudan yasaklandın'); save(); pushServers([n, ...s.members]); io.to('user:' + n).emit('toast', `${s.name} sunucusundan yasaklandın`); botMember(s, n, 'leave', { by: a.bot, islem: 'yasaklandi', sebep: clean(req.body?.sebep, 120) }); return { ok: true };
 }));
 api.delete('/sunucular/:sid/uyeler/:ad/sustur', R((a, req) => {
   const x = botMod(a, req, 'timeout'); if (x.error) return x; const { s, n } = x;
@@ -4620,8 +4631,15 @@ api.post('/sunucular/:sid/odalar', R((a, req) => {
   const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
   if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
   if (limited('botch|' + a.id + '|' + s.id, 10, 60e3)) return { error: 'Çok hızlı oda açıyorsun: dakikada en fazla 10', code: 429 };
-  const b = req.body || {}; const r = addChannel(s, a.bot, { name: b.ad ?? b.name, type: b.tur ?? b.type, cat: b.kategori ?? b.parent ?? null, priv: !!(b.ozel ?? b.private), topic: b.konu ?? b.topic });
-  if (r.error) return r; return chBotView(s, r.c, a.bot);
+  const b = req.body || {}; const r = addChannel(s, a.bot, { name: b.ad ?? b.name, type: b.tur ?? b.type, cat: b.kategori ?? b.parent ?? null, priv: !!((b.ozel ?? b.private) || b.kisiler), topic: b.konu ?? b.topic });
+  if (r.error) return r;
+  // Talep (ticket) odası tek istekte: { ozel: true, kisiler: ['ali'], roller: [rolId], izinler: { hedef: { view, send } } }
+  const ov = {}; const put = (k, v) => { const t = ovTarget(s, k); if (t) ov[t] = { ...(ov[t] || {}), ...v }; };
+  for (const k of [].concat(b.kisiler || [])) put(k, { view: true, send: true, history: true, attach: true });
+  for (const k of [].concat(b.roller || [])) put(k, { view: true, send: true, history: true });
+  if (b.izinler && typeof b.izinler === 'object') for (const [k, v] of Object.entries(b.izinler)) { const o = {}; for (const [k0, x] of Object.entries(v || {})) { const kk = OV_TR[k0] || k0; if (CH_KEYS.includes(kk) && typeof x === 'boolean') o[kk] = x; } put(k, o); }
+  if (Object.keys(ov).length) { const c = r.c; if (c.sync) { c.perms = JSON.parse(JSON.stringify(catOf(s, c)?.perms || {})); c.sync = false; } c.perms = { ...(c.perms || {}), ...ov }; c.perms['u:' + a.bot] = { ...(c.perms['u:' + a.bot] || {}), view: true, send: true }; save(); pushServers(membersOf(s)); chEvent(s, 'ODA_GUNCELLENDI', c); }
+  return chBotView(s, r.c, a.bot);
 }));
 // Oda izinleri (gizli oda, ticket odası): hedef = herkes | rol id'si | kişi adı/kimliği. Gövde: { view: true, send: false, ... } (null = devral)
 const OV_TR = { gor: 'view', gorme: 'view', yaz: 'send', yazma: 'send', gecmis: 'history', baglan: 'connect', baglanma: 'connect', dosya: 'attach', tepki: 'react', konus: 'speak', konusma: 'speak', kamera: 'video', yayin: 'stream' };
@@ -6721,7 +6739,7 @@ io.on('connection', socket => {
     audit(s, me, 'Yasakladı', name + (reason ? ' · ' + clean(reason, 120) : ''));
     voiceKick(s.channels.map(c => c.id), name, 'Sunucudan yasaklandın');
     save(); pushServers([name, ...s.members]);
-    io.to('user:' + name).emit('toast', `${s.name} sunucusundan yasaklandın`); botMember(s, name, 'leave');
+    io.to('user:' + name).emit('toast', `${s.name} sunucusundan yasaklandın`); botMember(s, name, 'leave', { by: me, islem: 'yasaklandi', sebep: clean(reason, 120) });
     cb({ ok: true });
   });
   socket.on('kick', ({ serverId, name } = {}, cb = () => {}) => {
@@ -6733,7 +6751,7 @@ io.on('connection', socket => {
     audit(s, me, 'Sunucudan attı', name);
     voiceKick(s.channels.map(c => c.id), name, 'Sunucudan çıkarıldın');
     save(); pushServers([name, ...s.members]);
-    io.to('user:' + name).emit('toast', `${s.name} sunucusundan çıkarıldın`); botMember(s, name, 'leave');
+    io.to('user:' + name).emit('toast', `${s.name} sunucusundan çıkarıldın`); botMember(s, name, 'leave', { by: me, islem: 'atildi' });
     cb({ ok: true });
   });
   socket.on('deleteChannel', ({ serverId, channelId } = {}, cb = () => {}) => {
@@ -7242,7 +7260,7 @@ io.on('connection', socket => {
     const s = db.servers.find(x => x.id === serverId);
     if (!me || !s || s.public) return cb({ error: 'Bu sunucudan ayrılamazsın' });
     if (s.owner === me && s.members.some(n => n !== me)) return cb({ error: 'Sunucunun sahibisin. Ayrılmadan önce Sunucu ayarları → Genel → Sahipliği devret, ya da sunucuyu sil.', owner: true });
-    s.members = s.members.filter(n => n !== me); wipeMember(s, me); botMember(s, me, 'leave');
+    s.members = s.members.filter(n => n !== me); wipeMember(s, me); botMember(s, me, 'leave', { islem: 'ayrildi' });
     for (const c of s.channels.filter(c => c.ticket && !c.ticket.closedAt && c.ticket.by === me)) closeTicket(s, c, me);
     botBye(s, me);
     voiceKick(s.channels.map(c => c.id), me, 'Sunucudan ayrıldın');

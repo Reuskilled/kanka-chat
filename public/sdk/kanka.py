@@ -11,11 +11,11 @@ Belgeler: https://kankahq.com/gelistirici
 
     bot.calistir()
 """
-import asyncio, time, random, hashlib, hmac, json, re
+import asyncio, time, random, hashlib, hmac, json, re, os
 from urllib.parse import quote
 import aiohttp
 
-SURUM = "1.5.0"
+SURUM = "1.7.0"
 
 
 class KankaHata(Exception):
@@ -189,8 +189,23 @@ class Bot:
             # sunucu güncellenirken birkaç saniye cevap vermez: bekleyip tekrar dene
             await asyncio.sleep(1.5 * (deneme + 1))
         raise KankaHata("Sunucuya ulaşılamadı ya da hız sınırı", 429)
+    async def _dosyalar(self, g):
+        """{"dosyalar": ["kart.png"]} ya da [{"ad": "kart.png", "veri": bytes}] → önce yüklenir, kartta "attachment://kart.png" kullanılabilir"""
+        d = g.pop("dosyalar", None) if isinstance(g, dict) else None
+        if not d: return g
+        ids = list(g.get("ekler") or [])
+        for x in (d if isinstance(d, (list, tuple)) else [d]):
+            if isinstance(x, str):
+                with open(x, "rb") as f: veri, ad = f.read(), os.path.basename(x)
+            elif isinstance(x, (bytes, bytearray)): veri, ad = bytes(x), "dosya.png"
+            else: veri, ad = x.get("veri"), x.get("ad", "dosya.png")
+            ids.append((await self.dosya_yukle(veri, ad))["id"])
+        g["ekler"] = ids; return g
     async def gonder(self, oda, icerik):
-        return Mesaj(self, (await self.api("POST", f"/odalar/{oda}/mesajlar", _govde(icerik)))["mesaj"])
+        return Mesaj(self, (await self.api("POST", f"/odalar/{oda}/mesajlar", await self._dosyalar(_govde(icerik))))["mesaj"])
+    async def talep_odasi(self, sunucu, ad, kisiler=(), roller=(), kategori=None, konu=None):
+        """Talep (ticket) odası: sadece kisiler, roller ve bot görür"""
+        return await self.api("POST", f"/sunucular/{sunucu}/odalar", {"ad": ad, "tur": "text", "ozel": True, "kisiler": list(kisiler), "roller": list(roller), **({"kategori": kategori} if kategori else {}), **({"konu": konu} if konu else {})})
     async def _ham(self, yontem, yol, veri, basliklar=None):
         h = {"Authorization": "Bot " + self.token, "User-Agent": "kanka.py/" + SURUM, "Content-Type": "application/octet-stream", **(basliklar or {})}
         async with self._oturum.request(yontem, f"{self.adres}/api/v1{yol}", data=veri, headers=h) as r:
@@ -291,7 +306,7 @@ class Bot:
     async def oda_izni_kaldir(self, oda, hedef): return await self.api("DELETE", f"/odalar/{oda}/izinler/{quote(str(hedef))}")
     async def ozel_gonder(self, oda, kisi, icerik):
         """Kalıcı gizli mesaj: odada sadece kisi görür"""
-        return await self.api("POST", f"/odalar/{oda}/ozel-mesajlar", {**_govde(icerik), "kisi": kisi})
+        return await self.api("POST", f"/odalar/{oda}/ozel-mesajlar", {**(await self._dosyalar(_govde(icerik))), "kisi": kisi})
     async def ozel_sil(self, oda, mesaj): return await self.api("DELETE", f"/odalar/{oda}/ozel-mesajlar/{mesaj}")
     async def dm(self, kullanici, icerik):
         return Mesaj(self, (await self.api("POST", f"/kullanicilar/{quote(str(kullanici))}/dm", _govde(icerik)))["mesaj"])

@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.6.0';
+const SURUM = '1.7.0';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -47,7 +47,22 @@ class Kanka extends EventEmitter {
     }
     throw new KankaHata('Hız sınırı: istek tekrar tekrar reddedildi', 429);
   }
-  gonder(oda, icerik) { return this.api('POST', `/odalar/${oda}/mesajlar`, govde(icerik)).then(r => { if (r.uyari) { this.emit('uyari', r.uyari); if (!this.listenerCount('uyari')) console.warn('[kanka] uyarı:', r.uyari); } return this._mesaj(r.mesaj); }); }
+  /**
+   * Mesaj içindeki dosyaları önce yükler: { dosyalar: ['./kart.png'] } ya da { dosyalar: [{ ad: 'kart.png', veri: buffer }] }.
+   * Kartta resim: 'attachment://kart.png' yazman yeter (karşılama kartı vb.).
+   */
+  async _dosyalar(g) {
+    const d = g && (g.dosyalar || g.files); if (!d || !(Array.isArray(d) ? d.length : true)) return g;
+    const ids = [].concat(g.ekler || []);
+    for (const x of [].concat(d)) {
+      let veri = Buffer.isBuffer(x) || typeof x === 'string' ? x : (x.veri ?? x.data ?? x.attachment), ad = x.ad ?? x.name;
+      if (typeof veri === 'string') { ad ||= require('path').basename(veri); veri = require('fs').readFileSync(veri); }
+      if (!Buffer.isBuffer(veri)) veri = Buffer.from(veri);
+      ids.push((await this.dosyaYukle(veri, ad || 'dosya.png')).id);
+    }
+    const out = { ...g, ekler: ids }; delete out.dosyalar; delete out.files; return out;
+  }
+  gonder(oda, icerik) { return this._dosyalar(govde(icerik)).then(g => this.api('POST', `/odalar/${oda}/mesajlar`, g)).then(r => { if (r.uyari) { this.emit('uyari', r.uyari); if (!this.listenerCount('uyari')) console.warn('[kanka] uyarı:', r.uyari); } return this._mesaj(r.mesaj); }); }
   // Ham gövdeli istek (dosya, emoji)
   async _ham(yontem, yol, veri, basliklar = {}) {
     const r = await fetch(this.adres + '/api/v1' + yol, { method: yontem, headers: { Authorization: 'Bot ' + this.token, 'Content-Type': 'application/octet-stream', 'User-Agent': 'kanka.js/' + SURUM, ...basliklar }, body: veri });
@@ -93,8 +108,8 @@ class Kanka extends EventEmitter {
   mesaj(oda, id) { return this.api('GET', `/odalar/${kod(oda)}/mesajlar/${id}`).then(m => this._mesaj(m)); }
   /** Kullanıcı bilgisi: ad ya da sayısal kimlik */
   kullanici(adVeyaId) { return this.api('GET', `/kullanicilar/${kod(adVeyaId)}`); }
-  dm(kullanici, icerik) { return this.api('POST', `/kullanicilar/${encodeURIComponent(kullanici)}/dm`, govde(icerik)).then(r => this._mesaj(r.mesaj)); }
-  duzenle(oda, mesaj, icerik) { return this.api('PATCH', `/odalar/${oda}/mesajlar/${mesaj}`, govde(icerik)); }
+  dm(kullanici, icerik) { return this._dosyalar(govde(icerik)).then(g => this.api('POST', `/kullanicilar/${encodeURIComponent(kullanici)}/dm`, g)).then(r => this._mesaj(r.mesaj)); }
+  duzenle(oda, mesaj, icerik) { return this._dosyalar(govde(icerik)).then(g => this.api('PATCH', `/odalar/${oda}/mesajlar/${mesaj}`, g)); }
   sil(oda, mesaj) { return this.api('DELETE', `/odalar/${oda}/mesajlar/${mesaj}`); }
   tepki(oda, mesaj, emoji) { return this.api('PUT', `/odalar/${oda}/mesajlar/${mesaj}/tepkiler/${encodeURIComponent(emoji)}`); }
   tepkiKaldir(oda, mesaj, emoji) { return this.api('DELETE', `/odalar/${oda}/mesajlar/${mesaj}/tepkiler/${encodeURIComponent(emoji)}`); }
@@ -131,7 +146,12 @@ class Kanka extends EventEmitter {
   odaIzni(oda, hedef, izinler) { return this.api('PUT', `/odalar/${kod(oda)}/izinler/${kod(hedef)}`, izinler); }
   odaIzniKaldir(oda, hedef) { return this.api('DELETE', `/odalar/${kod(oda)}/izinler/${kod(hedef)}`); }
   /** Kalıcı gizli mesaj: odada sadece "kisi" görür, sayfa yenilense de kalır. Döner: { mesaj: id } */
-  ozelGonder(oda, kisi, icerik) { return this.api('POST', `/odalar/${kod(oda)}/ozel-mesajlar`, { ...govde(icerik), kisi }); }
+  ozelGonder(oda, kisi, icerik) { return this._dosyalar(govde(icerik)).then(g => this.api('POST', `/odalar/${kod(oda)}/ozel-mesajlar`, { ...g, kisi })); }
+  /**
+   * Talep (ticket) odası tek seferde: sadece kisiler, roller ve bot görür.
+   * bot.talepOdasi(sunucu, { ad: 'talep-ali', kisiler: ['ali'], roller: [yetkiliRolId], kategori, konu })
+   */
+  talepOdasi(sunucu, ayar = {}) { return this.api('POST', `/sunucular/${kod(sunucu)}/odalar`, { tur: 'text', ozel: true, ...ayar }); }
   ozelDuzenle(oda, mesaj, icerik) { return this.api('PATCH', `/odalar/${kod(oda)}/ozel-mesajlar/${kod(mesaj)}`, govde(icerik)); }
   ozelSil(oda, mesaj) { return this.api('DELETE', `/odalar/${kod(oda)}/ozel-mesajlar/${kod(mesaj)}`); }
   rolVer(sunucu, kisi, rol) { return this.api('PUT', `/sunucular/${sunucu}/uyeler/${encodeURIComponent(kisi)}/roller/${rol}`); }
@@ -314,7 +334,7 @@ class Etkilesim {
   /** Butona basan / komutu kullanan kişinin yetkisi var mı? e.yetkisiVar('manageMessages') (sahip ve yönetici her zaman evet) */
   yetkisiVar(izin) { const k = this.kullanici || {}; return (k.izinler || []).includes('administrator') || (k.izinler || []).includes(izin); }
   get alanlar() { return (this.veri && this.veri.alanlar) || {}; }
-  _c(govdeVeri) { this.cevaplandi = true; return fetch(`${this._bot.adres}/api/v1/etkilesim/${this.id}/${this.token}/cevap`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govdeVeri) }).then(async r => { const j = await r.json().catch(() => null); if (!r.ok) throw new KankaHata((j && j.hata) || 'Cevap verilemedi', r.status, j); return j; }); }
+  async _c(govdeVeri) { this.cevaplandi = true; govdeVeri = await this._bot._dosyalar(govdeVeri); return fetch(`${this._bot.adres}/api/v1/etkilesim/${this.id}/${this.token}/cevap`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govdeVeri) }).then(async r => { const j = await r.json().catch(() => null); if (!r.ok) throw new KankaHata((j && j.hata) || 'Cevap verilemedi', r.status, j); return j; }); }
   /** Cevap ver (3 saniye içinde). gizli: true ise sadece komutu kullanan görür */
   cevapla(icerik) { return this._c({ tur: 'mesaj', ...govde(icerik) }); }
   /** Sadece komutu kullanan görür */
@@ -328,9 +348,9 @@ class Etkilesim {
   /** Kullanıcıya form penceresi aç: { id, baslik, alanlar: [{ id, etiket, tur: 'kisa'|'uzun', zorunlu, yerTutucu }] } */
   formAc(form) { return this._c({ tur: 'form', form }); }
   /** bekle()'den sonra mesajı doldur */
-  duzenle(icerik) { return fetch(`${this._bot.adres}/api/v1/etkilesim/${this.id}/${this.token}/mesaj`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde(icerik)) }).then(r => r.json()); }
+  async duzenle(icerik) { const g = await this._bot._dosyalar(govde(icerik)); return fetch(`${this._bot.adres}/api/v1/etkilesim/${this.id}/${this.token}/mesaj`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(g) }).then(r => r.json()); }
   /** Ek mesaj gönder */
-  takip(icerik) { return fetch(`${this._bot.adres}/api/v1/etkilesim/${this.id}/${this.token}/takip`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde(icerik)) }).then(r => r.json()); }
+  async takip(icerik) { const g = await this._bot._dosyalar(govde(icerik)); return fetch(`${this._bot.adres}/api/v1/etkilesim/${this.id}/${this.token}/takip`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(g) }).then(r => r.json()); }
 }
 // ---------- Ses bağlantısı ----------
 let _werift = null;

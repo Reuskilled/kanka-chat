@@ -2,7 +2,7 @@
   {
     "id": "2026-11-25-bot-api-15",
     "baslik": "🧩 Bot API 1.5 · kanka.js / kanka.py 1.5.0",
-    "metin": "• **Üye / rol / oda seçici:** KisiSecici, RolSecici, OdaSecici. Kullanıcı listeden arayıp seçer, Kanka doğrular. Formlarda da tur: 'kisi' çalışır, bilgiler e.secilenler'de\n• **Kalıcı gizli mesaj:** e.kaliciGizliCevapla() ve bot.ozelGonder(oda, kisi, …). 15 dakikada silinmez, butonları çalışır\n• **Oda izinleri:** PUT / DELETE /odalar/:id/izinler/:hedef (herkes, rol, kişi). Ticket odaları için\n• **Yetki okuma:** /uyeler/:ad/izinler?oda=, /roller, e.yetkisiVar(). Üye bilgisinde izinler, sahip, energy, sesOdasi\n• **Üye arama:** /uyeler?ara=\n• **Energy (boost):** /energy ve energy olayı\n• **Ses:** 'ses' niyeti ile sesDurumu olayı, /ses, sesteki kişiyi taşı / çıkar / sustur\n• Sunucu bilgisinde botu ekleyen kişi (ekleyen)"
+    "metin": "• **Üye / rol / oda seçici:** KisiSecici, RolSecici, OdaSecici. Kullanıcı listeden arayıp seçer, Kanka doğrular. Formlarda da tur: 'kisi' çalışır, bilgiler e.secilenler'de\n• **Kalıcı gizli mesaj:** e.kaliciGizliCevapla() ve bot.ozelGonder(oda, kisi, …). 15 dakikada silinmez, butonları çalışır\n• **Oda izinleri:** PUT / DELETE /odalar/:id/izinler/:hedef (herkes, rol, kişi). Ticket odaları için\n• **Yetki okuma:** /uyeler/:ad/izinler?oda=, /roller, e.yetkisiVar(). Üye bilgisinde izinler, sahip, energy, sesOdasi\n• **Üye arama:** /uyeler?ara=\n• **Energy (boost):** /energy ve energy olayı\n• **Ses:** 'ses' niyeti ile sesDurumu olayı, /ses, sesteki kişiyi taşı / çıkar / sustur\n• Sunucu bilgisinde botu ekleyen kişi (ekleyen)\n• \"Yetki doğrulanamadı\" için: /izinler cevabında botunUstunde: true ise botun rolünü yukarı sürükleyin"
   },
   {
     "id": "2026-11-25-kankajs-16-ses",
@@ -10,13 +10,13 @@
     "metin": "• bot.sesliOdayaKatil(oda) → ses.cal('sarki.mp3' | https | stream)\n• ses.siraya(), gec(), duraklat(), devam(), durdur(); bitti / kisiKatildi / ayrildi olayları\n• Ses bottan dinleyenlere doğrudan gider (WebRTC), Kanka sunucusu sadece bağlantıyı kurar\n• Gerekenler: ffmpeg ve npm i werift. Botun odada bağlanma ve konuşma izni olmalı\n• Yetkililer botu da sesten çıkarabilir, taşıyabilir, susturabilir. Bağlantı kopunca kanka.js odaya kendiliğinden döner\n• Gateway: op 4 (sese gir/çık), op 5 (sinyal). Ayrıntı: Geliştirici sayfası › Sesli odada çalma"
   },
   {
-    "id": "2026-11-25-ince-ayar",
-    "baslik": "🔧 İnce ayarlar",
-    "metin": "• Biri profilini değiştirince artık herkese tüm kullanıcı listesi değil sadece değişen kişi gidiyor (usersPatch), 1,5 sn içindeki değişiklikler tek pakette\n• Çevrimiçi listesi (presence) toplanarak ve sadece değişince gönderiliyor\n• Sunucu listesi güncellemeleri sadece bağlı kişiler için hesaplanıyor\n• \"Yetki doğrulanamadı\" sorunları için /izinler cevabında botunUstunde alanı: true ise botun rolünü yukarı sürükleyin\n• Mobilde mesaj başlığında isim, etiket, seviye ve tarih artık kendi içinde bölünmüyor"
-  },
-  {
     "id": "2026-11-25-satir-bosluk",
     "baslik": "🔧 Bot mesajlarında satır ve boşluklar",
     "metin": "• Kart açıklaması, alan değerleri ve alt yazıdaki satır sonları (\\n) ve fazladan boşluklar artık korunuyor; önceden hepsi tek satıra bitişiyordu\n• Mesajda liste, başlık ya da alıntı varken araya koyulan boş satırlar artık kayboluyor değil, olduğu gibi görünüyor\n• Bot tarafında değişiklik gerekmez, sayfayı yenilemek yeterli"
+  },
+  {
+    "id": "2026-11-25-kankajs-17",
+    "baslik": "🧩 kanka.js / kanka.py 1.7.0",
+    "metin": "• **Kartta etiket:** @ad, <@kimlik>, <@&rolId> ve <#odaId> kartın içinde de çalışır; kişi etiketi mesajdaki gibi renkli kutu olur\n• **Karşılama kartı için dosya:** bot.gonder(oda, { dosyalar: ['./kart.png'], kartlar: [new Kart().resim('attachment://kart.png')] }). Dosya önce kendiliğinden yüklenir; cevapla, dm ve ozelGonder'de de çalışır\n• **Talep odası tek istekte:** bot.talepOdasi(sunucu, { ad, kisiler: ['ali'], roller: [yetkiliRolId] }). Sadece onlar, yöneticiler ve bot görür\n• **Çıkarılma bilgisi:** sunucudanCikarildi olayında kaldiran, islem ('atildi' | 'yasaklandi'), sebep ve ekleyen; bot sahibine de DM gider. uyeAyrildi'da da aynı bilgi var\n• Kartlarda boş satırlar ve satır sonları artık korunuyor"
   }
 ]
