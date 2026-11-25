@@ -1055,7 +1055,7 @@ const TAG = {
   of(u) { if (!u?.tag) return null; const s = db.servers.find(x => x.id === u.tag); return TAG.canUse(u.name, s) ? s.id : null; },
   push() { const d = TAG.defs(); io.emit('tagDefs', d); for (const [sid, n] of online) io.to(sid).emit('tagCan', TAG.canList(n)); pushUsers(); },
 };
-const pubUser = u => ({ sp: sparkOn(u) ? u.spark.since : null, id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme || null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect && (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner') ? u.effect : null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
+const pubUser = u => ({ sp: sparkOn(u) ? u.spark.since : null, id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.theme : null, intro: u.intro && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.intro : null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect && (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner') ? u.effect : null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), tg: u.bot ? null : TAG.of(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
@@ -1157,7 +1157,7 @@ function viewersOf(s, c) {
 }
 // Oda simgesi (test: sadece etiket testindeki sunucular, yani şimdilik Kanka HQ). c.icon: emoji | ':ozelEmoji:' | '/uploads/...'
 const CHICON = {
-  allowed: s => TAG.allowedServer(s),
+  allowed: s => TAG.allowedServer(s) || perkOn(s, 'chIcon'),
   EMO_RE: /^(?=.*\p{Extended_Pictographic}|.*\p{Regional_Indicator}|.*\u20e3)[\p{Extended_Pictographic}\p{Emoji_Component}\p{Regional_Indicator}\u200d\ufe0f\u20e3]+$/u,
   clean(s, v) {
     if (v === null || v === '' || v === undefined) return { ok: true, v: undefined };
@@ -1177,7 +1177,7 @@ const CHICON = {
 function chView(s, c, viewer, manager) {
   const ov = ovOf(s, c);
   const P = k => viewer ? chPerm(s, c, viewer, k) : true;
-  const v = { id: c.id, name: c.name, type: c.type || 'text', cat: c.cat || null, sync: !!c.sync, icon: CHICON.view(s, c), iconRaw: manager && CHICON.allowed(s) ? c.icon || null : undefined,
+  const v = { id: c.id, name: c.name, type: c.type || 'text', cat: c.cat || null, sync: !!c.sync, icon: CHICON.view(s, c), color: c.color || null, font: c.font || null, iconRaw: manager && CHICON.allowed(s) ? c.icon || null : undefined,
     topic: c.topic || '', slow: c.slow || 0, limit: c.limit || 0, bitrate: c.bitrate === 'studio' && !energyPerk(s, 'studio') ? 'high' : c.bitrate || 'std', news: !!c.news, followers: (c.followers || []).length,
     stage: c.type === 'stage' && stage.has(c.id) ? stageView(c.id) : undefined,
     canAttach: P('attach'), canReact: P('react'), canMention: P('mention'), canManage: P('manage'), canStream: P('stream'), canSpeak: P('speak'), canSound: P('soundboard'),
@@ -1616,7 +1616,8 @@ function srvBadges(s) {
 }
 const serverView = (s, viewer) => (s.customRoles ||= [], s.memberRoles ||= {}, s.bans ||= {}, s.timeouts ||= {}, {
   id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, banner: s.banner || null, bannerColor: s.bannerColor || null, owner: s.owner || null, invite: s.invite, vanity: vanityOk(s) ? s.vanity || null : null, energy: { total: energyTotal(s), level: energyLevel(s) }, public: s.public, roles: s.roles,
-  emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, sounds: s.sounds || [], tag: s.tag || null, tagAllowed: TAG.allowedServer(s), chIconAllowed: CHICON.allowed(s), sbAll: s.sbAll !== false, filter: !!s.filter, slow: s.slow || 0,
+  emojis: s.emojis || {}, emojiMeta: s.emojiMeta || {}, sounds: s.sounds || [], tag: s.tag || null, tagAllowed: TAG.allowedServer(s), chIconAllowed: CHICON.allowed(s), perks: perksOf(s), perkLv: PERK_LV,
+  theme: s.theme || null, chatBg: s.chatBg || null, chatBgDim: s.chatBgDim ?? 0.6, sbAll: s.sbAll !== false, filter: !!s.filter, slow: s.slow || 0,
   channels: (viewer ? s.channels.filter(c => seesChannel(s, c, viewer)) : s.channels).map(c => chView(s, c, viewer, viewer && can(s, viewer, 'manageChannels'))),
   categories: (s.categories || []).filter(k => !viewer || can(s, viewer, 'manageChannels') || s.channels.some(c => c.cat === k.id && seesChannel(s, c, viewer)))
     .map(k => ({ id: k.id, name: k.name, ...(viewer && can(s, viewer, 'manageChannels') ? { perms: k.perms || {} } : {}) })), members: s.public ? Object.keys(db.users) : s.members,
@@ -1684,10 +1685,19 @@ const isAdmin = (s, n) => s.owner === n || roleOf(s, n) === 'admin';
 // Abonelik biterse tüm Energy'ler (sunuculardakiler dahil) silinir, sadakat sayacı sıfırlanır.
 const SPARK_MONTH = 30 * 864e5, SPARK_PER_MONTH = 2, SPARK_BONUS_EVERY = 3;
 const ENERGY_LV = [0, 2, 7, 14]; // Energy Level eşikleri (Total Energy)
+// Görünüm avantajları seviyeyle birikir (üst seviye alttakileri de içerir)
+const EP1 = { chIcon: true, chColor: true, roleEmoji: true }, EP2 = { ...EP1, theme: true, roleGrad: true, roleFont: true, chFont: true }, EP3 = { ...EP2, chatBg: true };
 const ENERGY_PERKS = [null,
-  { emoji: 50, sb: 10, items: ['+50 özel emoji yeri', '+10 ses paneli yeri', 'Sunucu listesinde Energy rozeti'] },
-  { emoji: 100, sb: 20, studio: true, items: ['+100 özel emoji yeri', '+20 ses paneli yeri', 'Stüdyo ses kalitesi (256 kbps)'] },
-  { emoji: 150, sb: 30, studio: true, vanity: true, items: ['+150 özel emoji yeri', '+30 ses paneli yeri', 'Özel davet linki (kankahq.com/s/…)'] }];
+  { emoji: 50, sb: 10, ...EP1, items: ['+50 özel emoji yeri', '+10 ses paneli yeri', 'Sunucu listesinde Energy rozeti', 'Oda simgeleri (emoji)', 'Oda adı rengi', 'Rollere özel emoji simgesi'] },
+  { emoji: 100, sb: 20, studio: true, ...EP2, items: ['+100 özel emoji yeri', '+20 ses paneli yeri', 'Stüdyo ses kalitesi (256 kbps)', 'Sunucu renk teması', 'Oda adı yazı tipi', 'Rol renk geçişi ve yazı tipi'] },
+  { emoji: 150, sb: 30, studio: true, vanity: true, ...EP3, items: ['+150 özel emoji yeri', '+30 ses paneli yeri', 'Özel davet linki (kankahq.com/s/…)', 'Sohbet arka plan fotoğrafı'] }];
+const PERK_KEYS = ['chIcon', 'chColor', 'chFont', 'theme', 'chatBg', 'roleGrad', 'roleFont', 'roleEmoji'];
+const PERK_LV = Object.fromEntries(PERK_KEYS.map(k => [k, ENERGY_PERKS.findIndex(p => p?.[k])]));
+const perkOn = (s, k) => !!energyPerk(s, k) || isStar(s) || s?.id === 's1'; // Yıldız sunucular ve Kanka HQ hepsini kullanır
+const perksOf = s => Object.fromEntries(PERK_KEYS.map(k => [k, perkOn(s, k)]));
+const perkErr = k => `Bu özellik Energy Level ${PERK_LV[k]} ile açılır. Üyeler sunucuya Energy gönderdikçe seviye artar.`;
+const FONT_IDS = ['serif', 'cinzel', 'rounded', 'script', 'pixel', 'cyber', 'mono'];
+const INTROS = ['burst', 'portal', 'confetti', 'hearts', 'neon', 'flame', 'glitch', 'stars'];
 // Google Play aboneliğinde yenileme bildirimi birkaç saat gecikebilir: bitişten sonra 6 saat açık kalır, kesin kararı playSync verir
 const sparkOn = u => !!(u?.spark && u.spark.until + (u.spark.play ? 6 * 3600e3 : 0) > Date.now());
 const energyTotal = s => Object.values(s?.energy || {}).reduce((a, b) => a + b, 0);
@@ -4891,7 +4901,7 @@ io.on('connection', socket => {
   // Tek bir bağlantıdan olağandışı yoğunlukta istek gelirse (betik/saldırı) bağlantıyı kes
   { let n = 0, t0 = Date.now();
     // Gerçek zamanlı oyun girdisi (masa hokeyi 60Hz) sayılmaz: kendi sınırı var (arenaIn), yoksa oyuncu bağlantıdan ve sesten düşer
-    socket.onAny(ev => { if (ev === 'arenaIn') return; const now = Date.now(); if (now - t0 > 10e3) { n = 0; t0 = now; } if (++n === 400) { secLog('istek-seli', socket.data?.me || 'bağlantı', '10 saniyede 400+ istek, bağlantı kesildi'); socket.disconnect(true); } }); }
+    socket.onAny(ev => { if (ev === 'arenaIn' || ev === 'instr') return; const now = Date.now(); if (now - t0 > 10e3) { n = 0; t0 = now; } if (++n === 400) { secLog('istek-seli', socket.data?.me || 'bağlantı', '10 saniyede 400+ istek, bağlantı kesildi'); socket.disconnect(true); } }); }
   socket.emit('build', build); if (buildParts) socket.emit('buildParts', buildParts);
   // Eski sayfa (büyük güncellemeden önce açılmış) yenile uyarısını bilmiyor: ona birkaç kez yazılı haber ver.
   // Yeni sayfalar bağlanınca 'yeniIstemci' der; demeyenler eski sayfadır.
@@ -6144,7 +6154,7 @@ io.on('connection', socket => {
   });
 
   // ----- Profil -----
-  socket.on('updateProfile', ({ avatar, status, bio, banner, color, birthday, music, displayName, pronouns, theme, bannerImg, frame, effect, nameBanner, nameStyle, socials } = {}, cb = () => {}) => {
+  socket.on('updateProfile', ({ avatar, status, bio, banner, color, birthday, music, displayName, pronouns, theme, bannerImg, frame, effect, nameBanner, nameStyle, socials, intro } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return;
     if (avatar === null) u.avatar = null;
     else if (avatar !== undefined) { if (!AVATAR_OK(avatar)) return cb({ error: 'Geçersiz resim' }); u.avatar = avatar; }
@@ -6156,7 +6166,9 @@ io.on('connection', socket => {
     if (music !== undefined) u.music = /^https?:\/\/\S{4,300}$/.test(music) ? music : null;
     if (displayName !== undefined) u.displayName = clean(displayName, 32).replace(/[\u200B-\u200F\u202A-\u202E]/g, '');
     if (pronouns !== undefined) u.pronouns = clean(pronouns, 20);
-    if (theme !== undefined) u.theme = Array.isArray(theme) && theme.length === 2 && theme.every(c => HEX.test(c)) ? theme : null;
+    const sparky = sparkOn(u) || staffRank(u.name) === 'owner';
+    if (theme !== undefined) { const t = Array.isArray(theme) && theme.length === 2 && theme.every(c => HEX.test(c)) ? theme : null; if (t && !sparky && JSON.stringify(t) !== JSON.stringify(u.theme)) return cb({ error: 'Profil renk teması Kanka Spark ile açılır' }); u.theme = t; }
+    if (intro !== undefined) { if (intro && intro !== 'none' && !INTROS.includes(intro)) return cb({ error: 'Geçersiz açılış efekti' }); if (intro && intro !== 'none' && !sparky) return cb({ error: 'Profil açılış efekti Kanka Spark ile açılır' }); u.intro = intro && intro !== 'none' ? intro : null; }
     if (bannerImg !== undefined) u.bannerImg = bannerImg && UPLOAD_RE.test(bannerImg) ? bannerImg : null;
     if (frame !== undefined) { if (frame && !frameOk(u, frame)) return cb({ error: 'Bu çerçeve henüz açılmadı' }); u.frame = frame && frame !== 'none' ? frame : null; }
     if (effect !== undefined) { if (effect && !effectOk(u, effect)) return cb({ error: PEFFECTS_OWNER.includes(effect) ? 'Bu 3D profil efekti sadece Kurucu rütbesine özeldir' : 'Geçersiz profil efekti' }); u.effect = effect && effect !== 'none' ? effect : null; }
@@ -6654,8 +6666,11 @@ io.on('connection', socket => {
     for (const n of membersOf(s)) if (on) io.to('user:' + n).emit('toast', `${s.name} artık ${SB_LABEL[badge]} bir sunucu`);
     cb({ ok: true });
   });
-  socket.on('updateServer', ({ serverId, name, icon, iconImg, banner, bannerColor, filter, slow, afkCh, afkMin } = {}, cb = () => {}) => {
+  socket.on('updateServer', ({ serverId, name, icon, iconImg, banner, bannerColor, filter, slow, afkCh, afkMin, theme, chatBg, chatBgDim } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageServer'); if (!s) return cb({ error: 'Sunucuyu yönetme yetkin yok' });
+    if (theme !== undefined) { if (theme && !perkOn(s, 'theme')) return cb({ error: perkErr('theme') }); if (theme && !HEX.test(theme)) return cb({ error: 'Geçersiz renk' }); s.theme = theme || null; audit(s, me, theme ? 'Sunucu renk temasını değiştirdi' : 'Sunucu renk temasını kaldırdı'); }
+    if (chatBg !== undefined) { if (chatBg && !perkOn(s, 'chatBg')) return cb({ error: perkErr('chatBg') }); s.chatBg = chatBg && UPLOAD_RE.test(chatBg) ? chatBg : null; audit(s, me, s.chatBg ? 'Sohbet arka planını değiştirdi' : 'Sohbet arka planını kaldırdı'); }
+    if (chatBgDim !== undefined) s.chatBgDim = Math.max(0.2, Math.min(0.9, +chatBgDim || 0.6));
     if (filter !== undefined) { s.filter = !!filter; audit(s, me, filter ? 'Küfür filtresini açtı' : 'Küfür filtresini kapattı'); }
     if (slow !== undefined) { s.slow = [0, 5, 10, 30, 60, 300].includes(+slow) ? +slow : 0; audit(s, me, 'Yavaş modu ayarladı', s.slow ? s.slow + ' sn' : 'kapalı'); }
     if (name !== undefined || icon !== undefined || iconImg !== undefined) audit(s, me, 'Sunucu ayarlarını değiştirdi');
@@ -6685,9 +6700,16 @@ io.on('connection', socket => {
     const color = /^#[0-9a-f]{6}$/i.test(role.color) ? role.color : '#99aab5';
     let r = s.customRoles.find(x => x.id === role.id);
     if (r?.bot) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); r.color = color; pushSrv(s); return cb({ ok: true, id: r.id }); }
-    const icon = [...clean(role.icon, 16)].slice(0, 2).join('') || null, mentionable = !!role.mentionable;
-    if (r) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); Object.assign(r, { name, color, perms, hoist: !!role.hoist, icon, mentionable }); audit(s, me, 'Rolü düzenledi', name); }
-    else { if (s.customRoles.length >= MAX_ROLES) return cb({ error: `En fazla ${MAX_ROLES} rol` }); r = { id: id(), name, color, perms, hoist: !!role.hoist, icon, mentionable }; s.customRoles.push(r); audit(s, me, 'Rol oluşturdu', name); }
+    let icon; { const raw = String(role.icon || '').trim(), em = /^:([a-z0-9_]{2,24}):$/.exec(raw);
+      if (em) { if (!perkOn(s, 'roleEmoji')) return cb({ error: perkErr('roleEmoji') }); if (!s.emojis?.[em[1]]) return cb({ error: 'Bu özel emoji sunucuda yok' }); icon = raw; }
+      else icon = [...clean(raw, 16)].slice(0, 2).join('') || null; }
+    const mentionable = !!role.mentionable;
+    const color2 = HEX.test(role.color2 || '') ? role.color2 : null, font = FONT_IDS.includes(role.font) ? role.font : null;
+    if (color2 && !perkOn(s, 'roleGrad') && color2 !== r?.color2) return cb({ error: perkErr('roleGrad') });
+    if (font && !perkOn(s, 'roleFont') && font !== r?.font) return cb({ error: perkErr('roleFont') });
+    const fx = {}; if (color2) fx.color2 = color2; if (font) fx.font = font;
+    if (r) { if (!outranksRole(s, r)) return cb({ error: 'Bu rol senden yüksek' }); delete r.color2; delete r.font; Object.assign(r, { name, color, perms, hoist: !!role.hoist, icon, mentionable, ...fx }); audit(s, me, 'Rolü düzenledi', name); }
+    else { if (s.customRoles.length >= MAX_ROLES) return cb({ error: `En fazla ${MAX_ROLES} rol` }); r = { id: id(), name, color, perms, hoist: !!role.hoist, icon, mentionable, ...fx }; s.customRoles.push(r); audit(s, me, 'Rol oluşturdu', name); }
     pushSrv(s); cb({ ok: true, id: r.id });
   });
   const outranksRole = (s, r) => s.owner === me || rankOf(s, me) > 1000 - s.customRoles.indexOf(r);
@@ -6751,7 +6773,7 @@ io.on('connection', socket => {
     if (want.length) s.memberRoles[name] = want; else delete s.memberRoles[name];
     audit(s, me, 'Rollerini değiştirdi', name); pushSrv(s); botMember(s, name, 'update'); cb({ ok: true });
   });
-  socket.on('channelSave', ({ serverId, channelId, name, cat, perms, sync, topic, slow, limit, bitrate, news, icon } = {}, cb = () => {}) => {
+  socket.on('channelSave', ({ serverId, channelId, name, cat, perms, sync, topic, slow, limit, bitrate, news, icon, color, font } = {}, cb = () => {}) => {
     const s = permServer(serverId, 'manageChannels'); if (!s) return cb({ error: 'Oda yönetme yetkin yok' });
     const c = s.channels.find(x => x.id === channelId); if (!c) return cb({ error: 'Oda bulunamadı' });
     if (name !== undefined) { name = clean(name, 30); if (c.type === 'text' || c.type === 'forum') name = name.toLowerCase().replace(/\s+/g, '-'); if (name) c.name = name; }
@@ -6761,10 +6783,12 @@ io.on('connection', socket => {
       if ((c.cat || null) !== (k?.id || null)) { c.cat = k?.id || undefined; if (!k) c.sync = false; placeInCat(s, c, k); }
     }
     if (icon !== undefined) {
-      if (!CHICON.allowed(s)) return cb({ error: 'Oda simgesi şimdilik sadece Kanka HQ\'da test ediliyor' });
+      if (!CHICON.allowed(s) && icon) return cb({ error: perkErr('chIcon') });
       const r = CHICON.clean(s, icon); if (r.error) return cb({ error: r.error });
       if ((c.icon || undefined) !== r.v) { if (r.v) c.icon = r.v; else delete c.icon; audit(s, me, r.v ? 'Oda simgesini değiştirdi' : 'Oda simgesini kaldırdı', c.name); }
     }
+    if (color !== undefined) { if (color && !perkOn(s, 'chColor')) return cb({ error: perkErr('chColor') }); if (color) { if (!HEX.test(color)) return cb({ error: 'Geçersiz renk' }); c.color = color; } else delete c.color; }
+    if (font !== undefined) { if (font && !perkOn(s, 'chFont')) return cb({ error: perkErr('chFont') }); if (font && FONT_IDS.includes(font)) c.font = font; else delete c.font; }
     if (topic !== undefined) c.topic = clean(topic, 160);
     if (slow !== undefined) c.slow = [0, 5, 10, 15, 30, 60, 120, 300, 600, 900, 3600].includes(+slow) ? +slow : 0;
     if (limit !== undefined) c.limit = Math.max(0, Math.min(99, parseInt(limit) || 0));
@@ -7706,6 +7730,33 @@ io.on('connection', socket => {
     io.to('v:' + ch).emit('sbPlay', { by: me, id: snd.id, url: snd.url, vol: snd.vol, name: snd.name, emoji: snd.emoji, entry: !!entry });
   }
   function sbAllowed(f) { return !f || (chPerm(f.s, f.c, me, 'soundboard') && !timedOut(f.s, me) && !srvMuted.has(f.s.id + '|' + me) && (f.c.type !== 'stage' || chPerm(f.s, f.c, me, 'speak'))); }
+  // Enstrüman: nota olayı odadaki herkese gider, ses her cihazda yerelde üretilir (gecikme ve bant genişliği düşük)
+  const INSTR = ['gitar', 'piyano', 'bas', 'davul', 'synth'];
+  let insT = 0, insN = 0;
+  socket.on('instr', ({ i, n, v } = {}) => {
+    if (!me || !myVoice) return;
+    const now = Date.now(); if (now - insT > 1000) { insT = now; insN = 0; } if (++insN > 24) return; // saniyede en çok 24 nota
+    if (!INSTR.includes(i) || !Number.isInteger(n) || n < 24 || n > 96) return;
+    const f = myVoice.startsWith('call:') ? null : findChannel(myVoice);
+    if (f && !sbAllowed(f)) return;
+    if (f && timedOut(f.s, me)) return;
+    socket.to('v:' + myVoice).emit('instr', { sid: socket.id, name: me, i, n, v: Math.max(0.1, Math.min(1, +v || 0.8)) });
+  });
+  // Kişisel notlar: sadece sahibi görür. Anahtar: oda/sohbet kimliği ya da 'genel'
+  socket.on('noteGet', ({ key } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function' || !me) return; const u = db.users[me]; key = String(key || 'genel').slice(0, 80);
+    cb({ text: u.notes?.[key]?.t || '', at: u.notes?.[key]?.at || null, keys: Object.entries(u.notes || {}).filter(([, x]) => x.t).map(([k, x]) => ({ k, at: x.at, len: x.t.length })).sort((a, b) => b.at - a.at).slice(0, 50) });
+  });
+  socket.on('noteSet', ({ key, text } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') cb = () => {}; if (!me) return cb({ error: 'Giriş yap' });
+    if (limited('note|' + me, 40, 60e3)) return cb({ error: 'Çok hızlı kaydediyorsun' });
+    const u = db.users[me]; key = String(key || 'genel').slice(0, 80); text = String(text ?? '').slice(0, 8000);
+    u.notes ||= {};
+    if (!text.trim()) delete u.notes[key];
+    else { if (!u.notes[key] && Object.keys(u.notes).length >= 200) return cb({ error: 'En fazla 200 not' }); u.notes[key] = { t: text, at: Date.now() }; }
+    save(); cb({ ok: true, at: u.notes[key]?.at || null });
+    for (const sid2 of io.sockets.adapter.rooms.get('user:' + me) || []) if (sid2 !== socket.id) io.to(sid2).emit('noteChanged', { key }); // diğer cihazlar güncellensin
+  });
   socket.on('sbPlay', ({ id: sid, from } = {}, cb = () => {}) => {
     if (typeof cb !== 'function') cb = () => {};
     if (!me || !myVoice) return cb({ error: 'Önce bir sesli odaya katıl' });
