@@ -2005,12 +2005,15 @@ function botPost(chId, { title, text, tone = 'info', fields } = {}) {
 }
 // Değişiklik günlüğü: depodaki degisiklik-gunlugu.json'a eklenen her kayıt, geliştirici sunucusunun #değişiklik-günlüğü odasına
 // Kanka Bot tarafından bir kez yazılır (yayınlananlar db.clPosted'da). Dosya dakikada bir kontrol edilir; sunucuyu yeniden başlatmaya gerek yok.
-const CL_FILE = path.join(__dirname, 'degisiklik-gunlugu.json'); let clMtime = 0;
+const CL_FILE = path.join(__dirname, 'public', 'degisiklik-gunlugu.json'); let clMtime = 0; // VDS güncelleyicisi sadece server.js, package*.json ve public/ kopyalar
 function changelogSync(force) {
   let st; try { st = fs.statSync(CL_FILE); } catch { return; } if (!force && st.mtimeMs === clMtime) return;
   let list; try { list = JSON.parse(fs.readFileSync(CL_FILE, 'utf8')); } catch (e) { console.error('degisiklik-gunlugu.json okunamadı:', e.message); return; }
-  const targets = db.servers.filter(s => s.template === 'gelistirici').flatMap(s => s.channels.filter(c => c.name === 'değişiklik-günlüğü').map(c => c.id));
-  if (!targets.length) return; clMtime = st.mtimeMs;
+  const norm = x => String(x || '').toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i');
+  const targets = db.servers.filter(s => s.id === db.devServer || s.template === 'gelistirici').flatMap(s => { const t = s.channels.filter(c => (c.type || 'text') === 'text');
+    const exact = t.filter(c => c.name === 'değişiklik-günlüğü'); return (exact.length ? exact : t.filter(c => /degisiklik|gunlug|changelog/.test(norm(c.name)))).slice(0, 1).map(c => c.id); });
+  if (!targets.length) { if (!changelogSync.warned) { changelogSync.warned = 1; console.log('Değişiklik günlüğü: geliştirici sunucusunda günlük odası bulunamadı'); } return; }
+  clMtime = st.mtimeMs;
   const done = (db.clPosted ||= []); let any = false;
   for (const e of Array.isArray(list) ? list : []) { if (!e?.id || done.includes(e.id)) continue;
     for (const ch of targets) botPost(ch, { title: e.baslik || 'Güncelleme', text: e.metin || '', tone: e.ton || 'info' }); done.push(e.id); any = true; }
