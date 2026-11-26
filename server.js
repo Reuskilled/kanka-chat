@@ -1308,6 +1308,14 @@ const TEMPLATES = {
       { n: 'Etüt', cat: 'Sesli', v: 1 }, { n: 'Grup çalışması', cat: 'Sesli', v: 1 }],
     welcome: { message: 'Sınıfımıza hoş geldin! Duyuruları takip et, takıldığın soruları #soru-cevap odasına yaz.', rules: ['Birbirimize saygılı olalım.', 'Ödev cevaplarını doğrudan paylaşma, birbirine yardım et.', 'Ders dışı konular için #sohbet odasını kullan.'],
       channels: [['duyurular', 'Okul ve ders duyuruları'], ['ödevler', 'Teslim tarihleri ve ödevler'], ['soru-cevap', 'Takıldığın yerleri sor']] } },
+  robrun: {
+    roles: [{ name: 'Patron', color: '#f5c542', perms: MOD, hoist: true, icon: '👑' }, { name: 'Sağ Kol', color: '#ff6b3d', perms: ['manageMessages', 'mentionEveryone', 'timeout'], hoist: true, icon: '🗝️' },
+      { name: 'Tetikçi', color: '#ff3b5c', perms: [], hoist: true, icon: '🎯' }, { name: 'Şoför', color: '#3dd6ff', perms: [], hoist: true, icon: '🏎️' },
+      { name: 'Hacker', color: '#7dff6b', perms: [], hoist: true, icon: '💻' }, { name: 'Çaylak', color: '#a7a3b8', perms: [], hoist: true, icon: '🐣' }],
+    channels: [{ n: 'aile-kuralları', cat: 'Karargâh', ro: 1 }, { n: 'duyurular', cat: 'Karargâh', ro: 1 }, { n: 'genel', cat: 'Sokak' }, { n: 'ganimet', cat: 'Sokak' }, { n: 'klipler', cat: 'Sokak' }, { n: 'ihbar-hattı', cat: 'Sokak' },
+      { n: 'soygun-planı', cat: 'Aile içi', priv: ['Patron', 'Sağ Kol', 'Tetikçi', 'Şoför', 'Hacker'] }, { n: 'Sığınak', cat: 'Sesli', v: 1 }, { n: 'Soygun', cat: 'Sesli', v: 1 }, { n: 'Kaçış Aracı', cat: 'Sesli', v: 1 }, { n: 'Nezarethane', cat: 'Sesli', v: 1 }],
+    welcome: { message: 'Aileye hoş geldin. Çaylak olarak başlarsın; sadakatini gösteren yükselir. Önce kuralları oku.', rules: ['Aile içinde konuşulan aile içinde kalır.', 'Ganimet adil bölünür, kimse kimseyi satmaz.', 'Soygun sırasında seste sadece plan konuşulur.', 'Hile ve hile satışı yapan aileden atılır.'],
+      channels: [['genel', 'Sokağın nabzı'], ['ganimet', 'Vurgunları paylaş'], ['klipler', 'En iyi kaçışlar']] } },
   topluluk: {
     roles: [{ name: 'Moderatör', color: '#4cc38a', perms: MOD, hoist: true }, { name: 'Destekçi', color: '#ff6b9a', perms: [], hoist: true }],
     channels: [{ n: 'duyurular', cat: 'Başla', ro: 1 }, { n: 'kurallar', cat: 'Başla', ro: 1 }, { n: 'kendini-tanıt', cat: 'Başla' }, { n: 'genel', cat: 'Topluluk' }, { n: 'öneriler', cat: 'Topluluk' }, { n: 'paylaşımlar', cat: 'Topluluk' },
@@ -7848,6 +7856,17 @@ io.on('connection', socket => {
     if (f && !sbAllowed(f)) return;
     if (f && timedOut(f.s, me)) return;
     socket.to('v:' + myVoice).emit('instr', { sid: socket.id, name: me, i, n, v: Math.max(0.1, Math.min(1, +v || 0.8)) });
+  });
+  // Ekip geri sayımı: sesli odadaki herkesin ekranında aynı anda sayar (soygun, baskın, maç başlangıcı)
+  let vcT = 0;
+  socket.on('vCount', ({ n, label } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') cb = () => {};
+    if (!me || !myVoice) return cb({ error: 'Önce bir sesli odaya gir' });
+    const now = Date.now(); if (now - vcT < 6000) return cb({ error: 'Biraz bekle, sayaç zaten çalışıyor' });
+    const f = myVoice.startsWith('call:') ? null : findChannel(myVoice);
+    if (f && timedOut(f.s, me)) return cb({ error: 'Zaman aşımındayken sayaç başlatamazsın' });
+    n = [3, 5, 10].includes(+n) ? +n : 5; label = clean(label, 28) || 'BAŞLIYORUZ';
+    vcT = now; io.to('v:' + myVoice).emit('vCount', { n, label, by: me, at: now + 400 }); cb({ ok: true });
   });
   // Kişisel notlar: sadece sahibi görür. Anahtar: oda/sohbet kimliği ya da 'genel'
   socket.on('noteGet', ({ key } = {}, cb = () => {}) => {

@@ -5478,6 +5478,15 @@ html.native input, html.native textarea, html.native [contenteditable], html.nat
   .sp-lock-note { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: rgba(212,255,0,.07); border: 1px solid rgba(212,255,0,.25); font-size: 13px; margin: 6px 0 12px; }
   .sp-lock-note .ic { width: 16px; height: 16px; flex: none; margin-top: 2px; color: #d4ff00; } .sp-lock-note a { color: var(--accent); font-weight: 800; }
   /* Enstrüman */
+  #vc-ov { position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center; background: radial-gradient(circle, rgba(0,0,0,.35), rgba(0,0,0,.75)); backdrop-filter: blur(3px); cursor: pointer; animation: vcIn .2s ease; }
+  #vc-ov.go { background: radial-gradient(circle, rgba(212,255,58,.35), rgba(0,0,0,.7)); }
+  #vc-ov .vc-in { display: grid; justify-items: center; gap: 18px; color: #fff; text-align: center; }
+  #vc-ov .vcd-l { font-size: clamp(14px, 3.4vw, 22px); font-weight: 800; line-height: 1; letter-spacing: .25em; color: #d4ff3a; }
+  #vc-ov .vcd-n { font-size: clamp(120px, 34vw, 260px); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 40px rgba(212,255,58,.55); background: none; padding: 0; min-width: 0; }
+  #vc-ov .vcd-n.vcpop { animation: vcPop .45s cubic-bezier(.2,1.6,.4,1); } #vc-ov .vcd-n.go { color: #d4ff3a; }
+  #vc-ov .vcd-b { font-size: 13px; color: rgba(255,255,255,.7); }
+  @keyframes vcPop { from { transform: scale(1.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes vcIn { from { opacity: 0; } }
   .sb-instr { display: flex; align-items: center; gap: 10px; width: calc(100% - 24px); margin: 0 12px 10px; padding: 10px 12px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-soft), transparent); border: 1px solid var(--line); text-align: left; font-size: 20px; }
   .sb-instr span { flex: 1; display: grid; font-size: 13px; } .sb-instr small { color: var(--muted); font-size: 11.5px; } .sb-instr .ic { transform: rotate(-90deg); width: 16px; color: var(--muted); }
   .ins-pop { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); width: min(720px, calc(100vw - 20px)); z-index: 120; padding-bottom: 12px; }
@@ -6973,6 +6982,7 @@ const TPL_UI = [
   ['bos', 'Sıfırdan başla', 'Bir yazılı, bir sesli oda. Gerisini sen kurarsın.', 'plus', '#6b5a4e'],
   ['arkadas', 'Arkadaş grubu', 'Mimler, fotoğraflar, planlar, müzik ve film gecesi odası.', 'users', '#ff9f43'],
   ['oyun', 'Oyun ekibi', 'Duyurular, klipler, takım arıyorum, maç odaları, Kaptan ve Takım rolleri.', 'gamepad', '#ff4655'],
+  ['robrun', 'Rob Run ailesi', 'Patron, Sağ Kol, Tetikçi, Şoför, Hacker rolleri; soygun planı, ganimet, Sığınak ve Kaçış Aracı odaları.', 'crown', '#f5c542'],
   ['okul', 'Okul / sınıf', 'Ödevler, sınav takvimi, soru-cevap, etüt odası, Öğretmen rolü.', 'book', '#2fd3c3'],
   ['topluluk', 'Topluluk', 'Kurallar, kendini tanıt, öneriler, mod odası ve hoş geldin ekranı.', 'sparkle', '#7c5cff'],
   ['discord', 'Şablon aktar', 'Şablon linkini yapıştır; odalar, kategoriler, roller ve izinler aynen kurulsun.', 'download', '#5865f2'],
@@ -6980,7 +6990,7 @@ const TPL_UI = [
 function showTemplates(pick = 'arkadas') {
   modal(`<h3>${ic('plus')}Sunucu oluştur</h3><p class="hint">Bir şablon seç; odalar, kategoriler ve roller hazır gelsin. Sonradan her şeyi değiştirebilirsin.</p>
     <div class="tp-grid">${TPL_UI.map(([k, t, d, i, c]) => `<button class="tp ${k === pick ? 'on' : ''}" data-tp="${k}"><span class="ti" style="background:${c}">${ic(i)}</span><span><b>${t}</b><small>${d}</small></span></button>`).join('')}</div>
-    <form id="tp-form">${pick === 'discord' ? `<input class="field" name="dc" maxlength="120" placeholder="Şablon linki ya da kodu" autocomplete="off" style="margin-top:10px"><div id="dt-prev"></div>` : ''}<input class="field" name="name" maxlength="40" placeholder="Sunucu adı (${pick === 'discord' ? 'şablondan gelir' : 'örn. ' + (pick === 'oyun' ? 'Valo Ekibi' : pick === 'okul' ? '11-B Sınıfı' : pick === 'topluluk' ? 'Anime Severler' : 'Kankalar')})" required autocomplete="off" style="margin-top:10px">
+    <form id="tp-form">${pick === 'discord' ? `<input class="field" name="dc" maxlength="120" placeholder="Şablon linki ya da kodu" autocomplete="off" style="margin-top:10px"><div id="dt-prev"></div>` : ''}<input class="field" name="name" maxlength="40" placeholder="Sunucu adı (${pick === 'discord' ? 'şablondan gelir' : 'örn. ' + (pick === 'oyun' ? 'Valo Ekibi' : pick === 'robrun' ? 'Kanka Ailesi' : pick === 'okul' ? '11-B Sınıfı' : pick === 'topluluk' ? 'Anime Severler' : 'Kankalar')})" required autocomplete="off" style="margin-top:10px">
     <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="primary">Oluştur</button></div></form>
     <div class="tp-alt"><button id="tp-join">${ic('link')}Davet koduyla katıl</button><button id="tp-disc">${ic('compass')}Sunucuları keşfet</button></div>`);
   $('#mx').onclick = closeModal;
@@ -13380,6 +13390,7 @@ function openSoundboard(anchor) {
     const favs = all.filter(o => sbFav.has(sbKey(o.g?.srv.id, o.x))).filter(match);
     const cg = groups.find(g => !g.other);
     p.innerHTML = `<div class="sb-head"><b>${ic('sboard')}Ses paneli</b><label class="sb-vol" title="Panel sesleri ses seviyesi (sadece senin için)">${ic('volume')}<input type="range" min="0" max="1" step="0.05" value="${sbVol()}" aria-label="Panel ses seviyesi"></label><button class="ibtn" id="sb-more" aria-label="Ayarlar">${ic('more')}</button><button class="ibtn" id="sb-x" aria-label="Kapat">${ic('x')}</button></div>
+      <button class="sb-instr" id="sb-count">⏱️<span><b>Ekip geri sayımı</b><small>Soygun, baskın, maç başı · odadaki herkesin ekranında aynı anda</small></span>${ic('chevron')}</button>
       <button class="sb-instr" id="sb-instr">🎸<span><b>Enstrüman çal</b><small>Gitar, piyano, bas, davul, synth · odadaki herkes duyar</small></span>${ic('chevron')}</button>
       <div class="sb-search">${ic('search')}<input placeholder="Ses ara" value="${esc(q)}" aria-label="Ses ara"></div>
       ${!inV ? `<p class="sb-note">${ic('info')}Sesli bir odaya girince çaldığın sesleri odadaki herkes duyar. Şimdilik sadece sen dinlersin.</p>` : !can ? `<p class="sb-note">${ic('lock')}Bu odada ses panelini kullanma iznin yok. Sesleri sadece sen dinleyebilirsin.</p>` : ''}
@@ -13411,6 +13422,7 @@ function openSoundboard(anchor) {
     p.querySelector('.sb-vol input').oninput = e => store.set('kanka-sbvol', e.target.value);
     $('#sb-x').onclick = closeSoundboard;
     $('#sb-instr').onclick = () => { closeSoundboard(); openInstrument(); };
+    $('#sb-count').onclick = e => { const r = e.currentTarget.getBoundingClientRect(); ctxMenu(r.left, r.bottom + 6, VC_PRESETS.map(([t, l, n]) => ({ t: `${t} · ${n} sn`, icon: 'clock', act: () => vCountStart(n, l) })), 'Geri sayım'); };
     if ($('#sb-add')) $('#sb-add').onclick = () => { closeSoundboard(); sbAddForm(cur); };
     $('#sb-more').onclick = e => { const r = e.currentTarget.getBoundingClientRect(), off = store.get('kanka-sboff') === '1', items = [
       { t: off ? 'Panel seslerini duy' : 'Panel seslerini hiç duyma', icon: off ? 'volume' : 'volumeoff', act: () => { store.set('kanka-sboff', off ? null : '1'); toast(off ? 'Panel seslerini duyacaksın' : 'Kimsenin panel sesini duymayacaksın'); } }];
@@ -13486,6 +13498,29 @@ socket.on('instr', d => {
   const hl = $('#ins-panel')?.querySelector(`[data-n="${d.n}"]`); if (hl && $('#ins-panel')?.dataset.i === d.i) { hl.classList.add('peer'); setTimeout(() => hl.classList.remove('peer'), 180); }
 });
 const insFx = {};
+// ---------- Ekip geri sayımı ----------
+const VC_PRESETS = [['Soygun başlıyor', 'SOYGUN BAŞLIYOR', 5], ['Baskın', 'BASKIN', 3], ['Maç başlıyor', 'MAÇ BAŞLIYOR', 10], ['Herkes hazır mı?', 'HAZIR OLUN', 5]];
+function vCountStart(n, label) {
+  if (!myVoice) return toast('Önce bir sesli odaya gir');
+  socket.emit('vCount', { n, label }, r => { if (r?.error) toast(r.error); else closeSoundboard?.(); });
+}
+function vcBeep(f, d = 0.12, g = 0.25) {
+  try { const ac = window.__vcAC ||= new (window.AudioContext || window.webkitAudioContext)(), t = ac.currentTime, o = ac.createOscillator(), v = ac.createGain();
+    o.type = 'square'; o.frequency.value = f; v.gain.setValueAtTime(g * sbVol(), t); v.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(v); v.connect(ac.destination); o.start(t); o.stop(t + d + 0.02); } catch {}
+}
+socket.on('vCount', d => {
+  if (!myVoice) return;
+  $('#vc-ov')?.remove(); clearInterval(window.__vcTm);
+  const ov = document.createElement('div'); ov.id = 'vc-ov'; ov.setAttribute('role', 'status'); ov.setAttribute('aria-live', 'assertive');
+  ov.innerHTML = `<div class="vc-in"><div class="vcd-l">${esc(d.label)}</div><div class="vcd-n">${d.n}</div><div class="vcd-b">${esc(dn(d.by))} başlattı</div></div>`;
+  ov.onclick = () => ov.remove(); document.body.appendChild(ov);
+  const end = d.at + d.n * 1000 - 0, b = ov.querySelector('.vcd-n'); let last = -1;
+  const tick = () => { const left = Math.min(d.n, Math.ceil((end - Date.now()) / 1000));
+    if (left !== last) { last = left;
+      if (left > 0) { b.textContent = left; b.classList.remove('vcpop'); void b.offsetWidth; b.classList.add('vcpop'); vcBeep(left <= 3 ? 880 : 660); }
+      else { clearInterval(window.__vcTm); b.textContent = 'GİT!'; b.classList.remove('vcpop'); void b.offsetWidth; b.classList.add('vcpop', 'go'); ov.classList.add('go'); vcBeep(1320, 0.45, 0.3); navigator.vibrate?.(200); setTimeout(() => ov.remove(), 1600); } } };
+  tick(); window.__vcTm = setInterval(tick, 50);
+});
 // Bilgisayar klavyesi: iki sıra piyano tuşları (Z sırası alt oktav, Q sırası üst oktav)
 const INS_KEYS = { KeyZ: 0, KeyS: 1, KeyX: 2, KeyD: 3, KeyC: 4, KeyV: 5, KeyG: 6, KeyB: 7, KeyH: 8, KeyN: 9, KeyJ: 10, KeyM: 11, Comma: 12, KeyQ: 12, Digit2: 13, KeyW: 14, Digit3: 15, KeyE: 16, KeyR: 17, Digit5: 18, KeyT: 19, Digit6: 20, KeyY: 21, Digit7: 22, KeyU: 23, KeyI: 24 };
 const INS_DRUM_KEYS = { KeyA: 0, KeyS: 1, KeyD: 2, KeyF: 3, KeyG: 4, KeyH: 5, KeyJ: 6, KeyK: 7 };
