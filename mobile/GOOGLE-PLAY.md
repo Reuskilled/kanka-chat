@@ -26,7 +26,7 @@ Kodda yapılanlar: Kanka Spark aboneliği Google Play Faturalandırma (Billing L
 | Reklamlar | Hayır, uygulamada reklam yok |
 | Uygulama içi satın alma | Evet (Kanka Spark aboneliği, Google Play Faturalandırma). Mağaza sayfasında "Uygulama içi satın alma içerir" yazar |
 | İçerik derecelendirmesi | 5. bölüm |
-| Hedef kitle | **13-15, 16-17, 18 ve üzeri.** 13 yaş altını işaretleme (işaretlersen Aileler politikası devreye girer). "Uygulama çocuklara hitap ediyor mu?" → Hayır |
+| Hedef kitle | **16-17, 18 ve üzeri** (uygulama 15 yaş ve üzeri; Play'in 13-15 grubunu işaretleme, 15 yaş altı yasal olarak kapalı). 13 yaş altını işaretleme (işaretlersen Aileler politikası devreye girer). "Uygulama çocuklara hitap ediyor mu?" → Hayır |
 | Veri güvenliği | 3. bölüm |
 | Hesap silme | Uygulama içi: Ayarlar › Hesap › Hesabı sil. Web URL: `https://kankahq.com/hesap-silme` |
 | Haber uygulaması | Hayır |

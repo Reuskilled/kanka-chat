@@ -452,7 +452,7 @@ function activitiesOf(u) {
   const auto = u.auto && Date.now() - u.auto.at < 45e3 ? u.auto : null;
   return auto && (auto.game || auto.music) ? { game: auto.game, music: auto.music, auto: true } : null;
 }
-const pushActivity = u => io.emit('activity', { name: u.name, activities: activitiesOf(u) });
+const pushActivity = u => isMinor(u) ? [u.name, ...(u.friends || []).filter(f => areFriends(u.name, f))].forEach(n => io.to('user:' + n).emit('activity', { name: u.name, activities: activitiesOf(u) })) : io.emit('activity', { name: u.name, activities: activitiesOf(u) });
 // Oyunun kendi servisinden gelen ayrıntılar (şampiyon, mod, derece, skor). Resimler sadece bilinen oyun kaynaklarından.
 const RICH_IMG = /^https:\/\/(ddragon\.leagueoflegends\.com|media\.valorant-api\.com|cdn\.communitydragon\.org)\//;
 function cleanRich(r) {
@@ -1077,10 +1077,15 @@ const TAG = {
   of(u) { if (!u?.tag) return null; const s = db.servers.find(x => x.id === u.tag); return TAG.canUse(u.name, s) ? s.id : null; },
   push() { const d = TAG.defs(); io.emit('tagDefs', d); for (const [sid, n] of online) io.to(sid).emit('tagCan', TAG.canList(n)); pushUsers(); },
 };
-const pubUser = u => ({ sp: sparkOn(u) ? u.spark.since : null, id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.theme : null, intro: u.intro && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.intro : null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect && (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner') ? u.effect : null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
+const pubUser0 = u => ({ sp: sparkOn(u) ? u.spark.since : null, id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.theme : null, intro: u.intro && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.intro : null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect && (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner') ? u.effect : null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), tg: u.bot ? null : TAG.of(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
+// 18 altı gizli hesap: kişisel profil alanları herkese gitmez; sadece kendisi ve arkadaşları 'privProfiles' ile alır
+const PRIV_KEYS = ['pronouns', 'socials', 'bio', 'birthday', 'music', 'activities', 'friendCount'];
+const privOf = u => ({ pronouns: u.pronouns || '', socials: u.socials || {}, bio: u.bio || '', birthday: u.birthday || null, music: u.music || null, activities: activitiesOf(u), friendCount: (u.friends || []).length });
+const pubUserMinorSafe = u => !u.bot && isMinor(u) ? { ...pubUser0(u), pronouns: '', socials: {}, bio: '', birthday: null, music: null, activities: null, friendCount: 0, gizli: true } : pubUser0(u);
 const social = n => { const u = db.users[n] || {}; return { friends: u.friends || [], reqIn: u.reqIn || [], reqOut: u.reqOut || [], blocked: u.blocked || [] }; };
 const pushSocial = (...names) => names.forEach(n => io.to('user:' + n).emit('social', social(n)));
+const pubUser = u => pubUserMinorSafe(u);
 const allUsers = () => Object.values(db.users).map(pubUser);
 
 const serversFor = name => db.servers.filter(s => (s.public || s.members.includes(name)) && !s.bans?.[name]);
@@ -3182,11 +3187,23 @@ function renameUser(old, nw) {
   for (const n of peers) if (n !== nw) { io.to('user:' + n).emit('dms', dmsFor(n)); io.to('user:' + n).emit('social', social(n)); io.to('user:' + n).emit('userRenamed', { from: old, to: nw }); }
   return true;
 }
-// ---------- Yaş kontrolü (kayıtta doğum tarihi zorunlu, 13 yaş altı hesap açamaz) ----------
+// ---------- Yaş kontrolü (kayıtta doğum tarihi zorunlu, 15 yaş altı hesap açamaz) ----------
+// 5651 sayılı Kanun ve 1 Kasım 2026'da yürürlüğe giren yönetmelik: sosyal ağlar 15 yaş altına hizmet veremez (veli izni de yetmez),
+// 15-17 yaş: gizli hesap, sadece arkadaşlardan mesaj, canlı yayın yok, öneri yok.
+const MIN_AGE = 15;
 const needAge = u => !!u && (!u.dob || !!u.ageLock);
 // 18 yaş altı: kayıtta ve sonradan bir kez "velimin bilgisi ve izniyle kullanıyorum" onayı alınır, tarihiyle saklanır
 const isMinor = u => { const a = ageOf(u?.dob); return a !== null && a < 18; };
 const needVeli = u => isMinor(u) && !u.guardian;
+const areFriends = (a, b) => !!db.users[a]?.friends?.includes(b) && !!db.users[b]?.friends?.includes(a);
+// 18 yaş altı biriyle özel sohbet (DM, grup, arama) sadece karşılıklı arkadaşlar arasında olur
+function minorGate(a, b) {
+  if (a === b || a === BOT_NAME || b === BOT_NAME) return null;
+  const A = db.users[a], B = db.users[b]; if (!A || !B || A.bot || B.bot) return null;
+  if (!(isMinor(A) || isMinor(B)) || areFriends(a, b)) return null;
+  return isMinor(B) ? `${b} 18 yaşından küçük; sadece arkadaşlarından mesaj alabiliyor. Önce arkadaşlık isteği gönder.` : '18 yaşından küçükler sadece arkadaşlarıyla özel mesajlaşabilir. Önce arkadaş olun.';
+}
+const chatMinorBlock = (me, chId) => { for (const n of chatMembers(chId)) { const e = minorGate(me, n); if (e) return e; } return null; };
 const AGE_FREE = new Set(['disconnect', 'auth', 'login', 'logout', 'setDob', 'vis', 'register', 'resetPw', 'forgot', 'checkReset', 'betaInfo', 'checkCode', 'waitlist']);
 function ageOf(dob) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dob || '')); if (!m) return null;
@@ -4735,6 +4752,7 @@ api.post('/kullanicilar/:ad/dm', R((a, req) => {
   if (a.dmOk === false) return { error: 'Bu uygulamada DM kapalı (Geliştirici Portalı)', code: 403 };
   if (u.botDmOff) return { error: 'Bu kişi botlardan özel mesaj almıyor', code: 403 };
   if (u.blocked?.includes(a.bot)) return { error: 'Bu kişi botu engellemiş', code: 403 };
+  if (isMinor(u) && !msgRaw[dmId(a.bot, n)]?.some(m => m.author === n)) return { error: 'Bu kişiye bot önce yazamaz (18 yaş altı); kişi bota yazdıktan sonra cevap verilebilir', code: 403 };
   if (!botServers(a).some(s => s.members.includes(n)) && !msgRaw[dmId(a.bot, n)]?.some(m => m.author === n)) return { error: 'Bot ile bu kişinin ortak bir sunucusu yok', code: 403 };
   if (limited('botdm|' + a.id, 30, 60e3) || limited('botdm1|' + a.id + '|' + n, 5, 60e3)) return { error: 'Çok fazla DM: dakikada en fazla 30 (kişi başı 5)', code: 429 };
   const cid = dmId(a.bot, n), r = appPost(a, cid, msgBody(req.body || {})); return r.error ? r : { oda: cid, mesaj: msgForBot(a, cid, r.msg, true) };
@@ -5092,7 +5110,7 @@ io.on('connection', socket => {
     if (!NAME_RE.test(name)) return cb({ error: 'Kullanıcı adı 2-20 karakter olmalı; harf, rakam, _ . - kullanabilirsin.' });
     const age = ageOf(dob);
     if (age === null) return cb({ error: 'Doğum tarihini seç.', field: 'dob' });
-    if (age < 13) return cb({ error: 'Kanka Chat\'te hesap açmak için 13 yaşında ya da daha büyük olmalısın.', field: 'dob', minor: true }); // doğum tarihi saklanmaz
+    if (age < MIN_AGE) return cb({ error: `Kanka Chat'te hesap açmak için ${MIN_AGE} yaşında ya da daha büyük olmalısın.`, field: 'dob', minor: true }); // doğum tarihi saklanmaz
     if (password.length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
     if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz. Şifreni unutursan buraya link göndeririz.', field: 'email' });
     if (!terms) return cb({ error: 'Devam etmek için kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
@@ -5862,6 +5880,7 @@ io.on('connection', socket => {
     const list = [...new Set((members || []).filter(n => db.users[n] && n !== me))].slice(0, 9);
     if (list.length < 2) return cb({ error: 'Grup için en az 2 kişi seç' });
     if (list.some(n => db.users[n].blocked?.includes(me))) return cb({ error: 'Seçtiğin kişilerden biri seni ekleyemez' });
+    { const all = [me, ...list]; for (const a of all) for (const b of all) { const e = minorGate(a, b); if (e) return cb({ error: '18 yaşından küçük biri olan grupta herkesin birbiriyle arkadaş olması gerekir.' }); } }
     if (limited('grp|' + me, 10, 3600e3)) return cb({ error: 'Çok fazla grup açtın, biraz bekle' });
     db.groups ||= {};
     const g = { id: id(), name: clean(name, 40), members: [me, ...list], owner: me, created: Date.now() };
@@ -5877,6 +5896,7 @@ io.on('connection', socket => {
     if (name !== undefined) { g.name = clean(name, 40); notes.push(`${me} grubun adını "${g.name || 'adsız'}" yaptı`); }
     if (add?.length) {
       const fresh = add.filter(n => db.users[n] && !g.members.includes(n) && !db.users[n].blocked?.includes(me)).slice(0, 10 - g.members.length);
+      for (const n of fresh) for (const m of g.members) if (minorGate(n, m)) return cb({ error: '18 yaşından küçük biri olan grupta herkesin birbiriyle arkadaş olması gerekir.' });
       if (!fresh.length) return cb({ error: 'Eklenecek kimse yok (en fazla 10 kişi)' });
       g.members.push(...fresh); notes.push(`${me}, ${fresh.join(', ')} kişisini ekledi`);
     }
@@ -5894,7 +5914,7 @@ io.on('connection', socket => {
 
   // ----- Özel arama (DM ve grup) -----
   socket.on('ring', ({ chId, video } = {}) => {
-    if (!isPrivateChat(chId) || !canAccess(me, chId) || limited('ring|' + me, 6, 60e3)) return;
+    if (!isPrivateChat(chId) || !canAccess(me, chId) || chatMinorBlock(me, chId) || limited('ring|' + me, 6, 60e3)) return;
     { const s = callSessOf(chId); s.rangAt = Date.now(); if (!s.by) s.by = me; }
     for (const n of chatMembers(chId)) if (n !== me && !db.users[n]?.blocked?.includes(me))
     { const title = chId.startsWith('g:') ? groupTitle(groupOf(chId)) : me;
@@ -5916,6 +5936,7 @@ io.on('connection', socket => {
   });
   socket.on('openDM', (other, cb) => {
     if (!me || !db.users[other] || other === me) return cb({ error: 'Kullanıcı bulunamadı' });
+    { const e = minorGate(me, other); if (e) return cb({ error: e, minor: true }); }
     cb({ id: dmId(me, other), with: other });
   });
 
@@ -5937,6 +5958,7 @@ io.on('connection', socket => {
       if (u?.blocked?.includes(other)) return cb({ error: 'Bu kişiyi engelledin. Mesaj göndermek için engeli kaldır.' });
       if (o?.blocked?.includes(me)) return cb({ error: 'Bu kişi sana mesaj alımını kapattı.' });
     }
+    if (cur.startsWith('dm:') || cur.startsWith('g:')) { const e = chatMinorBlock(me, cur); if (e) return cb({ error: e, minor: true }); }
     const srv = serverOf(cur);
     if (srv?.welcome?.enabled && srv.owner !== me && !srv.accepted?.[me]) return cb({ error: srv.applications?.[me]?.st === 'bekliyor' ? 'Katılım başvurun yetkililerin onayını bekliyor' : 'Önce sunucu kurallarını kabul etmelisin', needRules: srv.id });
     { const sb = srv && secBlock(srv, me); if (sb) return cb({ error: sb, needSec: srv.id }); }
@@ -6433,21 +6455,27 @@ io.on('connection', socket => {
     const by = o?.awards?.[badge]?.by || (badge === 'dev' ? db.devApps?.[owner]?.by : null) || null;
     cb({ count: list.length, total: badgeStatsCache.total, sample, earned, by, betaGiven: badge === 'beta' ? Math.min(300, badgeStatsCache.total) : undefined });
   });
+  socket.on('privProfiles', (names, cb = () => {}) => {
+    if (typeof cb !== 'function' || !me || !Array.isArray(names)) return; const out = {};
+    for (const n of names.slice(0, 300)) { const u = db.users[n]; if (u && isMinor(u) && (n === me || areFriends(me, n))) out[n] = privOf(u); }
+    cb(out);
+  });
   socket.on('mutuals', (n, cb = () => {}) => {
     const o = db.users[n]; if (!me || !o) return cb({ servers: [], friends: [] });
     const servers = db.servers.filter(s => { const m = membersOf(s); return m.includes(me) && m.includes(n); }).sort((a, b) => (b.id === 's1') - (a.id === 's1')).map(s => ({ id: s.id, name: s.name, icon: s.icon, iconImg: s.iconImg || null, joined: s.joinedAt?.[n] || null }));
-    const mine = new Set(db.users[me].friends || []), friends = n === me ? [] : (o.friends || []).filter(x => mine.has(x));
-    cb({ matches: (o.matches || []).slice(0, 8), servers: n === me ? [] : servers, friends, joined: Object.fromEntries(db.servers.filter(s => s.members.includes(n) && s.joinedAt?.[n]).map(s => [s.id, s.joinedAt[n]])) });
+    const hide = isMinor(o) && n !== me && !areFriends(me, n); // 18 altı: arkadaş listesi ve eşleşmeler sadece arkadaşlara
+    const mine = new Set(db.users[me].friends || []), friends = n === me || hide ? [] : (o.friends || []).filter(x => mine.has(x));
+    cb({ matches: hide ? [] : (o.matches || []).slice(0, 8), servers: n === me ? [] : servers, friends, joined: Object.fromEntries(db.servers.filter(s => s.members.includes(n) && s.joinedAt?.[n]).map(s => [s.id, s.joinedAt[n]])) });
   });
   // Eski hesaplar için bir kereye mahsus doğum tarihi
   socket.on('veliOnay', (_ = {}, cb = () => {}) => { const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' }); if (isMinor(u) && !u.guardian) { u.guardian = { at: Date.now(), v: 1, where: 'sonradan' }; save(); } cb({ ok: true }); });
   socket.on('setDob', (dob, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
-    if (u.ageLock) return cb({ error: 'Kanka Chat\'i kullanabilmek için en az 13 yaşında olmalısın.', locked: true });
+    if (u.ageLock) return cb({ error: `Kanka Chat'i kullanabilmek için en az ${MIN_AGE} yaşında olmalısın.`, locked: true });
     if (u.dob) return cb({ ok: true });
     if (limited('dob|' + me, 10, 3600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
     const age = ageOf(dob); if (age === null) return cb({ error: 'Geçerli bir doğum tarihi seç.' });
-    if (age < 13) { u.ageLock = { at: Date.now() }; save(); secLog('yas-kilidi', me, '13 yaş altı doğum tarihi girdi'); return cb({ error: 'Kanka Chat\'i kullanabilmek için en az 13 yaşında olmalısın.', locked: true }); } // tarih saklanmaz, sadece kilit
+    if (age < MIN_AGE) { u.ageLock = { at: Date.now() }; save(); secLog('yas-kilidi', me, `${MIN_AGE} yaş altı doğum tarihi girdi`); return cb({ error: `Kanka Chat'i kullanabilmek için en az ${MIN_AGE} yaşında olmalısın.`, locked: true }); } // tarih saklanmaz, sadece kilit
     u.dob = String(dob); if (!u.birthday) u.birthday = String(dob).slice(5); save();
     cb({ ok: true });
   });
@@ -7160,7 +7188,7 @@ io.on('connection', socket => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     if (limited('fsug|' + me, 30, 60e3)) return cb({ error: 'Biraz bekle' });
     const minor = isMinor(u), skip = new Set([me, BOT_NAME, ...(u.friends || []), ...(u.reqOut || []), ...(u.reqIn || []), ...(u.blocked || []), ...(u.fsHide || [])]);
-    const ok = n => { const x = db.users[n]; return !!x && !x.bot && !skip.has(n) && !(x.blocked || []).includes(me) && !x.banned && isMinor(x) === minor; };
+    const ok = n => { const x = db.users[n]; return !minor && !!x && !x.bot && !skip.has(n) && !(x.blocked || []).includes(me) && !x.banned && !isMinor(x); }; // 18 altı hesap kimseye önerilmez, 18 altına da öneri yapılmaz
     const chatted = [];
     for (const d of dmsFor(me)) if (!d.group && ok(d.with)) { const l = msgRaw[d.id] || []; const both = l.some(m => m.author === me) && l.some(m => m.author === d.with); if (both) chatted.push({ name: d.with, last: d.last, n: l.length }); }
     chatted.sort((a, b) => b.last - a.last);
@@ -7365,6 +7393,7 @@ io.on('connection', socket => {
     if (!myVoice) return;
     const was = voiceMedia.get(socket.id)?.screen, now = { cam: !!st?.cam, screen: !!st?.screen };
     { const f = findChannel(myVoice);
+      if (f && (now.cam || now.screen) && isMinor(db.users[me])) { socket.emit('toast', '18 yaşından küçükler sunucularda kamera açamaz ve yayın yapamaz'); now.cam = now.screen = false; }
       if (f && now.cam && !chPerm(f.s, f.c, me, 'video')) { socket.emit('toast', 'Bu odada kamera açma iznin yok'); now.cam = false; }
       if (f && now.screen && !chPerm(f.s, f.c, me, 'stream')) { socket.emit('toast', 'Bu odada ekran paylaşma iznin yok'); now.screen = false; } }
     voiceMedia.set(socket.id, now);
@@ -7676,6 +7705,7 @@ io.on('connection', socket => {
     const isCall = typeof chId === 'string' && chId.startsWith('call:');
     const f = isCall ? null : findChannel(chId);
     if (!me) return cb({ error: 'Erişim yok' });
+    if (isCall && chatMinorBlock(me, chId.slice(5))) return cb({ error: chatMinorBlock(me, chId.slice(5)) });
     if (isCall ? !canAccess(me, chId.slice(5)) || !isPrivateChat(chId.slice(5)) : (!f || !voiceLike(f.c.type) || !(f.s.public || f.s.members.includes(me)) || f.s.bans?.[me] || !seesChannel(f.s, f.c, me))) return cb({ error: 'Erişim yok' });
     if (f && !chPerm(f.s, f.c, me, 'connect')) {
       const pass = voicePass.get(socket.id);

@@ -106,7 +106,7 @@ Toplanmayanlar: konum, kişiler, sağlık, finans, tarama geçmişi, arama geçm
 | Paylaşılan konum | Hayır |
 | Flört / ilişki | Hayır |
 
-Beklenen derece: **13+** (kullanıcı içeriği ve yabancılarla sohbet nedeniyle). Apple 16+ önerirse kabul et, bu uygulamanın 13 yaş kuralını değiştirmez.
+Beklenen derece: **13+** (kullanıcı içeriği ve yabancılarla sohbet nedeniyle). Apple 16+ önerirse kabul et, bu uygulamanın kendi yaş kuralını (15+, 5651 sayılı Kanun) değiştirmez.
 
 ## 8. Ret gelirse
 

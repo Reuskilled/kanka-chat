@@ -645,6 +645,8 @@
   @keyframes thinkDot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
   .af-form { display: grid; gap: 4px; } .af-h { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; } .af-h .av { width: 44px; height: 44px; font-size: 18px; } .af-h h3 { margin: 0; } .af-h small { color: var(--muted); font-size: 13px; }
   .af-l { display: grid; gap: 4px; margin-bottom: 6px; } .af-l > span { font-weight: 800; font-size: 13px; } .af-l > span em { color: var(--red); font-style: normal; } .af-l > span small { color: var(--muted); font-weight: 600; }
+  .pf-priv { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; margin-bottom: 12px; border-radius: 12px; background: var(--accent-soft); font-size: 13px; color: var(--muted); }
+  .pf-priv svg { flex: none; color: var(--accent); margin-top: 2px; } .pf-priv b { display: block; color: var(--text, #fff); margin-bottom: 2px; }
   .af-file { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1.5px dashed var(--line); background: var(--bg2, rgba(255,255,255,.03)); cursor: pointer; }
   .af-file:hover { border-color: var(--accent); } .af-file.ok { border-style: solid; border-color: var(--accent); } .af-file.busy { opacity: .7; }
   .af-file .af-finput { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
@@ -6154,12 +6156,12 @@ function renderAuth(mode = authMode, keep) {
       ${afield('a-mail', 'E-posta (şifreni unutursan diye)', 'mail', 'email', 'maxlength="190" autocomplete="email"')}
       ${afield('a-pass', 'Şifre (en az 6 karakter)', 'lock', 'password', 'autocomplete="new-password"')}
       ${dobField()}
-      <label class="acheck" id="af-a-terms"><input type="checkbox" id="a-terms"><span class="box2"></span><span><a href="/kosullar" target="_blank">Kullanım Şartları</a>'nı ve <a href="/gizlilik" target="_blank">Gizlilik Politikası / KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum. En az 13 yaşında olduğumu beyan ediyorum.</span></label>
+      <label class="acheck" id="af-a-terms"><input type="checkbox" id="a-terms"><span class="box2"></span><span><a href="/kosullar" target="_blank">Kullanım Şartları</a>'nı ve <a href="/gizlilik" target="_blank">Gizlilik Politikası / KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum. En az 15 yaşında olduğumu beyan ediyorum.</span></label>
       <label class="acheck" id="af-a-veli" hidden><input type="checkbox" id="a-veli"><span class="box2"></span><span><b>18 yaşından küçüğüm.</b> Kanka'yı velimin bilgisi ve izniyle kullanıyorum.</span></label>
       <button class="primary" type="submit" id="a-btn">Hesabı oluştur</button><div id="auth-err"></div>
       ${needCode ? `<div class="await"><span>Kodun yok mu?</span><button type="button" class="alink" id="a-wait">Bekleme listesine katıl →</button></div>` : ''}`;
   }
-  else if (mode === 'minor') h = `<div class="abig">${ic('shield')}</div><h1>Şu an hesap açamazsın</h1><p>Kanka Chat <b>13 yaş ve üzeri</b> içindir. Girdiğin doğum tarihine göre henüz 13 yaşında değilsin, bu yüzden hesap oluşturulamadı.</p>
+  else if (mode === 'minor') h = `<div class="abig">${ic('shield')}</div><h1>Şu an hesap açamazsın</h1><p>Kanka Chat <b>15 yaş ve üzeri</b> içindir. Girdiğin doğum tarihine göre henüz 15 yaşında değilsin, bu yüzden hesap oluşturulamadı.</p>
     <ul class="a-tips"><li>Doğum tarihini yanlış girdiysen <b>kankahq1@gmail.com</b> adresine yaz, yardımcı olalım.</li><li>Zaten bir hesabın varsa giriş yapabilirsin.</li></ul>
     <button type="button" class="primary" data-m="login">Giriş ekranına dön</button>`;
   else if (mode === 'forgot') h = `<h1>Şifreni mi unuttun?</h1><p>Kullanıcı adını ya da e-postanı yaz, sıfırlama linkini e-postana gönderelim.</p>
@@ -6342,6 +6344,7 @@ function onAuth(res) {
   if (KCALL) setTimeout(kCallInit, 1200);
   if (NPUSH) setTimeout(() => { nativePushInit(!store.get('kanka-npush-sordu')).then(s => { if (s !== 'sor') store.set('kanka-npush-sordu', 1); }); if (npPending) { const f = npPending; npPending = null; setTimeout(f, 400); } }, 1200);
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
+  setTimeout(() => { privMerge(); privFetch(Object.keys(S.users)); }, 0); // 18 altı gizli profiller: kendin ve arkadaşların
   setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {}; setVoiceAge(res.voiceAge);
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
   if (res.ageGate) return showAgeGate(res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
@@ -11524,7 +11527,7 @@ setInterval(() => document.querySelectorAll('.elapsed[data-since]').forEach(e =>
 let profileOpen = null;
 socket.on('activity', ({ name, activities }) => {
   if (!S.users[name]) return;
-  S.users[name].activities = activities;
+  S.users[name].activities = activities; if (privCache[name]) privCache[name].activities = activities;
   renderMembers(); if (name === S.me) { renderMe(); window.onMyActivity?.(); } else if (S.view === 'dm') renderDMSide();
   if (profileOpen === name && $('#modal').classList.contains('open') && $('#modal-box').classList.contains('pcard')) showProfile(name);
   if (S.view === 'dm' && !S.channel) showFriends();
@@ -12374,7 +12377,7 @@ function showProfile(n, tab = 'about') {
     $('#pf-tabs').innerHTML = tabs().map(([k, t]) => `<button class="${k === tab ? 'on' : ''}" data-pt="${k}">${t}</button>`).join('');
     $('#pf-tabs').querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { tab = b.dataset.pt; draw(); });
     const B = $('#pf-body');
-    if (tab === 'about') { B.innerHTML = compatHTML(cmp) + profAboutHTML(n, u); if (mut?.matches?.length) B.querySelector('.pf-grid')?.insertAdjacentHTML('beforebegin', matchAboutHTML(mut.matches)); if (me) socket.emit('badgeProgress', pr => { window._bprog = pr; const el = $('#pf-badges-sec'); if (el && profileOpen === n) el.innerHTML = badgeGrid(n, u, pr); }); }
+    if (tab === 'about') { B.innerHTML = (u.gizli && !me && !S.social.friends.includes(n) ? `<div class="pf-priv">${ic('lock')}<span><b>Gizli hesap</b>18 yaşından küçük kullanıcıların profil bilgileri, arkadaşları ve etkinlikleri sadece arkadaşlarına görünür.</span></div>` : '') + compatHTML(cmp) + profAboutHTML(n, u); if (mut?.matches?.length) B.querySelector('.pf-grid')?.insertAdjacentHTML('beforebegin', matchAboutHTML(mut.matches)); if (me) socket.emit('badgeProgress', pr => { window._bprog = pr; const el = $('#pf-badges-sec'); if (el && profileOpen === n) el.innerHTML = badgeGrid(n, u, pr); }); }
     if (tab === 'act') B.innerHTML = (actCards(u) || `<div class="pf-empty">${ic('activity')}<b>Şu an bir şey yapmıyor</b><span>Oyun oynarken ya da Spotify dinlerken burada görünür.</span></div>`) + matchListHTML(mut?.matches);
     if (tab === 'servers') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.servers.length ? `<div class="pf-list">${mut.servers.map(s => `<button data-gs="${s.id}"><span class="pl-ic">${s.iconImg ? `<img src="${esc(s.iconImg)}" alt="">` : esc(s.icon)}</span><span><b>${esc(s.name)}</b><small>${s.joined ? ago2(s.joined) + 'dır üye' : 'Ortak sunucu'}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('grid')}<b>Ortak sunucunuz yok</b><span>Onu bir sunucuna davet et.</span></div>`;
     if (tab === 'friends') B.innerHTML = !mut ? '<div class="pf-empty">Yükleniyor…</div>' : mut.friends.length ? `<div class="pf-list">${mut.friends.map(f => `<button data-gf="${esc(f)}">${av(f, S.online.has(f))}<span><b>${esc(dn(f))}</b><small>@${esc(f)}</small></span>${ic('chevron')}</button>`).join('')}</div>` : `<div class="pf-empty">${ic('users')}<b>Ortak arkadaşınız yok</b><span>Arkadaş olunca burada görünür.</span></div>`;
@@ -12728,9 +12731,17 @@ const voiceUsersSig = () => {
   for (const l of Object.values(S.voice || {})) for (const n of l || []) names.add(n);
   return JSON.stringify([...names].sort().map(n => { const u = S.users[n] || {}; return [n, u.displayName, u.nameBanner, u.nameStyle, u.tg]; }));
 };
-socket.on('users', list => { S.users = Object.fromEntries(list.map(u => [u.name, u])); usersChanged(); });
+// 18 altı gizli hesaplar: kişisel alanlar herkese boş gelir; kendin ve arkadaşların için ayrıca istenip birleştirilir
+const privCache = {};
+const privMerge = () => { for (const [n, p] of Object.entries(privCache)) if (S.users[n]?.gizli) Object.assign(S.users[n], p); };
+const privEligible = u => u?.gizli && (u.name === S.me || S.social?.friends?.includes(u.name));
+function privFetch(names) {
+  names = [...new Set(names)].filter(n => privEligible(S.users[n])); if (!names.length || !S.me) return;
+  socket.emit('privProfiles', names, r => { if (!r || typeof r !== 'object') return; for (const n of names) if (r[n]) privCache[n] = r[n]; else delete privCache[n]; privMerge(); usersChanged(); });
+}
+socket.on('users', list => { S.users = Object.fromEntries(list.map(u => [u.name, u])); privMerge(); usersChanged(); privFetch(Object.keys(S.users)); });
 // Sunucu artık sadece değişen kişileri gönderiyor (tüm liste yerine)
-socket.on('usersPatch', ({ upd = [], del = [] } = {}) => { for (const u of upd) S.users[u.name] = u; for (const n of del) delete S.users[n]; usersChanged(); });
+socket.on('usersPatch', ({ upd = [], del = [] } = {}) => { for (const u of upd) S.users[u.name] = u; for (const n of del) delete S.users[n]; privMerge(); usersChanged(); privFetch(upd.filter(u => u.gizli).map(u => u.name)); });
 function usersChanged() {
   if (!S.me || !S.users[S.me]) return;
   renderMe(); renderMembers(); if (S.view === 'dm') renderDMSide();
@@ -12744,6 +12755,8 @@ socket.on('toast', t => toast(t));
 socket.on('social', soc => {
   const newReq = soc.reqIn.length > S.social.reqIn.length;
   S.social = soc;
+  for (const n of Object.keys(privCache)) if (n !== S.me && !soc.friends.includes(n)) { delete privCache[n]; if (S.users[n]) Object.assign(S.users[n], { bio: '', pronouns: '', socials: {}, birthday: null, music: null, activities: null, friendCount: 0 }); }
+  privFetch(soc.friends);
   if (newReq && S.view !== 'dm') { S.unreadDM = true; renderRail(); }
   if (S.view === 'dm') { renderDMSide(); if (!S.channel) showFriends(); }
 });
@@ -15855,6 +15868,7 @@ function tuneSender(pc, tries = 0) {
 }
 async function startVideo(kind) {
   if (!myVoice) return;
+  if (S.minor && !String(myVoice).startsWith('call:') && videoKind !== kind) return toast('18 yaşından küçükler sunucularda kamera açamaz ve yayın yapamaz. Arkadaşlarınla özel aramada açabilirsin.');
   if (videoKind === kind) return stopVideo();
   if (kind === 'screen') return showGoLive();
   let stream;
@@ -19032,9 +19046,9 @@ function showAgeGate(locked) {
   let g = $('#agegate'); if (!g) { g = document.createElement('div'); g.id = 'agegate'; g.setAttribute('role', 'dialog'); g.setAttribute('aria-modal', 'true'); document.body.appendChild(g); }
   const out = `<button type="button" class="alink" id="ag-out">Çıkış yap</button>`;
   g.innerHTML = locked
-    ? `<div class="ag-card"><div class="ag-ico no">${ic('shield')}</div><h2>Kanka Chat'i kullanamazsın</h2><p>Kanka Chat'i kullanabilmek için <b>en az 13 yaşında</b> olmalısın. Girdiğin doğum tarihine göre henüz 13 yaşında değilsin, bu yüzden hesabın kullanıma kapatıldı.</p>
+    ? `<div class="ag-card"><div class="ag-ico no">${ic('shield')}</div><h2>Kanka Chat'i kullanamazsın</h2><p>Kanka Chat'i kullanabilmek için <b>en az 15 yaşında</b> olmalısın. Girdiğin doğum tarihine göre henüz 15 yaşında değilsin, bu yüzden hesabın kullanıma kapatıldı.</p>
       <p class="ag-sm">Doğum tarihini yanlış girdiysen <b>kankahq1@gmail.com</b> adresine kullanıcı adınla yaz.</p>${out}</div>`
-    : `<form class="ag-card" id="ag-f"><div class="ag-ico">${ic('cake')}</div><h2>Doğum tarihini gir</h2><p>Kanka Chat artık <b>13 yaş ve üzeri</b> içindir. Devam etmek için bir kereliğine doğum tarihini girmen gerekiyor.</p>
+    : `<form class="ag-card" id="ag-f"><div class="ag-ico">${ic('cake')}</div><h2>Doğum tarihini gir</h2><p>Kanka Chat artık <b>15 yaş ve üzeri</b> içindir. Devam etmek için bir kereliğine doğum tarihini girmen gerekiyor.</p>
       ${dobField('ag')}<p class="ag-sm">Tam tarihin gizli kalır, kimse göremez. Profilinde sadece gün ve ay görünür, istersen kaldırabilirsin.</p>
       <div id="ag-err" role="alert"></div><button class="primary" type="submit" id="ag-ok">Devam et</button>${out}</form>`;
   $('#ag-out').onclick = logout;
