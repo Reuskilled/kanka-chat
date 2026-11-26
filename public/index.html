@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="Kanka">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&family=JetBrains+Mono:wght@700&family=Nunito:wght@400;600;700;800&family=Pacifico&family=Playfair+Display:ital,wght@0,700;1,700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<link href="/fonts/fonts.css" rel="stylesheet"><!-- yazı tipleri kendi sunucumuzdan: IP yurt dışına gitmez -->
 <style id="kcss">
   :root {
     --bg: #09090b; --panel: #111114; --card: #18181c; --hover: #222228; --line: #27272e;
@@ -5647,7 +5647,7 @@ html.native input, html.native textarea, html.native [contenteditable], html.nat
 <div id="viewer"><button type="button" class="vw-b vw-x" aria-label="Kapat" title="Kapat (Esc)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button type="button" class="vw-b vw-nav vw-prev" aria-label="Önceki görsel" title="Önceki (←)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><img alt=""><button type="button" class="vw-b vw-nav vw-next" aria-label="Sonraki görsel" title="Sonraki (→)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><div class="vw-cnt"></div></div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="https://www.youtube.com/iframe_api" async></script>
+<!-- YouTube oynatıcı API'si sadece "Birlikte izle" açılınca yüklenir (açılışta Google'a bağlanılmaz) -->
 <script>
 // Sayfa iskeleti hiç kaymasın: bir öğeye odaklanma ya da kaydırma bazen tüm uygulamayı yukarı itiyordu
 (() => {
@@ -11467,7 +11467,10 @@ const STEAM = { 'Counter-Strike 2': 730, 'Dota 2': 570, PUBG: 578080, 'Apex Lege
   'Rocket League': 252950, 'Marvel Rivals': 2767030, 'The Finals': 2073850, Valheim: 892970, 'Dead by Daylight': 381210, 'Among Us': 945360, 'R.E.P.O.': 3241660, PEAK: 3527290,
   'Rainbow Six Siege': 359550, 'Overwatch 2': 2357570, 'Forza Horizon 5': 1551360, 'Content Warning': 2881650, 'Sons of the Forest': 1326470, 'Fall Guys': 1097150, Warframe: 230410,
   'Destiny 2': 1085660, 'The Witcher 3': 292030, Brawlhalla: 291550, 'Hollow Knight': 367520 };
-const gameCover = n => STEAM[n] ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${STEAM[n]}/header.jpg` : null;
+// Oyun görselleri (Steam, Riot, Valorant) kendi sunucumuz üzerinden: kullanıcının IP adresi bu servislere gitmez (KVKK m.9)
+const GIMG_RE = /^https:\/\/(ddragon\.leagueoflegends\.com|media\.valorant-api\.com|cdn\.communitydragon\.org|cdn\.cloudflare\.steamstatic\.com)\/[\w\-./%]+$/;
+const gimg = u => u && GIMG_RE.test(u) ? '/gimg?u=' + encodeURIComponent(u) : u && /^https?:/.test(u) && /(ddragon|valorant-api|communitydragon|steamstatic)/.test(u) ? null : u;
+const gameCover = n => STEAM[n] ? gimg(`https://cdn.cloudflare.steamstatic.com/steam/apps/${STEAM[n]}/header.jpg`) : null;
 const gameColor = n => (GAMES.find(g => g[0] === n) || [, `hsl(${[...n].reduce((a, c) => a + c.charCodeAt(0), 0) % 360} 55% 45%)`])[1];
 const GAME_SHORT = { 'League of Legends': 'LoL', 'Counter-Strike 2': 'CS2', 'Grand Theft Auto V': 'GTA', 'Rainbow Six Siege': 'R6', 'Euro Truck Simulator 2': 'ETS2', 'Red Dead Redemption 2': 'RDR2', 'EA FC 26': 'FC26', 'Dead by Daylight': 'DbD', 'Mobile Legends': 'MLBB' };
 const gameInit = n => GAME_SHORT[n] || [...n.replace(/[^\p{L}\p{N} ]/gu, '')].filter((ch, i, arr) => (i === 0 || arr[i - 1] === ' ') && /[\p{Lu}\p{N}]/u.test(ch)).slice(0, 2).join('') || n[0].toUpperCase();
@@ -11494,12 +11497,12 @@ function rankChip(r) {
 }
 function matchCardHTML(m) {
   const g = m.match, ps = g.players || [], lead = ps[0] || {};
-  const bg = g.bg || (g.game === 'League of Legends' ? lolSplash(lead.img) : null);
+  const bg = gimg(g.bg || (g.game === 'League of Legends' ? lolSplash(lead.img) : null));
   const meta = [g.mode, g.map && g.game !== 'Valorant' && g.game !== 'Counter-Strike 2' ? g.map : null, g.dur ? durTxt(g.dur) : null].filter(Boolean);
   const title = g.game === 'League of Legends' ? (ps.length > 1 ? `${ps.length} kanka aynı maçta` : lead.champ || g.game) : g.map || g.game;
   const players = ps.map(p => {
     const k = p.kda, r = kdaRatio(k);
-    return `<div class="mc-p" data-prof="${esc(p.n)}"><span class="mc-ch mc-av">${av(p.n)}${p.img ? `<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>
+    return `<div class="mc-p" data-prof="${esc(p.n)}"><span class="mc-ch mc-av">${av(p.n)}${p.img ? `<img src="${esc(gimg(p.img))}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>
       <span class="mc-who"><b>${esc(dn(p.n))}</b><small>${esc(p.champ || (g.game === 'Counter-Strike 2' ? 'CS2' : ''))}</small></span>
       ${k ? `<span class="mc-kda"><b>${k[0]}<i>/</i><em>${k[1]}</em><i>/</i>${k[2]}</b><small>${r} KDA${(p.extra || []).length ? ' · ' + p.extra.map(esc).join(' · ') : ''}</small></span>` : ''}
       ${rankChip(p.rank)}</div>`;
@@ -11522,7 +11525,7 @@ function matchAboutHTML(list) {
 }
 function matchListHTML(list, bare) {
   if (!list?.length) return '';
-  return `${bare ? '' : '<div class="pc-sec"><h5>Son maçlar</h5>'}<div class="mlist">${list.map(x => `<div class="ml r-${x.result}">${x.img ? `<img src="${esc(x.img)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(${esc(JSON.stringify(gameArt(x.game, 'sm')))}))">` : gameArt(x.game, 'sm')}
+  return `${bare ? '' : '<div class="pc-sec"><h5>Son maçlar</h5>'}<div class="mlist">${list.map(x => `<div class="ml r-${x.result}">${x.img ? `<img src="${esc(gimg(x.img))}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(${esc(JSON.stringify(gameArt(x.game, 'sm')))}))">` : gameArt(x.game, 'sm')}
     <span><b>${esc(x.champ || x.map || x.game)}</b><small>${esc([x.mode, ago(x.time)].filter(Boolean).join(' · '))}</small></span>
     <span class="ml-k">${x.score ? `${x.score[0]}:${x.score[1]}` : x.kda ? x.kda.join('/') : ''}</span><em>${RES_TXT[x.result]}</em></div>`).join('')}</div>${bare ? '' : '</div>'}`;
 }
@@ -11531,7 +11534,7 @@ function actCards(u) {
   let h = '';
   if (a.game) { const g = a.game, r = g.rich || {}, st = r.start || g.start;
     const chips = [r.phase && (r.ranked ? `<i class="rk on">Dereceli</i>` : r.mode ? `<i class="rk">Derecesiz</i>` : ''), r.rank && `<i class="rk tier">${esc(r.rank)}</i>`, r.extra && !r.state?.includes(r.extra) && `<i class="rk">${esc(r.extra)}</i>`].filter(Boolean).join('');
-    h += `<div class="act-card"><div class="act-art g ${r.img ? 'ri' : ''}">${r.img ? `<img src="${esc(r.img)}" alt="" onerror="this.remove()">` : ''}${gameArt(g.name)}${r.img ? `<span class="act-mini">${gameArt(g.name, 'xs')}</span>` : ''}</div>
+    h += `<div class="act-card"><div class="act-art g ${r.img ? 'ri' : ''}">${r.img ? `<img src="${esc(gimg(r.img))}" alt="" onerror="this.remove()">` : ''}${gameArt(g.name)}${r.img ? `<span class="act-mini">${gameArt(g.name, 'xs')}</span>` : ''}</div>
       <div class="act-info"><small>${esc(g.name)}${r.mode ? ' · ' + esc(r.mode) : g.detail ? ' · ' + esc(g.detail) : ''}</small><b>${esc(r.state || (g.detail === 'Lobide' ? 'Lobide' : 'Oynuyor'))}</b>${chips ? `<div class="rks">${chips}</div>` : ''}<div class="elapsed" data-since="${st}">${since2(st)}</div></div></div>`; }
   if (a.music) { const m = a.music, q = encodeURIComponent(((m.artist || '') + ' ' + m.title).trim());
     h += `<div class="act-card"><div class="act-art" style="background:#1d3b2a">${m.art ? `<img src="${esc(m.art)}" alt="" style="width:100%;height:100%;object-fit:cover">` : ic('music')}<span class="badge-sp">${ic('spotify')}</span></div><div class="act-info"><small>Spotify'da dinliyor <span class="eq"><i></i><i></i><i></i></span></small><b>${esc(m.title)}</b>${m.artist ? `<span>${esc(m.artist)}${m.album ? ' · ' + esc(m.album) : ''}</span>` : ''}
@@ -17336,7 +17339,7 @@ function setWatch(st) {
   if (!st) { $('#watch').classList.remove('on'); try { yt?.stopVideo(); } catch {} return; }
   $('#watch').classList.add('on');
   $('#watch-info').innerHTML = `${ic('tv')} ${esc(st.by)} başlattı · herkes senkron izliyor`;
-  if (!ytReady) { pendingWatch = st; $('#yt').textContent = 'Video yükleniyor...'; return; }
+  if (!ytReady) { pendingWatch = st; $('#yt').textContent = 'Video yükleniyor...'; if (!document.getElementById('yt-api')) { const sc = document.createElement('script'); sc.id = 'yt-api'; sc.src = 'https://www.youtube.com/iframe_api'; sc.async = true; document.head.appendChild(sc); } return; }
   pendingWatch = null;
   if (!yt) {
     yt = new YT.Player('yt', { videoId: st.videoId, playerVars: { autoplay: 1, rel: 0, playsinline: 1 }, events: {

@@ -606,6 +606,31 @@ app.post('/api/presence', express.json({ limit: '64kb' }), async (req, res) => {
 setInterval(() => { // durumu bildirmeyi bırakanları temizle
   for (const u of Object.values(db.users)) if (u.auto && !u.auto.gone && Date.now() - u.auto.at > 45e3) { u.auto.gone = true; pushActivity(u); }
 }, 15e3);
+// Yazı tipleri: değişmeyen dosyalar, uzun önbellek
+app.use('/fonts', express.static(path.join(__dirname, 'public', 'fonts'), { maxAge: '365d', setHeaders: (res, fp) => { if (fp.endsWith('.css')) res.set('Cache-Control', 'public, max-age=86400'); } }));
+// Oyun görselleri aracısı (Steam / Riot / Valorant): tarayıcı bu servislere hiç bağlanmaz, kullanıcının IP'si yurt dışına gitmez.
+// Açık vekil olmasın diye: sadece listedeki alan adları, sadece https, yönlendirme izlenmez, sadece resim, en fazla 4 MB; diske önbelleklenir.
+const GIMG_HOSTS = /^https:\/\/(ddragon\.leagueoflegends\.com|media\.valorant-api\.com|cdn\.communitydragon\.org|cdn\.cloudflare\.steamstatic\.com)\/[\w\-./%]+$/;
+const GIMG_DIR = path.join(DATA_DIR, 'gimg'); try { fs.mkdirSync(GIMG_DIR, { recursive: true }); } catch {}
+const gimgInflight = new Map();
+app.get('/gimg', async (req, res) => {
+  const u = String(req.query.u || ''); if (u.length > 300 || !GIMG_HOSTS.test(u) || u.includes('..')) return res.status(400).end();
+  const ip = String(req.headers['cf-connecting-ip'] || req.socket.remoteAddress || '');
+  if (limited('gimg|' + ip, 400, 60e3)) return res.status(429).end();
+  const key = crypto.createHash('sha1').update(u).digest('hex'), fp = path.join(GIMG_DIR, key), send = (ct) => { res.set({ 'Content-Type': ct, 'Cache-Control': 'public, max-age=2592000, immutable', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; sandbox" }); res.sendFile(fp); };
+  try { const meta = JSON.parse(fs.readFileSync(fp + '.json', 'utf8')); if (fs.existsSync(fp)) return send(meta.ct); } catch {}
+  try {
+    let job = gimgInflight.get(key);
+    if (!job) { job = (async () => {
+      const r = await fetch(u, { redirect: 'manual', signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'KankaChat-ImageProxy' } });
+      const ct = String(r.headers.get('content-type') || '').split(';')[0].trim();
+      if (r.status !== 200 || !/^image\/(png|jpeg|webp|gif|avif)$/.test(ct)) throw new Error('kaynak ' + r.status + ' ' + ct);
+      const buf = Buffer.from(await r.arrayBuffer()); if (buf.length > 4 * 1024 * 1024) throw new Error('büyük');
+      fs.writeFileSync(fp, buf); fs.writeFileSync(fp + '.json', JSON.stringify({ ct, u, at: Date.now() })); return ct;
+    })().finally(() => setTimeout(() => gimgInflight.delete(key), 1000)); gimgInflight.set(key, job); }
+    send(await job);
+  } catch { res.status(404).set('Cache-Control', 'public, max-age=3600').end(); }
+});
 app.use(express.static(path.join(__dirname, 'public'), {
   etag: false, lastModified: false, setHeaders: res => res.set('Cache-Control', 'no-store')
 }));

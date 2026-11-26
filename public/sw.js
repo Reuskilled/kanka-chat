@@ -1,5 +1,5 @@
 // Kanka Chat service worker: uygulama kabuğunu önbellekte tutar, çevrimdışıyken de açılır
-const CACHE = 'kanka-v240';
+const CACHE = 'kanka-v242';
 const SHELL = ['/app', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
@@ -12,8 +12,8 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => { if (res.ok) { const c = res.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); } return res; })));
     return;
   }
-  if (u.pathname.startsWith('/uploads/')) { // resimler: önce önbellek
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => { const c = res.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); return res; })));
+  if (u.pathname.startsWith('/uploads/') || u.pathname.startsWith('/gimg') || /^\/fonts\/.+\.woff2$/.test(u.pathname)) { // resimler ve yazı tipleri: önce önbellek
+    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => { if (res.ok) { const c = res.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); } return res; })));
     return;
   }
   e.respondWith(fetch(e.request).then(res => { // diğerleri: önce ağ, olmazsa önbellek
