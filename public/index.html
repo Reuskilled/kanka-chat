@@ -17858,7 +17858,7 @@ $('#mic-btn').onclick = async () => {
   recTimer = setInterval(() => { const d = (Date.now() - recStart) / 1000; $('#rectime').textContent = fmtDur(d); if (d > 300) rec?.stop(); }, 250);
 };
 $('#rec-cancel').onclick = () => { recCancel = true; rec?.stop(); };
-const waveBars = id => { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return Array.from({ length: 28 }, (_, i) => 25 + ((h >> (i % 24)) * (i + 7) % 75)); };
+const waveBars = id => { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return Array.from({ length: 28 }, (_, i) => 25 + (((h >>> (i % 24)) * (i + 7)) % 75)); };
 function voiceHTML(m) {
   return `<div class="vmsg" data-vid="${m.id}"><button class="play" data-vplay="${m.id}" aria-label="Oynat">▶</button><div class="wave">${waveBars(m.id).map(h => `<i style="height:${h}%"></i>`).join('')}</div><small>${fmtDur(m.duration || 0)}</small></div>`;
 }
