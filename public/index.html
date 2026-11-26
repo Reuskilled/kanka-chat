@@ -658,9 +658,51 @@
   .af-l .field { margin: 0; }
   .sg-ic.sg-av { background: none !important; padding: 0; } .sg-ic.sg-av .av { width: 26px; height: 26px; font-size: 11px; }
   .sg-g.sg-bot { display: flex; align-items: center; gap: 6px; } .sg-g.sg-bot .av { width: 16px; height: 16px; font-size: 8px; }
-  .ba-h { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; } .ba-h .av { width: 56px; height: 56px; font-size: 22px; flex: none; } .ba-h h3 { margin: 0 0 4px; } .ba-h small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
-  .ba-p { display: grid; gap: 4px; margin: 10px 0; padding: 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); } .ba-p > b { margin-bottom: 4px; } .ba-p > small { color: var(--muted); font-size: 12px; margin-top: 6px; }
-  .ba-pr { display: flex; gap: 10px; align-items: center; padding: 6px 2px; cursor: pointer; font-size: 14px; } .ba-pr input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; } .ba-pr small { color: var(--muted); }
+  #modal .box.ba-box { width: min(476px, 94vw); padding: 24px; }
+  .ba { display: flex; flex-direction: column; gap: 14px; }
+  .ba-h { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 16px; background: radial-gradient(85% 120% at 0% 0%, rgba(111,120,255,.16), transparent 65%), var(--card); border: 1px solid var(--line); }
+  .ba-h .av { width: 58px; height: 58px; font-size: 22px; flex: none; border-radius: 16px; }
+  .ba-h .av img { border-radius: 16px; }
+  .ba-h > div { min-width: 0; flex: 1; }
+  .ba-h h3 { margin: 0 0 3px; font-size: 18px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ba-h small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.4; margin-top: 2px; }
+  .ba-srvs { display: grid; gap: 6px; max-height: 190px; overflow-y: auto; padding-right: 2px; }
+  .ba-srv { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 11px; border-radius: 12px; background: var(--card); border: 1.5px solid var(--line); text-align: left; color: var(--ink); cursor: pointer; transition: border-color .14s, background .14s; }
+  .ba-srv:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: var(--hover); }
+  .ba-srv.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, var(--card)); }
+  .ba-srv:disabled { opacity: .52; cursor: not-allowed; }
+  .ba-srv-ic { width: 34px; height: 34px; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: var(--hover); font-weight: 900; font-size: 14px; flex: none; }
+  .ba-srv-ic img { width: 100%; height: 100%; object-fit: cover; }
+  .ba-srv-t { flex: 1; min-width: 0; }
+  .ba-srv-t b { display: block; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ba-srv-t small { display: block; font-size: 11.5px; color: var(--muted); }
+  .ba-srv-tag { font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 7px; background: rgba(255,255,255,.07); color: var(--muted); flex: none; }
+  .ba-srv.on .ba-srv-tag { background: var(--accent); color: var(--on-accent); }
+  .ba-p { display: grid; gap: 4px; padding: 12px 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .ba-p > b { font-size: 13px; margin-bottom: 4px; }
+  .ba-p > small { color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.45; }
+  .ba-pr { display: flex; gap: 10px; align-items: center; padding: 5px 2px; cursor: pointer; font-size: 13.5px; }
+  .ba-pr input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+  .ba-pr.warn span { color: #f6c445; }
+  .ba-pr small { color: var(--muted); }
+  .ba .rowb { margin-top: 2px; }
+  .ba .rowb .primary:disabled { opacity: .45; cursor: not-allowed; }
+  /* Sohbet içi Bot Daveti Kartı (.botc) */
+  .botc { position: relative; width: 400px; max-width: 100%; margin: 6px 0 2px; border-radius: 16px; overflow: hidden; background: var(--card); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.22); }
+  .botc .bc-ban { height: 42px; background: linear-gradient(125deg, rgba(111,120,255,.32), rgba(200,255,0,.18)); border-bottom: 1px solid rgba(255,255,255,.06); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
+  .botc .bc-ban small { font-size: 10.5px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; color: var(--ink); opacity: .82; display: inline-flex; align-items: center; gap: 5px; }
+  .botc .bc-ban small .ic { width: 13px; height: 13px; color: var(--accent); }
+  .botc .bc-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .botc .bc-av { width: 50px; height: 50px; border-radius: 14px; overflow: hidden; flex: none; display: grid; place-items: center; background: var(--hover); font-weight: 900; font-size: 19px; color: var(--ink); }
+  .botc .bc-av img { width: 100%; height: 100%; object-fit: cover; }
+  .botc .bc-av .av { width: 50px; height: 50px; border-radius: 14px; }
+  .botc .bc-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .botc .bc-t b { font-size: 15px; color: var(--ink); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .botc .bc-t small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .botc .bc-go { width: auto !important; padding: 9px 15px !important; border-radius: 11px !important; font-size: 13px !important; font-weight: 800 !important; flex: none; margin: 0 !important; display: inline-flex; align-items: center; gap: 6px; }
+  .botc .bc-desc { margin: -2px 14px 12px; font-size: 12.5px; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .botc.bad .bc-ban { background: rgba(229,72,77,.14); }
+  .botc.load .sk { display: inline-block; border-radius: 6px; background: var(--hover); min-width: 90px; }
   .dp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; } .dp-head h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
   .dp-badge { display: flex; gap: 12px; padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); margin-bottom: 14px; } .dp-badge.ok { border-color: #2f9e6566; }
   .dp-bi { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #6f78ff26; color: #8b93ff; flex: none; } .dp-badge.ok .dp-bi { background: #2f9e6526; color: #4cc38a; } .dp-bi .ic { width: 20px; height: 20px; }
@@ -10326,22 +10368,115 @@ function appCmdForm(c, pre = {}) {
   $('#ac-form').onsubmit = e => { e.preventDefault(); const opts = {}; for (const o of c.secenekler) { const v = $('#ac-form').querySelector(`[name="${CSS.escape(o.ad)}"]`).value; if (v !== '') opts[o.ad] = v; }
     socket.emit('appCmd', { chId: S.channel?.id, app: c.app, name: c.ad, opts }, r => { if (r?.error) return toast(r.error, null, false, { type: 'err' }); closeModal(); }); };
 }
-// ---- Botu sunucuya ekleme ekranı (kankahq.com/bot-ekle/...) ----
+// ---- Botu sunucuya ekleme ekranı & sohbet kartı (kankahq.com/bot-ekle/...) ----
 const PERM_TR = { manageServer: 'Sunucuyu yönet', manageRoles: 'Rolleri yönet', manageChannels: 'Odaları yönet', manageEmojis: 'Emojileri yönet', manageWebhooks: 'Webhook yönet', viewAudit: 'Kayıt defterini gör', manageMessages: 'Mesajları yönet (başkasınınkini sil)', pinMessages: 'Mesaj sabitle', slowBypass: 'Yavaş moda takılmasın', mentionEveryone: '@herkes etiketle', kick: 'Üye at', ban: 'Üye yasakla', timeout: 'Üye sustur', voiceMute: 'Seste sustur', voiceMove: 'Sesten taşı', manageSounds: 'Ses panelini yönet' };
+const PERM_WARN = new Set(['manageServer', 'manageRoles', 'ban', 'kick', 'manageWebhooks']);
+const BOT_INV_RE = /(?:https?:\/\/(?:www\.)?(?:kankahq\.com|[^\s/]+))?\/bot-ekle\/([A-Za-z0-9_-]{4,40})(?:\?([^\s#<>"]+))?/gi;
+function parseBotInv(rawUrl) {
+  if (!rawUrl) return null;
+  try {
+    const u = new URL(rawUrl, location.origin);
+    const hostOk = ownHost(u.host) || /^(?:www\.)?kankahq\.com$/i.test(u.hostname);
+    if (!hostOk) return null;
+    const m = u.pathname.match(/^\/bot-ekle\/([A-Za-z0-9_-]{4,40})\/?$/i);
+    if (m) return { id: m[1], perms: (u.searchParams.get('izin') || '').split(',').map(x => x.trim()).filter(Boolean) };
+    const qId = u.searchParams.get('botekle');
+    if (qId && /^[A-Za-z0-9_-]{4,40}$/.test(qId)) return { id: qId, perms: (u.searchParams.get('izin') || '').split(',').map(x => x.trim()).filter(Boolean) };
+  } catch {}
+  return null;
+}
+function botInvMatches(text) {
+  const out = [], seen = new Set();
+  for (const m of String(text || '').matchAll(BOT_INV_RE)) {
+    const hit = parseBotInv(m[0]);
+    if (hit && !seen.has(hit.id)) { seen.add(hit.id); out.push(hit); }
+    if (out.length >= 2) break;
+  }
+  return out;
+}
+const botInvOnly = t => botInvMatches(t).length === 1 && /^\s*(?:https?:\/\/\S+?)?\/bot-ekle\/[A-Za-z0-9_-]{4,40}(?:\?[^\s#<>"]+)?\s*$/i.test(t || '');
+const botInvCache = {}; let botInvAsk = new Set(), botInvT = null;
+const botAvHTML = a => a?.avatar ? `<img src="${esc(a.avatar)}" alt="">` : (S.users[a?.ad] ? av(a.ad) : `<span>${esc((a?.gorunenAd || a?.ad || 'B')[0].toUpperCase())}</span>`);
+function botCardHTML(item) {
+  const aid = item.id, pStr = (item.perms || []).join(','), v = botInvCache[aid];
+  if (v === undefined) {
+    botInvAsk.add(aid); clearTimeout(botInvT); botInvT = setTimeout(botInvFetch, 30);
+    return `<div class="botc load" data-botc="${esc(aid)}" data-botperms="${esc(pStr)}"><div class="bc-ban"><small>${ic('sparkle')} Bot daveti</small></div><div class="bc-row"><span class="bc-av sk"></span><span class="bc-t"><b class="sk">&nbsp;</b><small class="sk">&nbsp;</small></span></div></div>`;
+  }
+  if (!v) return `<div class="botc bad" data-botc="${esc(aid)}" data-botperms="${esc(pStr)}"><div class="bc-ban"><small>${ic('x')} Geçersiz bot daveti</small></div><div class="bc-row"><span class="bc-av">${ic('x')}</span><span class="bc-t"><b>Bot bulunamadı</b><small>Bu bot silinmiş ya da şu an kullanılamıyor.</small></span></div></div>`;
+  const pCnt = (item.perms || []).length;
+  return `<div class="botc" data-botc="${esc(aid)}" data-botperms="${esc(pStr)}">
+    <div class="bc-ban"><small>${ic('sparkle')} ${v.dogrulandi ? 'Doğrulanmış bot daveti' : 'Bot daveti'}</small>${pCnt ? `<small>+${pCnt} izin</small>` : ''}</div>
+    <div class="bc-row"><span class="bc-av">${botAvHTML(v)}</span>
+      <span class="bc-t"><b>${esc(v.gorunenAd)} <span class="botbadge app">${v.dogrulandi ? ic('check') : ''}BOT</span></b><small>Geliştirici: ${esc(v.sahip)}</small></span>
+      <button type="button" class="primary bc-go" data-botadd="${esc(aid)}" data-botperms="${esc(pStr)}">${ic('plus')} Sunucuya Ekle</button>
+    </div>${v.aciklama ? `<p class="bc-desc">${esc(v.aciklama)}</p>` : ''}</div>`;
+}
+function botInvFetch() {
+  const ids = [...botInvAsk]; botInvAsk = new Set();
+  ids.forEach(aid => socket.emit('appInfo', { id: aid }, r => {
+    botInvCache[aid] = r?.ok ? r.app : null;
+    document.querySelectorAll(`.botc[data-botc="${CSS.escape(aid)}"]`).forEach(el => {
+      const perms = (el.dataset.botperms || '').split(',').filter(Boolean);
+      el.outerHTML = botCardHTML({ id: aid, perms });
+    });
+  }));
+}
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-botadd]');
+  if (btn) { e.preventDefault(); e.stopPropagation(); return showBotAuthorize(btn.dataset.botadd, (btn.dataset.botperms || '').split(',').filter(Boolean)); }
+  const a = e.target.closest('a[href]');
+  if (!a) return;
+  const hit = parseBotInv(a.getAttribute('href'));
+  if (hit) { e.preventDefault(); e.stopPropagation(); showBotAuthorize(hit.id, hit.perms); }
+}, true);
 function showBotAuthorize(aid, perms) {
-  socket.emit('appInfo', { id: aid, perms }, r => {
+  const reqPerms = Array.isArray(perms) ? perms : String(perms || '').split(',').map(x => x.trim()).filter(Boolean);
+  socket.emit('appInfo', { id: aid, perms: reqPerms }, r => {
     if (r?.error) return toast(r.error, null, false, { type: 'err' });
-    const a = r.app, srvs = r.sunucular;
-    modal(`<div class="ba"><div class="ba-h">${av(a.ad)}<div><h3>${esc(a.gorunenAd)} ${a.dogrulandi ? `<span class="botbadge app">${ic('check')}BOT</span>` : '<span class="botbadge app">BOT</span>'}</h3><small>${esc(a.aciklama || 'Açıklama yok')}</small><small>Geliştirici: <b>${esc(a.sahip)}</b>${a.dogrulandi ? ' · Kanka tarafından doğrulandı' : ` · Doğrulanmadı (en fazla ${r.esik} kişiye ulaşabilir, şu an ${r.erisim})`}</small></div></div>
-      <label class="af-l"><span>Hangi sunucuya eklensin?</span><select class="field" id="ba-s"><option value="">Sunucu seç…</option>${srvs.map(s => `<option value="${esc(s.id)}" ${s.var || s.sigmaz ? 'disabled' : ''}>${esc(s.ad)} · ${s.uye} kişi${s.var ? ' (zaten var)' : s.sigmaz ? ` (bot doğrulanmadığı için olmaz)` : ''}</option>`).join('')}</select></label>
-      ${srvs.length ? '' : '<p class="hint">Bot ekleyebileceğin bir sunucun yok: sunucuda "Sunucuyu yönet" yetkin olmalı.</p>'}
-      <div class="ba-p"><b>Bu bot şunları yapabilecek</b><label class="ba-pr on"><input type="checkbox" checked disabled><span>Mesajları görmek, mesaj ve komut cevabı göndermek</span></label>${r.izinler.map(p => `<label class="ba-pr"><input type="checkbox" name="perm" value="${esc(p)}" checked><span>${esc(PERM_TR[p] || p)}</span></label>`).join('')}
-        <small>İzinleri istediğin zaman Sunucu ayarları › Roller'de <b>${esc(a.ad)}</b> rolünden değiştirebilirsin. Bot şifreli DM'lerini asla göremez.</small></div>
-      <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="btnp" id="ba-ok" type="button">${ic('check')} Sunucuya ekle</button></div></div>`);
+    const a = r.app, srvs = r.sunucular || [];
+    botInvCache[aid] = a;
+    const avail = srvs.filter(s => !s.var && !s.sigmaz);
+    let picked = (S.server && avail.some(s => s.id === S.server.id)) ? S.server.id : (avail.length === 1 ? avail[0].id : '');
+    const avEl = a.avatar ? `<div class="av"><img src="${esc(a.avatar)}" alt=""></div>` : av(a.ad);
+    const srvListHTML = srvs.length ? `<div class="ba-srvs" id="ba-srvs">${srvs.map(s => {
+      const dis = s.var || s.sigmaz, on = picked === s.id;
+      const icEl = s.simgeImg ? `<img src="${esc(s.simgeImg)}" alt="">` : esc((s.simge || s.ad[0] || '?').slice(0, 2));
+      const tag = s.var ? 'Zaten ekli' : s.sigmaz ? 'Eşik dolu' : on ? 'Seçili' : 'Seç';
+      return `<button type="button" class="ba-srv${on ? ' on' : ''}" data-basrv="${esc(s.id)}" ${dis ? 'disabled' : ''}>
+        <span class="ba-srv-ic">${icEl}</span>
+        <span class="ba-srv-t"><b>${esc(s.ad)}</b><small>${s.uye} üye${s.sigmaz ? ' · doğrulanmamış bot eşiği aşılıyor' : ''}</small></span>
+        <span class="ba-srv-tag">${tag}</span>
+      </button>`;
+    }).join('')}</div>` : '<p class="hint" style="margin:0">Bot ekleyebileceğin bir sunucun yok: sunucuda <b>Sunucuyu yönet</b> yetkin olmalı.</p>';
+    modal(`<div class="ba">
+      <div class="ba-h">${avEl}<div><h3>${esc(a.gorunenAd)} <span class="botbadge app">${a.dogrulandi ? ic('check') : ''}BOT</span></h3><small>${esc(a.aciklama || 'Açıklama eklenmemiş')}</small><small>Geliştirici: <b>${esc(a.sahip)}</b>${a.dogrulandi ? ' · Kanka tarafından doğrulandı' : ` · Doğrulanmadı (${r.erisim}/${r.esik} kişi)`}</small></div></div>
+      <div class="af-l"><span>Hangi sunucuya eklensin?</span>${srvListHTML}</div>
+      <div class="ba-p"><b>Bu bot şunları yapabilecek</b>
+        <label class="ba-pr on"><input type="checkbox" checked disabled><span>Mesajları görmek, mesaj ve komut cevabı göndermek</span></label>
+        ${(r.izinler || []).map(p => `<label class="ba-pr${PERM_WARN.has(p) ? ' warn' : ''}"><input type="checkbox" name="perm" value="${esc(p)}" checked><span>${esc(PERM_TR[p] || p)}</span></label>`).join('')}
+        <small>İzinleri istediğin zaman Sunucu ayarları › Roller'de <b>${esc(a.ad)}</b> rolünden değiştirebilirsin. Bot şifreli DM'lerini asla göremez.</small>
+      </div>
+      <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="primary" id="ba-ok" type="button" ${picked ? '' : 'disabled'}>${ic('check')} Sunucuya Ekle</button></div>
+    </div>`, 'ba-box');
     $('#mx').onclick = closeModal;
-    $('#ba-ok').onclick = () => { const sid = $('#ba-s').value; if (!sid) return toast('Önce bir sunucu seç');
-      socket.emit('appAuthorize', { id: aid, serverId: sid, perms: [...document.querySelectorAll('.ba [name=perm]:checked')].map(x => x.value) }, x => {
-        if (x?.error) return toast(x.error, null, false, { type: 'err' }); closeModal(); toast(`${a.gorunenAd} sunucuna eklendi 🎉`, null, false, { type: 'party' }); selectServer(sid); }); };
+    $('#ba-srvs')?.querySelectorAll('[data-basrv]').forEach(b => b.onclick = () => {
+      picked = b.dataset.basrv;
+      $('#ba-srvs').querySelectorAll('[data-basrv]').forEach(x => {
+        const on = x.dataset.basrv === picked;
+        x.classList.toggle('on', on);
+        if (!x.disabled) x.querySelector('.ba-srv-tag').textContent = on ? 'Seçili' : 'Seç';
+      });
+      $('#ba-ok').disabled = !picked;
+    });
+    $('#ba-ok').onclick = () => {
+      if (!picked) return toast('Önce bir sunucu seç');
+      $('#ba-ok').disabled = true;
+      socket.emit('appAuthorize', { id: aid, serverId: picked, perms: [...document.querySelectorAll('.ba [name=perm]:checked')].map(x => x.value) }, x => {
+        if (x?.error) { $('#ba-ok').disabled = false; return toast(x.error, null, false, { type: 'err' }); }
+        closeModal(); toast(`${a.gorunenAd} sunucuna eklendi 🎉`, null, false, { type: 'party' }); selectServer(picked);
+      });
+    };
   });
 }
 function msgHTML(m, prev) {
@@ -10442,7 +10577,8 @@ function msgHTML(m, prev) {
     const fimgs = (m.files || []).filter(f => f.kind === 'image');
     const onlyImg = (m.image || m.gif || (m.files?.length && fimgs.length === m.files.length)) && !m.text && !m.replyTo;
     const jumbo = !m.image && !m.audio && m.text && isJumbo(m.text);
-    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : m._auPend ? `<div class="e2e-ph sm">${ic('mic')}<span>Ses mesajı açılıyor…</span></div>` : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.gif ? gifHTML(m.gif) : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${allInvCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${m.preview && !allInvCodes(m.text).length && !roomIds(m.text).length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener" aria-label="YouTube videosunu aç"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
+    const bots = botInvMatches(m.text);
+    body = `<div class="bubble ${onlyImg ? 'only-img' : ''} ${jumbo ? 'jumbo' : ''}">${m.audio ? voiceHTML(m) : m._auPend ? `<div class="e2e-ph sm">${ic('mic')}<span>Ses mesajı açılıyor…</span></div>` : ''}${m.image ? `<img src="${esc(m.image)}" alt="Gönderilen resim" decoding="async" data-view>` : ''}${m.gif ? gifHTML(m.gif) : ''}${m.text && !invOnly(m.text) && !roomOnly(m.text) && !botInvOnly(m.text) ? fmt(m.text) : ''}${m.files?.length ? filesHTML(m.files) : ''}${allInvCodes(m.text).map(invCardHTML).join('')}${roomIds(m.text).map(roomCardHTML).join('')}${bots.map(botCardHTML).join('')}${m.preview && !allInvCodes(m.text).length && !roomIds(m.text).length && !bots.length ? previewHTML(m.preview) : ''}${(() => { const v = m.text && ytId(m.text); return v ? `<a class="yt" href="https://www.youtube.com/watch?v=${v}" target="_blank" rel="noopener" aria-label="YouTube videosunu aç"><img src="https://img.youtube.com/vi/${v}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()"></a>` : ''; })()}${m.edited ? '<span class="edtag">(düzenlendi)</span>' : ''}</div>`;
   }
   if (m.thread?.length) {
     const who = [...new Set(m.thread.map(t => t.author))].slice(0, 3);
