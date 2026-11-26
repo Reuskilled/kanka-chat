@@ -2947,7 +2947,7 @@ function postMessage(me, chId, p = {}) {
   // Bağlantı önizlemesi (YouTube zaten kendi kartıyla gösteriliyor)
   { const lu = msg.kind === 'text' && /https?:\/\/[^\s<>"']+/i.exec(msg.text || '')?.[0]?.replace(/[).,!?;:]+$/, '');
     const fe = lu && !msg.bot && !msg.wh ? findChannel(chId) : null;
-    if (lu && !(fe && !chPerm(fe.s, fe.c, me, 'embed')) && !/(youtube\.com|youtu\.be)\//i.test(lu) && !/\/davet\/|[?&]davet=/i.test(lu)) linkPreview(lu).then(pv => { if (pv && findMsg(chId, msg.id)) { msg.preview = pv; save(); io.to(chId).emit('update', { channelId: chId, msg }); } }); }
+    if (lu && !(fe && !chPerm(fe.s, fe.c, me, 'embed')) && !/(youtube\.com|youtu\.be)\//i.test(lu) && !/\/davet\/|[?&]davet=/i.test(lu) && !/^https?:\/\/(www\.)?kankahq\.com\/kanal\//i.test(lu)) linkPreview(lu).then(pv => { if (pv && findMsg(chId, msg.id)) { msg.preview = pv; save(); io.to(chId).emit('update', { channelId: chId, msg }); } }); }
   // Takip edilebilir duyuru odası: takipçi odalara kopyala
   { const f1 = p.xfrom || p.fwd ? null : findChannel(chId);
     if (f1?.c.news && f1.c.followers?.length) setTimeout(() => {
@@ -5832,6 +5832,21 @@ io.on('connection', socket => {
   socket.on('idle', on => { on ? idleSockets.add(socket.id) : idleSockets.delete(socket.id); pushPresence(); });
 
   // ----- Eski mesajlar -----
+  // Mesaj bağlantısı (kankahq.com/kanal/<sunucu>/<oda>/<mesaj>): açmadan önce erişim kontrolü.
+  // Sunucuda değilse, oda gizliyse, geçmişi görme izni yoksa, mesaj silinmişse ya da hiç yoksa HEP AYNI cevap döner:
+  // gizli odaların ya da mesajların varlığı bu uçtan anlaşılamaz.
+  socket.on('msgLink', ({ ch, msg } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') return; const NO = { error: 'Bu mesaj bulunamadı ya da görme iznin yok' };
+    if (!me) return cb(NO);
+    if (limited('mlink|' + me, 30, 60e3)) return cb({ error: 'Çok hızlı, biraz bekle' });
+    if (typeof ch !== 'string' || typeof msg !== 'string' || ch.length > 120 || msg.length > 60) return cb(NO);
+    if (!canAccess(me, ch)) return cb(NO);
+    const f = findChannel(ch);
+    if (f && (!f.s.members.includes(me) || !chPerm(f.s, f.c, me, 'history'))) return cb(NO);
+    const list = db.messages[ch] || [], i = list.findIndex(m => m.id === msg);
+    if (i < 0 || list[i].ephemeral || list[i].deleted) return cb(NO);
+    cb({ ok: true, sunucu: f?.s.id || null, geri: list.length - i });
+  });
   socket.on('history', ({ before } = {}, cb = () => {}) => {
     if (!canAccess(me, cur)) return cb({ messages: [] });
     { const f = findChannel(cur); if (f && !chPerm(f.s, f.c, me, 'history')) return cb({ messages: [], more: false }); }
