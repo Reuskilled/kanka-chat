@@ -9677,7 +9677,7 @@ function pickPeople(title, exclude, onOk, min = 1) {
 }
 function renderDMSide() {
   srvLook();
-  $('#side-head').className = 'shead'; $('#side-head').onclick = null; $('#side-head').onkeydown = null; $('#side-head').removeAttribute('role'); closeSrvMenu();
+  $('#side-head').className = 'shead'; $('#side-head').style.backgroundImage = ''; $('#side-head').onclick = null; $('#side-head').onkeydown = null; $('#side-head').removeAttribute('role'); $('#side-head').removeAttribute('tabindex'); closeSrvMenu(); // sunucu kapak resmi DM başlığında kalmasın
   $('#side-head').innerHTML = `<h3>Özel mesajlar</h3><button class="pill" id="new-dm">+ Yeni</button>`;
   $('#new-dm').onclick = () => pickPeople('Yeni sohbet', [S.me], (names, gname) => {
     if (names.length === 1) return openDM(names[0]);
