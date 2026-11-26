@@ -396,7 +396,7 @@ app.post('/api/dosya', express.raw({ type: () => true, limit: FILE_MAX + 1024 })
 // İstemcide yaşanan ve sunucuya hiç ulaşmayan hatalar (ör. yükleme sırasında bağlantı kopması) kayda düşsün: nerede takıldığını görmek için
 app.post('/api/istemci-hata', express.text({ type: () => true, limit: '2kb' }), (req, res) => {
   res.status(204).end();
-  if (limited('ihata|' + (req.ip || ''), 10, 600e3)) return;
+  if (limited('ihata|' + reqIp(req), 10, 600e3)) return;
   let d; try { d = JSON.parse(req.body); } catch { return; }
   console.warn('[istemci-hata]', JSON.stringify({ ...d, ua: String(req.headers['user-agent'] || '').slice(0, 110) }).slice(0, 400));
 });
@@ -615,7 +615,7 @@ const GIMG_DIR = path.join(DATA_DIR, 'gimg'); try { fs.mkdirSync(GIMG_DIR, { rec
 const gimgInflight = new Map();
 app.get('/gimg', async (req, res) => {
   const u = String(req.query.u || ''); if (u.length > 300 || !GIMG_HOSTS.test(u) || u.includes('..')) return res.status(400).end();
-  const ip = String(req.headers['cf-connecting-ip'] || req.socket.remoteAddress || '');
+  const ip = reqIp(req);
   if (limited('gimg|' + ip, 400, 60e3)) return res.status(429).end();
   const key = crypto.createHash('sha1').update(u).digest('hex'), fp = path.join(GIMG_DIR, key), send = (ct) => { res.set({ 'Content-Type': ct, 'Cache-Control': 'public, max-age=2592000, immutable', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; sandbox" }); res.sendFile(fp); };
   try { const meta = JSON.parse(fs.readFileSync(fp + '.json', 'utf8')); if (fs.existsSync(fp)) return send(meta.ct); } catch {}
@@ -5093,6 +5093,15 @@ setInterval(() => {
   if (n) save();
 }, 3600e3);
 const ipConns = new Map();
+// Kullanıcı başına (tüm bağlantıları toplamında) olay bütçesi ve ağır olayların dakikalık sınırları
+const evBudget = new Map();
+setInterval(() => { const now = Date.now(); for (const [k, b] of evBudget) if (now - b.t > 60e3) evBudget.delete(k); }, 60e3).unref();
+const EV_FREE = new Set(['arenaIn', 'instr', 'signal', 'vflags', 'typing', 'read']);
+const EV_HEAVY = { updateProfile: 30, setStatus: 30, setCustomStatus: 30, prefs: 120, statPrefs: 60, edit: 60, delete: 120, pin: 30,
+  updateServer: 30, channelSave: 60, renameChannel: 30, createChannel: 30, chDuplicate: 20, channelMove: 60, chLayout: 30, catSave: 30, catDelete: 30,
+  roleSave: 60, roleDelete: 30, roleMove: 60, roleOrder: 60, roleHoist: 30, setRole: 120, roleMembers: 60,
+  addEmoji: 30, editEmoji: 30, removeEmoji: 30, serverBadge: 30, welcomeSave: 20, discoverySave: 20, secSave: 20, levelsSave: 20,
+  groupUpdate: 30, createGroup: 10, createServer: 5, schedule: 20, sbEdit: 30, sbSettings: 20, tagCfgSet: 20, noteSet: 60, hideBadges: 20, matchShare: 20, appUpdate: 30 };
 io.on('connection', socket => {
   socket.on('usersPatchOk', () => socket.join('up2'));
   { // aynı IP'den aşırı bağlantı açılmasın (bir evde birkaç cihaz rahatça sığar)
@@ -5127,6 +5136,19 @@ io.on('connection', socket => {
   const ip = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']);
   const devRaw = socket.handshake.auth?.d, dH = typeof devRaw === 'string' && /^[a-z0-9-]{16,64}$/i.test(devRaw) ? idH('d|' + devRaw) : null, iH = ip && ip !== 'bilinmiyor' ? idH('i|' + ip) : null;
   let me = null, cur = null, myVoice = null;
+  // Kullanıcı başına sınırlar: tek bağlantı sınırı (10 sn'de 400) aynı hesapla açılan çok sayıda bağlantıyla aşılamasın.
+  // Herkese yayılan / kaydedilen ağır işlemlerin (profil, durum, düzenleme, sunucu ayarı...) ayrıca dakikalık sınırı var.
+  socket.use((pkt, next) => {
+    const ev = pkt[0]; if (!me || EV_FREE.has(ev)) return next();
+    const now = Date.now(); let b = evBudget.get(me); if (!b || now - b.t > 10e3) evBudget.set(me, b = { t: now, n: 0 });
+    const lim = EV_HEAVY[ev];
+    if (++b.n > 1000 || (lim && limited('ev|' + ev + '|' + me, lim, 60e3))) {
+      if (b.n === 1001) secLog('istek-seli', me, '10 saniyede 1000+ istek (tüm bağlantılar)');
+      const cb = pkt[pkt.length - 1]; if (typeof cb === 'function') cb({ error: 'Çok hızlı gidiyorsun, biraz bekle.' });
+      return;
+    }
+    next();
+  });
 
   function start(name) {
     { const ev = evasionOf(dH, null, name); if (ev) { secLog('yan-hesap', name, `askıdaki ${ev.u.name} ile aynı cihaz`); staffLog('Kanka', 'Yan hesap girişi engellendi', name, `askıdaki hesap: ${ev.u.name}`); return { error: evadeText(ev.u), banned: true }; } }
@@ -5928,7 +5950,7 @@ io.on('connection', socket => {
   const pushDms = names => names.forEach(n => io.to('user:' + n).emit('dms', dmsFor(n)));
   socket.on('createGroup', ({ members, name } = {}, cb = () => {}) => {
     if (!me) return;
-    const list = [...new Set((members || []).filter(n => db.users[n] && n !== me))].slice(0, 9);
+    const list = [...new Set((Array.isArray(members) ? members : []).filter(n => db.users[n] && n !== me))].slice(0, 9);
     if (list.length < 2) return cb({ error: 'Grup için en az 2 kişi seç' });
     if (list.some(n => db.users[n].blocked?.includes(me))) return cb({ error: 'Seçtiğin kişilerden biri seni ekleyemez' });
     { const all = [me, ...list]; for (const a of all) for (const b of all) { const e = minorGate(a, b); if (e) return cb({ error: '18 yaşından küçük biri olan grupta herkesin birbiriyle arkadaş olması gerekir.' }); } }
