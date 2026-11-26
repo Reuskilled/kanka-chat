@@ -2614,6 +2614,9 @@
   .has-nb .info > span:first-child, .has-nb .nb-dmn { color: #f4f4f6; text-shadow: 0 1px 3px rgba(0,0,0,.75); }
   .has-nb .st, .has-nb .act-line { color: rgba(255,255,255,.68) !important; text-shadow: 0 1px 2px rgba(0,0,0,.65); }
   .has-nb .act-line b { color: rgba(255,255,255,.88) !important; }
+  .dm-tx { display: grid; min-width: 0; line-height: 1.2; }
+  .dm-tx .st, .dm-tx .act-line { font-size: 11.5px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+  .room.dmoff:not(.active):not(.unread) .av { opacity: .5; } .room.dmoff:not(.active):not(.unread) .dm-tx { opacity: .62; }
   .nb-dmn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nb-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: 160% 100%; opacity: .28; transition: opacity .26s ease, filter .26s ease; }
   .nb-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, rgba(13,13,17,.96) 0%, rgba(13,13,17,.84) 56%, rgba(13,13,17,.22) 100%); transition: opacity .24s ease; }
@@ -9622,8 +9625,10 @@ function renderDMSide() {
     });
   }, 2);
   $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div>${SPARK_HIDE ? '' : `<div class="room sp-link ${!S.channel && friendTab === 'spark' ? 'active' : ''}" id="sp-link"><div class="ico">${ic('sparkle')}</div>Spark<span class="sp-soon">YAKINDA</span></div>`}<div class="room ${!S.channel && friendTab !== 'home' && friendTab !== 'spark' ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
-    const dnb = !d.group ? nbOf(S.users[d.with]) : null;
-    return `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''} ${S.calls?.[d.id]?.length ? 'incall' : ''}${dnb ? ' has-nb nb-' + dnb : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${dnb ? nbLayers(dnb) : ''}${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, S.online.has(d.with))}<span class="nb-dmn">${styledNameHTML(d.with, S.users[d.with]?.nameStyle)}</span>`}</div>`;
+    const dnb = !d.group ? nbOf(S.users[d.with]) : null, on = !d.group && (S.online.has(d.with) || d.with === BOT_NAME); // Kanka Bot hep açık
+    // Discord gibi: çevrimiçiyse oyun/müzik ya da özel durum yazısı adın altında; çevrimdışıysa (ya da görünmezse) gösterilmez
+    const sub = on ? actLine(d.with) || (S.users[d.with]?.status ? `<span class="st">${esc(S.users[d.with].status)}</span>` : '') : '';
+    return `<div class="room ${d.id === S.channel?.id ? 'active' : ''} ${S.unread.has(d.id) ? 'unread' : ''} ${S.calls?.[d.id]?.length ? 'incall' : ''}${!d.group && !on ? ' dmoff' : ''}${dnb ? ' has-nb nb-' + dnb : ''}" data-id="${esc(d.id)}" data-w="${esc(d.with || '')}">${dnb ? nbLayers(dnb) : ''}${d.group ? `<span class="gav">${ic('users')}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(groupName(d))}<small style="display:block;font-size:11px;color:var(--muted)">${d.members.length} üye</small></span>` : `${av(d.with, on)}<span class="dm-tx"><span class="nb-dmn">${styledNameHTML(d.with, S.users[d.with]?.nameStyle)}</span>${sub}</span>`}</div>`;
   }).join('')
     : `<p style="padding:6px 20px;color:var(--muted);font-size:14px">Henüz sohbet yok.</p>`);
   $('#side-list').querySelectorAll('.room[data-id]').forEach(r => r.onclick = () => openChat(r.dataset.id, r.dataset.w));
@@ -11520,7 +11525,7 @@ let profileOpen = null;
 socket.on('activity', ({ name, activities }) => {
   if (!S.users[name]) return;
   S.users[name].activities = activities;
-  renderMembers(); if (name === S.me) { renderMe(); window.onMyActivity?.(); }
+  renderMembers(); if (name === S.me) { renderMe(); window.onMyActivity?.(); } else if (S.view === 'dm') renderDMSide();
   if (profileOpen === name && $('#modal').classList.contains('open') && $('#modal-box').classList.contains('pcard')) showProfile(name);
   if (S.view === 'dm' && !S.channel) showFriends();
 });
