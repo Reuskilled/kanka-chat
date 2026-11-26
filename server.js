@@ -911,7 +911,9 @@ async function startTurn(attempt = 1) {
   }
 }
 startTurn();
-const iceServers = () => [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }, ...(turnInfo ? [turnInfo] : [])];
+// Kendi TURN sunucumuz STUN'u da cevaplar (bağlanma isteği kimlik istemez): çalışıyorsa IP adresleri Google'a hiç gitmez.
+// Sadece TURN açılamadıysa Google STUN'a düşülür (yoksa farklı ağlardaki kişiler birbirini duyamaz).
+const iceServers = () => turnInfo ? [{ urls: [turnInfo.urls[0].replace(/^turn:/, 'stun:').replace(/\?transport=udp$/, '')] }, turnInfo] : [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
 
 let saveTimer = null, saveFails = 0, syncGen = 0, dbDirty = false, dbWriting = false;
 // Atomik yazım: yarım kalan bir yazım asla data.json'u bozamaz
