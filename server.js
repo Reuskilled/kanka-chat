@@ -1593,6 +1593,15 @@ function botDm(name, o) {
   io.to('user:' + name).emit('message', { channelId: chId, msg }); // DM odasına girmemiş olsa da gelsin (okunmadı noktası)
   notifyUser(name, { from: BOT_NAME, text: o.title || 'Yeni mesaj', channelId: chId, dm: true }); // sesli bildirim + telefona/masaüstüne bildirim
 }
+function u15Notice() {
+  if (Date.now() > U15_END) return; let n = 0;
+  for (const u of Object.values(db.users)) if (u && !u.bot && !u.banned && under15(u) && !u.u15Dm) {
+    u.u15Dm = Date.now(); n++;
+    botDm(u.name, { title: '📢 Yaş sınırı 15 oldu', tone: 'info', text: `selam kanka! yeni yasa (5651 sayılı Kanun ve 1 Kasım 2026'da yürürlüğe giren yönetmelik) gereği sosyal platformlar artık 15 yaşından küçüklere hizmet veremiyor; veli izni de bunu değiştirmiyor.\n\nbu yüzden hesabın **31 Mart 2027'ye kadar** açık kalacak, o tarihten sonra kapanacak. **hiçbir verin silinmez:** 15 yaşına girdiğin gün (${u15OpenDate(u)}) hesabın kendiliğinden yeniden açılır, kaldığın yerden devam edersin.\n\no zamana kadar hesabın gizli hesap olarak çalışıyor: sadece arkadaşlarınla mesajlaşabilirsin ve sunucularda kamera ya da yayın açamazsın. sorun olursa kankahq1@gmail.com'a yazabilirsin 🧡` });
+  }
+  if (n) { save(); console.log(`15 yaş altı duyurusu: ${n} hesaba gönderildi`); }
+}
+setTimeout(u15Notice, 20e3); setInterval(u15Notice, 6 * 3600e3);
 // ---- Bot geliştiriciler: kabul edilen → aday (HQ'da rol + oda); rozet → botu gerçekten kullanılınca ----
 const DEV_GOAL = { servers: 3, cmds: 50 };
 function devPerks() {
@@ -3191,7 +3200,13 @@ function renameUser(old, nw) {
 // 5651 sayılı Kanun ve 1 Kasım 2026'da yürürlüğe giren yönetmelik: sosyal ağlar 15 yaş altına hizmet veremez (veli izni de yetmez),
 // 15-17 yaş: gizli hesap, sadece arkadaşlardan mesaj, canlı yayın yok, öneri yok.
 const MIN_AGE = 15;
-const needAge = u => !!u && (!u.dob || !!u.ageLock);
+// Kural değişmeden önce açılmış 15 yaş altı hesaplar: yönetmeliğin geçiş süresi (31 Mart 2027) sonuna kadar açık, sonra kilitlenir.
+// Veriler silinmez; 15 yaşına girdiği gün hesap kendiliğinden açılır.
+const U15_END = Date.parse('2027-03-31T23:59:59+03:00');
+const under15 = u => { const a = ageOf(u?.dob); return a !== null && a < MIN_AGE; };
+const u15Closed = u => !!u && !u.bot && under15(u) && Date.now() > U15_END;
+const u15OpenDate = u => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(u?.dob || ''); return m ? `${m[3]}.${m[2]}.${+m[1] + MIN_AGE}` : null; };
+const needAge = u => !!u && (!u.dob || !!u.ageLock || u15Closed(u));
 // 18 yaş altı: kayıtta ve sonradan bir kez "velimin bilgisi ve izniyle kullanıyorum" onayı alınır, tarihiyle saklanır
 const isMinor = u => { const a = ageOf(u?.dob); return a !== null && a < 18; };
 const needVeli = u => isMinor(u) && !u.guardian;
@@ -5101,7 +5116,7 @@ io.on('connection', socket => {
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: seenBy(flagsState(), name), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: seenBy(voiceState(), name), voiceAge: seenBy(voiceAges(), name), calls: callsFor(name), live: seenBy(liveState(), name), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
       onb: onbOf(db.users[name]), presets: PRESET_AV,
-      needVeli: needVeli(db.users[name]), inboxUnseen: inboxUnseen(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, tagDefs: TAG.defs(), tagCan: TAG.canList(name), npReady: { fcm: !!npCfg.fcm, apns: !!npCfg.apns }, tagCfg: siteAdmin(name) ? TAG.cfg() : null, arenaRooms: arenaRoomsFor(name), entrySound: db.users[name].entrySound || null, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : 'need') : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
+      needVeli: needVeli(db.users[name]), inboxUnseen: inboxUnseen(db.users[name]), minor: isMinor(db.users[name]), myEmail: db.users[name].email || null, siteAdmin: siteAdmin(name), staff: staffRank(name), warns: (db.users[name].siteWarns || []).filter(w => !w.seen).map(w => ({ id: w.id, at: w.at, reason: w.reason })), reportCounts: reportCounts(name), beta: db.beta.on, tfa: !!db.users[name].tfa?.on, botDmOff: !!db.users[name].botDmOff, wrapOff: !!db.users[name].wrapOff, tagDefs: TAG.defs(), tagCan: TAG.canList(name), npReady: { fcm: !!npCfg.fcm, apns: !!npCfg.apns }, tagCfg: siteAdmin(name) ? TAG.cfg() : null, arenaRooms: arenaRoomsFor(name), entrySound: db.users[name].entrySound || null, matchOff: !!db.users[name].matchOff, ageGate: needAge(db.users[name]) ? (db.users[name].ageLock ? 'locked' : u15Closed(db.users[name]) ? 'u15' : 'need') : null, u15: under15(db.users[name]) && !u15Closed(db.users[name]) ? { son: '31 Mart 2027', acilis: u15OpenDate(db.users[name]) } : u15Closed(db.users[name]) ? { acilis: u15OpenDate(db.users[name]) } : null, gif: gifReady(), gifHosts: [...gifHosts].slice(0, 40)
     };
   }
 

@@ -6344,10 +6344,17 @@ function onAuth(res) {
   if (KCALL) setTimeout(kCallInit, 1200);
   if (NPUSH) setTimeout(() => { nativePushInit(!store.get('kanka-npush-sordu')).then(s => { if (s !== 'sor') store.set('kanka-npush-sordu', 1); }); if (npPending) { const f = npPending; npPending = null; setTimeout(f, 400); } }, 1200);
   S.users = Object.fromEntries(res.users.map(u => [u.name, u]));
+  if (res.u15?.son && store.get('kanka-u15-seen') !== new Date().toDateString()) setTimeout(() => { // geçiş süresindeki 15 yaş altı hesaplara günde bir hatırlatma
+    store.set('kanka-u15-seen', new Date().toDateString());
+    modal(`<h3>${ic('shield')}Yaş sınırı 15 oldu</h3><p class="hint">Yeni yasa gereği sosyal platformlar 15 yaşından küçüklere hizmet veremiyor; veli izni de bunu değiştirmiyor.</p>
+      <p>Hesabın <b>${esc(res.u15.son)}</b> tarihine kadar açık kalacak, sonra kapanacak. <b>Hiçbir verin silinmez:</b> 15 yaşına girdiğin gün${res.u15.acilis ? ` (<b>${esc(res.u15.acilis)}</b>)` : ''} hesabın kendiliğinden yeniden açılır.</p>
+      <p class="hint">O zamana kadar hesabın gizli hesap olarak çalışır: sadece arkadaşlarınla mesajlaşabilirsin, sunucularda kamera ya da yayın açamazsın.</p>
+      <div class="rowb"><button class="primary" id="mx">Anladım</button></div>`); $('#mx').onclick = closeModal;
+  }, 2500);
   setTimeout(() => { privMerge(); privFetch(Object.keys(S.users)); }, 0); // 18 altı gizli profiller: kendin ve arkadaşların
   setPresence(res.online); S.vflags = res.voiceFlags || {}; S.myStatus = res.myStatus || 'online'; S.myStatusUntil = res.myStatusUntil || null; S.customUntil = res.customUntil || null; S.servers = res.servers; S.dms = res.dms; S.voice = res.voice; S.live = res.live || {}; setVoiceAge(res.voiceAge);
   S.social = res.social || S.social; S.badgeInfo = res.badgeInfo || S.badgeInfo;
-  if (res.ageGate) return showAgeGate(res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
+  if (res.ageGate) return showAgeGate(res.ageGate === 'u15' ? { u15: res.u15 } : res.ageGate === 'locked'); // doğum tarihi girilene kadar uygulama açılmaz
   if (res.ice?.length) ICE.iceServers = res.ice;
   S.gifHosts = res.gifHosts || S.gifHosts || []; E2E.boot(S.me); S.botDmOff = !!res.botDmOff; S.wrapOff = !!res.wrapOff; S.tagDefs = res.tagDefs || {}; S.tagCan = res.tagCan || []; S.tagCfg = res.tagCfg || null; setTimeout(tagIntro, 6000); S.arenaRooms = res.arenaRooms || {}; S.entrySound = res.entrySound || null; S.matchOff = !!res.matchOff;
   { const be = new URLSearchParams(location.search).get('botekle'); if (be) { const iz = new URLSearchParams(location.search).get('izin') || ''; history.replaceState(null, '', APP_PATH); setTimeout(() => showBotAuthorize(be, iz.split(',').filter(Boolean)), 900); } }
@@ -19045,7 +19052,10 @@ function showAgeGate(locked) {
   $('#auth').style.display = 'none'; $('#app').style.display = 'none'; closeModal();
   let g = $('#agegate'); if (!g) { g = document.createElement('div'); g.id = 'agegate'; g.setAttribute('role', 'dialog'); g.setAttribute('aria-modal', 'true'); document.body.appendChild(g); }
   const out = `<button type="button" class="alink" id="ag-out">Çıkış yap</button>`;
-  g.innerHTML = locked
+  g.innerHTML = locked?.u15
+    ? `<div class="ag-card"><div class="ag-ico no">${ic('shield')}</div><h2>Hesabın şimdilik kapalı</h2><p>Yeni yasa gereği sosyal platformlar 15 yaşından küçüklere hizmet veremiyor; geçiş süresi 31 Mart 2027'de bitti. <b>Hiçbir verin silinmedi.</b></p><p>15 yaşına girdiğin gün${locked.u15?.acilis ? ` (<b>${esc(locked.u15.acilis)}</b>)` : ''} hesabın kendiliğinden açılır, kaldığın yerden devam edersin.</p>
+      <p class="ag-sm">Doğum tarihini yanlış girdiysen <b>kankahq1@gmail.com</b> adresine kullanıcı adınla yaz.</p>${out}</div>`
+    : locked
     ? `<div class="ag-card"><div class="ag-ico no">${ic('shield')}</div><h2>Kanka Chat'i kullanamazsın</h2><p>Kanka Chat'i kullanabilmek için <b>en az 15 yaşında</b> olmalısın. Girdiğin doğum tarihine göre henüz 15 yaşında değilsin, bu yüzden hesabın kullanıma kapatıldı.</p>
       <p class="ag-sm">Doğum tarihini yanlış girdiysen <b>kankahq1@gmail.com</b> adresine kullanıcı adınla yaz.</p>${out}</div>`
     : `<form class="ag-card" id="ag-f"><div class="ag-ico">${ic('cake')}</div><h2>Doğum tarihini gir</h2><p>Kanka Chat artık <b>15 yaş ve üzeri</b> içindir. Devam etmek için bir kereliğine doğum tarihini girmen gerekiyor.</p>
