@@ -5025,6 +5025,15 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   #side-list .room.has-nb { border-color: rgba(255,255,255,.05); }
   #side-list .room.has-nb .nb-bg { opacity: .48; }
   #side-list .room.has-nb:hover .nb-bg, #side-list .room.has-nb.active .nb-bg { opacity: .82; }
+  .mk-link .ico { background: rgba(122,92,255,.16) !important; color: #b9a8ff !important; } .mk-link .sp-soon, .mk-cat .sp-soon { margin-left: auto; font-size: 9px; font-weight: 800; letter-spacing: .06em; padding: 2px 6px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); }
+  .mk-page { max-width: 720px; margin: 0 auto; padding: 28px 20px 40px; }
+  .mk-hero { text-align: center; padding: 26px 16px 22px; border-radius: 22px; background: radial-gradient(400px 200px at 50% 0, rgba(122,92,255,.22), transparent 70%), var(--bg2, rgba(255,255,255,.03)); border: 1px solid var(--line); margin-bottom: 16px; }
+  .mk-hi { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 18px; display: grid; place-items: center; background: rgba(122,92,255,.18); color: #b9a8ff; } .mk-hi svg { width: 30px; height: 30px; }
+  .mk-hero h2 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; } .mk-hero p { color: var(--muted); margin-top: 6px; font-size: 14px; }
+  .mk-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  .mk-cat { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--bg2, rgba(255,255,255,.03)); }
+  .mk-cat b { display: block; font-size: 14.5px; } .mk-cat small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; line-height: 1.35; }
+  .mk-ci { flex: none; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
   .sp-link .ico { background: rgba(212,255,0,.12) !important; color: var(--accent) !important; }
   .sp-link .sp-soon { margin-left: auto; font-size: 9px; font-weight: 800; letter-spacing: .06em; padding: 2px 6px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
   /* Sıralama paneli: kırpılmasız metin + metalik sıra rozetleri */
@@ -8997,6 +9006,14 @@ const STORE_APP = NATIVE;
 // Android uygulamasında Spark Google Play Faturalandırma ile satılır (KankaOdeme eklentisi olan sürümlerde). iOS'ta StoreKit gelene kadar gizli.
 const PLAY_BILL = NATIVE && NPLAT === 'android' && !!window.Capacitor?.isPluginAvailable?.('KankaOdeme');
 const SPARK_HIDE = STORE_APP && !PLAY_BILL;
+// ---------- Market (şimdilik vitrin: kategoriler hazır, ürünler sonra eklenecek; fiyat ve satın alma yok) ----------
+const MARKET_IC = 'tag';
+const MARKET_CATS = [['sparkle', 'İsim süsleri', 'Profil kartı ve isim plakası arka planları, isim renk efektleri'], ['camera', 'Avatar çerçeveleri', 'Profil resminin etrafında hareketli çerçeveler'],
+  ['star', 'Profil efektleri', 'Profil açılış animasyonları ve temalar'], ['flame', 'Energy', 'Sunucularına verip yeni özellikler açtığın Energy']];
+function marketHTML() {
+  return `<div class="mk-page"><div class="mk-hero"><div class="mk-hi">${ic(MARKET_IC)}</div><h2>Market</h2><p>Profilini ve sunucularını süsleyeceğin ürünler çok yakında burada.</p></div>
+    <div class="mk-cats">${MARKET_CATS.map(([i, t, d]) => `<div class="mk-cat"><div class="mk-ci">${ic(i)}</div><div><b>${t}</b><small>${d}</small></div><span class="sp-soon">YAKINDA</span></div>`).join('')}</div></div>`;
+}
 function showFriends(tab = friendTab) {
   if (SPARK_HIDE && tab === 'spark') tab = 'home';
   hideSuggest(); $('#cmdhint').style.display = 'none';
@@ -9006,6 +9023,7 @@ function showFriends(tab = friendTab) {
   S.view = 'dm'; S.channel = null; draftFor = null; roomLoading = null; joinSeq++; renderRail(); renderDMSide(); renderMembers();
   setWatch(null);
   if (tab === 'spark') setHeader(`${ic('sparkle')} Spark`, 'Kanka\'nın artı paketi · çok yakında', false);
+  else if (tab === 'market') setHeader(`${ic(MARKET_IC)} Market`, 'Profilini süsle · çok yakında', false);
   else if (tab === 'home') setHeader(`${ic('home')} Yuva`, `${S.social.friends.length} arkadaş · ${S.social.friends.filter(n => S.online.has(n)).length} çevrimiçi`, false);
   else setHeader(`${ic('users')} Arkadaşlar`, `${S.social.friends.length} arkadaş`, false);
   $('#head-actions').innerHTML = tab === 'home' ? `<button class="hbtn" id="add-friend" title="Arkadaş ekle" aria-label="Arkadaş ekle">${ic('userplus')}</button>` : '';
@@ -9017,6 +9035,7 @@ function showFriends(tab = friendTab) {
   const row = (n, extra, btns) => `<div class="frow" data-n="${esc(n)}">${av(n, S.online.has(n))}<div class="info"><b>${esc(n)}</b><small>${extra}</small></div>${btns}</div>`;
   let body;
   if (tab === 'home') body = homeHTML();
+  if (tab === 'market') { $('#callbar')?.remove(); $('#messages').innerHTML = marketHTML(); return; }
   if (tab === 'spark') { $('#callbar')?.remove(); if (PLAY_BILL) return sparkStore(); $('#messages').innerHTML = sparkHTML(); wireSpark(); return; }
   if (tab === 'pending') body = lists.pending.map(([d, n]) => row(n, d === 'in' ? 'Gelen arkadaşlık isteği' : 'Gönderilen istek',
     d === 'in' ? `<button data-acc="${esc(n)}" title="Kabul et" aria-label="Kabul et" style="color:var(--green)">${ic('check')}</button><button data-rem="${esc(n)}" title="Reddet" aria-label="Reddet" style="color:var(--red)">${ic('x')}</button>` : `<button data-rem="${esc(n)}" title="Geri çek" aria-label="İsteği geri çek">${ic('x')}</button>`)).join('');
@@ -9686,7 +9705,7 @@ function renderDMSide() {
       setTimeout(() => openGroup(r.id), 300);
     });
   }, 2);
-  $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div>${SPARK_HIDE ? '' : `<div class="room sp-link ${!S.channel && friendTab === 'spark' ? 'active' : ''}" id="sp-link"><div class="ico">${ic('sparkle')}</div>Spark<span class="sp-soon">YAKINDA</span></div>`}<div class="room ${!S.channel && friendTab !== 'home' && friendTab !== 'spark' ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
+  $('#side-list').innerHTML = `<div class="room ${!S.channel && friendTab === 'home' ? 'active' : ''}" id="home-link"><div class="ico">${ic('home')}</div>Yuva</div>${SPARK_HIDE ? '' : `<div class="room sp-link ${!S.channel && friendTab === 'spark' ? 'active' : ''}" id="sp-link"><div class="ico">${ic('sparkle')}</div>Spark<span class="sp-soon">YAKINDA</span></div>`}<div class="room ${!S.channel && !['home', 'spark', 'market'].includes(friendTab) ? 'active' : ''}" id="fr-link"><div class="ico">${ic('users')}</div>Arkadaşlar${S.social.reqIn.length ? `<span class="pill" style="margin-left:auto;background:var(--red);color:#fff">${S.social.reqIn.length}</span>` : ''}</div><div class="room mk-link ${!S.channel && friendTab === 'market' ? 'active' : ''}" id="mk-link"><div class="ico">${ic(MARKET_IC)}</div>Market<span class="sp-soon">YAKINDA</span></div><div class="label">Sohbetler</div>` + (S.dms.length ? S.dms.map(d => {
     const dnb = !d.group ? nbOf(S.users[d.with]) : null, on = !d.group && (S.online.has(d.with) || d.with === BOT_NAME); // Kanka Bot hep açık
     // Discord gibi: çevrimiçiyse oyun/müzik ya da özel durum yazısı adın altında; çevrimdışıysa (ya da görünmezse) gösterilmez
     const sub = on ? actLine(d.with) || (S.users[d.with]?.status ? `<span class="st">${esc(S.users[d.with].status)}</span>` : '') : '';
@@ -9694,7 +9713,8 @@ function renderDMSide() {
   }).join('')
     : `<p style="padding:6px 20px;color:var(--muted);font-size:14px">Henüz sohbet yok.</p>`);
   $('#side-list').querySelectorAll('.room[data-id]').forEach(r => r.onclick = () => openChat(r.dataset.id, r.dataset.w));
-  $('#fr-link').onclick = () => { document.body.classList.remove('drawer'); showFriends(friendTab === 'home' || friendTab === 'spark' ? (S.social.reqIn.length ? 'pending' : 'online') : friendTab); };
+  $('#mk-link').onclick = () => { document.body.classList.remove('drawer'); showFriends('market'); };
+  $('#fr-link').onclick = () => { document.body.classList.remove('drawer'); showFriends(['home', 'spark', 'market'].includes(friendTab) ? (S.social.reqIn.length ? 'pending' : 'online') : friendTab); };
   $('#home-link').onclick = () => { document.body.classList.remove('drawer'); showFriends('home'); };
   if ($('#sp-link')) $('#sp-link').onclick = () => { document.body.classList.remove('drawer'); showFriends('spark'); };
 }
