@@ -52,9 +52,11 @@ jobs:
         run: |
           export KANKA_VERSION_NAME="$(node -p "require('../package.json').version").${{ github.run_number }}"
           chmod +x gradlew
-          ./gradlew --no-daemon assembleRelease
+          ./gradlew --no-daemon assembleRelease bundleRelease
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/KankaChat.apk"
-          ls -la "$RUNNER_TEMP/KankaChat.apk"
+          # Google Play .aab ister. Anahtar sırrı yoksa test anahtarıyla imzalıdır; yüklemeden önce yükleme anahtarıyla yeniden imzalanmalı
+          cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/KankaChat.aab"
+          ls -la "$RUNNER_TEMP/KankaChat.apk" "$RUNNER_TEMP/KankaChat.aab"
       - name: İmza parmak izi (App Links için)
         run: |
           "$ANDROID_HOME"/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner verify --print-certs "$RUNNER_TEMP/KankaChat.apk" | grep -i "SHA-256" || true
@@ -65,4 +67,4 @@ jobs:
           V="$(node -p "require('./package.json').version")"
           gh release create "android-v$V-${{ github.run_number }}" --repo "${{ github.repository }}" --latest=false --prerelease \
             --title "Kanka Chat Android $V (${{ github.run_number }})" --notes "Otomatik derleme · ${{ github.sha }}" \
-            "$RUNNER_TEMP/KankaChat.apk"
+            "$RUNNER_TEMP/KankaChat.apk" "$RUNNER_TEMP/KankaChat.aab"

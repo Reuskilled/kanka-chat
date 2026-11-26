@@ -1,1 +1,1 @@
-İlk sürüm: sunucular, yazılı ve sesli odalar, özel mesajlar, sesli ve görüntülü arama, bildirimler.
+İlk demo sürümü: sunucular, yazılı ve sesli odalar, özel mesaj ve arama, sesli odada oyun ve enstrüman.
