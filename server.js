@@ -76,12 +76,20 @@ const GAME_PROCS = {
 app.get('/api/presence/games', (req, res) => res.json(GAME_PROCS));
 const STARTED = Date.now();
 // Gerçek istemci IP'si: X-Forwarded-For sadece bağlantı kendi sunucumuzdaki ters vekilden (Caddy) geliyorsa ve en son eklenen değer dikkate alınır; aksi halde sahte başlıkla limitler atlatılabilirdi
-function clientIp(remote, xff) {
-  const r = String(remote || '').replace(/^::ffff:/, '');
-  if ((r === '127.0.0.1' || r === '::1') && xff) { const hops = String(xff).split(',').map(x => x.trim()).filter(Boolean); if (hops.length) return hops[hops.length - 1].replace(/^::ffff:/, ''); }
+// Cloudflare arkasındayken Caddy'nin gördüğü adres Cloudflare'in sunucusudur; gerçek kullanıcı CF-Connecting-IP başlığındadır.
+// Bu başlığa SADECE bağlantı gerçekten Cloudflare'den geliyorsa güvenilir (aksi halde herkes sahte başlıkla limitleri atlatırdı).
+// Liste: https://www.cloudflare.com/ips/ (son değişiklik Eylül 2023)
+const CF_NETS = new (require('net').BlockList)();
+for (const c of ['173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22', '141.101.64.0/18', '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20', '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13', '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22']) { const [a, b] = c.split('/'); CF_NETS.addSubnet(a, +b, 'ipv4'); }
+for (const c of ['2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32', '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32']) { const [a, b] = c.split('/'); CF_NETS.addSubnet(a, +b, 'ipv6'); }
+const isCf = a => { const net = require('net'); try { return net.isIPv4(a) ? CF_NETS.check(a, 'ipv4') : net.isIPv6(a) ? CF_NETS.check(a, 'ipv6') : false; } catch { return false; } };
+function clientIp(remote, xff, cf) {
+  let r = String(remote || '').replace(/^::ffff:/, '');
+  if ((r === '127.0.0.1' || r === '::1') && xff) { const hops = String(xff).split(',').map(x => x.trim()).filter(Boolean); if (hops.length) r = hops[hops.length - 1].replace(/^::ffff:/, ''); }
+  if (cf && isCf(r)) { const c = String(cf).trim().replace(/^::ffff:/, ''); if (require('net').isIP(c)) return c; }
   return r || 'bilinmiyor';
 }
-const reqIp = req => clientIp(req.socket?.remoteAddress, req.headers['x-forwarded-for']);
+const reqIp = req => clientIp(req.socket?.remoteAddress, req.headers['x-forwarded-for'], req.headers['cf-connecting-ip']);
 // ---------- İki adımlı doğrulama (TOTP, Google Authenticator vb.) ----------
 const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 const b32enc = buf => { let bits = '', out = ''; for (const b of buf) bits += b.toString(2).padStart(8, '0'); for (let i = 0; i + 5 <= bits.length; i += 5) out += B32[parseInt(bits.slice(i, i + 5), 2)]; return out; };
@@ -310,6 +318,36 @@ app.post('/api/beta', (req, res) => {
   res.json({ pos: Math.min(userCount() + 1 + db.waitlist.filter((x, j) => j < i && !x.joined).length, 999999), inCap, code: inCap ? w.code : null, mailed: inCap && mailed && !!getMailer(), again: again || undefined, count: Math.min(betaCount(), cap), cap });
 });
 // ---------- Yedek indirme (sadece Kanka yönetimi; masaüstü uygulaması her gün bilgisayara çeker) ----------
+// E-postadaki güvenlik linkleri. Link önizleyiciler (Outlook, Gmail tarayıcıları) GET ile açtığında hiçbir şey olmasın diye
+// GET sadece onay sayfası gösterir; işlem butona basınca (POST) yapılır.
+const secPage = (title, body, btn) => `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title} · Kanka</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#17120f;color:#f3e9e1;font-family:Segoe UI,Arial,sans-serif}.c{max-width:420px;margin:20px;padding:28px;border-radius:18px;background:#221b17;border:1px solid #3a2f28}h1{font-size:20px;margin:0 0 10px}p{color:#c9b8ab;line-height:1.55;font-size:15px}button{margin-top:14px;width:100%;padding:13px;border:0;border-radius:12px;background:#ff7a59;color:#17120f;font-weight:700;font-size:15px;cursor:pointer}a{color:#ff9d80}</style></head>
+<body><div class="c"><h1>${title}</h1><p>${body}</p>${btn ? `<form method="post"><button>${btn}</button></form>` : ''}</div></body></html>`;
+const SEC_KINDS = { kilit: ['Hesabını kilitle', 'Hesabındaki <b>tüm oturumlar</b> hemen kapatılacak (telefon, bilgisayar, tarayıcı). Ardından yeni şifre belirleyeceğin sayfaya gideceksin.', 'Tüm oturumları kapat'],
+  eposta: ['E-postanı geri al', 'Hesabının e-posta adresi <b>eski adresine</b> geri alınacak ve tüm oturumlar kapatılacak. Ardından yeni şifre belirleyeceğin sayfaya gideceksin.', 'E-postamı geri al'] };
+const secGet = (req) => { const t = String(req.query.t || ''); const h = /^[a-f0-9]{48}$/.test(t) ? tokH(t) : null, x = h && db.secLinks?.[h]; return x && x.exp > Date.now() && db.users[x.name] ? { h, x } : null; };
+app.get('/guvenlik/:tur', (req, res) => {
+  const k = SEC_KINDS[req.params.tur]; if (!k) return res.status(404).end();
+  res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+  if (limited('secl|' + reqIp(req), 30, 3600e3)) return res.status(429).send(secPage('Çok fazla deneme', 'Biraz sonra tekrar dene.'));
+  const r = secGet(req); if (!r || r.x.kind !== req.params.tur) return res.status(410).send(secPage('Link geçersiz', 'Bu link kullanılmış ya da süresi dolmuş. Hâlâ bir sorun varsa <a href="/login">giriş sayfasından</a> "Şifremi unuttum" ile yeni şifre belirleyebilir ya da kankahq1@gmail.com adresine yazabilirsin.'));
+  res.send(secPage(...k));
+});
+app.post('/guvenlik/:tur', (req, res) => {
+  res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+  if (limited('secl|' + reqIp(req), 30, 3600e3)) return res.status(429).send(secPage('Çok fazla deneme', 'Biraz sonra tekrar dene.'));
+  const r = secGet(req); if (!r || r.x.kind !== req.params.tur) return res.status(410).send(secPage('Link geçersiz', 'Bu link kullanılmış ya da süresi dolmuş.'));
+  const u = db.users[r.x.name]; delete db.secLinks[r.h];
+  if (r.x.kind === 'eposta') {
+    const taken = r.x.old && Object.values(db.users).some(o => o !== u && o.email === r.x.old);
+    if (r.x.old && !taken) u.email = r.x.old;
+    for (const [h, x] of Object.entries(db.secLinks)) if (x.name === u.name && x.kind === 'eposta') delete db.secLinks[h];
+  }
+  if (u.tfa?.on && r.x.kind === 'eposta' && r.x.tfaAt && u.tfa.at > r.x.tfaAt) { delete u.tfa; } // değişiklikten sonra başkası 2FA açtıysa sahibini dışarıda bırakmasın
+  sessKillUser(u.name); for (const [t, x] of Object.entries(db.resets)) if (x.name === u.name) delete db.resets[t];
+  secLog(r.x.kind === 'kilit' ? 'hesap-kilitlendi' : 'eposta-geri-alindi', u.name, 'e-postadaki güvenlik linkiyle');
+  save(); res.redirect(303, '/login?sifirla=' + resetToken(u.name, 1));
+});
 app.get('/api/yedek/:name', (req, res) => {
   const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), who = sessGet(tok);
   if (!who || !siteAdmin(who)) return res.status(403).json({ error: 'Yetkin yok' });
@@ -784,10 +822,28 @@ const SESS_TTL = 90 * 864e5;
 if (!db.sessHashed) { const o = {}, r = {}; for (const [t, n] of Object.entries(db.sessions || {})) o[tokH(t)] = n; for (const [t, x] of Object.entries(db.resets || {})) r[tokH(t)] = x; db.sessions = o; if (db.resets) db.resets = r; db.sessHashed = true; }
 db.sessAt ||= {};
 const sessGet = t => { if (typeof t !== 'string' || t.length < 20 || t.length > 100) return null; const h = tokH(t); return Object.hasOwn(db.sessions, h) ? db.sessions[h] : null; };
-function sessNew(name) { const t = crypto.randomBytes(24).toString('hex'), h = tokH(t); db.sessions[h] = name; db.sessAt[h] = Date.now(); return t; }
-function sessDel(t) { if (typeof t !== 'string') return; const h = tokH(t); delete db.sessions[h]; delete db.sessAt[h]; }
-function sessDelUser(name) { for (const [h, n] of Object.entries(db.sessions)) if (n === name) { delete db.sessions[h]; delete db.sessAt[h]; } }
-setInterval(() => { const now = Date.now(); let n = 0; for (const h of Object.keys(db.sessions)) { const at = db.sessAt[h] ||= now; if (now - at > SESS_TTL) { delete db.sessions[h]; delete db.sessAt[h]; n++; } } for (const h of Object.keys(db.sessAt)) if (!db.sessions[h]) delete db.sessAt[h]; if (n) save(); }, 3600e3);
+// Oturum bilgisi (Ayarlar > Cihazlar): token her girişte yenilense de cihazın kimliği (id) aynı kalır
+db.sessMeta ||= {};
+function sessNew(name, meta) { const t = crypto.randomBytes(24).toString('hex'), h = tokH(t); db.sessions[h] = name; db.sessAt[h] = Date.now(); if (meta) db.sessMeta[h] = meta; return t; }
+function sessDel(t) { if (typeof t !== 'string') return; const h = tokH(t); delete db.sessions[h]; delete db.sessAt[h]; delete db.sessMeta[h]; }
+function sessDelUser(name) { for (const [h, n] of Object.entries(db.sessions)) if (n === name) { delete db.sessions[h]; delete db.sessAt[h]; delete db.sessMeta[h]; } }
+// Kullanıcının oturumlarını kapat. keep: bu cihaz kimliği açık kalsın (diğerlerinden çıkış). only: sadece bu cihaz kimliği
+function sessKillUser(name, { keep, only } = {}) {
+  let n = 0;
+  for (const [h, u] of Object.entries(db.sessions)) { if (u !== name) continue; const id = db.sessMeta[h]?.id || 'eski'; if ((keep && id === keep) || (only && id !== only)) continue; delete db.sessions[h]; delete db.sessAt[h]; delete db.sessMeta[h]; n++; }
+  for (const sid of io.sockets.adapter.rooms.get('user:' + name) || []) { const so = io.sockets.sockets.get(sid); if (!so) continue; const id = so.data.sid; if ((keep && id === keep) || (only && id !== only)) continue; so.emit('forceLogout', 'Bu cihazdaki oturum kapatıldı.'); so.disconnect(true); n++; }
+  return n;
+}
+const uaLabel = ua => { ua = String(ua || '');
+  const os = /Windows/.test(ua) ? 'Windows' : /iPhone|iPad|iPod/.test(ua) ? 'iPhone' : /Android/.test(ua) ? 'Android' : /Mac OS X|Macintosh/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : '';
+  if (/KankaApp|; wv\)/.test(ua)) return { t: 'Kanka uygulaması' + (os ? ' · ' + os : ''), k: 'phone' };
+  if (/Electron\//.test(ua)) return { t: 'Kanka masaüstü' + (os ? ' · ' + os : ''), k: 'screen' };
+  const br = /Edg\//.test(ua) ? 'Edge' : /OPR\/|Opera/.test(ua) ? 'Opera' : /YaBrowser/.test(ua) ? 'Yandex' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Tarayıcı';
+  return { t: br + (os ? ' · ' + os : ''), k: /Mobi|iPhone|Android/.test(ua) ? 'phone' : 'screen' };
+};
+// IP'nin tamamı gösterilmez/saklanmaz: ilk iki bölüm yeter (operatör / bölge fikri verir)
+const maskIp = ip => { ip = String(ip || ''); if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) return ip.split('.').slice(0, 2).join('.') + '.x.x'; if (ip.includes(':')) return ip.split(':').slice(0, 2).join(':') + ':…'; return ''; };
+setInterval(() => { const now = Date.now(); let n = 0; for (const h of Object.keys(db.sessions)) { const at = db.sessAt[h] ||= now; if (now - at > SESS_TTL) { delete db.sessions[h]; delete db.sessAt[h]; delete db.sessMeta[h]; n++; } } for (const h of Object.keys(db.sessAt)) if (!db.sessions[h]) delete db.sessAt[h]; for (const h of Object.keys(db.sessMeta)) if (!db.sessions[h]) delete db.sessMeta[h]; if (n) save(); }, 3600e3);
 db.servers ||= [];
 if (!db.servers.find(s => s.id === 's1')) {
   db.servers.unshift({ id: 's1', name: 'Kanka HQ', icon: 'K', channels: [{ id: 'c1', name: 'genel' }, { id: 'c2', name: 'duyurular' }, { id: 'c3', name: 'oyun' }] });
@@ -3257,6 +3313,40 @@ function ageOf(dob) {
 }
 // 18+ kuralı döneminde kilitlenen hesaplar 13+ kuralında doğum tarihini yeniden girebilsin
 if (!db.ageRuleV2) { for (const u of Object.values(db.users)) if (u?.ageLock) delete u.ageLock; db.ageRuleV2 = 1; save(); }
+// ---- Hesap güvenliği: zayıf şifre, yeni cihaz uyarısı, "bu ben değilim" ve e-posta geri alma linkleri ----
+const PW_COMMON = new Set(('123456 1234567 12345678 123456789 1234567890 111111 11111111 000000 00000000 123123 123321 654321 666666 121212 112233 ' +
+  '987654321 147258369 159753 123qwe qwerty qwerty123 qwertyuiop asdasd asdasd123 asdfgh asdf1234 zxcvbnm password password1 passw0rd ' +
+  'iloveyou abc123 abcd1234 aa123456 a123456 1q2w3e4r 1q2w3e 1qaz2wsx sifre sifre123 sifre1234 şifre şifre123 parola parola123 ' +
+  'galatasaray fenerbahce fenerbahçe besiktas beşiktaş trabzonspor cimbom1905 gs1905 fb1907 bjk1903 ts1967 istanbul ankara izmir turkiye türkiye ' +
+  'kanka kanka123 kankachat kanka1234 discord discord123 minecraft valorant fortnite roblox pubg123 gamer123 ' +
+  'selam123 merhaba merhaba123 askim askim123 aşkım seniseviyorum allah123 bismillah mustafa mehmet ahmet ayse fatma ' +
+  'qweasd qweasdzxc 1234qwer q1w2e3r4 letmein welcome admin admin123 root toor dragon monkey football baseball superman batman').split(' '));
+function pwWeak(pw, name) {
+  pw = String(pw ?? '');
+  if (pw.length < 8) return 'Şifre en az 8 karakter olmalı.';
+  if (pw.length > 200) return 'Şifre çok uzun.';
+  const low = pw.toLocaleLowerCase('tr');
+  if (PW_COMMON.has(low) || /^(.)\1+$/.test(pw) || /^(0123456789|1234567890|9876543210)/.test(pw)) return 'Bu şifre çok yaygın, kolayca tahmin edilir. Başka bir şifre seç.';
+  if (name && low.includes(String(name).toLocaleLowerCase('tr')) && String(name).length >= 3) return 'Şifren kullanıcı adını içermesin.';
+  return null;
+}
+// Tek kullanımlık güvenlik linkleri (e-postayla gider): kilit = tüm oturumları kapat + şifre sıfırla, eposta = eski e-postayı geri al
+db.secLinks ||= {};
+function secLink(name, kind, extra = {}, days = 7) {
+  const now = Date.now(); for (const [h, x] of Object.entries(db.secLinks)) if (x.exp < now) delete db.secLinks[h];
+  const t = crypto.randomBytes(24).toString('hex'); db.secLinks[tokH(t)] = { name, kind, exp: now + days * 864e5, ...extra }; return t;
+}
+const escH = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const trTime = t => new Date(t).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', dateStyle: 'medium', timeStyle: 'short' });
+function loginAlert(u, meta) {
+  const when = trTime(Date.now()), where = `${meta.ua}${meta.ip ? ' · IP ' + meta.ip : ''}`;
+  botDm(u.name, { title: '🔐 Yeni cihazdan giriş', tone: 'info', text: `hesabına yeni bir cihazdan giriş yapıldı.\n\n**Cihaz:** ${where}\n**Zaman:** ${when}\n\nbu sendin, her şey yolunda. **sen değilsen** hemen Ayarlar > Hesabım > Giriş yapılan cihazlar bölümünden o cihazı çıkar ve şifreni değiştir.${u.tfa?.on ? '' : ' iki adımlı doğrulamayı da açmanı öneririz.'}` });
+  if (u.email && getMailer() && mailCfg?.ok !== false && !limited('girisMail|' + u.name, 6, 3600e3)) {
+    const t = secLink(u.name, 'kilit');
+    sendMail(u.email, 'Kanka hesabına yeni bir cihazdan giriş yapıldı', mailHtml('Yeni cihazdan giriş', `Selam <b>${u.name}</b>, hesabına yeni bir cihazdan giriş yapıldı.<br><br><b>Cihaz:</b> ${escH(where)}<br><b>Zaman:</b> ${when}<br><br>Bu sendin, bir şey yapmana gerek yok.<br><br><b>Sen değilsen</b> aşağıdaki butona bas: hesabındaki tüm oturumları hemen kapatırız ve yeni şifre belirlemen için seni sıfırlama sayfasına götürürüz. Link 7 gün geçerli.`, 'Bu ben değilim, hesabımı kilitle', `${baseUrl()}/guvenlik/kilit?t=${t}`), null, 'güvenlik').catch(() => {});
+  }
+}
+
 function resetToken(name, hours) {
   for (const [t, r] of Object.entries(db.resets)) if (r.exp < Date.now()) delete db.resets[t];
   const mine = Object.entries(db.resets).filter(([, r]) => r.name === name).sort((a, b) => a[1].exp - b[1].exp);
@@ -3425,6 +3515,26 @@ const BOT_PERMS = PERMS.filter(p => p !== 'administrator'); // yönetici yetkisi
 const isBotUser = n => !!db.users[n]?.bot;
 const appOf = n => db.apps?.[db.users[n]?.bot?.app] || null;
 const appTokH = t => crypto.createHash('sha256').update('kbot|' + t).digest('hex');
+// Sohbete yapıştırılan oturum anahtarı / bot token'ı: mesaj gönderilmez, anahtar anında geçersiz olur.
+// ("Şu kodu bana at" dolandırıcılığına karşı: kullanıcı kandırılsa bile anahtar karşı tarafa ulaşmaz)
+function secretLeak(text, me) {
+  if (typeof text !== 'string' || text.length < 40) return null;
+  for (const m of text.match(/[a-f0-9]{48}/g) || []) {
+    const h = tokH(m), owner = db.sessions[h]; if (!owner) continue;
+    const id = db.sessMeta[h]?.id; delete db.sessions[h]; delete db.sessAt[h]; delete db.sessMeta[h];
+    if (id) sessKillUser(owner, { only: id });
+    secLog('anahtar-paylasimi', me, owner === me ? 'kendi oturum anahtarı' : 'başkasının oturum anahtarı: ' + owner); save();
+    return 'Bu mesajda bir oturum anahtarı vardı, güvenliğin için gönderilmedi ve o anahtar iptal edildi. Kimse senden bu kodu istememeli, isteyen dolandırıcıdır.';
+  }
+  for (const m of text.match(/[A-Za-z0-9_-]{40}/g) || []) {
+    const th = appTokH(m), a = Object.values(db.apps || {}).find(x => x.tokenH && x.tokenH === th); if (!a) continue;
+    a.tokenH = null; for (const c of botConnsOf(a.id)) c.ws.close(4004, 'Token iptal edildi');
+    secLog('anahtar-paylasimi', me, 'bot tokenı: ' + a.name); save();
+    if (a.owner) botDm(a.owner, { title: '🔑 Bot token\'ın iptal edildi', tone: 'warn', text: `**${a.name}** botunun token'ı bir sohbete yapıştırıldığı için iptal edildi. Geliştirici panelinden yeni token oluşturup botunu yeniden başlat.` });
+    return 'Bu mesajda bir bot token\'ı vardı, gönderilmedi ve token iptal edildi. Token\'ı kimseyle paylaşma.';
+  }
+  return null;
+}
 const appByToken = t => { if (typeof t !== 'string' || t.length < 30 || t.length > 120) return null; const h = appTokH(t); return Object.values(db.apps || {}).find(a => a.tokenH && a.tokenH.length === h.length && crypto.timingSafeEqual(Buffer.from(a.tokenH), Buffer.from(h))) || null; };
 const devOk = n => !!db.users[n] && (db.devApps?.[n]?.status === 'accepted' || !!db.users[n].devBeta || siteAdmin(n));
 const botServers = a => db.servers.filter(s => !s.public && s.members.includes(a.bot));
@@ -5105,7 +5215,7 @@ const EV_HEAVY = { updateProfile: 30, setStatus: 30, setCustomStatus: 30, prefs:
 io.on('connection', socket => {
   socket.on('usersPatchOk', () => socket.join('up2'));
   { // aynı IP'den aşırı bağlantı açılmasın (bir evde birkaç cihaz rahatça sığar)
-    const ipc = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']), n = (ipConns.get(ipc) || 0) + 1;
+    const ipc = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for'], socket.handshake.headers['cf-connecting-ip']), n = (ipConns.get(ipc) || 0) + 1;
     ipConns.set(ipc, n); socket.on('disconnect', () => { const k = (ipConns.get(ipc) || 1) - 1; k ? ipConns.set(ipc, k) : ipConns.delete(ipc); });
     if (n > 120) { if (n === 121) secLog('baglanti-seli', 'ip:' + ipc, 'aynı IP\'den 120+ eşzamanlı bağlantı (mobil operatörler çok kişiyi tek IP\'den çıkarabilir)'); return socket.disconnect(true); }
   }
@@ -5133,9 +5243,10 @@ io.on('connection', socket => {
   // Yeni sayfalar bağlanınca 'yeniIstemci' der; demeyenler eski sayfadır.
   socket.on('yeniIstemci', () => { socket.data.yeni = true; });
   for (const ms of [6e3, 4 * 60e3, 12 * 60e3]) setTimeout(() => { if (socket.connected && online.has(socket.id) && !socket.data.yeni && buildParts?.major) socket.emit('toast', '🎉 Büyük güncelleme geldi: Kanka Arena (sesli odada oyunlar), ses paneli ve yıl özeti! Görmek için sayfayı yenile. Telefonda uygulamayı kapatıp yeniden aç.'); }, ms);
-  const ip = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']);
+  const ip = clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for'], socket.handshake.headers['cf-connecting-ip']);
   const devRaw = socket.handshake.auth?.d, dH = typeof devRaw === 'string' && /^[a-z0-9-]{16,64}$/i.test(devRaw) ? idH('d|' + devRaw) : null, iH = ip && ip !== 'bilinmiyor' ? idH('i|' + ip) : null;
-  let me = null, cur = null, myVoice = null;
+  let me = null, cur = null, myVoice = null, sessCarry = null;
+  const myUa = uaLabel(socket.handshake.headers['user-agent']);
   // Kullanıcı başına sınırlar: tek bağlantı sınırı (10 sn'de 400) aynı hesapla açılan çok sayıda bağlantıyla aşılamasın.
   // Herkese yayılan / kaydedilen ağır işlemlerin (profil, durum, düzenleme, sunucu ayarı...) ayrıca dakikalık sınırı var.
   socket.use((pkt, next) => {
@@ -5160,7 +5271,9 @@ io.on('connection', socket => {
     { const ua = String(socket.handshake.headers['user-agent'] || ''), pf = /Electron\//.test(ua) ? 'app' : /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Android/.test(ua) ? 'android' : /Mobi/.test(ua) ? 'mob' : 'web';
       const u0 = db.users[name]; if (u0) { (u0.plat ||= {})[pf] = (u0.plat[pf] || 0) + 1; u0.plat1 ||= pf; } }
     const reward = touchStreak(name);
-    const token = sessNew(name); save();
+    const meta = { id: sessCarry?.id || crypto.randomBytes(6).toString('hex'), at: sessCarry?.at || Date.now(), seen: Date.now(), ua: myUa.t, k: myUa.k, ip: maskIp(ip) }; sessCarry = null;
+    socket.data.sid = meta.id;
+    const token = sessNew(name, meta); save();
     return { reward, social: social(name), badgeInfo: BADGES, ice: iceServers(),
       token, user: pubUser(db.users[name]), users: allUsers(), online: presenceList(), voiceFlags: seenBy(flagsState(), name), myStatus: db.users[name].presence || 'online', myStatusUntil: db.users[name].presenceUntil || null, customUntil: db.users[name].statusUntil || null,
       servers: serversFor(name).map(s => serverView(s, name)), dms: dmsFor(name), voice: seenBy(voiceState(), name), voiceAge: seenBy(voiceAges(), name), calls: callsFor(name), live: seenBy(liveState(), name), lastMsg: lastMsgTimes(name), prefs: db.users[name].prefs || null,
@@ -5175,7 +5288,7 @@ io.on('connection', socket => {
     const age = ageOf(dob);
     if (age === null) return cb({ error: 'Doğum tarihini seç.', field: 'dob' });
     if (age < MIN_AGE) return cb({ error: `Kanka Chat'te hesap açmak için ${MIN_AGE} yaşında ya da daha büyük olmalısın.`, field: 'dob', minor: true }); // doğum tarihi saklanmaz
-    if (password.length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
+    { const w = pwWeak(password, name); if (w) return cb({ error: w }); }
     if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz. Şifreni unutursan buraya link göndeririz.', field: 'email' });
     if (!terms) return cb({ error: 'Devam etmek için kullanım şartlarını ve gizlilik politikasını kabul etmelisin.', field: 'terms' });
     if (age < 18 && veli !== true) return cb({ error: '18 yaşından küçüksen velinin bilgisi ve izniyle kullandığını onaylamalısın.', field: 'veli' });
@@ -5239,7 +5352,7 @@ io.on('connection', socket => {
     if (limited('reset|' + ip, 10, 900e3)) return cb({ error: 'Çok fazla deneme' });
     const r = typeof token === 'string' && token.length <= 100 ? db.resets[tokH(token)] : null, u = r && db.users[r.name];
     if (!r || r.exp < Date.now() || !u) return cb({ error: 'Bu link geçersiz ya da süresi dolmuş. Yeni bir link iste.' });
-    if (String(password ?? '').length < 6) return cb({ error: 'Şifre en az 6 karakter olmalı.' });
+    { const w = pwWeak(password, u.name); if (w) return cb({ error: w }); }
     if (isBanned(u)) return cb({ error: banText(u) });
     u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(String(password), u.salt);
     sessDelUser(u.name); for (const s2 of io.sockets.adapter.rooms.get('user:' + u.name) || []) if (s2 !== socket.id) io.sockets.sockets.get(s2)?.disconnect(true); // eski cihazlar düşsün
@@ -5269,12 +5382,16 @@ io.on('connection', socket => {
     }
     limits.delete(key);
     if (isBanned(u)) return cb({ error: banText(u), banned: true });
-    cb(start(u.name));
+    // Yeni cihaz mı? (ne bu cihaz ne bu bağlantı daha önce görüldü) — ilk girişte ya da hiç kayıt yokken uyarma
+    const sn = u.idSeen, knownDev = !sn || (!sn.d?.length && !sn.i?.length) || (dH && sn.d?.some(x => x.h === dH)) || (iH && sn.i?.some(x => x.h === iH));
+    const r = start(u.name); cb(r);
+    if (!r?.error && !knownDev && !u.bot) { secLog('yeni-cihaz', u.name, myUa.t); try { loginAlert(u, { ua: myUa.t, ip: maskIp(ip) }); } catch (e) { console.error('giriş uyarısı:', e.message); } }
   });
 
   socket.on('auth', (token, cb) => {
     const n = sessGet(token);
     if (!n || !db.users[n]) return cb({ error: 'Oturum bulunamadı' });
+    sessCarry = db.sessMeta[tokH(token)] || null;
     sessDel(token);
     if (isBanned(db.users[n])) return cb({ error: banText(db.users[n]), banned: true });
     cb(start(n));
@@ -5315,19 +5432,26 @@ io.on('connection', socket => {
       servers: { total: svs.length, ready: svs.filter(x => x.setup?.done).length, three: svs.filter(x => membersOf(x).length >= 3).length } });
   });
   // ---- Hesap: e-posta, veri indirme, hesap silme ----
-  socket.on('setEmail', ({ email, password } = {}, cb = () => {}) => {
+  socket.on('setEmail', ({ email, password, code } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
     if (hashPw(String(password ?? ''), u.salt) !== u.hash) return cb({ error: 'Şifre yanlış' });
     email = clean(email, 190).toLowerCase();
     if (!EMAIL_RE.test(email)) return cb({ error: 'Geçerli bir e-posta adresi yaz' });
     if (Object.values(db.users).some(x => x !== u && x.email === email)) return cb({ error: 'Bu e-posta başka bir hesapta kayıtlı' });
+    if (u.tfa?.on && u.email && u.email !== email) { if (!code) return cb({ needTfa: true }); if (!tfaPass(u, code)) return cb({ needTfa: true, error: 'Doğrulama kodu yanlış' }); }
+    const old = u.email;
     u.email = email; save(); cb({ ok: true, email });
+    if (old && old !== email) { // eski adrese haber ver: hesap çalan ilk iş e-postayı değiştirir, sahibi 7 gün içinde geri alabilsin
+      secLog('eposta-degisti', me, '');
+      if (getMailer() && mailCfg?.ok !== false) { const t = secLink(me, 'eposta', { old, tfaAt: Date.now() });
+        sendMail(old, 'Kanka hesabının e-posta adresi değişti', mailHtml('E-posta adresin değişti', `Selam <b>${me}</b>, Kanka hesabının e-posta adresi az önce değiştirildi (${trTime(Date.now())}). Bundan sonra şifre sıfırlama linkleri yeni adrese gidecek.<br><br>Bu sendin, bir şey yapmana gerek yok.<br><br><b>Sen değilsen</b> aşağıdaki butona bas: e-postanı bu adrese geri alırız, tüm oturumları kapatırız ve yeni şifre belirlersin. Link 7 gün geçerli.`, 'Bu ben değilim, geri al', `${baseUrl()}/guvenlik/eposta?t=${t}`), null, 'güvenlik').catch(() => {}); }
+    }
   });
   socket.on('exportData', (cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
     if (limited('export|' + me, 3, 3600e3)) return cb({ error: 'Saatte en fazla 3 kez indirebilirsin' });
-    const { salt, hash, ...profile } = u, msgs = [];
+    const { salt, hash, tfa, presenceKey, matchKeys, idSeen, ...profile } = u, msgs = []; // gizli anahtarlar dışarı çıkmasın (oturum çalan kişi 2FA sırrını alamasın)
     for (const [k, list] of Object.entries(msgRaw)) for (const m of list) if (m.author === me)
       msgs.push({ yer: k.startsWith('dm:') ? 'DM: ' + dmPeers(k).filter(n => n !== me).join(', ') : (findChannel(k) ? findChannel(k).s.name + ' #' + findChannel(k).c.name : k), zaman: new Date(m.time).toISOString(), tur: m.kind, metin: m.text || '', resim: m.image || null });
     cb({ ok: true, data: { aciklama: 'Kanka Chat hesabında hakkında tuttuğumuz veriler (KVKK md. 11)', indirilme: new Date().toISOString(), profil: profile, sunucular: serversFor(me).filter(s => !s.public).map(s => ({ ad: s.name, sahip: s.owner === me, katilim: s.joinedAt?.[me] ? new Date(s.joinedAt[me]).toISOString() : null })), mesajlar: msgs } });
@@ -5356,6 +5480,24 @@ io.on('connection', socket => {
     u.tfa = { on: true, secret: p.secret, last: ctr, backup: backup.map(hashCode), at: Date.now() };
     tfaPending.delete(me); secLog('2fa-acildi', me, ''); save();
     cb({ ok: true, backup });
+  });
+  // Ayarlar > Giriş yapılan cihazlar
+  socket.on('sessList', (cb = () => {}) => {
+    if (typeof cb !== 'function') return; if (!me) return cb({ error: 'Giriş yap' });
+    const live = new Set(); for (const sid of io.sockets.adapter.rooms.get('user:' + me) || []) { const so = io.sockets.sockets.get(sid); if (so?.data.sid) live.add(so.data.sid); }
+    const byId = new Map();
+    for (const [h, n] of Object.entries(db.sessions)) { if (n !== me) continue; const m = db.sessMeta[h] || {}, id = m.id || 'eski';
+      const x = { id, cihaz: m.ua || 'Önceki girişler (cihaz bilgisi yok)', k: m.k || 'screen', ip: m.ip || '', at: m.at || db.sessAt[h] || 0, seen: m.seen || db.sessAt[h] || 0, aktif: live.has(id), bu: id === socket.data.sid, n: 1 };
+      const p = byId.get(id); if (p) { p.n++; if (x.at && (!p.at || x.at < p.at)) p.at = x.at; if (x.seen > p.seen) p.seen = x.seen; } else byId.set(id, x); }
+    cb({ ok: true, list: [...byId.values()].sort((a, b) => b.bu - a.bu || b.aktif - a.aktif || b.seen - a.seen).slice(0, 50) });
+  });
+  socket.on('sessKill', ({ id, all } = {}, cb = () => {}) => {
+    if (typeof cb !== 'function') cb = () => {}; if (!me) return cb({ error: 'Giriş yap' });
+    if (limited('sessk|' + me, 30, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+    if (!all && (typeof id !== 'string' || !/^([a-f0-9]{12}|eski)$/.test(id))) return cb({ error: 'Geçersiz cihaz' });
+    if (!all && id === socket.data.sid) return cb({ error: 'Bu cihazdan çıkmak için çıkış yap butonunu kullan' });
+    const n = all ? sessKillUser(me, { keep: socket.data.sid || '-' }) : sessKillUser(me, { only: id });
+    secLog('oturum-kapatildi', me, all ? 'diğer tüm cihazlar' : 'tek cihaz'); save(); cb({ ok: true, n });
   });
   socket.on('tfaDisable', ({ password, code } = {}, cb = () => {}) => {
     const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
@@ -6020,6 +6162,7 @@ io.on('connection', socket => {
     if (cur.startsWith('dm:') && dmPeers(cur).includes(BOT_NAME)) return cb({ error: 'Kanka Bot\'a buradan cevap yazılamıyor. Sorun için Kanka HQ\'daki odalara yaz.' });
     let { xfrom, fwd, scheduled, ...p } = p0; // bu alanları sadece sunucu koyar (sahte "iletildi / şuradan" etiketi olmasın)
     if (typeof p.text === 'string' && p.text.length > MSG_MAX) return cb({ error: `Mesaj en fazla ${MSG_MAX} karakter olabilir` });
+    { const lk = secretLeak(p.text, me); if (lk) return cb({ error: lk }); }
     if (p.enc) { // uçtan uca şifreli mesaj: içerik sunucuya hiç açık gelmez
       const c = db.e2e?.[cur];
       if (!e2eChat(cur) || !c || !p.enc || !c.eps.some(x => x.id === p.enc.ep) || !b64ok(p.enc.iv, 24) || !b64ok(p.enc.ct, 60000) || !b64ok(p.fc, 64)) return cb({ error: 'Şifreli mesaj geçersiz, sayfayı yenile' });
@@ -6336,6 +6479,7 @@ io.on('connection', socket => {
 
   socket.on('edit', ({ msgId, text, enc, fc } = {}) => {
     if (!canAccess(me, cur)) return;
+    { const lk = secretLeak(text, me); if (lk) return socket.emit('toast', lk); }
     { const f = findChannel(cur); if (f && timedOut(f.s, me)) return socket.emit('toast', 'Susturulmuşken mesaj düzenleyemezsin'); }
     if (enc) { const msg = findMsg(cur, msgId), c = db.e2e?.[cur]; // şifreli düzenleme
       if (!msg || msg.author !== me || !msg.enc || !c?.eps.some(x => x.id === enc.ep) || !b64ok(enc.iv, 24) || !b64ok(enc.ct, 60000) || !b64ok(fc, 64)) return;
@@ -6572,10 +6716,11 @@ io.on('connection', socket => {
     const u = db.users[me]; if (!u) return;
     if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
     if (hashPw(String(old ?? ''), u.salt) !== u.hash) return cb({ error: 'Mevcut şifre yanlış' });
-    if (String(next ?? '').length < 6) return cb({ error: 'Yeni şifre en az 6 karakter olmalı' });
+    { const w = pwWeak(next, me); if (w) return cb({ error: w }); }
+    if (String(next) === String(old)) return cb({ error: 'Yeni şifre eskisiyle aynı olamaz' });
     u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(String(next), u.salt);
     sessDelUser(me); for (const s2 of io.sockets.adapter.rooms.get('user:' + me) || []) if (s2 !== socket.id) io.sockets.sockets.get(s2)?.disconnect(true); // şifre değişince diğer cihazlardaki oturumlar kapansın
-    save(); cb({ ok: true, token: sessNew(me) });
+    save(); cb({ ok: true, token: sessNew(me, { id: socket.data.sid || crypto.randomBytes(6).toString('hex'), at: Date.now(), seen: Date.now(), ua: myUa.t, k: myUa.k, ip: maskIp(ip) }) });
   });
 
   // ----- Sunucu yönetimi -----
@@ -6757,8 +6902,12 @@ io.on('connection', socket => {
     if (!a.emojis?.[name]) return cb({ error: 'Böyle bir emoji yok' });
     delete a.emojis[name]; save(); cb({ ok: true });
   });
-  socket.on('appToken', ({ id: aid, secret } = {}, cb = () => {}) => {
+  socket.on('appToken', ({ id: aid, secret, password, code } = {}, cb = () => {}) => {
     const a = myApp(aid, cb); if (!a) return; if (limited('appt|' + me, 10, 3600e3)) return cb({ error: 'Biraz bekle' });
+    { const u = db.users[me]; // token / sır yenilemek botun kontrolünü verir: şifre (ve açıksa 2FA) iste
+      if (limited('pw|' + me, 5, 600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle.' });
+      if (!u || hashPw(String(password ?? ''), u.salt) !== u.hash) return cb({ error: 'Şifre yanlış', needPw: true });
+      if (u.tfa?.on) { if (!code) return cb({ needTfa: true }); if (!tfaPass(u, code)) return cb({ needTfa: true, error: 'Doğrulama kodu yanlış' }); } }
     if (secret) { a.secret = crypto.randomBytes(24).toString('hex'); save(); return cb({ ok: true, sir: a.secret }); }
     const token = crypto.randomBytes(30).toString('base64url'); a.tokenH = appTokH(token); a.tokenAt = Date.now(); save();
     for (const c of botConnsOf(a.id)) c.ws.close(4004, 'Token yenilendi');

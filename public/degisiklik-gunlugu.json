@@ -1,5 +1,10 @@
 [
   {
+    "id": "2026-11-26-bot-token-guvenlik",
+    "baslik": "🔑 Bot token güvenliği",
+    "metin": "• **Token ve imza sırrı yenilerken şifre isteniyor:** Geliştirici panelinde yeni token ya da yeni imza sırrı oluşturmak artık hesap şifreni (2FA açıksa kodu da) istiyor. Oturumu çalınan biri botunun kontrolünü alamaz\n• **Sohbete yapıştırılan token iptal ediliyor:** Bot token'ını yanlışlıkla bir mesaja yapıştırırsan mesaj gönderilmez, token anında iptal edilir ve Kanka Bot sana haber verir. Panelden yeni token oluşturup botunu yeniden başlatman yeterli\n• Bot API'sinde değişiklik yok, mevcut botların aynen çalışır"
+  },
+  {
     "id": "2026-11-26-bot-api-18",
     "baslik": "🧩 Bot API · kanka.js / kanka.py 1.8.0",
     "metin": "• **Gizli kategori:** POST /kategoriler'de gizli: true, roller, kisiler. İçine açılan talep odaları izinleri kategoriden alır\n• **Kategori izinleri ve listesi:** GET /kategoriler, PUT / DELETE /kategoriler/:kid/izinler/:hedef, kategori adı değiştirme\n• **Rol aç / düzenle / sil:** POST /roller, PATCH / DELETE /roller/:rol. Bot sadece kendinde olan izinleri verebilir. Olaylar: ROL_OLUSTU, ROL_GUNCELLENDI, ROL_SILINDI\n• **Formda dosya alanı:** tur: 'dosya' ya da 'resim'. Kullanıcı formdan yükler, bot mesajına ekleyebilir ya da kartta resim yapabilir\n• **Kalıcı gizli mesaj cevabı:** artık normal gönderimle aynı biçimde { id, mesaj: { … } }. Eskiden mesaj alanı düz id'ydi, artık id alanını kullan\n• Olay ve etkileşim verisinde sunucuAd hazır geliyor\n• Belgeye hız sınırları tablosu ve rol etiketi biçimi (<@&rolId>) eklendi\n• kanka.py'ye ozel_duzenle eklendi"
