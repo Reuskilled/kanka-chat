@@ -5865,6 +5865,15 @@ io.on('connection', socket => {
   socket.on('idle', on => { on ? idleSockets.add(socket.id) : idleSockets.delete(socket.id); pushPresence(); });
 
   // ----- Eski mesajlar -----
+  // Spark ön bilgilendirme / cayma hakkı istisnası onayı: Google Play açılmadan önce tarihiyle saklanır (Mesafeli Sözleşmeler Yönetmeliği m.15/1-ğ)
+  socket.on('sparkOnay', ({ fiyat, donem, veli } = {}, cb = () => {}) => {
+    const u = db.users[me]; if (!u) return cb({ error: 'Giriş yap' });
+    if (limited('sponay|' + me, 20, 3600e3)) return cb({ error: 'Çok fazla deneme, biraz bekle' });
+    if (isMinor(u) && veli !== true) return cb({ error: '18 yaşından küçüksen velinin izni olduğunu onaylamalısın' });
+    (u.sparkOnay ||= []).push({ at: Date.now(), fiyat: clean(fiyat, 40), donem: clean(donem, 20), metin: 'kosullar#spark-on-bilgi v2026-11-26', ...(isMinor(u) ? { veli: true } : {}) });
+    if (u.sparkOnay.length > 20) u.sparkOnay = u.sparkOnay.slice(-20);
+    save(); cb({ ok: true });
+  });
   // Mesaj bağlantısı (kankahq.com/kanal/<sunucu>/<oda>/<mesaj>): açmadan önce erişim kontrolü.
   // Sunucuda değilse, oda gizliyse, geçmişi görme izni yoksa, mesaj silinmişse ya da hiç yoksa HEP AYNI cevap döner:
   // gizli odaların ya da mesajların varlığı bu uçtan anlaşılamaz.

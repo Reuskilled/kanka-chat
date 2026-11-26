@@ -647,6 +647,9 @@
   .af-l { display: grid; gap: 4px; margin-bottom: 6px; } .af-l > span { font-weight: 800; font-size: 13px; } .af-l > span em { color: var(--red); font-style: normal; } .af-l > span small { color: var(--muted); font-weight: 600; }
   .pf-priv { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; margin-bottom: 12px; border-radius: 12px; background: var(--accent-soft); font-size: 13px; color: var(--muted); }
   .pf-priv svg { flex: none; color: var(--accent); margin-top: 2px; } .pf-priv b { display: block; color: var(--text, #fff); margin-bottom: 2px; }
+  .sps-onbilgi { display: grid; gap: 4px; margin: 12px 0 2px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid var(--line); font-size: 12px; line-height: 1.45; color: var(--muted); text-align: left; }
+  .sps-cay span { font-size: 13px; font-weight: 500; line-height: 1.45; text-align: left; } .sps-cay b { font-weight: 700; }
+  .sps-onbilgi b { color: var(--text, #fff); font-size: 12.5px; } .sps-onbilgi a { color: var(--accent); }
   .af-file { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1.5px dashed var(--line); background: var(--bg2, rgba(255,255,255,.03)); cursor: pointer; }
   .af-file:hover { border-color: var(--accent); } .af-file.ok { border-style: solid; border-color: var(--accent); } .af-file.busy { opacity: .7; }
   .af-file .af-finput { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
@@ -9516,7 +9519,9 @@ function sparkStore() {
         <div class="sps-price"><b>${esc(rec.fiyat)}</b><span> / ${esc(playDonem(rec.donem))}</span></div>
         ${intro ? `<p class="sps-intro">${intro.mikro === 0 ? `İlk ${esc(playDonem(intro.donem))}${intro.sayi > 1 ? ` × ${intro.sayi}` : ''} ücretsiz` : `İlk ${intro.sayi > 1 ? intro.sayi + ' ' : ''}${esc(playDonem(intro.donem))} ${esc(intro.fiyat)}`}, sonra ${esc(rec.fiyat)} / ${esc(playDonem(rec.donem))}. Uygunluğu Google Play belirler.</p>` : ''}
         ${S.minor ? `<label class="chk" style="margin:10px 0"><input type="checkbox" id="sps-veli"><span>18 yaşından küçüğüm, bu satın alma için <b>velimin izni var</b>.</span></label>` : ''}
-        <button class="primary" id="sps-buy" ${S.minor ? 'disabled' : ''}>${ic('sparkle')} Abone ol</button>
+        <div class="sps-onbilgi"><b>Ön bilgilendirme</b><span>Hizmet: Kanka Spark dijital abonelik · Fiyat: ${esc(rec.fiyat)} / ${esc(playDonem(rec.donem))} (vergiler dahil, Google Play'in gösterdiği tutar) · Ödeme Google Play üzerinden alınır · Hizmet ödeme onaylanınca anında açılır · İptal etmediğin sürece otomatik yenilenir. <a href="/kosullar#spark-on-bilgi" target="_blank">Ön bilgilendirme ve mesafeli satış koşulları</a></span></div>
+        <label class="chk sps-cay" style="margin:10px 0"><input type="checkbox" id="sps-cayma"><span><a href="/kosullar#spark-on-bilgi" target="_blank">Ön bilgilendirme koşullarını</a> okudum. Hizmetin <b>hemen başlamasını onaylıyorum</b> ve bu nedenle <b>cayma hakkımı kaybedeceğimi</b> biliyorum.</span></label>
+        <button class="primary" id="sps-buy" disabled>${ic('sparkle')} Abone ol</button>
         <p class="sps-legal">Ödeme Google Play hesabından alınır. Abonelik, iptal etmediğin sürece her ${esc(playDonem(rec.donem))} aynı ücretle otomatik yenilenir. İstediğin zaman Google Play › Ödemeler ve abonelikler bölümünden iptal edebilirsin; iptal edersen dönem sonuna kadar Spark açık kalır. Kanka hesabını silmek aboneliği iptal etmez. <a href="/kosullar">Kullanım Şartları</a> · <a href="/gizlilik">Gizlilik</a></p></div>`;
     B.innerHTML = `${top}<div class="sp-sec-title" style="margin:22px 0 10px">SPARK'TA NELER VAR</div>${perkHTML}
       <div class="rowb" style="justify-content:flex-start;margin-top:16px"><button class="btns2" id="sps-rest">Satın alımları geri yükle</button></div>`;
@@ -9524,9 +9529,14 @@ function sparkStore() {
     if ($('#sps-man')) $('#sps-man').onclick = () => go(PLAY_MANAGE(m.playUrun));
     if ($('#sps-re')) $('#sps-re').onclick = sparkStore;
     $('#sps-rest').onclick = () => playRestore(true);
-    if ($('#sps-veli')) $('#sps-veli').onchange = e => { $('#sps-buy').disabled = !e.target.checked; };
-    if ($('#sps-buy')) $('#sps-buy').onclick = () => {
-      $('#sps-buy').disabled = true; setTimeout(() => { if ($('#sps-buy')) $('#sps-buy').disabled = S.minor && !$('#sps-veli')?.checked; }, 2500);
+    const buyOk = () => !!$('#sps-cayma')?.checked && (!S.minor || !!$('#sps-veli')?.checked);
+    for (const id of ['#sps-veli', '#sps-cayma']) if ($(id)) $(id).onchange = () => { $('#sps-buy').disabled = !buyOk(); };
+    if ($('#sps-buy')) $('#sps-buy').onclick = async () => {
+      if (!buyOk()) return toast('Önce ön bilgilendirme onayını işaretle');
+      $('#sps-buy').disabled = true; setTimeout(() => { if ($('#sps-buy')) $('#sps-buy').disabled = !buyOk(); }, 2500);
+      // Onay, Google Play açılmadan önce tarihiyle sunucuya kaydedilir (cayma hakkı istisnası için ispat)
+      const r = await new Promise(res => { socket.emit('sparkOnay', { fiyat: rec.fiyat, donem: rec.donem, veli: S.minor ? true : undefined }, res); setTimeout(() => res({ error: 'Bağlantı yavaş, tekrar dene' }), 6000); });
+      if (!r?.ok) return toast(r?.error || 'Onay kaydedilemedi, tekrar dene', null, false, { type: 'err' });
       window.Capacitor.Plugins.KankaOdeme.satinAl({ urun: prod.id, teklif: off.token, hesap: m.playHesap }).catch(e => toast('Google Play açılamadı: ' + (e?.message || e), null, false, { type: 'err' }));
     };
   });
