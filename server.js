@@ -3485,7 +3485,7 @@ function msgBody(b) { // REST gövdesinden mesaj alanları (Kanka ve alışık o
   return { text, embeds, comps: cleanComps(b?.bilesenler ?? b?.components), files, uyari: warn };
 }
 // Botun yüklediği dosyalar (POST /dosyalar) mesaja eklenir; başkasının dosyası eklenemez
-const botFiles = (a, ids) => (ids || []).filter(x => db.files?.[x]?.owner === a.bot).map(x => { const f = db.files[x]; return { id: x, name: f.name, size: f.size, kind: f.kind, url: `/dosya/${x}/${encodeURIComponent(f.name)}` }; });
+const botFiles = (a, ids) => (ids || []).filter(x => db.files?.[x]?.owner === a.bot || db.files?.[x]?.apps?.includes(a.id)).map(x => { const f = db.files[x]; return { id: x, name: f.name, size: f.size, kind: f.kind, url: `/dosya/${x}/${encodeURIComponent(f.name)}` }; });
 // Botun kendi emojileri: mesajda :ad: geçiyorsa resmi mesajla birlikte gider (her sunucuda ve DM'de görünür)
 function appEmo(a, text, embeds) {
   const em = a.emojis || {}, src = [text || '', ...(embeds || []).flatMap(e => [e.baslik, e.aciklama, ...(e.alanlar || []).flatMap(f => [f.ad, f.deger])])].join(' ');
@@ -3502,6 +3502,11 @@ function msgForBot(a, chId, m, full) {
     icerik: see ? (m.text || '') : '', kartlar: see ? (m.embeds || []) : [], bilesenler: m.comps || [], etiketlendi: mention,
     ekler: see ? (m.files || []).map(x => ({ ad: x.name, url: x.url, boyut: x.size, tur: x.kind })) : [], yanit: m.replyTo?.id || null, tepkiler: Object.fromEntries(Object.entries(m.reactions || {}).map(([e, us]) => [e, us.length])) };
 }
+// Olay ve etkileşim verisinde "sunucu" id'si varsa sunucuAd da hazır gelsin (bot ek sorgu yapmasın)
+function withSrvName(d) {
+  if (!d || typeof d !== 'object' || Array.isArray(d) || typeof d.sunucu !== 'string' || 'sunucuAd' in d) return d;
+  const s = srvOf(d.sunucu); return s ? { ...d, sunucuAd: s.name } : d;
+}
 // ---- Gateway (WebSocket) ----
 const botConns = new Map(); // appId -> Set(bağlantı)
 const botSessions = new Map(); // oturum id -> { app, seq, buf, closedAt }
@@ -3509,6 +3514,7 @@ const botConnsOf = appId => [...(botConns.get(appId) || [])];
 let WSS = null; try { const { WebSocketServer } = require('ws'); WSS = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 }); } catch (e) { console.error('ws paketi yok, bot gateway kapalı', e.message); }
 function gwSend(conn, o) { try { if (conn.ws.readyState === 1) conn.ws.send(JSON.stringify(o)); } catch {} }
 function gwDispatch(appId, t, d, filter) {
+  d = withSrvName(d);
   for (const conn of botConnsOf(appId)) {
     if (!conn.ready || (filter && !filter(conn))) continue;
     const sess = botSessions.get(conn.session); if (!sess) continue;
@@ -4445,7 +4451,7 @@ function newInter(a, type, user, chId, data, msg) {
   const f = findChannel(chId), it = { id: id() + id(), token: crypto.randomBytes(24).toString('hex'), app: a.id, type, user, chId, sid: f?.s.id || null, data, msgId: msg?.id || null, eph: !!msg?.ephemeral, at: Date.now(), done: false, deferred: null };
   inters.set(it.id, it);
   const u = db.users[user] || {};
-  const payload = { id: it.id, token: it.token, tur: type, oda: chId, sunucu: it.sid, dm: chId.startsWith('dm:'),
+  const payload = { id: it.id, token: it.token, tur: type, oda: chId, sunucu: it.sid, sunucuAd: f?.s.name || null, dm: chId.startsWith('dm:'),
     kullanici: { id: db.users[user] ? uidOf(u) : null, ad: user, gorunenAd: u.displayName || user, avatar: u.avatar || null, roller: f ? f.s.memberRoles?.[user] || [] : [], izinler: f ? [...permsOf(f.s, user)] : [] },
     veri: data, mesaj: msg ? msgForBot(a, chId, msg, true) : null };
   setTimeout(() => { if (!it.done && !it.deferred) ephWhisper(user, chId, `${a.bot} cevap vermedi. Bot kapalı ya da yavaş olabilir.`); }, INTER_WAIT + 400);
@@ -4475,9 +4481,9 @@ function interRespond(it, b) {
   if (tur === 'form') {
     if (it.done) return { error: 'Bu etkileşim zaten cevaplandı', code: 400 };
     const f = b?.form ?? b?.veri ?? b;
-    const alanlar = (Array.isArray(f?.alanlar) ? f.alanlar : []).slice(0, 5).map(x => ({ id: clean(x?.id, 60), etiket: clean(x?.etiket, 60), tur: x?.tur === 'uzun' ? 'uzun' : PICK_TUR[x?.tur] || 'kisa', zorunlu: x?.zorunlu !== false, yerTutucu: clean(x?.yerTutucu, 100), min: Math.max(0, parseInt(x?.min) || 0), max: Math.min(4000, parseInt(x?.max) || 400), deger: clean(x?.deger, 4000) })).filter(x => x.id && x.etiket);
+    const alanlar = (Array.isArray(f?.alanlar) ? f.alanlar : []).slice(0, 5).map(x => ({ id: clean(x?.id, 60), etiket: clean(x?.etiket, 60), tur: x?.tur === 'uzun' ? 'uzun' : ['dosya', 'file', 'resim', 'image'].includes(x?.tur) ? 'dosya' : PICK_TUR[x?.tur] || 'kisa', ...(['resim', 'image'].includes(x?.tur) || ['resim', 'image'].includes(x?.kabul) ? { kabul: 'resim' } : {}), zorunlu: x?.zorunlu !== false, yerTutucu: clean(x?.yerTutucu, 100), min: Math.max(0, parseInt(x?.min) || 0), max: Math.min(4000, parseInt(x?.max) || 400), deger: clean(x?.deger, 4000) })).filter(x => x.id && x.etiket);
     if (!alanlar.length) return { error: 'Form için en az bir alan gerekli', code: 400 };
-    it.done = true; it.form = { id: clean(f?.id, 100) || 'form', baslik: clean(f?.baslik, 60) || a.bot, tipler: Object.fromEntries(alanlar.map(x => [x.id, x.tur])), zorunlu: alanlar.filter(x => x.zorunlu).map(x => x.id) };
+    it.done = true; it.form = { id: clean(f?.id, 100) || 'form', baslik: clean(f?.baslik, 60) || a.bot, tipler: Object.fromEntries(alanlar.map(x => [x.id, x.tur])), kabul: Object.fromEntries(alanlar.filter(x => x.kabul).map(x => [x.id, x.kabul])), zorunlu: alanlar.filter(x => x.zorunlu).map(x => x.id) };
     io.to('user:' + it.user).emit('appForm', { iid: it.id, app: a.id, bot: a.bot, baslik: it.form.baslik, alanlar });
     return { ok: true };
   }
@@ -4748,6 +4754,57 @@ api.delete('/sunucular/:sid/uyeler/:ad/roller/:rid', R((a, req) => {
   const mine = (s.memberRoles[a.bot] || []).map(id => s.customRoles.findIndex(r => r.id === id)).filter(k => k >= 0); if (!mine.length || Math.min(...mine) >= i) return { error: 'Bot sadece kendi rolünden aşağıdaki rolleri alabilir', code: 403 };
   s.memberRoles[n] = (s.memberRoles[n] || []).filter(r => r !== rid); if (!s.memberRoles[n].length) delete s.memberRoles[n]; audit(s, a.bot, 'Rol aldı (bot)', `${n} · ${s.customRoles[i].name}`); save(); pushServers(membersOf(s)); botMember(s, n, 'update'); return { ok: true };
 }));
+// ---- Rol aç / düzenle / sil (kurulum sihirbazları için). Bot sadece kendi en üst rolünün altındaki rollerle uğraşır ve sadece kendinde olan izinleri verebilir.
+const botTopIdx = (s, bot) => { const l = (s.memberRoles[bot] || []).map(x => s.customRoles.findIndex(r => r.id === x)).filter(k => k >= 0); return l.length ? Math.min(...l) : -1; };
+function botRoleFields(a, s, b, r) {
+  const out = {};
+  if ('ad' in b || 'name' in b) { const n = clean(b.ad ?? b.name, 30); if (!n) return { error: 'Rol adı boş olamaz' }; out.name = n; } else if (!r) return { error: 'Rol adı gerekli (ad)' };
+  const renk = b.renk ?? b.color; if (renk !== undefined) { if (renk === null) out.color = '#99aab5'; else if (/^#[0-9a-f]{6}$/i.test(String(renk))) out.color = String(renk).toLowerCase(); else if (Number.isInteger(renk)) out.color = '#' + renk.toString(16).padStart(6, '0'); else return { error: 'renk: "#ff4655" biçiminde olmalı' }; }
+  const iz = b.izinler ?? b.permissions; if (iz !== undefined) {
+    if (!Array.isArray(iz)) return { error: 'izinler dizi olmalı, ör. ["manageMessages", "kick"]. Liste: GET /sunucular/:id/roller → izinListesi' };
+    const bad = iz.filter(p => !PERMS.includes(p)); if (bad.length) return { error: `Bilinmeyen izin: ${bad.join(', ')}` };
+    const mine = permsOf(s, a.bot), adm = mine.has('administrator') || s.owner === a.bot;
+    const no = iz.filter(p => !adm && (!mine.has(p) || p === 'administrator')); if (no.length) return { error: `Bot kendinde olmayan izni veremez: ${no.join(', ')}`, code: 403 };
+    out.perms = [...new Set(iz)]; }
+  for (const [k, ks] of [['hoist', ['ayriGoster', 'hoist']], ['mentionable', ['etiketlenebilir', 'mentionable']]]) { const v = b[ks[0]] ?? b[ks[1]]; if (v !== undefined) out[k] = !!v; }
+  const sm = b.simge ?? b.icon; if (sm !== undefined) out.icon = sm ? [...clean(String(sm), 16)].slice(0, 2).join('') || null : null;
+  return out;
+}
+function roleEvent(s, t, r) { for (const n of s.members.filter(isBotUser)) { const a = appOf(n); if (a && !a.killed) gwDispatch(a.id, t, t === 'ROL_SILINDI' ? { id: r.id, sunucu: s.id } : { ...roleView(r, s.customRoles.indexOf(r)), sunucu: s.id }); } }
+api.post('/sunucular/:sid/roller', R((a, req) => {
+  const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  if (!can(s, a.bot, 'manageRoles')) return { error: 'Botun bu sunucuda "manageRoles" (rolleri yönet) izni yok', code: 403 };
+  if (limited('botrol|' + a.id, 20, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 20 rol işlemi', code: 429 };
+  if (s.customRoles.length >= MAX_ROLES) return { error: `En fazla ${MAX_ROLES} rol olabilir` };
+  const top = botTopIdx(s, a.bot); if (top < 0 && s.owner !== a.bot) return { error: 'Botun bir rolü yok, rol açamaz', code: 403 };
+  const f = botRoleFields(a, s, req.body || {}); if (f.error) return f;
+  const r = { id: id(), name: f.name, color: f.color || '#99aab5', perms: f.perms || [], hoist: !!f.hoist, icon: f.icon || null, mentionable: f.mentionable ?? true };
+  s.customRoles.splice(top + 1, 0, r); // botun rolünün hemen altına
+  audit(s, a.bot, 'Rol oluşturdu (bot)', r.name); save(); pushServers(membersOf(s)); roleEvent(s, 'ROL_OLUSTU', r);
+  return roleView(r, s.customRoles.indexOf(r));
+}));
+const botRoleTarget = (a, s, rid) => { const i = s.customRoles.findIndex(r => r.id === rid); if (i < 0) return { error: 'Rol yok', code: 404 };
+  const r = s.customRoles[i]; if (r.managed || r.bot) return { error: 'Bot rolleri düzenlenemez', code: 403 };
+  if (s.owner !== a.bot && botTopIdx(s, a.bot) >= i) return { error: 'Bot sadece kendi rolünün altındaki rolleri düzenleyebilir', code: 403 }; return { r }; };
+api.patch('/sunucular/:sid/roller/:rid', R((a, req) => {
+  const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  if (!can(s, a.bot, 'manageRoles')) return { error: 'Botun bu sunucuda "manageRoles" (rolleri yönet) izni yok', code: 403 };
+  if (limited('botrol|' + a.id, 20, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 20 rol işlemi', code: 429 };
+  const x = botRoleTarget(a, s, req.params.rid); if (x.error) return x;
+  const f = botRoleFields(a, s, req.body || {}, x.r); if (f.error) return f; if (!Object.keys(f).length) return { error: 'Değiştirilecek alan yok (ad, renk, izinler, ayriGoster, etiketlenebilir, simge)' };
+  Object.assign(x.r, f); audit(s, a.bot, 'Rolü düzenledi (bot)', x.r.name); save(); pushServers(membersOf(s)); roleEvent(s, 'ROL_GUNCELLENDI', x.r);
+  return roleView(x.r, s.customRoles.indexOf(x.r));
+}));
+api.delete('/sunucular/:sid/roller/:rid', R((a, req) => {
+  const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  if (!can(s, a.bot, 'manageRoles')) return { error: 'Botun bu sunucuda "manageRoles" (rolleri yönet) izni yok', code: 403 };
+  if (limited('botrol|' + a.id, 20, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 20 rol işlemi', code: 429 };
+  const x = botRoleTarget(a, s, req.params.rid); if (x.error) return x; const r = x.r;
+  s.customRoles = s.customRoles.filter(y => y !== r);
+  for (const n in s.memberRoles) { s.memberRoles[n] = s.memberRoles[n].filter(y => y !== r.id); if (!s.memberRoles[n].length) delete s.memberRoles[n]; }
+  for (const c of [...s.channels, ...(s.categories || [])]) if (c.perms?.[r.id]) delete c.perms[r.id];
+  audit(s, a.bot, 'Rolü sildi (bot)', r.name); save(); pushServers(membersOf(s)); roleEvent(s, 'ROL_SILINDI', r); return { ok: true };
+}));
 api.post('/sunucular/:sid/uyeler/:ad/sustur', R((a, req) => {
   const x = botMod(a, req, 'timeout'); if (x.error) return x; const { s, n } = x, dk0 = parseInt(req.body?.dakika), dk = Math.min(Math.max(Number.isFinite(dk0) ? dk0 : 10, 0), 40320);
   if (!dk) delete s.timeouts[n]; else s.timeouts[n] = Date.now() + dk * 60e3; audit(s, a.bot, dk ? 'Susturdu (bot)' : 'Susturmayı kaldırdı (bot)', n + (req.body?.sebep ? ' · ' + clean(req.body.sebep, 120) : '')); save(); pushServers(membersOf(s)); if (dk) io.to('user:' + n).emit('toast', `${s.name} sunucusunda ${dk} dakika susturuldun`); return { ok: true };
@@ -4806,7 +4863,8 @@ api.put('/komutlar', R((a, req) => { const r = cleanCmds(Array.isArray(req.body)
 // ---- Oda ve kategori yönetimi (manageChannels izni gerekir) ----
 const botChMgr = (a, s) => s && can(s, a.bot, 'manageChannels');
 api.get('/sunucular/:sid/odalar', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
-  return { odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => chBotView(s, c, a.bot)), kategoriler: s.categories.map(k => ({ id: k.id, ad: k.name })) }; }));
+  return { odalar: s.channels.filter(c => seesChannel(s, c, a.bot)).map(c => chBotView(s, c, a.bot)), kategoriler: s.categories.map(k => catBotView(s, k)) }; }));
+api.get('/sunucular/:sid/kategoriler', R((a, req) => { const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 }; return { kategoriler: s.categories.map(k => catBotView(s, k)) }; }));
 api.post('/sunucular/:sid/odalar', R((a, req) => {
   const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
   if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
@@ -4826,6 +4884,34 @@ const OV_TR = { gor: 'view', gorme: 'view', yaz: 'send', yazma: 'send', gecmis: 
 function ovTarget(s, h) {
   h = String(h || ''); if (['herkes', '@everyone', 'everyone', s.id].includes(h)) return '@everyone';
   if (s.customRoles.some(r => r.id === h)) return h; const n = nameOfRef(h.replace(/^(u:|kisi:)/, '')) || h.replace(/^(u:|kisi:)/, ''); return s.members.includes(n) ? 'u:' + n : null;
+}
+const catBotView = (s, k) => ({ id: k.id, ad: k.name, ozel: everyoneDenied(k.perms || {}, 'view'), izinAyarlari: ovView(k.perms || {}), odalar: s.channels.filter(c => c.cat === k.id).map(c => c.id) });
+// { roller, kisiler, izinler } gövdesinden izin tablosu (oda ve kategori açarken)
+function ovBuild(s, b) {
+  const ov = {}; const put = (k, v) => { const t = ovTarget(s, k); if (!t) return false; ov[t] = { ...(ov[t] || {}), ...v }; return true; };
+  for (const k of [].concat(b.kisiler || [])) if (!put(k, { view: true, send: true, history: true, attach: true, connect: true, speak: true })) return { error: `kisiler: "${k}" sunucuda yok`, code: 404 };
+  for (const k of [].concat(b.roller || [])) if (!put(k, { view: true, send: true, history: true, connect: true, speak: true })) return { error: `roller: "${k}" bulunamadı`, code: 404 };
+  if (b.izinler && typeof b.izinler === 'object') for (const [k, v] of Object.entries(b.izinler)) { const o = {}; for (const [k0, x] of Object.entries(v || {})) { const kk = OV_TR[k0] || k0; if (!CH_KEYS.includes(kk)) return { error: `Bilinmeyen izin: ${k0}. Geçerli: ${CH_KEYS.join(', ')}` }; if (typeof x === 'boolean') o[kk] = x; } if (!put(k, o)) return { error: `izinler: hedef "${k}" bulunamadı`, code: 404 }; }
+  return ov;
+}
+// Kategori izinleri: kategoriyle eşitlenmiş (sync) odalar otomatik uyar
+function catOvSet(a, req, del) {
+  const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
+  const k = s.categories.find(x => x.id === req.params.kid); if (!k) return { error: 'Kategori bulunamadı', code: 404 };
+  const t = ovTarget(s, req.params.hedef); if (!t) return { error: 'Hedef bulunamadı: herkes, bir rol id\'si ya da sunucudaki bir kişi olmalı', code: 404 };
+  if (limited('botov|' + a.id, 60, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 60 izin değişikliği', code: 429 };
+  k.perms ||= {};
+  if (del) delete k.perms[t];
+  else { const cur = { ...(k.perms[t] || {}) }; let n = 0;
+    for (const [k0, v] of Object.entries(req.body || {})) { const kk = OV_TR[k0] || k0; if (!CH_KEYS.includes(kk)) return { error: `Bilinmeyen izin: ${k0}. Geçerli: ${CH_KEYS.join(', ')}` }; if (v === null) delete cur[kk]; else if (typeof v === 'boolean') cur[kk] = v; else return { error: `${k0}: true, false ya da null olmalı` }; n++; }
+    if (!n) return { error: 'Gövdede en az bir izin olmalı, ör. { "view": false }' };
+    if (t === 'u:' + a.bot && cur.view === false) return { error: 'Bot kendi görme iznini kapatamaz' };
+    if (Object.keys(cur).length) k.perms[t] = cur; else delete k.perms[t];
+    if (t === '@everyone' && cur.view === false && !k.perms['u:' + a.bot]?.view) k.perms['u:' + a.bot] = { ...(k.perms['u:' + a.bot] || {}), view: true, send: true, history: true }; }
+  audit(s, a.bot, 'Kategori izinlerini düzenledi', `${k.name} (${t === '@everyone' ? 'herkes' : t.startsWith('u:') ? t.slice(2) : s.customRoles.find(r => r.id === t)?.name || t})`);
+  save(); pushServers(membersOf(s)); for (const c of s.channels) if (c.cat === k.id && c.sync) chEvent(s, 'ODA_GUNCELLENDI', c);
+  return catBotView(s, k);
 }
 function ovSet(a, req, del) {
   const f = botChan(a, req.params.cid); if (f.error) return f; if (f.dm) return { error: 'DM için izin yok', code: 400 };
@@ -4853,7 +4939,7 @@ api.post('/odalar/:cid/ozel-mesajlar', R((a, req) => {
   if (!f.s.members.includes(n) || isBotUser(n) || !seesChannel(f.s, f.c, n)) return { error: 'kisi: bu odayı gören bir üye olmalı', code: 404 };
   if (limited('botozel|' + a.id, 60, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 60 gizli mesaj', code: 429 };
   const body = msgBody(b); if (!body.text && !body.embeds.length && !body.comps.length && !body.files.length) return { error: 'Boş mesaj' };
-  const m = ozelPost(a, req.params.cid, n, body); return { ok: true, mesaj: m.id, ...(body.uyari ? { uyari: body.uyari } : {}) };
+  const m = ozelPost(a, req.params.cid, n, body); return { ok: true, id: m.id, mesaj: { ...msgForBot(a, req.params.cid, m, true), gizli: true, kalici: true, kisi: n }, ...(body.uyari ? { uyari: body.uyari } : {}) };
 }));
 api.delete('/odalar/:cid/ozel-mesajlar/:mid', R((a, req) => { const e = ozelIdx.get(req.params.mid); if (!e || e.chId !== req.params.cid || e.msg.app !== a.id) return { error: 'Mesaj yok', code: 404 }; ozelDel(req.params.mid); return { ok: true }; }));
 api.patch('/odalar/:cid/ozel-mesajlar/:mid', R((a, req) => { const e = ozelIdx.get(req.params.mid); if (!e || e.chId !== req.params.cid) return { error: 'Mesaj yok', code: 404 }; return editAppMsg(a, req.params.cid, req.params.mid, req.body || {}); }));
@@ -4882,10 +4968,25 @@ api.post('/sunucular/:sid/kategoriler', R((a, req) => {
   if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
   if (s.categories.length >= 50) return { error: 'En fazla 50 kategori olabilir' };
   if (limited('botch|' + a.id + '|' + s.id, 10, 60e3)) return { error: 'Çok hızlı: dakikada en fazla 10 oda/kategori', code: 429 };
-  const name = clean(req.body?.ad, 30); if (!name) return { error: 'Kategori adı gerekli' };
-  const k = { id: id(), name, perms: {} }; s.categories.push(k); audit(s, a.bot, 'Kategori oluşturdu', k.name); save(); pushServers(membersOf(s));
-  return { id: k.id, ad: k.name };
+  const b = req.body || {}, name = clean(b.ad ?? b.name, 30); if (!name) return { error: 'Kategori adı gerekli' };
+  // Gizli kategori tek istekte: { ad, gizli: true, roller: [yetkiliRolId], kisiler: ['ali'], izinler: { hedef: { view, send } } }
+  const ov = ovBuild(s, b); if (ov.error) return ov;
+  const gizli = !!(b.gizli ?? b.ozel ?? b.private);
+  if (gizli) ov['@everyone'] = { ...(ov['@everyone'] || {}), view: false };
+  if (Object.keys(ov).length) ov['u:' + a.bot] = { ...(ov['u:' + a.bot] || {}), view: true, send: true, history: true, connect: true };
+  const k = { id: id(), name, perms: ov }; s.categories.push(k); audit(s, a.bot, gizli ? 'Gizli kategori oluşturdu' : 'Kategori oluşturdu', k.name); save(); pushServers(membersOf(s));
+  return catBotView(s, k);
 }));
+api.patch('/sunucular/:sid/kategoriler/:kid', R((a, req) => {
+  const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
+  if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
+  const k = s.categories.find(x => x.id === req.params.kid); if (!k) return { error: 'Kategori bulunamadı', code: 404 };
+  const name = clean(req.body?.ad ?? req.body?.name, 30); if (!name) return { error: 'Kategori adı gerekli' };
+  audit(s, a.bot, 'Kategoriyi yeniden adlandırdı', `${k.name} → ${name}`); k.name = name; save(); pushServers(membersOf(s)); return catBotView(s, k);
+}));
+api.put('/sunucular/:sid/kategoriler/:kid/izinler/:hedef', R((a, req) => catOvSet(a, req, false)));
+api.patch('/sunucular/:sid/kategoriler/:kid/izinler/:hedef', R((a, req) => catOvSet(a, req, false)));
+api.delete('/sunucular/:sid/kategoriler/:kid/izinler/:hedef', R((a, req) => catOvSet(a, req, true)));
 api.delete('/sunucular/:sid/kategoriler/:kid', R((a, req) => {
   const s = botSrv(a, req.params.sid); if (!s) return { error: 'Sunucu bulunamadı', code: 404 };
   if (!botChMgr(a, s)) return { error: 'Botun bu sunucuda "manageChannels" (odaları yönet) izni yok', code: 403 };
@@ -6618,6 +6719,13 @@ io.on('connection', socket => {
     for (const [k, t] of Object.entries(f2.tipler || {})) if (PICK_TUR[t]) {
       if (!vals[k]) { if (f2.zorunlu?.includes(k)) return cb({ error: 'Bir seçim yapmalısın' }); continue; }
       const r = pickVals(t, vals[k], fs, it.chId, me); if (r.error) return cb(r); vals[k] = r.vals[0]; coz[k] = Object.values(r.coz)[0][0];
+    }
+    for (const [k, t] of Object.entries(f2.tipler || {})) if (t === 'dosya') { // kullanıcının yüklediği dosya: bu bot da mesajına ekleyebilsin
+      const fid = vals[k]; if (!fid) { if (f2.zorunlu?.includes(k)) return cb({ error: 'Bir dosya seçmelisin' }); delete vals[k]; continue; }
+      const fl = /^[a-f0-9]{24}$/.test(fid) && db.files?.[fid]; if (!fl || fl.owner !== me) return cb({ error: 'Dosya bulunamadı, tekrar yükle' });
+      if (f2.kabul?.[k] === 'resim' && fl.kind !== 'image') return cb({ error: 'Bu alana sadece resim yükleyebilirsin' });
+      fl.apps ||= []; if (!fl.apps.includes(a.id)) { fl.apps.push(a.id); save(); }
+      coz[k] = { id: fid, ad: fl.name, url: `/dosya/${fid}/${encodeURIComponent(fl.name)}`, boyut: fl.size, tur: fl.kind };
     }
     it.form = null;
     newInter(a, 'FORM', me, it.chId, { id: f2.id, alanlar: vals, ...(Object.keys(coz).length ? { cozulmus: coz } : {}) }, it.msgId ? findMsg(it.chId, it.msgId) || ephGet(it.msgId)?.msg : null); cb({ ok: true });

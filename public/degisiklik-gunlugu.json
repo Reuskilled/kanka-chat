@@ -1,5 +1,10 @@
 [
   {
+    "id": "2026-11-26-bot-api-18",
+    "baslik": "🧩 Bot API · kanka.js / kanka.py 1.8.0",
+    "metin": "• **Gizli kategori:** POST /kategoriler'de gizli: true, roller, kisiler. İçine açılan talep odaları izinleri kategoriden alır\n• **Kategori izinleri ve listesi:** GET /kategoriler, PUT / DELETE /kategoriler/:kid/izinler/:hedef, kategori adı değiştirme\n• **Rol aç / düzenle / sil:** POST /roller, PATCH / DELETE /roller/:rol. Bot sadece kendinde olan izinleri verebilir. Olaylar: ROL_OLUSTU, ROL_GUNCELLENDI, ROL_SILINDI\n• **Formda dosya alanı:** tur: 'dosya' ya da 'resim'. Kullanıcı formdan yükler, bot mesajına ekleyebilir ya da kartta resim yapabilir\n• **Kalıcı gizli mesaj cevabı:** artık normal gönderimle aynı biçimde { id, mesaj: { … } }. Eskiden mesaj alanı düz id'ydi, artık id alanını kullan\n• Olay ve etkileşim verisinde sunucuAd hazır geliyor\n• Belgeye hız sınırları tablosu ve rol etiketi biçimi (<@&rolId>) eklendi\n• kanka.py'ye ozel_duzenle eklendi"
+  },
+  {
     "id": "2026-11-25-bot-api-15",
     "baslik": "🧩 Bot API 1.5 · kanka.js / kanka.py 1.5.0",
     "metin": "• **Üye / rol / oda seçici:** KisiSecici, RolSecici, OdaSecici. Kullanıcı listeden arayıp seçer, Kanka doğrular. Formlarda da tur: 'kisi' çalışır, bilgiler e.secilenler'de\n• **Kalıcı gizli mesaj:** e.kaliciGizliCevapla() ve bot.ozelGonder(oda, kisi, …). 15 dakikada silinmez, butonları çalışır\n• **Oda izinleri:** PUT / DELETE /odalar/:id/izinler/:hedef (herkes, rol, kişi). Ticket odaları için\n• **Yetki okuma:** /uyeler/:ad/izinler?oda=, /roller, e.yetkisiVar(). Üye bilgisinde izinler, sahip, energy, sesOdasi\n• **Üye arama:** /uyeler?ara=\n• **Energy (boost):** /energy ve energy olayı\n• **Ses:** 'ses' niyeti ile sesDurumu olayı, /ses, sesteki kişiyi taşı / çıkar / sustur\n• Sunucu bilgisinde botu ekleyen kişi (ekleyen)\n• \"Yetki doğrulanamadı\" için: /izinler cevabında botunUstunde: true ise botun rolünü yukarı sürükleyin"

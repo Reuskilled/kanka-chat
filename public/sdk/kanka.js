@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.7.0';
+const SURUM = '1.8.0';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -103,8 +103,22 @@ class Kanka extends EventEmitter {
   odaOlustur(sunucu, ayar = {}) { if (typeof ayar === 'string') ayar = { ad: ayar }; return this.api('POST', `/sunucular/${kod(sunucu)}/odalar`, ayar); }
   odaDuzenle(oda, ayar = {}) { return this.api('PATCH', `/odalar/${kod(oda)}`, ayar); }
   odaSil(oda) { return this.api('DELETE', `/odalar/${kod(oda)}`); }
-  kategoriOlustur(sunucu, ad) { return this.api('POST', `/sunucular/${kod(sunucu)}/kategoriler`, { ad }); }
+  /** Kategori aç. ayar string ise sadece ad. Gizli kategori: bot.kategoriOlustur(sunucu, { ad: 'Talepler', gizli: true, roller: [yetkiliRolId] }) */
+  kategoriOlustur(sunucu, ayar) { return this.api('POST', `/sunucular/${kod(sunucu)}/kategoriler`, typeof ayar === 'string' ? { ad: ayar } : ayar); }
+  /** Sunucudaki kategoriler: [{ id, ad, ozel, izinAyarlari, odalar }] */
+  kategoriler(sunucu) { return this.api('GET', `/sunucular/${kod(sunucu)}/kategoriler`).then(r => r.kategoriler); }
+  kategoriAdi(sunucu, kategori, ad) { return this.api('PATCH', `/sunucular/${kod(sunucu)}/kategoriler/${kod(kategori)}`, { ad }); }
+  /** Kategori izni: kategoriyle eşitlenmiş odalar da uyar. bot.kategoriIzni(sunucu, kat, 'herkes', { view: false }) */
+  kategoriIzni(sunucu, kategori, hedef, izinler) { return this.api('PUT', `/sunucular/${kod(sunucu)}/kategoriler/${kod(kategori)}/izinler/${kod(hedef)}`, izinler); }
+  kategoriIzniKaldir(sunucu, kategori, hedef) { return this.api('DELETE', `/sunucular/${kod(sunucu)}/kategoriler/${kod(kategori)}/izinler/${kod(hedef)}`); }
   kategoriSil(sunucu, kategori) { return this.api('DELETE', `/sunucular/${kod(sunucu)}/kategoriler/${kod(kategori)}`); }
+  /**
+   * Rol aç: botun rolünün hemen altına eklenir. Bot sadece kendinde olan izinleri verebilir ("manageRoles" gerekir).
+   * bot.rolOlustur(sunucu, { ad: 'Bildirim', renk: '#ff4655', izinler: [], etiketlenebilir: true, ayriGoster: false, simge: '🔔' })
+   */
+  rolOlustur(sunucu, ayar) { return this.api('POST', `/sunucular/${kod(sunucu)}/roller`, ayar); }
+  rolDuzenle(sunucu, rol, ayar) { return this.api('PATCH', `/sunucular/${kod(sunucu)}/roller/${kod(rol)}`, ayar); }
+  rolSil(sunucu, rol) { return this.api('DELETE', `/sunucular/${kod(sunucu)}/roller/${kod(rol)}`); }
   mesaj(oda, id) { return this.api('GET', `/odalar/${kod(oda)}/mesajlar/${id}`).then(m => this._mesaj(m)); }
   /** Kullanıcı bilgisi: ad ya da sayısal kimlik */
   kullanici(adVeyaId) { return this.api('GET', `/kullanicilar/${kod(adVeyaId)}`); }
@@ -145,7 +159,7 @@ class Kanka extends EventEmitter {
    */
   odaIzni(oda, hedef, izinler) { return this.api('PUT', `/odalar/${kod(oda)}/izinler/${kod(hedef)}`, izinler); }
   odaIzniKaldir(oda, hedef) { return this.api('DELETE', `/odalar/${kod(oda)}/izinler/${kod(hedef)}`); }
-  /** Kalıcı gizli mesaj: odada sadece "kisi" görür, sayfa yenilense de kalır. Döner: { mesaj: id } */
+  /** Kalıcı gizli mesaj: odada sadece "kisi" görür, sayfa yenilense de kalır. Döner: { id, mesaj: { id, oda, icerik, kartlar, bilesenler, kisi, ... } } */
   ozelGonder(oda, kisi, icerik) { return this._dosyalar(govde(icerik)).then(g => this.api('POST', `/odalar/${kod(oda)}/ozel-mesajlar`, { ...g, kisi })); }
   /**
    * Talep (ticket) odası tek seferde: sadece kisiler, roller ve bot görür.
@@ -285,6 +299,9 @@ class Kanka extends EventEmitter {
     if (t === 'ODA_OLUSTU') return this.emit('odaOlustu', d);
     if (t === 'ODA_GUNCELLENDI') return this.emit('odaGuncellendi', d);
     if (t === 'ODA_SILINDI') return this.emit('odaSilindi', d);
+    if (t === 'ROL_OLUSTU') return this.emit('rolOlustu', d);
+    if (t === 'ROL_GUNCELLENDI') return this.emit('rolGuncellendi', d);
+    if (t === 'ROL_SILINDI') return this.emit('rolSilindi', d);
     if (t === 'TEPKI_EKLENDI') return this.emit('tepki', d);
     if (t === 'TEPKI_KALDIRILDI') return this.emit('tepkiKaldirildi', d);
     if (t === 'SES_DURUMU') return this.emit('sesDurumu', d);
@@ -345,7 +362,8 @@ class Etkilesim {
   bekle({ gizli = false } = {}) { return this._c({ tur: 'bekle', gizli }); }
   /** Butona basılan mesajı yerinde değiştir */
   guncelle(icerik) { return this._c({ tur: 'guncelle', ...govde(icerik) }); }
-  /** Kullanıcıya form penceresi aç: { id, baslik, alanlar: [{ id, etiket, tur: 'kisa'|'uzun', zorunlu, yerTutucu }] } */
+  /** Kullanıcıya form penceresi aç: { id, baslik, alanlar: [{ id, etiket, tur: 'kisa'|'uzun'|'kisi'|'rol'|'oda'|'dosya'|'resim', zorunlu, yerTutucu }] }
+   *  'dosya' / 'resim' alanında kullanıcı dosya yükler; e.secilenler[alanId] = { id, ad, url, boyut, tur }. Bot bu dosyayı mesajına ekleyebilir ya da kartta resim olarak kullanabilir. */
   formAc(form) { return this._c({ tur: 'form', form }); }
   /** bekle()'den sonra mesajı doldur */
   async duzenle(icerik) { const g = await this._bot._dosyalar(govde(icerik)); return fetch(`${this._bot.adres}/api/v1/etkilesim/${this.id}/${this.token}/mesaj`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(g) }).then(r => r.json()); }

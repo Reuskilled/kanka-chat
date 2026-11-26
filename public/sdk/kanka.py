@@ -15,7 +15,7 @@ import asyncio, time, random, hashlib, hmac, json, re, os
 from urllib.parse import quote
 import aiohttp
 
-SURUM = "1.7.0"
+SURUM = "1.8.0"
 
 
 class KankaHata(Exception):
@@ -263,7 +263,32 @@ class Bot:
         return await self.api("POST", f"/sunucular/{quote(str(sunucu))}/odalar", veri)
     async def oda_duzenle(self, oda, **ayar): return await self.api("PATCH", f"/odalar/{quote(str(oda))}", ayar)
     async def oda_sil(self, oda): return await self.api("DELETE", f"/odalar/{quote(str(oda))}")
-    async def kategori_olustur(self, sunucu, ad): return await self.api("POST", f"/sunucular/{quote(str(sunucu))}/kategoriler", {"ad": ad})
+    async def kategori_olustur(self, sunucu, ad, gizli=False, roller=(), kisiler=(), izinler=None):
+        """Kategori aç. Gizli kategori: await bot.kategori_olustur(sunucu, "Talepler", gizli=True, roller=[yetkili_rol])"""
+        veri = {"ad": ad}
+        if gizli: veri["gizli"] = True
+        if roller: veri["roller"] = list(roller)
+        if kisiler: veri["kisiler"] = list(kisiler)
+        if izinler: veri["izinler"] = izinler
+        return await self.api("POST", f"/sunucular/{quote(str(sunucu))}/kategoriler", veri)
+    async def kategoriler(self, sunucu):
+        """[{ id, ad, ozel, izinAyarlari, odalar }]"""
+        return (await self.api("GET", f"/sunucular/{quote(str(sunucu))}/kategoriler"))["kategoriler"]
+    async def kategori_adi(self, sunucu, kategori, ad): return await self.api("PATCH", f"/sunucular/{quote(str(sunucu))}/kategoriler/{quote(str(kategori))}", {"ad": ad})
+    async def kategori_izni(self, sunucu, kategori, hedef, izinler):
+        """Kategoriyle eşitlenmiş odalar da uyar. hedef: "herkes" | rol id'si | kişi adı"""
+        return await self.api("PUT", f"/sunucular/{quote(str(sunucu))}/kategoriler/{quote(str(kategori))}/izinler/{quote(str(hedef))}", izinler)
+    async def kategori_izni_kaldir(self, sunucu, kategori, hedef): return await self.api("DELETE", f"/sunucular/{quote(str(sunucu))}/kategoriler/{quote(str(kategori))}/izinler/{quote(str(hedef))}")
+    async def rol_olustur(self, sunucu, ad, renk=None, izinler=(), etiketlenebilir=True, ayri_goster=False, simge=None):
+        """Botun rolünün hemen altına rol açar; bot sadece kendinde olan izinleri verebilir ("manageRoles" gerekir)"""
+        veri = {"ad": ad, "izinler": list(izinler), "etiketlenebilir": etiketlenebilir, "ayriGoster": ayri_goster}
+        if renk: veri["renk"] = renk
+        if simge: veri["simge"] = simge
+        return await self.api("POST", f"/sunucular/{quote(str(sunucu))}/roller", veri)
+    async def rol_duzenle(self, sunucu, rol, **alanlar):
+        """alanlar: ad, renk, izinler, etiketlenebilir, ayriGoster, simge"""
+        return await self.api("PATCH", f"/sunucular/{quote(str(sunucu))}/roller/{quote(str(rol))}", alanlar)
+    async def rol_sil(self, sunucu, rol): return await self.api("DELETE", f"/sunucular/{quote(str(sunucu))}/roller/{quote(str(rol))}")
     async def kategori_sil(self, sunucu, kategori): return await self.api("DELETE", f"/sunucular/{quote(str(sunucu))}/kategoriler/{quote(str(kategori))}")
     async def mesaj(self, oda, id): return Mesaj(self, await self.api("GET", f"/odalar/{quote(str(oda))}/mesajlar/{id}"))
     async def kullanici(self, ad_veya_id): return await self.api("GET", f"/kullanicilar/{quote(str(ad_veya_id))}")
@@ -305,8 +330,9 @@ class Bot:
         return await self.api("PUT", f"/odalar/{oda}/izinler/{quote(str(hedef))}", izinler)
     async def oda_izni_kaldir(self, oda, hedef): return await self.api("DELETE", f"/odalar/{oda}/izinler/{quote(str(hedef))}")
     async def ozel_gonder(self, oda, kisi, icerik):
-        """Kalıcı gizli mesaj: odada sadece kisi görür"""
+        """Kalıcı gizli mesaj: odada sadece kisi görür. Döner: { id, mesaj: { id, oda, icerik, kisi, ... } }"""
         return await self.api("POST", f"/odalar/{oda}/ozel-mesajlar", {**(await self._dosyalar(_govde(icerik))), "kisi": kisi})
+    async def ozel_duzenle(self, oda, mesaj, icerik): return await self.api("PATCH", f"/odalar/{oda}/ozel-mesajlar/{mesaj}", _govde(icerik))
     async def ozel_sil(self, oda, mesaj): return await self.api("DELETE", f"/odalar/{oda}/ozel-mesajlar/{mesaj}")
     async def dm(self, kullanici, icerik):
         return Mesaj(self, (await self.api("POST", f"/kullanicilar/{quote(str(kullanici))}/dm", _govde(icerik)))["mesaj"])
@@ -441,7 +467,7 @@ class Bot:
         if t == "HAZIR":
             self._oturum_id = d["oturum"]; self.ben = d["bot"]; self.sunucular = {s["id"]: s for s in d["sunucular"]}
             return await self._yay("hazir")
-        adlar = {"MESAJ_DUZENLENDI": "mesaj_duzenlendi", "MESAJ_SILINDI": "mesaj_silindi", "TEPKI_EKLENDI": "tepki", "TEPKI_KALDIRILDI": "tepki_kaldirildi", "SUNUCUYA_EKLENDI": "sunucuya_eklendi", "SUNUCUDAN_CIKARILDI": "sunucudan_cikarildi", "ODA_OLUSTU": "oda_olustu", "ODA_GUNCELLENDI": "oda_guncellendi", "ODA_SILINDI": "oda_silindi", "SES_DURUMU": "ses_durumu", "ENERGY_GONDERILDI": "energy_gonderildi", "ENERGY_GERI_CEKILDI": "energy_geri_cekildi"}
+        adlar = {"MESAJ_DUZENLENDI": "mesaj_duzenlendi", "MESAJ_SILINDI": "mesaj_silindi", "TEPKI_EKLENDI": "tepki", "TEPKI_KALDIRILDI": "tepki_kaldirildi", "SUNUCUYA_EKLENDI": "sunucuya_eklendi", "SUNUCUDAN_CIKARILDI": "sunucudan_cikarildi", "ODA_OLUSTU": "oda_olustu", "ODA_GUNCELLENDI": "oda_guncellendi", "ODA_SILINDI": "oda_silindi", "ROL_OLUSTU": "rol_olustu", "ROL_GUNCELLENDI": "rol_guncellendi", "ROL_SILINDI": "rol_silindi", "SES_DURUMU": "ses_durumu", "ENERGY_GONDERILDI": "energy_gonderildi", "ENERGY_GERI_CEKILDI": "energy_geri_cekildi"}
         if t == "MESAJ_GELDI":
             if d.get("yazar") and self.ben and d["yazar"]["ad"] == self.ben["ad"]: return
             m = Mesaj(self, d)

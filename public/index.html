@@ -645,6 +645,11 @@
   @keyframes thinkDot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
   .af-form { display: grid; gap: 4px; } .af-h { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; } .af-h .av { width: 44px; height: 44px; font-size: 18px; } .af-h h3 { margin: 0; } .af-h small { color: var(--muted); font-size: 13px; }
   .af-l { display: grid; gap: 4px; margin-bottom: 6px; } .af-l > span { font-weight: 800; font-size: 13px; } .af-l > span em { color: var(--red); font-style: normal; } .af-l > span small { color: var(--muted); font-weight: 600; }
+  .af-file { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1.5px dashed var(--line); background: var(--bg2, rgba(255,255,255,.03)); cursor: pointer; }
+  .af-file:hover { border-color: var(--accent); } .af-file.ok { border-style: solid; border-color: var(--accent); } .af-file.busy { opacity: .7; }
+  .af-file .af-finput { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .af-fprev { flex: none; width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); overflow: hidden; } .af-fprev img { width: 100%; height: 100%; object-fit: cover; }
+  .af-fname { font-size: 13.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .af-file.ok .af-fname { color: var(--text, #fff); }
   .af-l .field { margin: 0; }
   .sg-ic.sg-av { background: none !important; padding: 0; } .sg-ic.sg-av .av { width: 26px; height: 26px; font-size: 11px; }
   .sg-g.sg-bot { display: flex; align-items: center; gap: 6px; } .sg-g.sg-bot .av { width: 16px; height: 16px; font-size: 8px; }
@@ -10200,11 +10205,21 @@ document.addEventListener('change', e => { const s = e.target.closest('select.as
 // Botun açtığı form penceresi
 socket.on('appForm', f => {
   modal(`<form id="af-form" class="af-form"><div class="af-h">${av(f.bot)}<div><h3>${esc(f.baslik)}</h3><small>${esc(f.bot)} <span class="botbadge app">BOT</span></small></div></div>
-    ${f.alanlar.map(a => `<label class="af-l"><span>${esc(a.etiket)}${a.zorunlu ? ' <em>*</em>' : ''}</span>${['kisi', 'rol', 'oda'].includes(a.tur) ? pickHTML({ kind: a.tur, ph: a.yerTutucu, name: a.id }).replace('<div class="ap-chips">', `<input type="hidden" name="${esc(a.id)}"><div class="ap-chips">`) : a.tur === 'uzun' ? `<textarea class="field" name="${esc(a.id)}" rows="4" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}">${esc(a.deger)}</textarea>` : `<input class="field" name="${esc(a.id)}" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}" value="${esc(a.deger)}" autocomplete="off">`}</label>`).join('')}
+    ${f.alanlar.map(a => `<label class="af-l"><span>${esc(a.etiket)}${a.zorunlu ? ' <em>*</em>' : ''}</span>${a.tur === 'dosya' ? `<input type="hidden" name="${esc(a.id)}"><span class="af-file" data-af="${esc(a.id)}"><span class="af-fprev">${ic(a.kabul === 'resim' ? 'image' : 'plus')}</span><span class="af-fname">${esc(a.yerTutucu || (a.kabul === 'resim' ? 'Resim seç' : 'Dosya seç'))}</span><input type="file" class="af-finput" ${a.kabul === 'resim' ? 'accept="image/*"' : ''}></span>` : ['kisi', 'rol', 'oda'].includes(a.tur) ? pickHTML({ kind: a.tur, ph: a.yerTutucu, name: a.id }).replace('<div class="ap-chips">', `<input type="hidden" name="${esc(a.id)}"><div class="ap-chips">`) : a.tur === 'uzun' ? `<textarea class="field" name="${esc(a.id)}" rows="4" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}">${esc(a.deger)}</textarea>` : `<input class="field" name="${esc(a.id)}" maxlength="${a.max}" ${a.zorunlu ? 'required' : ''} ${a.min ? `minlength="${a.min}"` : ''} placeholder="${esc(a.yerTutucu)}" value="${esc(a.deger)}" autocomplete="off">`}</label>`).join('')}
     <p class="hint" style="font-size:12px">Yazdıkların ${esc(f.bot)} botuna ve sahibine gönderilir.</p>
     <div class="rowb"><button type="button" id="mx">Vazgeç</button><button class="btnp" type="submit">${ic('send')} Gönder</button></div></form>`);
   $('#mx').onclick = closeModal; setTimeout(() => $('#af-form [name]')?.focus(), 50);
-  $('#af-form').onsubmit = e => { e.preventDefault(); const miss = f.alanlar.find(a => a.zorunlu && ['kisi', 'rol', 'oda'].includes(a.tur) && !$('#af-form').querySelector(`input[type=hidden][name="${CSS.escape(a.id)}"]`).value); if (miss) return toast(`${miss.etiket}: bir seçim yap`); const vals = Object.fromEntries(f.alanlar.map(a => [a.id, $('#af-form').querySelector(`[name="${CSS.escape(a.id)}"]`).value]));
+  $('#af-form').querySelectorAll('.af-finput').forEach(inp => inp.onchange = async () => { // formdaki dosya alanı: seçilince hemen yüklenir, id gizli alana yazılır
+    const fl = inp.files?.[0], box = inp.closest('.af-file'), hid = $('#af-form').querySelector(`input[type=hidden][name="${CSS.escape(box.dataset.af)}"]`), nm = box.querySelector('.af-fname'), pv = box.querySelector('.af-fprev'); if (!fl) return;
+    if (inp.accept && !fl.type.startsWith('image/')) { inp.value = ''; return toast('Bu alana sadece resim yükleyebilirsin'); }
+    box.classList.add('busy'); box.classList.remove('ok'); hid.value = ''; nm.textContent = `${fl.name} · yükleniyor…`;
+    try { const r = await (await fetch('/api/dosya', { method: 'POST', headers: { Authorization: 'Bearer ' + store.get('kanka-token'), 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(fl.name), 'X-File-Type': fl.type || 'application/octet-stream' }, body: fl })).json();
+      if (!r.ok || !r.id) throw new Error(r.error || 'Yüklenemedi');
+      hid.value = r.id; box.classList.add('ok'); nm.textContent = fl.name; if (fl.type.startsWith('image/')) pv.innerHTML = `<img src="${URL.createObjectURL(fl)}" alt="">`;
+    } catch (er) { nm.textContent = 'Yüklenemedi, tekrar seç'; toast(er.message || 'Yüklenemedi', null, false, { type: 'err' }); }
+    box.classList.remove('busy');
+  });
+  $('#af-form').onsubmit = e => { e.preventDefault(); if ($('#af-form .af-file.busy')) return toast('Dosya yükleniyor, biraz bekle'); const missF = f.alanlar.find(a => a.zorunlu && a.tur === 'dosya' && !$('#af-form').querySelector(`input[type=hidden][name="${CSS.escape(a.id)}"]`).value); if (missF) return toast(`${missF.etiket}: bir dosya seç`); const miss = f.alanlar.find(a => a.zorunlu && ['kisi', 'rol', 'oda'].includes(a.tur) && !$('#af-form').querySelector(`input[type=hidden][name="${CSS.escape(a.id)}"]`).value); if (miss) return toast(`${miss.etiket}: bir seçim yap`); const vals = Object.fromEntries(f.alanlar.map(a => [a.id, $('#af-form').querySelector(`[name="${CSS.escape(a.id)}"]`).value]));
     socket.emit('appFormSubmit', { iid: f.iid, values: vals }, r => { if (r?.error) return toast(r.error, null, false, { type: 'err' }); closeModal(); }); };
 });
 // ---- Komutlar: / listesinde botların komutları ----
