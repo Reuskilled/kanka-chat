@@ -2612,6 +2612,19 @@
   .fr-altin::before { background: linear-gradient(135deg, #fff1b8, #e2b04a 30%, #8a5a12 55%, #ffe08a 80%, #b9821f); box-shadow: 0 0 16px rgba(226,176,74,.55); }
   .fr-kurucu::before { background: conic-gradient(#ff8a4c, #ffb347, #ff6b3d, #ff8a4c); box-shadow: 0 0 14px rgba(255,138,76,.55); }
   .fr-kurucu::after { content: '🦝'; position: absolute; z-index: 3; left: 50%; bottom: calc(var(--s) * -.08); transform: translateX(-50%); font-size: calc(var(--s) * .2); line-height: 1; padding: 2px 5px; border-radius: 99px; background: #2b1d15; border: 2px solid #ff8a4c; }
+  /* Gece Kedisi — stüdyo şeffaf kadife kedi kulaklı avatar çerçevesi */
+  .pav.fr-gecekedi::before { background: none !important; box-shadow: none !important; }
+  .pav.fr-gecekedi .av { border-color: transparent !important; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
+  .pav.fr-gecekedi::after, .av.fr-gecekedi::after {
+    content: ''; position: absolute; left: -31%; top: -31%; width: 162%; height: 162%;
+    z-index: 4; pointer-events: none;
+    background: url('/effects/cat_frame_midnight.png') center/contain no-repeat;
+    filter: drop-shadow(0 5px 12px rgba(0,0,0,.58));
+  }
+  .av.fr-gecekedi { position: relative; overflow: visible !important; }
+  .pfx-cat-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; z-index: 1 !important; opacity: .94; pointer-events: none; border-radius: inherit; animation: pfCatBreathe 9s ease-in-out infinite; }
+  .pfx-cat-scrim { position: absolute; inset: 0; z-index: 1 !important; pointer-events: none; border-radius: inherit; background: linear-gradient(180deg, rgba(13,11,21,.04) 0%, rgba(13,11,21,.16) 36%, rgba(12,10,20,.72) 58%, rgba(10,9,17,.88) 100%); }
+  @keyframes pfCatBreathe { 0%,100% { transform: scale(1.01); } 50% { transform: scale(1.045); } }
   /* mini kart teması */
   .vpop.themed { background: linear-gradient(170deg, var(--t1), var(--t2)); border-color: transparent; }
   .vpop.themed .vp-body { background: rgba(18,13,10,.66); margin: 0 6px 6px; border-radius: 0 0 14px 14px; }
@@ -2719,6 +2732,10 @@
   .nb-prism .nb-bg { background: linear-gradient(100deg, #100c1e 12%, #33134a 48%, #0e4a6b 82%, #00e5ff 100%); }
   .nb-sakura .nb-bg { background: linear-gradient(100deg, #190d16 15%, #461938 56%, #8c3168 85%, #f472b6 100%); }
   .nb-goldsilk .nb-bg { background: linear-gradient(100deg, #14110b 15%, #332610 56%, #6e5118 86%, #eab308 100%); }
+  .nb-gecekedi .nb-bg { background: url('/effects/cat_nameplate_midnight.jpg') right center/cover no-repeat !important; opacity: .88 !important; }
+  .nb-gecekedi .nb-scrim { background: linear-gradient(90deg, rgba(16,12,24,.84) 0%, rgba(16,12,24,.44) 50%, rgba(16,12,24,.04) 80%) !important; }
+  .nb-gecekedi:hover .nb-bg, .nb-card:hover .nb-gecekedi .nb-bg { opacity: 1 !important; filter: brightness(1.12); animation: none !important; }
+  .nb-card.lock { opacity: .55; cursor: not-allowed; }
   .nb-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .nb-cats button { padding: 4px 10px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: 11.5px; font-weight: 800; transition: all .14s; }
   .nb-cats button:hover { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
@@ -6934,7 +6951,8 @@ function showSettings(tab) {
 
     if (studioTab === 'frame') {
       root.innerHTML = head + `<div class="frames">${FRAMES.map(f => { const open = frameOpen(u, f), on = (draft.frame || 'none') === f[0];
-        return `<button type="button" data-fr="${f[0]}" class="${on ? 'on' : ''} ${open ? '' : 'lock'}" title="${open ? f[1] : f[2] < 0 ? 'İlk 100 kullanıcıya özel' : 'Genel seviyen ' + f[2] + ' olunca açılır (şu an ' + (u.level || 1) + '). Sunucu seviyeleri sayılmaz.'}">${pAv(S.me, { ...u, ...draft, frame: f[0] === 'none' ? null : f[0] }, 52, false)}<span>${f[1]}</span>${open ? '' : `<em>${f[2] < 0 ? '🔒' : 'Sv ' + f[2]}</em>`}</button>`; }).join('')}</div>`;
+        const tip = open ? f[1] : f[2] === -2 ? 'Çok yakında Market\'te açılacak!' : f[2] < 0 ? 'İlk 100 kullanıcıya özel' : 'Genel seviyen ' + f[2] + ' olunca açılır (şu an ' + (u.level || 1) + '). Sunucu seviyeleri sayılmaz.';
+        return `<button type="button" data-fr="${f[0]}" class="${on ? 'on' : ''} ${open ? '' : 'lock'}" title="${tip}">${pAv(S.me, { ...u, ...draft, frame: f[0] === 'none' ? null : f[0] }, 52, false)}<span>${f[1]}</span>${open ? '' : `<em>${f[2] === -2 ? 'YAKINDA' : f[2] < 0 ? '🔒' : 'Sv ' + f[2]}</em>`}</button>`; }).join('')}</div>`;
       root.querySelectorAll('[data-fr]').forEach(b => b.onclick = () => {
         if (b.classList.contains('lock')) return toast(b.title);
         draft.frame = b.dataset.fr === 'none' ? null : b.dataset.fr;
@@ -6942,11 +6960,12 @@ function showSettings(tab) {
         preview();
       });
     } else if (studioTab === 'effect') {
+      const ownerEfs = PEFFECTS_OWNER.filter(ef => ef[0] !== 'cat_midnight' || isPisagoMe());
       const ownerBlock = S.staff === 'owner' ? `<div class="pe-sec-h"><span>3D &amp; GPU VFX Efektler</span><em>KURUCU ÖZEL</em></div>
-        <div class="peffects pe-3d">${PEFFECTS_OWNER.map(ef => {
+        <div class="peffects pe-3d">${ownerEfs.map(ef => {
           const on = (draft.effect || 'none') === ef[0];
           const pv = ef[5] ? `<img src="${ef[5]}" alt="">` : '';
-          return `<button type="button" data-ef="${ef[0]}" class="${on ? 'on' : ''}" title="${ef[1]} · Kurucu Özel 3D VFX"><div class="pe-pv ${ef[6] || ''}" style="background:${ef[3]};color:${ef[4]}">${pv}<span class="pe-ktag">3D</span></div><span>${ef[1]}</span></button>`;
+          return `<button type="button" data-ef="${ef[0]}" class="${on ? 'on' : ''}" title="${ef[1]} · Kurucu Özel 3D VFX"><div class="pe-pv ${ef[6] || ''}" style="background:${ef[3]};color:${ef[4]}">${pv}<span class="pe-ktag">${ef[0] === 'cat_midnight' ? 'ÖZEL' : '3D'}</span></div><span>${ef[1]}</span></button>`;
         }).join('')}</div>
         <div class="pe-sec-h"><span>Standart Efektler</span></div>` : '';
       root.innerHTML = head + ownerBlock + `<div class="peffects" id="st-peffects">${PEFFECTS.map(ef => { const on = (draft.effect || 'none') === ef[0];
@@ -6971,13 +6990,14 @@ function showSettings(tab) {
       const nm = esc(draft.displayName || S.me);
       root.innerHTML = head + `<div class="nb-cats">${NB_CATS.map(([k, l]) => `<button type="button" data-nbcat="${k}" class="${nbCat === k ? 'on' : ''}">${l}</button>`).join('')}</div>
         <div class="nb-grid">${list.map(b => {
-          const on = (draft.nameBanner || 'none') === b.id;
-          return `<button type="button" class="nb-card ${on ? 'on' : ''}" data-nb="${b.id}" title="${b.name}">
+          const locked = !!b.soon && !isPisagoMe(), on = (draft.nameBanner || 'none') === b.id;
+          return `<button type="button" class="nb-card ${on ? 'on' : ''} ${locked ? 'lock' : ''}" data-nb="${b.id}" title="${locked ? 'Çok yakında Market\'te açılacak!' : b.name}">
             <div class="nb-pv ${b.id !== 'none' ? 'has-nb nb-' + b.id : ''}">${b.id !== 'none' ? nbLayers(b.id) : ''}${nbAvHTML()}<b>${nm}</b></div>
             <span class="nb-lbl"><span>${b.name}</span>${b.tag ? `<em>${b.tag}</em>` : ''}</span></button>`;
         }).join('')}</div>`;
       root.querySelectorAll('[data-nbcat]').forEach(b => b.onclick = () => { nbCat = b.dataset.nbcat; renderStudioBody(); });
       root.querySelectorAll('[data-nb]').forEach(b => b.onclick = () => {
+        if (b.classList.contains('lock')) return toast(b.title);
         draft.nameBanner = b.dataset.nb === 'none' ? null : b.dataset.nb;
         root.querySelectorAll('[data-nb]').forEach(x => x.classList.toggle('on', x === b));
         preview();
@@ -9228,29 +9248,39 @@ const SPARK_HIDE = STORE_APP && !PLAY_BILL;
 const MARKET_IC = 'tag';
 let mkTab = 'all', mkQuery = '';
 function marketCatalog() {
-  const me = S.users?.[S.me] || {}, meLv = me.level || 1;
-  const eff3d = (typeof PEFFECTS_OWNER !== 'undefined' ? PEFFECTS_OWNER : []).map(e => ({
-    key: 'eff:' + e[0], cat: 'effect', id: e[0], name: e[1], sub: '3D Profil Efekti', badge: '3D VFX', badgeCls: 'lime',
-    status: 'Vitrin · Yakında', open: false, color: e[4] || '#c8ff00', bg: e[3] || '#121319', img: e[5] || '', fx: e[6] || '',
-    desc: 'Profil kartın açıldığında arka planda sinematik WebGL2 3D efekt ve parçacık ışıkları oynatır.',
-  }));
+  const me = S.users?.[S.me] || {}, meLv = me.level || 1, pi = isPisagoMe();
+  const eff3d = (typeof PEFFECTS_OWNER !== 'undefined' ? PEFFECTS_OWNER : []).map(e => {
+    const isCat = e[0] === 'cat_midnight';
+    return {
+      key: 'eff:' + e[0], cat: 'effect', id: e[0], name: e[1], sub: isCat ? 'Gece Kedisi · Profil Efekti' : '3D Profil Efekti',
+      badge: isCat ? 'YAKINDA' : '3D VFX', badgeCls: 'lime',
+      status: isCat ? (pi ? 'Profilinde Aktif' : 'Çok Yakında') : 'Vitrin · Yakında', open: isCat ? pi : false, color: e[4] || '#c8ff00', bg: e[3] || '#121319', img: e[5] || '', fx: e[6] || '',
+      desc: isCat ? 'Hilal üzerinde altın gözlü siyah kedi, yüzen sakura yaprakları ve parlayan pati takımyıldızları. Çok yakında Market\'te açılacak!' : 'Profil kartın açıldığında arka planda sinematik WebGL2 3D efekt ve parçacık ışıkları oynatır.',
+    };
+  });
   const effAmb = (typeof PEFFECTS !== 'undefined' ? PEFFECTS : []).filter(e => e[0] !== 'none').map(e => ({
     key: 'eff:' + e[0], cat: 'effect', id: e[0], name: e[1], sub: 'Profil Efekti', badge: 'HAREKETLİ', badgeCls: '',
     status: 'Profilde Açık', open: true, color: e[4] || '#c8ff00', bg: e[3] || '#121319', img: '', fx: '',
     desc: 'Profil kartının üzerinde hafif hareketli parçacık atmosferi oluşturur. Ayarlar › Profil üzerinden hemen takabilirsin.',
   }));
-  const banners = (typeof NAME_BANNERS !== 'undefined' ? NAME_BANNERS : []).filter(b => b.id !== 'none').map(b => ({
-    key: 'nb:' + b.id, cat: 'banner', id: b.id, name: b.name, sub: 'İsim Plakası', badge: b.tag || 'PLAKA', badgeCls: b.tag === 'KANKA' ? 'lime' : '',
-    status: 'Profilde Açık', open: true, color: '#c8ff00',
-    desc: 'Üye listesinde ve sohbet kenar çubuğunda isminin arkasında animasyonlu sahne ve parlama efekti gösterir.',
-  }));
-  const frames = (typeof FRAMES !== 'undefined' ? FRAMES : []).filter(f => f[0] !== 'none').map(f => {
-    const unlocked = frameOpen(me, f);
+  const banners = (typeof NAME_BANNERS !== 'undefined' ? NAME_BANNERS : []).filter(b => b.id !== 'none').map(b => {
+    const isSoon = !!b.soon;
     return {
-      key: 'fr:' + f[0], cat: 'frame', id: f[0], name: f[1] + ' Çerçeve', sub: f[2] < 0 ? 'Kurucu Özel' : `Seviye ${f[2]}`,
-      badge: f[2] < 0 ? 'ÖZEL' : unlocked ? 'AÇIK' : `SV. ${f[2]}`, badgeCls: unlocked ? 'ok' : '',
-      status: unlocked ? 'Kullanılabilir' : (f[2] < 0 ? 'Kurucu Rozeti' : `Sv. ${f[2]} (${meLv}/${f[2]})`), open: unlocked, color: '#c8ff00',
-      desc: f[2] < 0 ? 'Kanka Chat kurucu üyelerine özel hareketli avatar çerçevesi.' : `Avatarının etrafında dönen hareketli çerçeve. Seviye ${f[2]} olunca otomatik açılır.`,
+      key: 'nb:' + b.id, cat: 'banner', id: b.id, name: b.name, sub: isSoon ? 'Gece Kedisi · İsim Plakası' : 'İsim Plakası',
+      badge: isSoon ? 'YAKINDA' : (b.tag || 'PLAKA'), badgeCls: isSoon || b.tag === 'KANKA' ? 'lime' : '',
+      status: isSoon ? (pi ? 'Profilinde Aktif' : 'Çok Yakında') : 'Profilde Açık', open: isSoon ? pi : true, color: isSoon ? '#f48fb1' : '#c8ff00',
+      desc: isSoon ? 'Sağda yıldızlı gözlü siyah kedi ve altın zil, solda isminin altında parlayan pembe pati izleri. Çok yakında Market\'te!' : 'Üye listesinde ve sohbet kenar çubuğunda isminin arkasında animasyonlu sahne ve parlama efekti gösterir.',
+    };
+  });
+  const frames = (typeof FRAMES !== 'undefined' ? FRAMES : []).filter(f => f[0] !== 'none').map(f => {
+    const isSoon = f[2] === -2, unlocked = frameOpen(me, f);
+    return {
+      key: 'fr:' + f[0], cat: 'frame', id: f[0], name: isSoon ? f[1] + ' Çerçevesi' : f[1] + ' Çerçeve',
+      sub: isSoon ? 'Gece Kedisi · Avatar Çerçevesi' : f[2] < 0 ? 'Kurucu Özel' : `Seviye ${f[2]}`,
+      badge: isSoon ? 'YAKINDA' : f[2] < 0 ? 'ÖZEL' : unlocked ? 'AÇIK' : `SV. ${f[2]}`, badgeCls: isSoon ? 'lime' : unlocked ? 'ok' : '',
+      status: isSoon ? (pi ? 'Profilinde Aktif' : 'Çok Yakında') : unlocked ? 'Kullanılabilir' : (f[2] < 0 ? 'Kurucu Rozeti' : `Sv. ${f[2]} (${meLv}/${f[2]})`),
+      open: isSoon ? pi : unlocked, color: isSoon ? '#f48fb1' : '#c8ff00',
+      desc: isSoon ? 'Küpeli kadife siyah kedi kulakları, kıvrık gümüş bıyıklar, pembe pati taşı ve altın zil. Çok yakında Market\'te!' : f[2] < 0 ? 'Kanka Chat kurucu üyelerine özel hareketli avatar çerçevesi.' : `Avatarının etrafında dönen hareketli çerçeve. Seviye ${f[2]} olunca otomatik açılır.`,
     };
   });
   const tags = (typeof TAG_PX_PACKS !== 'undefined' ? TAG_PX_PACKS : []).map(p => ({
@@ -9325,7 +9355,12 @@ function marketSectionsHTML() {
 }
 function marketHTML() {
   const cat = marketCatalog(), meLv = S.users?.[S.me]?.level || 1, q = mkQuery.trim();
-  const feat = [cat.eff3d[0], cat.banners[0], cat.frames[2] || cat.frames[0], cat.tags[1] || cat.tags[0]].filter(Boolean);
+  const feat = [
+    cat.eff3d.find(x => x.id === 'cat_midnight'),
+    cat.frames.find(x => x.id === 'gecekedi'),
+    cat.banners.find(x => x.id === 'gecekedi'),
+    cat.eff3d.find(x => x.id === 'dragon_crimson') || cat.tags[1],
+  ].filter(Boolean);
   const navTabs = [['all', 'Öne Çıkanlar'], ['effect', 'Profil Efektleri'], ['banner', 'İsim Süsleri'], ['frame', 'Avatar Çerçeveleri'], ['tag', 'Piksel Paketler']];
   const showHero = mkTab === 'all' && !q;
   const meCol = userColor(S.me), meIn = avInner(S.me), meName = esc(dn(S.me));
@@ -9340,16 +9375,16 @@ function marketHTML() {
     <div id="mk-top" style="${showHero ? '' : 'display:none'}">
       <div class="mk-hero-wrap">
         <section class="mk-hero">
-          <img class="mk-hero-art" src="/effects/dragon_crimson.jpg" alt="">
+          <img class="mk-hero-art" src="/effects/cat_profile_midnight.jpg" alt="">
           <div class="mk-hero-bg"></div>
           <div class="mk-hero-l">
-            <span class="mk-kicker">✦ KANKA KOLEKSİYON · İLK SERİ</span>
-            <h2>PROFİLİNİ &amp; SUNUCUNU ÖNE ÇIKAR</h2>
-            <p>3D ejderha efektleri, hareketli isim plakaları, avatar çerçeveleri ve 30 özgün Kanka piksel rozeti — hepsini kendi profilinde canlı önizle.</p>
+            <span class="mk-kicker">🐾 YENİ KOLEKSİYON · ÇOK YAKINDA</span>
+            <h2>GECE KEDİSİ KOLEKSİYONU</h2>
+            <p>Kadife kedi kulaklı avatar çerçevesi, ay ışıklı profil efekti ve yıldızlı gözlü isim plakası — şimdilik vitrinde, kendi profilinde hemen önizle.</p>
           </div>
           <div class="mk-hero-box">
-            <div class="mk-hb-row"><span class="mk-hb-pill">30 ROZET</span><span class="mk-hb-pill">17 EFEKT</span><span class="mk-hb-pill">11 PLAKA</span></div>
-            <p>Yeni Market koleksiyonu vitrinde! Herhangi bir karta tıkla, kendi profilinde nasıl duracağını hemen gör.</p>
+            <div class="mk-hb-row"><span class="mk-hb-pill">ÇERÇEVE</span><span class="mk-hb-pill">EFEKT</span><span class="mk-hb-pill">PLAKA</span></div>
+            <p>Gece Kedisi 3'lü seti çok yakında açılıyor! Karta tıklayıp kendi avatarında nasıl duracağını görebilirsin.</p>
             <button type="button" class="mk-hero-btn" id="mk-explore">Koleksiyonları İncele</button>
           </div>
         </section>
@@ -9360,11 +9395,11 @@ function marketHTML() {
           <img class="mk-spot-bg" src="/effects/dragon_jade.jpg" alt="">
           <div class="mk-spot-l"><small>3D PROFİL EVRENİ</small><h3>Ejderha &amp; GPU VFX</h3><p>Kızıl Ejderha, Zümrüt Ejderha, Kara Delik ve Kuzey Işıkları.</p><span class="mk-spot-btn">Koleksiyona Git</span></div>
         </div>
-        <div class="mk-spot" data-mktab="banner" style="--sp-c:#c8ff00">
-          <div class="mk-spot-l"><small>HAREKETLİ KİMLİK</small><h3>İsim Süsleri &amp; Plakalar</h3><p>Asit Siber, Magma, Samanyolu ve Altın İpek isim plakaları.</p><span class="mk-spot-btn">Koleksiyona Git</span></div>
+        <div class="mk-spot" data-mktab="banner" style="--sp-c:#f48fb1">
+          <div class="mk-spot-l"><small>HAREKETLİ KİMLİK</small><h3>İsim Süsleri &amp; Plakalar</h3><p>Gece Kedisi, Asit Siber, Magma, Samanyolu ve Altın İpek plakaları.</p><span class="mk-spot-btn">Koleksiyona Git</span></div>
           <div class="mk-spot-art">
+            <div class="mk-spot-nb has-nb nb-gecekedi">${nbLayers('gecekedi')}<div class="av" style="background:${meCol}">${meIn}</div><b>${meName}</b></div>
             <div class="mk-spot-nb has-nb nb-cyberlime">${nbLayers('cyberlime')}<div class="av" style="background:${meCol}">${meIn}</div><b>${meName}</b></div>
-            <div class="mk-spot-nb has-nb nb-nebula">${nbLayers('nebula')}<div class="av" style="background:${meCol}">${meIn}</div><b>${meName}</b></div>
           </div>
         </div>
       </div>
@@ -12272,8 +12307,9 @@ document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === 
 
 // ================= Profil 2.0 =================
 const dn = n => uNicks[n] || S.users[n]?.displayName || n;
-const FRAMES = [['none', 'Yok', 0], ['halka', 'Halka', 2], ['gokkusagi', 'Gökkuşağı', 5], ['ates', 'Ateş', 10], ['neon', 'Neon', 15], ['altin', 'Altın', 25], ['kurucu', 'Kurucu', -1]];
-const frameOpen = (u, f) => f[0] === 'none' || (f[2] < 0 ? !!u.kurucu : (u.level || 1) >= f[2]);
+const isPisagoMe = () => (S.me || '').toLowerCase() === 'pisago';
+const FRAMES = [['none', 'Yok', 0], ['gecekedi', 'Gece Kedisi', -2], ['halka', 'Halka', 2], ['gokkusagi', 'Gökkuşağı', 5], ['ates', 'Ateş', 10], ['neon', 'Neon', 15], ['altin', 'Altın', 25], ['kurucu', 'Kurucu', -1]];
+const frameOpen = (u, f) => f[0] === 'none' || (f[2] === -2 ? (u?.name || S.me || '').toLowerCase() === 'pisago' : f[2] < 0 ? !!u.kurucu : (u.level || 1) >= f[2]);
 const SOCIAL_META = {
   instagram: ['Instagram', '#e1306c', h => `https://instagram.com/${h}`], tiktok: ['TikTok', '#25f4ee', h => `https://www.tiktok.com/@${h}`],
   youtube: ['YouTube', '#ff3b3b', h => `https://www.youtube.com/@${h}`], x: ['X', '#e7e9ea', h => `https://x.com/${h}`],
@@ -12294,6 +12330,7 @@ const PEFFECTS = [
   ['sparkles', 'Prizma', '✧', 'linear-gradient(135deg,#181429,#26240c)', '#fde047'],
 ];
 const PEFFECTS_OWNER = [
+  ['cat_midnight', 'Gece Kedisi', '🐾', '#120c1c', '#f48fb1', '/effects/cat_profile_midnight.jpg', ''],
   ['dragon_crimson', 'Kızıl Ejderha', '🐉', '#120405', '#fb923c', '/effects/dragon_crimson.jpg', ''],
   ['dragon_jade', 'Zümrüt Ejderha', '🐉', '#04140e', '#34d399', '/effects/dragon_jade.jpg', ''],
   ['dragon_frost', 'Buzul Ejderhası', '❄️', '#06121f', '#38bdf8', '/effects/dragon_crimson.jpg', 'frost'],
@@ -12307,6 +12344,7 @@ const PFX_3D_MAP = { dragon_crimson: 0, dragon_jade: 1, dragon_frost: 2, vfx_bla
 const NB_CATS = [['all', 'Tümü'], ['fire', 'Ateş & Kor'], ['ice', 'Buz & Su'], ['space', 'Uzay'], ['neon', 'Neon & Siber'], ['soft', 'Yumuşak']];
 const NAME_BANNERS = [
   { id: 'none', cat: 'all', name: 'Yok', svg: '' },
+  { id: 'gecekedi', cat: 'soft', name: 'Gece Kedisi', tag: 'YAKINDA', soon: true, svg: '' },
   { id: 'cyberlime', cat: 'neon', name: 'Asit Siber', tag: 'KANKA', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv" stroke="#d4ff00" stroke-opacity=".45" fill="none" stroke-width="1.2"><path d="M135 10 H170 L180 20 H225"/><path d="M150 34 H190 L202 24 H238"/><circle cx="170" cy="10" r="2.2" fill="#d4ff00"/><circle cx="202" cy="24" r="2.2" fill="#d4ff00"/><circle cx="222" cy="12" r="1.6" fill="#fff"/></g><rect x="210" y="6" width="22" height="3" rx="1.5" fill="#d4ff00" opacity=".75"/></svg>` },
   { id: 'embers', cat: 'fire', name: 'Kor Alev', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv"><circle cx="150" cy="30" r="2.2" fill="#ffbe3b" opacity=".8"/><circle cx="176" cy="14" r="1.6" fill="#ff7a2b" opacity=".9"/><circle cx="198" cy="26" r="3" fill="#ffd166" opacity=".75"/><circle cx="218" cy="12" r="2" fill="#fff" opacity=".85"/><circle cx="226" cy="33" r="2.5" fill="#ff6b2b" opacity=".8"/><circle cx="164" cy="36" r="1.4" fill="#fde047" opacity=".7"/></g></svg>` },
   { id: 'magma', cat: 'fire', name: 'Magma', tag: 'YENİ', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv" stroke="#ff9447" stroke-opacity=".55" stroke-width="1.3" fill="none"><path d="M130 44 L178 12 L238 36"/><path d="M168 44 L208 4 L232 44"/><circle cx="178" cy="12" r="2.4" fill="#fde047"/><circle cx="208" cy="18" r="1.5" fill="#ff7a2b"/></g></svg>` },
@@ -12714,6 +12752,53 @@ function mountProfileEffect(el, fx) {
   el.querySelectorAll(':scope > .pfx-cv').forEach(c => { c._stop?.(); c.remove(); });
   el.classList.remove('has-vfx3d');
   if (!fx || fx === 'none' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (fx === 'cat_midnight') {
+    el.classList.add('has-vfx3d');
+    const img = document.createElement('img'); img.className = 'pfx-cv pfx-cat-bg'; img.src = '/effects/cat_profile_midnight.jpg'; img.alt = ''; img.setAttribute('aria-hidden', 'true');
+    const scrim = document.createElement('div'); scrim.className = 'pfx-cv pfx-cat-scrim'; scrim.setAttribute('aria-hidden', 'true');
+    const cv = document.createElement('canvas'); cv.className = 'pfx-cv'; cv.setAttribute('aria-hidden', 'true');
+    el.prepend(scrim); el.prepend(img); el.appendChild(cv);
+    const ctx = cv.getContext('2d'); if (!ctx) return;
+    let W = Math.max(180, el.clientWidth || 300), H = Math.max(220, el.clientHeight || 420), raf = 0, dead = false, startT = performance.now(), last = startT;
+    const fit = () => { const dpr = Math.min(1.75, devicePixelRatio || 1); W = Math.max(180, el.clientWidth || 300); H = Math.max(220, el.clientHeight || 420); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    fit();
+    const petals = Array.from({ length: 12 }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: -.3 - Math.random() * .4, vy: .3 + Math.random() * .5, r: Math.random() * 6.28, vr: (Math.random() - .5) * .03, s: 3.5 + Math.random() * 3.8, ph: Math.random() * 6.28 }));
+    const stars = Array.from({ length: 20 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: .8 + Math.random() * 1.9, ph: Math.random() * 6.28, sp: 1.4 + Math.random() * 2.1 }));
+    const stop = () => { dead = true; cancelAnimationFrame(raf); };
+    cv._stop = stop; img._stop = stop; scrim._stop = stop;
+    const tick = now => {
+      if (dead || !cv.isConnected) return stop();
+      if (!document.hidden) {
+        const dt = Math.min(.05, (now - last) / 1000), t = (now - startT) / 1000; last = now;
+        ctx.clearRect(0, 0, W, H);
+        if (t < 1.35) {
+          const p = t / 1.35, a = (1 - p) * .5;
+          const g = ctx.createRadialGradient(W * .5, H * .22, 6, W * .5, H * .22, W * (.28 + p * .78));
+          g.addColorStop(0, `rgba(255,240,248,${a})`); g.addColorStop(.45, `rgba(244,143,177,${a * .42})`); g.addColorStop(1, 'rgba(168,85,247,0)');
+          ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        }
+        for (const p of petals) {
+          p.ph += dt * 1.8; p.x += p.vx + Math.sin(p.ph) * .32; p.y += p.vy; p.r += p.vr;
+          if (p.y > H + 12) { p.y = -12; p.x = Math.random() * W; } if (p.x < -12) p.x = W + 12;
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+          ctx.globalAlpha = (p.x < 68 || p.x > W - 68 || p.y < 160) ? .72 : .24;
+          ctx.fillStyle = '#fbcfe8'; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 7;
+          ctx.beginPath(); ctx.ellipse(0, 0, p.s, p.s * .46, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+        for (const s of stars) {
+          s.ph += dt * s.sp;
+          const a = Math.max(0, Math.sin(s.ph)) * (s.y < 180 || s.x < 62 || s.x > W - 62 ? .8 : .24);
+          if (a > .06) {
+            ctx.save(); ctx.translate(s.x, s.y); ctx.globalAlpha = a; ctx.fillStyle = s.r > 1.7 ? '#fde68a' : '#f8b4cb';
+            ctx.beginPath(); ctx.moveTo(0, -s.r * 2.2); ctx.quadraticCurveTo(0, 0, s.r * 2.2, 0); ctx.quadraticCurveTo(0, 0, 0, s.r * 2.2); ctx.quadraticCurveTo(0, 0, -s.r * 2.2, 0); ctx.quadraticCurveTo(0, 0, 0, -s.r * 2.2); ctx.fill(); ctx.restore();
+          }
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return;
+  }
   if (fx in PFX_3D_MAP) { try { if (mountWebGL3DEffect(el, PFX_3D_MAP[fx])) return; } catch (err) { console.warn('3D pfx fallback:', err); el.classList.remove('has-vfx3d'); } }
   const cv = document.createElement('canvas');
   cv.className = 'pfx-cv';

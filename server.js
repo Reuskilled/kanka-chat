@@ -1078,15 +1078,19 @@ function srvXp(s, name, n, chId) {
   setTimeout(() => botPost(to, { title: `🎉 ${db.users[name]?.displayName || name} bu sunucuda seviye ${a} oldu!`, text: got ? `Yeni rol kazandı: ${got.name}` : 'Sohbet etmeye devam, sıradaki seviye seni bekliyor.', tone: 'ok', fields: got ? [['Sunucu seviyesi', String(a)], ['Ödül', got.name]] : null }), 400);
 }
 // Profil: çerçeveler (seviyeyle açılır) ve sosyal bağlantılar
+const isPisago = n => typeof n === 'string' && n.toLowerCase() === 'pisago';
 const FRAMES = { halka: 2, gokkusagi: 5, ates: 10, neon: 15, altin: 25, kurucu: 0 };
+const FRAMES_SOON = ['gecekedi']; // şimdilik sadece pisago'da aktif (yakında mağazada)
 const PEFFECTS = ['glitch', 'matrix', 'starry', 'embers', 'lightning', 'snow', 'rain', 'sakura', 'sparkles'];
-const PEFFECTS_OWNER = ['dragon_crimson', 'dragon_jade', 'dragon_frost', 'vfx_inferno', 'vfx_volt', 'vfx_rift', 'vfx_blackhole', 'vfx_aurora'];
+const PEFFECTS_OWNER = ['cat_midnight', 'dragon_crimson', 'dragon_jade', 'dragon_frost', 'vfx_inferno', 'vfx_volt', 'vfx_rift', 'vfx_blackhole', 'vfx_aurora'];
+const PEFFECTS_PISAGO = ['cat_midnight'];
 const NAME_BANNERS = ['cyberlime', 'embers', 'magma', 'frostbite', 'deepsea', 'thunder', 'nebula', 'eclipse', 'prism', 'sakura', 'goldsilk'];
+const NAME_BANNERS_SOON = ['gecekedi']; // şimdilik sadece pisago'da aktif (yakında mağazada)
 const SOCIALS = ['instagram', 'tiktok', 'youtube', 'x', 'twitch', 'steam', 'spotify'];
 const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (u.createdAt || 0)).length < 100;
-const frameOk = (u, f) => f === 'none' || (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f]));
-const effectOk = (u, ef) => !ef || ef === 'none' || PEFFECTS.includes(ef) || (PEFFECTS_OWNER.includes(ef) && staffRank(u.name) === 'owner');
-const nameBannerOk = (u, nb) => !nb || nb === 'none' || NAME_BANNERS.includes(nb);
+const frameOk = (u, f) => f === 'none' || (FRAMES_SOON.includes(f) ? isPisago(u.name) : (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f])));
+const effectOk = (u, ef) => !ef || ef === 'none' || PEFFECTS.includes(ef) || (PEFFECTS_PISAGO.includes(ef) ? isPisago(u.name) : (PEFFECTS_OWNER.includes(ef) && staffRank(u.name) === 'owner'));
+const nameBannerOk = (u, nb) => !nb || nb === 'none' || NAME_BANNERS.includes(nb) || (NAME_BANNERS_SOON.includes(nb) && isPisago(u.name));
 const NS_FONTS = ['default', 'serif', 'cinzel', 'rounded', 'script', 'pixel', 'cyber', 'mono'];
 const NS_MODES = ['none', 'solid', 'gradient'];
 const NS_ANIMS = ['none', 'flow', 'shimmer', 'glow', 'rainbow'];
@@ -1130,6 +1134,8 @@ function migrateUids() { // eski hesaplara, açılış sırasına göre kimlik v
   const miss = Object.entries(db.users).filter(([, u]) => u && !u.id).sort((a, b) => (a[1].createdAt || 0) - (b[1].createdAt || 0));
   for (const [n, u] of miss) { u.name ||= n; u.id = mkUid(u.createdAt); uidIndex().set(u.id, n); }
   if (miss.length) { save(); console.log(`Kullanıcı kimliği: ${miss.length} hesaba kalıcı kimlik verildi`); }
+  const pu = Object.values(db.users).find(u => u && isPisago(u.name));
+  if (pu && !pu.catMidnightV1) { pu.frame = 'gecekedi'; pu.effect = 'cat_midnight'; pu.nameBanner = 'gecekedi'; pu.catMidnightV1 = true; save(); console.log(`Gece Kedisi seti ${pu.name} için aktif edildi`); }
 }
 // ---------- Sunucu etiketi (Discord'daki gibi isim yanında küçük etiket) ----------
 // Test aşamasında: sadece TAG.cfg.servers listesindeki sunucular etiket açabilir (başta Kanka HQ),
@@ -1160,7 +1166,7 @@ const TAG = {
   of(u) { if (!u?.tag) return null; const s = db.servers.find(x => x.id === u.tag); return TAG.canUse(u.name, s) ? s.id : null; },
   push() { const d = TAG.defs(); io.emit('tagDefs', d); for (const [sid, n] of online) io.to(sid).emit('tagCan', TAG.canList(n)); pushUsers(); },
 };
-const pubUser0 = u => ({ sp: sparkOn(u) ? u.spark.since : null, id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.theme : null, intro: u.intro && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.intro : null, bannerImg: u.bannerImg || null, frame: u.frame || null, effect: u.effect && (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner') ? u.effect : null, nameBanner: u.nameBanner || null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
+const pubUser0 = u => ({ sp: sparkOn(u) ? u.spark.since : null, id: uidOf(u), displayName: u.displayName || '', pronouns: u.pronouns || '', theme: u.theme && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.theme : null, intro: u.intro && (sparkOn(u) || staffRank(u.name) === 'owner') ? u.intro : null, bannerImg: u.bannerImg || null, frame: u.frame && (!FRAMES_SOON.includes(u.frame) || isPisago(u.name)) ? u.frame : null, effect: u.effect && (PEFFECTS_PISAGO.includes(u.effect) ? isPisago(u.name) : (!PEFFECTS_OWNER.includes(u.effect) || staffRank(u.name) === 'owner')) ? u.effect : null, nameBanner: u.nameBanner && (!NAME_BANNERS_SOON.includes(u.nameBanner) || isPisago(u.name)) ? u.nameBanner : null, nameStyle: staffRank(u.name) === 'owner' ? (u.nameStyle || null) : null, socials: u.socials || {}, kurucu: kurucuOk(u), name: u.name, color: u.color, xp: u.xp || 0, level: level(u.xp), avatar: u.avatar || null, status: u.status || '', bio: u.bio || '', banner: u.banner || null, createdAt: u.createdAt || null,
   birthday: u.birthday || null, music: u.music || null, ...(u.bot ? { bot: { app: u.bot.app, dogrulandi: !!db.apps?.[u.bot.app]?.verified, sahip: db.apps?.[u.bot.app]?.owner || null } } : {}), activities: activitiesOf(u), tg: u.bot ? null : TAG.of(u), badges: shownBadges(u), ach: u.bot ? undefined : achOf(u), betaNo: betaNoOf(u), streak: u.streak?.count || 0, friendCount: (u.friends || []).length });
 // 18 altı gizli hesap: kişisel profil alanları herkese gitmez; sadece kendisi ve arkadaşları 'privProfiles' ile alır
 const PRIV_KEYS = ['pronouns', 'socials', 'bio', 'birthday', 'music', 'activities', 'friendCount'];
