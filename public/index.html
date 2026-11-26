@@ -2641,7 +2641,7 @@
   .has-catfx .vp-banner::after, .has-catfx .pf-ban::after, .has-catfx .dmp-ban::after { display: none; }
   .has-catfx .vp-head, .has-catfx .vp-in, .has-catfx .pf-in, .has-catfx .dmp-id, .has-catfx .dmp-body { position: relative; z-index: 2; }
   /* Yerel Şeffaf VP9+Alpha (.webm) Profil Efekti & İsim Plakası Motoru */
-  .pfx-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; z-index: 6; border-radius: inherit; }
+  .pfx-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; pointer-events: none; z-index: 6; border-radius: inherit; }
   .pfx-vid.screen { mix-blend-mode: screen; }
   .nb-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: right center; z-index: 0; pointer-events: none; opacity: .82; transition: opacity .25s ease, filter .25s ease; }
   .has-nb:hover .nb-vid, .nb-card:hover .nb-vid { opacity: 1; filter: brightness(1.1); }
@@ -9340,9 +9340,12 @@ function marketCatalog() {
 function mkStageHTML(it, big = false) {
   const meName = esc(dn(S.me)), meCol = userColor(S.me), meIn = avInner(S.me);
   if (it.cat === 'effect') {
-    const media = it.img
-      ? `<img class="mk-stage-img" src="${esc(it.img)}" alt="" style="${it.fx === 'frost' ? 'filter:hue-rotate(195deg) saturate(1.15)' : ''}">`
-      : `<div class="mk-stage-bg" style="background:${it.bg}"></div>`;
+    const vcfg = typeof PFX_VIDEO_MAP !== 'undefined' ? PFX_VIDEO_MAP[it.id] : null;
+    const media = vcfg && big
+      ? `<video class="mk-stage-img${vcfg.screen ? ' pfx-vid screen' : ''}" src="${esc(vcfg.loop || vcfg.intro)}" autoplay loop muted playsinline disablePictureInPicture style="z-index:4;opacity:1;object-position:center top"></video>`
+      : it.img
+        ? `<img class="mk-stage-img" src="${esc(it.img)}" alt="" style="${it.fx === 'frost' ? 'filter:hue-rotate(195deg) saturate(1.15)' : ''}">`
+        : `<div class="mk-stage-bg" style="background:${it.bg}"></div>`;
     return `${media}<div class="mk-mini-pf" style="${big ? 'transform:scale(1.18)' : ''}"><div class="av" style="background:${meCol}">${meIn}</div><i></i><em></em></div>`;
   }
   if (it.cat === 'banner') {
@@ -12878,7 +12881,9 @@ function playIntro(el, kind, u) {
 }
 // Şeffaf VP9+Alpha (.webm) profil efekti kayıt defteri: { intro?: '/effects/...webm', loop: '/effects/...webm', screen?: true }
 // Yeni özgün bir .webm efekt eklemek için public/effects/ içine koyup buraya 1 satır eklemek yeterli.
-const PFX_VIDEO_MAP = {};
+const PFX_VIDEO_MAP = {
+  dragon_crimson: { loop: '/effects/dragon_inferno.webm', screen: true },
+};
 function mountVideoProfileEffect(el, cfg) {
   if (!el || !cfg || (!cfg.loop && !cfg.intro)) return false;
   const mkVid = (src, loop) => {
