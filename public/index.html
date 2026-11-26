@@ -2612,19 +2612,28 @@
   .fr-altin::before { background: linear-gradient(135deg, #fff1b8, #e2b04a 30%, #8a5a12 55%, #ffe08a 80%, #b9821f); box-shadow: 0 0 16px rgba(226,176,74,.55); }
   .fr-kurucu::before { background: conic-gradient(#ff8a4c, #ffb347, #ff6b3d, #ff8a4c); box-shadow: 0 0 14px rgba(255,138,76,.55); }
   .fr-kurucu::after { content: '🦝'; position: absolute; z-index: 3; left: 50%; bottom: calc(var(--s) * -.08); transform: translateX(-50%); font-size: calc(var(--s) * .2); line-height: 1; padding: 2px 5px; border-radius: 99px; background: #2b1d15; border: 2px solid #ff8a4c; }
-  /* Gece Kedisi — stüdyo şeffaf kadife kedi kulaklı avatar çerçevesi */
-  .pav.fr-gecekedi::before { background: none !important; box-shadow: none !important; }
+  /* Gece Kedisi — stüdyo şeffaf kadife kedi kulaklı avatar çerçevesi (canlı kıpırtı + parıltı) */
+  .pav.fr-gecekedi::before { background: radial-gradient(circle, rgba(244,143,177,.35), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
   .pav.fr-gecekedi .av { border-color: transparent !important; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
   .pav.fr-gecekedi::after, .av.fr-gecekedi::after {
     content: ''; position: absolute; left: -31%; top: -31%; width: 162%; height: 162%;
     z-index: 4; pointer-events: none;
     background: url('/effects/cat_frame_midnight.png') center/contain no-repeat;
     filter: drop-shadow(0 5px 12px rgba(0,0,0,.58));
+    animation: catEarBop 4.8s ease-in-out infinite;
   }
+  .pav.fr-gecekedi:hover::after, .av.fr-gecekedi:hover::after { animation: catEarHop .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes catGlow { 0%,100% { opacity: .45; transform: scale(1); } 50% { opacity: .9; transform: scale(1.06); } }
+  @keyframes catEarBop { 0%,78%,100% { transform: rotate(0deg) scale(1); } 83% { transform: rotate(-3.5deg) scale(1.03); } 89% { transform: rotate(2.5deg) scale(1.02); } 94% { transform: rotate(0deg) scale(1); } }
+  @keyframes catEarHop { 0% { transform: scale(1) rotate(0); } 45% { transform: scale(1.08) rotate(-4deg); } 100% { transform: scale(1) rotate(0); } }
   .av.fr-gecekedi { position: relative; overflow: visible !important; }
-  .pfx-cat-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; z-index: 1 !important; opacity: .94; pointer-events: none; border-radius: inherit; animation: pfCatBreathe 9s ease-in-out infinite; }
-  .pfx-cat-scrim { position: absolute; inset: 0; z-index: 1 !important; pointer-events: none; border-radius: inherit; background: linear-gradient(180deg, rgba(13,11,21,.04) 0%, rgba(13,11,21,.16) 36%, rgba(12,10,20,.72) 58%, rgba(10,9,17,.88) 100%); }
-  @keyframes pfCatBreathe { 0%,100% { transform: scale(1.01); } 50% { transform: scale(1.045); } }
+  .pfx-cat-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; z-index: 1 !important; opacity: .74; pointer-events: none; border-radius: inherit; }
+  .pfx-cat-scrim { position: absolute; inset: 0; z-index: 1 !important; pointer-events: none; border-radius: inherit; background: linear-gradient(180deg, rgba(13,11,21,.08) 0%, rgba(13,11,21,.22) 38%, rgba(12,10,20,.78) 58%, rgba(10,9,17,.92) 100%); }
+  .nb-gecekedi .nb-art { opacity: .68 !important; -webkit-mask-image: none !important; mask-image: none !important; }
+  .nb-gecekedi .nb-paw { animation: nbPawWalk 2.6s ease-in-out infinite; }
+  .nb-gecekedi .nb-paw.p2 { animation-delay: .55s; }
+  .nb-gecekedi .nb-paw.p3 { animation-delay: 1.1s; }
+  @keyframes nbPawWalk { 0%,100% { opacity: .15; transform: translateY(1px) scale(.88); } 40% { opacity: .95; transform: translateY(-1px) scale(1.1); } 75% { opacity: .25; } }
   /* mini kart teması */
   .vpop.themed { background: linear-gradient(170deg, var(--t1), var(--t2)); border-color: transparent; }
   .vpop.themed .vp-body { background: rgba(18,13,10,.66); margin: 0 6px 6px; border-radius: 0 0 14px 14px; }
@@ -12344,7 +12353,7 @@ const PFX_3D_MAP = { dragon_crimson: 0, dragon_jade: 1, dragon_frost: 2, vfx_bla
 const NB_CATS = [['all', 'Tümü'], ['fire', 'Ateş & Kor'], ['ice', 'Buz & Su'], ['space', 'Uzay'], ['neon', 'Neon & Siber'], ['soft', 'Yumuşak']];
 const NAME_BANNERS = [
   { id: 'none', cat: 'all', name: 'Yok', svg: '' },
-  { id: 'gecekedi', cat: 'soft', name: 'Gece Kedisi', tag: 'YAKINDA', soon: true, svg: '' },
+  { id: 'gecekedi', cat: 'soft', name: 'Gece Kedisi', tag: 'YAKINDA', soon: true, svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="nb-paw p1" fill="#f8b4cb" transform="translate(96 27) rotate(-14)"><ellipse cx="0" cy="3" rx="3.4" ry="2.4"/><circle cx="-3.4" cy="-1.2" r="1.2"/><circle cx="-1.1" cy="-2.6" r="1.3"/><circle cx="1.4" cy="-2.4" r="1.3"/><circle cx="3.6" cy="-.8" r="1.2"/></g><g class="nb-paw p2" fill="#f8b4cb" transform="translate(124 16) rotate(10)"><ellipse cx="0" cy="3" rx="3.4" ry="2.4"/><circle cx="-3.4" cy="-1.2" r="1.2"/><circle cx="-1.1" cy="-2.6" r="1.3"/><circle cx="1.4" cy="-2.4" r="1.3"/><circle cx="3.6" cy="-.8" r="1.2"/></g><g class="nb-paw p3" fill="#fde68a" transform="translate(152 28) rotate(-8)"><ellipse cx="0" cy="3" rx="3.4" ry="2.4"/><circle cx="-3.4" cy="-1.2" r="1.2"/><circle cx="-1.1" cy="-2.6" r="1.3"/><circle cx="1.4" cy="-2.4" r="1.3"/><circle cx="3.6" cy="-.8" r="1.2"/></g></svg>` },
   { id: 'cyberlime', cat: 'neon', name: 'Asit Siber', tag: 'KANKA', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv" stroke="#d4ff00" stroke-opacity=".45" fill="none" stroke-width="1.2"><path d="M135 10 H170 L180 20 H225"/><path d="M150 34 H190 L202 24 H238"/><circle cx="170" cy="10" r="2.2" fill="#d4ff00"/><circle cx="202" cy="24" r="2.2" fill="#d4ff00"/><circle cx="222" cy="12" r="1.6" fill="#fff"/></g><rect x="210" y="6" width="22" height="3" rx="1.5" fill="#d4ff00" opacity=".75"/></svg>` },
   { id: 'embers', cat: 'fire', name: 'Kor Alev', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv"><circle cx="150" cy="30" r="2.2" fill="#ffbe3b" opacity=".8"/><circle cx="176" cy="14" r="1.6" fill="#ff7a2b" opacity=".9"/><circle cx="198" cy="26" r="3" fill="#ffd166" opacity=".75"/><circle cx="218" cy="12" r="2" fill="#fff" opacity=".85"/><circle cx="226" cy="33" r="2.5" fill="#ff6b2b" opacity=".8"/><circle cx="164" cy="36" r="1.4" fill="#fde047" opacity=".7"/></g></svg>` },
   { id: 'magma', cat: 'fire', name: 'Magma', tag: 'YENİ', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv" stroke="#ff9447" stroke-opacity=".55" stroke-width="1.3" fill="none"><path d="M130 44 L178 12 L238 36"/><path d="M168 44 L208 4 L232 44"/><circle cx="178" cy="12" r="2.4" fill="#fde047"/><circle cx="208" cy="18" r="1.5" fill="#ff7a2b"/></g></svg>` },
@@ -12759,39 +12768,190 @@ function mountProfileEffect(el, fx) {
     const cv = document.createElement('canvas'); cv.className = 'pfx-cv'; cv.setAttribute('aria-hidden', 'true');
     el.prepend(scrim); el.prepend(img); el.appendChild(cv);
     const ctx = cv.getContext('2d'); if (!ctx) return;
-    let W = Math.max(180, el.clientWidth || 300), H = Math.max(220, el.clientHeight || 420), raf = 0, dead = false, startT = performance.now(), last = startT;
-    const fit = () => { const dpr = Math.min(1.75, devicePixelRatio || 1); W = Math.max(180, el.clientWidth || 300); H = Math.max(220, el.clientHeight || 420); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    let W = Math.max(180, el.clientWidth || 300), H = Math.max(220, el.clientHeight || 420), raf = 0, dead = false, startT = performance.now(), last = startT, frame = 0;
+    const fit = () => { const dpr = Math.min(1.75, devicePixelRatio || 1); const nw = Math.max(180, el.clientWidth || 300), nh = Math.max(220, el.clientHeight || 420); if (cv.width === Math.round(nw * dpr) && cv.height === Math.round(nh * dpr)) return; W = nw; H = nh; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
     fit();
-    const petals = Array.from({ length: 12 }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: -.3 - Math.random() * .4, vy: .3 + Math.random() * .5, r: Math.random() * 6.28, vr: (Math.random() - .5) * .03, s: 3.5 + Math.random() * 3.8, ph: Math.random() * 6.28 }));
-    const stars = Array.from({ length: 20 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: .8 + Math.random() * 1.9, ph: Math.random() * 6.28, sp: 1.4 + Math.random() * 2.1 }));
+    const petals = Array.from({ length: 12 }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: -.32 - Math.random() * .42, vy: .32 + Math.random() * .48, r: Math.random() * 6.28, vr: (Math.random() - .5) * .035, s: 3.4 + Math.random() * 3.6, ph: Math.random() * 6.28 }));
+    const stars = Array.from({ length: 18 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: .8 + Math.random() * 1.8, ph: Math.random() * 6.28, sp: 1.5 + Math.random() * 2.2 }));
+    const paws = [], bursts = [];
+    // Koşan kedi durumu: ilk saniyeden sağdan sola koşar, ortada zıplayıp yıldız kelebeğe pati atar, sonra döngüyle tekrar koşar
+    const cat = { active: true, dir: -1, prog: 0, dur: 2.35, nextAt: 0, lane: 0, pounced: false, lastPaw: -1, runCount: 0 };
+    const spawnBurst = (bx, by, n = 16) => {
+      for (let i = 0; i < n; i++) {
+        const ang = (Math.PI * 2 * i) / n + (Math.random() - .5) * .4, spd = 28 + Math.random() * 72;
+        bursts.push({ x: bx, y: by, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd - 14, age: 0, life: .65 + Math.random() * .45, r: 1.4 + Math.random() * 2.2, col: i % 3 === 0 ? '#fde68a' : i % 2 ? '#f8b4cb' : '#c8ff00' });
+      }
+    };
+    const drawStar4 = (x, y, r, a, col) => {
+      ctx.save(); ctx.translate(x, y); ctx.globalAlpha = a; ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.moveTo(0, -r * 2.3); ctx.quadraticCurveTo(0, 0, r * 2.3, 0); ctx.quadraticCurveTo(0, 0, 0, r * 2.3); ctx.quadraticCurveTo(0, 0, -r * 2.3, 0); ctx.quadraticCurveTo(0, 0, 0, -r * 2.3); ctx.fill(); ctx.restore();
+    };
+    const drawPaw = (x, y, s, rot, a) => {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s); ctx.globalAlpha = a;
+      ctx.fillStyle = '#f8b4cb'; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.ellipse(0, 3.2, 4.8, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+      [[-4.8, -1.8, 1.8], [-1.7, -4, 1.9], [1.9, -3.8, 1.9], [5, -1.5, 1.7]].forEach(([tx, ty, tr]) => { ctx.beginPath(); ctx.arc(tx, ty, tr, 0, Math.PI * 2); ctx.fill(); });
+      ctx.restore();
+    };
+    const drawButterfly = (bx, by, t) => {
+      const flap = .35 + .65 * Math.abs(Math.sin(t * 15));
+      ctx.save(); ctx.translate(bx, by); ctx.shadowColor = '#fde047'; ctx.shadowBlur = 14;
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath(); ctx.ellipse(-5 * flap, -3, 6.2 * flap, 3.8, -.45, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(5 * flap, -3, 6.2 * flap, 3.8, .45, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f8b4cb';
+      ctx.beginPath(); ctx.ellipse(-3.5 * flap, 2.5, 4 * flap, 2.6, .35, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(3.5 * flap, 2.5, 4 * flap, 2.6, -.35, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 1.8, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    };
+    // Eklemli, koşan ve zıplayan siyah kedi (dir: 1 = sağa, -1 = sola)
+    const drawRunningCat = (cx, cy, dir, phase, jumpAmt) => {
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(dir, 1);
+      const stride = Math.sin(phase), stride2 = Math.cos(phase);
+      const pitch = jumpAmt > .05 ? -jumpAmt * .22 : stride2 * .09;
+      ctx.rotate(pitch);
+      const bodyStroke = '#e8b4f8', bodyFill = '#120e1c';
+      ctx.shadowColor = 'rgba(244,143,177,.65)'; ctx.shadowBlur = 12;
+      // Dalgalı uzun kuyruk (6 eklemli S-eğrisi)
+      ctx.strokeStyle = bodyFill; ctx.lineWidth = 4.6; ctx.lineCap = 'round';
+      const tx0 = -19, ty0 = -5 - stride * 2;
+      const tx1 = -30, ty1 = -13 + Math.sin(phase - .9) * 5;
+      const tx2 = -40, ty2 = -20 + Math.cos(phase - 1.5) * 6;
+      ctx.beginPath(); ctx.moveTo(tx0, ty0); ctx.bezierCurveTo(tx1, ty1 - 3, tx1 - 4, ty2 + 4, tx2, ty2); ctx.stroke();
+      ctx.strokeStyle = bodyStroke; ctx.lineWidth = 1.1; ctx.stroke();
+      // 4 bacak (arka sol/sağ + ön sol/sağ — gerçek kedi dörtnal faz kayması)
+      const leg = (ox, oy, ang, far) => {
+        ctx.save(); ctx.translate(ox, oy);
+        const kX = Math.sin(ang) * 9.5, kY = Math.cos(ang) * 9.5;
+        const fX = kX + Math.sin(ang - .55) * 8.5, fY = kY + Math.cos(ang - .55) * 8.5;
+        ctx.strokeStyle = far ? '#0b0812' : bodyFill; ctx.lineWidth = far ? 3.5 : 4.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(kX, kY); ctx.lineTo(fX, fY); ctx.stroke();
+        ctx.fillStyle = '#f8b4cb'; ctx.beginPath(); ctx.arc(fX, fY, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      };
+      const jumpSpread = jumpAmt * .55;
+      leg(-15, -2, -stride * .85 - .35 - jumpSpread, true);
+      leg(12, -3, stride * .95 + .35 + jumpSpread, true);
+      // Esnek gövde
+      const arch = stride * 2.6;
+      ctx.fillStyle = bodyFill; ctx.strokeStyle = bodyStroke; ctx.lineWidth = 1.25;
+      ctx.beginPath();
+      ctx.moveTo(-19, -5);
+      ctx.bezierCurveTo(-10, -14 - arch, 8, -14 - arch, 18, -7);
+      ctx.bezierCurveTo(21, -2, 16, 4, 8, 3);
+      ctx.bezierCurveTo(-2, 2 - arch * .6, -12, 4, -18, 1);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      // Ön plandaki bacaklar
+      leg(-14, -1, -Math.sin(phase + .45) * .9 - .25 - jumpSpread, false);
+      leg(13, -2, Math.sin(phase + .45) * 1.05 + .45 + jumpSpread, false);
+      // Kafa + kulaklar + parlayan altın göz + pembe iç kulak + bıyıklar
+      ctx.save(); ctx.translate(22, -11 - jumpAmt * 3); ctx.rotate(-pitch * .5);
+      ctx.fillStyle = bodyFill; ctx.strokeStyle = bodyStroke; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.ellipse(0, 0, 8.6, 7.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // Kulaklar (koşarken hafif geriye yatık)
+      ctx.beginPath(); ctx.moveTo(-4, -5); ctx.lineTo(-9, -15); ctx.lineTo(0, -7); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(1, -6); ctx.lineTo(-1, -15.5); ctx.lineTo(6, -5.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f48fb1'; ctx.beginPath(); ctx.moveTo(-3.5, -6.5); ctx.lineTo(-7, -12.5); ctx.lineTo(-1, -7.2); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(1.5, -7); ctx.lineTo(0, -12.8); ctx.lineTo(4.5, -6.5); ctx.closePath(); ctx.fill();
+      // Parlayan altın göz + minik pembe burun + bıyık
+      ctx.shadowColor = '#ffd54f'; ctx.shadowBlur = 10; ctx.fillStyle = '#ffd54f';
+      ctx.beginPath(); ctx.ellipse(3.6, -1.2, 2.3, 2.6, -.1, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0; ctx.fillStyle = '#09090d'; ctx.beginPath(); ctx.ellipse(4.1, -1.2, .75, 2.1, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(3.1, -2.1, .7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f8b4cb'; ctx.beginPath(); ctx.arc(8.4, .9, 1.1, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.72)'; ctx.lineWidth = .85;
+      ctx.beginPath(); ctx.moveTo(6.5, 2); ctx.lineTo(13, .8); ctx.moveTo(6.5, 3); ctx.lineTo(12.5, 3.8); ctx.stroke();
+      ctx.restore();
+      ctx.restore();
+    };
+    const drawPeekEyes = (ex, ey, open, a) => {
+      [-15, 15].forEach(dx => {
+        ctx.save(); ctx.translate(ex + dx, ey); ctx.globalAlpha = a;
+        ctx.fillStyle = '#ffd54f'; ctx.shadowColor = '#ffd54f'; ctx.shadowBlur = 14;
+        ctx.beginPath(); ctx.moveTo(-9, 0); ctx.quadraticCurveTo(0, -7 * open, 9, 0); ctx.quadraticCurveTo(0, 7 * open, -9, 0); ctx.fill();
+        if (open > .2) { ctx.shadowBlur = 0; ctx.fillStyle = '#09090d'; ctx.beginPath(); ctx.ellipse(0, 0, 1.5, 5.2 * open, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-2.4, -1.6 * open, 1.1, 0, Math.PI * 2); ctx.fill(); }
+        ctx.restore();
+      });
+    };
     const stop = () => { dead = true; cancelAnimationFrame(raf); };
     cv._stop = stop; img._stop = stop; scrim._stop = stop;
     const tick = now => {
       if (dead || !cv.isConnected) return stop();
       if (!document.hidden) {
+        if (++frame % 25 === 0) fit();
         const dt = Math.min(.05, (now - last) / 1000), t = (now - startT) / 1000; last = now;
         ctx.clearRect(0, 0, W, H);
-        if (t < 1.35) {
-          const p = t / 1.35, a = (1 - p) * .5;
-          const g = ctx.createRadialGradient(W * .5, H * .22, 6, W * .5, H * .22, W * (.28 + p * .78));
-          g.addColorStop(0, `rgba(255,240,248,${a})`); g.addColorStop(.45, `rgba(244,143,177,${a * .42})`); g.addColorStop(1, 'rgba(168,85,247,0)');
-          ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-        }
+        // 1) Sakura yaprakları & yıldız kıvılcımları
         for (const p of petals) {
-          p.ph += dt * 1.8; p.x += p.vx + Math.sin(p.ph) * .32; p.y += p.vy; p.r += p.vr;
+          p.ph += dt * 1.9; p.x += p.vx + Math.sin(p.ph) * .34; p.y += p.vy; p.r += p.vr;
           if (p.y > H + 12) { p.y = -12; p.x = Math.random() * W; } if (p.x < -12) p.x = W + 12;
           ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
-          ctx.globalAlpha = (p.x < 68 || p.x > W - 68 || p.y < 160) ? .72 : .24;
+          ctx.globalAlpha = (p.x < 68 || p.x > W - 68 || p.y < 165) ? .72 : .22;
           ctx.fillStyle = '#fbcfe8'; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 7;
           ctx.beginPath(); ctx.ellipse(0, 0, p.s, p.s * .46, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
         }
         for (const s of stars) {
           s.ph += dt * s.sp;
-          const a = Math.max(0, Math.sin(s.ph)) * (s.y < 180 || s.x < 62 || s.x > W - 62 ? .8 : .24);
-          if (a > .06) {
-            ctx.save(); ctx.translate(s.x, s.y); ctx.globalAlpha = a; ctx.fillStyle = s.r > 1.7 ? '#fde68a' : '#f8b4cb';
-            ctx.beginPath(); ctx.moveTo(0, -s.r * 2.2); ctx.quadraticCurveTo(0, 0, s.r * 2.2, 0); ctx.quadraticCurveTo(0, 0, 0, s.r * 2.2); ctx.quadraticCurveTo(0, 0, -s.r * 2.2, 0); ctx.quadraticCurveTo(0, 0, 0, -s.r * 2.2); ctx.fill(); ctx.restore();
+          const a = Math.max(0, Math.sin(s.ph)) * (s.y < 175 || s.x < 60 || s.x > W - 60 ? .82 : .22);
+          if (a > .06) drawStar4(s.x, s.y, s.r, a, s.r > 1.65 ? '#fde68a' : '#f8b4cb');
+        }
+        // 2) Koşan kedinin bıraktığı parlayan pembe pati izleri
+        for (let i = paws.length - 1; i >= 0; i--) {
+          const pw = paws[i]; pw.age += dt;
+          if (pw.age >= pw.life) { paws.splice(i, 1); continue; }
+          const u = pw.age / pw.life, a = (u < .15 ? u / .15 : 1 - (u - .15) / .85) * .68;
+          drawPaw(pw.x, pw.y - pw.age * 3, pw.s, pw.rot, a);
+        }
+        // 3) Sağdan sola / soldan sağa koşan ve zıplayıp yıldız kelebeğe pati atan kedi!
+        if (!cat.active && t >= cat.nextAt) {
+          cat.active = true; cat.prog = 0; cat.pounced = false; cat.lastPaw = -1; cat.runCount++;
+          cat.dir = cat.runCount % 2 === 1 ? 1 : -1;
+          cat.lane = cat.runCount % 3 === 2 ? 1 : 0; // üst banner çizgisi ve arada alt kenar
+        }
+        if (cat.active) {
+          cat.prog += dt / cat.dur;
+          const p = cat.prog;
+          const baseY = cat.lane === 0 ? Math.min(136, H * .30) : H - 26;
+          const cx = cat.dir < 0 ? (W + 58) - (W + 124) * p : -58 + (W + 124) * p;
+          const jumpU = p > .40 && p < .64 ? Math.sin(((p - .40) / .24) * Math.PI) : 0;
+          const cy = baseY - jumpU * 34 + Math.sin(p * 26) * 2.5;
+          // Önünde uçan altın yıldız kelebeği (pati yiyince kıvılcımla kaçışır!)
+          const bfLead = cat.pounced ? 68 + (p - .52) * 190 : 46 + Math.sin(t * 7) * 8;
+          const bfX = cx + cat.dir * bfLead, bfY = baseY - 26 - (cat.pounced ? (p - .52) * 95 : Math.sin(t * 8.5) * 11);
+          if (bfX > -20 && bfX < W + 20 && bfY > -20) drawButterfly(bfX, bfY, t);
+          if (!cat.pounced && p >= .51) { cat.pounced = true; spawnBurst(cx + cat.dir * 26, cy - 10, 18); }
+          // Her adımda yere parlayan pembe pati izi bırak
+          const pawBucket = Math.floor(p * 11);
+          if (jumpU < .2 && pawBucket !== cat.lastPaw && cx > 18 && cx < W - 18) {
+            cat.lastPaw = pawBucket;
+            paws.push({ x: cx - cat.dir * 10, y: baseY + 6 + (pawBucket % 2 ? 3 : -2), s: .78, rot: (cat.dir < 0 ? -.4 : .4) + (Math.random() - .5) * .2, age: 0, life: 2.3 });
           }
+          drawRunningCat(cx, cy, cat.dir, p * 26, jumpU);
+          if (cat.prog >= 1) { cat.active = false; cat.nextAt = t + 3.6; }
+        } else {
+          // Koşular arasında: gölgeden göz kırpan altın kedi gözleri + alt sağda sallanan kedi kuyruğu
+          const idleT = t - (cat.nextAt - 3.6);
+          if (idleT > .6 && idleT < 2.9) {
+            const fade = idleT < 1.0 ? (idleT - .6) / .4 : idleT > 2.4 ? (2.9 - idleT) / .5 : 1;
+            const blink = (idleT > 1.55 && idleT < 1.75) ? Math.abs((idleT - 1.65) / .1) : 1;
+            drawPeekEyes(W * .76, Math.min(72, H * .17), Math.max(.08, blink), fade * .88);
+          }
+          // Alt sağ köşeden nazikçe sallanan kedi kuyruğu
+          ctx.save(); ctx.translate(W - 8, H + 4);
+          const sway = Math.sin(t * 2.4) * 14;
+          ctx.strokeStyle = '#120e1c'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+          ctx.shadowColor = 'rgba(244,143,177,.45)'; ctx.shadowBlur = 10;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(-18, -22, -26 + sway, -44, -10 + sway * 1.3, -64); ctx.stroke();
+          ctx.strokeStyle = '#e8b4f8'; ctx.lineWidth = 1.3; ctx.stroke();
+          ctx.restore();
+        }
+        // 4) Pati darbesi kıvılcım patlaması
+        for (let i = bursts.length - 1; i >= 0; i--) {
+          const b = bursts[i]; b.age += dt;
+          if (b.age >= b.life) { bursts.splice(i, 1); continue; }
+          b.x += b.vx * dt; b.y += b.vy * dt; b.vy += 45 * dt;
+          drawStar4(b.x, b.y, b.r * (1 - b.age / b.life * .4), 1 - b.age / b.life, b.col);
         }
       }
       raf = requestAnimationFrame(tick);
