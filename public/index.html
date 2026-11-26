@@ -7604,7 +7604,7 @@ function msgActs(m) {
   const canDel = (mine || mod) && !m.ephemeral, canPin = (S.view === 'dm' || mod) && !m.ephemeral && m.author;
   return [bot ? null : ['reply', 'reply', 'Yanıtla'], (m.author || m.kind === 'bot') && !m.enc ? ['thread', 'thread', 'Konu başlat'] : null,
     m.text || m.bot?.text ? ['copy', 'copy', 'Metni kopyala'] : null,
-    msgLinkOf(m) ? ['mlink', 'link', 'Mesaj linkini kopyala'] : null,
+    msgLinkOf(m) ? ['mlink', 'link', 'Mesaj bağlantısını kopyala'] : null,
     fwdable(m) ? ['fwd', 'forward', 'İlet'] : null,
     canPin ? ['pin', 'pin', m.pinned ? 'Sabitlemeyi kaldır' : 'Sabitle'] : null,
     mine && (m.kind || 'text') === 'text' && m.text && (!m.enc || m._e2e) ? ['edit', 'edit', 'Düzenle'] : null,
@@ -7655,7 +7655,7 @@ function runMsgAct(m, a) {
   if (a === 'pin') socket.emit('pin', m.id);
   if (a === 'thread') openThread(m.id);
   if (a === 'copy') navigator.clipboard?.writeText(m.text || m.bot?.text || '').then(() => toast('Kopyalandı'));
-  if (a === 'mlink') { const u = msgLinkOf(m); if (u) navigator.clipboard?.writeText(u).then(() => toast('Mesaj linki kopyalandı. Sadece bu mesajı görebilenler açabilir.')); }
+  if (a === 'mlink') { const u = msgLinkOf(m); if (u) navigator.clipboard?.writeText(u).then(() => toast('Mesaj bağlantısı kopyalandı. Sadece bu mesajı görebilenler açabilir.')); }
   if (a === 'fwd') openForward(m);
   if (a === 'edit') form('Mesajı düzenle', '', [{ k: 'text', p: 'Mesaj', v: m.text }], v => editMsg(m, v.text));
   if (a === 'del') confirmBox('Bu mesaj silinsin mi?', () => socket.emit('delete', m.id));
@@ -7795,7 +7795,7 @@ $('#messages').addEventListener('contextmenu', e => {
     + (has('thread') ? item('thread', 'thread', 'Konu başlat') : '')
     + '<div class="mc-sep"></div>'
     + (has('copy') ? item('copy', 'copy', 'Metni kopyala') : '')
-    + (has('mlink') ? item('mlink', 'link', 'Mesaj linkini kopyala') : '')
+    + (has('mlink') ? item('mlink', 'link', 'Mesaj bağlantısını kopyala') : '')
     + (has('pin') ? item('pin', 'pin', acts.find(x => x[0] === 'pin')[2]) : '')
     + (has('report') ? item('report', 'flag', 'Şikayet et', 'danger') : '')
     + (has('del') ? item('del', 'trash', 'Sil', 'danger') : '');
