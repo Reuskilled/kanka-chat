@@ -2640,6 +2640,33 @@
   .has-catfx .vp-banner, .has-catfx .pf-ban, .has-catfx .dmp-ban { background: transparent !important; position: relative; z-index: 1; }
   .has-catfx .vp-banner::after, .has-catfx .pf-ban::after, .has-catfx .dmp-ban::after { display: none; }
   .has-catfx .vp-head, .has-catfx .vp-in, .has-catfx .pf-in, .has-catfx .dmp-id, .has-catfx .dmp-body { position: relative; z-index: 2; }
+  /* Yerel Şeffaf VP9+Alpha (.webm) Profil Efekti & İsim Plakası Motoru */
+  .pfx-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; z-index: 6; border-radius: inherit; }
+  .pfx-vid.screen { mix-blend-mode: screen; }
+  .nb-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: right center; z-index: 0; pointer-events: none; opacity: .82; transition: opacity .25s ease, filter .25s ease; }
+  .has-nb:hover .nb-vid, .nb-card:hover .nb-vid { opacity: 1; filter: brightness(1.1); }
+  /* Kurucu Özel: Canlı .webm / .webp Efekt Laboratuvarı */
+  #modal .box.mklab-box { width: min(760px, 95vw); padding: 22px; }
+  .mklab-grid { display: grid; grid-template-columns: 310px 1fr; gap: 18px; align-items: start; margin-top: 12px; }
+  @media (max-width: 720px) { .mklab-grid { grid-template-columns: 1fr; } }
+  .mklab-card { position: relative; width: 100%; border-radius: 18px; overflow: hidden; background: var(--card); border: 1px solid var(--line); box-shadow: 0 18px 46px rgba(0,0,0,.45); }
+  .mklab-ban { height: 96px; background: linear-gradient(135deg, #1d1829, #13141c); }
+  .mklab-body { position: relative; z-index: 2; padding: 0 16px 16px; }
+  .mklab-avrow { display: flex; align-items: flex-end; justify-content: space-between; margin-top: -42px; margin-bottom: 10px; }
+  .mklab-avw { position: relative; width: 82px; height: 82px; display: inline-grid; place-items: center; }
+  .mklab-avw .av { width: 82px; height: 82px; font-size: 28px; border: 4px solid var(--card); }
+  .mklab-avw img.lab-fr { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: var(--fsz, 150%); height: var(--fsz, 150%); pointer-events: none; z-index: 4; object-fit: contain; }
+  .mklab-bio { margin-top: 10px; padding: 10px 12px; border-radius: 11px; background: rgba(255,255,255,.04); border: 1px solid var(--line); font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .mklab-ctrls { display: grid; gap: 10px; }
+  .mklab-drop { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px 14px; border-radius: 14px; border: 1.5px dashed var(--line); background: var(--card); cursor: pointer; text-align: center; transition: border-color .15s; }
+  .mklab-drop:hover { border-color: var(--accent); }
+  .mklab-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .mklab-drop b { font-size: 13.5px; } .mklab-drop small { font-size: 11.5px; color: var(--muted); }
+  .mklab-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 3px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+  .mklab-tabs button { padding: 7px 6px; border-radius: 7px; font-size: 12px; font-weight: 800; color: var(--muted); }
+  .mklab-tabs button.on { background: var(--card); color: var(--ink); }
+  .mklab-nbp { position: relative; overflow: hidden; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #14141a; border: 1px solid var(--line); min-height: 54px; }
+  .mklab-nbp > *:not(.nb-vid):not(.nb-scrim) { position: relative; z-index: 2; }
   .nb-gecekedi .nb-art { opacity: .68 !important; -webkit-mask-image: none !important; mask-image: none !important; }
   .nb-gecekedi .nb-paw { animation: nbPawWalk 2.6s ease-in-out infinite; }
   .nb-gecekedi .nb-paw.p2 { animation-delay: .55s; }
@@ -9373,6 +9400,86 @@ function marketSectionsHTML() {
   if (mkTab === 'tag') return sec('Kanka Piksel Etiket Paketleri (30 Rozet)', cat.tags.length, cat.tags);
   return '';
 }
+function openEffectLab() {
+  const meCol = userColor(S.me), meIn = avInner(S.me), meName = esc(dn(S.me));
+  const urls = [];
+  const state = { tab: 'effect', loop: '', intro: '', screen: false, frame: '', frameSz: 158, nb: '', nbVid: false };
+  const cleanup = () => { urls.forEach(u => { try { URL.revokeObjectURL(u); } catch {} }); urls.length = 0; $('#mklab-card')?.querySelectorAll(':scope > .pfx-cv').forEach(c => c._stop?.()); };
+  const render = () => {
+    const card = $('#mklab-card'); if (!card) return;
+    card.querySelectorAll(':scope > .pfx-cv').forEach(c => { c._stop?.(); c.remove(); });
+    if (state.loop || state.intro) mountVideoProfileEffect(card, { intro: state.intro || null, loop: state.loop || state.intro, screen: state.screen });
+    const fr = $('#mklab-fr');
+    if (fr) { fr.style.display = state.frame ? '' : 'none'; if (state.frame) { fr.src = state.frame; fr.style.setProperty('--fsz', state.frameSz + '%'); } }
+    const nb = $('#mklab-nb');
+    if (nb) {
+      nb.querySelector('.nb-vid')?.remove();
+      nb.querySelector('.nb-img')?.remove();
+      if (state.nb) {
+        if (state.nbVid) { const v = document.createElement('video'); v.className = 'nb-vid'; v.src = state.nb; v.autoplay = v.loop = v.muted = v.playsInline = true; nb.prepend(v); }
+        else { const i = document.createElement('img'); i.className = 'nb-vid nb-img'; i.src = state.nb; i.alt = ''; nb.prepend(i); }
+      }
+    }
+  };
+  modal(`<h3>🧪 Canlı .webm / .webp Efekt Laboratuvarı</h3>
+    <p class="hint" style="margin:2px 0 0">Bilgisayarındaki şeffaf <b>.webm (VP9+Alpha)</b> profil efektini, hareketli <b>.webp</b> avatar çerçevesini veya <b>.webm</b> isim plakasını doğrudan kendi profilinde anlık test et (sunucuya yüklenmez).</p>
+    <div class="mklab-grid">
+      <div>
+        <div class="mklab-card" id="mklab-card">
+          <div class="mklab-ban"></div>
+          <div class="mklab-body">
+            <div class="mklab-avrow"><div class="mklab-avw"><div class="av" style="background:${meCol}">${meIn}</div><img class="lab-fr" id="mklab-fr" style="display:none" alt=""></div></div>
+            <b style="font-size:17px">${meName}</b>
+            <div style="font-size:12px;color:var(--muted)">@${esc(S.me)} · Kurucu</div>
+            <div class="mklab-bio">Şeffaf .webm efektler ortadaki metni hiç boğmadan kenarlarda 60fps oynar.</div>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="mklab-nbp has-nb" id="mklab-nb"><div class="nb-scrim"></div><div class="av" style="width:34px;height:34px;font-size:13px;background:${meCol}">${meIn}</div><div><b style="font-size:13.5px">${meName}</b><small style="display:block;font-size:11px;color:var(--muted)">İsim plakası önizlemesi</small></div></div>
+        </div>
+      </div>
+      <div class="mklab-ctrls">
+        <div class="mklab-tabs" id="mklab-tabs">
+          <button type="button" data-lt="effect" class="on">Profil Efekti (.webm)</button>
+          <button type="button" data-lt="frame">Çerçeve (.webp/.png)</button>
+          <button type="button" data-lt="nb">İsim Plakası</button>
+        </div>
+        <div id="mklab-p-effect">
+          <label class="mklab-drop"><b>Döngü Efekti Seç (.webm / .mp4)</b><small>450×880 VP9+Alpha (.webm) — ortası şeffaf</small><input type="file" id="lab-f-loop" accept="video/webm,video/mp4,.webm"></label>
+          <label class="mklab-drop" style="margin-top:8px;padding:12px"><b>Opsiyonel: Giriş Efekti (.webm)</b><small>Bir kez oynayıp sonra döngüye geçer</small><input type="file" id="lab-f-intro" accept="video/webm,video/mp4,.webm"></label>
+          <label class="switch" style="margin-top:10px">Siyah arka planı saydamlaştır (Screen)<input type="checkbox" id="lab-scr"></label>
+          <div class="rowb" style="margin-top:8px"><button type="button" id="lab-replay">▶ Baştan Oynat</button><button type="button" id="lab-clr-e">Temizle</button></div>
+        </div>
+        <div id="mklab-p-frame" style="display:none">
+          <label class="mklab-drop"><b>Hareketli Çerçeve Seç (.webp / .png / .gif)</b><small>288×288 veya 512×512 şeffaf Animated WebP / PNG</small><input type="file" id="lab-f-frame" accept="image/webp,image/png,image/gif,.webp,.png"></label>
+          <div class="st-field" style="margin-top:10px"><label>Çerçeve Boyutu: <b id="lab-fsz-v">158%</b></label><input type="range" id="lab-fsz" min="115" max="185" value="158" style="width:100%;accent-color:var(--accent)"></div>
+          <div class="rowb"><button type="button" id="lab-clr-f">Çerçeveyi Kaldır</button></div>
+        </div>
+        <div id="mklab-p-nb" style="display:none">
+          <label class="mklab-drop"><b>İsim Plakası Seç (.webm / .webp / .jpg)</b><small>640×120 veya yatay şeffaf .webm / görsel</small><input type="file" id="lab-f-nb" accept="video/webm,image/webp,image/png,image/jpeg,.webm,.webp"></label>
+          <div class="rowb" style="margin-top:8px"><button type="button" id="lab-clr-n">Plakayı Kaldır</button></div>
+        </div>
+        <div class="rowb" style="margin-top:6px"><button type="button" id="mx">Kapat</button></div>
+      </div>
+    </div>`, 'mklab-box');
+  $('#mx').onclick = () => { cleanup(); closeModal(); };
+  const addUrl = f => { const u = URL.createObjectURL(f); urls.push(u); return u; };
+  $('#mklab-tabs').querySelectorAll('[data-lt]').forEach(b => b.onclick = () => {
+    state.tab = b.dataset.lt;
+    $('#mklab-tabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    ['effect', 'frame', 'nb'].forEach(k => { $('#mklab-p-' + k).style.display = k === state.tab ? '' : 'none'; });
+  });
+  $('#lab-f-loop').onchange = e => { const f = e.target.files?.[0]; if (!f) return; state.loop = addUrl(f); render(); toast(`${f.name} yüklendi`); };
+  $('#lab-f-intro').onchange = e => { const f = e.target.files?.[0]; if (!f) return; state.intro = addUrl(f); render(); toast(`Giriş: ${f.name}`); };
+  $('#lab-scr').onchange = e => { state.screen = e.target.checked; render(); };
+  $('#lab-replay').onclick = render;
+  $('#lab-clr-e').onclick = () => { state.loop = state.intro = ''; render(); };
+  $('#lab-f-frame').onchange = e => { const f = e.target.files?.[0]; if (!f) return; state.frame = addUrl(f); render(); };
+  $('#lab-fsz').oninput = e => { state.frameSz = +e.target.value; $('#lab-fsz-v').textContent = state.frameSz + '%'; render(); };
+  $('#lab-clr-f').onclick = () => { state.frame = ''; render(); };
+  $('#lab-f-nb').onchange = e => { const f = e.target.files?.[0]; if (!f) return; state.nb = addUrl(f); state.nbVid = /^video\/|\.webm$/i.test(f.type || f.name); render(); };
+  $('#lab-clr-n').onclick = () => { state.nb = ''; render(); };
+}
 function marketHTML() {
   const cat = marketCatalog(), meLv = S.users?.[S.me]?.level || 1, q = mkQuery.trim();
   const feat = [
@@ -9389,6 +9496,7 @@ function marketHTML() {
       <div class="mk-tabs">${navTabs.map(([id, lab]) => `<button type="button" data-mktab="${id}" class="${mkTab === id ? 'on' : ''}">${lab}</button>`).join('')}</div>
       <div class="mk-nav-r">
         <div class="mk-search">${ic('search')}<input id="mk-q" type="search" value="${esc(mkQuery)}" placeholder="Market'te ara…" autocomplete="off"></div>
+        ${S.staff === 'owner' ? `<button type="button" class="mk-bal" id="mk-lab" title="Yerel .webm / .webp efektini kendi profilinde canlı test et">🧪<span>Efekt Test Et</span></button>` : ''}
         <button type="button" class="mk-bal" id="mk-bal">${ic(SPARK_HIDE ? 'star' : 'sparkle')}<span>${SPARK_HIDE ? `Sv. ${meLv}` : 'Spark & Energy'}</span></button>
       </div>
     </nav>
@@ -9446,6 +9554,7 @@ function wireMarket() {
     if (list) { list.innerHTML = marketSectionsHTML(); bindCards(list); }
   };
   if ($('#mk-explore')) $('#mk-explore').onclick = () => $('#mk-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if ($('#mk-lab')) $('#mk-lab').onclick = openEffectLab;
   if ($('#mk-bal')) $('#mk-bal').onclick = () => { if (!SPARK_HIDE) showFriends('spark'); else showSettings('profile'); };
 }
 function showFriends(tab = friendTab) {
@@ -12378,7 +12487,7 @@ const NAME_BANNERS = [
   { id: 'goldsilk', cat: 'soft', name: 'Altın İpek', tag: 'ÖZEL', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><path class="mv" d="M130 36 Q180 8 240 26" fill="none" stroke="#fde047" stroke-opacity=".35" stroke-width="2"/><g class="mv" fill="#fef08a"><circle cx="174" cy="16" r="1.5"/><circle cx="204" cy="24" r="2"/><circle cx="224" cy="12" r="1.3"/></g></svg>` },
 ];
 const nbOf = u => u?.nameBanner && NAME_BANNERS.some(x => x.id === u.nameBanner && x.id !== 'none') ? u.nameBanner : null;
-const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `<div class="nb-bg"></div><div class="nb-scrim"></div><div class="nb-art">${b.svg}</div><div class="nb-sheen"></div>`; };
+const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `${b.vid ? `<video class="nb-vid" src="${esc(b.vid)}" autoplay loop muted playsinline disablePictureInPicture aria-hidden="true"></video>` : '<div class="nb-bg"></div>'}<div class="nb-scrim"></div><div class="nb-art">${b.svg || ''}</div><div class="nb-sheen"></div>`; };
 const NS_FONTS = [
   ['default', 'Varsayılan'], ['serif', 'Klasik'], ['cinzel', 'Kraliyet'], ['rounded', 'Yuvarlak'],
   ['script', 'El Yazısı'], ['pixel', 'Piksel'], ['cyber', 'Siber'], ['mono', 'Kod'],
@@ -12767,11 +12876,55 @@ function playIntro(el, kind, u) {
   if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
   el.appendChild(d); setTimeout(() => d.remove(), 2000);
 }
+// Şeffaf VP9+Alpha (.webm) profil efekti kayıt defteri: { intro?: '/effects/...webm', loop: '/effects/...webm', screen?: true }
+// Yeni özgün bir .webm efekt eklemek için public/effects/ içine koyup buraya 1 satır eklemek yeterli.
+const PFX_VIDEO_MAP = {};
+function mountVideoProfileEffect(el, cfg) {
+  if (!el || !cfg || (!cfg.loop && !cfg.intro)) return false;
+  const mkVid = (src, loop) => {
+    const v = document.createElement('video');
+    v.className = 'pfx-cv pfx-vid' + (cfg.screen ? ' screen' : '');
+    v.src = src; v.muted = true; v.playsInline = true; v.loop = !!loop; v.autoplay = true;
+    v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('disablePictureInPicture', ''); v.setAttribute('aria-hidden', 'true');
+    return v;
+  };
+  let dead = false, cur = null, nxt = null;
+  const onVis = () => { if (!cur || dead) return; if (document.hidden) cur.pause(); else cur.play().catch(() => {}); };
+  const stop = () => {
+    if (dead) return; dead = true;
+    document.removeEventListener('visibilitychange', onVis);
+    for (const v of [cur, nxt]) { if (!v) continue; try { v.pause(); v.removeAttribute('src'); v.load(); v.remove(); } catch {} }
+    cur = nxt = null;
+  };
+  document.addEventListener('visibilitychange', onVis);
+  if (cfg.intro && cfg.loop) {
+    cur = mkVid(cfg.intro, false); nxt = mkVid(cfg.loop, true);
+    nxt.style.opacity = '0'; nxt.preload = 'auto';
+    cur._stop = stop; nxt._stop = stop;
+    cur.onended = () => {
+      if (dead) return;
+      nxt.style.opacity = '1'; nxt.play().catch(() => {});
+      try { cur.pause(); cur.remove(); } catch {}
+      cur = nxt; nxt = null;
+    };
+    cur.onerror = () => { if (!dead && nxt) cur.onended(); else stop(); };
+    el.appendChild(nxt); el.appendChild(cur);
+    cur.play().catch(() => {});
+  } else {
+    cur = mkVid(cfg.loop || cfg.intro, true);
+    cur._stop = stop;
+    cur.onerror = stop;
+    el.appendChild(cur);
+    cur.play().catch(() => {});
+  }
+  return true;
+}
 function mountProfileEffect(el, fx) {
   if (!el) return;
   el.querySelectorAll(':scope > .pfx-cv').forEach(c => { c._stop?.(); c.remove(); });
   el.classList.remove('has-vfx3d', 'has-catfx');
   if (!fx || fx === 'none' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (fx in PFX_VIDEO_MAP && mountVideoProfileEffect(el, PFX_VIDEO_MAP[fx])) return;
   if (fx === 'cat_midnight') {
     // Profili boğmayan ferah tasarım: sadece üst banner'da yumuşak eriyen ay ışıklı kedi + kenarlarda yürüyen pati izleri, sakura yaprakları & ay ışığı kıvılcımları
     el.classList.add('has-catfx');
