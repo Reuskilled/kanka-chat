@@ -1832,7 +1832,7 @@ const perkErr = k => `Bu özellik Energy Level ${PERK_LV[k]} ile açılır. Üye
 const FONT_IDS = ['serif', 'cinzel', 'rounded', 'script', 'pixel', 'cyber', 'mono'];
 const INTROS = ['burst', 'portal', 'confetti', 'hearts', 'neon', 'flame', 'glitch', 'stars'];
 // Google Play aboneliğinde yenileme bildirimi birkaç saat gecikebilir: bitişten sonra 6 saat açık kalır, kesin kararı playSync verir
-const sparkOn = u => !!(u?.spark && u.spark.until + (u.spark.play ? 6 * 3600e3 : 0) > Date.now());
+const sparkOn = u => !!(u?.spark && u.spark.until + (u.spark.play || u.spark.apple ? 6 * 3600e3 : 0) > Date.now());
 const energyTotal = s => Object.values(s?.energy || {}).reduce((a, b) => a + b, 0);
 const energyLevel = s => { const t = energyTotal(s); let l = 0; for (let i = 1; i < ENERGY_LV.length; i++) if (t >= ENERGY_LV[i]) l = i; return l; };
 const energyPerk = (s, k) => { const l = energyLevel(s); return l ? ENERGY_PERKS[l][k] || 0 : 0; };
@@ -1847,7 +1847,7 @@ function sparkView(u) {
   const sp = u?.spark; if (!sp) return { active: false };
   const e = sp.energy || [], placed = {}; for (const x of e) if (x.srv) placed[x.srv] = (placed[x.srv] || 0) + 1;
   const done = sp.credited || 0;
-  return { active: sparkOn(u), since: sp.since, until: sp.until, months: done, play: !!sp.play, nextBonusIn: SPARK_BONUS_EVERY - (done % SPARK_BONUS_EVERY),
+  return { active: sparkOn(u), since: sp.since, until: sp.until, months: done, play: !!sp.play, apple: !!sp.apple, nextBonusIn: SPARK_BONUS_EVERY - (done % SPARK_BONUS_EVERY),
     nextCredit: sp.since + done * SPARK_MONTH < sp.until ? sp.since + done * SPARK_MONTH : null, energy: e.length, free: e.filter(x => !x.srv).length,
     placed: Object.entries(placed).map(([sid, n]) => { const sv = db.servers.find(x => x.id === sid); return { sid, n, name: sv?.name || 'Silinmiş sunucu', icon: sv?.icon || '', iconImg: sv?.iconImg || null, level: sv ? energyLevel(sv) : 0, total: sv ? energyTotal(sv) : 0 }; }) };
 }
@@ -1980,6 +1980,74 @@ setInterval(async () => { // bildirim kaçarsa: bitişi yaklaşan / beklemedeki 
     try { await playSync(t); } catch (e) { console.error('play sync', e.message); r.chk = Date.now(); }
   }
 }, 10 * 60e3);
+// ================= App Store aboneliği (Kanka Spark, iPhone uygulaması) =================
+// StoreKit 2: satın alma iPhone'da Apple'ın ekranında olur. Uygulama Apple'ın imzaladığı işlemi (JWS) gönderir; sunucu imzayı,
+// sertifika zincirinin Apple Root CA - G3'e dayandığını, paket ve ürün kimliğini ve işlemin bu Kanka hesabına (appAccountToken)
+// ait olduğunu doğrular. Yenileme, iptal, iade ve ödeme sorunları App Store sunucu bildirimleriyle (/apple/bildirim, V2) gelir.
+// Apple incelemesi test ortamında (Sandbox) satın aldığı için Sandbox işlemleri de kabul edilir. Kart bilgisi Kanka'ya hiç gelmez.
+const APPLE_SPARK = ['kanka_spark'];
+const APPLE_BUNDLE = () => String(npCfg.apple?.bundle || process.env.IOS_BUNDLE || 'com.kanka.chat');
+const APPLE_ROOT_G3 = '63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179'; // Apple'ın kök sertifika listesindeki SHA-256
+const APPLE_OID_LEAF = Buffer.from('060a2a864886f76364060b01', 'hex'), APPLE_OID_MID = Buffer.from('060a2a864886f76364060201', 'hex'); // 1.2.840.113635.100.6.11.1 / .6.2.1
+const appleReady = () => !!npCfg.apple?.on;
+const appleAcct = name => { // StoreKit appAccountToken bir UUID olmalı; kullanıcıdan türetilir, Apple'a kim olduğunu söylemez
+  const h = crypto.createHash('sha256').update('kanka-apple|' + (uidOf(db.users[name]) || name)).digest('hex');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-${(8 + (parseInt(h[16], 16) & 3)).toString(16)}${h.slice(17, 20)}-${h.slice(20, 32)}`;
+};
+function appleJws(jws) { // Apple'ın imzaladığı JWS'yi doğrula, içeriğini döndür (sahteyse hata)
+  const parts = String(jws || '').split('.'); if (parts.length !== 3 || parts.some(x => !x) || jws.length > 20000) throw new Error('Geçersiz imzalı veri');
+  const [h, p, sig] = parts, head = JSON.parse(Buffer.from(h, 'base64url').toString('utf8'));
+  if (head.alg !== 'ES256' || !Array.isArray(head.x5c) || head.x5c.length !== 3) throw new Error('Beklenmeyen imza biçimi');
+  const [leaf, mid, root] = head.x5c.map(c => new crypto.X509Certificate(Buffer.from(String(c), 'base64')));
+  if (crypto.createHash('sha256').update(root.raw).digest('hex') !== APPLE_ROOT_G3) throw new Error('Apple kök sertifikası değil');
+  const now = Date.now(); for (const c of [leaf, mid, root]) if (Date.parse(c.validFrom) > now || Date.parse(c.validTo) < now) throw new Error('Sertifika süresi geçersiz');
+  if (!mid.ca || !mid.checkIssued(root) || !mid.verify(root.publicKey) || !leaf.checkIssued(mid) || !leaf.verify(mid.publicKey)) throw new Error('Sertifika zinciri doğrulanamadı');
+  if (!mid.raw.includes(APPLE_OID_MID) || !leaf.raw.includes(APPLE_OID_LEAF)) throw new Error('App Store sertifikası değil');
+  if (!crypto.verify('sha256', Buffer.from(h + '.' + p), { key: leaf.publicKey, dsaEncoding: 'ieee-p1363' }, Buffer.from(sig, 'base64url'))) throw new Error('İmza geçersiz');
+  return JSON.parse(Buffer.from(p, 'base64url').toString('utf8'));
+}
+function sparkApple(u, until, key) { // App Store aboneliği: bitiş tarihini Apple belirler
+  if (!u.spark || !sparkOn(u)) sparkGrant(u, 0, 'app-store');
+  const sp = u.spark;
+  if (until > sp.until) sp.until = until;
+  if (sp.apple !== key) { sp.apple = key; (sp.log ||= []).push({ at: Date.now(), months: 0, by: 'app-store' }); sp.log = sp.log.slice(-30); }
+  sparkCredit(u); save(); io.to('user:' + u.name).emit('spark', sparkView(u)); pushUsers();
+}
+function appleApply(tx, claimer = null, renew = null) { // doğrulanmış işlemi uygula: Spark'ı aç/uzat/kapat
+  if (tx.bundleId !== APPLE_BUNDLE()) return { error: 'Bu satın alma Kanka uygulamasına ait değil' };
+  if (!APPLE_SPARK.includes(tx.productId)) return { error: 'Bu satın alma Kanka Spark değil' };
+  const key = String(tx.originalTransactionId || ''); if (!/^\d{1,30}$/.test(key)) return { error: 'Geçersiz satın alma' };
+  db.appleSubs ||= {};
+  const rec = db.appleSubs[key], acct = String(tx.appAccountToken || '').toLowerCase(), sandbox = tx.environment === 'Sandbox';
+  let owner = rec?.u || null;
+  if (!owner && acct) owner = (claimer && appleAcct(claimer) === acct) ? claimer : Object.keys(db.users).find(n => appleAcct(n) === acct) || null;
+  if (!owner && claimer && !acct && sandbox) owner = claimer; // hesap bağı olmadan yapılmış test satın alması (sadece Sandbox)
+  if (claimer && owner && owner !== claimer) return { error: 'Bu abonelik başka bir Kanka hesabına bağlı. O hesapla giriş yap.' };
+  if (!owner || !db.users[owner]) return { error: 'Aboneliğin bağlı olduğu Kanka hesabı bulunamadı' };
+  const signed = +tx.signedDate || Date.now();
+  if (rec && rec.sd && rec.sd > signed && !renew) { const u = db.users[owner]; return { ok: true, active: sparkOn(u) && u.spark?.apple === key, until: rec.exp, me: sparkView(u) }; } // eski işlem yeniyi ezmesin
+  let exp = +tx.expiresDate || 0; const grace = +renew?.gracePeriodExpiresDate || 0; if (grace > exp) exp = grace; // ödeme sorununda ek süre
+  const revoked = !!tx.revocationDate, on = !revoked && exp > Date.now();
+  db.appleSubs[key] = { u: owner, p: tx.productId, at: rec?.at || Date.now(), exp, sd: signed, env: tx.environment || '', iade: revoked,
+    yenile: renew && renew.autoRenewStatus !== undefined ? renew.autoRenewStatus === 1 : rec?.yenile ?? true };
+  const u = db.users[owner];
+  if (on) sparkApple(u, exp, key);
+  else if (u.spark?.apple === key) sparkExpire(u, revoked ? 'App Store aboneliğin iade edildiği için sona erdi' : 'App Store aboneliğin sona erdi');
+  save();
+  return { ok: true, active: on, until: exp, test: sandbox, me: sparkView(u) };
+}
+app.post('/apple/bildirim', express.json({ limit: '64kb' }), (req, res) => { // App Store sunucu bildirimleri V2 (yenileme, iptal, iade…)
+  res.status(200).end(); // içerik her zaman Apple'ın imzasıyla doğrulanır; sahte bildirim zararsız
+  if (limited('apple-bildirim', 600, 60e3)) return;
+  try {
+    const n = appleJws(req.body?.signedPayload);
+    if (n.data?.bundleId && n.data.bundleId !== APPLE_BUNDLE()) return;
+    if (n.notificationType === 'TEST') { db.appleTest = Date.now(); save(); return; }
+    const tx = n.data?.signedTransactionInfo ? appleJws(n.data.signedTransactionInfo) : null;
+    const rn = n.data?.signedRenewalInfo ? appleJws(n.data.signedRenewalInfo) : {};
+    if (tx) { const r = appleApply(tx, null, rn); if (r.error) console.warn('apple bildirim', n.notificationType, r.error); }
+  } catch (e) { console.error('apple bildirim', e.message); }
+});
 function wipeMember(s, n) {
   if (s.energy?.[n]) energyRelease(n, s.id); // çıkan üyenin Energy'si kendisine geri döner
   if (db.users[n]?.tag === s.id) delete db.users[n].tag; // sunucudan çıkan etiketini de bırakır
@@ -5774,7 +5842,7 @@ io.on('connection', socket => {
       const u = mintUser(user); if (!u) return cb({ error: 'Kullanıcı bulunamadı (kullanıcı adını @ olmadan yaz)' });
       if (act === 'spark') {
         const m = Math.max(-24, Math.min(24, parseInt(months) || 0)); if (!m) return cb({ error: 'Ay sayısı gir (1-24, kısaltmak için eksi)' });
-        if (m < 0) { if (!sparkOn(u)) return cb({ error: 'Aktif Spark aboneliği yok' }); if (u.spark.play) return cb({ error: 'Bu abonelik Google Play üzerinden, süresi oradan yönetilir' });
+        if (m < 0) { if (!sparkOn(u)) return cb({ error: 'Aktif Spark aboneliği yok' }); if (u.spark.play) return cb({ error: 'Bu abonelik Google Play üzerinden, süresi oradan yönetilir' }); if (u.spark.apple) return cb({ error: 'Bu abonelik App Store üzerinden, süresi oradan yönetilir' });
           u.spark.until += m * SPARK_MONTH; if (u.spark.until <= Date.now()) sparkExpire(u, 'Kanka Spark aboneliğin ekip tarafından sonlandırıldı'); else { save(); io.to('user:' + u.name).emit('spark', sparkView(u)); pushUsers(); } }
         else sparkGrant(u, m, me);
         staffLog(me, `Kanka Spark ${m > 0 ? 'verdi' : 'kısalttı'} (${m} ay)`, u.name); mintLog('spark', u.name, m, note);
@@ -8130,7 +8198,8 @@ io.on('connection', socket => {
   // Kanka Spark & Energy
   socket.on('sparkMe', (_, cb = () => {}) => { if (!me) return cb({ error: 'Giriş yap' }); const u = db.users[me]; if (u.spark && !sparkOn(u)) sparkExpire(u); else if (u.spark && sparkCredit(u)) save();
     cb({ ...sparkView(u), perMonth: SPARK_PER_MONTH, bonusEvery: SPARK_BONUS_EVERY, levels: ENERGY_LV, perks: ENERGY_PERKS.map(p => p?.items || []),
-      playHazir: playReady(), playUrun: PLAY_SPARK[0], playHesap: playAcct(me), play: !!u.spark?.play, playYenile: u.spark?.play ? db.playSubs?.[u.spark.play]?.yenile !== false : null }); });
+      playHazir: playReady(), playUrun: PLAY_SPARK[0], playHesap: playAcct(me), play: !!u.spark?.play, playYenile: u.spark?.play ? db.playSubs?.[u.spark.play]?.yenile !== false : null,
+      appleHazir: appleReady(), appleUrun: APPLE_SPARK[0], appleHesap: appleAcct(me), apple: !!u.spark?.apple, appleYenile: u.spark?.apple ? db.appleSubs?.[u.spark.apple]?.yenile !== false : null }); });
   socket.on('energyInfo', ({ serverId } = {}, cb = () => {}) => { const s = db.servers.find(x => x.id === serverId); if (!me || !s || !s.members.includes(me)) return cb({ error: 'Sunucu bulunamadı' }); cb(energyView(s, me)); });
   socket.on('energyMove', ({ serverId, n = 1, pull } = {}, cb = () => {}) => {
     const s = db.servers.find(x => x.id === serverId), u = db.users[me];
@@ -8159,6 +8228,18 @@ io.on('connection', socket => {
     if (!me || !playReady()) return cb({ ok: false }); if (limited('playrest|' + me, 6, 60e3)) return cb({ ok: false });
     const out = []; for (const t of (Array.isArray(tokens) ? tokens : []).slice(0, 5)) { if (typeof t !== 'string' || t.length > 400) continue;
       try { out.push(await playSync(t, me)); } catch (e) { out.push({ error: e.message }); } }
+    cb({ ok: true, sonuc: out, me: sparkView(db.users[me]) });
+  });
+  socket.on('appleBuy', ({ jws } = {}, cb = () => {}) => {
+    if (!me) return cb({ error: 'Giriş yap' }); if (limited('applebuy|' + me, 20, 60e3)) return cb({ error: 'Biraz bekle' });
+    if (!appleReady()) return cb({ error: 'Satın alma doğrulaması henüz açık değil. Ödemen alındıysa Apple\'dan iade isteyebilirsin; uygulama açılışta tekrar dener.' });
+    try { const r = appleApply(appleJws(jws), me); if (r.ok) secLog?.('apple-satin-alma', me, `${r.active ? 'aktif' : 'bitmiş'} · ${new Date(r.until).toISOString().slice(0, 10)}${r.test ? ' · test' : ''}`); cb(r); }
+    catch (e) { console.error('appleBuy', e.message); cb({ error: 'App Store satın alması doğrulanamadı. Spark açılmazsa uygulama her açılışta tekrar dener.' }); }
+  });
+  socket.on('appleRestore', ({ jwss } = {}, cb = () => {}) => {
+    if (!me || !appleReady()) return cb({ ok: false }); if (limited('applerest|' + me, 6, 60e3)) return cb({ ok: false });
+    const out = []; for (const j of (Array.isArray(jwss) ? jwss : []).slice(0, 5)) { if (typeof j !== 'string') continue;
+      try { out.push(appleApply(appleJws(j), me)); } catch (e) { out.push({ error: e.message }); } }
     cb({ ok: true, sonuc: out, me: sparkView(db.users[me]) });
   });
   socket.on('sparkInfo', (_, cb = () => {}) => { if (!me) return cb({ error: 'Giriş yap' }); const w = db.sparkWait || {}; cb({ bekliyor: !!w[me], sayi: Object.keys(w).length }); });
