@@ -34,12 +34,16 @@ def find_ffmpeg() -> str:
     raise FileNotFoundError("ffmpeg bulunamadi. PATH'e ekleyin veya ffmpeg-static kurun.")
 
 
-def probe_video(ffmpeg: str, src: Path) -> tuple[int, int, float]:
+def probe_video(ffmpeg: str, src: Path) -> tuple[int, int, float, float]:
     cmd = [ffmpeg, "-i", str(src)]
     res = subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True, encoding="utf-8", errors="ignore")
-    w, h, fps = 0, 0, 24.0
+    w, h, fps, dur = 0, 0, 24.0, 5.0
     import re
     for line in res.stderr.splitlines():
+        if "Duration:" in line:
+            m_d = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", line)
+            if m_d:
+                dur = int(m_d.group(1)) * 3600 + int(m_d.group(2)) * 60 + float(m_d.group(3))
         if "Video:" in line:
             m_dim = re.search(r",\s*(\d{2,5})x(\d{2,5})(?:\s|,|\[)", line)
             if m_dim:
@@ -50,7 +54,7 @@ def probe_video(ffmpeg: str, src: Path) -> tuple[int, int, float]:
             break
     if not w or not h:
         raise RuntimeError(f"Video cozunurlugu okunamadi: {src}")
-    return w, h, fps
+    return w, h, fps, dur
 
 
 def load_session(model_path: Path, use_cpu: bool = False) -> tuple[ort.InferenceSession, str, tuple[int, int]]:
@@ -107,7 +111,15 @@ def detect_black_bg(rgb_arr: np.ndarray) -> bool:
     )
 
 
-def compose_rgba(rgb_arr: np.ndarray, ai_alpha: np.ndarray, black_vfx: bool, mask_kling_corner: bool = False) -> np.ndarray:
+def compose_rgba(
+    rgb_arr: np.ndarray,
+    ai_alpha: np.ndarray,
+    black_vfx: bool,
+    mask_kling_corner: bool = False,
+    mask_dreamina: bool = False,
+    keep_dark: bool = False,
+    opacity_scale: float = 1.0,
+) -> np.ndarray:
     rgb_f = rgb_arr.astype(np.float32)
     # Clean near-zero matte noise while preserving soft edge antialiasing
     solid = smoothstep(0.10, 0.85, ai_alpha)
@@ -117,8 +129,9 @@ def compose_rgba(rgb_arr: np.ndarray, ai_alpha: np.ndarray, black_vfx: bool, mas
         max_c = rgb_f.max(axis=2) / 255.0
         min_c = rgb_f.min(axis=2) / 255.0
         chroma = max_c - min_c
-        # Punch out trapped pure #000000 background holes inside coils/loops without touching dark scales (max_c >= 0.06)
-        solid = solid * smoothstep(0.012, 0.045, max_c)
+        # Punch out trapped pure #000000 background holes inside coils/loops (skip for 2D anime with black outlines/eyes)
+        if not keep_dark:
+            solid = solid * smoothstep(0.012, 0.045, max_c)
         # Emissive glow = bright pixels OR warm/colorful fire embers
         glow_energy = np.maximum(max_c, chroma * 1.10)
         glow_alpha = smoothstep(0.11, 0.56, glow_energy)
@@ -126,7 +139,7 @@ def compose_rgba(rgb_arr: np.ndarray, ai_alpha: np.ndarray, black_vfx: bool, mas
         # Combine: 100% solid AI subject + silky translucent emissive glow
         alpha = np.maximum(solid, glow_alpha)
 
-        # Un-premultiply pure black fringe in glow/edge areas so fire stays vivid on both dark and light cards
+        # Un-premultiply pure black fringe in glow/edge areas so fire/glow stays vivid on both dark and light cards
         glow_only = np.clip(alpha - solid, 0.0, 1.0)
         if np.any(glow_only > 0.01):
             denom = np.maximum(alpha, 0.28)[..., None]
@@ -143,9 +156,16 @@ def compose_rgba(rgb_arr: np.ndarray, ai_alpha: np.ndarray, black_vfx: bool, mas
         x0 = int(w * 0.67)
         patch = rgb_f[y0:, x0:] / 255.0
         p_chroma = patch.max(axis=2) - patch.min(axis=2)
-        # Watermark text is white/grey (low chroma); flames are saturated warm orange/yellow
         wm_mask = smoothstep(0.16, 0.06, p_chroma)
         alpha[y0:, x0:] *= (1.0 - wm_mask)
+
+    if mask_dreamina:
+        # Erase top-left [AI] badge completely (Dreamina bottom watermark is handled via --crop-bottom 0.045)
+        h, w = alpha.shape
+        alpha[:int(h * 0.055), :int(w * 0.10)] = 0.0
+
+    if opacity_scale < 0.999:
+        alpha = alpha * max(0.0, min(1.0, opacity_scale))
 
     # Zero out completely transparent pixels for cleaner VP9 compression
     rgb_f = np.where(alpha[..., None] < 0.01, 0.0, rgb_f)
@@ -157,13 +177,13 @@ def compose_rgba(rgb_arr: np.ndarray, ai_alpha: np.ndarray, black_vfx: bool, mas
     return rgba
 
 
-def process_image(src: Path, dst: Path, sess, input_name, in_size, mode: str, mask_wm: bool = False):
+def process_image(src: Path, dst: Path, sess, input_name, in_size, mode: str, mask_wm: bool = False, mask_dreamina: bool = False, keep_dark: bool = False):
     im = Image.open(src).convert("RGB")
     rgb = np.asarray(im, dtype=np.uint8)
     black_vfx = (mode == "black-vfx") or (mode == "auto" and detect_black_bg(rgb))
     print(f"[AI] Gorsel isleniyor ({rgb.shape[1]}x{rgb.shape[0]}, mod={'black-vfx' if black_vfx else 'general'})...")
     ai_alpha = infer_alpha(sess, input_name, in_size, rgb)
-    rgba = compose_rgba(rgb, ai_alpha, black_vfx, mask_kling_corner=mask_wm)
+    rgba = compose_rgba(rgb, ai_alpha, black_vfx, mask_kling_corner=mask_wm, mask_dreamina=mask_dreamina, keep_dark=keep_dark)
     Image.fromarray(rgba, mode="RGBA").save(dst)
     print(f"[OK] Kaydedildi: {dst} ({dst.stat().st_size / 1024:.1f} KB)")
 
@@ -180,10 +200,16 @@ def process_video(
     crop_bottom: float,
     crf: int,
     mask_wm: bool = False,
+    mask_dreamina: bool = False,
+    keep_dark: bool = False,
+    fade_in: float = 0.0,
+    fade_out: float = 0.0,
+    tail_pause: float = 0.0,
 ):
     ffmpeg = find_ffmpeg()
-    orig_w, orig_h, orig_fps = probe_video(ffmpeg, src)
+    orig_w, orig_h, orig_fps, dur = probe_video(ffmpeg, src)
     fps = target_fps if target_fps > 0 else min(orig_fps, 24.0)
+    est_frames = max(1, int(round(dur * fps)))
 
     # Compute output dimensions (even numbers required by VP9 yuva420p)
     crop_h = int(orig_h * (1.0 - crop_bottom))
@@ -218,7 +244,7 @@ def process_video(
         str(dst),
     ]
 
-    print(f"[AI] Video: {src.name} ({orig_w}x{orig_h} @ {orig_fps:.1f}fps) -> {out_w}x{out_h} @ {fps:.1f}fps")
+    print(f"[AI] Video: {src.name} ({orig_w}x{orig_h} @ {orig_fps:.1f}fps, {dur:.2f}s) -> {out_w}x{out_h} @ {fps:.1f}fps")
     dec = subprocess.Popen(dec_cmd, stdout=subprocess.PIPE)
     enc = subprocess.Popen(enc_cmd, stdin=subprocess.PIPE)
 
@@ -247,12 +273,40 @@ def process_video(
                 stable = ai_alpha
             prev_alpha = ai_alpha
 
-            rgba = compose_rgba(rgb, stable, black_vfx, mask_kling_corner=mask_wm)
+            # Smooth fade-in / fade-out envelope for seamless loop
+            t_cur = idx / fps
+            op = 1.0
+            if fade_in > 0.01 and t_cur < fade_in:
+                u = max(0.0, min(1.0, t_cur / fade_in))
+                op *= u * u * (3.0 - 2.0 * u)
+            if fade_out > 0.01:
+                rem = max(0.0, (est_frames - 1 - idx) / fps)
+                if rem < fade_out:
+                    u = max(0.0, min(1.0, rem / fade_out))
+                    op *= u * u * (3.0 - 2.0 * u)
+
+            rgba = compose_rgba(
+                rgb,
+                stable,
+                black_vfx,
+                mask_kling_corner=mask_wm,
+                mask_dreamina=mask_dreamina,
+                keep_dark=keep_dark,
+                opacity_scale=op,
+            )
             enc.stdin.write(rgba.tobytes())
             idx += 1
             if idx % 10 == 0:
                 dt = time.time() - t0
                 print(f"  kare {idx} ({idx / max(dt, 0.1):.2f} kare/sn)...", flush=True)
+
+        # Optional fully transparent breath pause at the end before seamless loop restarts
+        if tail_pause > 0.01:
+            n_empty = int(round(tail_pause * fps))
+            empty = bytes(out_w * out_h * 4)
+            for _ in range(n_empty):
+                enc.stdin.write(empty)
+                idx += 1
     finally:
         if dec.stdout:
             dec.stdout.close()
@@ -275,8 +329,13 @@ def main():
     p.add_argument("--mode", choices=["auto", "general", "black-vfx"], default="auto")
     p.add_argument("--fps", type=float, default=20.0, help="Hedef FPS (0 = orijinal, varsayilan 20)")
     p.add_argument("--max-w", type=int, default=540, help="Maksimum genislik (varsayilan 540)")
-    p.add_argument("--crop-bottom", type=float, default=0.0, help="Alttan kirpma orani (or: 0.05 = %%5)")
+    p.add_argument("--crop-bottom", type=float, default=-1.0, help="Alttan kirpma orani (or: 0.045 = %%4.5, -1 = dreamina icin oto)")
     p.add_argument("--mask-watermark", action="store_true", help="Sag alt kosedeki KlingAI logosunu sil")
+    p.add_argument("--mask-dreamina", action="store_true", help="Sol ust [AI] rozetini ve Dreamina filigranini sil")
+    p.add_argument("--keep-dark", action="store_true", help="2D anime siyah cizgileri ve gozleri koru")
+    p.add_argument("--fade-in", type=float, default=0.0, help="Baslangic yumusak giris suresi (sn)")
+    p.add_argument("--fade-out", type=float, default=0.0, help="Son saniyede yumusak yok olma suresi (sn)")
+    p.add_argument("--tail-pause", type=float, default=0.0, help="Loop oncesi saydam bekleme suresi (sn)")
     p.add_argument("--crf", type=int, default=28, help="VP9 kalite (dusuk = daha net, varsayilan 28)")
     p.add_argument("--model", default=str(DEFAULT_MODEL), help="ONNX model yolu")
     p.add_argument("--cpu", action="store_true", help="GPU yerine CPU kullan")
@@ -294,15 +353,24 @@ def main():
         ext = ".png" if is_img else ".webm"
         dst = src.with_name(f"{src.stem}_saydam{ext}")
 
-    mask_wm = args.mask_watermark or ("kling" in src.name.lower())
+    lname = src.name.lower()
+    mask_wm = args.mask_watermark or ("kling" in lname)
+    mask_dr = args.mask_dreamina or ("dreamina" in lname)
+    crop_bottom = args.crop_bottom
+    if crop_bottom < 0:
+        crop_bottom = 0.045 if mask_dr else 0.0
 
     sess, input_name, in_size = load_session(Path(args.model), use_cpu=args.cpu)
     print(f"[AI] Motor hazir: {sess.get_providers()[0]} | Model: {Path(args.model).name}")
 
     if is_img:
-        process_image(src, dst, sess, input_name, in_size, args.mode, mask_wm=mask_wm)
+        process_image(src, dst, sess, input_name, in_size, args.mode, mask_wm=mask_wm, mask_dreamina=mask_dr, keep_dark=args.keep_dark)
     else:
-        process_video(src, dst, sess, input_name, in_size, args.mode, args.fps, args.max_w, args.crop_bottom, args.crf, mask_wm=mask_wm)
+        process_video(
+            src, dst, sess, input_name, in_size, args.mode, args.fps, args.max_w, crop_bottom, args.crf,
+            mask_wm=mask_wm, mask_dreamina=mask_dr, keep_dark=args.keep_dark,
+            fade_in=args.fade_in, fade_out=args.fade_out, tail_pause=args.tail_pause,
+        )
 
 
 if __name__ == "__main__":
