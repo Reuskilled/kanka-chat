@@ -415,8 +415,6 @@
   .pcard p { font-size: 14.5px; color: var(--muted); }
   .pcard-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .pcard h3 .pc-tag { font-size: 11px; font-weight: 800; vertical-align: middle; padding: 3px 7px; border-radius: 6px; background: rgba(212,255,0,.14); color: var(--accent, #d4ff00); margin-left: 6px; letter-spacing: .02em; }
-  a[data-android] { display: none; } html.is-android a[data-android] { display: inline-flex; } html.is-android a[data-win] { display: none; }
-  .pcard p.pc-how { font-size: 13px; margin-top: 10px; }
   .pcard-sub { font-size: 12.5px; color: var(--dim); font-weight: 600; }
   .pcard-sub a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
   .pcard-sub a:hover { color: var(--accent); }
@@ -477,7 +475,7 @@
 
   @media (max-width: 960px) {
     .nav-links { display: none; }
-    .nav-acts .hide-sm, html.is-android .nav-acts a.hide-sm[data-android] { display: none; }
+    .nav-acts .hide-sm { display: none; }
     .strip .wrap { grid-template-columns: repeat(2, 1fr); }
     .bento { grid-template-columns: 1fr; }
     .bcard.span2 { grid-column: auto; }
@@ -517,8 +515,7 @@
       <a href="#sss">SSS</a>
     </div>
     <div class="nav-acts">
-      <a class="btn btn-ghost hide-sm" href="/indir/KankaChat.apk" download data-android><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10.5h12V17a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2zM6 9.5a6 6 0 0 1 12 0zM8 4l1.5 2.2M16 4l-1.5 2.2"/></svg>Android</a>
-      <a class="btn btn-ghost hide-sm" href="/indir/KankaChat-Kurulum.exe" download data-win>
+      <a class="btn btn-ghost hide-sm" href="/indir/KankaChat-Kurulum.exe" download>
         <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Windows
       </a>
       <a class="btn btn-light" href="/login" data-login>Giriş yap</a>
@@ -534,10 +531,9 @@
     <p class="hero-lead">Oyun ekibin, arkadaş grubun ya da topluluğun için sıfır gecikmeli sesli odalar, 1080p ekran paylaşımı ve şifreli sohbet. VPN yok, kısıtlama yok, ücret yok.</p>
     <div class="hero-ctas">
       <a class="btn btn-acid btn-lg" data-cta href="/register">Ücretsiz katıl →</a>
-      <a class="btn btn-glass btn-lg" href="/indir/KankaChat-Kurulum.exe" download data-win>
+      <a class="btn btn-glass btn-lg" href="/indir/KankaChat-Kurulum.exe" download>
         <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.5v7H3zM12 4.3 21 3v8.5h-9zM3 12.5h7.5v7L3 18.5zM12 12.5h9V21l-9-1.3z" fill="currentColor" stroke="none"/></svg>Windows için indir
       </a>
-      <a class="btn btn-glass btn-lg" href="/indir/KankaChat.apk" download data-android><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10.5h12V17a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2zM6 9.5a6 6 0 0 1 12 0zM8 4l1.5 2.2M16 4l-1.5 2.2"/></svg>Android için indir</a>
       <a class="btn btn-ghost btn-lg" href="/app" data-open>Tarayıcıda aç</a>
     </div>
     <div class="hero-meta">
@@ -775,14 +771,12 @@
 
       <div class="pcard reveal" id="android">
         <div>
-          <div class="bcard-ic green"><svg class="ic" viewBox="0 0 24 24"><path d="M6 10.5h12V17a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2zM6 9.5a6 6 0 0 1 12 0zM8 4l1.5 2.2M16 4l-1.5 2.2"/></svg></div>
-          <h3>Android Uygulaması <span class="pc-tag">Test</span></h3>
-          <p>Sesli odalar, anlık bildirimler ve ekran kapalıyken bile süren sesli sohbet. Play Store'a gelene kadar APK olarak hemen kurabilirsin.</p>
-          <p class="pc-how">İndirdiğin dosyayı aç → telefon "bilinmeyen kaynak" izni sorarsa izin ver → <b>Yükle</b>. iPhone'da şimdilik Safari'den "Ana ekrana ekle".</p>
+          <div class="bcard-ic green"><svg class="ic" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></div>
+          <h3>Telefon Uygulaması <span class="pc-tag">Yakında</span></h3>
+          <p>Android ve iPhone uygulaması Google Play ve App Store'a geliyor. O zamana kadar telefonunun tarayıcısından kankahq.com'u açıp "Ana ekrana ekle" demen yeterli.</p>
         </div>
         <div class="pcard-foot">
-          <a class="btn btn-acid" href="/indir/KankaChat.apk" download>Android için indir (APK)</a>
-          <span class="pcard-sub" id="apk-meta">Android 7.0 ve üzeri</span>
+          <span class="pcard-sub">Google Play · App Store</span>
         </div>
       </div>
     </div>
@@ -799,7 +793,7 @@
       </div>
       <details><summary>Kanka Chat ücretli mi?</summary><p>Hayır, tamamen ücretsiz. Sesli odalar, 1080p ekran paylaşımı, profil efektleri, isim afişleri ve sunucu kurma ücretsizdir.</p></details>
       <details><summary>VPN veya DNS ayarı gerekiyor mu?</summary><p>Hayır. Kanka Chat Türkiye'den doğrudan ve hızlı şekilde açılır; VPN ya da ek DNS ayarı gerektirmez.</p></details>
-      <details><summary>Telefonda nasıl kullanırım?</summary><p>Android'de <a href="/indir/KankaChat.apk" download style="color:var(--accent);text-decoration:underline">Android uygulamasını (APK)</a> indirip kurabilirsin; dosyayı açınca telefon "bilinmeyen kaynak" izni isterse izin vermen yeterli. iPhone'da şimdilik Safari'den kankahq.com'a girip "Ana ekrana ekle" diyebilirsin. App Store ve Play Store sürümleri yolda.</p></details>
+      <details><summary>Telefonda nasıl kullanırım?</summary><p>Android ve iPhone uygulamaları Google Play ve App Store'a geliyor. O zamana kadar telefonunun tarayıcısından kankahq.com'a girip "Ana ekrana ekle" seçeneğini kullanabilirsin; uygulama gibi açılır ve bildirim gönderir.</p></details>
       <details><summary>Başka bir uygulamadaki sunucumu taşıyabilir miyim?</summary><p>Evet. Kanal ve rol yapını Kanka'da kurmana yardımcı oluyoruz; Kanka HQ sunucusunda bize yazman yeterli. Eski uygulamanı bırakmak zorunda değilsin.</p></details>
       <details><summary>Windows uygulaması güvenli mi?</summary><p>Evet. Kurulum dosyasının SHA-256 özeti ve VirusTotal tarama bağlantısı her sürümde <a href="/guvenli" style="color:var(--accent);text-decoration:underline">kankahq.com/guvenli</a> sayfasında şeffaf olarak paylaşılır.</p></details>
       <details><summary>Kim geliştiriyor?</summary><p>Kanka Chat, Türkiye'den bağımsız ve küçük bir ekibin toplulukla birlikte geliştirdiği bir projedir. Yeni özelliklerin çoğu doğrudan kullanıcı istekleriyle eklenir.</p></details>
@@ -817,8 +811,7 @@
     <p class="reveal">Hesabını 30 saniyede aç, sunucunu kur, linki kankalarına at.</p>
     <div class="hero-ctas reveal">
       <a class="btn btn-acid btn-lg" data-cta href="/register">Ücretsiz katıl →</a>
-      <a class="btn btn-glass btn-lg" href="/indir/KankaChat-Kurulum.exe" download data-win>Windows için indir</a>
-      <a class="btn btn-glass btn-lg" href="/indir/KankaChat.apk" download data-android>Android için indir</a>
+      <a class="btn btn-glass btn-lg" href="/indir/KankaChat-Kurulum.exe" download>Windows için indir</a>
     </div>
   </div>
 </section>
@@ -861,15 +854,6 @@
 </footer>
 
 <script>
-  // Android'den girene Windows yerine APK düğmeleri; telefon kartına sürüm ve boyut
-  (function () {
-    if (/Android/i.test(navigator.userAgent)) document.documentElement.classList.add('is-android');
-    fetch('/indir/android.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
-      if (!j) return; var m = document.getElementById('apk-meta'); if (!m) return;
-      var mb = j.boyut ? (j.boyut / 1048576).toFixed(1).replace('.', ',') + ' MB' : '';
-      m.textContent = ['Sürüm ' + (j.surum || '').replace(/^android-v/, '').replace(/-\d+$/, ''), mb, 'Android 7.0+'].filter(Boolean).join(' · ');
-    }).catch(function () {});
-  })();
   // Reklam ve kaynak bilgisini (utm, gclid) kayıt sayfasına taşı
   (function () {
     var q = new URLSearchParams(location.search);

@@ -18556,29 +18556,17 @@ function applyTheme() {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#09090b');
 }
 applyTheme();
-const ANDROID_WEB = !NATIVE && !window.kankaDesktop && /Android/i.test(navigator.userAgent);
 if (!window.kankaDesktop && /Windows/.test(navigator.userAgent)) fetch('/indir/KankaChat-Kurulum.exe', { method: 'HEAD' }).then(r => { if (r.ok) $('#get-app').style.display = 'inline-block'; }).catch(() => {});
-// Android tarayıcısından girenlere APK bağlantısı (giriş ekranında)
-if (ANDROID_WEB) fetch('/indir/KankaChat.apk', { method: 'HEAD' }).then(r => { if (!r.ok) return; const a = $('#get-app'); a.href = '/indir/KankaChat.apk'; a.textContent = 'Android uygulamasını indir (APK) →'; a.style.display = 'inline-block'; }).catch(() => {});
 if (window.kankaDesktop) document.documentElement.classList.add('desktop');
 if (window.kankaDesktop?.customTitlebar) { document.body.classList.add('has-tb'); applyTheme(); }
 // Windows'ta tarayıcıdan girenlere üstte uygulama şeridi. Kapatınca 5 gün, indirince 60 gün gösterilmez.
 (() => {
   const until = +store.get('kanka-appbar') || 0;
-  const win = /Windows/.test(navigator.userAgent) && !/Mobile|Android/.test(navigator.userAgent);
-  if (window.kankaDesktop || NATIVE || !(win || ANDROID_WEB) || until > Date.now()) return;
+  if (window.kankaDesktop || NATIVE || !/Windows/.test(navigator.userAgent) || /Mobile|Android/.test(navigator.userAgent) || until > Date.now()) return;
   const hide = days => { store.set('kanka-appbar', String(Date.now() + days * 864e5)); document.body.classList.remove('has-ab'); };
-  const file = ANDROID_WEB ? '/indir/KankaChat.apk' : '/indir/KankaChat-Kurulum.exe';
-  if (ANDROID_WEB) {
-    const bar = $('#appbar'); bar.setAttribute('aria-label', 'Android uygulaması'); bar.classList.add('ab-android');
-    bar.querySelector('.ab-i').innerHTML = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10.5h12V17a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2zM6 9.5a6 6 0 0 1 12 0zM8 4l1.5 2.2M16 4l-1.5 2.2"/></svg>';
-    bar.querySelector('.ab-t').innerHTML = '<b>Android uygulaması</b><span class="ab-more"> çıktı! Test sürümü · APK</span>';
-    bar.querySelector('.ab-safe').remove();
-    $('#ab-go').href = file; $('#ab-go').lastChild.textContent = 'APK indir';
-  }
   $('#ab-x').onclick = () => hide(5);
-  $('#ab-go').onclick = () => { setTimeout(() => hide(60), 300); toast(ANDROID_WEB ? 'İndirme başladı. Dosyayı açınca telefon "bilinmeyen kaynak" izni isteyebilir; izin verip Yükle\'ye dokun.' : 'İndirme başladı. Dosyayı açınca Kanka Chat kendiliğinden kurulur ve açılır.'); };
-  fetch(file, { method: 'HEAD' }).then(r => r.ok && document.body.classList.add('has-ab')).catch(() => {});
+  $('#ab-go').onclick = () => { setTimeout(() => hide(60), 300); toast('İndirme başladı. Dosyayı açınca Kanka Chat kendiliğinden kurulur ve açılır.'); };
+  fetch('/indir/KankaChat-Kurulum.exe', { method: 'HEAD' }).then(r => r.ok && document.body.classList.add('has-ab')).catch(() => {});
 })();
 // ================= Telefona/bilgisayara yükleme (PWA) =================
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
