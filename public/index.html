@@ -2700,9 +2700,11 @@
   .has-catfx .vp-banner, .has-catfx .pf-ban, .has-catfx .dmp-ban { background: transparent !important; position: relative; z-index: 1; }
   .has-catfx .vp-banner::after, .has-catfx .pf-ban::after, .has-catfx .dmp-ban::after { display: none; }
   .has-catfx .vp-head, .has-catfx .vp-in, .has-catfx .pf-in, .has-catfx .dmp-id, .has-catfx .dmp-body { position: relative; z-index: 2; }
-  /* Yerel Şeffaf VP9+Alpha (.webm) Profil Efekti & İsim Plakası Motoru */
-  .pfx-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; pointer-events: none; z-index: 6; border-radius: inherit; }
-  .pfx-vid.screen { mix-blend-mode: screen; }
+  /* Yerel Şeffaf VP9+Alpha (.webm) Profil Efekti & İsim Plakası Motoru
+     Genişliğe oturan doğal oran (height: auto; max-height: 100%) sayesinde DM sağ paneli (.dmp) gibi çok uzun
+     profillerde object-fit: cover kenar efektlerini sağdan/soldan kesmez; kısa kartlarda ise alttan temiz kırpar. */
+  .pfx-vid, .pfx-cv.pfx-vid { position: absolute; top: 0; left: 0; right: 0; bottom: auto; width: 100%; height: auto; max-height: 100%; object-fit: cover; object-position: center top; pointer-events: none; z-index: 6; border-radius: inherit; }
+  .pfx-vid.screen, .pfx-cv.pfx-vid.screen { mix-blend-mode: screen; }
   .nb-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: right center; z-index: 0; pointer-events: none; opacity: .88; transition: opacity .2s ease, filter .25s ease; }
   .has-nb:hover .nb-vid, .nb-card:hover .nb-vid { opacity: 1; filter: brightness(1.08); }
   .nb-vid.nb-play { opacity: 0 !important; }
