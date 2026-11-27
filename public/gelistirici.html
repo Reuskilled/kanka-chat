@@ -354,7 +354,7 @@
 
   <div class="card">
     <h1>Kanka için bot yaz</h1>
-    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.8, kanka.py 1.8</div>
+    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.9, kanka.py 1.8</div>
     <a class="comm-cta" href="/gelistirici-topluluk"><b>💬 Kanka Geliştiriciler sunucusu</b><span>Soru sor, API duyurularını takip et, botunu tanıt. Katıl →</span></a>
 
     <!-- ===== CANLI İNTERAKTİF BOT PLAYGROUND ===== -->
@@ -560,6 +560,7 @@ bot.form('karsilama', e => { const g = e.secilenler.gorsel; /* g.id'yi kaydet, k
 await ses.cal('sarki.mp3');                 // dosya yolu, https adresi ya da okunabilir akış (stream)
 ses.siraya('a.mp3'); ses.siraya('b.mp3');   // sırayla çalar
 ses.gec(); ses.duraklat(); ses.devam(); ses.durdur();
+console.log(ses.durum);   // { kisi, kuyruk, gonderilen, eksik, atlanan, bellekMB }: uzun süre açık botlarda takip için
 ses.cal('radyo.mp3', { ses: 0.5, baslangic: 30 }); // ses düzeyi, kaçıncı saniyeden
 ses.on('bitti', x => ...); ses.on('kisiKatildi', k => ...); ses.on('ayrildi', x => ...); // x.sebep: "sahip seni sesli odadan çıkardı" vb.
 bot.sestenAyril();</pre>
