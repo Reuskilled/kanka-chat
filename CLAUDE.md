@@ -8,7 +8,7 @@ Türkçe, Discord tarzı sohbet uygulaması. Tek geliştirici: Reuskilled (kulla
 
 | Repo | İçerik |
 | --- | --- |
-| `Reuskilled/kanka-chat` (bu repo) | `server.js` (Node, Express, Socket.IO, tek dosya), `public/` web arayüzü (`index.html` tek dosya), `desktop/` Electron, `vds/` sunucu güncelleyici, `tanitim/` tanıtım videosu kaynakları |
+| `Reuskilled/kanka-chat` (bu repo) | `server.js` (Node, Express, Socket.IO, tek dosya), `public/` web arayüzü (`index.html` tek dosya), `desktop/` Electron, `vds/` sunucu güncelleyici, `tanitim/` tanıtım videosu kaynakları, `magaza/` Play ve App Store gönderim rehberleri ile mağaza metinleri |
 | `Reuskilled/kanka-chat-mobile` | Yerel telefon uygulaması: Expo SDK 58, RN 0.88, Expo Router, TypeScript. Kendi `CLAUDE.md`'si var |
 
 **Yayına alma:** `main`'e push = 1 dakika içinde canlı sunucuda (VDS güncelleyicisi depoyu izliyor). Yani her push canlıya gider; test etmeden push etme.

@@ -43,6 +43,9 @@ app.use('/indir', (req, res, next) => {
   next();
 });
 const deskVersions = () => { const now = Date.now(), o = {}; for (const [k, x] of deskSeen) { if (now - x.at > 48 * 3600e3) { deskSeen.delete(k); continue; } o[x.v] = (o[x.v] || 0) + 1; } return o; };
+// Eski test APK'sı (Capacitor, test anahtarı) artık dağıtılmıyor: Play sürümüyle aynı paket adı, farklı imza; kuran Play'den güncelleme alamıyordu.
+// Telefon uygulaması Reuskilled/kanka-chat-mobile reposunda, mağazalardan dağıtılacak.
+app.get(/^\/indir\/(KankaChat\.apk|android\.json)$/i, (req, res) => res.redirect(302, '/#indir'));
 app.use('/indir', express.static(path.join(__dirname, 'indir'), { setHeaders: res => res.set('Content-Disposition', 'attachment') }));
 // Genel gövde sınırı 8 KB. Bot API'si (/api/v1, 128 KB) ve masaüstü etkinlik bildirimi (/api/presence, 24 KB) kendi sınırlarıyla
 // okur: genel okuyucu önce çalışınca 8 KB'ı aşan bot mesajları ve oyun listeleri "request entity too large" ile düşüyordu.
