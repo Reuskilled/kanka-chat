@@ -1097,12 +1097,12 @@ function srvXp(s, name, n, chId) {
 // Profil: çerçeveler (seviyeyle açılır) ve sosyal bağlantılar
 const isPisago = n => typeof n === 'string' && n.toLowerCase() === 'pisago';
 const FRAMES = { halka: 2, gokkusagi: 5, ates: 10, neon: 15, altin: 25, kurucu: 0 };
-const FRAMES_SOON = ['gecekedi', 'kitsune']; // şimdilik sadece pisago'da aktif (yakında mağazada)
+const FRAMES_SOON = ['gecekedi', 'kitsune', 'sakuramoon']; // şimdilik sadece pisago'da aktif (yakında mağazada)
 const PEFFECTS = ['glitch', 'matrix', 'starry', 'embers', 'lightning', 'snow', 'rain', 'sakura', 'sparkles'];
-const PEFFECTS_OWNER = ['kitsune_cyber', 'cat_midnight', 'dragon_crimson', 'dragon_jade', 'dragon_frost', 'vfx_inferno', 'vfx_volt', 'vfx_rift', 'vfx_blackhole', 'vfx_aurora'];
-const PEFFECTS_PISAGO = ['cat_midnight', 'kitsune_cyber'];
+const PEFFECTS_OWNER = ['sakura_moon', 'kitsune_cyber', 'cat_midnight', 'dragon_crimson', 'dragon_jade', 'dragon_frost', 'vfx_inferno', 'vfx_volt', 'vfx_rift', 'vfx_blackhole', 'vfx_aurora'];
+const PEFFECTS_PISAGO = ['cat_midnight', 'kitsune_cyber', 'sakura_moon'];
 const NAME_BANNERS = ['cyberlime', 'embers', 'magma', 'frostbite', 'deepsea', 'thunder', 'nebula', 'eclipse', 'prism', 'sakura', 'goldsilk'];
-const NAME_BANNERS_SOON = ['gecekedi', 'kitsune']; // şimdilik sadece pisago'da aktif (yakında mağazada)
+const NAME_BANNERS_SOON = ['gecekedi', 'kitsune', 'sakuramoon']; // şimdilik sadece pisago'da aktif (yakında mağazada)
 const SOCIALS = ['instagram', 'tiktok', 'youtube', 'x', 'twitch', 'steam', 'spotify'];
 const kurucuOk = u => Object.values(db.users).filter(x => (x.createdAt || 0) < (u.createdAt || 0)).length < 100;
 const frameOk = (u, f) => f === 'none' || (FRAMES_SOON.includes(f) ? isPisago(u.name) : (f in FRAMES && (f === 'kurucu' ? kurucuOk(u) : level(u.xp) >= FRAMES[f])));
