@@ -904,21 +904,35 @@ const backupList = () => fs.existsSync(BACKUPS) ? fs.readdirSync(BACKUPS).filter
 // ---------- Kötüye kullanım koruması ----------
 const limits = new Map();
 // key için pencere içinde en fazla max deneme; aşılırsa kalan bekleme süresini (sn) döndürür
-// Mesaj seli: hız sınırına 1 dakikada 3 kez takılan geçici olarak hiç yazamaz. Tekrar ederse süre artar (5 dk → 15 dk → 1 saat), 24 saatte sıfırlanır.
-const floodPen = new Map(); // isim -> { until, lvl, at, strikes: [] }
-function msgFlood(me) {
-  const now = Date.now(), p = floodPen.get(me) || { until: 0, lvl: 0, at: 0, strikes: [] };
-  if (p.until > now) return `Çok fazla mesaj attığın için ${Math.ceil((p.until - now) / 60e3)} dakika yazamazsın`;
-  if (!limited('msg|' + me, 8, 5000)) return null;
+// Mesaj seli: hız sınırına 1 dakikada 3 kez takılan geçici olarak yazamaz (5 dk → 15 dk → 1 saat, 24 saatte sıfırlanır).
+// Ceza sadece selin olduğu yerde geçerli: o sunucu ya da o DM/grup. Başka sunucular ve DM'ler etkilenmez.
+// Sunucunun sahibi ve yönetim ekibi kendi sunucusunda ceza almaz, sadece "biraz yavaşla" uyarısı görür.
+// Yetkililer sunucudaki "susturmayı kaldır" ile üyenin bu cezasını da kaldırabilir.
+const floodPen = new Map(); // isim|yer -> { until, lvl, at, strikes: [] }
+const floodScope = chId => { const sv = serverOf(chId); return sv ? 's:' + sv.id : 'c:' + chId; };
+function msgFlood(me, chId) {
+  const now = Date.now(), sc = chId ? floodScope(chId) : 'genel', key = me + '|' + sc, sv = chId ? serverOf(chId) : null;
+  const p = floodPen.get(key) || { until: 0, lvl: 0, at: 0, strikes: [] };
+  if (p.until > now) return `Burada çok fazla mesaj attığın için ${Math.ceil((p.until - now) / 60e3)} dakika yazamazsın. Diğer sunucular ve DM'ler etkilenmez`;
+  const over = limited('msg|' + key, 8, 5000), all = limited('msgall|' + me, 20, 5000); // tüm yerler toplamı: bot gibi her yere birden basmayı keser
+  if (!over && !all) return null;
+  if (sv && isStaff(sv, me)) return 'Çok hızlı yazıyorsun, biraz yavaşla 🙂';
   p.strikes = p.strikes.filter(t => now - t < 60e3); p.strikes.push(now);
   if (p.strikes.length >= 3) {
     if (now - p.at > 864e5) p.lvl = 0;
     const dk = [5, 15, 60][Math.min(p.lvl, 2)]; p.lvl++; p.at = now; p.until = now + dk * 60e3; p.strikes = [];
-    floodPen.set(me, p); secLog('mesaj-seli', me, `hız sınırını zorladı, ${dk} dk yazma cezası`);
-    return `Çok hızlı ve çok fazla mesaj attın, ${dk} dakika yazamazsın`;
+    secLog('mesaj-seli', me, `hız sınırını zorladı (${sv ? sv.name : 'DM'}), ${dk} dk yazma cezası`);
+    if (sv) { // sunucuda normal susturma olarak: yetkililer üye listesinde görür, "susturmayı kaldır" ile açar
+      sv.timeouts ||= {}; sv.timeouts[me] = Math.max(sv.timeouts[me] || 0, p.until); p.until = 0; floodPen.set(key, p);
+      audit(sv, BOT_NAME, 'Mesaj seli: susturdu', `${me} · ${dk} dk`); save(); pushServers(membersOf(sv));
+      return `Çok hızlı ve çok fazla mesaj attın, bu sunucuda ${dk} dakika susturuldun. Diğer sunucular ve DM'ler etkilenmez`;
+    }
+    floodPen.set(key, p);
+    return `Çok hızlı ve çok fazla mesaj attın, burada ${dk} dakika yazamazsın. Diğer sunucular ve DM'ler etkilenmez`;
   }
-  floodPen.set(me, p); return 'Çok hızlı yazıyorsun, biraz yavaşla 🙂';
+  floodPen.set(key, p); return 'Çok hızlı yazıyorsun, biraz yavaşla 🙂';
 }
+const floodClear = (s, n) => floodPen.delete(n + '|s:' + s.id);
 setInterval(() => { const now = Date.now(); for (const [k, v] of floodPen) if (v.until < now && now - v.at > 864e5 && !v.strikes.some(t => now - t < 60e3)) floodPen.delete(k); }, 600e3);
 function limited(key, max, windowMs) {
   const now = Date.now(), arr = (limits.get(key) || []).filter(t => now - t < windowMs);
@@ -1190,7 +1204,7 @@ function permsOf(s, n) {
 const can = (s, n, perm) => permsOf(s, n).has(perm);
 const rankOf = (s, n) => s.owner === n ? 1e9 : Math.max(s.roles?.[n] === 'mod' ? 500 : 0, ...(s.memberRoles?.[n] || []).map(rid => { const i = s.customRoles.findIndex(r => r.id === rid); return i < 0 ? 0 : 1000 - i; }));
 const outranks = (s, a, b) => s.owner === a || rankOf(s, a) > rankOf(s, b);
-const timedOut = (s, n) => (s.timeouts?.[n] || 0) > Date.now();
+const timedOut = (s, n) => s.owner !== n && (s.timeouts?.[n] || 0) > Date.now(); // sahip hiçbir zaman susturulmuş sayılmaz
 // ---------- Kategoriler ve oda izinleri ----------
 // Her oda/kategori: perms = { '@everyone' | rolId: { view, send, connect } } (true izin, false yasak, yoksa devral)
 // Eşitlenmiş oda (sync) kategorisinin izinlerini kullanır.
@@ -6220,7 +6234,7 @@ io.on('connection', socket => {
   socket.on('quickDM', ({ to, text } = {}, cb = () => {}) => {
     if (!me || !db.users[to] || to === me) return cb({ error: 'Kullanıcı bulunamadı' });
     text = cleanMsg(text); if (!text) return cb({ error: 'Boş mesaj' });
-    { const fl = msgFlood(me); if (fl) return cb({ error: fl }); }
+    { const fl = msgFlood(me, dmId(me, to)); if (fl) return cb({ error: fl }); }
     if (db.users[me].blocked?.includes(to)) return cb({ error: 'Bu kişiyi engelledin. Mesaj göndermek için engeli kaldır.' });
     if (db.users[to].blocked?.includes(me)) return cb({ error: 'Bu kişi sana mesaj alımını kapattı.' });
     const r = postMessage(me, dmId(me, to), { kind: 'text', text });
@@ -6245,7 +6259,7 @@ io.on('connection', socket => {
       if (!e2eChat(cur) || !c || !p.enc || !c.eps.some(x => x.id === p.enc.ep) || !b64ok(p.enc.iv, 24) || !b64ok(p.enc.ct, 60000) || !b64ok(p.fc, 64)) return cb({ error: 'Şifreli mesaj geçersiz, sayfayı yenile' });
       p = { kind: 'text', enc: { ep: p.enc.ep, iv: p.enc.iv, ct: p.enc.ct }, fc: p.fc, replyTo: p.replyTo };
     } else if (db.e2e?.[cur]?.eps?.length && e2eChat(cur) && (!p.kind || p.kind === 'text' || ['poll', 'plan', 'song'].includes(p.kind)) && chatMembers(cur).every(n => e2eCur(n))) return cb({ error: 'Bu sohbet uçtan uca şifreli, sayfayı yenileyip tekrar dene', e2e: true });
-    { const fl = msgFlood(me); if (fl) return cb({ error: fl }); }
+    { const fl = msgFlood(me, cur); if (fl) return cb({ error: fl }); }
     if (cur.startsWith('dm:')) {
       const other = dmPeers(cur).find(n => n !== me) || me, u = db.users[me], o = db.users[other];
       if (u?.blocked?.includes(other)) return cb({ error: 'Bu kişiyi engelledin. Mesaj göndermek için engeli kaldır.' });
@@ -6284,7 +6298,7 @@ io.on('connection', socket => {
     const { from, msgId, to } = p;
     if (!from || !msgId || !to) return cb({ error: 'Eksik bilgi' });
     if (!canAccess(me, from) || !canAccess(me, to)) return cb({ error: 'Bu odaya erişimin yok' });
-    { const fl = msgFlood(me); if (fl) return cb({ error: fl }); }
+    { const fl = msgFlood(me, to); if (fl) return cb({ error: fl }); }
     const src = findMsg(from, msgId);
     if (!src || src.ephemeral) return cb({ error: 'Mesaj bulunamadı' });
     if (src.enc) return cb({ error: 'Şifreli mesajlar iletilemez' });
@@ -7432,7 +7446,7 @@ io.on('connection', socket => {
     const s = permServer(serverId, 'timeout'); if (!s) return cb({ error: 'Susturma yetkin yok' });
     if (!membersOf(s).includes(name) || name === me || !outranks(s, me, name)) return cb({ error: 'Bu kişiyi susturamazsın' });
     minutes = [0, 1, 5, 10, 60, 1440, 10080].includes(+minutes) ? +minutes : 10;
-    if (minutes) s.timeouts[name] = Date.now() + minutes * 60e3; else delete s.timeouts[name];
+    if (minutes) s.timeouts[name] = Date.now() + minutes * 60e3; else { delete s.timeouts[name]; floodClear(s, name); }
     audit(s, me, minutes ? 'Susturdu' : 'Susturmayı kaldırdı', minutes ? `${name} · ${minutes >= 1440 ? minutes / 1440 + ' gün' : minutes >= 60 ? minutes / 60 + ' saat' : minutes + ' dk'}` : name);
     if (minutes) io.to('user:' + name).emit('toast', `${s.name} sunucusunda ${minutes >= 60 ? Math.round(minutes / 60) + ' saat' : minutes + ' dakika'} susturuldun`);
     pushSrv(s); cb({ ok: true });
@@ -7647,7 +7661,7 @@ io.on('connection', socket => {
   // ----- Konular -----
   socket.on('threadReply', ({ msgId, text } = {}, cb = () => {}) => {
     if (!canAccess(me, cur)) return cb({ error: 'Erişim yok' });
-    { const fl = msgFlood(me); if (fl) return cb({ error: fl }); }
+    { const fl = msgFlood(me, cur); if (fl) return cb({ error: fl }); }
     const msg = findMsg(cur, msgId); text = cleanMsg(text);
     if (!msg || !text || msg.kind === 'system') return cb({ error: 'Gönderilemedi' });
     if (db.e2e?.[cur]?.eps?.length) return cb({ error: 'Şifreli sohbette konu açılamıyor' });
