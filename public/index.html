@@ -2715,7 +2715,7 @@
   .has-nb { position: relative; overflow: hidden; isolation: isolate; background: #101014 !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
   .mem.has-nb { margin-bottom: 5px; }
   .room.has-nb { margin-bottom: 3px; }
-  .has-nb > *:not(.nb-bg):not(.nb-scrim):not(.nb-art):not(.nb-sheen) { position: relative; z-index: 2; }
+  .has-nb > *:not(.nb-bg):not(.nb-vid):not(.nb-scrim):not(.nb-art):not(.nb-sheen) { position: relative; z-index: 2; }
   .has-nb::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 1px solid rgba(255,255,255,.05); pointer-events: none; z-index: 2; transition: border-color .22s ease; }
   .has-nb:hover::after { border-color: rgba(255,255,255,.14); }
   .has-nb .info > span:first-child, .has-nb .nb-dmn { color: #f4f4f6; text-shadow: 0 1px 3px rgba(0,0,0,.75); }
@@ -2779,9 +2779,10 @@
   .nb-prism .nb-bg { background: linear-gradient(100deg, #100c1e 12%, #33134a 48%, #0e4a6b 82%, #00e5ff 100%); }
   .nb-sakura .nb-bg { background: linear-gradient(100deg, #190d16 15%, #461938 56%, #8c3168 85%, #f472b6 100%); }
   .nb-goldsilk .nb-bg { background: linear-gradient(100deg, #14110b 15%, #332610 56%, #6e5118 86%, #eab308 100%); }
-  .nb-gecekedi .nb-bg { background: url('/effects/cat_nameplate_midnight.jpg') right center/cover no-repeat !important; opacity: .88 !important; }
-  .nb-gecekedi .nb-scrim { background: linear-gradient(90deg, rgba(16,12,24,.84) 0%, rgba(16,12,24,.44) 50%, rgba(16,12,24,.04) 80%) !important; }
-  .nb-gecekedi:hover .nb-bg, .nb-card:hover .nb-gecekedi .nb-bg { opacity: 1 !important; filter: brightness(1.12); animation: none !important; }
+  .nb-gecekedi .nb-bg { background: linear-gradient(100deg, #120d1c 12%, #241338 56%, #3e194f 88%, #6d2666 100%) !important; opacity: .94 !important; }
+  .nb-gecekedi .nb-vid { object-fit: contain; object-position: right center; opacity: .98; z-index: 1; }
+  .nb-gecekedi .nb-scrim { background: linear-gradient(90deg, rgba(16,12,24,.76) 0%, rgba(16,12,24,.28) 46%, rgba(16,12,24,0) 74%) !important; }
+  .nb-gecekedi:hover .nb-bg, .nb-card:hover .nb-gecekedi .nb-bg { opacity: 1 !important; filter: brightness(1.1); animation: none !important; }
   .nb-card.lock { opacity: .55; cursor: not-allowed; }
   .nb-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .nb-cats button { padding: 4px 10px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: 11.5px; font-weight: 800; transition: all .14s; }
@@ -12476,7 +12477,7 @@ const PFX_3D_MAP = { dragon_crimson: 0, dragon_jade: 1, dragon_frost: 2, vfx_bla
 const NB_CATS = [['all', 'Tümü'], ['fire', 'Ateş & Kor'], ['ice', 'Buz & Su'], ['space', 'Uzay'], ['neon', 'Neon & Siber'], ['soft', 'Yumuşak']];
 const NAME_BANNERS = [
   { id: 'none', cat: 'all', name: 'Yok', svg: '' },
-  { id: 'gecekedi', cat: 'soft', name: 'Gece Kedisi', tag: 'YAKINDA', soon: true, svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="nb-paw p1" fill="#f8b4cb" transform="translate(96 27) rotate(-14)"><ellipse cx="0" cy="3" rx="3.4" ry="2.4"/><circle cx="-3.4" cy="-1.2" r="1.2"/><circle cx="-1.1" cy="-2.6" r="1.3"/><circle cx="1.4" cy="-2.4" r="1.3"/><circle cx="3.6" cy="-.8" r="1.2"/></g><g class="nb-paw p2" fill="#f8b4cb" transform="translate(124 16) rotate(10)"><ellipse cx="0" cy="3" rx="3.4" ry="2.4"/><circle cx="-3.4" cy="-1.2" r="1.2"/><circle cx="-1.1" cy="-2.6" r="1.3"/><circle cx="1.4" cy="-2.4" r="1.3"/><circle cx="3.6" cy="-.8" r="1.2"/></g><g class="nb-paw p3" fill="#fde68a" transform="translate(152 28) rotate(-8)"><ellipse cx="0" cy="3" rx="3.4" ry="2.4"/><circle cx="-3.4" cy="-1.2" r="1.2"/><circle cx="-1.1" cy="-2.6" r="1.3"/><circle cx="1.4" cy="-2.4" r="1.3"/><circle cx="3.6" cy="-.8" r="1.2"/></g></svg>` },
+  { id: 'gecekedi', cat: 'soft', name: 'Gece Kedisi', tag: 'YAKINDA', soon: true, vid: '/effects/cat_nameplate_walk.webm?v=1', svg: '' },
   { id: 'cyberlime', cat: 'neon', name: 'Asit Siber', tag: 'KANKA', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv" stroke="#d4ff00" stroke-opacity=".45" fill="none" stroke-width="1.2"><path d="M135 10 H170 L180 20 H225"/><path d="M150 34 H190 L202 24 H238"/><circle cx="170" cy="10" r="2.2" fill="#d4ff00"/><circle cx="202" cy="24" r="2.2" fill="#d4ff00"/><circle cx="222" cy="12" r="1.6" fill="#fff"/></g><rect x="210" y="6" width="22" height="3" rx="1.5" fill="#d4ff00" opacity=".75"/></svg>` },
   { id: 'embers', cat: 'fire', name: 'Kor Alev', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv"><circle cx="150" cy="30" r="2.2" fill="#ffbe3b" opacity=".8"/><circle cx="176" cy="14" r="1.6" fill="#ff7a2b" opacity=".9"/><circle cx="198" cy="26" r="3" fill="#ffd166" opacity=".75"/><circle cx="218" cy="12" r="2" fill="#fff" opacity=".85"/><circle cx="226" cy="33" r="2.5" fill="#ff6b2b" opacity=".8"/><circle cx="164" cy="36" r="1.4" fill="#fde047" opacity=".7"/></g></svg>` },
   { id: 'magma', cat: 'fire', name: 'Magma', tag: 'YENİ', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv" stroke="#ff9447" stroke-opacity=".55" stroke-width="1.3" fill="none"><path d="M130 44 L178 12 L238 36"/><path d="M168 44 L208 4 L232 44"/><circle cx="178" cy="12" r="2.4" fill="#fde047"/><circle cx="208" cy="18" r="1.5" fill="#ff7a2b"/></g></svg>` },
@@ -12490,7 +12491,7 @@ const NAME_BANNERS = [
   { id: 'goldsilk', cat: 'soft', name: 'Altın İpek', tag: 'ÖZEL', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><path class="mv" d="M130 36 Q180 8 240 26" fill="none" stroke="#fde047" stroke-opacity=".35" stroke-width="2"/><g class="mv" fill="#fef08a"><circle cx="174" cy="16" r="1.5"/><circle cx="204" cy="24" r="2"/><circle cx="224" cy="12" r="1.3"/></g></svg>` },
 ];
 const nbOf = u => u?.nameBanner && NAME_BANNERS.some(x => x.id === u.nameBanner && x.id !== 'none') ? u.nameBanner : null;
-const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `${b.vid ? `<video class="nb-vid" src="${esc(b.vid)}" autoplay loop muted playsinline disablePictureInPicture aria-hidden="true"></video>` : '<div class="nb-bg"></div>'}<div class="nb-scrim"></div><div class="nb-art">${b.svg || ''}</div><div class="nb-sheen"></div>`; };
+const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `<div class="nb-bg"></div>${b.vid ? `<video class="nb-vid" src="${esc(b.vid)}" autoplay loop muted playsinline disablePictureInPicture aria-hidden="true"></video>` : ''}<div class="nb-scrim"></div><div class="nb-art">${b.svg || ''}</div><div class="nb-sheen"></div>`; };
 const NS_FONTS = [
   ['default', 'Varsayılan'], ['serif', 'Klasik'], ['cinzel', 'Kraliyet'], ['rounded', 'Yuvarlak'],
   ['script', 'El Yazısı'], ['pixel', 'Piksel'], ['cyber', 'Siber'], ['mono', 'Kod'],
