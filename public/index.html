@@ -9481,7 +9481,7 @@ const SPARK_HIDE = STORE_APP && !PLAY_BILL;
 // ---------- Market (tam genişlik koleksiyon vitrini: canlı önizleme, arama ve filtreleme; fiyat/satın alma yok) ----------
 const MARKET_IC = 'tag';
 const PFX_POSTER_MAP = {
-  kitsune_cyber: '/effects/kitsune_profile_poster.webp?v=1',
+  kitsune_cyber: '/effects/kitsune_profile_poster.webp?v=2',
   cat_midnight: '/effects/cat_profile_poster.webp?v=1',
   dragon_crimson: '/effects/dragon_inferno_poster.webp?v=1',
 };
@@ -12841,7 +12841,7 @@ const PEFFECTS = [
   ['sparkles', 'Prizma', '✧', 'linear-gradient(135deg,#181429,#26240c)', '#fde047'],
 ];
 const PEFFECTS_OWNER = [
-  ['kitsune_cyber', 'Siber Tilki', '🦊', '#080c18', '#00e5ff', '/effects/kitsune_profile_poster.webp', ''],
+  ['kitsune_cyber', 'Siber Tilki', '🦊', '#080c18', '#00e5ff', '/effects/kitsune_profile_poster.webp?v=2', ''],
   ['cat_midnight', 'Gece Kedisi', '🐾', '#120c1c', '#f48fb1', '/effects/cat_profile_poster.webp', ''],
   ['dragon_crimson', 'Kızıl Ejderha', '🐉', '#120405', '#fb923c', '/effects/dragon_crimson.jpg', ''],
   ['dragon_jade', 'Zümrüt Ejderha', '🐉', '#04140e', '#34d399', '/effects/dragon_jade.jpg', ''],
@@ -13304,7 +13304,7 @@ function playIntro(el, kind, u) {
 const PFX_VIDEO_MAP = {
   dragon_crimson: { loop: '/effects/dragon_inferno.webm?v=5', screen: false },
   cat_midnight: { loop: '/effects/cat_midnight_walk.webm?v=1', screen: false },
-  kitsune_cyber: { loop: '/effects/kitsune_cyber_effect.webm?v=1', screen: false },
+  kitsune_cyber: { loop: '/effects/kitsune_cyber_effect.webm?v=2', screen: false },
 };
 function mountVideoProfileEffect(el, cfg) {
   if (!el || !cfg || (!cfg.loop && !cfg.intro)) return false;
