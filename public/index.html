@@ -2614,9 +2614,9 @@
   .fr-kurucu::after { content: '🦝'; position: absolute; z-index: 3; left: 50%; bottom: calc(var(--s) * -.08); transform: translateX(-50%); font-size: calc(var(--s) * .2); line-height: 1; padding: 2px 5px; border-radius: 99px; background: #2b1d15; border: 2px solid #ff8a4c; }
   /* Gece Kedisi — stüdyo şeffaf kadife kedi kulaklı avatar çerçevesi (canlı kıpırtı + parıltı) */
   .pav.fr-gecekedi::before { background: radial-gradient(circle, rgba(244,143,177,.35), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
-  .pav.fr-gecekedi .av { border-color: transparent !important; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
+  .pav.fr-gecekedi .av { border: 0 !important; background-clip: padding-box; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
   .pav.fr-gecekedi::after {
-    content: ''; position: absolute; left: -37%; top: -37%; width: 174%; height: 174%;
+    content: ''; position: absolute; left: -36%; top: -36%; width: 172%; height: 172%;
     z-index: 4; pointer-events: none;
     background: url('/effects/cat_frame_midnight.webp?v=1') center/contain no-repeat;
     filter: drop-shadow(0 4px 10px rgba(0,0,0,.5));
