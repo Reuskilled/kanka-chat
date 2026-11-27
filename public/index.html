@@ -2616,7 +2616,7 @@
   .pav.fr-gecekedi::before { background: radial-gradient(circle, rgba(244,143,177,.35), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
   .pav.fr-gecekedi .av { border-color: transparent !important; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
   .pav.fr-gecekedi::after {
-    content: ''; position: absolute; left: -31%; top: -31%; width: 162%; height: 162%;
+    content: ''; position: absolute; left: -37%; top: -37%; width: 174%; height: 174%;
     z-index: 4; pointer-events: none;
     background: url('/effects/cat_frame_midnight.webp?v=1') center/contain no-repeat;
     filter: drop-shadow(0 4px 10px rgba(0,0,0,.5));
@@ -2624,7 +2624,7 @@
   }
   .pav.fr-gecekedi:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(216,172,255,.55)); }
   /* Sohbet mesajları, DM listesi (Sohbetler), üye listesi & sol alt avatar çerçeveleri (.on-dot::after ile çakışmaz) */
-  .av.has-fr { position: relative; overflow: visible !important; border-color: transparent !important; }
+  .av.has-fr { position: relative; overflow: visible !important; border: 0 !important; }
   .av.has-fr > .av-fr { position: absolute; inset: -3px; border-radius: 50%; pointer-events: none; z-index: 3; }
   .av.has-fr:not(.fr-gecekedi) > .av-fr {
     padding: 2.5px;
@@ -2638,15 +2638,16 @@
   .av.fr-altin > .av-fr { background: linear-gradient(135deg, #fff1b8, #e2b04a 30%, #8a5a12 55%, #ffe08a 80%, #b9821f); filter: drop-shadow(0 0 4px rgba(226,176,74,.55)); }
   .av.fr-kurucu > .av-fr { background: conic-gradient(#ff8a4c, #ffb347, #ff6b3d, #ff8a4c); filter: drop-shadow(0 0 4px rgba(255,138,76,.6)); }
   .av.fr-gecekedi > .av-fr {
-    left: -31%; top: -31%; right: auto; bottom: auto; width: 162%; height: 162%;
+    left: -36%; top: -36%; right: auto; bottom: auto; width: 172%; height: 172%;
     border-radius: 0; z-index: 4;
     background: url('/effects/cat_frame_midnight.webp?v=1') center/contain no-repeat;
     filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
     transition: transform .22s cubic-bezier(.34,1.56,.64,1);
   }
   .av.fr-gecekedi:hover > .av-fr { transform: scale(1.06); }
+  .has-nb .av.fr-gecekedi > .av-fr { left: -29%; top: -29%; width: 158%; height: 158%; }
   :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) .av.has-fr > .av-fr { inset: -2px; padding: 1.8px; }
-  :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) .av.fr-gecekedi > .av-fr { left: -24%; top: -24%; width: 148%; height: 148%; }
+  :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) .av.fr-gecekedi > .av-fr { left: -26%; top: -26%; width: 152%; height: 152%; }
   .av.on-dot::after { z-index: 6; }
   .pav .pdot { z-index: 5; }
   @keyframes catGlow { 0%,100% { opacity: .45; transform: scale(1); } 50% { opacity: .9; transform: scale(1.06); } }
