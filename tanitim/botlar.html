@@ -1,0 +1,312 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0b0b0e;font-family:'Inter Display','Inter',sans-serif;color:#f4f4f6}
+.L{position:absolute;inset:0}
+#bg{background:radial-gradient(900px 900px at 20% 15%,#d4ff0014,transparent 60%),radial-gradient(1000px 1000px at 85% 80%,#6c78ff14,transparent 60%),#0b0b0e}
+#grid{background-image:linear-gradient(#ffffff07 2px,transparent 2px),linear-gradient(90deg,#ffffff07 2px,transparent 2px);background-size:90px 90px;mask-image:radial-gradient(900px 1300px at 50% 50%,#000 30%,transparent 75%)}
+#glow{width:900px;height:900px;left:90px;top:520px;border-radius:50%;background:radial-gradient(circle,#d4ff0022,transparent 65%);filter:blur(20px)}
+#grain{background-image:radial-gradient(#ffffff0a 1px,transparent 1px);background-size:5px 5px;opacity:.5;pointer-events:none}
+.top{position:absolute;top:110px;left:0;right:0;display:flex;justify-content:center}
+.tag{display:flex;align-items:center;gap:16px;padding:16px 30px;border-radius:999px;background:#15151a;border:2px solid #ffffff14;font-weight:800;font-size:34px;letter-spacing:3px;color:#cfcfd6}
+.tag i{width:18px;height:18px;border-radius:50%;background:#d4ff00;box-shadow:0 0 18px #d4ff00}
+.foot{position:absolute;bottom:150px;left:0;right:0;text-align:center;font-weight:700;font-size:34px;color:#8b8b96;letter-spacing:1px}
+.sc{position:absolute;inset:0;will-change:transform,opacity,filter}
+.kick{position:absolute;left:0;right:0;top:300px;text-align:center;font-weight:800;font-size:34px;letter-spacing:6px;color:#d4ff00}
+.h{position:absolute;left:60px;right:60px;top:360px;text-align:center;font-weight:900;font-size:104px;letter-spacing:-4px;line-height:.98}
+.h .w{display:inline-block;overflow:hidden;vertical-align:bottom;padding:0 4px}
+.h .w>span{display:inline-block}
+.lime{color:#d4ff00}
+.sub{position:absolute;left:90px;right:90px;top:620px;text-align:center;font-weight:600;font-size:40px;color:#a7a7b2;line-height:1.3}
+.card{position:absolute;left:70px;right:70px;border-radius:44px;background:linear-gradient(180deg,#17171d,#111115);border:2px solid #ffffff12;box-shadow:0 40px 120px #0009,inset 0 1px 0 #ffffff10;overflow:hidden}
+.msg{display:flex;gap:26px;padding:34px 40px}
+.av{width:96px;height:96px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:900;font-size:40px;color:#0b0b0e}
+.av.k{background:#0b0b0e;border:3px solid #2a2a33}
+.who{display:flex;align-items:center;gap:16px;font-weight:800;font-size:40px;margin-bottom:8px}
+.bot{background:#6c78ff;color:#fff;font-size:24px;font-weight:900;padding:5px 12px;border-radius:10px;letter-spacing:1px}
+.tm{color:#6e6e78;font-weight:600;font-size:28px}
+.tx{font-size:42px;font-weight:500;color:#e9e9ee;line-height:1.35}
+.btn{display:inline-flex;align-items:center;gap:12px;padding:22px 34px;border-radius:18px;font-weight:800;font-size:38px;margin:18px 14px 0 0;color:#fff}
+.g{background:#2f9e65}.r{background:#d64545}.n{background:#2a2a33}
+.sel{margin-top:20px;padding:24px 30px;border-radius:18px;background:#0f0f13;border:2px solid #ffffff18;font-size:38px;color:#9a9aa6;display:flex;justify-content:space-between}
+code,.code{font-family:'DejaVu Sans Mono',monospace}
+.ed{padding:40px 44px;font-size:33px;line-height:1.6;white-space:pre;color:#d9d9e0}
+.ed .c1{color:#c792ea}.ed .c2{color:#d4ff00}.ed .c3{color:#82aaff}.ed .c4{color:#f78c6c}.ed .c5{color:#6e6e78}
+.dots{display:flex;gap:14px;padding:26px 34px;border-bottom:2px solid #ffffff0d}.dots i{width:22px;height:22px;border-radius:50%;background:#2a2a33}
+.dots b{margin-left:18px;font-weight:700;font-size:28px;color:#7d7d88}
+.car{display:inline-block;width:16px;height:38px;background:#d4ff00;vertical-align:-6px}
+.in{margin:30px 40px 0;padding:24px 30px;border-radius:20px;background:#0f0f13;border:3px solid #d4ff00;font-size:40px;font-weight:600;display:flex;align-items:center;gap:6px}
+.li{display:flex;align-items:center;gap:24px;padding:20px 40px;font-size:40px;font-weight:700}
+.li .av{width:76px;height:76px;font-size:32px}
+.li small{margin-left:auto;color:#6e6e78;font-size:30px;font-weight:600}
+.li.on{background:#d4ff0016}
+.chip{display:inline-flex;align-items:center;gap:12px;padding:10px 22px 10px 10px;border-radius:999px;background:#d4ff0022;font-weight:800;font-size:34px;margin:30px 0 0 40px}
+.chip .av{width:52px;height:52px;font-size:24px}
+.ch{display:flex;align-items:center;gap:22px;padding:22px 40px;font-size:44px;font-weight:700;color:#a7a7b2}
+.ch.new{color:#fff;background:#d4ff0014;border-left:8px solid #d4ff00}
+.eye{display:flex;align-items:center;gap:12px;margin-top:22px;font-size:30px;color:#8b8b96;font-weight:600}.eye b{color:#d4ff00}
+.half{position:absolute;top:0;bottom:0;width:50%;padding:34px 30px}
+.vh{display:flex;align-items:center;gap:18px;padding:34px 40px 10px;font-weight:900;font-size:44px}
+.vu{display:flex;align-items:center;gap:26px;padding:16px 40px;font-size:42px;font-weight:700}
+.vu .av{width:90px;height:90px;font-size:38px}
+.wave{display:flex;align-items:center;gap:8px;height:120px;margin:10px 40px 0}
+.wave i{flex:1;border-radius:6px;background:#d4ff00}
+.np{margin:26px 40px 36px;padding:22px 28px;border-radius:20px;background:#0f0f13;font-size:34px;font-weight:700;display:flex;align-items:center;gap:18px}
+.bar{height:10px;border-radius:6px;background:#ffffff14;flex:1;overflow:hidden}.bar i{display:block;height:100%;background:#d4ff00}
+.pill{position:absolute;padding:22px 34px;border-radius:999px;background:#17171d;border:2px solid #ffffff16;font-weight:800;font-size:38px;white-space:nowrap}
+.pill.l{background:#d4ff00;color:#0b0b0e;border-color:#d4ff00}
+#sweep{left:-400px;top:-400px;width:500px;height:2800px;background:linear-gradient(90deg,transparent,#d4ff00 45%,#f4ffb0 50%,#d4ff00 55%,transparent);transform:rotate(18deg);opacity:0;filter:blur(2px)}
+#flash{background:#fff;opacity:0;mix-blend-mode:overlay}
+#fade{background:#0b0b0e;opacity:0}
+.cur{position:absolute;width:84px;height:84px;opacity:0}
+</style></head><body>
+<div class="L" id="bg"></div><div class="L" id="grid"></div><div class="L" id="glow" style="position:absolute;inset:auto"></div>
+
+<!-- S0 kanca -->
+<div class="sc" id="s0">
+  <svg id="logo" viewBox="0 0 200 200" style="position:absolute;left:340px;top:420px;width:400px;height:400px">
+    <g transform="translate(100 100) scale(.62) translate(-100 -99)">
+      <path fill="#fff" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/>
+      <path id="dot" fill="#D4FF00" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/>
+    </g>
+    <g fill="none" stroke="#d4ff00" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+      <path id="bl" d="M 46 70 L 20 100 L 46 130"/><path id="br" d="M 154 70 L 180 100 L 154 130"/>
+    </g>
+  </svg>
+  <div class="h" style="top:930px;font-size:150px;letter-spacing:-7px"><span class="w"><span id="w0">KENDİ</span></span><br><span class="w"><span id="w1">BOTUNU</span></span><br><span class="w"><span id="w2" class="lime">YAZ.</span></span></div>
+  <div class="sub" id="s0sub" style="top:1450px">Kanka'nın bot API'si açık. Komutlar, butonlar, müzik… hepsi.</div>
+</div>
+
+<!-- S1 kod -->
+<div class="sc" id="s1">
+  <div class="kick">01 · BAŞLANGIÇ</div>
+  <div class="h"><span class="w"><span>5 satırda</span></span><br><span class="w"><span class="lime">ilk botun</span></span></div>
+  <div class="card" id="ed" style="top:700px">
+    <div class="dots"><i></i><i></i><i></i><b>bot.js</b></div>
+    <div class="ed" id="code"></div>
+  </div>
+  <div class="card" id="chat" style="top:1230px">
+    <div class="msg" id="m1"><div class="av" style="background:#ff8a4c">A</div><div><div class="who">Ahmet <span class="tm">21:04</span></div><div class="tx"><span style="color:#d4ff00;font-weight:800">/zar</span></div></div></div>
+    <div class="msg" id="m2" style="padding-top:0"><div class="av k"><svg viewBox="0 0 200 200" width="70" height="70"><g transform="translate(100 100) scale(.62) translate(-100 -99)"><path fill="#fff" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="#D4FF00" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></g></svg></div><div><div class="who">ZarBot <span class="bot">BOT</span> <span class="tm">21:04</span></div><div class="tx" style="font-size:64px">🎲 <b id="die">4</b></div></div></div>
+  </div>
+</div>
+
+<!-- S2 butonlar -->
+<div class="sc" id="s2">
+  <div class="kick">02 · BİLEŞENLER</div>
+  <div class="h"><span class="w"><span>Butonlar ve</span></span><br><span class="w"><span class="lime">seçim menüleri</span></span></div>
+  <div class="card" style="top:760px">
+    <div class="msg"><div class="av" style="background:#6c78ff;color:#fff">O</div><div style="flex:1">
+      <div class="who">OyunBot <span class="bot">BOT</span></div>
+      <div class="tx" id="s2q">Akşam oyun var mı? 🎮</div>
+      <div><span class="btn g" id="by">👍 Evet</span><span class="btn r">Hayır</span><span class="btn n">Belki</span></div>
+      <div class="sel">Hangi oyun? <span>▾</span></div>
+      <div class="tx" id="s2r" style="margin-top:26px;font-size:38px;color:#d4ff00;font-weight:800;opacity:0">✅ Ahmet katılıyor · 4/5 kişi</div>
+    </div></div>
+  </div>
+  <svg class="cur" id="cur2" viewBox="0 0 24 24"><path d="M4 2l16 9-7 2-3 7z" fill="#fff" stroke="#0b0b0e" stroke-width="1.5"/></svg>
+</div>
+
+<!-- S3 üye seçici -->
+<div class="sc" id="s3">
+  <div class="kick">03 · YENİ</div>
+  <div class="h"><span class="w"><span>Üye seçici</span></span></div>
+  <div class="sub" style="top:500px">İsim yazdırmak yok. Kullanıcı arar, tıklar.<br>Kanka doğrular.</div>
+  <div class="card" style="top:760px;padding-bottom:30px">
+    <div class="msg" style="padding-bottom:0"><div class="av" style="background:#2f9e65">T</div><div><div class="who">TicketBot <span class="bot">BOT</span></div><div class="tx">Bilete kimi ekleyelim?</div></div></div>
+    <div id="s3chips" style="height:0"></div>
+    <div class="in"><span id="s3q"></span><span class="car" id="s3c"></span><span style="margin-left:auto;color:#6e6e78">🔍</span></div>
+    <div id="s3list" style="margin-top:14px">
+      <div class="li" id="li0"><div class="av" style="background:#ff8a4c">A</div>Ahmet <small>@ahmet</small></div>
+      <div class="li" id="li1"><div class="av" style="background:#ff6b9a">A</div>Ahmet Can <small>@ahmetcan</small></div>
+      <div class="li" id="li2"><div class="av" style="background:#4aa8ff">A</div>Ahu <small>@ahu.k</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- S4 talep odası -->
+<div class="sc" id="s4">
+  <div class="kick">04 · TİCKET BOTLARI</div>
+  <div class="h"><span class="w"><span>Talep odası</span></span><br><span class="w"><span class="lime">tek satırda</span></span></div>
+  <div class="card" style="top:740px;padding:26px 0">
+    <div class="ch"># genel</div><div class="ch"># duyurular</div><div class="ch">🔊 Sohbet</div>
+    <div class="ch new" id="s4new">🔒 talep-ahmet <span style="margin-left:auto;display:flex;gap:-10px" id="s4av"><span class="av" style="width:64px;height:64px;font-size:28px;background:#ff8a4c">A</span><span class="av" style="width:64px;height:64px;font-size:28px;background:#6c78ff;color:#fff;margin-left:-14px">Y</span><span class="av k" style="width:64px;height:64px;margin-left:-14px;font-size:24px;color:#d4ff00">K</span></span></div>
+  </div>
+  <div class="card code" style="top:1340px;padding:34px 40px;font-size:32px;color:#d9d9e0;line-height:1.5" id="s4code">bot.<span style="color:#82aaff">talepOdasi</span>(sunucu, {<br>&nbsp;&nbsp;kisiler: [<span style="color:#d4ff00">'ahmet'</span>], roller: [yetkili]<br>})</div>
+</div>
+
+<!-- S5 gizli mesaj -->
+<div class="sc" id="s5">
+  <div class="kick">05 · YENİ</div>
+  <div class="h"><span class="w"><span>Sadece ona</span></span><br><span class="w"><span class="lime">görünen mesaj</span></span></div>
+  <div class="card" style="top:760px;height:660px">
+    <div class="half" style="left:0;border-right:2px solid #ffffff0d">
+      <div style="font-weight:800;font-size:32px;color:#d4ff00;margin-bottom:24px">👤 AHMET GÖRÜYOR</div>
+      <div id="s5m" style="background:#0f0f13;border-radius:24px;padding:28px;border:2px solid #d4ff0044">
+        <div class="who" style="font-size:32px">TicketBot <span class="bot">BOT</span></div>
+        <div class="tx" style="font-size:34px">🎫 Talebin açıldı.<br>Yetkili birazdan burada.</div>
+        <div class="eye">👁 Sadece sen görüyorsun</div>
+      </div>
+    </div>
+    <div class="half" style="right:0">
+      <div style="font-weight:800;font-size:32px;color:#6e6e78;margin-bottom:24px">👥 DİĞERLERİ</div>
+      <div id="s5o" style="border:3px dashed #ffffff1a;border-radius:24px;height:420px;display:grid;place-items:center;color:#4a4a55;font-size:34px;font-weight:700;text-align:center">hiçbir şey<br>görmüyor</div>
+    </div>
+  </div>
+  <div class="sub" style="top:1480px">Sayfa yenilense de kaybolmaz.</div>
+</div>
+
+<!-- S6 müzik -->
+<div class="sc" id="s6">
+  <div class="kick">06 · YENİ</div>
+  <div class="h"><span class="w"><span>Müzik botu</span></span><br><span class="w"><span class="lime">sesli odada</span></span></div>
+  <div class="card" style="top:740px">
+    <div class="vh">🔊 Sohbet <span style="margin-left:auto;font-size:30px;color:#2f9e65">● canlı</span></div>
+    <div class="vu"><div class="av k" id="s6b" style="color:#d4ff00">♪</div>MüzikBot <span class="bot">BOT</span></div>
+    <div class="vu"><div class="av" style="background:#ff8a4c">A</div>Ahmet</div>
+    <div class="vu"><div class="av" style="background:#ff6b9a">E</div>Elif</div>
+    <div class="wave" id="wave"></div>
+    <div class="np">▶ lofi-gece.mp3 <div class="bar"><i id="s6p"></i></div><span style="color:#6e6e78" id="s6t">0:12</span></div>
+  </div>
+  <div class="sub" style="top:1560px">Ses bottan dinleyene doğrudan gider.<br>Sıra, geç, duraklat… hepsi hazır.</div>
+</div>
+
+<!-- S7 liste -->
+<div class="sc" id="s7">
+  <div class="h" style="top:300px"><span class="w"><span>Hepsi</span></span><br><span class="w"><span class="lime">tek API'de</span></span></div>
+  <div id="pills"></div>
+</div>
+
+<!-- S8 CTA -->
+<div class="sc" id="s8">
+  <svg viewBox="0 0 200 200" id="logo2" style="position:absolute;left:390px;top:440px;width:300px;height:300px">
+    <g transform="translate(100 100) scale(.62) translate(-100 -99)"><path fill="#fff" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="#D4FF00" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></g>
+    <g fill="none" stroke="#d4ff00" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M 46 70 L 20 100 L 46 130"/><path d="M 154 70 L 180 100 L 154 130"/></g>
+  </svg>
+  <div class="h" style="top:820px;font-size:120px;letter-spacing:-5px"><span class="w"><span id="c0">Botunu yaz,</span></span><br><span class="w"><span id="c1" class="lime">Kanka'ya ekle.</span></span></div>
+  <div style="position:absolute;left:0;right:0;top:1170px;display:flex;justify-content:center"><div class="pill l" id="url" style="position:static;font-size:50px;padding:30px 52px">kankahq.com/gelistirici</div></div>
+  <div class="sub" id="c2" style="top:1320px">kanka.js · kanka.py · REST · Gateway</div>
+</div>
+
+<div class="top"><div class="tag" id="tag"><i></i>KANKA BOT API</div></div>
+<div class="foot" id="foot">kankahq.com/gelistirici</div>
+<div class="L" id="sweep" style="position:absolute;inset:auto"></div>
+<div class="L" id="grain"></div><div class="L" id="flash"></div><div class="L" id="fade"></div>
+<script>
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)), seg=(t,a,b)=>cl((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3), eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2, eb=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)}, ee=x=>x===1?1:1-Math.pow(2,-10*x);
+// sahne sınırları
+const B=[0,3.4,8.9,11.9,14.9,17.9,20.9,24.9,27.9,32.4];
+const TOT=B[9];
+const TR=['','push','zoom','iris','sweep','push','zoom','iris','sweep']; // B[i] geçişi (i. sahneye)
+// kod
+const CODE=[['c1','const'],['',' { Kanka } = '],['c3','require'],['','('],['c2',"'kanka.js'"],[')\n'],
+ ['c1','const'],['',' bot = '],['c1','new'],['',' Kanka({ token })\n\n'],
+ ['','bot.'],['c3','komut'],['','('],['c2',"'zar'"],['',', k =>\n  k.'],['c3','cevapla'],['','('],['c2','`🎲 ${zar()}`'],['','))\n\n'],
+ ['','bot.'],['c3','baglan'],['','()']];
+const CODEFLAT=[];for(const [c,s] of CODE.map(x=>x.length===1?['',x[0]]:x))for(const ch of [...(s===undefined?'':s)])CODEFLAT.push([c,ch]);
+// fix: 'const{' spacing
+const T1=B[1]+0.55, T1E=T1+2.9;
+const typedAt=[];for(let i=0;i<CODEFLAT.length;i++)typedAt.push(T1+i/CODEFLAT.length*(T1E-T1));
+// dalga
+const W=$('wave');for(let i=0;i<34;i++)W.appendChild(document.createElement('i'));
+// hap listesi
+const PL=['Slash komutlar','Kartlar','Formlar','Butonlar','Üye seçici','Rol seçici','Talep odası','Oda izinleri','Gizli mesaj','Müzik botu','Ses durumu','Energy olayları','Dosya yükleme','REST + Gateway','kanka.js','kanka.py'];
+const PP=$('pills');const pos=[];
+PL.forEach((p,i)=>{const d=document.createElement('div');d.className='pill'+(i%5===0?' l':'');d.textContent=p;PP.appendChild(d);});
+// yerleşim: satırlar
+{let y=720,row=[],w=0;const els=[...PP.children];const rows=[];for(const e of els){const ew=e.textContent.length*22+90;if(w+ew>920&&row.length){rows.push(row);row=[];w=0}row.push([e,ew]);w+=ew+24}rows.push(row);
+ rows.forEach((r,ri)=>{const tw=r.reduce((a,[,ew])=>a+ew,0)+24*(r.length-1);let x=(1080-tw)/2;for(const [e,ew] of r){e.style.left=x+'px';e.style.top=(y+ri*140)+'px';e.style.width=ew+'px';e.style.textAlign='center';x+=ew+24}});}
+const MARKS={pop:[],whoosh:[],type:[],tick:[],fail:[],hit:[]};
+B.slice(1,9).forEach(b=>MARKS.whoosh.push(b));
+MARKS.pop.push(0.45,1.0,1.25,1.5);
+for(let i=0;i<CODEFLAT.length;i+=2)if(CODEFLAT[i][1].trim())MARKS.type.push(typedAt[i]);
+MARKS.pop.push(T1E+0.45,T1E+0.95);
+MARKS.tick.push(B[2]+1.45);MARKS.pop.push(B[2]+1.6);
+for(let i=0;i<2;i++)MARKS.type.push(B[3]+0.9+i*0.22);MARKS.pop.push(B[3]+1.55,B[3]+1.85);
+MARKS.pop.push(B[4]+1.0,B[4]+1.35);
+MARKS.pop.push(B[5]+0.9);
+MARKS.pop.push(B[6]+0.8);
+PL.forEach((p,i)=>MARKS.tick.push(B[7]+0.45+i*0.07));
+MARKS.hit.push(B[8]+0.05);MARKS.pop.push(B[8]+1.1);
+// sahne geçişi uygula
+function scene(i,t){
+  const el=$('s'+i), a=B[i], b=B[i+1];
+  const inT=TR[i]||'', outT=TR[i+1]||'';
+  let op=1,tf='',fl=0,clip='none';
+  if(i>0){const p=seg(t,a-0.2,a+0.45),e=eo(p);
+    if(t<a-0.2){el.style.display='none';return}
+    if(inT==='push'){tf+=`translateY(${(1-e)*420}px) `;op*=e;fl=(1-e)*16}
+    else if(inT==='zoom'){tf+=`scale(${0.78+0.22*e}) `;op*=e;fl=(1-e)*12}
+    else if(inT==='iris'){clip=`circle(${e*1500}px at 540px 960px)`}
+    else if(inT==='sweep'){const q=seg(t,a-0.15,a+0.3);clip=`polygon(0 0, ${q*140}% 0, ${q*140-30}% 100%, 0 100%)`;tf+=`translateX(${(1-eo(q))*60}px) `}
+  }
+  if(i<8){const p=seg(t,b-0.42,b+0.15),e=eio(p);
+    if(t>b+0.15){el.style.display='none';return}
+    if(outT==='push'){tf+=`translateY(${-e*360}px) scale(${1-0.08*e}) `;op*=1-e;fl+=e*16}
+    else if(outT==='zoom'){tf+=`scale(${1+0.4*e}) `;op*=1-e;fl+=e*14}
+    else if(outT==='iris'){tf+=`scale(${1-0.08*e}) `;op*=1-0.7*e}
+    else if(outT==='sweep'){tf+=`translateX(${-e*120}px) `;op*=1-0.8*e;fl+=e*6}
+  }
+  el.style.display='block';el.style.opacity=op;el.style.transform=tf;el.style.filter=fl>0.3?`blur(${fl}px)`:'none';el.style.clipPath=clip;
+}
+function words(ids,t0,t,gap=0.12){ids.forEach((id,k)=>{const p=eo(seg(t,t0+k*gap,t0+k*gap+0.55));const e=$(id);e.style.transform=`translateY(${(1-p)*150}%)`;});}
+function heads(i,t){const s=$('s'+i);s.querySelectorAll('.h .w>span').forEach((e,k)=>{const p=eo(seg(t,B[i]+0.15+k*0.12,B[i]+0.7+k*0.12));e.style.transform=`translateY(${(1-p)*150}%)`});
+  const kk=s.querySelector('.kick');if(kk){const p=eo(seg(t,B[i]-0.15,B[i]+0.3));kk.style.opacity=p;kk.style.transform=`translateY(${(1-p)*30}px)`;kk.style.letterSpacing=(6+(1-p)*14)+'px'}
+  s.querySelectorAll('.sub').forEach(e=>{const p=eo(seg(t,B[i]+0.3,B[i]+0.8));e.style.opacity=p;e.style.transform=`translateY(${(1-p)*30}px)`});
+  s.querySelectorAll('.card').forEach((e,k)=>{const p=eo(seg(t,B[i]+0.1+k*0.15,B[i]+0.7+k*0.15));e.style.opacity=p;e.style.transform=`translateY(${(1-p)*120}px) scale(${0.94+0.06*p})`});}
+function setT(t){
+  // arka plan hareketi
+  $('glow').style.transform=`translate(${Math.sin(t*0.6)*80}px,${Math.cos(t*0.45)*120}px) scale(${1+0.08*Math.sin(t*1.3)})`;
+  $('grid').style.transform=`translateY(${(t*24)%90}px)`;
+  $('tag').style.opacity=eo(seg(t,0.2,0.8))*(1-seg(t,B[8]-0.2,B[8]+0.3));
+  for(let i=0;i<9;i++)scene(i,t);
+  // S0
+  {const p=eb(seg(t,0.05,0.75));$('logo').style.transform=`scale(${0.4+0.6*p}) rotate(${(1-p)*-12}deg)`;$('logo').style.opacity=seg(t,0.05,0.35);
+   const q=eo(seg(t,0.45,1.0));$('bl').style.transform=`translateX(${(1-q)*40}px)`;$('br').style.transform=`translateX(${-(1-q)*40}px)`;$('bl').style.opacity=$('br').style.opacity=q;
+   $('dot').style.transform=`translateY(${Math.sin(seg(t,0.7,1.3)*Math.PI)*-10}px)`;
+   words(['w0','w1','w2'],0.9,t,0.22);const s=eo(seg(t,1.8,2.3));$('s0sub').style.opacity=s;$('s0sub').style.transform=`translateY(${(1-s)*30}px)`;}
+  // başlıklar
+  for(let i=1;i<8;i++)heads(i,t);
+  // S1 kod
+  {let h='',cc=null,buf='';const n=CODEFLAT.filter((x,k)=>typedAt[k]<=t).length;
+   for(let k=0;k<n;k++){const [c,ch]=CODEFLAT[k];if(c!==cc){if(buf)h+=cc?`<span class="${cc}">${buf}</span>`:buf;buf='';cc=c}buf+=ch.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+   if(buf)h+=cc?`<span class="${cc}">${buf}</span>`:buf; h+=(t<T1E+0.6&&Math.floor(t*3)%2===0)||t<T1E?'<span class="car"></span>':'';$('code').innerHTML=h;
+   const shrink=eio(seg(t,T1E+0.1,T1E+0.6));$('ed').style.transform=`translateY(${(1-eo(seg(t,B[1]+0.1,B[1]+0.7)))*120-shrink*40}px) scale(${0.94+0.06*eo(seg(t,B[1]+0.1,B[1]+0.7))-shrink*0.06})`;
+   const c=$('chat');const cp=eo(seg(t,T1E+0.25,T1E+0.75));c.style.opacity=cp;c.style.transform=`translateY(${(1-cp)*140}px)`;
+   const m1=eb(seg(t,T1E+0.4,T1E+0.8)),m2=eb(seg(t,T1E+0.9,T1E+1.3));$('m1').style.transform=`scale(${0.9+0.1*m1})`;$('m1').style.opacity=seg(t,T1E+0.4,T1E+0.6);
+   $('m2').style.transform=`scale(${0.9+0.1*m2})`;$('m2').style.opacity=seg(t,T1E+0.9,T1E+1.1);
+   $('die').textContent=t<T1E+1.3?String(1+Math.floor(t*17)%6):'4';}
+  // S2 tıklama
+  {const c=$('cur2'),a=B[2];const p=eio(seg(t,a+0.8,a+1.4));c.style.opacity=seg(t,a+0.7,a+0.9)*(1-seg(t,a+2.3,a+2.6));c.style.left=(860-p*560)+'px';c.style.top=(1500-p*390)+'px';
+   const pr=seg(t,a+1.4,a+1.55)-seg(t,a+1.55,a+1.75);c.style.transform=`scale(${1-pr*0.2})`;$('by').style.transform=`scale(${1-pr*0.08})`;$('by').style.boxShadow=t>a+1.45?`0 0 0 ${6}px #d4ff0088, 0 0 50px #2f9e6599`:'none';
+   const r=eo(seg(t,a+1.6,a+2.0));$('s2r').style.opacity=r;$('s2r').style.transform=`translateY(${(1-r)*20}px)`;}
+  // S3 arama
+  {const a=B[3];const q='ah'.slice(0,Math.floor(seg(t,a+0.85,a+1.3)*2+0.0001));$('s3q').textContent=q||'';$('s3c').style.opacity=(Math.floor(t*3)%2===0||t<a+1.4)?1:0;
+   for(let k=0;k<3;k++){const p=eo(seg(t,a+1.0+k*0.1,a+1.4+k*0.1));const e=$('li'+k);e.style.opacity=p;e.style.transform=`translateX(${(1-p)*60}px)`;e.classList.toggle('on',k===0&&t>a+1.5)}
+   $('s3chips').innerHTML=t>a+1.55?'<div class="chip" style="transform:scale('+(0.8+0.2*eb(seg(t,a+1.55,a+1.85)))+')"><div class="av" style="background:#ff8a4c">A</div>Ahmet ✕</div>':'';$('s3chips').style.height=t>a+1.55?'100px':'0';}
+  // S4 oda
+  {const a=B[4];const p=eb(seg(t,a+0.95,a+1.4));const e=$('s4new');e.style.opacity=seg(t,a+0.95,a+1.15);e.style.transform=`translateX(${(1-p)*-80}px)`;e.style.boxShadow=`inset 0 0 ${30*Math.sin(seg(t,a+1.2,a+2.2)*Math.PI)}px #d4ff0055`;
+   const v=eo(seg(t,a+1.3,a+1.7));$('s4av').style.opacity=v;$('s4av').style.transform=`translateX(${(1-v)*40}px)`;}
+  // S5
+  {const a=B[5];const p=eb(seg(t,a+0.85,a+1.3));$('s5m').style.transform=`scale(${0.85+0.15*p})`;$('s5m').style.opacity=seg(t,a+0.85,a+1.05);
+   $('s5o').style.opacity=0.4+0.6*seg(t,a+1.2,a+1.6);}
+  // S6 müzik
+  {const a=B[6];const on=seg(t,a+0.8,a+1.1);[...W.children].forEach((e,k)=>{const v=0.18+0.82*Math.abs(Math.sin(t*5.3+k*0.7)*Math.sin(t*2.1+k*0.33));e.style.height=(12+v*108*on)+'px';e.style.opacity=0.35+0.65*on});
+   const r=0.5+0.5*Math.sin(t*9);$('s6b').style.boxShadow=`0 0 0 ${on*(5+r*5)}px #2f9e65, 0 0 ${on*40}px #2f9e6588`;
+   const pr=0.18+seg(t,a,B[7])*0.12;$('s6p').style.width=(pr*100)+'%';const sec=12+Math.floor(seg(t,a,B[7])*24);$('s6t').textContent='0:'+String(sec).padStart(2,'0');}
+  // S7 haplar
+  {const a=B[7];[...PP.children].forEach((e,k)=>{const p=eb(seg(t,a+0.5+k*0.09,a+0.9+k*0.09));e.style.opacity=seg(t,a+0.45+k*0.07,a+0.65+k*0.07);e.style.transform=`scale(${0.6+0.4*eb(seg(t,a+0.45+k*0.07,a+0.85+k*0.07))}) translateY(${Math.sin(t*1.4+k)*6}px)`});}
+  // S8
+  {const a=B[8];const p=eb(seg(t,a+0.1,a+0.8));$('logo2').style.transform=`scale(${0.5+0.5*p})`;$('logo2').style.opacity=seg(t,a+0.1,a+0.4);
+   words(['c0','c1'],a+0.55,t,0.2);const u=eb(seg(t,a+1.05,a+1.5));$('url').style.transform=`scale(${0.7+0.3*u})`;$('url').style.opacity=seg(t,a+1.05,a+1.25);
+   $('url').style.boxShadow=`0 0 ${40+20*Math.sin(t*4)}px #d4ff0066`;const s=eo(seg(t,a+1.5,a+2));$('c2').style.opacity=s;$('c2').style.transform=`translateY(${(1-s)*30}px)`;}
+  // ışık süpürmesi (sweep geçişleri) ve flaş
+  {let so=0,sx=-600;for(let i=1;i<9;i++)if(TR[i]==='sweep'){const q=seg(t,B[i]-0.2,B[i]+0.35);if(q>0&&q<1){so=Math.sin(q*Math.PI);sx=-700+q*2600}}$('sweep').style.opacity=so*0.9;$('sweep').style.left=sx+'px';}
+  {let f=0;for(let i=1;i<9;i++){const d=t-B[i];if(d>-0.05&&d<0.35)f=Math.max(f,(1-seg(d,0,0.35))*0.35)}const d=t-B[8];if(d>0&&d<0.5)f=Math.max(f,(1-d/0.5)*0.6);$('flash').style.opacity=f;}
+  $('foot').style.opacity=0.8*seg(t,B[1]+0.6,B[1]+1.2)*(1-seg(t,B[8]-0.3,B[8]+0.1));
+  $('fade').style.opacity=seg(t,TOT-0.4,TOT);
+}
+setT(0);
+</script></body></html>

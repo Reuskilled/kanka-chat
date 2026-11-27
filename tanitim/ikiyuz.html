@@ -1,0 +1,142 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0f0b09;font-family:'Inter Display','Inter','Poppins',sans-serif;color:#f9efe4}
+.S{position:absolute;inset:0}
+#bg{background:radial-gradient(1000px 1000px at 50% 42%,#ff8a4c2e,transparent 65%)}
+#bg2{background:radial-gradient(1000px 1000px at 50% 42%,#6a4bff33,transparent 65%)}
+.hot{background:linear-gradient(120deg,#ffc08f,#ff8a4c 45%,#ff5a2e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cy{background:linear-gradient(120deg,#9ff6ff,#7cb8ff 45%,#8a6bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.big{position:absolute;left:30px;right:30px;text-align:center;font-weight:900;letter-spacing:-4px;line-height:.95;text-transform:uppercase;white-space:nowrap}
+.sub{position:absolute;left:0;right:0;text-align:center;font-size:52px;font-weight:800;color:#d9c4b2}
+.rays{position:absolute;left:50%;top:780px;width:1400px;height:1400px;margin:-700px 0 0 -700px;border-radius:50%;background:repeating-conic-gradient(#7c9bff2e 0 7deg,transparent 7deg 22deg);-webkit-mask:radial-gradient(circle,#000 15%,transparent 62%)}
+#hb{position:absolute;left:50%;top:480px;width:600px;height:600px;margin-left:-300px;filter:drop-shadow(0 30px 70px #6a4bffaa)}
+#logo{position:absolute;left:50%;top:330px;width:300px;height:300px;margin-left:-150px;border-radius:80px;box-shadow:0 40px 100px #ff6a2c66}
+#phone{position:absolute;left:50%;top:700px;width:560px;height:1210px;margin-left:-280px;border-radius:76px;background:#000;border:14px solid #2a221e;box-shadow:0 60px 140px #000d,0 0 120px #ff8a4c22;overflow:hidden}
+#phone img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.chip{position:absolute;font-size:46px;font-weight:900;padding:18px 32px;border-radius:99px;background:#1c1512ee;border:4px solid #ff8a4c;white-space:nowrap;box-shadow:0 20px 50px #000a}
+.pnl{position:absolute;left:150px;right:150px;top:520px;border-radius:56px;background:linear-gradient(180deg,#1d2440 0,#15100d 52%);border:3px solid #5a5aa8;box-shadow:0 60px 140px #000c;padding:50px 56px 56px;text-align:center;overflow:hidden}
+.pnl .hero{position:relative;height:320px;display:grid;place-items:center}
+.pnl .rays2{position:absolute;width:640px;height:640px;border-radius:50%;background:repeating-conic-gradient(#7c9bff40 0 7deg,transparent 7deg 22deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 64%)}
+.pnl h3{font-size:70px;font-weight:900;margin:10px 0 16px}
+.pnl .chips{display:flex;gap:16px;justify-content:center;margin-bottom:24px}.pnl .chips span{font-size:28px;font-weight:900;letter-spacing:3px;padding:8px 22px;border-radius:99px;color:#ffcf5c;border:3px solid #ffcf5c77;background:#ffcf5c1a}
+.bbox{text-align:left;background:#0006;border:2px solid #ffffff14;border-radius:30px;padding:30px 34px}
+.bbox .r{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px}.bbox b{font-size:68px;font-weight:900;white-space:nowrap}.bbox .r span{font-size:30px;color:#a8968a}
+.bar{height:22px;border-radius:22px;background:#ffffff14;overflow:hidden}.bar i{display:block;height:100%;border-radius:22px;background:linear-gradient(90deg,#7cf0ff,#6a4bff);box-shadow:0 0 24px #7c9bffaa}
+#cnt{position:absolute;left:0;right:0;top:800px;text-align:center;font-size:150px;font-weight:900;letter-spacing:-6px}
+#bar3{position:absolute;left:120px;right:120px;top:1030px;height:46px;border-radius:46px;background:#ffffff12;overflow:hidden;border:2px solid #ffffff1a}
+#bar3 i{display:block;height:100%;border-radius:46px;background:linear-gradient(90deg,#7cf0ff,#6a4bff)}
+#stamp{position:absolute;left:50%;top:1220px;font-size:68px;font-weight:900;color:#ff5a5a;border:12px solid #ff5a5a;border-radius:30px;padding:14px 40px;white-space:nowrap;background:#0f0b09cc}
+#url{position:absolute;left:80px;right:80px;top:500px;height:140px;border-radius:44px;background:#1f1814;border:4px solid #3a2c25;display:flex;align-items:center;gap:22px;padding:0 38px;font-size:70px;font-weight:800;box-shadow:0 30px 80px #000a}
+#url i{width:60px;height:60px;border-radius:50%;border:6px solid #8a7464;flex:none}#url u{display:inline-block;width:6px;height:72px;background:#ff8a4c;margin-left:4px;vertical-align:middle}
+.q{position:absolute;left:50%;top:560px;width:640px;height:820px;margin-left:-320px;border-radius:56px;border:5px dashed #ff8a4c;background:radial-gradient(circle at 50% 40%,#ff8a4c22,#0f0b09 70%);display:grid;place-items:center;align-content:center;gap:10px;box-shadow:0 0 120px #ff8a4c33}
+.q b{font-size:220px;font-weight:900;letter-spacing:-8px}.q span{font-size:44px;color:#d9c4b2;font-weight:800}
+#go{position:absolute;left:50%;top:1490px;font-size:72px;font-weight:900;padding:24px 60px;border-radius:999px;background:linear-gradient(120deg,#ff8a4c,#ff5a2e);color:#fff;white-space:nowrap;box-shadow:0 24px 70px #ff5a2e66}
+#flash{position:absolute;inset:0;background:#fff;opacity:0}
+</style></head><body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+ <linearGradient id="kbg-ekip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ec5ff"/><stop offset="1" stop-color="#2f6fe0"/></linearGradient>
+ <linearGradient id="kbg-erken" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ff0c2"/><stop offset="1" stop-color="#16a35a"/></linearGradient>
+ <linearGradient id="kbg-kurucu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3d1"/><stop offset="1" stop-color="#c72a74"/></linearGradient>
+ <linearGradient id="kbg-efsane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset="1" stop-color="#e09a12"/></linearGradient>
+ <linearGradient id="kbg-avci" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4ff9a"/><stop offset="1" stop-color="#3a9d23"/></linearGradient>
+ <linearGradient id="kbg-dev" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6aa8ff"/><stop offset="1" stop-color="#3a4fd8"/></linearGradient>
+ <linearGradient id="kbg-gece" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8c8ff"/><stop offset="1" stop-color="#6a45d8"/></linearGradient>
+ <linearGradient id="kbg-sohbet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd8ff"/><stop offset="1" stop-color="#2a8ae0"/></linearGradient>
+ <linearGradient id="kbg-sosyal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb0c0"/><stop offset="1" stop-color="#e5485d"/></linearGradient>
+ <linearGradient id="kbg-seri" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".55" stop-color="#ff7a2e"/><stop offset="1" stop-color="#e0331a"/></linearGradient>
+ <linearGradient id="kbg-xox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc2a1"/><stop offset="1" stop-color="#ff6a3a"/></linearGradient>
+ <linearGradient id="kbg-caylak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2a0"/><stop offset="1" stop-color="#f2b322"/></linearGradient>
+ <linearGradient id="kbg-beta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cf0ff"/><stop offset="1" stop-color="#6a4bff"/></linearGradient>
+ <symbol id="kb-ekip" viewBox="0 0 48 48"><path d="M24 3 42 9.5V23c0 11-7.6 18.6-18 22C13.6 41.6 6 34 6 23V9.5Z" fill="url(#kbg-ekip)"/><path d="M24 7.5 38 12.6V23c0 8.6-5.8 14.6-14 17.6Z" fill="#fff" opacity=".18"/><path d="M18.5 15v18M18.5 24l9.5-9M21.5 21.5l7.5 11.5" stroke="#0e2a5c" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+ <symbol id="kb-erken" viewBox="0 0 48 48"><path d="M24 45V24" stroke="#16a35a" stroke-width="4.5" stroke-linecap="round"/><path d="M24 26C24 14 15 7 4 7c0 11 8 19 20 19Z" fill="url(#kbg-erken)"/><path d="M24 22c0-10 7.5-16 20-16 0 10-7 16-20 16Z" fill="#5fd18e"/></symbol>
+ <symbol id="kb-kurucu" viewBox="0 0 48 48"><path d="M8 44V16h6v5h5v-5h10v5h5v-5h6v28Z" fill="url(#kbg-kurucu)"/><path d="M8 16V8h5v4h4V8h5v4h4V8h5v4h4V8h5v8" fill="#ff8ab8"/><path d="M19 44V33a5 5 0 0 1 10 0v11Z" fill="#5a0f30"/></symbol>
+ <symbol id="kb-efsane" viewBox="0 0 48 48"><path d="M5 15l9.5 8L24 8l9.5 15L43 15l-4 24H9Z" fill="url(#kbg-efsane)"/><rect x="9" y="38" width="30" height="6" rx="2" fill="#c27c0e"/><circle cx="24" cy="29" r="3.6" fill="#fff" opacity=".85"/><circle cx="5" cy="15" r="3" fill="#fff3c0"/><circle cx="43" cy="15" r="3" fill="#fff3c0"/><circle cx="24" cy="7" r="3" fill="#fff3c0"/></symbol>
+ <symbol id="kb-avci" viewBox="0 0 48 48"><g stroke="#2f7a1e" stroke-width="3" stroke-linecap="round"><path d="M10 20l6 3M38 20l-6 3M8 30h8M40 30h-8M10 41l7-4M38 41l-7-4M18 9l3 4M30 9l-3 4"/></g><ellipse cx="24" cy="29" rx="11" ry="14" fill="url(#kbg-avci)"/><path d="M24 15v28" stroke="#2f7a1e" stroke-width="2.4"/><circle cx="24" cy="15" r="7" fill="#3a9d23"/><circle cx="19" cy="27" r="2.4" fill="#1d4d12"/><circle cx="29" cy="33" r="2.4" fill="#1d4d12"/><circle cx="20" cy="36" r="1.8" fill="#1d4d12"/></symbol>
+ <symbol id="kb-dev" viewBox="0 0 48 48"><rect x="3" y="7" width="42" height="34" rx="10" fill="url(#kbg-dev)"/><path d="M17 17l-7 7 7 7M31 17l7 7-7 7M27 14l-6 20" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+ <symbol id="kb-gece" viewBox="0 0 48 48"><path d="M30 6a19 19 0 1 0 13 30A16 16 0 0 1 30 6Z" fill="url(#kbg-gece)"/><path d="M35 9l1.6 3.4L40 14l-3.4 1.6L35 19l-1.6-3.4L30 14l3.4-1.6Z" fill="#fff6c8"/></symbol>
+ <symbol id="kb-sohbet" viewBox="0 0 48 48"><path d="M8 6h32a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H22l-11 9v-9H8a5 5 0 0 1-5-5V11a5 5 0 0 1 5-5Z" fill="url(#kbg-sohbet)"/><circle cx="15" cy="21" r="3" fill="#fff"/><circle cx="24" cy="21" r="3" fill="#fff"/><circle cx="33" cy="21" r="3" fill="#fff"/></symbol>
+ <symbol id="kb-sosyal" viewBox="0 0 48 48"><path d="M18 40S3 31 3 19.5A8.5 8.5 0 0 1 18 14a8.5 8.5 0 0 1 15 5.5C33 31 18 40 18 40Z" fill="url(#kbg-sosyal)"/><path d="M31 44s-10-6.4-10-14a6 6 0 0 1 10-4.2A6 6 0 0 1 41 30c0 7.6-10 14-10 14Z" fill="#ffd0da" stroke="#1d1613" stroke-width="2.4"/></symbol>
+ <symbol id="kb-seri7" viewBox="0 0 48 48"><path d="M24 2c2 8 13 13 13 26a13 13 0 0 1-26 0c0-6 3-10 6-12 0 4 2 6 4 7-1-8 1-15 3-21Z" fill="url(#kbg-seri)"/><path d="M24 26c4 3 6 6 6 10a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3 0-5 1-7Z" fill="#fff2b0"/></symbol>
+ <symbol id="kb-xox" viewBox="0 0 48 48"><rect x="3" y="3" width="42" height="42" rx="11" fill="url(#kbg-xox)"/><path d="M12 12l10 10M22 12 12 22" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/><circle cx="32" cy="32" r="5.6" stroke="#fff" stroke-width="3.6" fill="none"/></symbol>
+ <symbol id="kb-caylak" viewBox="0 0 48 48"><path d="M24 4c9 0 16 12 16 23a16 16 0 0 1-32 0C8 16 15 4 24 4Z" fill="url(#kbg-caylak)"/><path d="M8.5 25l5-4 4 5 5-5 4 5 5-5 4 5 4.5-3.5" stroke="#fff8e0" stroke-width="2.6" stroke-linejoin="round" fill="none"/><circle cx="19" cy="33" r="2.4" fill="#5a3a0a"/><circle cx="29" cy="33" r="2.4" fill="#5a3a0a"/><path d="M22 38h4l-2 2.6Z" fill="#ff7a2e"/></symbol>
+ <symbol id="kb-beta" viewBox="0 0 48 48"><path d="M24 2.5 43 13.3v21.4L24 45.5 5 34.7V13.3Z" fill="url(#kbg-beta)"/><path d="M24 6.8 39.3 15.5v17L24 41.2 8.7 32.5v-17Z" fill="#000" opacity=".18"/><ellipse cx="24" cy="24" rx="22" ry="8" transform="rotate(-24 24 24)" stroke="#ffd27a" stroke-width="2.4" fill="none"/><path d="M19.6 36V17.6a4.6 4.6 0 0 1 9.2 0c0 2.7-1.9 4.1-4.3 4.3 3.1.3 5.2 2 5.2 4.9 0 3.2-2.5 5.1-5.5 5.1-1.8 0-3.5-.7-4.5-1.9" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="41" cy="15" r="2.4" fill="#ffd27a"/></symbol>
+</defs></svg>
+<div class="S" id="bg"></div><div class="S" id="bg2"></div>
+<div class="S" id="sA"><div class="rays" id="rays0"></div>
+ <div class="big" id="a0" style="top:230px;font-size:120px">BU ROZETİ</div>
+ <svg id="hb" viewBox="0 0 48 48"><use href="#kb-beta"/></svg>
+ <div class="big hot" id="a1" style="top:1150px;font-size:116px">SADECE 200 KİŞİ</div>
+ <div class="big" id="a2" style="top:1290px;font-size:96px">DAHA ALABİLECEK</div></div>
+<div class="S" id="sB"><img id="logo" src="hq.png"><div class="big" id="b0" style="top:120px;font-size:110px">KANKA</div>
+ <div id="phone"><img id="pi" src="f/tn/voice.png"></div>
+ <div class="chip" id="c1" style="left:40px;top:760px">🔊 Sesli sohbet</div><div class="chip" id="c2" style="right:40px;top:980px">🏠 Sunucu kur</div>
+ <div class="chip" id="c3" style="left:60px;top:1220px">🇹🇷 Türk yapımı</div><div class="chip" id="c4" style="right:60px;top:1440px">💸 Ücretsiz</div><div class="chip" id="c5" style="left:120px;top:1640px">🚫 VPN yok</div></div>
+<div class="S" id="sC"><div class="big" id="cT" style="top:250px;font-size:96px">İLK <span class="cy">300 KİŞİYE</span></div>
+ <div class="pnl" id="pnl"><div class="hero"><div class="rays2" id="rays2"></div><svg width="290" height="290" viewBox="0 0 48 48" style="position:relative;filter:drop-shadow(0 20px 40px #6a4bff88)"><use href="#kb-beta"/></svg></div>
+  <h3>Beta Tester</h3><div class="chips"><span>EFSANEVİ</span><span>SINIRLI</span></div>
+  <div class="bbox"><div class="r"><b class="cy" id="num">#001 / 300</b><span>senin numaran</span></div><div class="bar"><i id="bar"></i></div></div></div>
+ <div class="sub" id="cS" style="top:1560px">profilinde kalıcı · herkes görüyor</div></div>
+<div class="S" id="sD"><div class="big" id="dT" style="top:520px;font-size:110px">300 DOLUNCA</div>
+ <div id="cnt"><span class="cy" id="cn">104</span> / 300</div><div id="bar3"><i id="b3"></i></div><div id="stamp">BİR DAHA VERİLMEYECEK</div></div>
+<div class="S" id="sE"><div class="big" id="eT" style="top:250px;font-size:96px">NASIL <span class="hot">GİRİLİR?</span></div>
+ <div id="url"><i></i><b id="ut"></b><u id="uc"></u></div>
+ <div class="chip" id="e1" style="left:50%;top:760px;transform:translateX(-50%)">📱 Telefon ya da 💻 bilgisayar</div>
+ <div id="phone2" style="position:absolute;left:50%;top:860px;width:520px;height:1120px;margin-left:-260px;border-radius:70px;background:#000;border:14px solid #2a221e;overflow:hidden;box-shadow:0 60px 140px #000d"><img src="f/tn/reg.png" style="width:100%;height:100%;object-fit:cover;object-position:top"></div>
+ <div class="chip" id="e2" style="right:50px;top:1200px;border-color:#3fcf8e">⏱ 1 dakika</div></div>
+<div class="S" id="sF"><div class="big" id="fT" style="top:250px;font-size:96px">KAÇ NUMARA<br><span class="hot">OLACAKSIN?</span></div>
+ <div class="q" id="q"><b class="hot" id="qn">#???</b><span>/ 300 · Beta Tester</span></div><div id="go">kankahq.com</div></div>
+<div id="flash"></div>
+<script>
+const TOT=29.8;
+const MARKS={pop:[1.0,2.2,3.9,4.7,6.6,8.0,9.8,10.65,12.0,16.15,20.2,22.0,25.55,26.3,27.6,28.1],whoosh:[3.7,11.8,18.8,21.7,27.4,28.9],tick:[],type:[],fail:[20.2]};
+for(let t=22.0;t<24.2;t+=.1)MARKS.type.push(+t.toFixed(2));
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>cl((t-a)/(b-a)),eo=x=>1-Math.pow(1-x,3),bk=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)},L=(a,b,x)=>a+(b-a)*x;
+const vis=(id,on)=>$(id).style.display=on?'':'none';
+const pop=(id,t,a,from=1.5)=>{const e=$(id);e.style.opacity=seg(t,a,a+.07);return L(from,1,bk(seg(t,a,a+.3)));};
+function setT(t){
+  const ph=t/TOT*Math.PI*2;
+  $('bg2').style.opacity=(t<3.7||t>=11.8&&t<21.7||t>=28.9)?1:0;
+  // A: kanca + döngü dönüşü
+  const A=t<3.75||t>=28.9; vis('sA',A);
+  if(A){ $('rays0').style.transform=`rotate(${t/TOT*264}deg)`; $('rays0').style.opacity=t<3.75?1:seg(t,28.95,29.5);
+    if(t<3.75){ $('sA').style.opacity=1-seg(t,3.5,3.75); $('a0').style.opacity=1; $('hb').style.opacity=1; $('hb').style.transform=`scale(${1+.05*Math.sin(t*6)*(t<3?1:0)}) translateY(${Math.sin(ph*7)*10}px)`;
+      $('a1').style.transform=`scale(${pop('a1',t,1.0)})`; $('a2').style.transform=`scale(${pop('a2',t,2.2)})`; }
+    else { $('sA').style.opacity=1; $('a1').style.opacity=0; $('a2').style.opacity=0; $('a0').style.opacity=seg(t,28.95,29.15);
+      const b=bk(seg(t,29.0,29.5)); $('hb').style.opacity=seg(t,29.0,29.1); $('hb').style.transform=`scale(${L(.3,1,b)}) rotate(${L(-160,0,eo(seg(t,29.0,29.6)))}deg) translateY(${Math.sin(ph*7)*10}px)`; } }
+  // B: Kanka nedir 3.7-11.8
+  const B=t>=3.7&&t<11.9; vis('sB',B);
+  if(B){ $('sB').style.opacity=seg(t,3.7,3.85)*(1-seg(t,11.6,11.9));
+    $('logo').style.transform=`scale(${L(.2,1,bk(seg(t,3.87,4.25)))}) rotate(${L(-30,0,eo(seg(t,3.87,4.3)))}deg)`; $('logo').style.opacity=seg(t,3.87,3.95);
+    $('b0').style.transform=`scale(${pop('b0',t,3.87,1.6)})`;
+    $('pi').src=t<6.6?'f/tn/voice.png':t<8?'f/tn/stage.png':'f/tn/chat.png';
+    $('phone').style.opacity=seg(t,4.6,4.7); $('phone').style.transform=`translateY(${(1-bk(seg(t,4.6,5.0)))*900}px) rotate(${L(-10,-3,eo(seg(t,4.6,5.1)))}deg)`;
+    [['c1',4.7],['c2',6.6],['c3',8.0],['c4',9.8],['c5',10.65]].forEach(([id,a])=>{$(id).style.transform=`scale(${pop(id,t,a,1.8)}) rotate(${id==='c2'||id==='c4'?3:-3}deg)`;}); }
+  // C: beta paneli 11.8-18.8
+  const C=t>=11.8&&t<18.9; vis('sC',C);
+  if(C){ $('sC').style.opacity=seg(t,11.8,11.95)*(1-seg(t,18.6,18.9)); $('cT').style.transform=`scale(${pop('cT',t,11.98)})`;
+    $('pnl').style.opacity=seg(t,12.1,12.2); $('pnl').style.transform=`scale(${L(.7,1,bk(seg(t,12.1,12.6)))})`; $('rays2').style.transform=`rotate(${t*16}deg)`;
+    const n=Math.round(L(1,104,eo(seg(t,12.6,15.6)))); $('num').textContent='#'+String(n).padStart(3,'0')+' / 300'; $('bar').style.width=(n/3)+'%';
+    $('cS').style.opacity=seg(t,16.15,16.4); }
+  // D: 300 dolunca 18.8-21.7
+  const D=t>=18.8&&t<21.8; vis('sD',D);
+  if(D){ $('sD').style.opacity=seg(t,18.8,18.95)*(1-seg(t,21.5,21.8)); $('dT').style.transform=`scale(${pop('dT',t,18.96)})`;
+    const n=Math.round(L(104,300,eo(seg(t,19.0,20.1)))); $('cn').textContent=n; $('b3').style.width=(n/3)+'%';
+    $('stamp').style.opacity=seg(t,20.2,20.3); $('stamp').style.transform=`translateX(-50%) rotate(-7deg) scale(${L(2.2,1,eo(seg(t,20.2,20.45)))})`; }
+  // E: nasıl girilir 21.7-27.4
+  const E=t>=21.7&&t<27.5; vis('sE',E);
+  if(E){ $('sE').style.opacity=seg(t,21.7,21.85)*(1-seg(t,27.2,27.5)); $('eT').style.transform=`scale(${pop('eT',t,21.79)})`;
+    const ut='kankahq.com',n=Math.round(L(0,ut.length,seg(t,22.0,24.2))); $('ut').textContent=ut.slice(0,n); $('uc').style.opacity=Math.floor(t*3)%2?1:0;
+    $('url').style.opacity=seg(t,21.9,22); $('url').style.transform=`translateY(${(1-bk(seg(t,21.9,22.25)))*300}px)`;
+    $('e1').style.transform=`translateX(-50%) scale(${pop('e1',t,22.4,1.6)})`;
+    $('phone2').style.opacity=seg(t,25.4,25.5); $('phone2').style.transform=`translateY(${(1-bk(seg(t,25.4,25.8)))*900}px)`;
+    $('e2').style.transform=`scale(${pop('e2',t,26.3,1.8)}) rotate(4deg)`; }
+  // F: kaç numara 27.4-28.9
+  const F=t>=27.4&&t<29.0; vis('sF',F);
+  if(F){ $('sF').style.opacity=seg(t,27.4,27.55)*(1-seg(t,28.75,29.0)); $('fT').style.transform=`scale(${pop('fT',t,27.6)})`;
+    $('q').style.opacity=seg(t,27.7,27.8); $('q').style.transform=`scale(${L(.5,1,bk(seg(t,27.7,28.1)))})`;
+    $('qn').textContent=t<28.4?['#1','#2','#3','#5','#7','#9'][Math.floor(t*14)%6]+'??':'#???';
+    $('go').style.opacity=seg(t,28.1,28.2); $('go').style.transform=`translateX(-50%) scale(${L(.5,1,bk(seg(t,28.1,28.4)))})`; }
+  $('flash').style.opacity=t>3.87&&t<4.1?.4*(1-seg(t,3.87,4.1)):t>20.2&&t<20.45?.35*(1-seg(t,20.2,20.45)):0;
+}
+setT(0);
+</script></body></html>

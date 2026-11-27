@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0f0b09;font-family:'Inter Display','Inter','Poppins',sans-serif;color:#f9efe4}
+.L{position:absolute;inset:0}
+.hot{background:linear-gradient(120deg,#ffc08f,#ff8a4c 45%,#ff5a2e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.big{font-weight:900;letter-spacing:-4px;line-height:.95;text-transform:uppercase;text-align:center}
+#bg{background:radial-gradient(900px 900px at 50% 40%,#ff8a4c30,transparent 65%)}
+#hook{position:absolute;left:0;right:0;top:620px;font-size:128px}
+#hook2{position:absolute;left:0;right:0;top:1180px;font-size:52px;font-weight:800;color:#d9c4b2;text-align:center;letter-spacing:0;text-transform:none}
+/* bölünmüş ekran */
+.half{position:absolute;left:0;right:0;height:960px;overflow:hidden}
+#top{top:0;background:linear-gradient(180deg,#1a0d0d,#140a0a)}
+#bot{top:960px;background:linear-gradient(180deg,#0e1510,#0b120d)}
+#divider{position:absolute;left:0;right:0;top:954px;height:12px;background:#0f0b09}
+.lab{position:absolute;left:60px;top:70px;font-size:46px;font-weight:900;letter-spacing:2px;padding:12px 28px;border-radius:999px}
+#top .lab{background:#ff4d4d22;color:#ff7a7a;border:3px solid #ff4d4d66}
+#bot .lab{background:#3fcf8e22;color:#5fe0a4;border:3px solid #3fcf8e66}
+.stp{position:absolute;left:60px;right:60px;top:210px;font-size:74px;font-weight:900;letter-spacing:-2px;line-height:1.05}
+.card{position:absolute;left:90px;right:90px;top:430px;height:400px;border-radius:40px;background:#1f1514;border:3px solid #3a2626;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
+#bot .card{background:#132018;border-color:#24402e}
+.spin{width:110px;height:110px;border-radius:50%;border:14px solid #3a2626;border-top-color:#ff8a4c}
+.ctext{font-size:52px;font-weight:800;text-align:center;padding:0 30px}
+.pill{font-size:40px;font-weight:800;padding:14px 30px;border-radius:999px;background:#ff4d4d1f;border:2px solid #ff4d4d77;color:#ff8080}
+.flags{display:flex;gap:26px;font-size:90px}
+.wave{display:flex;gap:12px;align-items:center;height:130px}
+.wave i{width:22px;border-radius:11px;background:#ff8a4c}
+#bshot{position:absolute;left:70px;right:70px;top:300px;height:600px;border-radius:34px;overflow:hidden;border:3px solid #2f5a3e;box-shadow:0 40px 100px #000a}
+#bshot img{display:block;height:100%}
+.ok{position:absolute;left:50%;top:560px;transform:translateX(-50%);font-size:60px;font-weight:900;color:#0a1a10;background:#5fe0a4;padding:20px 46px;border-radius:999px;white-space:nowrap;box-shadow:0 20px 60px #3fcf8e66}
+#tap{position:absolute;width:120px;height:120px;border-radius:50%;border:8px solid #fff;opacity:0}
+/* tam ekran kanka */
+#full{background:#0f0b09}
+#ftitle{position:absolute;left:60px;right:60px;top:220px;font-size:110px}
+#fshot{position:absolute;left:50px;right:50px;top:620px;height:760px;border-radius:36px;overflow:hidden;border:3px solid #4a3a30;box-shadow:0 60px 140px #000c}
+#fshot img{display:block;height:100%}
+.chip{position:absolute;font-size:50px;font-weight:900;padding:22px 40px;border-radius:999px;background:#241b17;border:3px solid #ff8a4c88;box-shadow:0 20px 60px #000b;white-space:nowrap}
+/* cta */
+#ctaT{position:absolute;left:0;right:0;top:520px;font-size:124px}
+#logo2{position:absolute;left:50%;top:930px;width:240px;height:240px;margin-left:-120px;border-radius:64px;box-shadow:0 30px 100px #ff6a2e77}
+#url{position:absolute;left:50%;top:1250px;font-size:84px;font-weight:900;padding:34px 70px;border-radius:999px;background:linear-gradient(135deg,#ff8a4c,#ff5a2e);color:#1a0f08;white-space:nowrap;box-shadow:0 30px 90px #ff6a2e77}
+#ctaS{position:absolute;left:0;right:0;top:1450px;font-size:46px;font-weight:700;color:#e7d1bf;text-align:center}
+#prog{position:absolute;left:0;top:0;height:10px;background:linear-gradient(90deg,#ff8a4c,#ff5a2e);z-index:9}
+#flash{background:#fff;opacity:0}
+</style></head>
+<body>
+<div class="L" id="bg"></div>
+<div class="L" id="s1"><div class="big" id="hook">VPN'siz<br><span class="hot">sesli sohbet</span><br>mümkün mü?</div><div id="hook2">İkisini yan yana koyduk 👇</div></div>
+<div class="L" id="s2">
+  <div class="half" id="top"><div class="lab">VPN İLE</div><div class="stp" id="ts"></div>
+    <div class="card" id="tc"></div></div>
+  <div class="half" id="bot"><div class="lab">KANKA İLE</div><div class="stp" id="bs"></div>
+    <div class="card" id="bc"></div>
+    <div id="bshot"><img src="f/oda.jpg"></div><div class="ok" id="ok">Bağlandın ✓</div></div>
+  <div id="divider"></div>
+  <div id="tap"></div>
+</div>
+<div class="L" id="full">
+  <div class="big" id="ftitle">Sadece <span class="hot">gir</span><br>ve konuş.</div>
+  <div id="fshot"><img id="fimg" src="f/ses.jpg"></div>
+  <div class="chip" id="c0" style="left:60px;top:1440px">✕ VPN yok</div>
+  <div class="chip" id="c1" style="right:60px;top:1560px">✕ Ayar yok</div>
+  <div class="chip" id="c2" style="left:180px;top:1680px">✓ Ücretsiz</div>
+</div>
+<div class="L" id="s4"><div class="big" id="ctaT">VPN'i<br><span class="hot">kapat.</span></div><img id="logo2" src="f/logo.png"><div id="url">kankahq.com</div><div id="ctaS">Ücretsiz · Türkçe · Telefon + PC</div></div>
+<div class="L" id="flash"></div>
+<div id="prog"></div>
+<script>
+const TOT=21;
+const MARKS={pop:[.25,2.2,10.6,15.45,15.85,16.25,17.35,17.75],tick:[],type:[],whoosh:[2.9,14.6,17.0],fail:[5.0,7.4,9.4]};
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>cl((t-a)/(b-a)),eo=x=>1-Math.pow(1-x,3),eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,bk=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)},L=(a,b,x)=>a+(b-a)*x;
+const vis=(id,on)=>$(id).style.display=on?'':'none';
+// VPN tarafı adımları
+const TOPS=[
+ [3.0,'VPN uygulamasını aç…','<div class="spin" id="sp"></div><div class="ctext">Başlatılıyor…</div>'],
+ [4.6,'Sunucu seç…','<div class="flags">🇩🇪 🇳🇱 🇺🇸 🇸🇬</div><div class="pill">Sunucu dolu, başka seç</div>'],
+ [6.8,'Bağlandı… galiba?','<div class="wave" id="wv"></div><div class="ctext">Ses gidip geliyor</div>'],
+ [8.9,'Ve…','<div class="ctext" style="font-size:72px;color:#ff6b6b">✕ Bağlantı koptu</div><div class="pill">Baştan başla</div>'],
+];
+let lastTop=-1,lastBot=-1;
+function setT(t){
+  $('prog').style.width=(t/TOT*100)+'%';
+  // S1 kanca 0-2.9
+  vis('s1',t<2.95);
+  if(t<2.95){const a=bk(seg(t,.2,.6));$('hook').style.opacity=seg(t,.2,.3);$('hook').style.transform=`scale(${L(1.4,1,a)})`;
+    $('hook2').style.opacity=seg(t,1.9,2.3);$('s1').style.opacity=1-seg(t,2.65,2.95);}
+  // S2 bölünmüş 2.9-14.6
+  vis('s2',t>=2.9&&t<14.65);
+  if(t>=2.9&&t<14.65){
+    const sl=eo(seg(t,2.9,3.35));$('top').style.transform=`translateY(${(1-sl)*-960}px)`;$('bot').style.transform=`translateY(${(1-sl)*960}px)`;
+    let k=-1;TOPS.forEach((s,i)=>{if(t>=s[0])k=i;});
+    if(k!==lastTop&&k>=0){lastTop=k;$('ts').textContent=TOPS[k][1];$('tc').innerHTML=TOPS[k][2];if(k===2)$('wv').innerHTML='<i></i>'.repeat(14);}
+    if(k>=0){const a0=TOPS[k][0],e=bk(seg(t,a0,a0+.3));$('tc').style.transform=`scale(${L(.85,1,e)})`;$('ts').style.opacity=seg(t,a0,a0+.2);}
+    const sp=$('sp');if(sp)sp.style.transform=`rotate(${t*500}deg)`;
+    const wv=$('wv');if(wv)[...wv.children].forEach((b,i)=>{const on=Math.sin(t*3.1+i*.3)>-.2&&Math.sin(t*17+i)>-.6;b.style.height=(on?30+Math.abs(Math.sin(t*9+i*1.7))*100:6)+'px';b.style.opacity=on?1:.3;});
+    const shake=t>8.9&&t<9.5?Math.sin(t*90)*18*(1-seg(t,8.9,9.5)):0;$('tc').style.marginLeft=shake+'px';
+    $('top').style.filter=t>8.9?`saturate(${L(1,.35,seg(t,9.3,10.2))}) brightness(${L(1,.6,seg(t,9.3,10.2))})`:'';
+    // Kanka tarafı
+    const bstage=t<3.6?-1:t<5.6?0:1;
+    if(bstage!==lastBot){lastBot=bstage;
+      if(bstage===0){$('bs').textContent='kankahq.com → Gir';$('bc').innerHTML='<div class="ctext" style="font-size:66px">kankahq.com</div><div class="pill" style="background:#3fcf8e1f;border-color:#3fcf8e77;color:#5fe0a4">Oyun Odası 1 · Katıl</div>';}
+      if(bstage===1){$('bs').textContent='Tamam. Bu kadar.';}}
+    $('bc').style.display=bstage===0?'':'none';$('bc').style.transform=`scale(${L(.85,1,bk(seg(t,3.6,3.9)))})`;
+    const sh=eo(seg(t,5.6,6.1));$('bshot').style.display=bstage===1?'':'none';$('bshot').style.opacity=sh;$('bshot').style.transform=`scale(${L(.85,1,sh)})`;
+    $('bshot').querySelector('img').style.transform=`translateX(${-L(0,560,seg(t,6,14.6))}px)`;
+    const ok=bk(seg(t,5.7,6.05));$('ok').style.display=bstage===1?'':'none';$('ok').style.opacity=seg(t,5.7,5.8)*(1-seg(t,8.5,8.9));$('ok').style.transform=`translateX(-50%) scale(${L(.4,1,ok)})`;
+    $('bs').style.opacity=bstage>=0?seg(t,3.6,3.8):0;
+    // dokunma efekti
+    const tp=$('tap');const tt=t-5.2;if(tt>0&&tt<.5){tp.style.opacity=1-tt/.5;tp.style.left='480px';tp.style.top=(960+590)+'px';tp.style.transform=`scale(${.4+tt*2})`;}else tp.style.opacity=0;
+    $('s2').style.opacity=1-seg(t,14.35,14.65);
+  }
+  // S3 tam ekran 14.6-17
+  vis('full',t>=14.6&&t<17.05);
+  if(t>=14.6&&t<17.05){const a=eo(seg(t,14.6,15.0)),o=1-seg(t,16.8,17.05);
+    $('ftitle').style.opacity=a*o;$('ftitle').style.transform=`translateY(${L(-60,0,a)}px)`;
+    $('fshot').style.opacity=o;$('fshot').style.transform=`translateY(${L(500,0,eo(seg(t,14.7,15.2)))}px)`;
+    $('fimg').style.transform=`translateX(${-L(100,500,seg(t,14.7,17))}px)`;
+    for(let k=0;k<3;k++){const s=15.45+k*.4,e=bk(seg(t,s,s+.3));$('c'+k).style.opacity=seg(t,s,s+.08)*o;$('c'+k).style.transform=`scale(${L(.3,1,e)})`;}}
+  // S4 CTA
+  vis('s4',t>=17);
+  if(t>=17){const a=bk(seg(t,17,17.4));$('ctaT').style.opacity=seg(t,17,17.1);$('ctaT').style.transform=`scale(${L(1.5,1,a)})`;
+    const l=bk(seg(t,17.35,17.7));$('logo2').style.opacity=seg(t,17.35,17.45);$('logo2').style.transform=`scale(${L(.3,1,l)}) translateY(${Math.sin(t*2)*8}px)`;
+    const u=bk(seg(t,17.75,18.1)),p=t>18.3?1+.035*Math.max(0,Math.sin((t-18.3)*5.5)):1;$('url').style.opacity=seg(t,17.75,17.85);$('url').style.transform=`translateX(-50%) scale(${L(.5,1,u)*p})`;
+    $('ctaS').style.opacity=seg(t,18.3,18.7);}
+  $('flash').style.opacity=t>2.9&&t<3.2?.5*(1-seg(t,2.9,3.2)):t>17&&t<17.25?.4*(1-seg(t,17,17.25)):0;
+}
+setT(0);
+</script></body></html>

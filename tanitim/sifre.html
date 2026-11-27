@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0f0b09;font-family:'Inter Display','Inter','Poppins',sans-serif;color:#f9efe4}
+.S{position:absolute;inset:0}
+.hot{background:linear-gradient(120deg,#ffe08a,#ff8a4c 45%,#ff3d1f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.grn{background:linear-gradient(120deg,#c8ffd9,#4cd98a 50%,#14a86a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.big{font-weight:900;letter-spacing:-4px;line-height:.95;text-align:center;text-transform:uppercase}
+.sub{position:absolute;left:60px;right:60px;text-align:center;font-size:50px;font-weight:800;color:#d9c4b2;line-height:1.25}
+#bg{background:radial-gradient(1100px 1100px at 50% 40%,#ff5a2e30,transparent 65%)}
+#bgg{background:radial-gradient(1100px 1100px at 50% 45%,#2ecc7a2e,transparent 65%);opacity:0}
+.ttl{position:absolute;left:0;right:0}
+/* S0 yorum */
+#cm{position:absolute;left:90px;right:90px;top:620px;padding:46px 50px;border-radius:44px;background:#1c1512;border:3px solid #3a2c25;box-shadow:0 50px 140px #000c}
+#cm .hd{display:flex;align-items:center;gap:26px}
+#cm .pp{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#5a6bff,#a35bff);display:grid;place-items:center;font-size:52px;font-weight:900;color:#fff}
+#cm .nm{font-size:40px;font-weight:800;color:#a8968a}
+#cm .tx{font-size:88px;font-weight:900;margin-top:30px;letter-spacing:-2px}
+#cm .ft{display:flex;gap:40px;margin-top:30px;font-size:38px;color:#7d6c61;font-weight:800}
+#q0{position:absolute;left:0;right:0;top:300px;font-size:92px}
+#hm{position:absolute;right:120px;top:520px;font-size:150px}
+#a0{position:absolute;left:0;right:0;top:1320px;font-size:110px}
+/* S1 kilit */
+#lk{position:absolute;left:50%;top:330px;width:560px;height:700px;margin-left:-280px}
+#t1{position:absolute;left:0;right:0;top:1120px;font-size:96px}
+#t1b{position:absolute;left:0;right:0;top:1340px;font-size:150px;letter-spacing:-6px}
+/* S2 DM */
+#t2{position:absolute;left:0;right:0;top:170px;font-size:84px}
+#ph{position:absolute;left:150px;width:780px;top:380px;height:1150px;border-radius:70px;background:#17110e;border:5px solid #3a2c25;overflow:hidden;box-shadow:0 60px 150px #000d}
+#ph .top{height:130px;display:flex;align-items:center;gap:22px;padding:0 40px;border-bottom:3px solid #2a201b}
+#ph .top i{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#ff8a4c,#ff4d2e);display:grid;place-items:center;font-style:normal;font-size:38px;font-weight:900}
+#ph .top b{font-size:44px}#ph .top em{margin-left:auto;font-style:normal;font-size:44px}
+.bub{position:absolute;right:40px;max-width:560px;padding:26px 34px;border-radius:40px 40px 12px 40px;background:linear-gradient(135deg,#ff8a4c,#ff5a2e);color:#2a0d05;font-size:44px;font-weight:800;display:flex;align-items:center;gap:20px}
+.bub .lk{position:absolute;left:-30px;top:-30px;width:78px;height:78px;border-radius:50%;background:#14a86a;display:grid;place-items:center;font-size:40px;box-shadow:0 0 0 8px #17110e;opacity:0}
+#b1{top:190px}#b2{top:350px;padding:14px}#b3{top:620px;padding:14px}#b4{top:900px}
+.gif{width:300px;height:200px;border-radius:28px;background:linear-gradient(135deg,#6a4bff,#ff4d9a);display:grid;place-items:center;font-size:56px;font-weight:900;color:#fff;letter-spacing:2px}
+.pic{width:340px;height:230px;border-radius:28px;background:linear-gradient(180deg,#ffcf7a 0,#ff8a4c 45%,#5a2a1a 46%,#2a140c);position:relative;overflow:hidden}
+.pic:after{content:'';position:absolute;left:60px;top:40px;width:80px;height:80px;border-radius:50%;background:#fff6c9}
+.wave{display:flex;gap:7px;align-items:center;height:70px}.wave i{width:9px;border-radius:6px;background:#2a0d05}
+#keys{position:absolute;left:0;right:0;top:1600px;display:flex;justify-content:center;gap:40px;font-size:46px;font-weight:900}
+#keys span{padding:22px 38px;border-radius:999px;background:#1c1512;border:3px solid #14a86a;color:#8ff0b8}
+/* S3 sunucu */
+#t3{position:absolute;left:0;right:0;top:230px;font-size:84px}
+#srv{position:absolute;left:110px;right:110px;top:440px;height:820px;border-radius:50px;background:#0b0f0c;border:4px solid #1f3b2b;overflow:hidden;box-shadow:0 60px 150px #000d}
+#srv .hd{height:100px;display:flex;align-items:center;gap:18px;padding:0 40px;font-size:38px;font-weight:900;color:#5bd38f;border-bottom:3px solid #1f3b2b;letter-spacing:1px}
+#rows{padding:24px 40px;font:700 40px/1.5 'DejaVu Sans Mono',monospace;color:#3fbf78;white-space:nowrap;overflow:hidden}
+#rows div{opacity:.9}
+#t3b{position:absolute;left:0;right:0;top:1350px;font-size:130px;letter-spacing:-5px}
+/* S4 şikayet */
+#t4{position:absolute;left:0;right:0;top:220px;font-size:84px}
+.ln{position:absolute;left:120px;right:120px;height:150px;border-radius:36px;background:#1c1512;border:3px solid #3a2c25;display:flex;align-items:center;gap:28px;padding:0 40px;font-size:44px;font-weight:800;color:#7d6c61}
+.ln .ic{font-size:54px}
+#l0{top:460px}#l1{top:640px}#l2{top:820px}#l3{top:1000px}#l4{top:1180px}
+#l2.open{background:#2a1a12;border-color:#ff8a4c;color:#f9efe4}
+#stamp{position:absolute;right:140px;top:752px;padding:14px 30px;border-radius:18px;border:6px solid #ff4d4d;color:#ff6b6b;font-size:46px;font-weight:900;letter-spacing:3px;transform:rotate(-8deg);background:#1a0c0c}
+#t4b{position:absolute;left:0;right:0;top:1440px;font-size:112px;letter-spacing:-4px}
+/* S5 şifre */
+#t5{position:absolute;left:0;right:0;top:300px;font-size:90px}
+#key{position:absolute;left:50%;top:520px;width:420px;height:420px;margin-left:-210px;font-size:300px;text-align:center;line-height:420px}
+#chats{position:absolute;left:150px;right:150px;top:1000px;display:grid;gap:26px}
+#chats div{height:120px;border-radius:32px;background:#1c1512;border:3px solid #3a2c25;display:flex;align-items:center;gap:24px;padding:0 34px;font-size:44px;font-weight:800}
+#chats i{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:34px;font-weight:900;color:#fff}
+#chats em{margin-left:auto;font-style:normal;color:#4cd98a;font-size:40px}
+#t5b{position:absolute;left:0;right:0;top:1550px;font-size:84px}
+/* S6 CTA */
+#logo{position:absolute;left:50%;top:420px;width:460px;height:460px;margin-left:-230px;border-radius:110px;box-shadow:0 40px 120px #ff5a2e88}
+#t6a{position:absolute;left:0;right:0;top:960px;font-size:120px;letter-spacing:-5px}
+#url{position:absolute;left:50%;top:1200px;transform:translateX(-50%);white-space:nowrap;padding:34px 56px;border-radius:40px;background:#1c1512;border:4px solid #ff8a4c;font-size:56px;font-weight:900}
+#t6c{position:absolute;left:0;right:0;top:1420px;font-size:56px;font-weight:800;color:#d9c4b2;text-align:center}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+</style></head><body>
+<div class="S" id="bg"></div><div class="S" id="bgg"></div>
+<div class="S" id="s0">
+  <div id="q0" class="big ttl">Geçen videoya<br>şu yorum geldi</div>
+  <div id="cm"><div class="hd"><div class="pp">İ</div><div class="nm">@izleyici · 2 gün önce</div></div><div class="tx">"Ve özelimizi alın"</div><div class="ft"><span>👍 24</span><span>💬 Yanıtla</span></div></div>
+  <div id="hm">🤔</div>
+  <div id="a0" class="big ttl hot">Haklı soru.</div>
+</div>
+<div class="S" id="s1">
+  <svg id="lk" viewBox="0 0 280 350"><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb35a"/><stop offset="1" stop-color="#ff4d2e"/></linearGradient></defs>
+    <path id="shk" d="M70 160 V100 a70 70 0 0 1 140 0 V160" fill="none" stroke="#f9efe4" stroke-width="30" stroke-linecap="round"/>
+    <rect x="20" y="150" width="240" height="190" rx="40" fill="url(#lg)"/><circle cx="140" cy="230" r="24" fill="#2a0d05"/><rect x="128" y="236" width="24" height="56" rx="10" fill="#2a0d05"/></svg>
+  <div id="t1" class="big ttl">Kanka'da özel mesajların</div>
+  <div id="t1b" class="big ttl grn">Uçtan uca<br>şifreli</div>
+</div>
+<div class="S" id="s2">
+  <div id="t2" class="big ttl">Daha telefonundan<br><span class="hot">çıkmadan kilitleniyor</span></div>
+  <div id="ph"><div class="top"><i>E</i><b>Ege</b><em>🔒</em></div>
+    <div class="bub" id="b1"><span class="lk">🔒</span>akşam maça geliyo musun</div>
+    <div class="bub" id="b2"><span class="lk">🔒</span><div class="gif">GIF</div></div>
+    <div class="bub" id="b3"><span class="lk">🔒</span><div class="pic"></div></div>
+    <div class="bub" id="b4"><span class="lk">🔒</span>▶<div class="wave" id="wv"></div>0:07</div>
+  </div>
+  <div id="keys"><span>🔑 Sen</span><span>🔑 Ege</span></div>
+</div>
+<div class="S" id="s3">
+  <div id="t3" class="big ttl">Sunucularımızda<br>duran şey bu</div>
+  <div id="srv"><div class="hd">● KANKA SUNUCUSU · DM KAYITLARI</div><div id="rows"></div></div>
+  <div id="t3b" class="big ttl grn">Biz bile<br>okuyamıyoruz</div>
+</div>
+<div class="S" id="s4">
+  <div id="t4" class="big ttl">Biri seni rahatsız<br>ederse?</div>
+  <div class="ln" id="l0"><span class="ic">🔒</span>Şifreli mesaj</div>
+  <div class="ln" id="l1"><span class="ic">🔒</span>Şifreli mesaj</div>
+  <div class="ln" id="l2"><span class="ic" id="l2i">🔒</span><span id="l2t">Şifreli mesaj</span></div>
+  <div class="ln" id="l3"><span class="ic">🔒</span>Şifreli mesaj</div>
+  <div class="ln" id="l4"><span class="ic">🔒</span>Şifreli mesaj</div>
+  <div id="stamp">ŞİKAYET</div>
+  <div id="t4b" class="big ttl"><span class="hot">Sadece o mesaj</span><br>açılır</div>
+</div>
+<div class="S" id="s5">
+  <div id="t5" class="big ttl">Şifreni<br>unutsan bile</div>
+  <div id="key">🔑</div>
+  <div id="chats"><div id="c1"><i style="background:#5a6bff">E</i>Ege<em>✓ geri geldi</em></div><div id="c2"><i style="background:#ff4d9a">A</i>Ayşe<em>✓ geri geldi</em></div><div id="c3"><i style="background:#14a86a">K</i>Kuzenler<em>✓ geri geldi</em></div></div>
+  <div id="t5b" class="big ttl grn">Konuşmaların durur</div>
+</div>
+<div class="S" id="s6">
+  <img id="logo" src="f/logo.png" alt="">
+  <div id="t6a" class="big ttl hot">Kanka'yı dene</div>
+  <div id="url">kankahq.com</div>
+  <div id="t6c">Ücretsiz · link açıklamada</div>
+</div>
+<div id="flash"></div>
+<script>
+let TOT=39;let RT=0;
+// VO gelince sahne saatleri bu tabloyla seslendirmeye oturtulur: [sahne saati, gerçek saat]
+let WA=[[0,0],[0.5,2.6],[1.3,3.9],[2.6,4.4],[3.6,6.4],[4.1,7.0],[5.0,8.6],[6.5,10.3],[7.3,11.2],[8.3,12.3],[9.3,13.3],[10.3,14.4],[11.3,17.5],[12.8,20.6],[15.9,23.9],[18.2,25.3],[19.8,27.8],[20.4,29.3],[21.2,29.9],[23.6,32.6],[26.8,34.6],[28.2,35.3],[28.8,35.8],[29.3,36.3],[29.8,37.3],[32,39]];
+const toScene=y=>{for(let i=1;i<WA.length;i++){const[a,b]=WA[i-1],[c,d]=WA[i];if(y<=d)return a+(c-a)*(y-b)/(d-b);}return WA[WA.length-1][0];};
+const toReal=x=>{for(let i=1;i<WA.length;i++){const[a,b]=WA[i-1],[c,d]=WA[i];if(x<=c)return b+(d-b)*(x-a)/(c-a);}return WA[WA.length-1][1];};
+const MK={pop:[.9,2.6,4.1,7.6,8.6,9.6,10.6,19.8,24.6,25.3,26.0,28.4,28.8],whoosh:[3.6,6.5,12.8,18.2,23.6,28.2],tick:[13.4,14.0,14.6,15.2],fail:[],type:[]};const MARKS={};
+const mk=()=>{for(const k in MK)MARKS[k]=MK[k].map(toReal);};mk();
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>cl((t-a)/(b-a)),eo=x=>1-Math.pow(1-x,3),bk=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)},L=(a,b,x)=>a+(b-a)*x;
+const vis=(id,on)=>$(id).style.display=on?'':'none';
+const pop=(id,t,a,from=1.5)=>{$(id).style.opacity=seg(t,a,a+.08);return L(from,1,bk(seg(t,a,a+.3)));};
+$('wv').innerHTML=Array.from({length:18},(_,i)=>`<i style="height:${18+Math.abs(Math.sin(i*1.7))*50}px"></i>`).join('');
+const CH='ab01xQz9#$%&*+=?@Kp7Fm3Lw8Vt2Ry5Nc4Hd6Gs';
+let seedRows=Array.from({length:12},(_,r)=>Array.from({length:30},(_,i)=>CH[(r*31+i*17)%CH.length]).join(''));
+function scene(id,t,a,b){const on=t>=a&&t<b;vis(id,on);if(on)$(id).style.opacity=seg(t,a,a+.2)*(1-seg(t,b-.3,b));return on;}
+function setT(T){RT=T;const t=toScene(T);
+  $('bgg').style.opacity=(t>=3.6&&t<6.6)||(t>=12.8&&t<18.2)||(t>=23.6&&t<28.2)?1:0;$('bg').style.opacity=1-$('bgg').style.opacity*.7;
+  // S0 yorum 0-3.6
+  if(scene('s0',t,0,3.8)){ $('q0').style.opacity=seg(t,0,.15);$('q0').style.transform=`translateY(${L(-40,0,eo(seg(t,0,.35)))}px)`;
+    $('cm').style.opacity=seg(t,.5,.6);$('cm').style.transform=`scale(${L(.7,1,bk(seg(t,.5,.9)))}) rotate(${L(-6,-2,eo(seg(t,.5,.9)))}deg)`;
+    $('hm').style.opacity=seg(t,1.3,1.4);$('hm').style.transform=`scale(${L(.2,1,bk(seg(t,1.3,1.6)))}) rotate(${Math.sin(t*4)*8}deg)`;
+    $('a0').style.transform=`scale(${pop('a0',t,2.6,1.7)})`;}
+  // S1 kilit 3.6-6.6
+  if(scene('s1',t,3.6,6.6)){const c=eo(seg(t,4.1,4.4));$('shk').setAttribute('transform',`translate(0 ${L(-60,0,c)})`);
+    $('lk').style.transform=`scale(${L(.4,1,bk(seg(t,3.7,4.1)))*(t>4.4&&t<4.7?1+.08*Math.sin((t-4.4)*20):1)}) translateY(${Math.sin(t*2)*10}px)`;$('lk').style.opacity=seg(t,3.7,3.8);
+    $('t1').style.opacity=seg(t,4.5,4.7);$('t1').style.transform=`translateY(${L(40,0,eo(seg(t,4.5,4.8)))}px)`;
+    $('t1b').style.transform=`scale(${pop('t1b',t,5.0,1.6)})`;}
+  // S2 DM 6.5-12.9
+  if(scene('s2',t,6.5,12.9)){$('t2').style.opacity=seg(t,6.6,6.8);
+    $('ph').style.opacity=seg(t,6.7,6.85);$('ph').style.transform=`translateY(${L(260,0,eo(seg(t,6.7,7.2)))}px)`;
+    [['b1',7.3],['b2',8.3],['b3',9.3],['b4',10.3]].forEach(([id,a])=>{const e=$(id);e.style.opacity=seg(t,a,a+.1);e.style.transform=`translateY(${L(80,0,eo(seg(t,a,a+.3)))}px)`;
+      const lk=e.querySelector('.lk');lk.style.opacity=seg(t,a+.3,a+.38);lk.style.transform=`scale(${L(2.2,1,bk(seg(t,a+.3,a+.6)))})`;
+      e.style.filter=t>a+.35?`saturate(${L(1,.75,seg(t,a+.35,a+.6))})`:'';});
+    $('keys').style.opacity=seg(t,11.3,11.5);$('keys').style.transform=`scale(${L(.6,1,bk(seg(t,11.3,11.7)))})`;}
+  // S3 sunucu 12.8-18.2
+  if(scene('s3',t,12.8,18.2)){$('t3').style.opacity=seg(t,12.9,13.1);
+    $('srv').style.opacity=seg(t,13.0,13.15);$('srv').style.transform=`scale(${L(.85,1,eo(seg(t,13.0,13.4)))})`;
+    const n=Math.floor(t*12);$('rows').innerHTML=seedRows.map((r,i)=>i<cl(Math.floor((t-13.2)*5),0,12)?`<div>${r.split('').map((ch,j)=>CH[(ch.charCodeAt(0)+n*(j%3+1)+i)%CH.length]).join('')}</div>`:'').join('');
+    $('t3b').style.transform=`scale(${pop('t3b',t,15.9,1.7)})`;}
+  // S4 şikayet 18.2-23.7
+  if(scene('s4',t,18.2,23.7)){$('t4').style.opacity=seg(t,18.3,18.5);
+    ['l0','l1','l2','l3','l4'].forEach((id,i)=>{$(id).style.opacity=seg(t,18.6+i*.1,18.75+i*.1)*(t>20.4&&i!==2?L(1,.4,seg(t,20.4,20.8)):1);$(id).style.transform=`translateX(${L(-500,0,eo(seg(t,18.6+i*.1,18.95+i*.1)))}px)`;});
+    $('stamp').style.transform=`rotate(-8deg) scale(${pop('stamp',t,19.8,2.4)})`;
+    const op=t>=20.4;$('l2').className='ln'+(op?' open':'');$('l2i').textContent=op?'🔓':'🔒';$('l2t').textContent=op?'Hakaret içeren mesaj':'Şifreli mesaj';
+    $('l2').style.transform=op?`scale(${L(1.12,1,eo(seg(t,20.4,20.7)))})`:$('l2').style.transform;
+    $('t4b').style.transform=`scale(${pop('t4b',t,21.2,1.6)})`;}
+  // S5 şifre 23.6-28.3
+  if(scene('s5',t,23.6,28.3)){$('t5').style.opacity=seg(t,23.7,23.9);$('t5').style.transform=`translateY(${L(-40,0,eo(seg(t,23.7,24.0)))}px)`;
+    $('key').style.opacity=seg(t,23.9,24.0);$('key').style.transform=`scale(${L(.3,1,bk(seg(t,23.9,24.3)))}) rotate(${Math.sin(t*3)*10}deg)`;
+    ['c1','c2','c3'].forEach((id,i)=>{const a=24.6+i*.7;$(id).style.opacity=seg(t,a,a+.1);$(id).style.transform=`translateX(${L(600,0,bk(seg(t,a,a+.35)))}px)`;});
+    $('t5b').style.transform=`scale(${pop('t5b',t,26.8,1.6)})`;}
+  // S6 CTA 28.2-32
+  if(scene('s6',t,28.2,32.01)){$('s6').style.opacity=seg(t,28.2,28.4);
+    $('logo').style.opacity=seg(t,28.4,28.5);$('logo').style.transform=`scale(${L(.3,1,bk(seg(t,28.4,28.8)))}) translateY(${Math.sin(t*2)*10}px)`;
+    $('t6a').style.transform=`scale(${pop('t6a',t,28.8,1.6)})`;
+    $('url').style.opacity=seg(t,29.3,29.4);$('url').style.transform=`translateX(-50%) scale(${L(.5,1,bk(seg(t,29.3,29.6)))*(t>29.6?1+.03*Math.max(0,Math.sin((t-29.6)*6)):1)})`;
+    $('t6c').style.opacity=seg(t,29.8,30.0);}
+  $('flash').style.opacity=t>4.4&&t<4.6?.3*(1-seg(t,4.4,4.6)):t>20.4&&t<20.6?.25*(1-seg(t,20.4,20.6)):0;
+}
+setT(0);
+</script></body></html>

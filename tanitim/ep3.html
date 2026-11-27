@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0d0a08;font-family:'Inter Display','Inter','Poppins',sans-serif;color:#f9efe4}
+.S{position:absolute;inset:0}
+.hot{background:linear-gradient(120deg,#ffe08a,#ff8a4c 45%,#ff3d1f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.big{font-weight:900;letter-spacing:-4px;line-height:.92;text-align:center;text-transform:uppercase}
+.ttl{position:absolute;left:0;right:0;text-align:center}
+.sub{font-weight:700;font-size:56px}
+#bg{background:radial-gradient(1100px 1100px at 50% 42%,#ff8a4c22,transparent 62%)}
+#grain{background-image:radial-gradient(#ffffff08 1px,transparent 1px);background-size:6px 6px;opacity:.6}
+#flash{background:#fff;opacity:0;mix-blend-mode:overlay}
+/* üst ilerleme */
+#prog{position:absolute;top:120px;left:0;right:0;display:flex;justify-content:center;gap:22px;opacity:0}
+#prog i{width:110px;height:110px;border-radius:30px;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:54px;background:#ffffff0d;border:3px solid #ffffff1c;color:#7a6a5e}
+#prog i.on{background:#ff8a4c;border-color:#ff8a4c;color:#1a0f07;box-shadow:0 0 40px #ff8a4c88}
+#prog i.lk{border-style:dashed}
+/* kanca */
+.cmt{position:absolute;background:#22180fcc;border:2px solid #ffffff18;border-radius:30px;padding:18px 26px;font-size:36px;font-weight:700;white-space:nowrap;color:#e8dccf}
+.lockcard{position:absolute;left:150px;right:150px;top:1180px;height:330px;border-radius:50px;background:linear-gradient(180deg,#2b1d12,#160f0a);border:4px dashed #ff8a4c99;display:flex;align-items:center;justify-content:center;gap:30px;font-weight:900;font-size:60px}
+.lockcard .n{font-size:130px;color:#ff8a4c}
+.lockcard small{display:block;font-size:34px;color:#c9b8a8;font-weight:700;letter-spacing:4px}
+/* geri sayım */
+.num{position:absolute;left:0;right:0;top:300px;text-align:center;font-size:520px;font-weight:900;letter-spacing:-20px;line-height:1}
+.ft{position:absolute;left:60px;right:60px;top:820px;text-align:center;font-size:84px;font-weight:900;letter-spacing:-2px;line-height:1.02}
+.stage{position:absolute;left:70px;right:70px;top:1080px;height:560px;border-radius:52px;background:linear-gradient(180deg,#22180f,#140f0a);border:3px solid #ffffff14;overflow:hidden}
+.medal{position:absolute;top:110px;width:240px;height:240px;border-radius:50%;display:grid;place-items:center;font-size:110px;box-shadow:0 20px 60px #0008}
+.medal b{position:absolute;bottom:-70px;left:0;right:0;text-align:center;font-size:40px;font-weight:900}
+.chatb{position:absolute;left:50px;right:50px;top:120px;background:#2a1f16;border-radius:34px;padding:34px 40px;font-size:54px;font-weight:700}
+.chref{color:#ffb07a;background:#ff8a4c26;border-radius:14px;padding:2px 12px;font-weight:900}
+.cursor{position:absolute;width:70px;height:70px}
+.typ{position:absolute;left:50px;right:50px;top:170px;height:200px;background:#0f0b08;border:3px solid #ffffff1c;border-radius:34px;display:flex;align-items:center;padding:0 44px;font-size:110px;font-weight:800}
+.typ .car{display:inline-block;width:8px;height:110px;background:#ff8a4c;margin-left:8px}
+.phone{position:absolute;left:50%;top:40px;width:300px;height:500px;margin-left:-150px;border-radius:44px;background:#0f0b08;border:6px solid #3a2c22;overflow:hidden}
+.phone .ph{position:absolute;left:24px;right:24px;top:60px;height:250px;border-radius:24px;background:linear-gradient(135deg,#ffb35a,#ff5f6d 50%,#7a5cff)}
+.phone .bar{position:absolute;left:24px;right:24px;top:340px;height:22px;border-radius:12px;background:#ffffff1a;overflow:hidden}
+.phone .bar i{display:block;height:100%;background:#4cd98a;width:0}
+.phone .ok{position:absolute;left:0;right:0;top:390px;text-align:center;font-size:44px;font-weight:900;color:#4cd98a}
+.vroom{position:absolute;left:50px;right:50px;top:60px;bottom:60px}
+.vroom .hd{font-size:44px;font-weight:900;color:#c9b8a8;margin-bottom:24px}
+.vu{display:flex;align-items:center;gap:22px;font-size:44px;font-weight:800;margin:8px 0}
+.vu i{width:72px;height:72px;border-radius:50%;flex:none;display:grid;place-items:center;font-style:normal;color:#fff;font-weight:900;box-shadow:0 0 0 5px #4cd98a}
+.upd{position:absolute;left:-10px;right:-10px;top:-80px;background:#ff8a4c;color:#1a0f07;border-radius:26px;padding:20px 30px;font-size:40px;font-weight:900;text-align:center}
+.keep{position:absolute;left:0;right:0;bottom:-30px;text-align:center;font-size:50px;font-weight:900;color:#4cd98a}
+.pill{display:inline-block;background:#ff8a4c;color:#1a0f07;font-weight:900;font-size:74px;padding:24px 58px;border-radius:999px}
+.box{position:absolute;left:90px;right:90px;top:1050px;background:#140f0a;border:3px solid #ff8a4c;border-radius:36px;padding:34px 40px;font-size:52px;font-weight:700;color:#c9b8a8;text-align:left}
+#fade{background:#0d0a08;opacity:0}
+</style></head><body>
+<div class="S" id="bg"></div><div class="S" id="grain"></div>
+<div class="S" id="hook">
+  <div id="cmts"></div>
+  <div class="ttl big" id="k0" style="top:330px;font-size:120px">bu hafta</div>
+  <div class="ttl big hot" id="k1" style="top:460px;font-size:118px;white-space:nowrap;letter-spacing:-5px">ne istediyseniz</div>
+  <div class="ttl big" id="k2" style="top:600px;font-size:200px">yaptım</div>
+  <div class="lockcard" id="lc"><div class="n">#1</div><div>EN ÇOK İSTENEN<small>SONA KADAR İZLE</small></div><div style="font-size:110px">🔒</div></div>
+</div>
+<div class="S" id="cd"></div>
+<div class="S" id="out">
+  <div class="ttl big" id="o0" style="top:430px;font-size:150px">sıradakini</div>
+  <div class="ttl big hot" id="o1" style="top:590px;font-size:200px">sen yaz</div>
+  <div class="box" id="o2"><span id="otx"></span><span style="display:inline-block;width:6px;height:56px;background:#ff8a4c;vertical-align:-8px;margin-left:6px"></span></div>
+  <div class="ttl" id="o3" style="top:1330px"><span class="pill">kankahq.com</span></div>
+</div>
+<div id="prog"><i>5</i><i>4</i><i>3</i><i>2</i><i class="lk">1</i></div>
+<div class="S" id="flash"></div><div class="S" id="fade"></div>
+<script>
+// Seslendirmedeki cümle başlangıçları: [kanca, "sona kadar izle", 5, 4, 3, 2, 1, kapanış, bitiş]
+const T=[0,3.22,6.61,10.57,14.05,17.37,20.72,24.68,27.25];
+const TOT=T[8]+0.5;
+const $=id=>document.getElementById(id);
+const CM=['rozetler çok kolay 😅','kanal linkleri tıklanmıyor','telefondan foto gitmiyor','güncellemede sesten atıyor','emoji otomatik olsa','#kanal yazınca gitsin','seste kalalım yenile deyince','foto yüklenmiyor mobilde'];
+$('cmts').innerHTML=CM.map((c,i)=>`<div class="cmt" id="cm${i}" style="left:${[60,420,120,500,40,380,180,520][i]}px;top:${[870,960,1060,1640,1730,1820,1560,1470][i]}px">${c}</div>`).join('');
+const C=[ // geri sayım: [numara, başlık, sahne html]
+ [5,'Rozetler artık<br><span class="hot">bronz · gümüş · altın</span>',`<div class="medal" id="m0" style="left:60px;background:radial-gradient(circle at 35% 30%,#f0b27a,#a0522d)">💬<b style="color:#d08a4e">BRONZ</b></div><div class="medal" id="m1" style="left:350px;background:radial-gradient(circle at 35% 30%,#f4f7fa,#8c99a6)">⭕<b style="color:#c9d3dd">GÜMÜŞ</b></div><div class="medal" id="m2" style="left:640px;background:radial-gradient(circle at 35% 30%,#fff1b0,#d99a00)">🔥<b style="color:#ffcf5c">ALTIN</b></div>`],
+ [4,'Kanal adına tıkla,<br><span class="hot">direkt oraya ışınlan</span>',`<div class="chatb">bakın <span class="chref" id="href">#「🎳」oyun</span> kanalında turnuva var</div><svg class="cursor" id="cur" viewBox="0 0 24 24"><path d="M3 2l7 19 2.5-7.5L20 11z" fill="#fff" stroke="#000" stroke-width="1.2"/></svg><div class="ttl" id="tele" style="top:380px;font-size:60px;font-weight:900;opacity:0">⚡ #「🎳」oyun açıldı</div>`],
+ [3,'<span class="hot">:)</span> yaz,<br>emojiye dönsün',`<div class="typ"><span id="tt">selam </span><span class="car"></span></div><div class="ttl" style="top:420px;font-size:46px;font-weight:800;color:#c9b8a8">;) :D &lt;3 xD hepsi çalışıyor</div>`],
+ [2,'Telefondan foto<br><span class="hot">artık takılmıyor</span>',`<div class="phone"><div class="ph"></div><div class="bar"><i id="pb"></i></div><div class="ok" id="pok">✓ gönderildi</div></div>`],
+ [1,'Güncelleme gelince<br><span class="hot">sesten atılmıyorsun</span>',`<div class="vroom"><div class="upd" id="upd">🔄 Güncelleme geldi · yenileniyor…</div><div class="hd" style="margin-top:30px;margin-bottom:10px">🔊 Sohbet odası</div><div class="vu" id="v0"><i style="background:#5a6bff">N</i>NovaVesta</div><div class="vu" id="v1"><i style="background:#ff6bb0">D</i>DeadLyBro</div><div class="vu" id="v2"><i style="background:#ff8a4c">P</i>Pisago 🎙️</div><div class="keep" id="keep">✓ seste kalmaya devam</div></div>`],
+];
+$('cd').innerHTML=C.map((c,i)=>`<div class="S" id="c${i}"><div class="num hot" id="n${i}">${c[0]}</div><div class="ft" id="f${i}">${c[1]}</div><div class="stage" id="st${i}">${c[2]}</div></div>`).join('');
+const CS=[T[2],T[3],T[4],T[5],T[6]], CE=T[7];
+const MARKS={type:[...[0,1].map(k=>CS[2]+.6+k*.12),CE+.8,CE+.95,CE+1.1,CE+1.25,CE+1.4],pop:[0.05,.75,2.37,T[1]+.1,...CS.map(a=>a+.35),CS[0]+.7,CS[0]+.95,CS[0]+1.2,CS[1]+1.2,CS[2]+1.25,CS[3]+1.5,CS[4]+1.6,CE+.1,CE+.45,CE+2.0],whoosh:[T[2]-.1,...CS.slice(1).map(a=>a-.1),CE-.1,CS[1]+1.3],fail:[...CS,T[1]+.1],tick:[0.3,0.4,0.5,0.6,0.7,0.8]};
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>cl((t-a)/(b-a)),eo=x=>1-Math.pow(1-x,3),bk=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)},L=(a,b,x)=>a+(b-a)*x;
+const vis=(el,on)=>el.style.display=on?'':'none';
+const pop=(el,t,a,from=1.6,dur=.28,extra='')=>{el.style.opacity=seg(t,a,a+.06);el.style.transform=`scale(${L(from,1,bk(seg(t,a,a+dur)))}) ${extra}`;};
+const up=(el,t,a,d=.35,dy=60)=>{const k=eo(seg(t,a,a+d));el.style.opacity=k;el.style.transform=`translateY(${L(dy,0,k)}px)`;};
+const shake=(t,a,d=.35,amp=22)=>t>a&&t<a+d?Math.sin((t-a)*70)*amp*(1-(t-a)/d):0;
+function setT(t){
+  $('bg').style.transform=`scale(${1+.05*Math.sin(t*1.1)})`;
+  // flaş: her numara çarpışında
+  let fl=0; CS.forEach(a=>{if(t>=a&&t<a+.18)fl=1-(t-a)/.18;}); $('flash').style.opacity=fl*.5;
+  // kanca
+  const hk=$('hook'); vis(hk,t<T[2]); if(t<T[2]){ hk.style.opacity=1-seg(t,T[2]-.2,T[2]);
+    pop($('k0'),t,-.1,1.3); pop($('k1'),t,.75,1.6); pop($('k2'),t,2.37,2.2,.3); $('hook').style.transform=`translateX(${shake(t,2.37)}px)`;
+    CM.forEach((_,i)=>{const e=$('cm'+i),a=.15+i*.17;e.style.opacity=seg(t,a,a+.2)*.85;e.style.transform=`translateY(${L(80,0,eo(seg(t,a,a+.4)))-t*14}px)`;});
+    const lc=$('lc'); pop(lc,t,T[1]+.1,.4,.35,`rotate(${Math.sin(t*9)*(t>T[1]+.4?1.2:0)}deg)`);
+  }
+  // üst ilerleme
+  const pg=$('prog'); pg.style.opacity=seg(t,T[2]-.3,T[2])*(1-seg(t,CE,CE+.2));
+  [...pg.children].forEach((e,i)=>{const on=t>=CS[i]; e.classList.toggle('on',on); e.classList.toggle('lk',i===4&&!on); e.style.transform=`scale(${on&&t<CS[i]+.3?L(1.35,1,seg(t,CS[i],CS[i]+.3)):1})`;});
+  // geri sayım
+  C.forEach((_,i)=>{const a=CS[i],b=CS[i+1]||CE,el=$('c'+i),on=t>=a-.05&&t<b; vis(el,on); if(!on)return;
+    el.style.opacity=1-seg(t,b-.15,b); el.style.transform=`translateX(${shake(t,a,.4,26)}px)`;
+    const n=$('n'+i); n.style.opacity=seg(t,a,a+.04); n.style.transform=`scale(${L(3.2,1,bk(seg(t,a,a+.3)))})`;
+    up($('f'+i),t,a+.3,.3); up($('st'+i),t,a+.45,.35,90);
+  });
+  // sahne içleri
+  [0,1,2].forEach(k=>{const m=$('m'+k); if(m) pop(m,t,CS[0]+.7+k*.25,.2,.35);});
+  const cur=$('cur'); if(cur){const a=CS[1]+.6,k=eo(seg(t,a,a+.55)); cur.style.left=L(820,330,k)+'px'; cur.style.top=L(470,180,k)+'px'; const clk=seg(t,CS[1]+1.2,CS[1]+1.3); cur.style.transform=`scale(${1-.25*Math.sin(clk*Math.PI)})`;
+    $('href').style.background=t>CS[1]+1.2?'#ff8a4c':'#ff8a4c26'; $('href').style.color=t>CS[1]+1.2?'#1a0f07':'#ffb07a'; up($('tele'),t,CS[1]+1.35,.3);}
+  const tt=$('tt'); if(tt){const a=CS[2]+.6; tt.textContent= t<a?'selam ':t<a+.12?'selam :':t<CS[2]+1.25?'selam :)':'selam 🙂'; tt.style.transform=`scale(${t>=CS[2]+1.25&&t<CS[2]+1.45?1.08:1})`;}
+  const pb=$('pb'); if(pb){pb.style.width=Math.round(eo(seg(t,CS[3]+.7,CS[3]+1.45))*100)+'%'; pop($('pok'),t,CS[3]+1.5,1.8,.3);}
+  const upd=$('upd'); if(upd){ up(upd,t,CS[4]+.55,.3,-60); ['v0','v1','v2'].forEach((v,k)=>{const e=$(v); const blink=t>CS[4]+.9&&t<CS[4]+1.4; e.style.opacity=blink?(.35+.65*(Math.sin(t*40+k)>0)):1;}); pop($('keep'),t,CS[4]+1.6,1.8,.3); }
+  // kapanış
+  const o=$('out'); vis(o,t>=CE); if(t>=CE){ o.style.opacity=seg(t,CE,CE+.1); pop($('o0'),t,CE+.1,1.4); pop($('o1'),t,CE+.45,2.0,.32); $('o1').style.transform+=` rotate(${Math.sin(t*5)*1.5}deg)`;
+    up($('o2'),t,CE+.7); const msg='sıradaki özellik: '; $('otx').textContent=msg.slice(0,Math.floor(seg(t,CE+.8,CE+1.6)*msg.length)); pop($('o3'),t,CE+2.0,1.5); }
+  $('fade').style.opacity=seg(t,TOT-.35,TOT);
+}
+setT(0);
+</script></body></html>

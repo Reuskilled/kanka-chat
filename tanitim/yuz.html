@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0f0b09;font-family:'Inter Display','Inter','Poppins',sans-serif;color:#f9efe4}
+.S{position:absolute;inset:0}
+.hot{background:linear-gradient(120deg,#ffc08f,#ff8a4c 45%,#ff5a2e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cy{background:linear-gradient(120deg,#9ff6ff,#7cb8ff 45%,#8a6bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.big{font-weight:900;letter-spacing:-4px;line-height:.95;text-align:center;text-transform:uppercase}
+.sub{position:absolute;left:0;right:0;text-align:center;font-size:54px;font-weight:800;color:#d9c4b2}
+#bg{background:radial-gradient(1000px 1000px at 50% 42%,#ff8a4c2e,transparent 65%)}
+#bg2{background:radial-gradient(1000px 1000px at 50% 42%,#7c6bff33,transparent 65%);opacity:0}
+/* S1 sayaç */
+#cnt{position:absolute;left:0;right:0;top:600px;height:420px;overflow:hidden}
+#cnt .roll{position:absolute;left:0;right:0;font-size:400px;font-weight:900;letter-spacing:-18px;text-align:center;line-height:420px}
+#t1{position:absolute;left:0;right:0;top:1080px;font-size:110px}
+#t1s{top:1250px}
+.cf{position:absolute;width:22px;height:36px;border-radius:5px}
+/* S2 sohbet */
+#s2h{position:absolute;left:0;right:0;top:380px;font-size:96px}
+.chat{position:absolute;left:70px;right:70px;top:640px;background:#1c1512;border:3px solid #3a2c25;border-radius:44px;padding:44px 44px 50px;box-shadow:0 50px 120px #000b}
+.msg{display:flex;gap:26px;margin-bottom:34px}
+.av{width:96px;height:96px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:48px;font-weight:900}
+.nm{font-size:40px;font-weight:800}.nm small{font-size:28px;color:#a8968a;font-weight:600;margin-left:12px}
+.tag{display:inline-block;font-size:24px;font-weight:900;background:#ff8a4c;color:#1a0f0a;border-radius:10px;padding:3px 12px;margin-left:10px;vertical-align:4px}
+.tx{font-size:42px;margin-top:6px;color:#efe2d6}
+.emb{margin-top:16px;border-left:8px solid #ff8a4c;background:#241b17;border-radius:18px;padding:26px 30px}
+.emb h4{font-size:44px;font-weight:900;margin-bottom:10px}
+.emb p{font-size:36px;color:#d9c4b2;line-height:1.35}
+.fl{display:flex;gap:60px;margin-top:22px}.fl small{display:block;font-size:24px;font-weight:900;letter-spacing:2px;color:#a8968a}.fl b{font-size:38px}
+#hl{position:absolute;border:6px solid #ffcf5c;border-radius:20px;box-shadow:0 0 40px #ffcf5c88;opacity:0}
+/* S3 rozetler */
+.bdg{position:absolute;left:50%;top:560px;width:520px;height:520px;margin-left:-260px}
+.rays{position:absolute;left:50%;top:820px;width:1300px;height:1300px;margin:-650px 0 0 -650px;border-radius:50%;background:repeating-conic-gradient(#7c9bff33 0 7deg,transparent 7deg 22deg);-webkit-mask:radial-gradient(circle,#000 15%,transparent 62%);opacity:0}
+#lock{position:absolute;left:50%;top:860px;width:230px;height:230px;margin-left:30px}
+#stamp{position:absolute;left:50%;top:760px;font-size:96px;font-weight:900;color:#ff5a5a;border:12px solid #ff5a5a;border-radius:28px;padding:16px 40px;white-space:nowrap;transform:translateX(-50%) rotate(-10deg);opacity:0;background:#0f0b09aa}
+#t3{position:absolute;left:0;right:0;top:260px;font-size:100px}
+#t3s{top:1200px}
+/* S4 panel */
+#t4{position:absolute;left:0;right:0;top:260px;font-size:92px}
+.pnl{position:absolute;left:150px;right:150px;top:520px;border-radius:56px;background:linear-gradient(180deg,#1d2440 0,#15100d 52%);border:3px solid #5a5aa8;box-shadow:0 60px 140px #000c;padding:50px 56px 56px;text-align:center;overflow:hidden}
+.pnl .hero{position:relative;height:330px;display:grid;place-items:center}
+.pnl .hero .rays2{position:absolute;width:640px;height:640px;border-radius:50%;background:repeating-conic-gradient(#7c9bff40 0 7deg,transparent 7deg 22deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 64%)}
+.pnl h3{font-size:72px;font-weight:900;margin:10px 0 18px}
+.chips{display:flex;gap:16px;justify-content:center;margin-bottom:22px}.chips span{font-size:28px;font-weight:900;letter-spacing:3px;padding:8px 22px;border-radius:99px;color:#ffcf5c;border:3px solid #ffcf5c77;background:#ffcf5c1a}
+.pnl p{font-size:38px;color:#bfb0a4;margin-bottom:34px}
+.bbox{text-align:left;background:#0006;border:2px solid #ffffff14;border-radius:30px;padding:30px 34px}
+.bbox .r{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px}.bbox b{font-size:68px;white-space:nowrap;font-weight:900}.bbox .r span{font-size:30px;color:#a8968a}
+.bar{height:22px;border-radius:22px;background:#ffffff14;overflow:hidden}.bar i{display:block;height:100%;border-radius:22px;background:linear-gradient(90deg,#7cf0ff,#6a4bff);box-shadow:0 0 24px #7c9bffaa}
+#t4s{top:1560px;font-size:50px}
+/* S5 CTA */
+#t5a{position:absolute;left:0;right:0;top:330px;font-size:84px;color:#d9c4b2;letter-spacing:-2px}
+#n5{position:absolute;left:0;right:0;top:470px;font-size:330px;letter-spacing:-14px;line-height:1}
+#t5b{position:absolute;left:0;right:0;top:820px;font-size:120px}
+#t5c{top:1010px;font-size:48px}
+#logo{position:absolute;left:50%;top:1170px;width:230px;height:230px;margin-left:-115px;border-radius:60px;box-shadow:0 30px 80px #ff6a2c55}
+#url{position:absolute;left:50%;top:1460px;font-size:76px;font-weight:900;padding:24px 60px;border-radius:999px;background:linear-gradient(120deg,#ff8a4c,#ff5a2e);color:#fff;white-space:nowrap;box-shadow:0 24px 70px #ff5a2e66}
+#prog{position:absolute;left:0;bottom:0;height:10px;background:#ff8a4c}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+ <linearGradient id="kbg-ekip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ec5ff"/><stop offset="1" stop-color="#2f6fe0"/></linearGradient>
+ <linearGradient id="kbg-erken" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ff0c2"/><stop offset="1" stop-color="#16a35a"/></linearGradient>
+ <linearGradient id="kbg-kurucu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3d1"/><stop offset="1" stop-color="#c72a74"/></linearGradient>
+ <linearGradient id="kbg-efsane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset="1" stop-color="#e09a12"/></linearGradient>
+ <linearGradient id="kbg-avci" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4ff9a"/><stop offset="1" stop-color="#3a9d23"/></linearGradient>
+ <linearGradient id="kbg-dev" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6aa8ff"/><stop offset="1" stop-color="#3a4fd8"/></linearGradient>
+ <linearGradient id="kbg-gece" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8c8ff"/><stop offset="1" stop-color="#6a45d8"/></linearGradient>
+ <linearGradient id="kbg-sohbet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd8ff"/><stop offset="1" stop-color="#2a8ae0"/></linearGradient>
+ <linearGradient id="kbg-sosyal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb0c0"/><stop offset="1" stop-color="#e5485d"/></linearGradient>
+ <linearGradient id="kbg-seri" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".55" stop-color="#ff7a2e"/><stop offset="1" stop-color="#e0331a"/></linearGradient>
+ <linearGradient id="kbg-xox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc2a1"/><stop offset="1" stop-color="#ff6a3a"/></linearGradient>
+ <linearGradient id="kbg-caylak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2a0"/><stop offset="1" stop-color="#f2b322"/></linearGradient>
+ <linearGradient id="kbg-beta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cf0ff"/><stop offset="1" stop-color="#6a4bff"/></linearGradient>
+ <symbol id="kb-ekip" viewBox="0 0 48 48"><path d="M24 3 42 9.5V23c0 11-7.6 18.6-18 22C13.6 41.6 6 34 6 23V9.5Z" fill="url(#kbg-ekip)"/><path d="M24 7.5 38 12.6V23c0 8.6-5.8 14.6-14 17.6Z" fill="#fff" opacity=".18"/><path d="M18.5 15v18M18.5 24l9.5-9M21.5 21.5l7.5 11.5" stroke="#0e2a5c" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+ <symbol id="kb-erken" viewBox="0 0 48 48"><path d="M24 45V24" stroke="#16a35a" stroke-width="4.5" stroke-linecap="round"/><path d="M24 26C24 14 15 7 4 7c0 11 8 19 20 19Z" fill="url(#kbg-erken)"/><path d="M24 22c0-10 7.5-16 20-16 0 10-7 16-20 16Z" fill="#5fd18e"/></symbol>
+ <symbol id="kb-kurucu" viewBox="0 0 48 48"><path d="M8 44V16h6v5h5v-5h10v5h5v-5h6v28Z" fill="url(#kbg-kurucu)"/><path d="M8 16V8h5v4h4V8h5v4h4V8h5v4h4V8h5v8" fill="#ff8ab8"/><path d="M19 44V33a5 5 0 0 1 10 0v11Z" fill="#5a0f30"/></symbol>
+ <symbol id="kb-efsane" viewBox="0 0 48 48"><path d="M5 15l9.5 8L24 8l9.5 15L43 15l-4 24H9Z" fill="url(#kbg-efsane)"/><rect x="9" y="38" width="30" height="6" rx="2" fill="#c27c0e"/><circle cx="24" cy="29" r="3.6" fill="#fff" opacity=".85"/><circle cx="5" cy="15" r="3" fill="#fff3c0"/><circle cx="43" cy="15" r="3" fill="#fff3c0"/><circle cx="24" cy="7" r="3" fill="#fff3c0"/></symbol>
+ <symbol id="kb-avci" viewBox="0 0 48 48"><g stroke="#2f7a1e" stroke-width="3" stroke-linecap="round"><path d="M10 20l6 3M38 20l-6 3M8 30h8M40 30h-8M10 41l7-4M38 41l-7-4M18 9l3 4M30 9l-3 4"/></g><ellipse cx="24" cy="29" rx="11" ry="14" fill="url(#kbg-avci)"/><path d="M24 15v28" stroke="#2f7a1e" stroke-width="2.4"/><circle cx="24" cy="15" r="7" fill="#3a9d23"/><circle cx="19" cy="27" r="2.4" fill="#1d4d12"/><circle cx="29" cy="33" r="2.4" fill="#1d4d12"/><circle cx="20" cy="36" r="1.8" fill="#1d4d12"/></symbol>
+ <symbol id="kb-dev" viewBox="0 0 48 48"><rect x="3" y="7" width="42" height="34" rx="10" fill="url(#kbg-dev)"/><path d="M17 17l-7 7 7 7M31 17l7 7-7 7M27 14l-6 20" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+ <symbol id="kb-gece" viewBox="0 0 48 48"><path d="M30 6a19 19 0 1 0 13 30A16 16 0 0 1 30 6Z" fill="url(#kbg-gece)"/><path d="M35 9l1.6 3.4L40 14l-3.4 1.6L35 19l-1.6-3.4L30 14l3.4-1.6Z" fill="#fff6c8"/></symbol>
+ <symbol id="kb-sohbet" viewBox="0 0 48 48"><path d="M8 6h32a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H22l-11 9v-9H8a5 5 0 0 1-5-5V11a5 5 0 0 1 5-5Z" fill="url(#kbg-sohbet)"/><circle cx="15" cy="21" r="3" fill="#fff"/><circle cx="24" cy="21" r="3" fill="#fff"/><circle cx="33" cy="21" r="3" fill="#fff"/></symbol>
+ <symbol id="kb-sosyal" viewBox="0 0 48 48"><path d="M18 40S3 31 3 19.5A8.5 8.5 0 0 1 18 14a8.5 8.5 0 0 1 15 5.5C33 31 18 40 18 40Z" fill="url(#kbg-sosyal)"/><path d="M31 44s-10-6.4-10-14a6 6 0 0 1 10-4.2A6 6 0 0 1 41 30c0 7.6-10 14-10 14Z" fill="#ffd0da" stroke="#1d1613" stroke-width="2.4"/></symbol>
+ <symbol id="kb-seri7" viewBox="0 0 48 48"><path d="M24 2c2 8 13 13 13 26a13 13 0 0 1-26 0c0-6 3-10 6-12 0 4 2 6 4 7-1-8 1-15 3-21Z" fill="url(#kbg-seri)"/><path d="M24 26c4 3 6 6 6 10a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3 0-5 1-7Z" fill="#fff2b0"/></symbol>
+ <symbol id="kb-xox" viewBox="0 0 48 48"><rect x="3" y="3" width="42" height="42" rx="11" fill="url(#kbg-xox)"/><path d="M12 12l10 10M22 12 12 22" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/><circle cx="32" cy="32" r="5.6" stroke="#fff" stroke-width="3.6" fill="none"/></symbol>
+ <symbol id="kb-caylak" viewBox="0 0 48 48"><path d="M24 4c9 0 16 12 16 23a16 16 0 0 1-32 0C8 16 15 4 24 4Z" fill="url(#kbg-caylak)"/><path d="M8.5 25l5-4 4 5 5-5 4 5 5-5 4 5 4.5-3.5" stroke="#fff8e0" stroke-width="2.6" stroke-linejoin="round" fill="none"/><circle cx="19" cy="33" r="2.4" fill="#5a3a0a"/><circle cx="29" cy="33" r="2.4" fill="#5a3a0a"/><path d="M22 38h4l-2 2.6Z" fill="#ff7a2e"/></symbol>
+ <symbol id="kb-beta" viewBox="0 0 48 48"><path d="M24 2.5 43 13.3v21.4L24 45.5 5 34.7V13.3Z" fill="url(#kbg-beta)"/><path d="M24 6.8 39.3 15.5v17L24 41.2 8.7 32.5v-17Z" fill="#000" opacity=".18"/><ellipse cx="24" cy="24" rx="22" ry="8" transform="rotate(-24 24 24)" stroke="#ffd27a" stroke-width="2.4" fill="none"/><path d="M19.6 36V17.6a4.6 4.6 0 0 1 9.2 0c0 2.7-1.9 4.1-4.3 4.3 3.1.3 5.2 2 5.2 4.9 0 3.2-2.5 5.1-5.5 5.1-1.8 0-3.5-.7-4.5-1.9" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="41" cy="15" r="2.4" fill="#ffd27a"/></symbol>
+</defs></svg>
+<div class="S" id="bg"></div><div class="S" id="bg2"></div>
+<div class="S" id="s1">
+ <div id="cnt"><div class="roll hot" id="r0"></div><div class="roll hot" id="r1"></div></div>
+ <div class="big" id="t1">KANKA OLDUK 🎉</div>
+ <div class="sub" id="t1s">hepinize teşekkürler 🧡</div>
+ <div id="conf"></div>
+</div>
+<div class="S" id="s2">
+ <div class="big" id="s2h">işte o an 👇</div>
+ <div class="chat" id="chat">
+  <div class="msg" id="m1"><div class="av" style="background:#ff8a4c;color:#1a0f0a">K</div><div style="flex:1"><div class="nm">Kanka Bot<span class="tag">BOT</span><small>bugün</small></div>
+   <div class="emb"><h4>hoş geldin, yeni yüz! 🎉</h4><p>yeni bir kanka aramıza katıldı. kendini #tanışma odasında tanıt!</p>
+   <div class="fl"><div id="f1"><small>ÜYE</small><b>100. kanka</b></div><div><small>ROZET</small><b>🧪 Beta Tester</b></div></div></div></div></div>
+  <div class="msg" id="m2"><div class="av" style="background:#6a4bff">P</div><div><div class="nm">Pisago<small>bugün</small></div><div class="tx">100. kankamız geldi 🥳</div></div></div>
+  <div class="msg" id="m3" style="margin:0"><div class="av" style="background:#3fcf8e;color:#07261a">B</div><div><div class="nm">kanka<small>bugün</small></div><div class="tx">hoş bulduk 🧡</div></div></div>
+ </div>
+ <div id="hl"></div>
+ <div class="sub" id="s2s" style="top:1500px">kanka hq'nun 100. üyesi bugün geldi</div>
+</div>
+<div class="S" id="s3">
+ <div class="rays" id="rays"></div>
+ <div class="big" id="t3">İLK 100'E ÖZEL</div>
+ <svg class="bdg" id="be" viewBox="0 0 48 48"><use href="#kb-erken"/></svg>
+ <svg class="bdg" id="bb" viewBox="0 0 48 48"><use href="#kb-beta"/></svg>
+ <svg id="lock" viewBox="0 0 48 48"><circle cx="24" cy="24" r="23" fill="#1a120c" stroke="#5a4a40" stroke-width="2"/><path d="M15.5 22v-4a8.5 8.5 0 0 1 17 0v4M13 22h22v14H13z" fill="none" stroke="#e8d8cc" stroke-width="3.4" stroke-linejoin="round"/></svg>
+ <div id="stamp">KAPANDI</div>
+ <div class="sub" id="t3s"></div>
+</div>
+<div class="S" id="s4">
+ <div class="big" id="t4">NUMARAN <span class="cy">KALICI</span></div>
+ <div class="pnl" id="pnl">
+  <div class="hero"><div class="rays2" id="rays2"></div><svg width="300" height="300" viewBox="0 0 48 48" style="position:relative;filter:drop-shadow(0 20px 40px #6a4bff88)"><use href="#kb-beta"/></svg></div>
+  <h3>Beta Tester</h3>
+  <div class="chips"><span>EFSANEVİ</span><span>SINIRLI</span></div>
+  <p>Kanka betasındaki ilk 300 kişiden biri</p>
+  <div class="bbox"><div class="r"><b class="cy" id="num">#101 / 300</b><span>senin numaran</span></div><div class="bar"><i id="bar"></i></div></div>
+ </div>
+ <div class="sub" id="t4s">300 dolunca bir daha verilmeyecek</div>
+</div>
+<div class="S" id="s5">
+ <div class="big" id="t5a">beta rozeti için</div>
+ <div class="big hot" id="n5">200</div>
+ <div class="big" id="t5b">YER KALDI</div>
+ <div class="sub" id="t5c">kaç numara olacaksın? 👀</div>
+ <img id="logo" src="hq.png">
+ <div id="url">kankahq.com</div>
+</div>
+<div id="flash"></div><div id="prog"></div>
+<script>
+const TOT=22.5;
+const MARKS={pop:[1.55,3.6,4.3,5.0,5.7,8.3,9.9,12.6,14.6,17.4,18.6,19.6],tick:[.35,.75,1.15],type:[],whoosh:[3.1,7.1,9.6,12.1,17.0],fail:[8.3]};
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>cl((t-a)/(b-a)),eo=x=>1-Math.pow(1-x,3),bk=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)},L=(a,b,x)=>a+(b-a)*x;
+const vis=(id,on)=>$(id).style.display=on?'':'none';
+// konfeti
+let rs=7;const rnd=()=>(rs=(rs*16807)%2147483647)/2147483647;
+const CC=['#ff8a4c','#ffcf5c','#7cf0ff','#6a4bff','#3fcf8e','#ff6b9a','#fff'];const P=[];
+for(let i=0;i<110;i++){const d=document.createElement('i');d.className='cf';d.style.background=CC[i%CC.length];$('conf').appendChild(d);
+ const a=-Math.PI/2+(rnd()-.5)*2.4,v=900+rnd()*1500;P.push({d,vx:Math.cos(a)*v,vy:Math.sin(a)*v,rot:rnd()*720,sp:(rnd()-.5)*1400,w:.5+rnd()*.7});}
+function setT(t){
+  $('prog').style.width=(t/TOT*100)+'%';
+  $('bg2').style.opacity=seg(t,9.6,10.2)*(1-seg(t,17,17.5));
+  // S1 0-3.2
+  vis('s1',t<3.3);
+  if(t<3.3){
+    const nums=[97,98,99,100],k=Math.min(3,Math.floor(t/.4)),f=k<3?eo(seg(t%.4,0,.18)):1;
+    $('r0').textContent=nums[Math.max(0,k-1)];$('r1').textContent=nums[k];
+    $('r0').style.transform=`translateY(${-420*f}px)`;$('r0').style.opacity=k===0?0:1-f;$('r1').style.transform=`translateY(${420*(1-f)}px)`;
+    const pp=k===3?1+.12*Math.sin(seg(t,1.2,1.6)*Math.PI):1;$('cnt').style.transform=`scale(${pp})`;
+    const a=bk(seg(t,1.55,1.9));$('t1').style.opacity=seg(t,1.55,1.65);$('t1').style.transform=`scale(${L(1.5,1,a)})`;
+    $('t1s').style.opacity=seg(t,2.1,2.4);
+    const ct=t-1.55;P.forEach(p=>{if(ct<0){p.d.style.opacity=0;return;}p.d.style.opacity=1-seg(ct,1.3,1.7);
+      const x=540+p.vx*ct,y=780+p.vy*ct+1500*ct*ct;p.d.style.transform=`translate(${x}px,${y}px) rotate(${p.rot+p.sp*ct}deg) scale(${p.w},${Math.abs(Math.cos(ct*8+p.rot))})`;});
+    $('s1').style.opacity=1-seg(t,3.0,3.3);
+  }
+  // S2 3.1-7.3
+  vis('s2',t>=3.1&&t<7.4);
+  if(t>=3.1&&t<7.4){const o=1-seg(t,7.1,7.4);$('s2').style.opacity=o;
+    $('s2h').style.opacity=seg(t,3.1,3.3);$('s2h').style.transform=`translateY(${L(-40,0,eo(seg(t,3.1,3.4)))}px)`;
+    $('chat').style.transform=`translateY(${L(900,0,eo(seg(t,3.2,3.7)))}px)`;
+    [['m1',3.6],['m2',4.3],['m3',5.0]].forEach(([id,s])=>{const e=bk(seg(t,s,s+.3));$(id).style.opacity=seg(t,s,s+.1);$(id).style.transform=`scale(${L(.85,1,e)})`;$(id).style.transformOrigin='left center';});
+    $('s2s').style.opacity=seg(t,6.0,6.3);
+    const h=$('hl'),f=$('f1').getBoundingClientRect(),hp=seg(t,5.7,6.0);h.style.left=(f.left-16)+'px';h.style.top=(f.top-12)+'px';h.style.width=(f.width+32)+'px';h.style.height=(f.height+24)+'px';h.style.opacity=hp;h.style.transform=`scale(${L(1.4,1,bk(hp))})`;
+  }
+  // S3 7.1-12.3
+  vis('s3',t>=7.1&&t<12.4);
+  if(t>=7.1&&t<12.4){$('s3').style.opacity=seg(t,7.1,7.4)*(1-seg(t,12.1,12.4));
+    const er=t<9.6;$('t3').innerHTML=er?"İLK 100'E ÖZEL":'SIRADA: <span class="cy">İLK 300</span>';
+    $('t3').style.opacity=er?seg(t,7.2,7.4):seg(t,9.9,10.1);$('t3').style.transform=`scale(${er?1:L(1.4,1,bk(seg(t,9.9,10.2)))})`;
+    const be=bk(seg(t,7.2,7.6));vis('be',t<9.9);$('be').style.transform=`scale(${L(.3,1,be)*(t>9.6?1-eo(seg(t,9.6,9.9)):1)}) translateY(${Math.sin(t*2)*8}px)`;
+    $('be').style.filter=t>8.3?`grayscale(${seg(t,8.3,8.6)}) brightness(${L(1,.55,seg(t,8.3,8.6))})`:'';
+    const lk=bk(seg(t,8.3,8.6));vis('lock',t>=8.3&&t<9.7);$('lock').style.transform=`translateY(${L(-300,0,eo(seg(t,8.3,8.5)))}px) scale(${L(1.4,1,lk)})`;$('lock').style.opacity=1-seg(t,9.5,9.7);
+    vis('stamp',t>=8.5&&t<9.7);$('stamp').style.opacity=seg(t,8.5,8.6)*(1-seg(t,9.5,9.7));$('stamp').style.transform=`translateX(-50%) rotate(-10deg) scale(${L(2,1,eo(seg(t,8.5,8.7)))})`;
+    const bb=bk(seg(t,9.9,10.4));vis('bb',t>=9.9);$('bb').style.transform=`scale(${L(.2,1,bb)}) rotate(${L(-200,0,eo(seg(t,9.9,10.5)))}deg) translateY(${Math.sin(t*2)*10}px)`;
+    $('rays').style.opacity=seg(t,9.9,10.4);$('rays').style.transform=`rotate(${t*14}deg)`;
+    $('t3s').textContent=er?(t>8.5?'erken kanka rozeti artık verilmiyor':'erken kanka rozeti'):'numaralı beta rozeti 🧪';
+    $('t3s').style.opacity=er?seg(t,7.5,7.8):seg(t,10.6,10.9);$('t3s').style.color=er&&t>8.5?'#ff8a8a':'#d9c4b2';
+  }
+  // S4 12.1-17.2
+  vis('s4',t>=12.1&&t<17.3);
+  if(t>=12.1&&t<17.3){$('s4').style.opacity=1-seg(t,17,17.3);
+    $('t4').style.opacity=seg(t,12.2,12.4);$('t4').style.transform=`translateY(${L(-40,0,eo(seg(t,12.2,12.5)))}px)`;
+    const e=bk(seg(t,12.3,12.8));$('pnl').style.opacity=seg(t,12.3,12.45);$('pnl').style.transform=`scale(${L(.7,1,e)})`;
+    $('rays2').style.transform=`rotate(${t*16}deg)`;
+    const n=Math.round(L(1,101,eo(seg(t,12.7,14.6))));$('num').textContent='#'+String(n).padStart(3,'0')+' / 300';
+    $('bar').style.width=(n/300*100)+'%';
+    $('t4s').style.opacity=seg(t,15.0,15.3);
+  }
+  // S5 17-22.5
+  vis('s5',t>=17);
+  if(t>=17){$('t5a').style.opacity=seg(t,17.1,17.3);
+    const a=bk(seg(t,17.4,17.8)),n=Math.round(L(300,200,eo(seg(t,17.4,18.4))));$('n5').textContent=n;$('n5').style.opacity=seg(t,17.4,17.5);$('n5').style.transform=`scale(${L(1.6,1,a)*(t>18.4?1+.03*Math.sin((t-18.4)*6):1)})`;
+    $('t5b').style.opacity=seg(t,18.6,18.7);$('t5b').style.transform=`scale(${L(1.4,1,bk(seg(t,18.6,18.9)))})`;
+    $('t5c').style.opacity=seg(t,19.1,19.4);
+    const l=bk(seg(t,19.6,19.95));$('logo').style.opacity=seg(t,19.6,19.7);$('logo').style.transform=`scale(${L(.3,1,l)}) translateY(${Math.sin(t*2)*8}px)`;
+    const u=bk(seg(t,19.9,20.3)),p=t>20.5?1+.035*Math.max(0,Math.sin((t-20.5)*5.5)):1;$('url').style.opacity=seg(t,19.9,20);$('url').style.transform=`translateX(-50%) scale(${L(.5,1,u)*p})`;}
+  $('flash').style.opacity=t>1.55&&t<1.8?.45*(1-seg(t,1.55,1.8)):t>9.9&&t<10.15?.35*(1-seg(t,9.9,10.15)):0;
+}
+setT(0);
+</script></body></html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0d0a08;font-family:'Inter Display','Inter','Poppins',sans-serif;color:#f9efe4}
+.S{position:absolute;inset:0}
+.hot{background:linear-gradient(120deg,#ffe08a,#ff8a4c 45%,#ff3d1f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.big{font-weight:900;letter-spacing:-4px;line-height:.92;text-align:center;text-transform:uppercase}
+.ttl{position:absolute;left:0;right:0;text-align:center}
+#bg{background:radial-gradient(1100px 1100px at 50% 40%,#ff8a4c26,transparent 62%)}
+#grain{background-image:radial-gradient(#ffffff08 1px,transparent 1px);background-size:6px 6px;opacity:.6}
+.small{font-weight:800;font-size:54px;letter-spacing:6px;text-transform:uppercase;color:#c9b8a8}
+.sub{font-weight:700;font-size:58px;color:#f9efe4}
+.stamp{display:inline-block;color:#ff3b30;border:14px solid #ff3b30;border-radius:28px;padding:8px 38px;transform:rotate(-7deg)}
+#day{font-size:420px;font-weight:900;letter-spacing:-18px;line-height:1}
+/* özellik kartı */
+.card{position:absolute;left:70px;right:70px;top:300px;height:1240px;border-radius:64px;background:linear-gradient(180deg,#22180f,#140f0a);border:3px solid #ffffff14;box-shadow:0 50px 120px #000a;overflow:hidden}
+.card .em{font-size:150px;text-align:center;margin-top:70px}
+.card h2{font-size:92px;font-weight:900;letter-spacing:-3px;line-height:1.02;text-align:center;margin:26px 50px 0}
+.card .mock{position:absolute;left:60px;right:60px;bottom:70px;height:560px;border-radius:40px;overflow:hidden}
+.num{position:absolute;top:60px;right:70px;font-weight:900;font-size:44px;color:#ff8a4c}
+/* mocklar */
+.game{background:linear-gradient(160deg,#1f3b55,#0b1724 55%,#2c1a0c);}
+.game .cross{position:absolute;left:50%;top:55%;width:60px;height:60px;margin:-30px;border:5px solid #fff8;border-radius:50%}
+.game .hud{position:absolute;left:30px;bottom:26px;font-weight:900;font-size:40px;color:#fff;opacity:.85}
+.toast{position:absolute;right:26px;top:26px;width:440px;background:#1c1510ee;border:3px solid #ff8a4c;border-radius:28px;padding:22px 26px;font-size:34px;font-weight:700;display:flex;gap:16px;align-items:center}
+.toast i{width:66px;height:66px;border-radius:50%;background:#b07cff;flex:none;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:34px}
+.toast small{display:block;color:#c9b8a8;font-size:28px;font-weight:600}
+.match{background:#140f0a;border:3px solid #ffffff14;display:flex;align-items:center;gap:36px;padding:40px}
+.match .ch{width:200px;height:200px;border-radius:50%;background:conic-gradient(#ffd25a,#ff8a4c,#ff3d1f,#ffd25a);flex:none;display:grid;place-items:center;font-size:110px}
+.match b{display:block;font-size:84px;font-weight:900;color:#4cd98a;letter-spacing:-2px}
+.match span{display:block;font-size:52px;font-weight:800;margin-top:8px}
+.match small{display:block;font-size:34px;color:#c9b8a8;margin-top:10px}
+.code{background:#0a0807;border:3px solid #ffffff14;padding:44px;font-family:'JetBrains Mono','DejaVu Sans Mono',monospace;font-size:38px;line-height:1.55;color:#e8dccf}
+.code .k{color:#ff8a4c}.code .s{color:#4cd98a}.code .c{color:#7a6a5e}
+.badge{display:grid;place-items:center}
+.badge .r{width:380px;height:380px;border-radius:50%;background:conic-gradient(#ffe08a,#ff8a4c,#ff3d1f,#ffe08a);padding:20px;box-shadow:0 0 120px #ff8a4c77}
+.badge .r div{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3a2615,#120c08 70%);display:grid;place-items:center;font-size:190px}
+.lock{background:#140f0a;border:3px solid #ffffff14;padding:46px}
+.lock .bub{background:#2a1f16;border-radius:30px;padding:26px 30px;font-size:40px;font-weight:700;margin-bottom:22px;width:80%}
+.lock .bub.me{margin-left:auto;background:#ff8a4c33}
+.lock .bub span{filter:blur(9px)}
+.lock .pad{position:absolute;inset:0;display:grid;place-items:center;font-size:170px}
+.list{background:#140f0a;border:3px solid #ffffff14;padding:56px 60px;font-size:64px;font-weight:900;line-height:1.75}
+.list s{color:#ff3b30;text-decoration-thickness:8px}
+/* yorumlar */
+.cm{position:absolute;left:90px;right:90px;background:#22180f;border:3px solid #ffffff18;border-radius:40px;padding:30px 36px;display:flex;align-items:center;gap:26px;font-size:46px;font-weight:700}
+.cm i{width:84px;height:84px;border-radius:50%;flex:none;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:40px;color:#fff}
+.cm .ok{margin-left:auto;flex:none;background:#4cd98a;color:#0d0a08;font-weight:900;font-size:38px;padding:10px 22px;border-radius:999px}
+.pill{display:inline-block;background:#ff8a4c;color:#1a0f07;font-weight:900;font-size:78px;padding:26px 60px;border-radius:999px;letter-spacing:-1px}
+#fade{background:#0d0a08;opacity:0}
+</style></head><body>
+<div class="S" id="bg"></div><div class="S" id="grain"></div>
+
+<div class="S" id="s0">
+  <div class="ttl small" id="h0" style="top:520px">771 gündür</div>
+  <div class="ttl big" id="h1" style="top:640px;font-size:170px;text-transform:none">DISCORD</div>
+  <div class="ttl big" id="h2" style="top:830px;font-size:150px"><span class="stamp">kapalı</span></div>
+  <div class="ttl sub" id="h3" style="top:1150px">ben de kendi Discord'umu<br>yaptım 🦝</div>
+</div>
+
+<div class="S" id="s1">
+  <div class="ttl small" style="top:560px">o videodan</div>
+  <div class="ttl hot" id="day" style="top:660px">1</div>
+  <div class="ttl big" id="dl" style="top:1110px;font-size:130px">gün sonra</div>
+  <div class="ttl sub" id="dq" style="top:1300px;color:#c9b8a8">bakın ne oldu 👇</div>
+</div>
+
+<div class="S" id="s2"></div>
+
+<div class="S" id="s3">
+  <div class="ttl big" id="y0" style="top:250px;font-size:120px">hepsi <span class="hot">sizin</span><br>fikrinizdi</div>
+  <div class="cm" id="c0" style="top:660px"><i style="background:#5a6bff">N</i>kanal linkleri tıklanmıyor<span class="ok">✓ yapıldı</span></div>
+  <div class="cm" id="c1" style="top:870px"><i style="background:#ff6bb0">D</i>güncellemede sesten atıyor<span class="ok">✓ yapıldı</span></div>
+  <div class="cm" id="c2" style="top:1080px"><i style="background:#4cd98a">A</i>rozetler çok kolay alınıyor<span class="ok">✓ yapıldı</span></div>
+  <div class="cm" id="c3" style="top:1290px"><i style="background:#ffd25a;color:#1a0f07">S</i>mobilde foto yüklenmiyor<span class="ok">✓ yapıldı</span></div>
+</div>
+
+<div class="S" id="s4">
+  <div class="ttl big" id="z0" style="top:560px;font-size:150px">sıradakini</div>
+  <div class="ttl big hot" id="z1" style="top:720px;font-size:190px">sen seç</div>
+  <div class="ttl sub" id="z2" style="top:1000px">yorumlara yaz 👇</div>
+  <div class="ttl" id="z3" style="top:1220px"><span class="pill">kankahq.com</span></div>
+</div>
+<div class="S" id="fade"></div>
+
+<script>
+const TOT=24.2;
+const F=[ // [emoji, başlık, mock html]
+ ['🎮','Oyundayken mesajlar<br><span class="hot">köşede</span>',`<div class="mock game"><div class="cross"></div><div class="hud">❤ 100 · 🔫 30/90</div><div class="toast" id="tst"><i>N</i><div>maça gel hadi<small>NovaVesta · DM</small></div></div></div>`],
+ ['🏆','Maç bitince kartın<br><span class="hot">sohbete düşüyor</span>',`<div class="mock match"><div class="ch">⚔️</div><div><b>ZAFER</b><span>12 / 3 / 8</span><small>Dereceli · 31 dk</small></div></div>`],
+ ['🤖','Kendi <span class="hot">botunu</span><br>yazabiliyorsun',`<div class="mock code"><span class="c">// kanka.js</span><br><span class="k">bot</span>.komut(<span class="s">'zar'</span>, k =&gt;<br>&nbsp;&nbsp;k.cevapla(<span class="s">'🎲 4'</span>))<br><span class="k">bot</span>.baglan()</div>`],
+ ['🐞','Hata bulana<br><span class="hot">özel rozet</span>',`<div class="mock badge"><div class="r" id="bdg"><div>🐞</div></div></div>`],
+ ['🔒','DM\'ler uçtan uca<br><span class="hot">şifreli</span>',`<div class="mock lock"><div class="bub"><span>yarın kaçta çıkıyoruz</span></div><div class="bub me"><span>8 gibi hazır ol</span></div><div class="bub"><span>tamamdır 👍</span></div><div class="pad" id="lk">🔒</div></div>`],
+ ['🇹🇷','VPN yok,<br><span class="hot">her şey Türkçe</span>',`<div class="mock list"><div id="l0"><s>VPN</s> ❌</div><div id="l1">Türkçe ✅</div><div id="l2">Ücretsiz ✅</div></div>`],
+];
+const FS=[7.08,9.22,11.47,13.05,14.89,16.90], FE=19.0, FA=FS[0]; // özellik kartları: seslendirmedeki cümle başlangıçları
+const $=id=>document.getElementById(id);
+$('s2').innerHTML=F.map((f,i)=>`<div class="card" id="k${i}"><div class="num">${i+1}/6</div><div class="em">${f[0]}</div><h2>${f[1]}</h2>${f[2]}</div>`).join('');
+const MARKS={type:[],pop:[0.05,1.95,2.85,...FS.map(a=>a+.18),19.55,19.9,20.25,20.6,21.7,22.0,22.4],whoosh:[4.6,...FS,19.0,21.5],tick:[5.0,5.15,5.3,5.45,5.6,5.75,5.9,6.05,6.2],fail:[1.95]};
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>cl((t-a)/(b-a)),eo=x=>1-Math.pow(1-x,3),bk=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)},L=(a,b,x)=>a+(b-a)*x;
+const vis=(id,on)=>$(id).style.display=on?'':'none';
+function scene(id,t,a,b,fi=.12,fo=.18){const on=t>=a&&t<b;vis(id,on);if(on)$(id).style.opacity=seg(t,a,a+fi)*(1-seg(t,b-fo,b));return on;}
+const pop=(el,t,a,from=1.6,dur=.28,extra='')=>{el.style.opacity=seg(t,a,a+.06);el.style.transform=`scale(${L(from,1,bk(seg(t,a,a+dur)))}) ${extra}`;};
+const up=(el,t,a,d=.35)=>{const k=eo(seg(t,a,a+d));el.style.opacity=k;el.style.transform=`translateY(${L(60,0,k)}px)`;};
+const shake=(t,a,d=.35,amp=18)=>t>a&&t<a+d?Math.sin((t-a)*70)*amp*(1-(t-a)/d):0;
+function setT(t){
+  // hafif kamera nefesi
+  $('bg').style.transform=`scale(${1+.04*Math.sin(t*.9)})`;
+  if(scene('s0',t,0,4.6,0)){
+    up($('h0'),t,-.2); pop($('h1'),t,-.1,1.3);
+    const st=$('h2').firstChild; $('h2').style.opacity=seg(t,1.95,2.0); st.style.transform=`rotate(-7deg) scale(${L(2.6,1,bk(seg(t,1.95,2.2)))})`;
+    $('s0').style.transform=`translateX(${shake(t,1.95)}px)`;
+    up($('h3'),t,2.85);
+  }
+  if(scene('s1',t,4.6,7.0)){
+    const d=Math.max(1,Math.min(10,1+Math.floor(seg(t,4.95,6.2)*9.99)));
+    $('day').textContent=d; $('day').style.transform=`scale(${1+.06*(1-((t-4.95)*7.2%1))})`;
+    pop($('dl'),t,4.75,1.3); up($('dq'),t,6.0);
+  }
+  if(scene('s2',t,FA-.25,FE,0,0)){
+    F.forEach((_,i)=>{const a=FS[i],b=FS[i+1]||FE,el=$('k'+i),on=t>=a-.25&&t<b;el.style.display=on?'':'none';if(!on)return;
+      const kin=eo(seg(t,a-.25,a+.12)), kout=seg(t,b-.22,b);
+      el.style.transform=`translateX(${L(1100,0,kin)-kout*1100}px) rotate(${L(6,0,kin)-kout*6}deg)`;el.style.opacity=1-kout*.3;
+      pop(el.querySelector('.em'),t,a+.05,.3,.35);
+      const m=el.querySelector('.mock'); up(m,t,a+.25,.4);
+    });
+    const ts=$('tst'); if(ts){const a=FS[0]+.55; ts.style.transform=`translateX(${L(520,0,eo(seg(t,a,a+.35)))}px)`;}
+    const bd=$('bdg'); if(bd) bd.style.transform=`rotate(${(t-FS[3])*40}deg) scale(${L(.4,1,bk(seg(t,FS[3]+.25,FS[3]+.6)))})`;
+    const lk=$('lk'); if(lk) pop(lk,t,FS[4]+.55,2.2,.35);
+    ['l0','l1','l2'].forEach((id,j)=>{const e=$(id); if(e) up(e,t,FS[5]+.35+j*.3,.25);});
+  }
+  if(scene('s3',t,19.0,21.5)){
+    pop($('y0'),t,19.05,1.25,.3);
+    ['c0','c1','c2','c3'].forEach((id,j)=>{const a=19.45+j*.35,e=$(id),k=eo(seg(t,a,a+.3));e.style.opacity=k;e.style.transform=`translateX(${L(-700,0,k)}px)`;
+      const ok=e.querySelector('.ok'); pop(ok,t,a+.28,2,.25);});
+  }
+  if(scene('s4',t,21.5,TOT+1,.1,0)){
+    pop($('z0'),t,21.6,1.4); pop($('z1'),t,22.0,2.0,.32); up($('z2'),t,22.4); pop($('z3'),t,22.8,1.5);
+    $('z1').style.transform+=` rotate(${Math.sin(t*5)*1.5}deg)`;
+  }
+  $('fade').style.opacity=seg(t,TOT-.35,TOT); // döngü: siyah başlangıca bağlanır
+}
+setT(0);
+</script></body></html>

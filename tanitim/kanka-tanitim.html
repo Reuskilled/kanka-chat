@@ -1,0 +1,312 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#07070a;font-family:'Inter Display','Inter',sans-serif;color:#f4f4f6}
+.L{position:absolute;inset:0}
+#bg{background:#07070a}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55}
+#b1{width:900px;height:900px;background:#d4ff00;opacity:.14}
+#b2{width:1000px;height:1000px;background:#7c5cff;opacity:.16}
+#b3{width:700px;height:700px;background:#00f5d4;opacity:.08}
+#grid{background-image:linear-gradient(#ffffff08 2px,transparent 2px),linear-gradient(90deg,#ffffff08 2px,transparent 2px);background-size:96px 96px;-webkit-mask-image:radial-gradient(900px 1400px at 50% 50%,#000 25%,transparent 75%)}
+#grain{background-image:radial-gradient(#ffffff0b 1px,transparent 1px);background-size:4px 4px;opacity:.6;pointer-events:none;z-index:90}
+#vign{background:radial-gradient(1200px 1800px at 50% 50%,transparent 55%,#000c 100%);z-index:89;pointer-events:none}
+#parts i{position:absolute;width:6px;height:6px;border-radius:50%;background:#d4ff00;box-shadow:0 0 12px #d4ff00}
+#flash{background:#fff;opacity:0;z-index:95;pointer-events:none}
+#sweep{left:-500px;top:-500px;width:420px;height:3000px;background:linear-gradient(90deg,transparent,#d4ff0055 40%,#f6ffcc 50%,#d4ff0055 60%,transparent);transform:rotate(20deg);opacity:0;z-index:94;filter:blur(3px);mix-blend-mode:screen}
+.sc{position:absolute;inset:0;opacity:0;will-change:transform,opacity,filter}
+.kick{position:absolute;left:0;right:0;text-align:center;font-weight:800;font-size:32px;letter-spacing:8px;color:#d4ff00}
+.h{position:absolute;left:50px;right:50px;text-align:center;font-weight:900;font-size:108px;letter-spacing:-4px;line-height:1}
+.h .w{display:inline-block;overflow:hidden;vertical-align:bottom;padding:0 6px 8px}
+.h .w>span{display:inline-block}
+.lime{color:#d4ff00}
+.hl{background:linear-gradient(180deg,transparent 62%,#d4ff0040 62%)}
+.sub{position:absolute;left:90px;right:90px;text-align:center;font-weight:600;font-size:40px;color:#a8a8b4;line-height:1.3}
+/* telefon */
+.phone{position:absolute;width:640px;height:1384px;border-radius:92px;background:#0d0d11;padding:22px;box-shadow:0 0 0 3px #2c2c34,0 0 0 9px #111116,0 60px 160px #000c,0 0 120px #d4ff0018;transform-style:preserve-3d}
+.phone .scr{position:relative;width:100%;height:100%;border-radius:72px;overflow:hidden;background:#111}
+.phone .scr img{position:absolute;left:0;top:0;width:100%;display:block}
+.phone .isl{position:absolute;left:50%;top:40px;width:190px;height:54px;margin-left:-95px;border-radius:30px;background:#000;z-index:3}
+.phone .gl{position:absolute;inset:0;border-radius:72px;background:linear-gradient(125deg,#ffffff14,transparent 35%);pointer-events:none;z-index:2}
+.chip{position:absolute;display:flex;align-items:center;gap:16px;padding:22px 34px;border-radius:999px;background:#15151b;border:2px solid #ffffff18;font-weight:800;font-size:40px;white-space:nowrap;box-shadow:0 20px 60px #0009}
+.chip.l{background:#d4ff00;color:#0b0b0e;border-color:#d4ff00;box-shadow:0 20px 60px #d4ff0040}
+.chip .d{width:16px;height:16px;border-radius:50%;background:#d4ff00;box-shadow:0 0 14px #d4ff00}
+.chip.l .d{background:#0b0b0e;box-shadow:none}
+/* hook */
+.err{position:absolute;left:110px;right:110px;top:640px;border-radius:40px;background:#f4f4f6;color:#1d1d22;padding:70px 64px;box-shadow:0 50px 140px #000c}
+.err .bar{display:flex;align-items:center;gap:16px;padding:18px 26px;border-radius:18px;background:#e4e4e9;font-size:32px;font-weight:600;color:#5a5a66;margin-bottom:60px}
+.err .bar i{width:22px;height:22px;border-radius:50%;background:#e24b4b}
+.err h3{font-size:62px;font-weight:900;letter-spacing:-2px;line-height:1.05;margin-bottom:22px}
+.err p{font-size:34px;color:#5a5a66;font-weight:500;line-height:1.35}
+.err .code{margin-top:44px;font-family:'DejaVu Sans Mono',monospace;font-size:28px;color:#9a9aa6}
+.shard{position:absolute;background:#f4f4f6;border-radius:8px}
+/* logo */
+.ring{position:absolute;left:50%;top:50%;border-radius:50%;border:4px solid #d4ff00;transform:translate(-50%,-50%)}
+.logo{position:absolute;left:50%;top:760px;width:300px;height:300px;margin-left:-150px;border-radius:84px;background:#0d0d11;display:grid;place-items:center;box-shadow:0 0 0 3px #ffffff14,0 40px 120px #000,0 0 160px #d4ff0040}
+.logo img{width:230px;height:230px}
+.word{position:absolute;left:0;right:0;top:1130px;text-align:center;font-weight:900;font-size:150px;letter-spacing:-6px}
+.word span{display:inline-block}
+/* arena */
+.gc{position:absolute;width:420px;height:300px;border-radius:34px;overflow:hidden;box-shadow:0 30px 90px #000c,0 0 0 2px #ffffff14;background:#111}
+.gc img{width:100%;height:100%;object-fit:cover}
+.gc b{position:absolute;left:24px;bottom:20px;font-size:40px;font-weight:900;text-shadow:0 4px 20px #000}
+.gc:after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,#000c,transparent 55%)}
+.gc b{z-index:2}
+/* notalar */
+.note{position:absolute;font-size:70px;color:#d4ff00;text-shadow:0 0 24px #d4ff0090;font-weight:900}
+/* kilit */
+.lock{position:absolute;left:50%;top:640px;width:300px;height:340px;margin-left:-150px}
+.lock .sh{position:absolute;left:60px;top:0;width:180px;height:200px;border:30px solid #d4ff00;border-bottom:0;border-radius:100px 100px 0 0}
+.lock .bd{position:absolute;left:0;top:150px;width:300px;height:220px;border-radius:44px;background:#d4ff00;box-shadow:0 0 120px #d4ff0060}
+.lock .kh{position:absolute;left:132px;top:220px;width:36px;height:80px;border-radius:18px;background:#0b0b0e}
+.bub{position:absolute;left:120px;right:120px;padding:34px 44px;border-radius:40px 40px 40px 12px;background:#18181e;border:2px solid #ffffff14;font-size:46px;font-weight:600;box-shadow:0 30px 80px #000a}
+.bub.me{border-radius:40px 40px 12px 40px;background:#d4ff00;color:#0b0b0e;border-color:#d4ff00}
+.bub small{display:block;font-size:28px;font-weight:800;margin-bottom:10px;opacity:.6}
+.cip{font-family:'DejaVu Sans Mono',monospace;color:#d4ff00;letter-spacing:2px}
+/* laptop */
+.lap{position:absolute;left:60px;width:960px}
+.lap .lid{border-radius:34px 34px 10px 10px;background:#0d0d11;padding:20px;box-shadow:0 0 0 3px #2c2c34,0 50px 140px #000c}
+.lap .lid img{width:100%;display:block;border-radius:14px}
+.lap .base{height:34px;margin:0 -50px;border-radius:0 0 40px 40px;background:linear-gradient(180deg,#2a2a31,#141418);box-shadow:0 20px 50px #000a}
+/* CTA */
+.url{position:absolute;left:0;right:0;top:1150px;text-align:center;font-weight:900;font-size:118px;letter-spacing:-4px}
+.url .c{display:inline-block;width:10px;height:100px;background:#d4ff00;vertical-align:-8px;margin-left:8px}
+.pills{position:absolute;left:0;right:0;top:1340px;display:flex;justify-content:center;gap:20px}
+.pills .chip{position:relative}
+.cursor{position:absolute;width:70px;height:70px;z-index:60}
+.tap{position:absolute;width:120px;height:120px;border-radius:50%;border:5px solid #d4ff00;margin:-60px 0 0 -60px;opacity:0;z-index:59}
+.top{position:absolute;top:96px;left:0;right:0;display:flex;justify-content:center;z-index:80}
+.tag{display:flex;align-items:center;gap:14px;padding:14px 28px;border-radius:999px;background:#111116cc;border:2px solid #ffffff14;font-weight:800;font-size:30px;letter-spacing:4px;color:#cfcfd6}
+.tag img{width:38px;height:38px}
+.prog{position:absolute;left:80px;right:80px;bottom:90px;height:8px;border-radius:6px;background:#ffffff12;overflow:hidden;z-index:80}
+.prog i{display:block;height:100%;background:#d4ff00;box-shadow:0 0 14px #d4ff00}
+</style></head><body>
+<div class="L" id="bg"><div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div></div>
+<div class="L" id="grid"></div>
+<div class="L" id="parts"></div>
+
+<!-- 1: kanca -->
+<div class="sc" id="s1">
+  <div class="kick" style="top:330px" id="s1k">AKŞAM 21.00 · LOBİ KURULDU</div>
+  <div class="h" style="top:400px" id="s1h"><span class="w"><span>Lobi</span></span> <span class="w"><span>hazır.</span></span> <span class="w"><span class="lime">Ama…</span></span></div>
+  <div class="err" id="err"><div class="bar"><i></i>discord.com</div><h3>Bu siteye erişilemiyor</h3><p>Bağlantı engellendi. Arkadaşların seni bekliyor ama sen giremiyorsun.</p><div class="code">ERR_CONNECTION_RESET</div></div>
+  <div id="shards"></div>
+</div>
+<!-- 2: logo -->
+<div class="sc" id="s2">
+  <div class="ring" id="r1"></div><div class="ring" id="r2"></div>
+  <div class="logo" id="lg"><img src="k/logo.png"></div>
+  <div class="word" id="wd"></div>
+  <div class="sub" style="top:1320px" id="s2s">Kankalarınla buluşma yeri.</div>
+</div>
+<!-- 3: sohbet -->
+<div class="sc" id="s3">
+  <div class="kick" style="top:250px">01 · SUNUCULAR</div>
+  <div class="h" style="top:310px;font-size:96px" id="s3h"><span class="w"><span>Sunucunu</span></span> <span class="w"><span>kur,</span></span><br><span class="w"><span class="lime">kankalarını</span></span> <span class="w"><span>topla.</span></span></div>
+  <div class="phone" id="p3" style="left:220px;top:600px"><div class="scr"><img src="k/m-chat.jpg" id="i3"><div class="isl"></div><div class="gl"></div></div></div>
+  <div class="chip l" id="c3a" style="left:110px;top:1540px"><span class="d"></span>kankahq.com/gecelobisi</div>
+  <div class="chip" id="c3b" style="right:70px;top:800px">🎮 Oda simgeleri</div>
+</div>
+<!-- 4: ses -->
+<div class="sc" id="s4">
+  <div class="kick" style="top:250px">02 · SESLİ ODALAR</div>
+  <div class="h" style="top:310px;font-size:100px" id="s4h"><span class="w"><span>Sese</span></span> <span class="w"><span>gir.</span></span><br><span class="w"><span class="lime hl">VPN'siz.</span></span> <span class="w"><span>Takılmadan.</span></span></div>
+  <div class="phone" id="p4" style="left:220px;top:620px"><div class="scr"><img src="k/m-side.jpg" id="i4"><div class="isl"></div><div class="gl"></div></div></div>
+  <div class="chip l" id="c4a" style="left:90px;top:1180px">📺 1080p · 60 FPS yayın</div>
+  <div class="chip" id="c4b" style="right:80px;top:1400px">🎙️ Gürültü engelleme</div>
+  <div class="chip" id="c4c" style="left:110px;top:1600px">🔊 Ses paneli</div>
+</div>
+<!-- 5: arena -->
+<div class="sc" id="s5">
+  <div class="kick" style="top:250px">03 · ARENA</div>
+  <div class="h" style="top:310px;font-size:100px" id="s5h"><span class="w"><span>Seste</span></span> <span class="w"><span>canın</span></span> <span class="w"><span>sıkılırsa</span></span><br><span class="w"><span class="lime">oyna.</span></span></div>
+  <div id="games"></div>
+</div>
+<!-- 6: enstrüman -->
+<div class="sc" id="s6">
+  <div class="kick" style="top:250px">04 · ENSTRÜMANLAR</div>
+  <div class="h" style="top:310px;font-size:100px" id="s6h"><span class="w"><span>Odada</span></span> <span class="w"><span class="lime">gitar</span></span> <span class="w"><span>çal,</span></span><br><span class="w"><span>herkes</span></span> <span class="w"><span>duysun.</span></span></div>
+  <div class="phone" id="p6" style="left:220px;top:600px"><div class="scr"><img src="k/m-ins.jpg" id="i6"><div class="isl"></div><div class="gl"></div></div></div>
+  <div id="notes"></div>
+  <div class="chip" id="c6a" style="left:70px;top:900px">🎸 Gitar</div><div class="chip" id="c6b" style="right:70px;top:1020px">🎹 Piyano</div><div class="chip" id="c6c" style="left:90px;top:1180px">🥁 Davul</div>
+</div>
+<!-- 7: profil -->
+<div class="sc" id="s7">
+  <div class="kick" style="top:250px">05 · PROFİL</div>
+  <div class="h" style="top:310px;font-size:100px" id="s7h"><span class="w"><span>Profilin,</span></span><br><span class="w"><span class="lime">senin</span></span> <span class="w"><span class="lime">tarzın.</span></span></div>
+  <div class="phone" id="p7" style="left:220px;top:600px"><div class="scr"><img src="k/m-prof.jpg" id="i7"><div class="isl"></div><div class="gl"></div></div></div>
+  <div class="chip" id="c7a" style="left:60px;top:880px">🐉 3D efektler</div><div class="chip" id="c7b" style="right:60px;top:1060px">🎨 Temalar</div>
+  <div class="chip" id="c7c" style="left:80px;top:1300px">🏅 Rozetler</div><div class="chip l" id="c7d" style="right:70px;top:1500px">⚡ Spark</div>
+</div>
+<!-- 8: şifreleme -->
+<div class="sc" id="s8">
+  <div class="kick" style="top:250px">06 · GİZLİLİK</div>
+  <div class="h" style="top:310px;font-size:96px" id="s8h"><span class="w"><span>Özel</span></span> <span class="w"><span>mesajların</span></span><br><span class="w"><span class="lime">uçtan</span></span> <span class="w"><span class="lime">uca</span></span> <span class="w"><span class="lime">şifreli.</span></span></div>
+  <div class="lock" id="lk"><div class="sh" id="lks"></div><div class="bd"></div><div class="kh"></div></div>
+  <div class="bub me" id="bb1" style="top:1120px;left:260px"><small>Sen</small><span id="bt1"></span></div>
+  <div class="bub" id="bb2" style="top:1380px;right:260px"><small>Mert</small><span id="bt2"></span></div>
+  <div class="sub" style="top:1690px" id="s8s">Anahtarlar sadece sizin cihazlarınızda.<br>Biz bile okuyamayız.</div>
+</div>
+<!-- 9: cihazlar -->
+<div class="sc" id="s9">
+  <div class="kick" style="top:250px">07 · HER YERDE</div>
+  <div class="h" style="top:310px;font-size:100px" id="s9h"><span class="w"><span>Telefon.</span></span><br><span class="w"><span>Bilgisayar.</span></span><br><span class="w"><span class="lime">Tarayıcı.</span></span></div>
+  <div class="lap" id="lap" style="top:820px"><div class="lid"><img src="k/d-chat.jpg"></div><div class="base"></div></div>
+  <div class="phone" id="p9" style="left:640px;top:1100px;width:360px;height:778px;border-radius:56px;padding:12px"><div class="scr" style="border-radius:46px"><img src="k/m-side.jpg"><div class="gl" style="border-radius:46px"></div></div></div>
+</div>
+<!-- 10: CTA -->
+<div class="sc" id="s10">
+  <div class="ring" id="r3"></div>
+  <div class="logo" id="lg2" style="top:620px;width:240px;height:240px;margin-left:-120px;border-radius:68px"><img src="k/logo.png" style="width:180px;height:180px"></div>
+  <div class="h" style="top:930px;font-size:110px" id="s10h"><span class="w"><span>Gel</span></span> <span class="w"><span class="lime">kanka.</span></span></div>
+  <div class="url" id="url"><span id="ut"></span><span class="c" id="uc"></span></div>
+  <div class="pills"><div class="chip" id="cp1">🇹🇷 Türkçe</div><div class="chip" id="cp2">Ücretsiz</div><div class="chip" id="cp3">Reklamsız</div></div>
+  <div class="sub" style="top:1500px" id="s10s">Telefonda, bilgisayarda, tarayıcıda.</div>
+</div>
+
+<div class="top" id="top"><div class="tag"><img src="k/logo.png">KANKA CHAT</div></div>
+<div class="prog" id="prog"><i id="progi"></i></div>
+<div class="L" id="sweep"></div>
+<div class="L" id="flash"></div>
+<div class="L" id="vign"></div>
+<div class="L" id="grain"></div>
+<script>
+const $=s=>document.querySelector(s);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const seg=(t,a,b)=>cl((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3), eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2, eb=x=>{const c1=1.7,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const ex=x=>x===1?1:1-Math.pow(2,-10*x);
+// sahneler: [id, giriş, çıkış]
+const SC=[['s1',0,4.6],['s2',4.6,8.4],['s3',8.4,14.4],['s4',14.4,20.2],['s5',20.2,26.2],['s6',26.2,30.6],['s7',30.6,36.2],['s8',36.2,41.2],['s9',41.2,46.2],['s10',46.2,53]];
+const TOT=53;
+const MARKS={whoosh:[],pop:[],tick:[],type:[],fail:[],hit:[],swell:[]};
+SC.forEach(([,a])=>{if(a>0)MARKS.whoosh.push(a)});
+MARKS.fail.push(1.7,2.0); MARKS.hit.push(4.6,46.2); MARKS.swell.push(4.6);
+// parçacıklar
+const P=$('#parts'); const PS=[]; for(let i=0;i<46;i++){const e=document.createElement('i');P.appendChild(e);PS.push({e,x:Math.random()*1080,y:Math.random()*1920,s:.3+Math.random()*1.1,v:20+Math.random()*60,ph:Math.random()*6})}
+// kırık parçalar
+const SH=$('#shards'); const SHD=[]; for(let i=0;i<28;i++){const e=document.createElement('div');e.className='shard';const w=60+Math.random()*140,h=40+Math.random()*110;e.style.width=w+'px';e.style.height=h+'px';SH.appendChild(e);SHD.push({e,x:140+Math.random()*800,y:680+Math.random()*520,vx:(Math.random()-.5)*2400,vy:-600-Math.random()*1400,r:(Math.random()-.5)*900})}
+// logo yazısı
+const WD=$('#wd'); 'KANKA'.split('').forEach(c=>{const s=document.createElement('span');s.textContent=c;WD.appendChild(s)}); const WS=[...WD.children];
+// oyun kartları
+const GM=[['bilardo','Bilardo'],['dart','Dart'],['pisti','Pişti'],['kart','Kanka Kart'],['hokey','Masa Hokeyi'],['bilek','Bilek Güreşi'],['asmaca','Harf Tahmin']];
+const G=$('#games'); const GC=GM.map(([f,n],i)=>{const e=document.createElement('div');e.className='gc';e.innerHTML=`<img src="k/${f}.jpg"><b>${n}</b>`;G.appendChild(e);return e});
+// notalar
+const N=$('#notes'); const NT=[]; for(let i=0;i<14;i++){const e=document.createElement('div');e.className='note';e.textContent=['♪','♫','♩','♬'][i%4];N.appendChild(e);NT.push({e,x:300+Math.random()*480,d:i*.26,dx:(Math.random()-.5)*300})}
+// ses efekti işaretleri
+[['c3a',11.6],['c3b',12.4],['c4a',16.8],['c4b',17.5],['c4c',18.2],['c6a',27.6],['c6b',28.0],['c6c',28.4],['c7a',32.4],['c7b',32.9],['c7c',33.4],['c7d',34.0],['cp1',50.2],['cp2',50.45],['cp3',50.7]].forEach(([,t])=>MARKS.pop.push(t));
+GM.forEach((g,i)=>MARKS.pop.push(21.6+i*.22));
+for(let i=0;i<14;i++)MARKS.tick.push(27.0+i*.26);
+const URL='kankahq.com'; for(let i=0;i<URL.length;i++)MARKS.type.push(47.9+i*.09);
+const M1='yarın 9’da buluşalım mı?', M2='olur, ben de gelirim 🙌';
+for(let i=0;i<M1.length;i+=2)MARKS.type.push(37.4+i*.035);
+// sahne kelime animasyonu
+function words(id,t,a,step=.09){document.querySelectorAll('#'+id+' .w>span').forEach((s,i)=>{const k=eo(seg(t,a+i*step,a+i*step+.5));s.style.transform=`translateY(${(1-k)*110}%)`})}
+function pop(el,t,a,from='scale'){const k=seg(t,a,a+.45),b=eb(k);el.style.opacity=cl(k*3);el.style.transform=`scale(${.4+.6*b})`}
+function phone(el,t,a,img,scrollTo=0,dur=3){const k=eo(seg(t,a,a+.9));const tl=Math.sin(t*.7)*3;el.style.transform=`perspective(2400px) translateY(${(1-k)*900}px) rotateX(${(1-k)*30+2}deg) rotateY(${tl-6*(1-k)}deg) rotateZ(${(1-k)*-6}deg)`;el.style.opacity=cl(k*2);if(img&&scrollTo){const s=eio(seg(t,a+1,a+1+dur));img.style.transform=`translateY(${-scrollTo*s}px)`}}
+let last=-1;
+function setT0(t){
+  // arka plan
+  $('#b1').style.transform=`translate(${-200+Math.sin(t*.35)*260}px,${100+Math.cos(t*.3)*300}px)`;
+  $('#b2').style.transform=`translate(${300+Math.cos(t*.27)*300}px,${900+Math.sin(t*.32)*300}px)`;
+  $('#b3').style.transform=`translate(${500+Math.sin(t*.5)*200}px,${400+Math.cos(t*.45)*500}px)`;
+  $('#grid').style.backgroundPosition=`0 ${t*40}px`;
+  PS.forEach(p=>{const y=((p.y-t*p.v)%1920+1920)%1920;p.e.style.transform=`translate(${p.x+Math.sin(t+p.ph)*20}px,${y}px) scale(${p.s})`;p.e.style.opacity=.25+.35*Math.sin(t*2+p.ph)});
+  $('#progi').style.width=(t/TOT*100)+'%';
+  $('#top').style.opacity=t<4.6?0:cl((t-4.6)/0.6)*(t>46?cl(1-(t-46)/0.5):1);
+  // sahne geçişleri: giriş zoom-blur, çıkış hızlı yukarı + bulanık
+  SC.forEach(([id,a,b],i)=>{const e=$('#'+id);const vin=i===0?1:seg(t,a,a+.35),vout=i===SC.length-1?0:seg(t,b-.3,b);
+    if(t<a-.01||t>b+.01){e.style.opacity=0;return}
+    const sc=1+(1-eo(vin))*.18-eo(vout)*.0, ty=-eo(vout)*260, bl=(1-vin)*14+vout*18;
+    e.style.opacity=Math.min(vin,1-vout);e.style.transform=`translateY(${ty}px) scale(${sc+vout*.06})`;e.style.filter=bl>.3?`blur(${bl}px)`:'none'});
+  // flaş ve ışık süpürme
+  const af=(h,d,g=1)=>t>=h&&t<h+d?(1-(t-h)/d)*g:0;
+  let fl=Math.max(af(4.6,.45),af(46.2,.45),af(1.7,.25,.35)); SC.forEach(([,a])=>{if(a>4.7&&a<46)fl=Math.max(fl,af(a,.25,.18))});
+  $('#flash').style.opacity=t<0.05?0:fl;
+  const sw=[5.4,14.6,30.9,46.8].map(s=>seg(t,s,s+.9)).find(k=>k>0&&k<1);
+  $('#sweep').style.opacity=sw?Math.sin(sw*Math.PI)*.9:0;$('#sweep').style.left=(-500+(sw||0)*2100)+'px';
+  // 1: kanca
+  if(t<4.7){
+    words('s1',t,.15,.12); $('#s1k').style.opacity=seg(t,.1,.5);
+    const e=$('#err'); const k=eb(seg(t,.9,1.4));
+    const sh=(t>1.7&&t<2.5)?Math.sin(t*90)*18*(1-seg(t,1.7,2.5)):0;
+    const br=seg(t,3.85,3.95);
+    e.style.opacity=br>0?0:cl(seg(t,.9,1.1)); e.style.transform=`translateX(${sh}px) scale(${.6+.4*k}) rotate(${sh*.08}deg)`;
+    // glitch
+    const g=(t>1.7&&t<2.3)||(t>3.4&&t<3.8); e.style.filter=g?`hue-rotate(${Math.sin(t*50)*60}deg) contrast(1.4)`:'none';
+    e.querySelector('h3').style.color=t>1.7?'#d23c3c':'#1d1d22';
+    const bt=Math.max(0,t-3.9); SHD.forEach(s=>{s.e.style.opacity=bt>0?cl(1-bt/0.7):0;s.e.style.transform=`translate(${s.x+s.vx*bt}px,${s.y+s.vy*bt+1800*bt*bt}px) rotate(${s.r*bt}deg)`});
+  }
+  // 2: logo
+  if(t>4.4&&t<8.6){const L=t-4.6;
+    const k=eb(seg(L,0,.6)); $('#lg').style.transform=`scale(${k}) rotate(${(1-seg(L,0,.6))*-25}deg)`;$('#lg').style.opacity=cl(L*4);
+    [['#r1',0],['#r2',.18]].forEach(([s,d])=>{const q=seg(L,d,d+1.2);const r=$(s);r.style.width=r.style.height=(300+q*1400)+'px';r.style.opacity=(1-q)*.8;r.style.top='910px'});
+    WS.forEach((s,i)=>{const q=eb(seg(L,.35+i*.07,.75+i*.07));s.style.transform=`translateY(${(1-q)*120}px) scale(${.5+.5*q})`;s.style.opacity=cl(q*2);s.style.color=i===4&&L>1.1?'#d4ff00':'#f4f4f6'});
+    $('#s2s').style.opacity=seg(L,1.1,1.6);$('#s2s').style.transform=`translateY(${(1-eo(seg(L,1.1,1.6)))*30}px)`;
+    const zz=seg(t,7.9,8.4); $('#lg').style.transform+=` scale(${1+zz*.2})`;
+  }
+  // 3
+  if(t>8.2&&t<14.6){words('s3',t,8.6);phone($('#p3'),t,8.8,$('#i3'),0);
+    pop($('#c3a'),t,11.6);pop($('#c3b'),t,12.4);
+    $('#c3a').style.transform+=` translateY(${Math.sin(t*2)*6}px)`;}
+  // 4
+  if(t>14.2&&t<20.4){words('s4',t,14.6);phone($('#p4'),t,14.8,$('#i4'),0);pop($('#c4a'),t,16.8);pop($('#c4b'),t,17.5);pop($('#c4c'),t,18.2);}
+  // 5 arena: kartlar dağınıktan ızgaraya, sonra hokeye yakınlaş
+  if(t>20&&t<26.4){words('s5',t,20.6);
+    const pos=[[90,700],[570,700],[90,1040],[570,1040],[330,1380],[90,1380],[570,1380]];
+    const hz=eio(seg(t,24.6,25.9));
+    GC.forEach((e,i)=>{const a=21.6+i*.22;const k=eb(seg(t,a,a+.55));const [x,y]=pos[i===4?4:i<4?i:i===5?5:6];
+      let X=x+(1-k)*((i%2?1:-1)*700), Y=y+(1-k)*500, S=.5+.5*k, R=(1-k)*(i%2?20:-20);
+      if(i===4){X=x+(1-k)*900;}
+      const fx=i===4?hz:0; if(i===4){X=X+(90-X)*fx;Y=Y+(820-Y)*fx;S=S+(2.15-S)*fx;}
+      const fade=i!==4?1-hz:1;
+      e.style.opacity=cl(k*2)*fade;e.style.zIndex=i===4?5:1;e.style.transform=`translate(${X}px,${Y}px) rotate(${R+Math.sin(t*1.3+i)*1.5}deg) scale(${S})`;e.style.transformOrigin='0 0';
+      if(i===4){e.style.width=420+'px';}
+    });
+    $('#s5h').style.opacity=1-hz*.0;}
+  // 6
+  if(t>26&&t<30.8){words('s6',t,26.4);phone($('#p6'),t,26.5,$('#i6'),0);{const z=eio(seg(t,27.2,28.2));$('#i6').style.transformOrigin='50% 100%';$('#i6').style.transform=`scale(${1+z*.32})`;}
+    NT.forEach(n=>{const a=27+n.d;const q=seg(t,a,a+1.6);n.e.style.opacity=q>0&&q<1?Math.sin(q*Math.PI):0;n.e.style.transform=`translate(${n.x+n.dx*q}px,${1660-q*700}px) rotate(${(q-.5)*40}deg) scale(${.6+q*.6})`});
+    pop($('#c6a'),t,27.6);pop($('#c6b'),t,28);pop($('#c6c'),t,28.4);}
+  // 7
+  if(t>30.4&&t<36.4){words('s7',t,30.8);phone($('#p7'),t,31,$('#i7'),0);{const z=eio(seg(t,31.8,32.8));$('#i7').style.transformOrigin='50% 78%';$('#i7').style.transform=`scale(${1+z*.32})`;}
+    ['#c7a','#c7b','#c7c','#c7d'].forEach((s,i)=>{pop($(s),t,32.4+i*.5);$(s).style.transform+=` translateY(${Math.sin(t*1.8+i)*8}px)`});}
+  // 8
+  if(t>36&&t<41.4){words('s8',t,36.4);
+    const lk=eb(seg(t,36.6,37.1)); $('#lk').style.transform=`scale(${lk})`;$('#lk').style.opacity=cl(lk*2);
+    const sh=$('#lks'); const close=eo(seg(t,39.6,39.9)); sh.style.transform=`translateY(${-60+close*60}px)`;
+    if(t>39.6&&t<39.65&&!MARKS._l){}
+    const ty1=Math.floor(seg(t,37.4,37.4+M1.length*.035)*M1.length);
+    const scr=seg(t,38.4,38.9), back=seg(t,39.9,40.4);
+    const CS='#@$%&*+=?!0123456789abcdefXYZ';const enc=s=>s.replace(/[^\s]/g,(c,i)=>CS[(i*7+Math.floor(t*30))%CS.length]);
+    const b1=$('#bt1'); const txt1=M1.slice(0,ty1);
+    if(scr>0&&back<1){b1.innerHTML=`<span class="cip">${enc(M1).slice(0,M1.length)}</span>`;} else b1.textContent=txt1;
+    pop($('#bb1'),t,37.2); pop($('#bb2'),t,40.3);
+    $('#bt2').textContent=t>40.3?M2:'';
+    $('#bb1').style.background=scr>0&&back<1?'#18181e':'#d4ff00';$('#bb1').style.color=scr>0&&back<1?'#d4ff00':'#0b0b0e';
+    $('#s8s').style.opacity=seg(t,40.4,40.8);}
+  // 9
+  if(t>41&&t<46.4){words('s9',t,41.4,.16);
+    const k=eo(seg(t,41.6,42.5)); $('#lap').style.transform=`perspective(2400px) translateY(${(1-k)*600}px) rotateX(${(1-k)*25+4}deg) scale(${.85+.15*k})`;$('#lap').style.opacity=cl(k*2);
+    const q=eb(seg(t,42.6,43.2)); $('#p9').style.transform=`translateX(${(1-q)*500}px) rotate(${(1-q)*14+4}deg)`;$('#p9').style.opacity=cl(q*2);}
+  // 10
+  if(t>46&&t<53){const L=t-46.2;
+    const k=eb(seg(L,0,.5)); $('#lg2').style.transform=`scale(${k})`;$('#lg2').style.opacity=cl(L*4);
+    const q=seg(L,0,1.3); const r=$('#r3'); r.style.top='740px'; r.style.width=r.style.height=(240+q*1500)+'px'; r.style.opacity=(1-q)*.7;
+    words('s10',t,46.6,.14);
+    const n=Math.floor(seg(t,47.9,47.9+URL.length*.09)*URL.length); $('#ut').innerHTML=URL.slice(0,n).replace('kankahq','kanka<span class="lime">hq</span>');
+    $('#uc').style.opacity=(Math.floor(t*2.4)%2===0)?1:0;
+    $('#url').style.opacity=seg(t,47.7,47.9);
+    pop($('#cp1'),t,50.2);pop($('#cp2'),t,50.45);pop($('#cp3'),t,50.7);
+    $('#s10s').style.opacity=seg(t,51,51.4);
+    const out=seg(t,52.4,53); document.body.style.filter=out>0?`brightness(${1-out})`:'none';
+  } else document.body.style.filter='none';
+}
+// Hız: bütün zaman çizelgesi 1.4 kat hızlı (53 sn → ~38 sn); ses işaretleri de aynı oranda
+const MV=[0,3.0,4.35,6.3,8.65,13.4,18.05,20.05,21.95,24.15,26.9,32.0];
+const MO=[0,1.7,4.6,8.4,14.4,20.2,26.2,30.6,36.2,41.2,46.2,53];
+function pw(x,A,B){for(let i=1;i<A.length;i++)if(x<=A[i]||i==A.length-1)return B[i-1]+(x-A[i-1])*(B[i]-B[i-1])/(A[i]-A[i-1]);}
+const TOT2=MV[MV.length-1]; for(const k in MARKS) if(Array.isArray(MARKS[k])) MARKS[k]=MARKS[k].map(x=>+pw(x,MO,MV).toFixed(3));
+function setT(t){setT0(Math.min(TOT,pw(t,MV,MO)))}
+setT(0);
+</script></body></html>

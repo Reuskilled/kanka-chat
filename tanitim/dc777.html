@@ -1,0 +1,237 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0b0b0e;font-family:'Inter Display','Inter',sans-serif;color:#f4f4f6}
+.L{position:absolute;inset:0}
+#bg{background:radial-gradient(900px 900px at 20% 15%,#d4ff0014,transparent 60%),radial-gradient(1000px 1000px at 85% 80%,#6c78ff14,transparent 60%),#0b0b0e}
+#grid{background-image:linear-gradient(#ffffff07 2px,transparent 2px),linear-gradient(90deg,#ffffff07 2px,transparent 2px);background-size:90px 90px;mask-image:radial-gradient(900px 1300px at 50% 50%,#000 30%,transparent 75%)}
+#glow{width:900px;height:900px;left:90px;top:520px;border-radius:50%;background:radial-gradient(circle,#d4ff0022,transparent 65%);filter:blur(20px)}
+#grain{background-image:radial-gradient(#ffffff0a 1px,transparent 1px);background-size:5px 5px;opacity:.5;pointer-events:none}
+.top{position:absolute;top:110px;left:0;right:0;display:flex;justify-content:center}
+.tag{display:flex;align-items:center;gap:16px;padding:16px 30px;border-radius:999px;background:#15151a;border:2px solid #ffffff14;font-weight:800;font-size:34px;letter-spacing:3px;color:#cfcfd6}
+.tag i{width:18px;height:18px;border-radius:50%;background:#d4ff00;box-shadow:0 0 18px #d4ff00}
+.foot{position:absolute;bottom:150px;left:0;right:0;text-align:center;font-weight:700;font-size:34px;color:#8b8b96;letter-spacing:1px}
+.sc{position:absolute;inset:0;will-change:transform,opacity,filter}
+.kick{position:absolute;left:0;right:0;top:300px;text-align:center;font-weight:800;font-size:34px;letter-spacing:6px;color:#d4ff00}
+.h{position:absolute;left:60px;right:60px;top:360px;text-align:center;font-weight:900;font-size:104px;letter-spacing:-4px;line-height:.98}
+.h .w{display:inline-block;overflow:hidden;vertical-align:bottom;padding:0 4px}
+.h .w>span{display:inline-block}
+.lime{color:#d4ff00}
+.sub{position:absolute;left:90px;right:90px;top:620px;text-align:center;font-weight:600;font-size:40px;color:#a7a7b2;line-height:1.3}
+.card{position:absolute;left:70px;right:70px;border-radius:44px;background:linear-gradient(180deg,#17171d,#111115);border:2px solid #ffffff12;box-shadow:0 40px 120px #0009,inset 0 1px 0 #ffffff10;overflow:hidden}
+.msg{display:flex;gap:26px;padding:34px 40px}
+.av{width:96px;height:96px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:900;font-size:40px;color:#0b0b0e}
+.av.k{background:#0b0b0e;border:3px solid #2a2a33}
+.who{display:flex;align-items:center;gap:16px;font-weight:800;font-size:40px;margin-bottom:8px}
+.bot{background:#6c78ff;color:#fff;font-size:24px;font-weight:900;padding:5px 12px;border-radius:10px;letter-spacing:1px}
+.tm{color:#6e6e78;font-weight:600;font-size:28px}
+.tx{font-size:42px;font-weight:500;color:#e9e9ee;line-height:1.35}
+.btn{display:inline-flex;align-items:center;gap:12px;padding:22px 34px;border-radius:18px;font-weight:800;font-size:38px;margin:18px 14px 0 0;color:#fff}
+.g{background:#2f9e65}.r{background:#d64545}.n{background:#2a2a33}
+.sel{margin-top:20px;padding:24px 30px;border-radius:18px;background:#0f0f13;border:2px solid #ffffff18;font-size:38px;color:#9a9aa6;display:flex;justify-content:space-between}
+code,.code{font-family:'DejaVu Sans Mono',monospace}
+.ed{padding:40px 44px;font-size:33px;line-height:1.6;white-space:pre;color:#d9d9e0}
+.ed .c1{color:#c792ea}.ed .c2{color:#d4ff00}.ed .c3{color:#82aaff}.ed .c4{color:#f78c6c}.ed .c5{color:#6e6e78}
+.dots{display:flex;gap:14px;padding:26px 34px;border-bottom:2px solid #ffffff0d}.dots i{width:22px;height:22px;border-radius:50%;background:#2a2a33}
+.dots b{margin-left:18px;font-weight:700;font-size:28px;color:#7d7d88}
+.car{display:inline-block;width:16px;height:38px;background:#d4ff00;vertical-align:-6px}
+.in{margin:30px 40px 0;padding:24px 30px;border-radius:20px;background:#0f0f13;border:3px solid #d4ff00;font-size:40px;font-weight:600;display:flex;align-items:center;gap:6px}
+.li{display:flex;align-items:center;gap:24px;padding:20px 40px;font-size:40px;font-weight:700}
+.li .av{width:76px;height:76px;font-size:32px}
+.li small{margin-left:auto;color:#6e6e78;font-size:30px;font-weight:600}
+.li.on{background:#d4ff0016}
+.chip{display:inline-flex;align-items:center;gap:12px;padding:10px 22px 10px 10px;border-radius:999px;background:#d4ff0022;font-weight:800;font-size:34px;margin:30px 0 0 40px}
+.chip .av{width:52px;height:52px;font-size:24px}
+.ch{display:flex;align-items:center;gap:22px;padding:22px 40px;font-size:44px;font-weight:700;color:#a7a7b2}
+.ch.new{color:#fff;background:#d4ff0014;border-left:8px solid #d4ff00}
+.eye{display:flex;align-items:center;gap:12px;margin-top:22px;font-size:30px;color:#8b8b96;font-weight:600}.eye b{color:#d4ff00}
+.half{position:absolute;top:0;bottom:0;width:50%;padding:34px 30px}
+.vh{display:flex;align-items:center;gap:18px;padding:34px 40px 10px;font-weight:900;font-size:44px}
+.vu{display:flex;align-items:center;gap:26px;padding:16px 40px;font-size:42px;font-weight:700}
+.vu .av{width:90px;height:90px;font-size:38px}
+.wave{display:flex;align-items:center;gap:8px;height:120px;margin:10px 40px 0}
+.wave i{flex:1;border-radius:6px;background:#d4ff00}
+.np{margin:26px 40px 36px;padding:22px 28px;border-radius:20px;background:#0f0f13;font-size:34px;font-weight:700;display:flex;align-items:center;gap:18px}
+.bar{height:10px;border-radius:6px;background:#ffffff14;flex:1;overflow:hidden}.bar i{display:block;height:100%;background:#d4ff00}
+.pill{position:absolute;padding:22px 34px;border-radius:999px;background:#17171d;border:2px solid #ffffff16;font-weight:800;font-size:38px;white-space:nowrap}
+.pill.l{background:#d4ff00;color:#0b0b0e;border-color:#d4ff00}
+#sweep{left:-400px;top:-400px;width:500px;height:2800px;background:linear-gradient(90deg,transparent,#d4ff00 45%,#f4ffb0 50%,#d4ff00 55%,transparent);transform:rotate(18deg);opacity:0;filter:blur(2px)}
+#flash{background:#fff;opacity:0;mix-blend-mode:overlay}
+#fade{background:#0b0b0e;opacity:0}
+.cur{position:absolute;width:84px;height:84px;opacity:0}
+
+.err{position:absolute;left:90px;right:90px;top:520px;border-radius:40px;background:#141418;border:3px solid #ff4d4d55;padding:60px 56px;text-align:center;box-shadow:0 0 120px #ff3b3b22}
+.err .st{font-size:150px;line-height:1}
+.err h3{font-size:60px;font-weight:900;margin-top:26px;letter-spacing:-1px}
+.err p{font-size:36px;color:#9a9aa6;margin-top:14px;font-weight:600}
+.err code{display:inline-block;margin-top:30px;padding:14px 24px;border-radius:14px;background:#0b0b0e;color:#ff6b6b;font-size:30px}
+.cnt{position:absolute;left:0;right:0;top:330px;text-align:center;font-weight:900;font-size:360px;letter-spacing:-18px;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+.cntl{position:absolute;left:0;right:0;top:700px;text-align:center;font-weight:900;font-size:70px;letter-spacing:12px;color:#ff5d5d}
+.b2{position:absolute;max-width:760px;padding:26px 34px;border-radius:34px;font-size:44px;font-weight:600;line-height:1.3}
+.b2.l{left:80px;background:#1d1d24;border-bottom-left-radius:10px}
+.b2.r{right:80px;background:#2a2f14;color:#eaffb0;border-bottom-right-radius:10px}
+.b2 small{display:block;font-size:26px;color:#7d7d88;font-weight:700;margin-bottom:6px}
+.rail{position:absolute;left:70px;top:720px;width:150px;bottom:470px;display:flex;flex-direction:column;align-items:center;gap:26px;padding-top:30px}
+.sv{width:110px;height:110px;border-radius:36px;display:grid;place-items:center;font-weight:900;font-size:46px;color:#0b0b0e}
+.dev{position:absolute;display:flex;flex-direction:column;align-items:center;gap:22px;font-weight:800;font-size:38px;color:#cfcfd6}
+.dev .bx{border:5px solid #d4ff00;border-radius:30px;background:#141418;display:grid;place-items:center;box-shadow:0 0 50px #d4ff0022}
+.strike{position:absolute;left:-10px;right:-10px;top:52%;height:16px;background:#ff4d4d;border-radius:8px;transform-origin:left center}
+#glitch{background:repeating-linear-gradient(0deg,#ff3b3b22 0 6px,transparent 6px 14px);mix-blend-mode:screen;opacity:0}
+</style></head><body>
+<div class="L" id="bg"></div><div class="L" id="grid"></div><div class="L" id="glow" style="position:absolute;inset:auto"></div>
+
+<div class="sc" id="s0">
+  <div class="err" id="err"><div class="st">⛔</div><h3>Bu siteye erişilemiyor</h3><p>discord.com</p><code>ERİŞİM ENGELİ · 09.10.2024</code></div>
+</div>
+
+<div class="sc" id="s1">
+  <div class="cnt" id="cnt">0</div>
+  <div class="cntl" id="cntl">GÜNDÜR KAPALI</div>
+  <div class="h" style="top:900px;font-size:96px"><span class="w"><span>Discord hâlâ</span></span><br><span class="w"><span class="lime">açılmadı.</span></span></div>
+  <div class="sub" id="s1sub" style="top:1160px">"Muhtemelen bir müddet sonra açacağız" denildi.<br>Haziranda.</div>
+</div>
+
+<div class="sc" id="s2">
+  <div class="kick" style="color:#ff6b6b">TANIDIK GELDİ Mİ?</div>
+  <div class="b2 l" id="b0" style="top:520px"><small>Ahmet</small>akşam oyun var mı?</div>
+  <div class="b2 r" id="b1" style="top:720px"><small>Sen</small>VPN aç da gel</div>
+  <div class="b2 l" id="b2" style="top:920px"><small>Elif</small>DNS'i değiştirdim yine girmiyor 😩</div>
+  <div class="b2 l" id="b3" style="top:1120px"><small>Can</small>ben yokum o zaman</div>
+  <div class="b2 r" id="b4" style="top:1320px;background:#2a1414;color:#ffb0b0"><small>Sen</small>grup bitti galiba…</div>
+</div>
+
+<div class="sc" id="s3">
+  <svg viewBox="0 0 200 200" id="lg" style="position:absolute;left:315px;top:420px;width:450px;height:450px"><g transform="translate(100 100) scale(.62) translate(-100 -99)"><path fill="#fff" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="#D4FF00" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></g></svg>
+  <div class="h" style="top:940px;font-size:120px;letter-spacing:-5px"><span class="w"><span id="k0">Biz</span></span> <span class="w"><span id="k1" class="lime">beklemedik.</span></span></div>
+  <div class="sub" id="k2" style="top:1120px">Kanka: arkadaşlarınla sesli sohbet,<br>sunucular, oyun geceleri. <b style="color:#fff">VPN'siz.</b></div>
+</div>
+
+<div class="sc" id="s4">
+  <div class="kick">SESLİ ODALAR</div>
+  <div class="h"><span class="w"><span>Bas konuş,</span></span><br><span class="w"><span class="lime">takıl.</span></span></div>
+  <div class="card" style="top:720px">
+    <div class="vh">🔊 Oyun Gecesi <span style="margin-left:auto;font-size:30px;color:#2f9e65">● 4 kişi</span></div>
+    <div class="vu"><div class="av" id="v0" style="background:#ff8a4c">A</div>Ahmet</div>
+    <div class="vu"><div class="av" id="v1" style="background:#ff6b9a">E</div>Elif <span style="margin-left:auto;font-size:28px;color:#d4ff00;background:#d4ff0018;padding:6px 14px;border-radius:10px">📺 ekran paylaşıyor</span></div>
+    <div class="vu"><div class="av" id="v2" style="background:#4aa8ff">C</div>Can</div>
+    <div class="vu" style="padding-bottom:36px"><div class="av" id="v3" style="background:#9b6bff;color:#fff">S</div>Sen</div>
+  </div>
+</div>
+
+<div class="sc" id="s5">
+  <div class="kick">SUNUCULAR</div>
+  <div class="h"><span class="w"><span>Kendi sunucunu</span></span><br><span class="w"><span class="lime">kur.</span></span></div>
+  <div class="card" style="top:720px;left:70px;right:70px;height:700px">
+    <div style="position:absolute;left:0;top:0;bottom:0;width:170px;background:#0e0e12;display:flex;flex-direction:column;align-items:center;gap:24px;padding-top:34px" id="srail">
+      <div class="sv" style="background:#d4ff00">K</div><div class="sv" style="background:#ff8a4c">🎮</div><div class="sv" style="background:#4aa8ff">⚽</div><div class="sv" style="background:#ff6b9a">🎵</div>
+    </div>
+    <div style="position:absolute;left:170px;right:0;top:0;padding:34px 10px" id="slist">
+      <div style="font-weight:900;font-size:46px;padding:0 30px 20px">Oyun Gecesi</div>
+      <div class="ch"># genel</div><div class="ch"># klipler</div><div class="ch">🔊 Lobi</div><div class="ch">🔒 yetkililer</div>
+      <div style="display:flex;gap:14px;padding:22px 30px"><span class="bot" style="background:#e8a33d">Kurucu</span><span class="bot" style="background:#6c78ff">Mod</span><span class="bot" style="background:#2f9e65">Oyuncu</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="sc" id="s6">
+  <div class="h" style="top:330px"><span class="w"><span>Ve dahası</span></span></div>
+  <div id="pills"></div>
+</div>
+
+<div class="sc" id="s7">
+  <div class="kick">HER YERDE</div>
+  <div class="h"><span class="w"><span>Telefonda,</span></span><br><span class="w"><span class="lime">bilgisayarda.</span></span></div>
+  <div class="dev" id="d0" style="left:110px;top:800px"><div class="bx" style="width:230px;height:420px"><svg viewBox="0 0 200 200" width="150" height="150"><g transform="translate(100 100) scale(.62) translate(-100 -99)"><path fill="#fff" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="#D4FF00" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></g></svg></div>Android</div>
+  <div class="dev" id="d1" style="left:420px;top:880px"><div class="bx" style="width:540px;height:340px"><svg viewBox="0 0 200 200" width="170" height="170"><g transform="translate(100 100) scale(.62) translate(-100 -99)"><path fill="#fff" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="#D4FF00" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></g></svg></div>Windows · Tarayıcı</div>
+</div>
+
+<div class="sc" id="s8">
+  <svg viewBox="0 0 200 200" id="lg2" style="position:absolute;left:390px;top:400px;width:300px;height:300px"><g transform="translate(100 100) scale(.62) translate(-100 -99)"><path fill="#fff" d="M 48 58 C 48 48 56 42 65 42 C 74 42 80 48 80 58 L 80 86 L 122 47 C 130 40 143 41 150 49 C 156 57 155 69 147 76 L 91 126 C 85 131 80 137 80 144 C 80 151 74 156 64 156 C 55 156 48 150 48 141 Z"/><path fill="#D4FF00" d="M 119 116 C 125 110 135 110 141 116 L 152 128 C 159 136 155 156 140 156 L 135 156 C 127 156 121 152 117 146 L 113 138 C 109 130 112 122 119 116 Z"/></g></svg>
+  <div class="h" style="top:770px;font-size:108px;letter-spacing:-5px"><span class="w"><span id="c0">777 gün</span></span><br><span class="w"><span id="c1">bekleme.</span></span><br><span class="w"><span id="c2" class="lime">Kanka'ya gel.</span></span></div>
+  <div style="position:absolute;left:0;right:0;top:1250px;display:flex;justify-content:center"><div class="pill l" id="url" style="position:static;font-size:56px;padding:30px 60px">kankahq.com</div></div>
+  <div class="sub" id="c3" style="top:1400px">Ücretsiz · Türkçe · VPN gerekmez</div>
+</div>
+
+<div class="top"><div class="tag" id="tag"><i></i>KANKA</div></div>
+<div class="foot" id="foot">kankahq.com</div>
+<div class="L" id="sweep" style="position:absolute;inset:auto"></div>
+<div class="L" id="glitch"></div>
+<div class="L" id="grain"></div><div class="L" id="flash"></div><div class="L" id="fade"></div>
+<script>
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)), seg=(t,a,b)=>cl((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3), eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2, eb=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const B=[0,1.8,6.3,12.7,14.7,16.15,18.0,22.6,26.2,31.6];const TOT=B[9];
+const TR=['','glitch','push','iris','push','zoom','sweep','push','iris'];
+const PL=['Özel mesajlar','Uçtan uca şifreli DM','Ekran paylaşımı','Botlar','Müzik botu','Roller ve izinler','Oyun etkinliği','Emoji ve GIF','Bildirimler','Türkçe destek'];
+const PP=$('pills');PL.forEach((p,i)=>{const d=document.createElement('div');d.className='pill'+(i%4===0?' l':'');d.textContent=p;PP.appendChild(d);});
+{let y=650,row=[],w=0;const rows=[];for(const e of PP.children){const ew=e.textContent.length*22+90;if(w+ew>920&&row.length){rows.push(row);row=[];w=0}row.push([e,ew]);w+=ew+24}rows.push(row);
+ rows.forEach((r,ri)=>{const tw=r.reduce((a,[,ew])=>a+ew,0)+24*(r.length-1);let x=(1080-tw)/2;for(const [e,ew] of r){e.style.left=x+'px';e.style.top=(y+ri*140)+'px';e.style.width=ew+'px';e.style.textAlign='center';x+=ew+24}});}
+const MARKS={pop:[],whoosh:[],type:[],tick:[],fail:[],hit:[]};
+B.slice(2,9).forEach(b=>MARKS.whoosh.push(b));
+MARKS.fail.push(0.25);MARKS.hit.push(B[1]);
+for(let i=0;i<24;i++)MARKS.tick.push(B[1]+0.15+i*0.05);MARKS.hit.push(B[1]+1.3);
+for(let k=0;k<5;k++)MARKS.pop.push(B[2]+0.4+k*1.05);MARKS.fail.push(B[2]+4.7);
+MARKS.hit.push(B[3]+0.05);MARKS.pop.push(B[3]+0.9,B[3]+1.1);
+MARKS.pop.push(B[4]+0.8);MARKS.pop.push(B[5]+0.9);
+PL.forEach((p,i)=>MARKS.tick.push(B[6]+0.45+i*0.1));
+MARKS.pop.push(B[7]+0.8,B[7]+1.0);MARKS.hit.push(B[8]+0.05);MARKS.pop.push(B[8]+2.6);
+function scene(i,t){
+  const el=$('s'+i), a=B[i], b=B[i+1]; const inT=TR[i]||'', outT=TR[i+1]||'';
+  let op=1,tf='',fl=0,clip='none';
+  if(i>0){const p=seg(t,a-0.2,a+0.45),e=eo(p); if(t<a-0.2){el.style.display='none';return}
+    if(inT==='push'){tf+=`translateY(${(1-e)*420}px) `;op*=e;fl=(1-e)*16}
+    else if(inT==='zoom'){tf+=`scale(${0.78+0.22*e}) `;op*=e;fl=(1-e)*12}
+    else if(inT==='iris'){clip=`circle(${e*1500}px at 540px 960px)`}
+    else if(inT==='sweep'){const q=seg(t,a-0.15,a+0.3);clip=`polygon(0 0, ${q*140}% 0, ${q*140-30}% 100%, 0 100%)`}
+    else if(inT==='glitch'){const q=seg(t,a-0.05,a+0.25);op*=q>0?1:0;tf+=`translateX(${(1-q)*(Math.sin(t*90)*40)}px) `}}
+  if(i<8){const p=seg(t,b-0.42,b+0.15),e=eio(p); if(t>b+0.15){el.style.display='none';return}
+    if(outT==='push'){tf+=`translateY(${-e*360}px) scale(${1-0.08*e}) `;op*=1-e;fl+=e*16}
+    else if(outT==='zoom'){tf+=`scale(${1+0.4*e}) `;op*=1-e;fl+=e*14}
+    else if(outT==='iris'){tf+=`scale(${1-0.08*e}) `;op*=1-0.7*e}
+    else if(outT==='sweep'){tf+=`translateX(${-e*120}px) `;op*=1-0.8*e;fl+=e*6}
+    else if(outT==='glitch'){const q=seg(t,b-0.25,b+0.05);op*=1-q;tf+=`translateX(${q*Math.sin(t*120)*50}px) skewX(${q*12}deg) `}}
+  el.style.display='block';el.style.opacity=op;el.style.transform=tf;el.style.filter=fl>0.3?`blur(${fl}px)`:'none';el.style.clipPath=clip;
+}
+function words(ids,t0,t,gap=0.12){ids.forEach((id,k)=>{const p=eo(seg(t,t0+k*gap,t0+k*gap+0.55));$(id).style.transform=`translateY(${(1-p)*150}%)`;});}
+function heads(i,t){const s=$('s'+i);s.querySelectorAll('.h .w>span').forEach((e,k)=>{if(e.id)return;const p=eo(seg(t,B[i]-0.1+k*0.12,B[i]+0.45+k*0.12));e.style.transform=`translateY(${(1-p)*150}%)`});
+  const kk=s.querySelector('.kick');if(kk){const p=eo(seg(t,B[i]-0.15,B[i]+0.3));kk.style.opacity=p;kk.style.transform=`translateY(${(1-p)*30}px)`}
+  s.querySelectorAll('.card').forEach((e,k)=>{const p=eo(seg(t,B[i]+0.1+k*0.15,B[i]+0.7+k*0.15));e.style.opacity=p;e.style.transform=`translateY(${(1-p)*120}px) scale(${0.94+0.06*p})`});}
+function setT(t){
+  $('glow').style.transform=`translate(${Math.sin(t*0.6)*80}px,${Math.cos(t*0.45)*120}px) scale(${1+0.08*Math.sin(t*1.3)})`;
+  $('glow').style.background=t<B[3]?'radial-gradient(circle,#ff3b3b22,transparent 65%)':'radial-gradient(circle,#d4ff0022,transparent 65%)';
+  $('grid').style.transform=`translateY(${(t*24)%90}px)`;
+  $('tag').style.opacity=eo(seg(t,B[3]+0.3,B[3]+0.8))*(1-seg(t,B[8]-0.2,B[8]+0.3));
+  $('foot').style.opacity=0.8*seg(t,B[4],B[4]+0.6)*(1-seg(t,B[8]-0.3,B[8]+0.1));
+  for(let i=0;i<9;i++)scene(i,t);
+  for(const i of [1,4,5,6,7])heads(i,t);
+  // S0 hata kartı: sarsıntı ve kırmızı titreşim
+  {const p=eb(seg(t,0,0.45));const sh=seg(t,0.2,0.6)*(1-seg(t,0.6,1.0));$('err').style.transform=`scale(${0.7+0.3*p}) translateX(${Math.sin(t*70)*18*sh}px)`;$('err').style.opacity=seg(t,0,0.2);
+   const g=Math.max(seg(t,0.2,0.35)*(1-seg(t,0.35,0.7)),seg(t,B[1]-0.3,B[1])*(1-seg(t,B[1],B[1]+0.25)));$('glitch').style.opacity=g;}
+  // S1 sayaç
+  {const a=B[1];const p=eo(seg(t,a,a+1.3));const n=Math.round(777*p);$('cnt').textContent=n;$('cnt').style.transform=`scale(${1+0.15*(1-seg(t,a+1.3,a+1.6))*(t>a+1.3?1:0)})`;
+   $('cnt').style.opacity=seg(t,a-0.1,a+0.1);$('cnt').style.textShadow=t>a+1.3?`0 0 ${60*(1-seg(t,a+1.3,a+2.2))}px #ff3b3b`:'none';
+   const l=eo(seg(t,a+1.2,a+1.6));$('cntl').style.opacity=l;$('cntl').style.letterSpacing=(12+(1-l)*30)+'px';
+   $('s1').querySelectorAll('.h .w>span').forEach((e,k)=>{const q=eo(seg(t,a+1.5+k*0.15,a+2.0+k*0.15));e.style.transform=`translateY(${(1-q)*150}%)`});
+   const s=eo(seg(t,a+2.3,a+2.8));$('s1sub').style.opacity=s;$('s1sub').style.transform=`translateY(${(1-s)*30}px)`;}
+  // S2 mesajlar
+  {const a=B[2];for(let k=0;k<5;k++){const p=eb(seg(t,a+0.4+k*1.05,a+0.75+k*1.05));const e=$('b'+k);e.style.opacity=seg(t,a+0.4+k*1.05,a+0.55+k*1.05);e.style.transform=`scale(${0.7+0.3*p})`;e.style.transformOrigin=e.classList.contains('r')?'right bottom':'left bottom';}
+   const f=seg(t,a+5.0,a+5.6);for(let k=0;k<4;k++)$('b'+k).style.filter=`grayscale(${f}) blur(${f*2}px)`;}
+  // S3 logo
+  {const a=B[3];const p=eb(seg(t,a,a+0.7));$('lg').style.transform=`scale(${0.3+0.7*p}) rotate(${(1-p)*-20}deg)`;$('lg').style.opacity=seg(t,a,a+0.25);
+   $('lg').style.filter=`drop-shadow(0 0 ${40+30*Math.sin(t*3)}px #d4ff0055)`;words(['k0','k1'],a+0.15,t,0.18);const s=eo(seg(t,a+0.8,a+1.3));$('k2').style.opacity=s;$('k2').style.transform=`translateY(${(1-s)*30}px)`;}
+  // S4 konuşma halkaları
+  {const a=B[4];const on=seg(t,a+0.7,a+1.0);[0,1,2,3].forEach(k=>{const sp=Math.max(0,Math.sin(t*(3+k)+k*2));$('v'+k).style.boxShadow=`0 0 0 ${on*sp*7}px #2f9e65, 0 0 ${on*sp*30}px #2f9e6588`;});}
+  // S6 haplar
+  {const a=B[6];[...PP.children].forEach((e,k)=>{const p=eb(seg(t,a+0.4+k*0.1,a+0.8+k*0.1));e.style.opacity=seg(t,a+0.4+k*0.1,a+0.6+k*0.1);e.style.transform=`scale(${0.6+0.4*p}) translateY(${Math.sin(t*1.4+k)*6}px)`});}
+  // S7 cihazlar
+  {const a=B[7];[['d0',0.5],['d1',0.7]].forEach(([id,d])=>{const p=eb(seg(t,a+d,a+d+0.5));$(id).style.opacity=seg(t,a+d,a+d+0.2);$(id).style.transform=`translateY(${(1-p)*120}px)`});}
+  // S8
+  {const a=B[8];const p=eb(seg(t,a+0.1,a+0.8));$('lg2').style.transform=`scale(${0.5+0.5*p})`;$('lg2').style.opacity=seg(t,a+0.1,a+0.4);
+   words(['c0','c1','c2'],a+0.1,t,1.0);const u=eb(seg(t,a+2.6,a+3.05));$('url').style.transform=`scale(${0.7+0.3*u})`;$('url').style.opacity=seg(t,a+2.6,a+2.8);
+   $('url').style.boxShadow=`0 0 ${40+20*Math.sin(t*4)}px #d4ff0066`;const s=eo(seg(t,a+3.1,a+3.6));$('c3').style.opacity=s;$('c3').style.transform=`translateY(${(1-s)*30}px)`;}
+  {let so=0,sx=-600;for(let i=1;i<9;i++)if(TR[i]==='sweep'){const q=seg(t,B[i]-0.2,B[i]+0.35);if(q>0&&q<1){so=Math.sin(q*Math.PI);sx=-700+q*2600}}$('sweep').style.opacity=so*0.9;$('sweep').style.left=sx+'px';}
+  {let f=0;for(let i=2;i<9;i++){const d=t-B[i];if(d>-0.05&&d<0.35)f=Math.max(f,(1-seg(d,0,0.35))*0.3)}for(const h of [B[1],B[3],B[8]]){const d=t-h;if(d>0&&d<0.5)f=Math.max(f,(1-d/0.5)*0.6)}$('flash').style.opacity=f;}
+  $('fade').style.opacity=seg(t,TOT-0.4,TOT);
+}
+setT(0);
+</script></body></html>

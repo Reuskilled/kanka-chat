@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0d0a08;font-family:'Inter Display','Inter','Poppins',sans-serif;color:#f9efe4}
+.S{position:absolute;inset:0}
+.grn{background:linear-gradient(120deg,#e6ffc4,#8ff05a 45%,#2fae2a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hot{background:linear-gradient(120deg,#ffe08a,#ff8a4c 45%,#ff3d1f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.red{color:#ff4d4d}
+.big{font-weight:900;letter-spacing:-4px;line-height:.92;text-align:center;text-transform:uppercase}
+.ttl{position:absolute;left:0;right:0}
+#bg{background:radial-gradient(1000px 1000px at 50% 38%,#5cd63a33,transparent 62%)}
+#bgr{background:radial-gradient(1000px 1000px at 50% 45%,#ff3d2e33,transparent 62%);opacity:0}
+#grain{background-image:radial-gradient(#ffffff08 1px,transparent 1px);background-size:6px 6px;opacity:.6}
+/* rozet */
+#bd{position:absolute;left:50%;top:420px;width:560px;height:560px;margin-left:-280px;will-change:transform}
+#bd .glow{position:absolute;inset:-120px;border-radius:50%;background:radial-gradient(circle,#8ff05a55,transparent 65%)}
+#bd .ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from var(--a,0deg),#e6ffc4,#3a9d23,#c8ff9a,#2f8f2a,#e6ffc4);padding:22px}
+#bd .in{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#2a3d1f,#0f1a0b 70%);display:grid;place-items:center;box-shadow:inset 0 0 60px #000a}
+#bd svg{width:66%;height:66%}
+#bd .shine{position:absolute;inset:22px;border-radius:50%;overflow:hidden}
+#bd .shine i{position:absolute;top:-20%;width:30%;height:140%;background:linear-gradient(90deg,transparent,#ffffff55,transparent);transform:rotate(20deg)}
+#bdl{position:absolute;left:0;right:0;top:1000px;text-align:center;font-size:54px;font-weight:900;color:#b7f58e;letter-spacing:1px}
+#bdl small{display:block;font-size:34px;color:#8a9a80;font-weight:800;margin-top:8px;letter-spacing:6px}
+/* S0 hook */
+#h1{top:150px;font-size:120px}
+#h2{top:1130px;font-size:150px}
+#h3{top:1280px;font-size:150px}
+#buy{position:absolute;left:50%;top:1470px;width:620px;margin-left:-310px;height:130px;border-radius:70px;background:linear-gradient(135deg,#ff9a5a,#ff5a2e);display:flex;align-items:center;justify-content:center;gap:24px;font-size:56px;font-weight:900;color:#2a0d05;box-shadow:0 30px 80px #ff5a2e55}
+#stamp{position:absolute;left:50%;top:1440px;width:760px;margin-left:-380px;text-align:center;font-size:84px;font-weight:900;color:#ff4d4d;border:10px solid #ff4d4d;border-radius:28px;padding:14px 0;background:#0d0a08cc;letter-spacing:2px}
+/* S1 tek yol */
+#t1a{top:180px;font-size:110px}
+#code{position:absolute;left:90px;right:90px;top:430px;height:820px;border-radius:44px;background:#14100d;border:4px solid #33271f;box-shadow:0 50px 140px #000c;padding:50px 50px;font-family:'JetBrains Mono','DejaVu Sans Mono',monospace;font-size:34px;line-height:1.75;color:#8b7a6d;overflow:hidden}
+#code .ln{white-space:nowrap;border-radius:10px;padding:0 12px;transition:none}
+#code .k{color:#ff9a5a}#code .s{color:#9fe07a}#code .c{color:#5c4f45}
+#code .ln.bad{background:#ff3d2e30;color:#ffd0c8;box-shadow:inset 6px 0 0 #ff4d4d}
+#mag{position:absolute;width:250px;height:250px;left:0;top:0;will-change:transform}
+#t1b{top:1330px;font-size:190px;letter-spacing:-8px}
+/* S2 websocket */
+#t2{top:170px;font-size:84px}
+#dev{position:absolute;left:70px;right:70px;top:380px;height:930px;border-radius:44px;background:#121417;border:4px solid #2a2e35;overflow:hidden;box-shadow:0 50px 140px #000c}
+#dev .bar{height:110px;display:flex;align-items:center;gap:30px;padding:0 40px;border-bottom:3px solid #23272d;font-size:38px;font-weight:800;color:#9aa3ad}
+#dev .bar b{color:#e8edf2;border-bottom:6px solid #5aa9ff;padding-bottom:22px;margin-top:28px}
+#dev .bar .dot{width:22px;height:22px;border-radius:50%;background:#4cd98a;margin-left:auto;box-shadow:0 0 18px #4cd98a}
+#frames{position:absolute;left:0;right:0;top:110px;bottom:0;padding:20px 30px;font-family:'JetBrains Mono','DejaVu Sans Mono',monospace;font-size:32px}
+.fr{display:flex;gap:18px;align-items:center;padding:14px 18px;border-radius:14px;color:#8d96a0;white-space:nowrap;overflow:hidden}
+.fr .ar{color:#4cd98a;font-weight:900}.fr .ev{color:#e8edf2;font-weight:700}
+.fr.hl{background:#ff3d2e2a;color:#ffd9d2;box-shadow:inset 6px 0 0 #ff4d4d}
+.fr.hl .nm{background:#ff4d4d;color:#fff;border-radius:8px;padding:0 8px}
+#call{position:absolute;left:110px;right:110px;top:1350px;padding:34px 40px;border-radius:40px;background:#1d1210;border:4px solid #ff4d4d;display:flex;align-items:center;gap:30px;font-size:52px;font-weight:900;box-shadow:0 30px 90px #ff3d2e44}
+#call .av{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;font-size:44px;color:#fff;flex:none}
+#clk{position:absolute;right:90px;top:300px;font-size:44px;font-weight:900;color:#9aa3ad;font-family:'JetBrains Mono','DejaVu Sans Mono',monospace}
+/* S3 bildirim + kronometre */
+#t3{top:180px;font-size:96px}
+#msg{position:absolute;left:90px;right:90px;top:400px;padding:40px 44px;border-radius:44px;background:#1c1512;border:3px solid #3a2c25;box-shadow:0 40px 120px #000c}
+#msg .hd{display:flex;align-items:center;gap:24px;font-size:42px;font-weight:900}
+#msg .pp{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#5a6bff,#a35bff);display:grid;place-items:center;font-size:48px}
+#msg .hd small{font-size:32px;color:#7d6c61;font-weight:800}
+#msg .tx{font-size:66px;font-weight:900;margin-top:24px}
+#sw{position:absolute;left:50%;top:760px;width:480px;height:480px;margin-left:-240px}
+#swt{position:absolute;left:0;right:0;top:1260px;font-size:130px;font-family:'JetBrains Mono','DejaVu Sans Mono',monospace;font-weight:900;letter-spacing:-4px;text-align:center}
+#ok3{position:absolute;left:50%;top:1440px;width:700px;margin-left:-350px;text-align:center;font-size:84px;font-weight:900;color:#4cd98a;border:10px solid #4cd98a;border-radius:28px;padding:12px 0;background:#0d0a08dd}
+/* S4 tarama */
+#t4{top:170px;font-size:96px}
+#radar{position:absolute;left:50%;top:420px;width:640px;height:640px;margin-left:-320px;border-radius:50%;background:radial-gradient(circle,#0f2a14 0,#081208 70%);border:4px solid #2f8f2a66;overflow:hidden}
+#radar .sw{position:absolute;inset:0;background:conic-gradient(from 0deg,#8ff05a88,transparent 22%)}
+#radar .rg{position:absolute;border:3px solid #2f8f2a55;border-radius:50%}
+#radar .bl{position:absolute;width:34px;height:34px;margin:-17px;border-radius:50%;background:#ff4d4d;box-shadow:0 0 30px #ff4d4d}
+.cd{position:absolute;left:80px;right:80px;height:150px;border-radius:34px;background:#1a1411;border:3px solid #3a2c25;display:flex;align-items:center;gap:28px;padding:0 36px;font-size:38px;font-weight:800;box-shadow:0 20px 60px #000a}
+.cd .n{width:84px;height:84px;border-radius:24px;background:#ff4d4d22;color:#ff6b5a;display:grid;place-items:center;font-size:46px;font-weight:900;flex:none}
+.cd .st{position:absolute;right:24px;top:50%;margin-top:-36px;height:72px;padding:0 18px;border-radius:18px;border:5px solid #4cd98a;color:#4cd98a;font-size:34px;font-weight:900;display:flex;align-items:center;background:#0d0a08ee;letter-spacing:1px}
+/* S5 profil */
+#t5{top:180px;font-size:100px}
+#pf{position:absolute;left:90px;right:90px;top:430px;height:900px;border-radius:50px;background:#17110e;border:4px solid #3a2c25;overflow:hidden;box-shadow:0 60px 150px #000d}
+#pf .cov{height:280px;background:linear-gradient(135deg,#2f8f2a,#0f3a12 60%,#1a2a10)}
+#pf .pp{position:absolute;left:60px;top:190px;width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,#5a6bff,#a35bff);border:12px solid #17110e;display:grid;place-items:center;font-size:96px;font-weight:900}
+#pf .nm{position:absolute;left:60px;top:420px;font-size:70px;font-weight:900}
+#pf .sb{position:absolute;left:60px;top:510px;font-size:38px;color:#8a7a6e;font-weight:800}
+#pf .bl{position:absolute;left:60px;right:60px;top:660px;padding:30px;border-radius:30px;background:#0f0b09;display:flex;gap:22px;align-items:center}
+#pf .bl b{position:absolute;left:30px;top:-56px;font-size:32px;color:#8a7a6e;letter-spacing:4px}
+.bs{width:120px;height:120px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:58px;background:#231a15;border:4px solid #3a2c25}
+#slot{border:5px dashed #5cd63a88;background:transparent}
+#fly{position:absolute;width:120px;height:120px;left:0;top:0;will-change:transform}
+#conf{position:absolute;inset:0;pointer-events:none}
+#conf i{position:absolute;width:22px;height:34px;border-radius:6px}
+/* S6 sıra sende */
+#t6a{top:1130px;font-size:180px;letter-spacing:-8px}
+#t6b{top:1330px;font-size:70px;color:#d9c4b2}
+#url{position:absolute;left:50%;top:1450px;width:620px;margin-left:-310px;height:120px;border-radius:60px;background:#1c1512;border:4px solid #ff8a4c;display:flex;align-items:center;justify-content:center;font-size:58px;font-weight:900;color:#ffb27f}
+#t6c{top:180px;font-size:120px}
+/* altyazı */
+#cap{position:absolute;left:60px;right:60px;top:1650px;text-align:center;font-size:52px;font-weight:900;line-height:1.2;color:#ffffffcc;text-shadow:0 4px 18px #000}
+#cap span{opacity:.45}#cap span.on{opacity:1;color:#fff}#cap span.cur{color:#b7f58e}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+ <linearGradient id="kbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4ff9a"/><stop offset="1" stop-color="#3a9d23"/></linearGradient>
+ <symbol id="bug" viewBox="0 0 48 48"><g stroke="#8fd96a" stroke-width="3" stroke-linecap="round"><path d="M10 20l6 3M38 20l-6 3M8 30h8M40 30h-8M10 41l7-4M38 41l-7-4M18 9l3 4M30 9l-3 4"/></g><ellipse cx="24" cy="29" rx="11" ry="14" fill="url(#kbg)"/><path d="M24 15v28" stroke="#2f7a1e" stroke-width="2.4"/><circle cx="24" cy="15" r="7" fill="#3a9d23"/><circle cx="19" cy="27" r="2.4" fill="#1d4d12"/><circle cx="29" cy="33" r="2.4" fill="#1d4d12"/><circle cx="20" cy="36" r="1.8" fill="#1d4d12"/></symbol>
+</defs></svg>
+<div class="S" id="bg"></div><div class="S" id="bgr"></div><div class="S" id="grain"></div>
+
+<!-- Rozet: tüm videoda yaşar, sahnelere göre yer değiştirir -->
+<div id="bd"><div class="glow"></div><div class="ring"><div class="in"><svg><use href="#bug"/></svg></div></div><div class="shine"><i id="shi"></i></div></div>
+<div id="bdl">🐞 HATA AVCISI<small>EN NADİR ROZET</small></div>
+
+<div class="S" id="s0">
+ <div class="ttl big" id="h1">BU ROZETİ</div>
+ <div class="ttl big grn" id="h2">PARAYLA</div>
+ <div class="ttl big" id="h3">ALAMAZSIN</div>
+ <div id="buy">🛒 Satın al · ₺999</div>
+ <div id="stamp">SATIŞTA DEĞİL</div>
+</div>
+
+<div class="S" id="s1">
+ <div class="ttl big" id="t1a">TEK BİR <span class="grn">YOLU</span> VAR</div>
+ <div id="code"></div>
+ <svg id="mag" viewBox="0 0 100 100"><circle cx="40" cy="40" r="28" fill="#ffffff10" stroke="#f9efe4" stroke-width="7"/><path d="M61 61l26 26" stroke="#f9efe4" stroke-width="11" stroke-linecap="round"/></svg>
+ <div class="ttl big hot" id="t1b">AÇIK BUL</div>
+</div>
+
+<div class="S" id="s2">
+ <div class="ttl big" id="t2">BU <span class="red">SABAH</span></div>
+ <div id="clk">11:31</div>
+ <div id="dev"><div class="bar"><span>Ağ</span><b>WebSocket</b><span>Mesajlar</span><i class="dot"></i></div><div id="frames"></div></div>
+ <div id="call"><div class="av" style="background:#5a8cff">A</div><span>ali</span><span style="color:#ff4d4d">⟷ 📞 ⟷</span><span>ayşe</span><div class="av" style="background:#ff6bb0">A</div></div>
+</div>
+
+<div class="S" id="s3">
+ <div class="ttl big" id="t3">BİZE <span class="hot">YAZDI</span></div>
+ <div id="msg"><div class="hd"><div class="pp">🦊</div><div>bir kanka<br><small>Kanka HQ · #genel</small></div></div><div class="tx">açık var diyeyim 🐞</div></div>
+ <svg id="sw" viewBox="0 0 200 200"><circle cx="100" cy="108" r="78" fill="#14100d" stroke="#3a2c25" stroke-width="8"/><rect x="88" y="12" width="24" height="18" rx="5" fill="#f9efe4"/><circle id="swa" cx="100" cy="108" r="66" fill="none" stroke="#4cd98a" stroke-width="12" stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="414.7" transform="rotate(-90 100 108)"/><line id="swh" x1="100" y1="108" x2="100" y2="52" stroke="#f9efe4" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="108" r="8" fill="#f9efe4"/></svg>
+ <div id="swt">00:00</div>
+ <div id="ok3">KAPATILDI ✅</div>
+</div>
+
+<div class="S" id="s4">
+ <div class="ttl big" id="t4">TÜM SİSTEMİ <span class="grn">TARADIK</span></div>
+ <div id="radar"><div class="rg" style="inset:20%"></div><div class="rg" style="inset:38%"></div><div class="sw" id="rsw"></div></div>
+ <div id="cards"></div>
+</div>
+
+<div class="S" id="s5">
+ <div class="ttl big" id="t5">VE <span class="grn">KAZANDI</span></div>
+ <div id="pf"><div class="cov"></div><div class="pp">🦊</div><div class="nm">bir kanka</div><div class="sb">Kanka HQ üyesi · Sv 8</div>
+  <div class="bl"><b>ROZETLER</b><div class="bs">🌱</div><div class="bs">🔥</div><div class="bs">💬</div><div class="bs" id="slot"></div></div></div>
+ <div id="conf"></div>
+</div>
+
+<div class="S" id="s6">
+ <div class="ttl big" id="t6c">AMA <span class="grn">UNUTMA</span></div>
+ <div class="ttl big" id="t6a">SIRA <span class="hot">SENDE</span></div>
+ <div class="ttl big" id="t6b">açığı bul · ekibe yaz · rozeti kap</div>
+ <div id="url">kankahq.com</div>
+</div>
+
+<div id="cap"></div>
+
+<script>
+const TOT=24.2;
+// ElevenLabs kelime zamanları (Murat Albayrak, eleven_v4)
+const W=[["Bu",0.08],["rozeti",0.16],["parayla",0.64],["alamazsın.",1.16],["Kanka",2.08],["Chat'te",2.52],["almanın",2.88],["tek",3.48],["bir",3.64],["yolu",3.76],["var:",4.04],["bizim",4.64],["bile",5.01],["kaçırdığımız",5.2],["bir",5.92],["açığı",6.08],["bulmak.",6.48],["Bu",7.16],["sabah",7.28],["bir",7.68],["kullanıcı,",7.84],["başkalarının",8.52],["kiminle",9.28],["aradığını",9.64],["görebildiğini",10.08],["fark",10.72],["etti.",10.96],["Bize",11.68],["yazdı.",11.88],["Bir",12.6],["saat",12.8],["dolmadan",13.12],["kapattık.",13.6],["Sonra",14.52],["bütün",14.85],["sistemi",15.2],["taradık.",15.6],["Dört",16.36],["açık",16.6],["daha",16.88],["bulduk.",17.12],["Hepsi",17.73],["kapandı.",18.08],["O",18.95],["kullanıcı",19.04],["da",19.68],["bu",19.88],["rozeti",20.04],["kazandı.",20.36],["Şimdi",21.2],["sıra",21.52],["sende.",21.76],["Ama",22.56],["unutma:",22.96]];
+// altyazı satırları: [ilk kelime, son kelime]
+const LINES=[[0,3],[4,10],[11,16],[17,20],[21,26],[27,28],[29,32],[33,36],[37,40],[41,42],[43,48],[49,51],[52,53]];
+const MK={pop:[0.16,0.64,1.16,3.48,6.08,7.3,9.28,11.7,11.88,16.36,16.6,16.88,17.12,20.04,21.52,22.56],whoosh:[2.0,7.1,11.6,14.5,18.9,21.2,23.5],tick:[12.7,12.95,13.2,13.45,15.0,15.5,16.0],type:[11.72,11.78,11.84,11.9,11.97,12.03,12.1,12.16],fail:[1.3]};
+const MARKS=MK;
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>cl((t-a)/(b-a)),eo=x=>1-Math.pow(1-x,3),bk=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)},L=(a,b,x)=>a+(b-a)*x;
+const vis=(id,on)=>$(id).style.display=on?'':'none';
+function scene(id,t,a,b,fi=.15,fo=.2){const on=t>=a&&t<b;vis(id,on);if(on)$(id).style.opacity=seg(t,a,a+fi)*(1-seg(t,b-fo,b));return on;}
+const pop=(el,t,a,from=1.6,dur=.28)=>{el.style.opacity=seg(t,a,a+.06);el.style.transform=`scale(${L(from,1,bk(seg(t,a,a+dur)))})`;};
+const shake=(t,a,d=.35,amp=18)=>t>a&&t<a+d?Math.sin((t-a)*70)*amp*(1-(t-a)/d):0;
+// kod satırları
+const CODE=[['c','// ses odaları herkese yayınlanıyor'],['k','function ','pushVoice() {'],['','  io.emit(','voiceState',')'],['','  io.emit(','voiceLive',')'],['bad','  io.emit(\'voiceAge\', voiceAges()) // call:dm:…'],['','  io.emit(','voiceFlags',')'],['','}'],['c','// …'],['k','function ','canAccess(n, ch) {'],['','  return ','seesChannel','(…)'],['','}']];
+$('code').innerHTML=CODE.map((r,i)=>`<div class="ln ${r[0]==='bad'?'badl':''}" id="cl${i}">${r[0]==='c'?`<span class="c">${r[1]}</span>`:r[0]==='bad'?r[1].replace(/</g,'&lt;'):r[0]==='k'?`<span class="k">${r[1]}</span>${r[2]}`:(r[2]===undefined?r[1]:`${r[1]}<span class="s">${r[2]}</span>${r[3]||''}`)}</div>`).join('');
+// websocket kareleri
+const FR=[['presence','[["mehmet","online"],…]'],['voiceState','{"7fc1…": ["zeynep"]}'],['typing','{"ch":"genel"}'],['voiceLive','{}'],['voiceAge','{"call:dm:<span class="nm">ali|ayşe</span>": 512}'],['voiceFlags','{"zeynep":{"m":1}}'],['message','{"text":"selam"}'],['presence','[["can","idle"],…]']];
+$('frames').innerHTML=FR.map((f,i)=>`<div class="fr ${f[0]==='voiceAge'?'hlx':''}" id="fr${i}"><span class="ar">↓</span><span class="ev">${f[0]}</span><span>${f[1]}</span></div>`).join('');
+// açık kartları
+const CD=['Atılan kişi mesajları görüyordu','Gizli ses odaları görünüyordu','Görünmez mod ele veriyordu','Arama, gizli geçmişi açıyordu'];
+$('cards').innerHTML=CD.map((c,i)=>`<div class="cd" id="cd${i}" style="top:${1060+i*160}px"><div class="n">${i+1}</div><span>${c}</span><div class="st" id="st${i}">KAPANDI ✓</div></div>`).join('');
+// konfeti
+const CC=['#8ff05a','#ff8a4c','#ffd25a','#5aa9ff','#ff6bb0','#e6ffc4'];
+const CF=Array.from({length:60},(_,i)=>({x:540+Math.cos(i*2.4)*60,vx:Math.cos(i*1.37)*(380+(i*53)%420),vy:-900-(i*97)%700,r:(i*47)%360,c:CC[i%CC.length]}));
+$('conf').innerHTML=CF.map((c,i)=>`<i id="cf${i}" style="background:${c.c}"></i>`).join('');
+// altyazı
+function caption(t){let li=-1;for(let i=0;i<LINES.length;i++){if(t>=W[LINES[i][0]][1]-.05)li=i;}
+  const el=$('cap');if(li<0||t>23.95){el.innerHTML='';return;}const [a,b]=LINES[li];
+  el.innerHTML=W.slice(a,b+1).map((w,k)=>{const st=w[1],nx=(W[a+k+1]||[0,99])[1];return `<span class="${t>=st?(t<nx?'on cur':'on'):''}">${w[0]}</span>`;}).join(' ');}
+
+// Rozetin konumu: sahneye göre (merkez = videonun ilk karesiyle aynı, döngü için)
+const BD0={x:0,y:0,s:1};
+function badge(t){
+  let x=0,y=0,s=1,o=1;
+  // S0: merkez, nefes alır. 2.0-2.4: küçülüp sağ üste
+  const P=2*Math.PI*t/TOT,breathe=1+Math.sin(P*12)*.02;
+  if(t<2.0){s=breathe;}
+  else if(t<21.2){const k=eo(seg(t,2.0,2.4));x=L(0,360,k);y=L(0,-300,k);s=L(1,.28,k);
+    if(t>=18.9){const k2=eo(seg(t,19.6,20.04));x=L(360,0,k2);y=L(-300,0,k2);s=L(.28,1.15,k2);o=1-seg(t,20.0,20.1);} }
+  else {const k=eo(seg(t,23.35,24.2));x=0;y=L(-120,0,k);s=L(.55,1,k)*(t>=24.15?1:1);if(t<23.35){x=0;y=-120;s=.55*breathe;}}
+  // S5 dışında tüm sahnelerde görünür (S5'te profile uçar)
+  if(t>=20.1&&t<21.2)o=0;
+  if(t>=21.2)o=seg(t,21.25,21.45);
+  $('bd').style.opacity=o;$('bd').style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${Math.sin(P*6)*4}deg)`;
+  $('bd').querySelector('.ring').style.setProperty('--a',(t/TOT*360*6)+'deg');
+  const sh=(t/TOT*14)%1;$('shi').style.left=L(-40,140,sh)+'%';
+  $('bdl').style.opacity=t<2.0?0:(t>=23.35?seg(t,23.35,23.6)*0:0);
+}
+function setT(T){const t=T;
+  const red=(t>=7.1&&t<11.6)?1:0;$('bgr').style.opacity=red;$('bg').style.opacity=1-red*.8;
+  badge(t);caption(t);
+  // S0 hook 0-2.0 (ilk kare: sadece rozet → döngü dikişi)
+  if(scene('s0',t,0,2.05,0,.15)){
+    pop($('h1'),t,0.12,1.8);pop($('h2'),t,0.62,2.0);pop($('h3'),t,1.12,2.0);
+    $('h2').style.transform+=` rotate(${-3}deg)`;
+    $('buy').style.opacity=seg(t,0.85,0.95);$('buy').style.transform=`translateY(${L(200,0,eo(seg(t,.85,1.15)))}px) translateX(${shake(t,1.3,.4,26)}px)`;
+    $('buy').style.filter=t>1.3?`grayscale(${seg(t,1.3,1.45)}) brightness(${L(1,.5,seg(t,1.3,1.45))})`:'';
+    $('stamp').style.opacity=seg(t,1.3,1.34);$('stamp').style.transform=`scale(${L(2.4,1,eo(seg(t,1.3,1.45)))}) rotate(-8deg)`;}
+  // S1 tek yol 2.0-7.1
+  if(scene('s1',t,2.0,7.12)){
+    $('t1a').style.opacity=seg(t,3.45,3.55);$('t1a').style.transform=`scale(${L(1.5,1,bk(seg(t,3.45,3.75)))})`;
+    $('code').style.opacity=seg(t,2.1,2.3);$('code').style.transform=`translateY(${L(120,0,eo(seg(t,2.1,2.6)))}px)`;
+    // büyüteç satırları tarar, 6.08'de hatalı satırda durur
+    const scan=seg(t,4.6,6.05),row=Math.min(CODE.length-1,Math.floor(L(0,4,eo(scan))+(scan>=1?0:0)));
+    const tx=L(220,560,(Math.sin(t*5)+1)/2), ty=470+60*L(0,4,eo(scan));
+    $('mag').style.opacity=seg(t,4.5,4.65)*(1-seg(t,6.9,7.1));$('mag').style.transform=`translate(${t<6.08?tx:L(tx,700,eo(seg(t,6.08,6.3)))}px,${ty+40}px) scale(${t>=6.08?L(1,1.25,bk(seg(t,6.08,6.35))):1})`;
+    CODE.forEach((_,i)=>{const e=$('cl'+i);e.className='ln'+(i===4&&t>=6.08?' bad':'');e.style.opacity=t>=6.08&&i!==4?.35:1;});
+    $('code').style.transform+=` translateX(${shake(t,6.08,.3,14)}px)`;
+    pop($('t1b'),t,6.08,2.2,.3);}
+  // S2 websocket 7.1-11.6
+  if(scene('s2',t,7.1,11.62)){
+    $('t2').style.opacity=seg(t,7.15,7.3);$('clk').style.opacity=seg(t,7.3,7.5);
+    $('dev').style.opacity=seg(t,7.2,7.35);$('dev').style.transform=`translateY(${L(200,0,eo(seg(t,7.2,7.6)))}px)`;
+    FR.forEach((_,i)=>{const e=$('fr'+i),a=7.5+i*.22;e.style.opacity=seg(t,a,a+.08)*(t>=9.28&&i!==4?.35:1);e.style.transform=`translateX(${L(-60,0,eo(seg(t,a,a+.25)))}px) scale(${i===4&&t>=9.28?L(1.12,1.04,eo(seg(t,9.28,9.6))):1})`;e.className='fr'+(i===4&&t>=9.28?' hl':'');});
+    $('call').style.opacity=seg(t,10.05,10.12);$('call').style.transform=`scale(${L(1.5,1,bk(seg(t,10.05,10.35)))}) translateX(${shake(t,10.4,.35,12)}px)`;}
+  // S3 bildirim + kronometre 11.6-14.5
+  if(scene('s3',t,11.6,14.52)){
+    $('t3').style.opacity=seg(t,11.62,11.75);
+    $('msg').style.opacity=seg(t,11.68,11.78);$('msg').style.transform=`translateY(${L(80,0,eo(seg(t,11.68,11.95)))}px) scale(${L(.9,1,eo(seg(t,11.68,11.95)))})`;
+    const tx=$('msg').querySelector('.tx'),full='açık var diyeyim 🐞',n=Math.floor(seg(t,11.72,12.2)*full.length);tx.textContent=[...full].slice(0,Math.max(0,n)).join('')||' ';
+    const run=seg(t,12.6,13.6),mins=Math.floor(eo(run)*41),secs=Math.floor((eo(run)*41*60)%60);
+    $('sw').style.opacity=seg(t,12.5,12.6);$('sw').style.transform=`scale(${L(.5,1,bk(seg(t,12.5,12.8)))})`;
+    $('swa').setAttribute('stroke-dashoffset',414.7*(1-eo(run)*41/60));$('swh').setAttribute('transform',`rotate(${eo(run)*41*6} 100 108)`);
+    $('swt').style.opacity=seg(t,12.55,12.65);$('swt').textContent=t>=13.6?'< 1 SAAT':'';$('swt').style.color=t>=13.6?'#4cd98a':'#f9efe4';
+    $('ok3').style.opacity=seg(t,13.6,13.64);$('ok3').style.transform=`scale(${L(2.2,1,eo(seg(t,13.6,13.78)))}) rotate(-6deg)`;}
+  // S4 tarama 14.5-18.9
+  if(scene('s4',t,14.5,18.92)){
+    $('t4').style.opacity=seg(t,14.55,14.7);$('t4').style.transform=`translateY(${L(-40,0,eo(seg(t,14.55,14.8)))}px)`;
+    $('radar').style.opacity=seg(t,14.55,14.7)*(1-seg(t,16.2,16.45)*.65);$('radar').style.transform=`scale(${L(.6,1,bk(seg(t,14.55,14.9)))*L(1,.7,eo(seg(t,16.2,16.5)))}) translateY(${L(0,-120,eo(seg(t,16.2,16.5)))}px)`;
+    $('rsw').style.transform=`rotate(${(t-14.5)*300}deg)`;
+    [0,1,2,3].forEach(i=>{const a=[16.36,16.6,16.88,17.12][i],e=$('cd'+i);e.style.opacity=seg(t,a,a+.07);e.style.transform=`translateX(${L(i%2?300:-300,0,eo(seg(t,a,a+.25)))}px) translateY(-200px)`;
+      const s=$('st'+i),b=18.08+i*.1;s.style.opacity=seg(t,b,b+.04);s.style.transform=`scale(${L(2.4,1,eo(seg(t,b,b+.16)))}) rotate(-6deg)`;
+      e.style.borderColor=t>=b?'#2f8f2a':'#3a2c25';e.querySelector('.n').style.background=t>=b?'#4cd98a22':'#ff4d4d22';e.querySelector('.n').style.color=t>=b?'#4cd98a':'#ff6b5a';});}
+  // S5 profil 18.9-21.2
+  if(scene('s5',t,18.9,21.22)){
+    $('t5').style.opacity=seg(t,20.34,20.45);$('t5').style.transform=`scale(${L(1.6,1,bk(seg(t,20.34,20.6)))})`;
+    $('pf').style.opacity=seg(t,18.95,19.1);$('pf').style.transform=`translateY(${L(150,0,eo(seg(t,18.95,19.35)))}px)`;
+    const slot=$('slot');slot.innerHTML=t>=20.1?'<svg style="width:84px;height:84px"><use href="#bug"/></svg>':'';slot.style.cssText=t>=20.1?`border:4px solid #8ff05a;background:radial-gradient(circle,#2a3d1f,#0f1a0b);box-shadow:0 0 ${L(80,30,seg(t,20.1,20.8))}px #8ff05a;transform:scale(${L(1.6,1,bk(seg(t,20.1,20.4)))})`:'';
+    CF.forEach((c,i)=>{const e=$('cf'+i),d=t-20.36;if(d<0){e.style.opacity=0;return;}e.style.opacity=1-seg(d,.6,.85);e.style.transform=`translate(${c.x+c.vx*d}px,${1050+c.vy*d+1800*d*d}px) rotate(${c.r+d*600}deg)`;});}
+  // S6 sıra sende 21.2-24.2 → son 0.85 sn rozet merkeze döner (ilk kare)
+  if(scene('s6',t,21.2,24.2,.12,.35)){
+    pop($('t6a'),t,21.5,2.0);$('t6b').style.opacity=seg(t,21.85,22.0);
+    $('url').style.opacity=seg(t,21.95,22.05);$('url').style.transform=`scale(${L(.6,1,bk(seg(t,21.95,22.25)))})`;
+    pop($('t6c'),t,22.55,1.8);
+    const out=1-seg(t,23.3,23.6);['t6a','t6b','url'].forEach(id=>$(id).style.opacity*=out);}
+}
+setT(0);
+</script></body></html>

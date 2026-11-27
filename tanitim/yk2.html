@@ -1,0 +1,219 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#060608;font-family:'Inter Display','Inter',sans-serif;color:#f4f4f6}
+.L{position:absolute;inset:0}
+.blob{position:absolute;border-radius:50%;filter:blur(110px)}
+#bR{width:1000px;height:1000px;background:#8a4dff;opacity:.18}
+#bB{width:1000px;height:1000px;background:#1f5bff;opacity:.2}
+#bG{width:800px;height:800px;background:#d4ff00;opacity:.07}
+#grid{background-image:linear-gradient(#ffffff07 2px,transparent 2px),linear-gradient(90deg,#ffffff07 2px,transparent 2px);background-size:96px 96px;-webkit-mask-image:radial-gradient(900px 1400px at 50% 50%,#000 25%,transparent 75%)}
+#strobeR{background:linear-gradient(90deg,#8a4dff 0%,#8a4dff00 60%);opacity:0;z-index:70;mix-blend-mode:screen;pointer-events:none}
+#strobeB{background:linear-gradient(270deg,#1f5bff 0%,#1f5bff00 60%);opacity:0;z-index:70;mix-blend-mode:screen;pointer-events:none}
+#grain{background-image:radial-gradient(#ffffff0b 1px,transparent 1px);background-size:4px 4px;opacity:.6;z-index:90;pointer-events:none}
+#vign{background:radial-gradient(1200px 1800px at 50% 50%,transparent 55%,#000d 100%);z-index:89;pointer-events:none}
+#flash{background:#fff;opacity:0;z-index:95;pointer-events:none}
+#lflash{background:radial-gradient(circle at 50% 45%,#e8ff6a,#d4ff00 30%,#d4ff0000 75%);opacity:0;z-index:94;pointer-events:none;mix-blend-mode:screen}
+#stage{position:absolute;inset:0}
+.sc{position:absolute;inset:0;opacity:0}
+.kick{position:absolute;left:0;right:0;text-align:center;font-weight:800;font-size:32px;letter-spacing:8px;color:#d4ff00}
+.h{position:absolute;left:40px;right:40px;text-align:center;font-weight:900;font-size:104px;letter-spacing:-4px;line-height:1}
+.h .w{display:inline-block;overflow:hidden;vertical-align:bottom;padding:0 6px 10px}
+.h .w>span{display:inline-block}
+.lime{color:#d4ff00}.red{color:#ff3b5c}
+.slam{position:absolute;left:0;right:0;text-align:center;font-weight:900;letter-spacing:-6px;line-height:.92;text-transform:uppercase}
+.sub{position:absolute;left:90px;right:90px;text-align:center;font-weight:600;font-size:40px;color:#a8a8b4;line-height:1.3}
+.phone{position:absolute;width:620px;height:1340px;border-radius:90px;background:#0d0d11;padding:22px;box-shadow:0 0 0 3px #2c2c34,0 0 0 9px #111116,0 60px 160px #000c}
+.phone .scr{position:relative;width:100%;height:100%;border-radius:70px;overflow:hidden;background:#111}
+.phone .scr img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:50% 0;display:block}
+.phone .isl{position:absolute;left:50%;top:38px;width:180px;height:52px;margin-left:-90px;border-radius:30px;background:#000;z-index:3}
+.phone .gl{position:absolute;inset:0;border-radius:70px;background:linear-gradient(125deg,#ffffff14,transparent 35%);pointer-events:none;z-index:2}
+.chip{position:absolute;display:flex;align-items:center;gap:16px;padding:22px 34px;border-radius:999px;background:#15151b;border:2px solid #ffffff18;font-weight:800;font-size:40px;white-space:nowrap;box-shadow:0 20px 60px #000a}
+.chip.l{background:#d4ff00;color:#0b0b0e;border-color:#d4ff00;box-shadow:0 20px 60px #d4ff0040}
+/* yorum kartı */
+.cmt{position:absolute;left:70px;right:70px;top:1020px;border-radius:40px;background:#fff;color:#16161a;padding:44px 46px 40px;box-shadow:0 50px 140px #000d}
+.cmt .rp{position:absolute;left:46px;top:-40px;background:#d4ff00;color:#0b0b0e;font-weight:900;font-size:30px;padding:14px 26px;border-radius:18px;letter-spacing:1px;box-shadow:0 14px 40px #0008}
+.cmt .row{display:flex;gap:28px}
+.cmt .av{flex:none;width:104px;height:104px;border-radius:50%;background:linear-gradient(135deg,#ffb347,#ff3b5c);display:grid;place-items:center;font-size:54px;font-weight:900;color:#fff}
+.cmt .u{font-size:32px;font-weight:700;color:#7a7a86;margin-bottom:8px}
+.cmt .t{font-size:50px;font-weight:700;line-height:1.18;letter-spacing:-1px}
+.cmt .m{display:flex;gap:34px;margin-top:20px;font-size:30px;color:#8a8a96;font-weight:600}
+.cmt .hrt{position:absolute;right:44px;top:56px;display:grid;justify-items:center;font-size:28px;font-weight:700;color:#8a8a96}
+.cmt .hrt b{font-size:56px;color:#ff2d55;line-height:1}
+/* roller */
+.role{position:absolute;left:110px;right:110px;height:150px;border-radius:40px;background:#111116;border:3px solid #ffffff12;display:flex;align-items:center;gap:34px;padding:0 44px;box-shadow:0 30px 80px #000b}
+.role .e{font-size:76px;width:90px;text-align:center}
+.role b{font-size:66px;font-weight:900;letter-spacing:-2px}
+.role small{margin-left:auto;font-size:30px;font-weight:700;color:#8a8a96;letter-spacing:2px}
+/* geri sayım */
+.big{position:absolute;left:0;right:0;text-align:center;font-weight:900;font-size:520px;letter-spacing:-20px;line-height:1;color:#fff;text-shadow:0 0 90px #d4ff0070}
+.tap{position:absolute;width:150px;height:150px;border-radius:50%;border:7px solid #d4ff00;margin:-75px 0 0 -75px;opacity:0;z-index:20}
+.dot{position:absolute;width:86px;height:86px;border-radius:50%;background:#ffffffd0;margin:-43px 0 0 -43px;opacity:0;z-index:21;box-shadow:0 0 0 10px #ffffff40}
+.logo{position:absolute;left:50%;width:240px;height:240px;margin-left:-120px;border-radius:68px;background:#0d0d11;display:grid;place-items:center;box-shadow:0 0 0 3px #ffffff14,0 40px 120px #000,0 0 160px #d4ff0030}
+.logo img{width:180px;height:180px}
+.url{position:absolute;left:0;right:0;text-align:center;font-weight:900;font-size:118px;letter-spacing:-4px}
+.url .c,.inp .c{display:inline-block;width:8px;background:#d4ff00;margin-left:8px}
+.inp{position:absolute;left:80px;right:80px;border-radius:999px;background:#16161c;border:3px solid #d4ff00;padding:34px 48px;font-size:44px;font-weight:600;color:#f4f4f6;box-shadow:0 0 80px #d4ff0030}
+.inp .ph{color:#777784}
+.top{position:absolute;top:96px;left:0;right:0;display:flex;justify-content:center;z-index:80}
+.tag{display:flex;align-items:center;gap:14px;padding:14px 28px;border-radius:999px;background:#111116cc;border:2px solid #ffffff18;font-weight:900;font-size:30px;letter-spacing:4px;color:#f4f4f6}
+.tag img{width:40px;height:40px}.tag i{font-style:normal;color:#d4ff00}
+.prog{position:absolute;left:80px;right:80px;bottom:90px;height:8px;border-radius:6px;background:#ffffff12;overflow:hidden;z-index:80}
+.prog i{display:block;height:100%;background:#d4ff00;box-shadow:0 0 14px #d4ff00}
+.spark{position:absolute;width:14px;height:14px;border-radius:3px;background:#d4ff00;z-index:60}
+</style></head><body>
+<div class="L"><div class="blob" id="bR"></div><div class="blob" id="bB"></div><div class="blob" id="bG"></div></div>
+<div class="L" id="grid"></div>
+<style>.ring{position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;border:8px solid #d4ff00;opacity:0;z-index:4;pointer-events:none}</style><div id="stage">
+<div class="sc" id="s1">
+  <div class="slam" id="w1" style="top:250px;font-size:160px">TELEFONDAN</div>
+  <div class="slam lime" id="w2" style="top:430px;font-size:150px">giriyorsan</div>
+  <div class="slam red" id="w3" style="top:600px;font-size:190px">KAYDIRMA</div>
+  <div class="cmt" id="cmt"><div class="rp">@ecemgg yorumuna yanıt</div>
+    <div class="row"><div class="av" style="background:linear-gradient(135deg,#7d5bff,#3dd6ff)">E</div><div><div class="u">ecemgg · 3 g</div><div class="t">Telefona uygulama yapın artık, tarayıcıdan girmek işkence 😩</div><div class="m"><span>Yanıtla</span></div></div></div>
+  </div>
+</div>
+<div class="sc" id="s2">
+  <div class="slam" id="t1" style="top:540px;font-size:150px">Tamam kanka.</div>
+  <div class="slam lime" id="t2" style="top:800px;font-size:280px">YAPTIK.</div>
+  <div class="sub" id="t3" style="top:1180px;font-size:44px;color:#cfcfd6">📱 Android + iPhone · gerçek uygulama</div>
+</div>
+<div class="sc" id="s3">
+  <div class="kick" style="top:230px">SUNUCULAR</div>
+  <div class="h" style="top:290px" id="s3h"><span class="w"><span>Ekibin</span></span> <span class="w"><span class="lime">cebinde.</span></span></div>
+  <div class="phone" id="p3" style="left:230px;top:470px"><div class="scr"><img src="e2/mob-9-rr.jpg" id="i3"><div class="isl"></div><div class="gl"></div><div class="tap" id="tp3"></div><div class="dot" id="dt3"></div></div></div>
+  <div class="chip l" id="c3" style="left:70px;top:1560px">👑 Rob Run Ailesi de burada</div>
+</div>
+<div class="sc" id="s4">
+  <div class="kick" style="top:230px">SESLİ MESAJ</div>
+  <div class="h" style="top:290px" id="s4h"><span class="w"><span>Bas.</span></span> <span class="w"><span>Konuş.</span></span> <span class="w"><span class="lime">Gönder.</span></span></div>
+  <div class="phone" id="p4" style="left:230px;top:470px"><div class="scr"><img src="e2/vm-kanal.jpg" id="i4"><div class="isl"></div><div class="gl"></div></div></div>
+  <div class="chip" id="c4a" style="left:40px;top:960px">🎙️ Basılı tut</div>
+  <div class="chip l" id="c4b" style="right:40px;top:1200px">▶︎ Dinle</div>
+</div>
+<div class="sc" id="s5">
+  <div class="kick" style="top:230px">ARAMA</div>
+  <div class="h" style="top:290px" id="s5h"><span class="w"><span>Kanka</span></span> <span class="w"><span class="lime">arıyor.</span></span></div>
+  <div class="phone" id="p5" style="left:230px;top:470px"><div class="scr"><img src="e2/ses-4-gelen.jpg" id="i5a"><img src="e2/ses-1-oda.jpg" id="i5b" style="opacity:0"><div class="isl"></div><div class="gl"></div><div class="ring" id="rg1"></div><div class="ring" id="rg2"></div></div></div>
+  <div class="chip" id="c5a" style="left:50px;top:900px">📞 Telefon çalar</div>
+  <div class="chip" id="c5b" style="right:50px;top:1110px">🔊 Ses odası</div>
+  <div class="chip l" id="c5c" style="left:70px;top:1560px">📹 Kamera da açılır</div>
+</div>
+<div class="sc" id="s6">
+  <div class="kick" style="top:230px" id="s6k">ARENA</div>
+  <div class="h" style="top:290px;z-index:5" id="s6h"><span class="w"><span>Sıkıldın</span></span> <span class="w"><span>mı?</span></span> <span class="w"><span class="lime">Masaya</span></span> <span class="w"><span class="lime">otur.</span></span></div>
+  <div class="phone" id="p6" style="left:230px;top:600px"><div class="scr"><img src="e2/ar-pisti-1.jpg" id="i6"><div class="isl"></div><div class="gl"></div></div></div>
+  <div class="chip l" id="c6" style="left:50%;top:1580px;transform-origin:0 0">🃏 Pişti</div>
+</div>
+<div class="sc" id="s7">
+  <div class="h" style="top:240px;font-size:112px" id="s7h"><span class="w"><span>Hepsi</span></span> <span class="w"><span>tek</span></span><br><span class="w"><span class="lime">uygulamada.</span></span></div>
+  <div class="phone" id="p7a" style="left:20px;top:720px;width:400px;height:865px;border-radius:60px;padding:14px"><div class="scr" style="border-radius:48px"><img src="e2/mob-6-mesajlar.jpg"></div></div>
+  <div class="phone" id="p7b" style="left:340px;top:660px;width:400px;height:865px;border-radius:60px;padding:14px;z-index:2"><div class="scr" style="border-radius:48px"><img src="e2/vm-kanal.jpg"></div></div>
+  <div class="phone" id="p7c" style="left:660px;top:720px;width:400px;height:865px;border-radius:60px;padding:14px"><div class="scr" style="border-radius:48px"><img src="e2/mob-8-profil.jpg"></div></div>
+</div>
+<div class="sc" id="s8">
+  <div class="logo" id="lg" style="top:330px"><img src="k/logo.png"></div>
+  <div class="h" style="top:630px;font-size:116px" id="s8h"><span class="w"><span>Cebine</span></span> <span class="w"><span class="lime">al.</span></span></div>
+  <div class="url" id="url" style="top:790px"><span id="ut"></span><span class="c" id="uc" style="height:100px;vertical-align:-8px"></span></div>
+  <div class="sub" id="soon" style="top:960px;font-size:40px;color:#cfcfd6">Play Store'a geliyor · iPhone yakında</div>
+  <div class="kick" style="top:1170px;color:#f4f4f6;letter-spacing:4px;font-size:40px" id="nx">SIRADAKİ BÖLÜM SENİN YORUMUN 👇</div>
+  <div class="inp" id="inp" style="top:1270px"><span id="it"></span><span class="c" id="ic" style="height:50px;vertical-align:-8px"></span></div>
+</div>
+</div>
+<div id="sparks"></div>
+<div class="top" id="top"><div class="tag"><img src="k/logo.png">YORUMLARLA KANKA <i>#2</i></div></div>
+<div class="prog"><i id="progi"></i></div>
+<div class="L" id="strobeR"></div><div class="L" id="strobeB"></div>
+<div class="L" id="lflash"></div><div class="L" id="flash"></div>
+<div class="L" id="vign"></div><div class="L" id="grain"></div>
+<script>
+const $=s=>document.querySelector(s);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)), seg=(t,a,b)=>cl((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3), eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2, eb=x=>{const c1=1.7,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const B=60/128, bt=n=>+(n*B).toFixed(3);
+// sahneler (vuruşa oturtulmuş)
+const SC=[['s1',0,bt(6)],['s2',bt(6),bt(10)],['s3',bt(10),bt(18)],['s4',bt(18),bt(26)],['s5',bt(26),bt(34)],['s6',bt(34),bt(46)],['s7',bt(46),bt(52)],['s8',bt(52),bt(64)]];
+const TOT=bt(64);
+const GO=bt(44), CD=[bt(38),bt(40),bt(42)];
+const MARKS={whoosh:[],pop:[],type:[],slam:[],siren:[],ring:[0,bt(26),bt(27)],beep:CD,go:[GO],hit:[bt(6),GO,bt(52)],stamp:[bt(8)],tap:[bt(14)],riser:[bt(34)]};
+SC.forEach(([,a])=>{if(a>0)MARKS.whoosh.push(a)});
+MARKS.slam.push(0,bt(1),bt(2),bt(3),bt(6));
+
+const ARS=[['e2/ar-pisti-1.jpg','🃏 Pişti'],['e2/ar-kart-2.jpg','🌈 Kanka Kart'],['e2/ar-asmaca-1.jpg','🔤 Harf Tahmin'],['e2/ar-pisti-2.jpg','🏆 Rövanş?']];
+[['c3',bt(15)],['c4a',bt(21)],['c4b',bt(23)],['c5a',bt(28)],['c5b',bt(30.5)],['c5c',bt(31.5)]].forEach(([,x])=>MARKS.pop.push(x));
+MARKS.tap.push(bt(22));
+const URL='kankahq.com', UT=bt(53.5); for(let i=0;i<URL.length;i++)MARKS.type.push(UT+i*.08);
+const CM='#3 ne olsun? yaz, yapalım 🔥', CT=bt(57.5); for(let i=0;i<CM.length;i+=1)MARKS.type.push(CT+i*.06);
+MARKS.pop.push(bt(55),bt(56));
+const SP=[];for(let i=0;i<60;i++){const e=document.createElement('div');e.className='spark';$('#sparks').appendChild(e);const a=Math.random()*Math.PI*2,v=600+Math.random()*1500;SP.push({e,vx:Math.cos(a)*v,vy:Math.sin(a)*v-500,r:Math.random()*720,s:.6+Math.random()*1.6})}
+function words(id,t,a,step=.08){document.querySelectorAll('#'+id+' .w>span').forEach((s,i)=>{const k=eo(seg(t,a+i*step,a+i*step+.4));s.style.transform=`translateY(${(1-k)*110}%)`})}
+function pop(el,t,a){const k=seg(t,a,a+.38),b=eb(k);el.style.opacity=cl(k*3);el.style.transform=`scale(${.3+.7*b})`}
+function slam(el,t,a){const k=seg(t,a,a+.16);el.style.opacity=k>0?1:0;el.style.transform=`scale(${3.2-2.2*eo(k)})`;el.style.filter=k<1?`blur(${(1-k)*14}px)`:'none'}
+function phone(el,t,a){const k=eo(seg(t,a,a+.6));el.style.transform=`perspective(2400px) translateY(${(1-k)*900}px) rotateX(${(1-k)*28+2}deg) rotateY(${Math.sin(t*.8)*3}deg) rotateZ(${(1-k)*-5}deg)`;el.style.opacity=cl(k*2)}
+const af=(t,h,d,g=1)=>t>=h&&t<h+d?(1-(t-h)/d)*g:0;
+function tapAt(t,tp,x,y,tap,dot){[tap,dot].forEach(e=>{e.style.left=x;e.style.top=y});const q=seg(t,tp,tp+.5);
+  dot.style.opacity=t>tp-.5&&t<tp+.35?cl((t-(tp-.5))/.2)*(1-seg(t,tp+.15,tp+.35)):0;dot.style.transform=`scale(${t<tp?1:.8})`;
+  tap.style.opacity=q>0&&q<1?1-q:0;tap.style.transform=`scale(${.5+q*1.6})`;}
+function setT(t){
+  const ps=t<bt(6)?1:(t>bt(34)&&t<GO?.7:.25);
+  $('#bR').style.transform=`translate(${-300+Math.sin(t*.6)*200}px,${200+Math.cos(t*.5)*300}px)`;
+  $('#bB').style.transform=`translate(${400+Math.cos(t*.55)*200}px,${800+Math.sin(t*.45)*300}px)`;
+  $('#bG').style.transform=`translate(${150+Math.sin(t*.4)*200}px,${500+Math.cos(t*.35)*300}px)`;
+  const ph=Math.floor(t/(B/2))%2;
+  $('#bR').style.opacity=.12+.25*ps*(ph?1:.2); $('#bB').style.opacity=.12+.25*ps*(ph?.2:1);
+  $('#grid').style.backgroundPosition=`0 ${t*40}px`;
+  const st=(t<bt(6))||(t>bt(37)&&t<GO);const sp=Math.floor(t/(B/4))%4;
+  $('#strobeR').style.opacity=st?(sp===0?.5:sp===1?.18:0):0; $('#strobeB').style.opacity=st?(sp===2?.5:sp===3?.18:0):0;
+  $('#progi').style.width=(t/TOT*100)+'%';
+  $('#top').style.opacity=t<bt(6)?0:cl((t-bt(6))/.4)*(t>bt(52)?cl(1-(t-bt(52))/.4):1);
+  SC.forEach(([id,a,b],i)=>{const e=$('#'+id);if(t<a-.01||t>b+.01){e.style.opacity=0;return}
+    const vin=i===0?1:seg(t,a,a+.22),vout=i===SC.length-1?0:seg(t,b-.2,b);
+    e.style.opacity=Math.min(vin,1-vout);e.style.transform=`translateY(${-eo(vout)*240}px) scale(${1+(1-eo(vin))*.2+vout*.06})`;
+    const bl=(1-vin)*16+vout*20;e.style.filter=bl>.3?`blur(${bl}px)`:'none'});
+  let fl=Math.max(af(t,0,.2,.6),af(t,bt(1),.15,.35),af(t,bt(2),.15,.35),af(t,bt(3),.2,.5),af(t,bt(6),.2,.4),af(t,bt(8),.18,.3),af(t,GO,.35,.9),af(t,bt(52),.25,.5));
+  SC.forEach(([,a])=>{if(a>bt(7))fl=Math.max(fl,af(t,a,.2,.15))}); CD.forEach(c=>fl=Math.max(fl,af(t,c,.15,.25)));
+  $('#flash').style.opacity=fl; $('#lflash').style.opacity=af(t,GO,1.1,1);
+  let sk=Math.max(af(t,0,.3,1),af(t,bt(1),.25,.7),af(t,bt(2),.3,1),af(t,bt(3),.3,.8),af(t,bt(8),.3,.8),af(t,GO,.8,1.6),...CD.map(c=>af(t,c,.25,.6)));
+  $('#stage').style.transform=sk>0?`translate(${Math.sin(t*97)*26*sk}px,${Math.cos(t*83)*26*sk}px) rotate(${Math.sin(t*61)*1.2*sk}deg)`:'none';
+  if(t<bt(6)+.05){slam($('#w1'),t,0);slam($('#w2'),t,bt(1));slam($('#w3'),t,bt(2));
+    const k=seg(t,bt(3),bt(3)+.35),b=eb(k);const c=$('#cmt');c.style.opacity=cl(k*3);c.style.transform=`translateY(${(1-b)*300}px) rotate(${(1-b)*-8+Math.sin(t*3)*.6}deg) scale(${.7+.3*b})`;}
+  if(t>bt(6)-.05&&t<bt(10)+.05){const L=t-bt(6);
+    const k=eo(seg(L,0,.3));$('#t1').style.opacity=k;$('#t1').style.transform=`translateY(${(1-k)*60}px)`;
+    slam($('#t2'),t,bt(8));if(t>=bt(8))$('#t2').style.transform+=` rotate(-4deg)`;
+    $('#t3').style.opacity=seg(t,bt(8.6),bt(9.2));}
+  if(t>bt(10)-.05&&t<bt(18)+.05){words('s3',t,bt(10)+.05);phone($('#p3'),t,bt(10)+.1);
+    const tp=bt(14);tapAt(t,tp,'50%','300px',$('#tp3'),$('#dt3'));
+    const z=eio(seg(t,tp+.1,tp+.8));$('#i3').style.transformOrigin='50% 12%';$('#i3').style.transform=`scale(${1+z*.3})`;
+    pop($('#c3'),t,bt(15));}
+  if(t>bt(18)-.05&&t<bt(26)+.05){words('s4',t,bt(18)+.05);phone($('#p4'),t,bt(18)+.1);
+    const z=eio(seg(t,bt(20),bt(22)));$('#i4').style.transformOrigin='50% 30%';$('#i4').style.transform=`scale(${1+z*.35}) translateY(${-z*40}px)`;
+    pop($('#c4a'),t,bt(21));pop($('#c4b'),t,bt(23));
+    ['#c4a','#c4b'].forEach((s,i)=>$(s).style.transform+=` translateY(${Math.sin(t*2+i)*7}px)`);}
+  if(t>bt(26)-.05&&t<bt(34)+.05){words('s5',t,bt(26)+.05);phone($('#p5'),t,bt(26)+.1);
+    const vib=t<bt(30)?Math.sin(t*90)*6*(Math.floor(t/(B/2))%2):0;$('#p5').style.transform+=` translateX(${vib}px)`;
+    [['#rg1',0],['#rg2',B]].forEach(([s,o])=>{const q=((t-bt(26)+o)%(2*B))/(2*B);const r=$(s);r.style.top='38%';r.style.opacity=t<bt(30)?(1-q)*.9:0;r.style.transform=`scale(${.6+q*1.6})`});
+    const sw=eio(seg(t,bt(30),bt(30)+.45));$('#i5a').style.transform=`translateX(${-sw*100}%)`;$('#i5b').style.opacity=1;$('#i5b').style.transform=`translateX(${(1-sw)*100}%)`;
+    pop($('#c5a'),t,bt(28));pop($('#c5b'),t,bt(30.5));pop($('#c5c'),t,bt(31.5));
+    ['#c5a','#c5b','#c5c'].forEach((s,i)=>$(s).style.transform+=` translateY(${Math.sin(t*2+i)*7}px)`);}
+  if(t>bt(34)-.05&&t<bt(46)+.05){words('s6',t,bt(34)+.05);phone($('#p6'),t,bt(34)+.1);
+    const ix=t<CD[0]?0:t<CD[1]?1:t<GO?2:3;const im=$('#i6');if(!im.src.endsWith(ARS[ix][0]))im.src=ARS[ix][0];
+    const c=$('#c6');if(c.dataset.i!=ix){c.textContent=ARS[ix][1];c.dataset.i=ix}
+    const a=[bt(35),CD[0],CD[1],GO][ix];const k=eb(seg(t,a,a+.35));c.style.opacity=cl(k*3);c.style.transform=`translateX(-50%) scale(${.4+.6*k}) rotate(${(1-k)*-10}deg)`;
+    const pk=Math.max(...CD.map(c=>af(t,c,.3,.06)),af(t,GO,.4,.12));$('#p6').style.transform+=` scale(${1+pk})`;}
+  const g=t-GO;SP.forEach(p=>{if(g<0||g>1.6){p.e.style.opacity=0;return}p.e.style.opacity=1-g/1.6;p.e.style.transform=`translate(${540+p.vx*g}px,${1000+p.vy*g+900*g*g}px) rotate(${p.r*g}deg) scale(${p.s})`});
+  if(t>bt(46)-.05&&t<bt(52)+.05){words('s7',t,bt(46)+.05,.1);
+    [['#p7a',bt(47),-1],['#p7b',bt(47.5),0],['#p7c',bt(48),1]].forEach(([s,a,d])=>{const k=eb(seg(t,a,a+.4));$(s).style.opacity=cl(k*3);$(s).style.transform=`translateY(${(1-k)*700}px) rotate(${d*6*(k)}deg) scale(${1+af(t,a+.3,.3,.06)})`});}
+  if(t>bt(52)-.05){const L=t-bt(52);
+    const k=eb(seg(L,0,.45));$('#lg').style.transform=`scale(${k}) rotate(${(1-k)*-20}deg)`;$('#lg').style.opacity=cl(L*4);
+    words('s8',t,bt(52)+.2,.12);
+    const n=Math.floor(seg(t,UT,UT+URL.length*.08)*URL.length);$('#ut').innerHTML=URL.slice(0,n).replace('kankahq','kanka<span class="lime">hq</span>');
+    $('#uc').style.opacity=(Math.floor(t*2.4)%2===0&&t<CT)?1:0;$('#url').style.opacity=seg(t,UT-.1,UT);
+    pop($('#soon'),t,bt(55));pop($('#nx'),t,bt(56));pop($('#inp'),t,bt(56.5));
+    const m=[...CM];const q=Math.floor(seg(t,CT,CT+m.length*.06)*m.length);$('#it').innerHTML=q?m.slice(0,q).join(''):'<span class="ph">Yorum ekle…</span>';
+    $('#ic').style.opacity=(Math.floor(t*2.4)%2===0)&&t>=CT?1:0;
+    const out=seg(t,TOT-.5,TOT);document.body.style.filter=out>0?`brightness(${1-out})`:'none';
+  } else document.body.style.filter='none';
+}
+MARKS.pop.push(bt(47),bt(47.5),bt(48));
+setT(0);
+</script></body></html>
