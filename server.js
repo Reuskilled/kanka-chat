@@ -6117,6 +6117,7 @@ io.on('connection', socket => {
     }
     cb(u.prefs ? { notif: u.prefs.notif, muted: u.prefs.muted, ch: u.prefs.ch, srv: u.prefs.srv || {}, order: u.prefs.order || [], muteUntil: u.prefs.muteUntil || {}, read: u.prefs.read || {}, emoji: u.prefs.emoji || { fav: [], use: {} }, at: u.prefs.at } : null);
   });
+  socket.on('vping', cb => { if (typeof cb === 'function') cb(Date.now()); }); // ses bağlantısı penceresi: Kanka sunucusuna gecikme
   socket.on('read', id => { // okundu bilgisi her cihazda aynı olsun
     const u = db.users[me]; if (!u || typeof id !== 'string' || id.length > 80) return;
     const t = Date.now(); u.prefs ||= {}; u.prefs.read ||= {}; u.prefs.read[id] = t;
