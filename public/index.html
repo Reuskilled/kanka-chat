@@ -9450,7 +9450,7 @@ function marketCatalog() {
       key: 'eff:' + e[0], cat: 'effect', id: e[0], name: e[1], sub: isCat ? 'Profil Efekti' : '3D Profil Efekti',
       badge: isCat ? 'YAKINDA' : '3D VFX', badgeCls: isCat ? 'pink' : 'lime',
       status: isCat ? (pi ? '✓ Aktif' : 'Yakında') : 'Yakında', stCls: isCat ? (pi ? 'ok' : 'pink') : '', open: isCat ? pi : false, color: e[4] || '#c8ff00', bg: e[3] || '#121319', img: e[5] || '', fx: e[6] || '',
-      desc: isCat ? 'Gümüş-lila çizgili 2D anime kedi profilin üstünden yürüyüp pembe pati izleri, mor parıltı ve yıldızlar bırakarak son saniyede yumuşakça erir.' : 'Profil kartın açıldığında kenarlarda sinematik 3D / şeffaf video efekt ve parçacık ışıkları oynatır.',
+      desc: isCat ? 'Gümüş-lila çizgili anime kedi profilin üstünden yürüyüp pembe pati izleri, mor parıltı ve yıldızlar bırakarak yumuşakça kaybolur.' : 'Profil kartın açıldığında kenarlarda sinematik efektler ve parçacık ışıkları oynatır.',
     };
   });
   const effAmb = (typeof PEFFECTS !== 'undefined' ? PEFFECTS : []).filter(e => e[0] !== 'none').map(e => ({
@@ -9464,7 +9464,7 @@ function marketCatalog() {
       key: 'nb:' + b.id, cat: 'banner', id: b.id, name: b.name, sub: 'İsim Plakası',
       badge: isSoon ? 'YAKINDA' : (b.tag || 'PLAKA'), badgeCls: isSoon ? 'pink' : (b.tag === 'KANKA' ? 'lime' : ''),
       status: isSoon ? (pi ? '✓ Aktif' : 'Yakında') : 'Açık', stCls: isSoon ? (pi ? 'ok' : 'pink') : 'ok', open: isSoon ? pi : true, color: isSoon ? '#f48fb1' : '#c8ff00',
-      desc: isSoon ? 'Fare üstüne gelince canlanan 2D anime kedi sağdan sola yürüyüp pembe parıltı ve yıldız izi bırakır — boşta 0 MB video RAM harcar.' : 'Üye listesinde ve sohbet kenar çubuğunda isminin arkasında animasyonlu sahne ve parlama efekti gösterir.',
+      desc: isSoon ? 'Üye listesinde fare üstüne gelince canlanan anime kedi, sağdan sola yürüyüp pembe parıltı ve yıldız izi bırakır.' : 'Üye listesinde ve sohbet kenar çubuğunda isminin arkasında animasyonlu sahne ve parlama efekti gösterir.',
     };
   });
   const frames = (typeof FRAMES !== 'undefined' ? FRAMES : []).filter(f => f[0] !== 'none').map(f => {
@@ -9476,7 +9476,7 @@ function marketCatalog() {
       status: isSoon ? (pi ? '✓ Aktif' : 'Yakında') : unlocked ? 'Açık' : (f[2] < 0 ? 'Kurucu' : `Sv. ${f[2]}`),
       stCls: isSoon ? (pi ? 'ok' : 'pink') : unlocked ? 'ok' : '',
       open: isSoon ? pi : unlocked, color: isSoon ? '#f48fb1' : '#c8ff00',
-      desc: isSoon ? 'Sol ve sağ kulağı ayrı ayrı kıpırdayan, çizgili kuyruğu sallanan ve 5 yıldızı parıldayan 20 FPS şeffaf 2D anime kedi çerçevesi.' : f[2] < 0 ? 'Kanka Chat kurucu üyelerine özel hareketli avatar çerçevesi.' : `Avatarının etrafında dönen hareketli çerçeve. Seviye ${f[2]} olunca otomatik açılır.`,
+      desc: isSoon ? 'Kulakları hafifçe kıpırdayan, çizgili kuyruğu sallanan ve yıldızları parıldayan hareketli anime kedi çerçevesi.' : f[2] < 0 ? 'Kanka Chat kurucu üyelerine özel hareketli avatar çerçevesi.' : `Avatarının etrafında dönen hareketli çerçeve. Seviye ${f[2]} olunca otomatik açılır.`,
     };
   });
   const tags = (typeof TAG_PX_PACKS !== 'undefined' ? TAG_PX_PACKS : []).map(p => ({
@@ -9488,7 +9488,7 @@ function marketCatalog() {
     key: 'bundle:gecekedi', cat: 'bundle', id: 'gecekedi', name: 'Gece Kedisi 3\'lü Set',
     sub: 'Çerçeve + Efekt + Plaka', badge: '3\'LÜ PAKET', badgeCls: 'pink',
     status: pi ? '✓ Tam Set' : 'Yakında', stCls: pi ? 'ok' : 'pink', open: pi, color: '#f48fb1',
-    desc: 'Gece Kedisi koleksiyonunun 3 uyumlu 2D anime parçası bir arada: Hareketli Kedi Çerçevesi, Yürüyen Kedi Profil Efekti ve Hover İsim Plakası.',
+    desc: 'Gece Kedisi koleksiyonunun 3 uyumlu parçası bir arada: Hareketli Kedi Çerçevesi, Yürüyen Kedi Profil Efekti ve Canlı İsim Plakası.',
   };
   return { eff3d, effAmb, banners, frames, tags, bundle, all: [bundle, ...eff3d, ...effAmb, ...banners, ...frames, ...tags] };
 }
@@ -9746,7 +9746,7 @@ function marketHTML() {
           <div class="mk-hero-l">
             <span class="mk-kicker">🐾 YENİ ANİME KOLEKSİYONU · 3 PARÇA</span>
             <h2>GECE KEDİSİ KOLEKSİYONU</h2>
-            <p>Kulakları kıpırdayan 20 FPS anime kedi çerçevesi, profilin üstünden yürüyüp pembe pati izleri bırakan efekt ve fareyle canlanan isim plakası — birebir aynı kediyle tam uyumlu 3'lü set.</p>
+            <p>Kulakları kıpırdayan hareketli kedi çerçevesi, profilin üstünden yürüyüp pembe pati izleri bırakan efekt ve üstüne gelince canlanan isim plakası — birbirine tam uyumlu 3'lü koleksiyon.</p>
             <div class="mk-hero-acts">
               <button type="button" class="mk-hero-btn" id="mk-try-set">🐾 3'lü Seti Canlı Dene</button>
               <button type="button" class="mk-hero-btn2" id="mk-explore">Tüm Koleksiyonlar ↓</button>
@@ -9770,7 +9770,7 @@ function marketHTML() {
       <div class="mk-spot2">
         <div class="mk-spot" data-mktab="effect" style="--sp-c:#ff6b4a">
           <img class="mk-spot-bg" src="/effects/dragon_crimson.jpg" alt="">
-          <div class="mk-spot-l"><small>3D &amp; AI PROFİL EVRENİ</small><h3>Kızıl Ejderha &amp; VFX</h3><p>Kızıl Ejderha, Zümrüt Ejderha, Kara Delik ve Kuzey Işıkları — şeffaf yüksek kaliteli efektler.</p><span class="mk-spot-btn">Efektlere Git</span></div>
+          <div class="mk-spot-l"><small>SİNEMATİK PROFİL EVRENİ</small><h3>Kızıl Ejderha &amp; VFX</h3><p>Kızıl Ejderha, Zümrüt Ejderha, Kara Delik ve Kuzey Işıkları ile profiline sinematik hava kat.</p><span class="mk-spot-btn">Efektlere Git</span></div>
           <div class="mk-spot-vfx"><img class="mk-fx-poster" src="/effects/dragon_inferno_poster.webp?v=1" ${drVid ? `data-mkvid="${esc(drVid)}"` : ''} alt=""></div>
         </div>
         <div class="mk-spot" data-mktab="banner" style="--sp-c:#f48fb1">
