@@ -6,7 +6,7 @@
 //   bot.komut('zar', { aciklama: 'Zar at' }, k => k.cevapla(`🎲 ${1 + Math.floor(Math.random() * 6)}`));
 //   bot.baglan();
 'use strict';
-const SURUM = '1.8.0';
+const SURUM = '1.9.0';
 const EventEmitter = require('events');
 
 class KankaHata extends Error { constructor(mesaj, durum, veri) { super(mesaj); this.name = 'KankaHata'; this.durum = durum; this.veri = veri; } }
@@ -197,7 +197,7 @@ class Kanka extends EventEmitter {
     });
   }
   /** Sesten çık (çalan şarkı durur) */
-  sestenAyril() { if (this._ses) { this._ses.durdur(); this._ses._istenen = null; this._ses.oda = null; } this._gonder && this._gonder({ op: 4, d: { oda: null } }); }
+  sestenAyril() { if (this._ses) { this._ses.durdur(); this._ses._hepsiniKapat(); this._ses._istenen = null; this._ses.oda = null; } this._gonder && this._gonder({ op: 4, d: { oda: null } }); }
   // ---------- Yardımcılar ----------
   /**
    * Bir süre "yazıyor…" göster. İkinci değer: iş fonksiyonu, bir Promise ya da milisaniye.
@@ -255,7 +255,7 @@ class Kanka extends EventEmitter {
     if (this.kayit && (this.komutlar.size)) await this.komutlariKaydet().catch(e => this.emit('hata', e));
     this._ac(); return this;
   }
-  kapat() { this._kapat = true; clearInterval(this._nabiz); try { this._ws && this._ws.close(); } catch {} }
+  kapat() { this._kapat = true; clearInterval(this._nabiz); if (this._ses) { this._ses.yokEt(); this._ses = null; } try { this._ws && this._ws.close(); } catch {} }
   _ac() {
     const WS = globalThis.WebSocket || require('ws');
     const ws = this._ws = new WS(this.adres.replace(/^http/, 'ws') + '/bot/gateway');
@@ -381,7 +381,7 @@ function werift() {
 class OggOpus {
   constructor(paket) { this.buf = Buffer.alloc(0); this.parca = []; this.paket = paket; this.n = 0; }
   yaz(veri) {
-    this.buf = Buffer.concat([this.buf, veri]);
+    this.buf = this.buf.length ? Buffer.concat([this.buf, veri]) : veri;
     while (this.buf.length >= 27) {
       if (this.buf.readUInt32BE(0) !== 0x4f676753) { const i = this.buf.indexOf('OggS', 1); if (i < 0) { this.buf = Buffer.alloc(0); return; } this.buf = this.buf.subarray(i); continue; }
       const seg = this.buf[26]; if (this.buf.length < 27 + seg) return;
@@ -393,58 +393,93 @@ class OggOpus {
     }
   }
 }
+// Ses dağıtımı (1.9.0): bot kullanıcılara sadece GÖNDERİR (sendonly). Eskiden 'sendrecv' idi: odadaki herkes mikrofonunu
+// bota da yüklüyordu (boşuna yükleme hattı, ping ve kalite düşüşü). Paketler 20 ms'de bir, saat kaymadan gider; olay döngüsü
+// takılırsa birikmiş paketler topluca basılmaz (ağda ani yük ve titreşim yapıyordu), eskiler atlanıp canlıya dönülür.
+// Kopan / hiç bağlanamayan eşler kapatılır; ayrılmış kişiden geç gelen sinyal yeni bağlantı açmaz (bellek sızıntısıydı).
+const KARE = 20, KARE_TS = 960, EN_COK_BIRIKME = 10, KUYRUK_UST = 150, KUYRUK_ALT = 50;
+const simdi = () => Number(process.hrtime.bigint() / 1000000n);
 class SesBaglantisi extends EventEmitter {
-  constructor(bot) { super(); this.bot = bot; this.oda = null; this.sid = null; this.ice = []; this.esler = new Map(); this.kuyruk = []; this.sira = []; this.susturuldu = false; this.duraklatildi = false; this.caliyor = null; this._seq = Math.floor(Math.random() * 60000); this._ts = Math.floor(Math.random() * 1e9); this._ssrc = 1 + Math.floor(Math.random() * 2 ** 31); }
+  constructor(bot) {
+    super(); this.bot = bot; this.oda = null; this.sid = null; this.ice = []; this.esler = new Map(); this.kuyruk = []; this.sira = []; this.susturuldu = false; this.duraklatildi = false; this.caliyor = null;
+    this._seq = Math.floor(Math.random() * 60000); this._ts = Math.floor(Math.random() * 1e9); this._ssrc = 1 + Math.floor(Math.random() * 2 ** 31);
+    this.sayac = { gonderilen: 0, eksik: 0, atlanan: 0 }; // eksik: kaynak yetişemedi (sessizlik) · atlanan: bot takıldı, eski paket atıldı
+    this._bakim = setInterval(() => this._temizle(), 5000); this._bakim.unref?.();
+  }
   get kisiSayisi() { return this.esler.size; }
-  _sinyal(kime, veri) { this.bot._gonder({ op: 5, d: { kime, veri } }); }
+  /** Anlık durum: { kisi, kuyruk, gonderilen, eksik, atlanan, bellekMB } (uzun süre açık kalan botlarda takip için) */
+  get durum() { return { kisi: this.esler.size, kuyruk: this.kuyruk.length, ...this.sayac, bellekMB: Math.round(process.memoryUsage().rss / 1048576) }; }
+  _sinyal(kime, veri) { this.bot._gonder && this.bot._gonder({ op: 5, d: { kime, veri } }); }
   _iz() { if (!this._track) { const { MediaStreamTrack } = werift(); this._track = new MediaStreamTrack({ kind: 'audio' }); } return this._track; }
   _es(sid) {
     if (this.esler.has(sid)) return this.esler.get(sid);
     const { RTCPeerConnection, RTCRtpCodecParameters } = werift();
     const ice = []; for (const x of this.ice || []) for (const u of [].concat(x.urls)) ice.push({ urls: u, ...(x.username ? { username: x.username, credential: x.credential } : {}) });
-    const pc = new RTCPeerConnection({ iceServers: ice, codecs: { audio: [new RTCRtpCodecParameters({ mimeType: 'audio/opus', clockRate: 48000, channels: 2 })], video: [] } });
-    pc._making = false; this.esler.set(sid, pc);
-    pc.addTransceiver(this._iz(), { direction: 'sendrecv' });
-    pc.onicecandidate = e => { if (e && e.candidate) this._sinyal(sid, { ice: typeof e.candidate.toJSON === 'function' ? e.candidate.toJSON() : e.candidate }); };
-    pc.connectionStateChange.subscribe(st => { this.bot._log('ses', sid, st); if (st === 'failed' || st === 'closed') this._kapat(sid); });
+    const pc = new RTCPeerConnection({ iceServers: ice, codecs: { audio: [new RTCRtpCodecParameters({ mimeType: 'audio/opus', clockRate: 48000, channels: 2, parameters: 'minptime=10;useinbandfec=1' })], video: [] } });
+    pc._making = false; pc._acildi = Date.now(); pc._durum = 'new'; pc._durumZamani = Date.now(); this.esler.set(sid, pc);
+    pc.addTransceiver(this._iz(), { direction: 'sendonly' });
+    pc.onicecandidate = e => { if (e && e.candidate && this.esler.get(sid) === pc) this._sinyal(sid, { ice: typeof e.candidate.toJSON === 'function' ? e.candidate.toJSON() : e.candidate }); };
+    pc._abone = pc.connectionStateChange.subscribe(st => {
+      pc._durum = st; pc._durumZamani = Date.now(); this.bot._log('ses', sid, st);
+      if (st === 'failed' || st === 'closed') this._kapat(sid, pc);
+    });
     return pc;
   }
   async _teklif(sid) {
     const pc = this._es(sid);
-    try { pc._making = true; await pc.setLocalDescription(await pc.createOffer()); this._sinyal(sid, { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }); }
+    try { pc._making = true; await pc.setLocalDescription(await pc.createOffer()); if (this.esler.get(sid) === pc) this._sinyal(sid, { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }); }
     catch (e) { this.bot.emit('hata', e); } finally { pc._making = false; }
   }
-  _kapat(sid) { const pc = this.esler.get(sid); if (!pc) return; this.esler.delete(sid); try { pc.close(); } catch {} }
+  _kapat(sid, sadece) {
+    const pc = this.esler.get(sid); if (!pc || (sadece && pc !== sadece)) return;
+    this.esler.delete(sid);
+    try { pc._abone && pc._abone.unSubscribe && pc._abone.unSubscribe(); } catch {}
+    pc.onicecandidate = null;
+    try { for (const t of pc.getTransceivers ? pc.getTransceivers() : []) { try { t.stop && t.stop(); } catch {} } } catch {}
+    try { const r = pc.close(); if (r && r.catch) r.catch(() => {}); } catch {}
+  }
   _hepsiniKapat() { for (const sid of [...this.esler.keys()]) this._kapat(sid); }
+  // Askıda kalan eşler: 15 sn "disconnected", ya da 30 sn'de bağlanamamış → kapat (karşı taraf isterse yeniden teklif eder)
+  _temizle() {
+    const t = Date.now();
+    for (const [sid, pc] of this.esler) {
+      if ((pc._durum === 'disconnected' && t - pc._durumZamani > 15000) || (['new', 'connecting'].includes(pc._durum) && t - pc._acildi > 30000)) {
+        this.bot._log('ses', sid, 'askıda kaldı, kapatıldı'); this._kapat(sid, pc);
+        if (this.oda && this._kisiler && this._kisiler.has(sid)) this._teklif(sid); // kişi hâlâ odadaysa temiz bir bağlantıyla yeniden dene
+      }
+    }
+  }
   async _olay(t, d) {
     if (t === 'SES_BAGLANDI') {
       this._hepsiniKapat(); this.oda = d.oda; this.sunucu = d.sunucu; this.sid = d.sid; this.ice = d.ice || [];
+      this._kisiler = new Set((d.kisiler || []).map(k => k.sid));
       for (const k of d.kisiler || []) this._teklif(k.sid);
       const b = this.bot._sesBekle; if (b) { this.bot._sesBekle = null; b.ok(this); }
       return this.emit(d.tasindi ? 'tasindi' : 'baglandi', d);
     }
     if (t === 'SES_SINYAL') {
-      const { kimden, veri } = d; if (!veri) return;
-      const pc = this._es(kimden);
+      const { kimden, veri } = d; if (!veri || !this.oda) return;
+      let pc = this.esler.get(kimden);
+      if (!pc) { if (!veri.sdp || veri.sdp.type !== 'offer') return; pc = this._es(kimden); } // ayrılmış kişiden geç gelen ICE/cevap yeni bağlantı açmasın
       try {
         if (veri.sdp) {
           const carpisma = veri.sdp.type === 'offer' && (pc._making || pc.signalingState !== 'stable');
           pc._yoksay = carpisma; if (carpisma) return; // bot "kaba" taraf: çakışmada kendi teklifinde kalır, tarayıcı geri çekilir
           await pc.setRemoteDescription(veri.sdp);
-          if (veri.sdp.type === 'offer') { await pc.setLocalDescription(await pc.createAnswer()); this._sinyal(kimden, { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }); }
+          if (veri.sdp.type === 'offer' && this.esler.get(kimden) === pc) { await pc.setLocalDescription(await pc.createAnswer()); this._sinyal(kimden, { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }); }
         } else if (veri.ice && !pc._yoksay) { await pc.addIceCandidate(veri.ice).catch(() => {}); }
       } catch (e) { this.bot._log('ses sinyal hatası', e.message); }
       return;
     }
-    if (t === 'SES_KISI_KATILDI') return this.emit('kisiKatildi', d);
-    if (t === 'SES_KISI_AYRILDI') { this._kapat(d.sid); return this.emit('kisiAyrildi', d); }
+    if (t === 'SES_KISI_KATILDI') { (this._kisiler ||= new Set()).add(d.sid); return this.emit('kisiKatildi', d); }
+    if (t === 'SES_KISI_AYRILDI') { this._kisiler && this._kisiler.delete(d.sid); this._kapat(d.sid); return this.emit('kisiAyrildi', d); }
     if (t === 'SES_KISI_YENILENDI') { if (d.eski) this._kapat(d.eski); return; }
     if (t === 'SES_SUSTURMA') { this.susturuldu = !!d.susturuldu; return this.emit('susturma', d); }
     if (t === 'SES_AYRILDI') { this._hepsiniKapat(); const o = this.oda; this.oda = null; this.durdur(); return this.emit('ayrildi', { oda: o, sebep: d.sebep }); }
   }
   /**
    * Çal. kaynak: dosya yolu, https adresi ya da okunabilir akış (Readable).
-   * ayar: { ses: 0.5 (ses düzeyi), baslangic: 30 (saniye), ffmpeg: 'ffmpeg yolu', bitHizi: 96 (kbps) }
+   * ayar: { ses: 0.5 (ses düzeyi, 0-2), baslangic: 30 (saniye), ffmpeg: 'ffmpeg yolu', bitHizi: 96 (kbps) }
    * Döner: şarkı bitince ya da durdurulunca çözülen Promise.
    */
   cal(kaynak, ayar = {}) {
@@ -452,39 +487,60 @@ class SesBaglantisi extends EventEmitter {
     const { spawn } = require('child_process');
     const akis = kaynak && typeof kaynak.pipe === 'function';
     const ff = ayar.ffmpeg || process.env.FFMPEG_PATH || (() => { try { return require('ffmpeg-static'); } catch { return 'ffmpeg'; } })();
-    const args = ['-hide_banner', '-loglevel', 'error', ...(ayar.baslangic ? ['-ss', String(ayar.baslangic)] : []), '-i', akis ? 'pipe:0' : String(kaynak), '-vn',
-      ...(ayar.ses != null && ayar.ses !== 1 ? ['-af', `volume=${Math.max(0, Math.min(2, +ayar.ses))}`] : []),
-      '-ac', '2', '-ar', '48000', '-c:a', 'libopus', '-b:a', `${ayar.bitHizi || 96}k`, '-frame_duration', '20', '-application', 'audio', '-f', 'ogg', 'pipe:1'];
+    const sv = ayar.ses != null ? Math.max(0, Math.min(2, +ayar.ses || 0)) : 1;
+    // 1'den yüksek ses düzeyinde tepe kırpılıp cızırtı yapmasın diye sınırlayıcı; Opus kayıp düzeltme (FEC) açık
+    const af = sv !== 1 ? ['-af', `volume=${sv}${sv > 1 ? ',alimiter=limit=0.95' : ''}`] : [];
+    const args = ['-hide_banner', '-loglevel', 'error', ...(ayar.baslangic ? ['-ss', String(ayar.baslangic)] : []), ...(akis ? [] : /^https?:/i.test(String(kaynak)) ? ['-reconnect', '1', '-reconnect_streamed', '1', '-reconnect_delay_max', '5'] : []), '-i', akis ? 'pipe:0' : String(kaynak), '-vn', ...af,
+      '-ac', '2', '-ar', '48000', '-c:a', 'libopus', '-b:a', `${Math.max(32, Math.min(192, +ayar.bitHizi || 96))}k`, '-vbr', 'on', '-frame_duration', String(KARE), '-application', 'audio', '-fec', '1', '-packet_loss', '10', '-f', 'ogg', 'pipe:1'];
     const p = spawn(ff, args, { stdio: [akis ? 'pipe' : 'ignore', 'pipe', 'pipe'] });
     let hataYazi = ''; p.stderr.on('data', x => { hataYazi = (hataYazi + x).slice(-500); });
     if (akis) { kaynak.pipe(p.stdin); p.stdin.on('error', () => {}); }
-    const ogg = new OggOpus(pk => { this.kuyruk.push(pk); if (this.kuyruk.length > 250) p.stdout.pause(); });
-    p.stdout.on('data', x => ogg.yaz(x));
-    const c = this.caliyor = { p, bitti: false, kaynak };
+    const c = this.caliyor = { p, bitti: false, kaynak, kuyruk: [] };
+    this.kuyruk = c.kuyruk;
+    const ogg = new OggOpus(pk => { if (c.son) return; c.kuyruk.push(pk); if (c.kuyruk.length > KUYRUK_UST && !p.stdout.isPaused()) p.stdout.pause(); });
+    p.stdout.on('data', x => { if (!c.son) ogg.yaz(x); });
     p.on('error', e => { c.bitti = true; this.emit('hata', new KankaHata(e.code === 'ENOENT' ? 'ffmpeg bulunamadı: bilgisayarına ffmpeg kur (ya da npm i ffmpeg-static)' : e.message)); });
-    p.on('close', kod => { c.bitti = true; if (kod && !c.durduruldu && !this.kuyruk.length) this.emit('hata', new KankaHata('ffmpeg: ' + (hataYazi.trim() || 'çalınamadı (kod ' + kod + ')'))); });
+    p.on('close', kod => { c.bitti = true; if (kod && !c.durduruldu && !c.kuyruk.length) this.emit('hata', new KankaHata('ffmpeg: ' + (hataYazi.trim() || 'çalınamadı (kod ' + kod + ')'))); });
     const { RtpPacket, RtpHeader } = werift();
-    let bas = Date.now(), gonderilen = 0;
+    let sonraki = simdi() + KARE, isaret = true, basladiMi = false;
+    const gonder = pk => {
+      this._seq = (this._seq + 1) & 0xffff; this._ts = (this._ts + KARE_TS) >>> 0;
+      if (this.susturuldu || !this._track || !this.esler.size) { isaret = true; return; }
+      this._track.writeRtp(new RtpPacket(new RtpHeader({ payloadType: 111, sequenceNumber: this._seq, timestamp: this._ts, ssrc: this._ssrc, marker: isaret }), pk));
+      isaret = false; this.sayac.gonderilen++;
+    };
     c.zamanlayici = setInterval(() => {
-      if (this.duraklatildi) { bas = Date.now() - gonderilen * 20; return; }
-      const hedef = Math.floor((Date.now() - bas) / 20);
-      while (gonderilen < hedef) {
-        const pk = this.kuyruk.shift();
-        if (!pk) { if (c.bitti) return this._bitir(c); bas = Date.now() - gonderilen * 20; break; } // veri gelmedi: beklerken zamanı kaydır
-        gonderilen++;
-        if (this.kuyruk.length < 100 && p.stdout.isPaused()) p.stdout.resume();
-        if (this.susturuldu || !this._track) continue;
-        this._seq = (this._seq + 1) & 0xffff; this._ts = (this._ts + 960) >>> 0;
-        this._track.writeRtp(new RtpPacket(new RtpHeader({ payloadType: 111, sequenceNumber: this._seq, timestamp: this._ts, ssrc: this._ssrc, marker: false }), pk));
+      const t = simdi();
+      if (this.duraklatildi) { sonraki = t + KARE; isaret = true; return; }
+      // Bot takıldıysa (çok geride kaldık) eski kareleri at, canlıya dön: topluca basmak titreşim ve paket kaybı yapıyordu
+      const geride = Math.floor((t - sonraki) / KARE);
+      if (geride > EN_COK_BIRIKME) {
+        const at = geride - 2; for (let i = 0; i < at; i++) { if (c.kuyruk.length) { c.kuyruk.shift(); this.sayac.atlanan++; } this._ts = (this._ts + KARE_TS) >>> 0; }
+        sonraki += at * KARE; isaret = true;
       }
-    }, 10);
+      let n = 0;
+      while (t >= sonraki && n < 3) { // bir turda en çok 3 kare (60 ms)
+        const pk = c.kuyruk.shift();
+        if (!pk) {
+          if (c.bitti) return this._bitir(c);
+          if (!basladiMi) { sonraki = t + KARE; break; } // daha ilk veri gelmedi: saati başlatma
+          this._ts = (this._ts + KARE_TS) >>> 0; this.sayac.eksik++; isaret = true; // kaynak yetişemedi: bu kare sessizlik, zaman akmaya devam eder
+        } else { basladiMi = true; gonder(pk); }
+        sonraki += KARE; n++;
+      }
+      if (c.kuyruk.length < KUYRUK_ALT && p.stdout.isPaused() && !c.son) p.stdout.resume();
+    }, 5);
     this.emit('basladi', { kaynak });
     return new Promise(r => { c.coz = r; });
   }
   _bitir(c, durduruldu) {
-    if (c.son) return; c.son = true; clearInterval(c.zamanlayici); try { c.p.kill('SIGKILL'); } catch {}
+    if (c.son) return; c.son = true; clearInterval(c.zamanlayici);
+    try { c.p.stdout.removeAllListeners('data'); c.p.stdout.destroy(); } catch {}
+    try { if (c.kaynak && typeof c.kaynak.unpipe === 'function') c.kaynak.unpipe(c.p.stdin); } catch {}
+    try { c.p.kill('SIGKILL'); } catch {}
+    c.kuyruk.length = 0;
     if (this.caliyor === c) { this.caliyor = null; this.kuyruk = []; }
-    c.coz && c.coz({ durduruldu: !!durduruldu });
+    c.coz && c.coz({ durduruldu: !!durduruldu }); c.coz = null;
     if (!durduruldu) { this.emit('bitti', { kaynak: c.kaynak }); if (this.sira.length) { const s = this.sira.shift(); this.cal(s.kaynak, s.ayar); } }
   }
   /** Sıraya ekle; bir şey çalmıyorsa hemen başlar */
@@ -496,6 +552,8 @@ class SesBaglantisi extends EventEmitter {
   /** Çalanı durdur (sıra da temizlenir) */
   durdur(siraKalsin) { const c = this.caliyor; if (c) { c.durduruldu = true; this._bitir(c, true); } if (!siraKalsin) this.sira = []; this.duraklatildi = false; }
   ayril() { this.bot.sestenAyril(); }
+  /** Botu tamamen kapatırken: bağlantıları ve zamanlayıcıları serbest bırak */
+  yokEt() { this.durdur(); this._hepsiniKapat(); clearInterval(this._bakim); this.removeAllListeners(); }
 }
 // Kart (embed) oluşturucu: new Kart().baslik('...').aciklama('...').renk('#ff8a4c').alan('ad', 'değer', true)
 class Kart {

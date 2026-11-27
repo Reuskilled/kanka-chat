@@ -10162,45 +10162,79 @@ function marketHTML() {
     <div id="mk-list">${marketSectionsHTML()}</div>
   </div>`;
 }
-// Market efekt kartları ve spotlight'ta hover'da .webm oynatma (boşta 0 video RAM)
-(() => {
-  let active = null;
+// Fare üstüne gelince oynayan şeffaf .webm'ler (isim afişi, Market kartları) için ortak yönetici.
+// Eskiden her hover'da yeni <video> açılıp ayrılınca hemen src silinip load() ile yıkılıyordu: donanım video çözücüsünü
+// arka arkaya açıp kapatmak bazı ekran kartlarında Kanka'yı, hatta tüm masaüstünü donduruyordu.
+// Şimdi: kısa bir bekleme (fareyle geçip giderken hiç açılmaz), ayrılınca sadece durdurulup gizlenir; aynı yere dönülürse
+// aynı video devam eder. Kullanılmayan video birkaç saniye sonra, tarayıcı boştayken ve tek tek serbest bırakılır.
+function hoverVideos({ hostOf, posterSel, srcAttr, vidClass, playClass }) {
+  const KEY = Symbol('hv'), HOLD = 6000, MAXKEEP = 3;
+  const idle = window.requestIdleCallback ? f => requestIdleCallback(f, { timeout: 1500 }) : f => setTimeout(f, 200);
+  let active = null, intent = null, intentT = 0;
+  const kept = []; // durdurulmuş, serbest bırakılmayı bekleyen videolar (eskiden yeniye)
+  const free = h => {
+    const v = h?.[KEY]; if (!v) return;
+    h[KEY] = null; const i = kept.indexOf(h); if (i >= 0) kept.splice(i, 1);
+    clearTimeout(v._relT);
+    idle(() => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch {} v.remove(); });
+  };
   const stop = h => {
     if (!h) return;
-    h.classList.remove('mk-vplay');
-    const v = h._mkVid;
-    if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); v.remove(); } catch {} h._mkVid = null; }
-    if (active === h) active = null;
+    h.classList.remove(playClass);
+    const v = h[KEY]; if (active === h) active = null;
+    if (!v) return;
+    try { v.pause(); } catch {}
+    v.classList.remove('ready');
+    clearTimeout(v._relT); v._relT = setTimeout(() => free(h), HOLD);
+    if (!kept.includes(h)) kept.push(h);
+    while (kept.length > MAXKEEP) free(kept[0]);
   };
   const start = h => {
-    if (!h || h._mkVid || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const p = h.querySelector('.mk-fx-poster[data-mkvid]');
-    if (!p) return;
-    const src = p.getAttribute('data-mkvid');
-    if (!src) return;
+    if (!h || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (active && active !== h) stop(active);
-    const v = document.createElement('video');
-    v.className = 'mk-stage-vid';
-    v.src = src; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+    let v = h[KEY];
+    if (v && !v.isConnected) { h[KEY] = null; v = null; }
+    if (v) { // aynı yere geri dönüldü: yeni çözücü açmadan devam
+      clearTimeout(v._relT); const i = kept.indexOf(h); if (i >= 0) kept.splice(i, 1);
+      active = h; v.play().then(() => { if (active === h) { v.classList.add('ready'); h.classList.add(playClass); } }).catch(() => {});
+      return;
+    }
+    const p = h.querySelector(posterSel), src = p?.getAttribute(srcAttr); if (!src) return;
+    // Liste yeniden çizildiyse (durum değişince üye listesi tazelenir) eski satırın videosunu yeni satıra taşı: yeni çözücü açma
+    const old = [...kept, ...(active ? [active] : [])].find(o => !o.isConnected && o[KEY]?.getAttribute('src') === src);
+    if (old) {
+      v = old[KEY]; old[KEY] = null; const i = kept.indexOf(old); if (i >= 0) kept.splice(i, 1); if (active === old) active = null;
+      clearTimeout(v._relT); p.after(v); h[KEY] = v; active = h;
+      v.play().then(() => { if (active === h) { v.classList.add('ready'); h.classList.add(playClass); } }).catch(() => {});
+      return;
+    }
+    v = document.createElement('video');
+    v.className = vidClass; v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto';
     v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('disablePictureInPicture', ''); v.setAttribute('aria-hidden', 'true');
-    v.addEventListener('playing', () => { if (h._mkVid !== v) return; v.classList.add('ready'); h.classList.add('mk-vplay'); }, { once: true });
-    p.after(v);
-    h._mkVid = v; active = h;
+    v.addEventListener('playing', () => { if (h[KEY] !== v || active !== h) return; v.classList.add('ready'); h.classList.add(playClass); });
+    v.src = src; p.after(v); h[KEY] = v; active = h;
     v.play().catch(() => {});
   };
-  const hostOf = t => t?.closest?.('.mk-card, .mk-spot');
   document.addEventListener('pointerover', e => {
+    if (e.pointerType && e.pointerType !== 'mouse') return; // dokunmatikte hover yok
     const h = hostOf(e.target);
     if (!h || (e.relatedTarget && h.contains(e.relatedTarget))) return;
-    start(h);
+    clearTimeout(intentT); intent = h;
+    intentT = setTimeout(() => { if (intent === h && h.matches(':hover')) start(h); }, 140);
   });
   document.addEventListener('pointerout', e => {
     const h = hostOf(e.target);
     if (!h || (e.relatedTarget && h.contains(e.relatedTarget))) return;
+    if (intent === h) { clearTimeout(intentT); intent = null; }
     stop(h);
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden && active) stop(active); });
-})();
+  window.addEventListener('blur', () => { if (active) stop(active); });
+  // Sayfadan kalkmış satırların videoları askıda kalmasın
+  setInterval(() => { if (active && !active.isConnected) stop(active); }, 4000);
+}
+// Market efekt kartları ve spotlight'ta hover'da .webm oynatma
+hoverVideos({ hostOf: t => t?.closest?.('.mk-card, .mk-spot'), posterSel: '.mk-fx-poster[data-mkvid]', srcAttr: 'data-mkvid', vidClass: 'mk-stage-vid', playClass: 'mk-vplay' });
 function wireMarket() {
   const root = $('#messages'); if (!root) return;
   const bindCards = scope => {
@@ -13179,45 +13213,8 @@ const NAME_BANNERS = [
 ];
 const nbOf = u => u?.nameBanner && NAME_BANNERS.some(x => x.id === u.nameBanner && x.id !== 'none') ? u.nameBanner : null;
 const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `<div class="nb-l nb-bg"></div>${b.vid ? `<img class="nb-l nb-vid nb-poster" src="${esc(b.poster || '')}" data-vid="${esc(b.vid)}" alt="" loading="lazy" aria-hidden="true">` : ''}<div class="nb-l nb-scrim"></div><div class="nb-l nb-art">${b.svg || ''}</div><div class="nb-l nb-sheen"></div>`; };
-// İsim afişi videoları sadece fare üstüne gelince oynar, ayrılınca bellekten tamamen boşaltılır (boşta 0 video RAM)
-(() => {
-  let activeHost = null;
-  const stopHost = h => {
-    if (!h) return;
-    h.classList.remove('nb-playing');
-    const v = h._nbVid;
-    if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); v.remove(); } catch {} h._nbVid = null; }
-    if (activeHost === h) activeHost = null;
-  };
-  const startHost = h => {
-    if (!h || h._nbVid || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const p = h.querySelector('.nb-poster[data-vid]');
-    if (!p) return;
-    const src = p.getAttribute('data-vid');
-    if (!src) return;
-    if (activeHost && activeHost !== h) stopHost(activeHost);
-    const v = document.createElement('video');
-    v.className = 'nb-l nb-vid nb-play';
-    v.src = src; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
-    v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('disablePictureInPicture', ''); v.setAttribute('aria-hidden', 'true');
-    v.addEventListener('playing', () => { if (h._nbVid !== v) return; v.classList.add('ready'); h.classList.add('nb-playing'); }, { once: true });
-    p.after(v);
-    h._nbVid = v; activeHost = h;
-    v.play().catch(() => {});
-  };
-  const hostOf = t => t?.closest?.('.nb-card') || t?.closest?.('.has-nb');
-  document.addEventListener('pointerover', e => {
-    const h = hostOf(e.target);
-    if (!h || (e.relatedTarget && h.contains(e.relatedTarget))) return;
-    startHost(h);
-  });
-  document.addEventListener('pointerout', e => {
-    const h = hostOf(e.target);
-    if (!h || (e.relatedTarget && h.contains(e.relatedTarget))) return;
-    stopHost(h);
-  });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && activeHost) stopHost(activeHost); });
-})();
+// İsim afişi videoları sadece fare üstüne gelince oynar (bkz. hoverVideos: kullanılmayan video birkaç saniye sonra boşaltılır)
+hoverVideos({ hostOf: t => t?.closest?.('.nb-card') || t?.closest?.('.has-nb'), posterSel: '.nb-poster[data-vid]', srcAttr: 'data-vid', vidClass: 'nb-l nb-vid nb-play', playClass: 'nb-playing' });
 const NS_FONTS = [
   ['default', 'Varsayılan'], ['serif', 'Klasik'], ['cinzel', 'Kraliyet'], ['rounded', 'Yuvarlak'],
   ['script', 'El Yazısı'], ['pixel', 'Piksel'], ['cyber', 'Siber'], ['mono', 'Kod'],
@@ -13634,8 +13631,11 @@ function mountVideoProfileEffect(el, cfg) {
   const stop = () => {
     if (dead) return; dead = true;
     document.removeEventListener('visibilitychange', onVis);
-    for (const v of [cur, nxt]) { if (!v) continue; try { v.pause(); v.removeAttribute('src'); v.load(); v.remove(); } catch {} }
-    cur = nxt = null;
+    // Kart kapanırken çözücüyü aynı anda yıkmak yerine: hemen durdur ve gizle, boşta serbest bırak (donma olmasın)
+    const list = [cur, nxt].filter(Boolean); cur = nxt = null;
+    for (const v of list) { try { v.pause(); } catch {} v.style.display = 'none'; }
+    const rel = () => list.forEach(v => { try { v.removeAttribute('src'); v.load(); } catch {} v.remove(); });
+    setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(rel, { timeout: 2000 }) : rel()), 400);
   };
   document.addEventListener('visibilitychange', onVis);
   if (cfg.intro && cfg.loop) {
@@ -14864,21 +14864,22 @@ async function vqTick() {
   if (!myVoice) { el.hidden = true; return; }
   const list = Object.entries(peers); el.hidden = false;
   if (!list.length) { el.className = 'vq good'; el.querySelector('em').textContent = ''; el.dataset.base = 'Odada şimdilik yalnızsın'; return; }
-  let lost = 0, recv = 0, bad = 0; const per = [];
+  let lost = 0, recv = 0, bad = 0, jitMax = 0; const per = [];
   for (const [sid, pc] of list) {
     if (['failed', 'disconnected'].includes(pc.connectionState)) bad++;
     try {
-      const st = await pc.getStats(); let rtt = null, pair = null, relay = false;
+      const st = await pc.getStats(); let rtt = null, pair = null, relay = false, jit = 0;
       st.forEach(r => {
         if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') { pair = r; if (r.currentRoundTripTime != null) rtt = r.currentRoundTripTime * 1000; }
         if (r.type === 'remote-inbound-rtp' && r.kind === 'audio' && r.roundTripTime != null && rtt == null) rtt = r.roundTripTime * 1000;
+        if (r.type === 'inbound-rtp' && r.kind === 'audio' && r.jitter != null) jit = Math.max(jit, r.jitter * 1000);
         if (r.type === 'inbound-rtp' && r.kind === 'audio') { const k = sid + r.id, p = vqPrev[k] || { l: r.packetsLost || 0, n: r.packetsReceived || 0 }; lost += Math.max(0, (r.packetsLost || 0) - p.l); recv += Math.max(0, (r.packetsReceived || 0) - p.n); vqPrev[k] = { l: r.packetsLost || 0, n: r.packetsReceived || 0 }; }
       });
       st.forEach(r => { if (pair && (r.id === pair.localCandidateId || r.id === pair.remoteCandidateId) && r.candidateType === 'relay') relay = true; });
       if (rtt == null) continue;
       const h = (vqHist[sid] ||= []); h.push(rtt); if (h.length > 5) h.shift();
       const med = [...h].sort((x, y) => x - y)[Math.floor(h.length / 2)]; // tek seferlik sıçramaları yok say
-      per.push({ sid, name: peerNames[sid] || '?', ms: Math.round(med), relay });
+      per.push({ sid, name: peerNames[sid] || '?', ms: Math.round(med), relay, jit: Math.round(jit) }); jitMax = Math.max(jitMax, jit);
       // 15 sn boyunca sürekli çok yüksekse daha iyi bir yol aramayı dene (en fazla dakikada bir)
       if (h.length >= 5 && h.every(x => x > 400) && Date.now() - (pc._ri || 0) > 60e3) { pc._ri = Date.now(); try { pc.restartIce(); } catch {} }
     } catch {}
@@ -14887,11 +14888,11 @@ async function vqTick() {
   per.sort((a, b) => b.ms - a.ms);
   const worst = per[0], ms = worst?.ms || 0;
   const loss = recv + lost ? lost / (recv + lost) * 100 : 0;
-  const lvl = bad ? 'bad' : ms > 250 || loss > 5 ? 'bad' : ms > 120 || loss > 2 ? 'mid' : 'good';
+  const lvl = bad ? 'bad' : ms > 250 || loss > 5 || jitMax > 100 ? 'bad' : ms > 120 || loss > 2 || jitMax > 40 ? 'mid' : 'good';
   el.className = 'vq ' + lvl;
   el.querySelector('em').textContent = bad ? 'yeniden bağlanıyor…' : ms ? ms + ' ms' : '';
   const why = worst && ms > 150 ? (worst.relay ? `\n${worst.name} ile bağlantı Kanka sunucusu üzerinden gidiyor (doğrudan bağlanılamadı), bu gecikmeyi artırır.` : videoKind === 'screen' && watchers.size ? '\nYayın açıkken yükleme hattın doluyor; gecikme artarsa yayın kalitesini düşür.' : `\nGecikme büyük ihtimalle ${worst.name} tarafının internetinden.`) : '';
-  el.dataset.base = bad ? 'Bağlantı koptu, kendiliğinden yeniden bağlanıyor' : `${per.map(p => `${p.name}: ${p.ms} ms${p.relay ? ' (sunucu üzerinden)' : ''}`).join('\n')}\nPaket kaybı %${loss.toFixed(1)}${lvl === 'good' ? ' · bağlantı iyi' : lvl === 'mid' ? ' · bağlantı orta' : ' · bağlantı zayıf'}${why}`;
+  el.dataset.base = bad ? 'Bağlantı koptu, kendiliğinden yeniden bağlanıyor' : `${per.map(p => `${p.name}: ${p.ms} ms${p.jit ? ` · titreşim ${p.jit} ms` : ''}${p.relay ? ' (sunucu üzerinden)' : ''}`).join('\n')}\nPaket kaybı %${loss.toFixed(1)}${lvl === 'good' ? ' · bağlantı iyi' : lvl === 'mid' ? ' · bağlantı orta' : ' · bağlantı zayıf'}${why}`;
 }
 function vqStart() { clearInterval(vqT); vqPrev = {}; vqT = setInterval(vqTick, 3000); vqTick(); }
 // Mikrofon çıkarılır ya da değişirse kendiliğinden yenisine geç
@@ -14913,9 +14914,11 @@ function makePeer(sid) {
   const pc = new RTCPeerConnection(ICE);
   Object.assign(pc, { _sid: sid, _polite: socket.id < sid, _making: false, _ignore: false, _re: true });
   peers[sid] = pc;
-  { const rt = bgRaw ? rawTrack() : null; localStream.getTracks().forEach(t => pc.addTrack(rt && t.kind === 'audio' ? rt : t, localStream)); }
+  const isBotPeer = sid.startsWith('~'); // müzik botu: sadece dinleriz. Mikrofonumuzu bota göndermek yükleme hattını boşuna dolduruyor, sesi bozuyordu
+  if (isBotPeer) pc.addTransceiver('audio', { direction: 'recvonly' });
+  else { const rt = bgRaw ? rawTrack() : null; localStream.getTracks().forEach(t => pc.addTrack(rt && t.kind === 'audio' ? rt : t, localStream)); }
   setTimeout(() => { const br = vch()?.c.bitrate === 'studio' ? 256000 : vch()?.c.bitrate === 'high' ? 128000 : 64000; pc.getSenders().filter(x => x.track?.kind === 'audio' && x.track === localStream?.getAudioTracks()[0]).forEach(x => { try { const p = x.getParameters(); if (!p.encodings?.length) p.encodings = [{}]; p.encodings[0].maxBitrate = br; p.encodings[0].priority = p.encodings[0].networkPriority = 'high'; x.setParameters(p).catch(() => {}); } catch {} }); }, 1500);
-  if (videoStream) setTimeout(() => feedPeer(sid));
+  if (videoStream && !isBotPeer) setTimeout(() => feedPeer(sid));
   pc.onicecandidate = e => e.candidate && socket.emit('signal', { to: pc._sid, data: { ice: e.candidate } });
   pc.onnegotiationneeded = async () => {
     try { pc._making = true; await pc.setLocalDescription(); socket.emit('signal', { to: pc._sid, data: { sdp: pc.localDescription } }); }
@@ -17397,7 +17400,7 @@ const watchers = new Set();
 const mediaState = () => ({ cam: videoKind === 'cam', screen: videoKind === 'screen', streamId: videoStream?.id || null, viewers: watchers.size, q: videoKind === 'screen' ? goCur?.q : null, audio: !!screenAudio });
 const sendMedia = () => myVoice && socket.emit('media', mediaState());
 function feedPeer(sid) {
-  const pc = peers[sid]; if (!pc) return;
+  const pc = peers[sid]; if (!pc || sid.startsWith('~')) return; // botlara görüntü gitmez
   const share = !!videoStream && (videoKind === 'cam' || watchers.has(sid));
   const vt = share ? videoStream.getVideoTracks()[0] : null, at = share && videoKind === 'screen' ? screenAudio : null;
   if (pc._vsender) pc._vsender.replaceTrack(vt).catch(() => {}); else if (vt) pc._vsender = pc.addTrack(vt, videoStream);

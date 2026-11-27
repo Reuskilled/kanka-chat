@@ -1,5 +1,10 @@
 [
   {
+    "id": "2026-11-27-ses-botlari-1-9",
+    "baslik": "🎵 Ses botları: daha temiz ses, sızıntı yok (SDK 1.9.0)",
+    "metin": "• **Mikrofonun bota gitmiyor:** Müzik botu sesli odadayken herkes mikrofonunu boşuna bota da yüklüyordu; bu yükleme hattını doldurup pingi ve sesi bozuyordu. Artık bot sadece gönderiyor, sen sadece dinliyorsun\n• **Takılmasız akış:** Bot bilgisayarı anlık takılınca biriken ses paketleri topluca basılmıyor (ani ping ve cızırtı yapıyordu); eskileri atlanıp canlıya dönülüyor. Opus kayıp düzeltme (FEC) açık, ses 1'in üstünde kırpılmıyor\n• **Bellek sızıntısı giderildi:** Odadan çıkan kişiden geç gelen bağlantı bilgisi botta kapanmayan yeni bağlantılar açıyordu; uzun süre açık kalan botların RAM'i şişiyordu. Askıda kalan bağlantılar da 15-30 sn içinde kapanıyor\n• **Geliştiriciler:** kankahq.com/sdk/kanka.js'i yeniden indir. `ses.durum` ile kişi sayısı, kuyruk, eksik/atlanan paket ve bellek takip edilebilir; botu kapatırken `bot.kapat()` ses kaynaklarını da serbest bırakır"
+  },
+  {
     "id": "2026-11-27-kanka-bot-yonetim-muaf",
     "baslik": "🛡️ Kanka Bot: yönetim ekibi korumalardan muaf",
     "metin": "• **Yönetim ekibine dokunmuyor:** Spam koruması ve diğer otomatik moderasyon kuralları sahibi, yöneticileri, moderatörleri ve atma, yasaklama, susturma, mesaj/oda/rol yönetme yetkisi olan herkesi artık hiç susturmuyor, mesajlarını engellemiyor\n• **Telefondan aç/kapat:** Telefon uygulamasında Sunucu menüsü › Kanka Bot'tan otomatik moderasyonu ve spam koruması, anti-nuke, davet linki, link, toplu etiket, büyük harf kurallarını tek tek açıp kapatabilirsin. Webde Sunucu ayarları › Kanka Bot'ta zaten vardı"
