@@ -2615,18 +2615,43 @@
   /* Gece Kedisi — stüdyo şeffaf kadife kedi kulaklı avatar çerçevesi (canlı kıpırtı + parıltı) */
   .pav.fr-gecekedi::before { background: radial-gradient(circle, rgba(244,143,177,.35), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
   .pav.fr-gecekedi .av { border-color: transparent !important; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
-  .pav.fr-gecekedi::after, .av.fr-gecekedi::after {
+  .pav.fr-gecekedi::after {
     content: ''; position: absolute; left: -31%; top: -31%; width: 162%; height: 162%;
     z-index: 4; pointer-events: none;
     background: url('/effects/cat_frame_midnight.webp?v=1') center/contain no-repeat;
     filter: drop-shadow(0 4px 10px rgba(0,0,0,.5));
     transition: transform .22s cubic-bezier(.34,1.56,.64,1), filter .22s ease;
   }
-  .pav.fr-gecekedi:hover::after, .av.fr-gecekedi:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(216,172,255,.55)); }
+  .pav.fr-gecekedi:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(216,172,255,.55)); }
+  /* Sohbet mesajları, DM listesi (Sohbetler), üye listesi & sol alt avatar çerçeveleri (.on-dot::after ile çakışmaz) */
+  .av.has-fr { position: relative; overflow: visible !important; border-color: transparent !important; }
+  .av.has-fr > .av-fr { position: absolute; inset: -3px; border-radius: 50%; pointer-events: none; z-index: 3; }
+  .av.has-fr:not(.fr-gecekedi) > .av-fr {
+    padding: 2.5px;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .av.fr-halka > .av-fr { background: var(--accent); }
+  .av.fr-gokkusagi > .av-fr { background: conic-gradient(#ff5d5d, #ffb347, #f6e05e, #4cc38a, #4aa8ff, #b07cff, #ff5d5d); animation: spin 4s linear infinite; }
+  .av.fr-ates > .av-fr { background: conic-gradient(#ff3d00, #ffb300, #ff6d00, #ffd54f, #ff3d00); animation: spin 2.4s linear infinite; filter: drop-shadow(0 0 4px rgba(255,109,0,.65)); }
+  .av.fr-neon > .av-fr { background: conic-gradient(#00e5ff, #ff2bd6, #00e5ff); animation: spin 3s linear infinite; filter: drop-shadow(0 0 4px rgba(0,229,255,.6)); }
+  .av.fr-altin > .av-fr { background: linear-gradient(135deg, #fff1b8, #e2b04a 30%, #8a5a12 55%, #ffe08a 80%, #b9821f); filter: drop-shadow(0 0 4px rgba(226,176,74,.55)); }
+  .av.fr-kurucu > .av-fr { background: conic-gradient(#ff8a4c, #ffb347, #ff6b3d, #ff8a4c); filter: drop-shadow(0 0 4px rgba(255,138,76,.6)); }
+  .av.fr-gecekedi > .av-fr {
+    left: -31%; top: -31%; right: auto; bottom: auto; width: 162%; height: 162%;
+    border-radius: 0; z-index: 4;
+    background: url('/effects/cat_frame_midnight.webp?v=1') center/contain no-repeat;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
+    transition: transform .22s cubic-bezier(.34,1.56,.64,1);
+  }
+  .av.fr-gecekedi:hover > .av-fr { transform: scale(1.06); }
+  :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) .av.has-fr > .av-fr { inset: -2px; padding: 1.8px; }
+  :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) .av.fr-gecekedi > .av-fr { left: -24%; top: -24%; width: 148%; height: 148%; }
+  .av.on-dot::after { z-index: 6; }
+  .pav .pdot { z-index: 5; }
   @keyframes catGlow { 0%,100% { opacity: .45; transform: scale(1); } 50% { opacity: .9; transform: scale(1.06); } }
   @keyframes catEarBop { 0%,78%,100% { transform: rotate(0deg) scale(1); } 83% { transform: rotate(-3.5deg) scale(1.03); } 89% { transform: rotate(2.5deg) scale(1.02); } 94% { transform: rotate(0deg) scale(1); } }
   @keyframes catEarHop { 0% { transform: scale(1) rotate(0); } 45% { transform: scale(1.08) rotate(-4deg); } 100% { transform: scale(1) rotate(0); } }
-  .av.fr-gecekedi { position: relative; overflow: visible !important; }
   /* Gece Kedisi profil efekti: sadece üst banner'da yumuşak eriyen ay ışıklı kedi + alt kısım tertemiz & ferah */
   .pfx-cat-top {
     position: absolute; left: 0; right: 0; top: 0; height: 122px; width: 100%;
@@ -6219,7 +6244,8 @@ const avInner = n => n === 'Kanka Bot' ? '<img src="/icon-192.png" alt="">' : S.
 const stOf = n => n === S.me ? (S.myStatus === 'invisible' ? 'invisible' : (S.status?.get(n) || S.myStatus || 'online')) : (S.status?.get(n) || 'online');
 const isMob = n => S.online?.has(n) && S.dev?.get(n) === 'm';
 const stLabel = n => STATUS[stOf(n)][0] + (isMob(n) ? ' · telefonda' : '');
-const av = (n, on) => `<div class="av ${on ? 'on-dot st-' + stOf(n) + (isMob(n) ? ' mob' : '') : ''}" style="background:${userColor(n)}">${avInner(n)}</div>`;
+const avFr = n => { const f = S.users[n]?.frame; return f && f !== 'none' ? f : ''; };
+const av = (n, on) => { const fr = avFr(n); return `<div class="av${fr ? ' has-fr fr-' + esc(fr) : ''}${on ? ' on-dot st-' + stOf(n) + (isMob(n) ? ' mob' : '') : ''}" style="background:${userColor(n)}">${avInner(n)}${fr ? '<i class="av-fr" aria-hidden="true"></i>' : ''}</div>`; };
 const STATUS = { online: ['Çevrimiçi', '#23a55a'], idle: ['Boşta', '#f0b232'], dnd: ['Rahatsız etmeyin', '#f23f43'], invisible: ['Görünmez', '#80848e'] };
 const isDnd = () => S.myStatus === 'dnd';
 const roleOf = (s, n) => !s ? 'member' : (s.roles?.[n] || 'member');
@@ -9356,7 +9382,7 @@ function mkStageHTML(it, big = false) {
     return `<div class="mk-nb-demo has-nb nb-${esc(it.id)}" style="${big ? 'max-width:300px;padding:12px 14px' : ''}">${nbLayers(it.id)}<div class="av" style="background:${meCol}">${meIn}</div><b>${meName}</b></div>`;
   }
   if (it.cat === 'frame') {
-    return `<div class="mk-fr-av"><div class="av fr-${esc(it.id)}" style="background:${meCol}${big ? ';width:92px;height:92px;font-size:32px' : ''}">${meIn}</div></div>`;
+    return `<div class="mk-fr-av"><div class="av has-fr fr-${esc(it.id)}" style="background:${meCol}${big ? ';width:92px;height:92px;font-size:32px' : ''}">${meIn}<i class="av-fr" aria-hidden="true"></i></div></div>`;
   }
   if (it.cat === 'tag' && it.pack) {
     const sz = big ? 36 : 28;
