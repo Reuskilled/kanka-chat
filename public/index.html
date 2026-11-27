@@ -2643,8 +2643,11 @@
   /* Yerel Şeffaf VP9+Alpha (.webm) Profil Efekti & İsim Plakası Motoru */
   .pfx-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; pointer-events: none; z-index: 6; border-radius: inherit; }
   .pfx-vid.screen { mix-blend-mode: screen; }
-  .nb-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: right center; z-index: 0; pointer-events: none; opacity: .82; transition: opacity .25s ease, filter .25s ease; }
-  .has-nb:hover .nb-vid, .nb-card:hover .nb-vid { opacity: 1; filter: brightness(1.1); }
+  .nb-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: right center; z-index: 0; pointer-events: none; opacity: .88; transition: opacity .2s ease, filter .25s ease; }
+  .has-nb:hover .nb-vid, .nb-card:hover .nb-vid { opacity: 1; filter: brightness(1.08); }
+  .nb-vid.nb-play { opacity: 0 !important; }
+  .nb-vid.nb-play.ready { opacity: 1 !important; }
+  .nb-playing .nb-poster { opacity: 0 !important; }
   /* Kurucu Özel: Canlı .webm / .webp Efekt Laboratuvarı */
   #modal .box.mklab-box { width: min(760px, 95vw); padding: 22px; }
   .mklab-grid { display: grid; grid-template-columns: 310px 1fr; gap: 18px; align-items: start; margin-top: 12px; }
@@ -12477,7 +12480,7 @@ const PFX_3D_MAP = { dragon_crimson: 0, dragon_jade: 1, dragon_frost: 2, vfx_bla
 const NB_CATS = [['all', 'Tümü'], ['fire', 'Ateş & Kor'], ['ice', 'Buz & Su'], ['space', 'Uzay'], ['neon', 'Neon & Siber'], ['soft', 'Yumuşak']];
 const NAME_BANNERS = [
   { id: 'none', cat: 'all', name: 'Yok', svg: '' },
-  { id: 'gecekedi', cat: 'soft', name: 'Gece Kedisi', tag: 'YAKINDA', soon: true, vid: '/effects/cat_nameplate_walk.webm?v=1', svg: '' },
+  { id: 'gecekedi', cat: 'soft', name: 'Gece Kedisi', tag: 'YAKINDA', soon: true, vid: '/effects/cat_nameplate_walk.webm?v=1', poster: '/effects/cat_nameplate_poster.webp?v=1', svg: '' },
   { id: 'cyberlime', cat: 'neon', name: 'Asit Siber', tag: 'KANKA', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv" stroke="#d4ff00" stroke-opacity=".45" fill="none" stroke-width="1.2"><path d="M135 10 H170 L180 20 H225"/><path d="M150 34 H190 L202 24 H238"/><circle cx="170" cy="10" r="2.2" fill="#d4ff00"/><circle cx="202" cy="24" r="2.2" fill="#d4ff00"/><circle cx="222" cy="12" r="1.6" fill="#fff"/></g><rect x="210" y="6" width="22" height="3" rx="1.5" fill="#d4ff00" opacity=".75"/></svg>` },
   { id: 'embers', cat: 'fire', name: 'Kor Alev', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv"><circle cx="150" cy="30" r="2.2" fill="#ffbe3b" opacity=".8"/><circle cx="176" cy="14" r="1.6" fill="#ff7a2b" opacity=".9"/><circle cx="198" cy="26" r="3" fill="#ffd166" opacity=".75"/><circle cx="218" cy="12" r="2" fill="#fff" opacity=".85"/><circle cx="226" cy="33" r="2.5" fill="#ff6b2b" opacity=".8"/><circle cx="164" cy="36" r="1.4" fill="#fde047" opacity=".7"/></g></svg>` },
   { id: 'magma', cat: 'fire', name: 'Magma', tag: 'YENİ', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><g class="mv" stroke="#ff9447" stroke-opacity=".55" stroke-width="1.3" fill="none"><path d="M130 44 L178 12 L238 36"/><path d="M168 44 L208 4 L232 44"/><circle cx="178" cy="12" r="2.4" fill="#fde047"/><circle cx="208" cy="18" r="1.5" fill="#ff7a2b"/></g></svg>` },
@@ -12491,7 +12494,46 @@ const NAME_BANNERS = [
   { id: 'goldsilk', cat: 'soft', name: 'Altın İpek', tag: 'ÖZEL', svg: `<svg viewBox="0 0 240 44" preserveAspectRatio="none"><path class="mv" d="M130 36 Q180 8 240 26" fill="none" stroke="#fde047" stroke-opacity=".35" stroke-width="2"/><g class="mv" fill="#fef08a"><circle cx="174" cy="16" r="1.5"/><circle cx="204" cy="24" r="2"/><circle cx="224" cy="12" r="1.3"/></g></svg>` },
 ];
 const nbOf = u => u?.nameBanner && NAME_BANNERS.some(x => x.id === u.nameBanner && x.id !== 'none') ? u.nameBanner : null;
-const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `<div class="nb-bg"></div>${b.vid ? `<video class="nb-vid" src="${esc(b.vid)}" autoplay loop muted playsinline disablePictureInPicture aria-hidden="true"></video>` : ''}<div class="nb-scrim"></div><div class="nb-art">${b.svg || ''}</div><div class="nb-sheen"></div>`; };
+const nbLayers = id => { const b = NAME_BANNERS.find(x => x.id === id); return !b || id === 'none' ? '' : `<div class="nb-bg"></div>${b.vid ? `<img class="nb-vid nb-poster" src="${esc(b.poster || '')}" data-vid="${esc(b.vid)}" alt="" loading="lazy" aria-hidden="true">` : ''}<div class="nb-scrim"></div><div class="nb-art">${b.svg || ''}</div><div class="nb-sheen"></div>`; };
+// İsim afişi videoları sadece fare üstüne gelince oynar, ayrılınca bellekten tamamen boşaltılır (boşta 0 video RAM)
+(() => {
+  let activeHost = null;
+  const stopHost = h => {
+    if (!h) return;
+    h.classList.remove('nb-playing');
+    const v = h._nbVid;
+    if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); v.remove(); } catch {} h._nbVid = null; }
+    if (activeHost === h) activeHost = null;
+  };
+  const startHost = h => {
+    if (!h || h._nbVid || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const p = h.querySelector('.nb-poster[data-vid]');
+    if (!p) return;
+    const src = p.getAttribute('data-vid');
+    if (!src) return;
+    if (activeHost && activeHost !== h) stopHost(activeHost);
+    const v = document.createElement('video');
+    v.className = 'nb-vid nb-play';
+    v.src = src; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+    v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('disablePictureInPicture', ''); v.setAttribute('aria-hidden', 'true');
+    v.addEventListener('playing', () => { if (h._nbVid !== v) return; v.classList.add('ready'); h.classList.add('nb-playing'); }, { once: true });
+    p.after(v);
+    h._nbVid = v; activeHost = h;
+    v.play().catch(() => {});
+  };
+  const hostOf = t => t?.closest?.('.nb-card') || t?.closest?.('.has-nb');
+  document.addEventListener('pointerover', e => {
+    const h = hostOf(e.target);
+    if (!h || (e.relatedTarget && h.contains(e.relatedTarget))) return;
+    startHost(h);
+  });
+  document.addEventListener('pointerout', e => {
+    const h = hostOf(e.target);
+    if (!h || (e.relatedTarget && h.contains(e.relatedTarget))) return;
+    stopHost(h);
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && activeHost) stopHost(activeHost); });
+})();
 const NS_FONTS = [
   ['default', 'Varsayılan'], ['serif', 'Klasik'], ['cinzel', 'Kraliyet'], ['rounded', 'Yuvarlak'],
   ['script', 'El Yazısı'], ['pixel', 'Piksel'], ['cyber', 'Siber'], ['mono', 'Kod'],
