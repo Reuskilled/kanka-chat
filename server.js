@@ -1017,6 +1017,14 @@ function roomCheck() {
 // Normal kayıt asenkron: diske yazarken sunucu donmaz (sesli sohbet, mesajlar takılmaz).
 // Yazım sürerken gelen değişiklikler bitince tek seferde yazılır; aynı anda iki yazım olmaz.
 const TMP_ASYNC = DATA_FILE + '.tmpa';
+// data.json büyüdükçe her yazım (JSON'a çevirme) sunucuyu onlarca ms kilitliyor; bu sırada mesajlar ve ping bekliyor.
+// Yazım pahalıysa değişiklikleri daha uzun biriktir (kapanışta bekleyenler yine senkron yazılır, veri kaybolmaz).
+let lastSaveCost = 0;
+// Sunucunun olay döngüsü gecikmesi (ms): ping penceresinde "sunucu yoğunluğu" olarak görünür
+const loopLag = { ort: 0, max: 0 };
+{ try { const h = require('perf_hooks').monitorEventLoopDelay({ resolution: 10 }); h.enable(); // ölçüm aralığı (10 ms) ortalamaya eklenir, çıkarıyoruz
+  setInterval(() => { loopLag.ort = Math.max(0, Math.round(h.mean / 1e6 - 10)); loopLag.max = Math.max(0, Math.round(h.max / 1e6 - 10)); h.reset(); }, 10000).unref(); } catch {} }
+const saveDelay = () => lastSaveCost > 60 ? 3000 : lastSaveCost > 25 ? 1500 : 300;
 async function writeDbAsync() {
   saveTimer = null;
   if (dbWriting) { dbDirty = true; return; }
@@ -1027,7 +1035,7 @@ async function writeDbAsync() {
     try { msgPersist(); } catch (e) { console.error('mesajlar.db yazılamadı:', e.message); }
     const t1 = performance.now(), snap0 = msgSnapAt;
     const txt = dbJson(false), stamp = lastStamp;
-    saveStat({ sqlite: t1 - t0, json: performance.now() - t1, kanal: nCh, mb: txt.length / 1e6, tam: msgSnapAt !== snap0 });
+    saveStat({ sqlite: t1 - t0, json: performance.now() - t1, kanal: nCh, mb: txt.length / 1e6, tam: msgSnapAt !== snap0 }); lastSaveCost = performance.now() - t0;
     const fh = await fs.promises.open(TMP_ASYNC, 'w');
     try { await fh.writeFile(txt); await fh.sync(); } finally { await fh.close(); }
     // bu arada senkron (daha yeni) bir yazım olduysa bu eski kopyayı data.json'un üstüne koyma
@@ -1036,13 +1044,13 @@ async function writeDbAsync() {
     saveFails = 0;
   } catch (e) { saveFails++; dbDirty = true; console.error('Kayıt yazılamadı (' + saveFails + '):', e.message); await new Promise(r => setTimeout(r, Math.min(30e3, 1000 * saveFails))); }
   finally { dbWriting = false; }
-  if (dbDirty && !saveTimer) saveTimer = setTimeout(writeDbAsync, 300);
+  if (dbDirty && !saveTimer) saveTimer = setTimeout(writeDbAsync, saveDelay());
 }
 function save() {
   if (!roomCheckQ) { roomCheckQ = true; setImmediate(roomCheck); }
   dbDirty = true;
   if (saveTimer || dbWriting) return; // 300 ms içindeki tüm değişiklikler tek yazımda; yazım sürüyorsa bitince yazılır
-  saveTimer = setTimeout(writeDbAsync, 300);
+  saveTimer = setTimeout(writeDbAsync, saveDelay());
 }
 // Kapanırken bekleyen değişiklikleri senkron yaz (süren asenkron yazım yarım kalsa da data.json hep sağlam kalır)
 const flushDb = () => { if (saveTimer || dbDirty || dbWriting) { writeDbNow(); dbDirty = false; } };
@@ -6117,7 +6125,7 @@ io.on('connection', socket => {
     }
     cb(u.prefs ? { notif: u.prefs.notif, muted: u.prefs.muted, ch: u.prefs.ch, srv: u.prefs.srv || {}, order: u.prefs.order || [], muteUntil: u.prefs.muteUntil || {}, read: u.prefs.read || {}, emoji: u.prefs.emoji || { fav: [], use: {} }, at: u.prefs.at } : null);
   });
-  socket.on('vping', cb => { if (typeof cb === 'function') cb(Date.now()); }); // ses bağlantısı penceresi: Kanka sunucusuna gecikme
+  socket.on('vping', cb => { if (typeof cb === 'function') cb({ t: Date.now(), lag: loopLag.ort, lagMax: loopLag.max, kayitMs: Math.round(lastSaveCost) }); }); // ses bağlantısı penceresi: Kanka sunucusuna gecikme
   socket.on('read', id => { // okundu bilgisi her cihazda aynı olsun
     const u = db.users[me]; if (!u || typeof id !== 'string' || id.length > 80) return;
     const t = Date.now(); u.prefs ||= {}; u.prefs.read ||= {}; u.prefs.read[id] = t;

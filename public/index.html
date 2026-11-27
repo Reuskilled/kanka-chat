@@ -14919,7 +14919,8 @@ function vqStart() { clearInterval(vqT); vqPrev = {}; vqLog.length = 0; srvLog.l
 // ---- Ses bağlantısı penceresi (sinyal simgesine tıklayınca, Discord'daki gibi): ping grafiği ve ayrıntılar ----
 let vqLast = null, vqPopOpen = false;
 const vqLog = [], srvLog = []; // son ~5 dakika (3 sn'de bir)
-function srvPing() { const t0 = performance.now(); socket.timeout(4000).emit('vping', err => { if (err) return; srvLog.push({ t: Date.now(), ms: Math.round(performance.now() - t0) }); if (srvLog.length > 100) srvLog.shift(); vqPopDraw(); }); }
+let srvInfo = null;
+function srvPing() { const t0 = performance.now(); socket.timeout(4000).emit('vping', (err, r) => { if (err) return; srvInfo = r && typeof r === 'object' ? r : null; srvLog.push({ t: Date.now(), ms: Math.round(performance.now() - t0) }); if (srvLog.length > 100) srvLog.shift(); vqPopDraw(); }); }
 function vqGraph(pts) {
   const W = 268, H = 74, v = pts.filter(p => p.ms != null);
   if (v.length < 2) return `<div class="vqp-empty">Grafik için birkaç saniye bekle…</div>`;
@@ -14941,10 +14942,10 @@ function vqPopDraw() {
   box.innerHTML = `<div class="vqp-h"><b>Ses bağlantısı</b><span class="vqp-st">${lab}</span></div>
     ${vqGraph(pts)}
     <div class="vqp-sec">${row(useV ? 'Ortalama ping (kişilere)' : 'Ortalama ping', avg != null ? avg + ' ms' : '…')}${row('Son ping', last != null ? last + ' ms' : '…')}
-      ${row('Kanka sunucusu', s != null ? s + ' ms' : '…')}${q.alone ? '' : row('Gelen paket kaybı', '%' + (q.loss || 0).toFixed(1)) + (q.outLoss != null ? row('Giden paket kaybı', '%' + q.outLoss.toFixed(1)) : '') + row('Titreşim (jitter)', (q.jit || 0) + ' ms')}</div>
+      ${row('Kanka sunucusu', s != null ? s + ' ms' : '…')}${srvInfo?.lagMax != null ? row('Sunucu yoğunluğu', srvInfo.lagMax >= 100 ? `yüksek (anlık ~${srvInfo.lagMax} ms)` : srvInfo.lagMax >= 40 ? `orta (anlık ~${srvInfo.lagMax} ms)` : 'düşük') : ''}${q.alone ? '' : row('Gelen paket kaybı', '%' + (q.loss || 0).toFixed(1)) + (q.outLoss != null ? row('Giden paket kaybı', '%' + q.outLoss.toFixed(1)) : '') + row('Titreşim (jitter)', (q.jit || 0) + ' ms')}</div>
     ${q.alone ? `<div class="vqp-note">Odada şimdilik yalnızsın. Biri gelince ses doğrudan ona gider, ping de kişi kişi burada görünür.</div>`
       : `<div class="vqp-sec"><div class="vqp-k">Kişiler</div>${q.per.map(p => `<div class="vqp-p"><span>${esc(dn(p.name))}${p.relay ? ' <em title="Doğrudan bağlanılamadı, ses Kanka sunucusu üzerinden gidiyor">sunucu üzerinden</em>' : ''}</span><b class="${p.ms > 250 ? 'bad' : p.ms > 120 ? 'mid' : ''}">${p.ms} ms</b></div>`).join('') || '<div class="vqp-note">Bağlanıyor…</div>'}</div>`}
-    <div class="vqp-note">Ses kişiler arasında doğrudan (eşten eşe) gider; ping her kişiyle ayrı ölçülür. Yüksekse genelde o kişinin ya da senin internetinden olur.</div>`;
+    <div class="vqp-note">${q.alone ? 'Yalnızken ping Kanka sunucusuna ölçülür; bu sesi değil mesajların gidiş hızını gösterir.' : 'Ses kişiler arasında doğrudan (eşten eşe) gider, Kanka sunucusundan geçmez; ping her kişiyle ayrı ölçülür. Yüksekse genelde o kişinin ya da senin internetinden olur.'}</div>`;
 }
 function openVqPop() {
   if ($('#vq-pop')) return closeVqPop();
