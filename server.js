@@ -2455,9 +2455,12 @@ function nukeCheck(s, actor, what) {
 }
 // Otomatik moderasyon: engellenirse hata metni döner
 const spamMap = new Map();
+// Yönetim ekibi: sahip, yönetici, moderatör ya da herhangi bir yönetim yetkisi olan. Otomatik moderasyon (spam dahil) bunlara hiç dokunmaz.
+const STAFF_PERMS = ['administrator', 'manageServer', 'manageRoles', 'manageChannels', 'manageMessages', 'kick', 'ban', 'timeout'];
+const isStaff = (s, n) => s.owner === n || isMod(s, n) || STAFF_PERMS.some(p => can(s, n, p));
 const LINK_RE = /https?:\/\/|www\.[^\s]+\.[a-z]{2,}/i, INV_RE = /discord\.(gg|com\/invite)\/|\/davet\/[a-z0-9]+|[?&]davet=/i;
 function automod(s, chId, me, text) {
-  const m = s.bot?.mod; if (!m?.on || s.owner === me || isMod(s, me) || can(s, me, 'manageMessages')) return null;
+  const m = s.bot?.mod; if (!m?.on || isStaff(s, me)) return null;
   text = String(text || '');
   const block = (why, label) => { modLog(s, { title: 'Otomatik moderasyon', text: `${me} adlı üyenin mesajı engellendi: ${label}`, tone: 'warn', fields: [['Oda', '#' + (s.channels.find(c => c.id === chId)?.name || '?')], ['Mesaj', text.slice(0, 110) || '—']] }); return 'Kanka Bot: ' + why; };
   if (m.invites && INV_RE.test(text) && !text.includes('/davet/' + s.invite)) return block('Bu sunucuda başka sunucuların davet linkleri paylaşılamaz.', 'davet linki');

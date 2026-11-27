@@ -1,5 +1,10 @@
 [
   {
+    "id": "2026-11-27-kanka-bot-yonetim-muaf",
+    "baslik": "🛡️ Kanka Bot: yönetim ekibi korumalardan muaf",
+    "metin": "• **Yönetim ekibine dokunmuyor:** Spam koruması ve diğer otomatik moderasyon kuralları sahibi, yöneticileri, moderatörleri ve atma, yasaklama, susturma, mesaj/oda/rol yönetme yetkisi olan herkesi artık hiç susturmuyor, mesajlarını engellemiyor\n• **Telefondan aç/kapat:** Telefon uygulamasında Sunucu menüsü › Kanka Bot'tan otomatik moderasyonu ve spam koruması, anti-nuke, davet linki, link, toplu etiket, büyük harf kurallarını tek tek açıp kapatabilirsin. Webde Sunucu ayarları › Kanka Bot'ta zaten vardı"
+  },
+  {
     "id": "2026-11-26-bot-token-guvenlik",
     "baslik": "🔑 Bot token güvenliği",
     "metin": "• **Token ve imza sırrı yenilerken şifre isteniyor:** Geliştirici panelinde yeni token ya da yeni imza sırrı oluşturmak artık hesap şifreni (2FA açıksa kodu da) istiyor. Oturumu çalınan biri botunun kontrolünü alamaz\n• **Sohbete yapıştırılan token iptal ediliyor:** Bot token'ını yanlışlıkla bir mesaja yapıştırırsan mesaj gönderilmez, token anında iptal edilir ve Kanka Bot sana haber verir. Panelden yeni token oluşturup botunu yeniden başlatman yeterli\n• Bot API'sinde değişiklik yok, mevcut botların aynen çalışır"
