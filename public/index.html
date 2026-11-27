@@ -2612,12 +2612,13 @@
   .fr-altin::before { background: linear-gradient(135deg, #fff1b8, #e2b04a 30%, #8a5a12 55%, #ffe08a 80%, #b9821f); box-shadow: 0 0 16px rgba(226,176,74,.55); }
   .fr-kurucu::before { background: conic-gradient(#ff8a4c, #ffb347, #ff6b3d, #ff8a4c); box-shadow: 0 0 14px rgba(255,138,76,.55); }
   .fr-kurucu::after { content: '🦝'; position: absolute; z-index: 3; left: 50%; bottom: calc(var(--s) * -.08); transform: translateX(-50%); font-size: calc(var(--s) * .2); line-height: 1; padding: 2px 5px; border-radius: 99px; background: #2b1d15; border: 2px solid #ff8a4c; }
-  /* Gece Kedisi, Siber Tilki & Ay ve Sakura — stüdyo şeffaf hareketli avatar çerçeveleri */
+  /* Gece Kedisi, Siber Tilki, Ay ve Sakura & Minik Hayalet — stüdyo şeffaf hareketli avatar çerçeveleri */
   .pav.fr-gecekedi::before { background: radial-gradient(circle, rgba(244,143,177,.35), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
   .pav.fr-kitsune::before { background: radial-gradient(circle, rgba(0,229,255,.35), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
   .pav.fr-sakuramoon::before { background: radial-gradient(circle, rgba(249,168,212,.34), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.6s ease-in-out infinite; }
-  .pav.fr-gecekedi .av, .pav.fr-kitsune .av, .pav.fr-sakuramoon .av { border: 0 !important; background-clip: padding-box; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
-  .pav.fr-gecekedi::after, .pav.fr-kitsune::after, .pav.fr-sakuramoon::after {
+  .pav.fr-minikhayalet::before { background: radial-gradient(circle, rgba(125,211,252,.36), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
+  .pav.fr-gecekedi .av, .pav.fr-kitsune .av, .pav.fr-sakuramoon .av, .pav.fr-minikhayalet .av { border: 0 !important; background-clip: padding-box; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
+  .pav.fr-gecekedi::after, .pav.fr-kitsune::after, .pav.fr-sakuramoon::after, .pav.fr-minikhayalet::after {
     content: ''; position: absolute; left: -36%; top: -36%; width: 172%; height: 172%;
     z-index: 4; pointer-events: none;
     background: url('/effects/cat_frame_midnight.webp?v=1') center/contain no-repeat;
@@ -2626,13 +2627,15 @@
   }
   .pav.fr-kitsune::after { background-image: url('/effects/kitsune_frame.webp?v=1'); }
   .pav.fr-sakuramoon::after { background-image: url('/effects/sakura_frame.webp?v=1'); }
+  .pav.fr-minikhayalet::after { background-image: url('/effects/ghost_frame.webp?v=1'); }
   .pav.fr-gecekedi:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(216,172,255,.55)); }
   .pav.fr-kitsune:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(0,229,255,.58)); }
   .pav.fr-sakuramoon:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(249,168,212,.58)); }
+  .pav.fr-minikhayalet:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(125,211,252,.6)); }
   /* Sohbet mesajları, DM listesi (Sohbetler), üye listesi & sol alt avatar çerçeveleri (.on-dot::after ile çakışmaz) */
   .av.has-fr { position: relative; overflow: visible !important; border: 0 !important; }
   .av.has-fr > .av-fr { position: absolute; inset: -3px; border-radius: 50%; pointer-events: none; z-index: 3; }
-  .av.has-fr:not(.fr-gecekedi):not(.fr-kitsune):not(.fr-sakuramoon) > .av-fr {
+  .av.has-fr:not(.fr-gecekedi):not(.fr-kitsune):not(.fr-sakuramoon):not(.fr-minikhayalet) > .av-fr {
     padding: 2.5px;
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude;
@@ -2644,7 +2647,7 @@
   .av.fr-altin > .av-fr { background: linear-gradient(135deg, #fff1b8, #e2b04a 30%, #8a5a12 55%, #ffe08a 80%, #b9821f); }
   .av.fr-kurucu > .av-fr { background: conic-gradient(#ff8a4c, #ffb347, #ff6b3d, #ff8a4c); }
   /* Boşta 0 GPU/CPU: liste ve sohbet çerçeveleri statik durur; sadece fare üstüne gelince (veya Market/profil vitrininde) canlanır */
-  .av.fr-gecekedi > .av-fr, .av.fr-kitsune > .av-fr, .av.fr-sakuramoon > .av-fr {
+  .av.fr-gecekedi > .av-fr, .av.fr-kitsune > .av-fr, .av.fr-sakuramoon > .av-fr, .av.fr-minikhayalet > .av-fr {
     left: -36%; top: -36%; right: auto; bottom: auto; width: 172%; height: 172%;
     border-radius: 0; z-index: 4;
     background: url('/effects/cat_frame_midnight.png?v=2') center/contain no-repeat;
@@ -2652,6 +2655,7 @@
   }
   .av.fr-kitsune > .av-fr { background-image: url('/effects/kitsune_frame.png?v=1'); }
   .av.fr-sakuramoon > .av-fr { background-image: url('/effects/sakura_frame.png?v=1'); }
+  .av.fr-minikhayalet > .av-fr { background-image: url('/effects/ghost_frame.png?v=1'); }
   :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-gokkusagi > .av-fr,
   :is(.mk-fr-av, .mk-setmod) .av.fr-gokkusagi > .av-fr,
   .av.fr-gokkusagi:hover > .av-fr { animation: spin 4s linear infinite; }
@@ -2670,11 +2674,14 @@
   :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-sakuramoon > .av-fr,
   :is(.mk-fr-av, .mk-hero-live, .mk-bundle-stage, .mk-setmod) .av.fr-sakuramoon > .av-fr,
   .av.fr-sakuramoon:hover > .av-fr { background-image: url('/effects/sakura_frame.webp?v=1'); }
-  :is(.mem, .room, .row, .vuser, .frow, #me-av):hover :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon) > .av-fr,
-  :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon):hover > .av-fr { transform: scale(1.06); }
-  .has-nb :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon) > .av-fr { left: -29%; top: -29%; width: 158%; height: 158%; }
+  :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-minikhayalet > .av-fr,
+  :is(.mk-fr-av, .mk-hero-live, .mk-bundle-stage, .mk-setmod) .av.fr-minikhayalet > .av-fr,
+  .av.fr-minikhayalet:hover > .av-fr { background-image: url('/effects/ghost_frame.webp?v=1'); }
+  :is(.mem, .room, .row, .vuser, .frow, #me-av):hover :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet) > .av-fr,
+  :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet):hover > .av-fr { transform: scale(1.06); }
+  .has-nb :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet) > .av-fr { left: -29%; top: -29%; width: 158%; height: 158%; }
   :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) .av.has-fr > .av-fr { inset: -2px; padding: 1.8px; }
-  :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon) > .av-fr { left: -26%; top: -26%; width: 152%; height: 152%; }
+  :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet) > .av-fr { left: -26%; top: -26%; width: 152%; height: 152%; }
   .av.on-dot::after { z-index: 6; }
   .pav .pdot { z-index: 5; }
   @keyframes catGlow { 0%,100% { opacity: .45; transform: scale(1); } 50% { opacity: .9; transform: scale(1.06); } }
@@ -2841,13 +2848,16 @@
   .nb-gecekedi .nb-bg { background: linear-gradient(100deg, #120d1c 12%, #241338 56%, #3e194f 88%, #6d2666 100%) !important; opacity: .94 !important; }
   .nb-kitsune .nb-bg { background: linear-gradient(100deg, #080d1a 10%, #10203d 54%, #1d1a4a 84%, #0f4c6e 100%) !important; opacity: .95 !important; }
   .nb-sakuramoon .nb-bg { background: linear-gradient(100deg, #090c1d 10%, #1b183a 52%, #3a1f49 84%, #6a2f5b 100%) !important; opacity: .95 !important; }
-  .nb-gecekedi .nb-vid, .nb-kitsune .nb-vid, .nb-sakuramoon .nb-vid { object-fit: contain; object-position: right center; opacity: .98; z-index: 1; }
+  .nb-minikhayalet .nb-bg { background: linear-gradient(100deg, #08111f 10%, #11243e 54%, #1b3a60 86%, #29517a 100%) !important; opacity: .95 !important; }
+  .nb-gecekedi .nb-vid, .nb-kitsune .nb-vid, .nb-sakuramoon .nb-vid, .nb-minikhayalet .nb-vid { object-fit: contain; object-position: right center; opacity: .98; z-index: 1; }
   .nb-gecekedi .nb-scrim { background: linear-gradient(90deg, rgba(16,12,24,.76) 0%, rgba(16,12,24,.28) 46%, rgba(16,12,24,0) 74%) !important; }
   .nb-kitsune .nb-scrim { background: linear-gradient(90deg, rgba(8,12,24,.82) 0%, rgba(8,12,24,.34) 48%, rgba(8,12,24,0) 74%) !important; }
   .nb-sakuramoon .nb-scrim { background: linear-gradient(90deg, rgba(10,12,28,.80) 0%, rgba(10,12,28,.32) 48%, rgba(10,12,28,0) 74%) !important; }
+  .nb-minikhayalet .nb-scrim { background: linear-gradient(90deg, rgba(8,16,30,.80) 0%, rgba(8,16,30,.32) 48%, rgba(8,16,30,0) 74%) !important; }
   .nb-gecekedi:hover .nb-bg, .nb-card:hover .nb-gecekedi .nb-bg,
   .nb-kitsune:hover .nb-bg, .nb-card:hover .nb-kitsune .nb-bg,
-  .nb-sakuramoon:hover .nb-bg, .nb-card:hover .nb-sakuramoon .nb-bg { opacity: 1 !important; filter: brightness(1.1); animation: none !important; }
+  .nb-sakuramoon:hover .nb-bg, .nb-card:hover .nb-sakuramoon .nb-bg,
+  .nb-minikhayalet:hover .nb-bg, .nb-card:hover .nb-minikhayalet .nb-bg { opacity: 1 !important; filter: brightness(1.1); animation: none !important; }
   .nb-card.lock { opacity: .55; cursor: not-allowed; }
   .nb-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .nb-cats button { padding: 4px 10px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: 11.5px; font-weight: 800; transition: all .14s; }
@@ -5235,6 +5245,24 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .mk-hero.t-sakura .mk-hero-live:hover { border-color: rgba(249,168,212,.65); }
   .mk-hero.t-sakura .mk-hb-pill { background: rgba(249,168,212,.14); border-color: rgba(249,168,212,.38); color: #fce7f3; }
   .mk-hero.t-sakura .mk-hl-foot span:last-child { color: #f9a8d4; }
+  .mk-hero.t-ghost {
+    border-color: rgba(125,211,252,.28);
+    background: linear-gradient(128deg, #07101e 0%, #10233d 48%, #1d3659 100%);
+  }
+  .mk-hero.t-ghost .mk-hero-bg {
+    background:
+      radial-gradient(52% 88% at 18% 20%, rgba(125,211,252,.24), transparent 64%),
+      radial-gradient(48% 82% at 84% 24%, rgba(253,224,116,.18), transparent 64%),
+      radial-gradient(40% 60% at 54% 92%, rgba(96,165,250,.16), transparent 65%),
+      linear-gradient(180deg, rgba(7,16,30,.08) 0%, rgba(7,16,30,.8) 86%, #07101e 100%);
+  }
+  .mk-hero.t-ghost .mk-kicker { background: rgba(125,211,252,.16); border-color: rgba(125,211,252,.44); color: #e0f2fe; }
+  .mk-hero.t-ghost .mk-hero-l h2 { background: linear-gradient(180deg, #ffffff 15%, #bae6fd 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mk-hero.t-ghost .mk-hero-btn { background: linear-gradient(135deg, #7dd3fc, #fde68a); color: #07111f; box-shadow: 0 8px 24px rgba(125,211,252,.34); }
+  .mk-hero.t-ghost .mk-hero-live { border-color: rgba(125,211,252,.32); background: rgba(8,18,34,.78); }
+  .mk-hero.t-ghost .mk-hero-live:hover { border-color: rgba(125,211,252,.65); }
+  .mk-hero.t-ghost .mk-hb-pill { background: rgba(125,211,252,.14); border-color: rgba(125,211,252,.38); color: #e0f2fe; }
+  .mk-hero.t-ghost .mk-hl-foot span:last-child { color: #7dd3fc; }
   .mk-hero-sw {
     display: inline-flex; align-items: center; gap: 4px; padding: 3px; border-radius: 999px;
     background: rgba(6,8,14,.62); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(10px);
@@ -5405,6 +5433,7 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .mk-pill.pink { background: linear-gradient(135deg, #f48fb1, #c084fc); color: #14081f; border-color: transparent; }
   .mk-pill.cyan { background: linear-gradient(135deg, #00e5ff, #a855f7); color: #050a14; border-color: transparent; }
   .mk-pill.rose { background: linear-gradient(135deg, #f9a8d4, #e2e8f0); color: #12091c; border-color: transparent; }
+  .mk-pill.sky { background: linear-gradient(135deg, #7dd3fc, #fde68a); color: #07111f; border-color: transparent; }
   .mk-pill.ok { background: rgba(76,195,138,.22); border-color: rgba(76,195,138,.5); color: #6ef0b0; }
   .mk-peek {
     position: absolute; right: 9px; bottom: 9px; z-index: 5; padding: 4px 9px; border-radius: 8px;
@@ -5421,10 +5450,13 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .mk-tag-st.pink { background: rgba(244,143,177,.16); color: #fbcfe8; }
   .mk-tag-st.cyan { background: rgba(0,229,255,.16); color: #99f6ff; }
   .mk-tag-st.rose { background: rgba(249,168,212,.18); color: #fce7f3; }
+  .mk-tag-st.sky { background: rgba(125,211,252,.18); color: #e0f2fe; }
   .mk-card.mk-bundle.t-kitsune { border-color: rgba(0,229,255,.42); background: linear-gradient(180deg, #0d1b30 0%, #10131e 100%); box-shadow: 0 12px 32px rgba(0,229,255,.14); }
   .mk-card.mk-bundle.t-kitsune:hover { border-color: #00e5ff; box-shadow: 0 18px 42px rgba(0,229,255,.26); }
   .mk-card.mk-bundle.t-sakura { border-color: rgba(249,168,212,.42); background: linear-gradient(180deg, #1b1734 0%, #131122 100%); box-shadow: 0 12px 32px rgba(249,168,212,.14); }
   .mk-card.mk-bundle.t-sakura:hover { border-color: #f9a8d4; box-shadow: 0 18px 42px rgba(249,168,212,.26); }
+  .mk-card.mk-bundle.t-ghost { border-color: rgba(125,211,252,.44); background: linear-gradient(180deg, #0e2038 0%, #0e1624 100%); box-shadow: 0 12px 32px rgba(125,211,252,.15); }
+  .mk-card.mk-bundle.t-ghost:hover { border-color: #7dd3fc; box-shadow: 0 18px 42px rgba(125,211,252,.28); }
 
   /* Kart içi canlı mini önizlemeler */
   .mk-mini-pf {
@@ -5448,7 +5480,7 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .mk-bundle-stage {
     position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 9px; width: 100%; padding: 0 14px;
   }
-  .mk-bundle-stage .av.fr-gecekedi, .mk-bundle-stage .av.fr-kitsune, .mk-bundle-stage .av.fr-sakuramoon { width: 58px; height: 58px; font-size: 20px; }
+  .mk-bundle-stage .av.fr-gecekedi, .mk-bundle-stage .av.fr-kitsune, .mk-bundle-stage .av.fr-sakuramoon, .mk-bundle-stage .av.fr-minikhayalet { width: 58px; height: 58px; font-size: 20px; }
   .mk-bundle-mini-nb {
     width: 100%; max-width: 184px; padding: 6px 9px; border-radius: 9px; display: flex; align-items: center; gap: 7px;
     box-shadow: 0 8px 20px rgba(0,0,0,.45);
@@ -7229,12 +7261,12 @@ function showSettings(tab) {
         preview();
       });
     } else if (studioTab === 'effect') {
-      const ownerEfs = PEFFECTS_OWNER.filter(ef => (ef[0] !== 'cat_midnight' && ef[0] !== 'kitsune_cyber' && ef[0] !== 'sakura_moon') || isPisagoMe());
+      const ownerEfs = PEFFECTS_OWNER.filter(ef => !['cat_midnight', 'kitsune_cyber', 'sakura_moon', 'ghost_wisp'].includes(ef[0]) || isPisagoMe());
       const ownerBlock = S.staff === 'owner' ? `<div class="pe-sec-h"><span>Özel &amp; 3D VFX Efektler</span><em>KURUCU ÖZEL</em></div>
         <div class="peffects pe-3d">${ownerEfs.map(ef => {
           const on = (draft.effect || 'none') === ef[0];
           const pv = ef[5] ? `<img src="${ef[5]}" alt="">` : '';
-          return `<button type="button" data-ef="${ef[0]}" class="${on ? 'on' : ''}" title="${ef[1]} · Özel Profil Efekti"><div class="pe-pv ${ef[6] || ''}" style="background:${ef[3]};color:${ef[4]}">${pv}<span class="pe-ktag">${ef[0] === 'cat_midnight' || ef[0] === 'kitsune_cyber' || ef[0] === 'sakura_moon' ? 'ÖZEL' : '3D'}</span></div><span>${ef[1]}</span></button>`;
+          return `<button type="button" data-ef="${ef[0]}" class="${on ? 'on' : ''}" title="${ef[1]} · Özel Profil Efekti"><div class="pe-pv ${ef[6] || ''}" style="background:${ef[3]};color:${ef[4]}">${pv}<span class="pe-ktag">${['cat_midnight', 'kitsune_cyber', 'sakura_moon', 'ghost_wisp'].includes(ef[0]) ? 'ÖZEL' : '3D'}</span></div><span>${ef[1]}</span></button>`;
         }).join('')}</div>
         <div class="pe-sec-h"><span>Standart Efektler</span></div>` : '';
       root.innerHTML = head + ownerBlock + `<div class="peffects" id="st-peffects">${PEFFECTS.map(ef => { const on = (draft.effect || 'none') === ef[0];
@@ -9516,13 +9548,25 @@ const SPARK_HIDE = STORE_APP && !PLAY_BILL;
 // ---------- Market (tam genişlik koleksiyon vitrini: canlı önizleme, arama ve filtreleme; fiyat/satın alma yok) ----------
 const MARKET_IC = 'tag';
 const PFX_POSTER_MAP = {
+  ghost_wisp: '/effects/ghost_profile_poster.webp?v=1',
   sakura_moon: '/effects/sakura_profile_poster.webp?v=1',
   kitsune_cyber: '/effects/kitsune_profile_poster.webp?v=2',
   cat_midnight: '/effects/cat_profile_poster.webp?v=1',
   dragon_crimson: '/effects/dragon_inferno_poster.webp?v=1',
 };
-let mkTab = 'all', mkQuery = '', mkHeroCol = 'sakuramoon';
+let mkTab = 'all', mkQuery = '', mkHeroCol = 'minikhayalet';
 const MK_COLLECTIONS = {
+  minikhayalet: {
+    id: 'minikhayalet', cls: 't-ghost', icon: '👻', tab: '👻 Minik Hayalet',
+    kicker: '👻 YENİ KOLEKSİYON · 3 PARÇA',
+    title: 'MİNİK HAYALET KOLEKSİYONU',
+    lead: 'Sol kenardan utangaçça göz kırpıp kaçan, elinde sıcak ruh feneriyle yukarı süzülüp patlayan baloncuklara dönüşen minik hayalet — neşeli ve tam uyumlu 3\'lü koleksiyon.',
+    short: 'Minik Hayalet · Canlı Önizleme',
+    effId: 'ghost_wisp', frId: 'minikhayalet', nbId: 'minikhayalet', bundleKey: 'bundle:minikhayalet',
+    accent: '#7dd3fc', badgeCls: 'sky', banBg: 'linear-gradient(135deg,#0d203a,#1b3b60)',
+    bio: 'Sol alttan utangaçça cee-ee yapıp geri kaçar, ardından elinde sıcak altın feneriyle sağdan yukarı süzülüp patlayan ruh baloncuklarıyla kaybolur.',
+    chatLine: 'Minik Hayalet 3\'lü seti sohbet, profil ve üye listesinde tam uyumlu! 👻🏮',
+  },
   sakuramoon: {
     id: 'sakuramoon', cls: 't-sakura', icon: '🌸', tab: '🌸 Ay & Sakura',
     kicker: '🌸 YENİ KOLEKSİYON · 3 PARÇA',
@@ -9560,13 +9604,13 @@ const MK_COLLECTIONS = {
 function marketCatalog() {
   const me = S.users?.[S.me] || {}, meLv = me.level || 1, pi = isPisagoMe();
   const eff3d = (typeof PEFFECTS_OWNER !== 'undefined' ? PEFFECTS_OWNER : []).map(e => {
-    const isCat = e[0] === 'cat_midnight', isKit = e[0] === 'kitsune_cyber', isSak = e[0] === 'sakura_moon', isCol = isCat || isKit || isSak;
-    const bCls = isSak ? 'rose' : isKit ? 'cyan' : isCat ? 'pink' : 'lime';
+    const isCat = e[0] === 'cat_midnight', isKit = e[0] === 'kitsune_cyber', isSak = e[0] === 'sakura_moon', isGho = e[0] === 'ghost_wisp', isCol = isCat || isKit || isSak || isGho;
+    const bCls = isGho ? 'sky' : isSak ? 'rose' : isKit ? 'cyan' : isCat ? 'pink' : 'lime';
     return {
       key: 'eff:' + e[0], cat: 'effect', id: e[0], name: e[1], sub: isCol ? 'Profil Efekti' : '3D Profil Efekti',
       badge: isCol ? 'YAKINDA' : '3D VFX', badgeCls: bCls,
       status: isCol ? (pi ? '✓ Aktif' : 'Yakında') : 'Yakında', stCls: isCol ? (pi ? 'ok' : bCls) : '', open: isCol ? pi : false, color: e[4] || '#c8ff00', bg: e[3] || '#121319', img: e[5] || '', fx: e[6] || '',
-      desc: isSak ? 'Gümüş hilal ve açan sakura dalı ay ışığı halkasıyla belirir, ipek rüzgar şeritleri ve savrulan sakura yaprakları kenarlardan akarak yumuşakça kaybolur.' : isKit ? 'Neo-Tokyo siber kitsune maskesi turkuaz göz parlamasıyla belirir, kenarlardan neon şeritler ve ruh alevleri akıp dijital piksellere dağılarak kaybolur.' : isCat ? 'Gümüş-lila çizgili anime kedi profilin üstünden yürüyüp pembe pati izleri, mor parıltı ve yıldızlar bırakarak yumuşakça kaybolur.' : 'Profil kartın açıldığında kenarlarda sinematik efektler ve parçacık ışıkları oynatır.',
+      desc: isGho ? 'Utangaç minik hayalet sol alttan göz kırpıp kaçar, sonra elinde sıcak feneriyle sağdan süzülerek yükselir ve patlayan ruh baloncuklarıyla kaybolur.' : isSak ? 'Gümüş hilal ve açan sakura dalı ay ışığı halkasıyla belirir, ipek rüzgar şeritleri ve savrulan sakura yaprakları kenarlardan akarak yumuşakça kaybolur.' : isKit ? 'Neo-Tokyo siber kitsune maskesi turkuaz göz parlamasıyla belirir, kenarlardan neon şeritler ve ruh alevleri akıp dijital piksellere dağılarak kaybolur.' : isCat ? 'Gümüş-lila çizgili anime kedi profilin üstünden yürüyüp pembe pati izleri, mor parıltı ve yıldızlar bırakarak yumuşakça kaybolur.' : 'Profil kartın açıldığında kenarlarda sinematik efektler ve parçacık ışıkları oynatır.',
     };
   });
   const effAmb = (typeof PEFFECTS !== 'undefined' ? PEFFECTS : []).filter(e => e[0] !== 'none').map(e => ({
@@ -9575,26 +9619,26 @@ function marketCatalog() {
     desc: 'Profil kartının üzerinde hafif hareketli parçacık atmosferi oluşturur. Ayarlar › Profil üzerinden hemen takabilirsin.',
   }));
   const banners = (typeof NAME_BANNERS !== 'undefined' ? NAME_BANNERS : []).filter(b => b.id !== 'none').map(b => {
-    const isSoon = !!b.soon, isKit = b.id === 'kitsune', isSak = b.id === 'sakuramoon';
-    const bCls = isSak ? 'rose' : isKit ? 'cyan' : isSoon ? 'pink' : (b.tag === 'KANKA' ? 'lime' : '');
+    const isSoon = !!b.soon, isKit = b.id === 'kitsune', isSak = b.id === 'sakuramoon', isGho = b.id === 'minikhayalet';
+    const bCls = isGho ? 'sky' : isSak ? 'rose' : isKit ? 'cyan' : isSoon ? 'pink' : (b.tag === 'KANKA' ? 'lime' : '');
     return {
       key: 'nb:' + b.id, cat: 'banner', id: b.id, name: b.name, sub: 'İsim Plakası',
       badge: isSoon ? 'YAKINDA' : (b.tag || 'PLAKA'), badgeCls: bCls,
-      status: isSoon ? (pi ? '✓ Aktif' : 'Yakında') : 'Açık', stCls: isSoon ? (pi ? 'ok' : bCls) : 'ok', open: isSoon ? pi : true, color: isSak ? '#f9a8d4' : isKit ? '#00e5ff' : isSoon ? '#f48fb1' : '#c8ff00',
-      desc: isSak ? 'Üye listesinde fare üstüne gelince gümüş hilal ve sakura dalından gece rüzgarıyla pembe sakura yaprakları savrulur.' : isKit ? 'Üye listesinde fare üstüne gelince parlayan siber kitsune maskesi, göz parlaması ve turkuaz-magenta enerji akışı canlanır.' : isSoon ? 'Üye listesinde fare üstüne gelince canlanan anime kedi, sağdan sola yürüyüp pembe parıltı ve yıldız izi bırakır.' : 'Üye listesinde ve sohbet kenar çubuğunda isminin arkasında animasyonlu sahne ve parlama efekti gösterir.',
+      status: isSoon ? (pi ? '✓ Aktif' : 'Yakında') : 'Açık', stCls: isSoon ? (pi ? 'ok' : bCls) : 'ok', open: isSoon ? pi : true, color: isGho ? '#7dd3fc' : isSak ? '#f9a8d4' : isKit ? '#00e5ff' : isSoon ? '#f48fb1' : '#c8ff00',
+      desc: isGho ? 'Üye listesinde fare üstüne gelince fenerli minik hayalet neşeyle zıplayıp gülümser, arkasından patlayan ruh baloncukları yükselir.' : isSak ? 'Üye listesinde fare üstüne gelince gümüş hilal ve sakura dalından gece rüzgarıyla pembe sakura yaprakları savrulur.' : isKit ? 'Üye listesinde fare üstüne gelince parlayan siber kitsune maskesi, göz parlaması ve turkuaz-magenta enerji akışı canlanır.' : isSoon ? 'Üye listesinde fare üstüne gelince canlanan anime kedi, sağdan sola yürüyüp pembe parıltı ve yıldız izi bırakır.' : 'Üye listesinde ve sohbet kenar çubuğunda isminin arkasında animasyonlu sahne ve parlama efekti gösterir.',
     };
   });
   const frames = (typeof FRAMES !== 'undefined' ? FRAMES : []).filter(f => f[0] !== 'none').map(f => {
-    const isSoon = f[2] === -2, isKit = f[0] === 'kitsune', isSak = f[0] === 'sakuramoon', unlocked = frameOpen(me, f);
-    const bCls = isSak ? 'rose' : isKit ? 'cyan' : isSoon ? 'pink' : unlocked ? 'ok' : '';
+    const isSoon = f[2] === -2, isKit = f[0] === 'kitsune', isSak = f[0] === 'sakuramoon', isGho = f[0] === 'minikhayalet', unlocked = frameOpen(me, f);
+    const bCls = isGho ? 'sky' : isSak ? 'rose' : isKit ? 'cyan' : isSoon ? 'pink' : unlocked ? 'ok' : '';
     return {
       key: 'fr:' + f[0], cat: 'frame', id: f[0], name: isSoon ? f[1] + ' Çerçevesi' : f[1] + ' Çerçeve',
       sub: isSoon ? 'Avatar Çerçevesi' : f[2] < 0 ? 'Kurucu Özel' : `Seviye ${f[2]}`,
       badge: isSoon ? 'YAKINDA' : f[2] < 0 ? 'ÖZEL' : unlocked ? 'AÇIK' : `SV. ${f[2]}`, badgeCls: bCls,
       status: isSoon ? (pi ? '✓ Aktif' : 'Yakında') : unlocked ? 'Açık' : (f[2] < 0 ? 'Kurucu' : `Sv. ${f[2]}`),
       stCls: isSoon ? (pi ? 'ok' : bCls) : unlocked ? 'ok' : '',
-      open: isSoon ? pi : unlocked, color: isSak ? '#f9a8d4' : isKit ? '#00e5ff' : isSoon ? '#f48fb1' : '#c8ff00',
-      desc: isSak ? 'Avatarı kucaklayan gümüş hilal, esintide hafifçe sallanan sakura çiçekleri, uçuşan pembe yapraklar ve parlayan yıldızlarla hareketli çerçeve.' : isKit ? 'Turkuaz devre desenli siber tilki kulakları, kıpırdayan hologram kulak efekti, neon halka akışı ve yüzen ruh alevleriyle hareketli çerçeve.' : isSoon ? 'Kulakları hafifçe kıpırdayan, çizgili kuyruğu sallanan ve yıldızları parıldayan hareketli anime kedi çerçevesi.' : f[2] < 0 ? 'Kanka Chat kurucu üyelerine özel hareketli avatar çerçevesi.' : `Avatarının etrafında dönen hareketli çerçeve. Seviye ${f[2]} olunca otomatik açılır.`,
+      open: isSoon ? pi : unlocked, color: isGho ? '#7dd3fc' : isSak ? '#f9a8d4' : isKit ? '#00e5ff' : isSoon ? '#f48fb1' : '#c8ff00',
+      desc: isGho ? 'Avatarın sağ üst omzunda gülümseyerek yüzen minik hayalet, sol alttan sarkaç gibi sallanan sıcak ruh feneri ve yükselen baloncuklarla hareketli çerçeve.' : isSak ? 'Avatarı kucaklayan gümüş hilal, esintide hafifçe sallanan sakura çiçekleri, uçuşan pembe yapraklar ve parlayan yıldızlarla hareketli çerçeve.' : isKit ? 'Turkuaz devre desenli siber tilki kulakları, kıpırdayan hologram kulak efekti, neon halka akışı ve yüzen ruh alevleriyle hareketli çerçeve.' : isSoon ? 'Kulakları hafifçe kıpırdayan, çizgili kuyruğu sallanan ve yıldızları parıldayan hareketli anime kedi çerçevesi.' : f[2] < 0 ? 'Kanka Chat kurucu üyelerine özel hareketli avatar çerçevesi.' : `Avatarının etrafında dönen hareketli çerçeve. Seviye ${f[2]} olunca otomatik açılır.`,
     };
   });
   const tags = (typeof TAG_PX_PACKS !== 'undefined' ? TAG_PX_PACKS : []).map(p => ({
@@ -9603,6 +9647,12 @@ function marketCatalog() {
     desc: p.desc,
   }));
   const bundles = {
+    minikhayalet: {
+      key: 'bundle:minikhayalet', cat: 'bundle', id: 'minikhayalet', name: 'Minik Hayalet 3\'lü Set',
+      sub: 'Çerçeve + Efekt + Plaka', badge: '3\'LÜ PAKET', badgeCls: 'sky',
+      status: pi ? '✓ Tam Set' : 'Yakında', stCls: pi ? 'ok' : 'sky', open: pi, color: '#7dd3fc',
+      desc: 'Minik Hayalet koleksiyonunun 3 uyumlu parçası bir arada: Fenerli Hayalet Çerçevesi, Cee-ee Profil Efekti ve Canlı İsim Plakası.',
+    },
     sakuramoon: {
       key: 'bundle:sakuramoon', cat: 'bundle', id: 'sakuramoon', name: 'Ay & Sakura 3\'lü Set',
       sub: 'Çerçeve + Efekt + Plaka', badge: '3\'LÜ PAKET', badgeCls: 'rose',
@@ -9622,12 +9672,12 @@ function marketCatalog() {
       desc: 'Gece Kedisi koleksiyonunun 3 uyumlu parçası bir arada: Hareketli Kedi Çerçevesi, Yürüyen Kedi Profil Efekti ve Canlı İsim Plakası.',
     },
   };
-  return { eff3d, effAmb, banners, frames, tags, bundles, all: [bundles.sakuramoon, bundles.kitsune, bundles.gecekedi, ...eff3d, ...effAmb, ...banners, ...frames, ...tags] };
+  return { eff3d, effAmb, banners, frames, tags, bundles, all: [bundles.minikhayalet, bundles.sakuramoon, bundles.kitsune, bundles.gecekedi, ...eff3d, ...effAmb, ...banners, ...frames, ...tags] };
 }
 function mkStageHTML(it, big = false) {
   const meName = esc(dn(S.me)), meCol = userColor(S.me), meIn = avInner(S.me);
   if (it.cat === 'bundle') {
-    const cid = it.id === 'sakuramoon' ? 'sakuramoon' : it.id === 'kitsune' ? 'kitsune' : 'gecekedi';
+    const cid = MK_COLLECTIONS[it.id]?.frId || 'gecekedi';
     return `<div class="mk-bundle-stage">
       <div class="av has-fr fr-${cid}" style="background:${meCol}">${meIn}<i class="av-fr" aria-hidden="true"></i></div>
       <div class="mk-bundle-mini-nb has-nb nb-${cid}">${nbLayers(cid)}<div class="av" style="background:${meCol}">${meIn}</div><b>${meName}</b></div>
@@ -9644,7 +9694,7 @@ function mkStageHTML(it, big = false) {
         : it.img
           ? `<img class="mk-stage-img" src="${esc(it.img)}" alt="" style="${it.fx === 'frost' ? 'filter:hue-rotate(195deg) saturate(1.15)' : ''}">`
           : `<div class="mk-stage-bg" style="background:${it.bg}"></div>`;
-    const banCol = it.id === 'sakura_moon' ? 'linear-gradient(125deg,#19183a,#3a1e47)' : it.id === 'kitsune_cyber' ? 'linear-gradient(125deg,#0d2547,#181135)' : it.id === 'cat_midnight' ? 'linear-gradient(125deg,#2d1747,#171326)' : it.id === 'dragon_crimson' ? 'linear-gradient(125deg,#3d1318,#161116)' : `linear-gradient(125deg,${it.color}38,#14151e)`;
+    const banCol = it.id === 'ghost_wisp' ? 'linear-gradient(125deg,#0f2340,#1c3b61)' : it.id === 'sakura_moon' ? 'linear-gradient(125deg,#19183a,#3a1e47)' : it.id === 'kitsune_cyber' ? 'linear-gradient(125deg,#0d2547,#181135)' : it.id === 'cat_midnight' ? 'linear-gradient(125deg,#2d1747,#171326)' : it.id === 'dragon_crimson' ? 'linear-gradient(125deg,#3d1318,#161116)' : `linear-gradient(125deg,${it.color}38,#14151e)`;
     return `${media}<div class="mk-mini-pf" style="${big ? 'transform:scale(1.18)' : ''}"><div class="mk-mp-ban" style="background:${banCol}"></div><div class="mk-mp-body"><div class="av" style="background:${meCol}">${meIn}</div><span class="mk-mp-nm">${meName}</span><i></i><em></em></div></div>`;
   }
   if (it.cat === 'banner') {
@@ -9663,7 +9713,7 @@ function mkStageHTML(it, big = false) {
 function mkCardHTML(it) {
   const stCls = it.stCls || (it.open ? 'ok' : '');
   const peek = it.cat === 'bundle' ? 'Seti Dene' : 'Önizle';
-  const bCls = it.cat === 'bundle' ? (' mk-bundle' + (it.id === 'sakuramoon' ? ' t-sakura' : it.id === 'kitsune' ? ' t-kitsune' : '')) : '';
+  const bCls = it.cat === 'bundle' ? (' mk-bundle' + (MK_COLLECTIONS[it.id]?.cls ? ' ' + MK_COLLECTIONS[it.id].cls : '')) : '';
   return `<button type="button" class="mk-card${bCls}" data-mkitem="${esc(it.key)}" style="--mc:${it.color}38">
     <div class="mk-stage"><span class="mk-pill ${it.badgeCls}">${esc(it.badge)}</span>${mkStageHTML(it, false)}<span class="mk-peek">${peek}</span></div>
     <div class="mk-body"><b>${esc(it.name)}</b><div class="mk-body-sub"><span>${esc(it.sub)}</span><span class="mk-tag-st${stCls ? ' ' + stCls : ''}">${esc(it.status)}</span></div></div>
@@ -9735,9 +9785,7 @@ function openCollectionShowcase(colId = mkHeroCol) {
   if ($('#mkset-go')) $('#mkset-go').onclick = () => { cleanup(); closeModal(); showSettings('profile'); };
 }
 function openMarketPreview(key) {
-  if (key === 'bundle:sakuramoon') return openCollectionShowcase('sakuramoon');
-  if (key === 'bundle:kitsune') return openCollectionShowcase('kitsune');
-  if (key === 'bundle:gecekedi') return openCollectionShowcase('gecekedi');
+  if (key.startsWith('bundle:')) return openCollectionShowcase(key.slice(7));
   const cat = marketCatalog(), it = cat.all.find(x => x.key === key); if (!it) return;
   const stCls = it.stCls || (it.open ? 'ok' : '');
   const goBtn = it.cat === 'tag'
@@ -12876,7 +12924,7 @@ document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === 
 // ================= Profil 2.0 =================
 const dn = n => uNicks[n] || S.users[n]?.displayName || n;
 const isPisagoMe = () => (S.me || '').toLowerCase() === 'pisago';
-const FRAMES = [['none', 'Yok', 0], ['sakuramoon', 'Ay & Sakura', -2], ['kitsune', 'Siber Tilki', -2], ['gecekedi', 'Gece Kedisi', -2], ['halka', 'Halka', 2], ['gokkusagi', 'Gökkuşağı', 5], ['ates', 'Ateş', 10], ['neon', 'Neon', 15], ['altin', 'Altın', 25], ['kurucu', 'Kurucu', -1]];
+const FRAMES = [['none', 'Yok', 0], ['minikhayalet', 'Minik Hayalet', -2], ['sakuramoon', 'Ay & Sakura', -2], ['kitsune', 'Siber Tilki', -2], ['gecekedi', 'Gece Kedisi', -2], ['halka', 'Halka', 2], ['gokkusagi', 'Gökkuşağı', 5], ['ates', 'Ateş', 10], ['neon', 'Neon', 15], ['altin', 'Altın', 25], ['kurucu', 'Kurucu', -1]];
 const frameOpen = (u, f) => f[0] === 'none' || (f[2] === -2 ? (u?.name || S.me || '').toLowerCase() === 'pisago' : f[2] < 0 ? !!u.kurucu : (u.level || 1) >= f[2]);
 const SOCIAL_META = {
   instagram: ['Instagram', '#e1306c', h => `https://instagram.com/${h}`], tiktok: ['TikTok', '#25f4ee', h => `https://www.tiktok.com/@${h}`],
@@ -12898,6 +12946,7 @@ const PEFFECTS = [
   ['sparkles', 'Prizma', '✧', 'linear-gradient(135deg,#181429,#26240c)', '#fde047'],
 ];
 const PEFFECTS_OWNER = [
+  ['ghost_wisp', 'Minik Hayalet', '👻', '#08111f', '#7dd3fc', '/effects/ghost_profile_poster.webp?v=1', ''],
   ['sakura_moon', 'Ay & Sakura', '🌸', '#090c1d', '#f9a8d4', '/effects/sakura_profile_poster.webp?v=1', ''],
   ['kitsune_cyber', 'Siber Tilki', '🦊', '#080c18', '#00e5ff', '/effects/kitsune_profile_poster.webp?v=2', ''],
   ['cat_midnight', 'Gece Kedisi', '🐾', '#120c1c', '#f48fb1', '/effects/cat_profile_poster.webp', ''],
@@ -12914,6 +12963,7 @@ const PFX_3D_MAP = { dragon_crimson: 0, dragon_jade: 1, dragon_frost: 2, vfx_bla
 const NB_CATS = [['all', 'Tümü'], ['fire', 'Ateş & Kor'], ['ice', 'Buz & Su'], ['space', 'Uzay'], ['neon', 'Neon & Siber'], ['soft', 'Yumuşak']];
 const NAME_BANNERS = [
   { id: 'none', cat: 'all', name: 'Yok', svg: '' },
+  { id: 'minikhayalet', cat: 'soft', name: 'Minik Hayalet', tag: 'YAKINDA', soon: true, vid: '/effects/ghost_wisp_nameplate.webm?v=1', poster: '/effects/ghost_nameplate_poster.webp?v=1', svg: '' },
   { id: 'sakuramoon', cat: 'soft', name: 'Ay & Sakura', tag: 'YAKINDA', soon: true, vid: '/effects/sakura_moon_nameplate.webm?v=1', poster: '/effects/sakura_nameplate_poster.webp?v=1', svg: '' },
   { id: 'kitsune', cat: 'neon', name: 'Siber Tilki', tag: 'YAKINDA', soon: true, vid: '/effects/kitsune_nameplate.webm?v=1', poster: '/effects/kitsune_nameplate_poster.webp?v=1', svg: '' },
   { id: 'gecekedi', cat: 'soft', name: 'Gece Kedisi', tag: 'YAKINDA', soon: true, vid: '/effects/cat_nameplate_walk.webm?v=1', poster: '/effects/cat_nameplate_poster.webp?v=1', svg: '' },
@@ -13365,6 +13415,7 @@ const PFX_VIDEO_MAP = {
   cat_midnight: { loop: '/effects/cat_midnight_walk.webm?v=1', screen: false },
   kitsune_cyber: { loop: '/effects/kitsune_cyber_effect.webm?v=2', screen: false },
   sakura_moon: { loop: '/effects/sakura_moon_effect.webm?v=1', screen: false },
+  ghost_wisp: { loop: '/effects/ghost_wisp_effect.webm?v=1', screen: false },
 };
 function mountVideoProfileEffect(el, cfg) {
   if (!el || !cfg || (!cfg.loop && !cfg.intro)) return false;
