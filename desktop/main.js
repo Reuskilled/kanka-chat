@@ -210,7 +210,33 @@ Get-Process Spotify,javaw -ErrorAction SilentlyContinue | Where-Object MainWindo
 try {
   Add-Type -AssemblyName System.Runtime.WindowsRuntime
   $at = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation\`1' })[0]
-  function W($op, $t) { $task = $at.MakeGenericMethod($t).Invoke($null, @($op)); $null = $task.Wait(3000); $task.Result }
+  $script:wr = $false
+function Init-Win {
+  if ($script:wr) { return }
+  Add-Type -TypeDefinition @'
+using System; using System.Collections.Generic; using System.Runtime.InteropServices; using System.Text;
+public static class KWin {
+  delegate bool EP(IntPtr h, IntPtr l);
+  [DllImport("user32.dll")] static extern bool EnumWindows(EP f, IntPtr l);
+  [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+  [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr h, uint c);
+  [DllImport("user32.dll")] static extern int GetWindowTextLength(IntPtr h);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr h, StringBuilder b, int n);
+  [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint p);
+  public static List<string> List() {
+    var r = new List<string>();
+    EnumWindows((h, l) => {
+      if (!IsWindowVisible(h) || GetWindow(h, 4) != IntPtr.Zero) return true; // görünür, sahibi olmayan üst pencere (küçültülmüş de sayılır)
+      int n = GetWindowTextLength(h); var b = new StringBuilder(n + 1); GetWindowText(h, b, b.Capacity);
+      uint pid; GetWindowThreadProcessId(h, out pid); r.Add(pid + "|" + b.ToString().Replace("|", " ").Replace("\r", " ").Replace("\n", " ")); return true;
+    }, IntPtr.Zero);
+    return r;
+  }
+}
+'@
+  $script:wr = $true
+}
+function W($op, $t) { $task = $at.MakeGenericMethod($t).Invoke($null, @($op)); $null = $task.Wait(3000); $task.Result }
   $M = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType = WindowsRuntime]
   $P = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties, Windows.Media.Control, ContentType = WindowsRuntime]
   $mgr = W ($M::RequestAsync()) $M
@@ -258,7 +284,12 @@ while ($true) {
   $cmd = [Console]::In.ReadLine()
   if ($cmd -eq $null) { break }
   try {
-    if ($cmd -eq 'PROCS') { Get-Process | ForEach-Object { $_.ProcessName + '|' + $_.Id + '|' + [int]($_.MainWindowHandle -ne 0) } }
+    if ($cmd -eq 'PROCS') {
+      $wp = @{}; try { Init-Win; foreach ($x in [KWin]::List()) { $wp[[int]($x.Split('|')[0])] = 1 } } catch {}
+      Get-Process | ForEach-Object { $_.ProcessName + '|' + $_.Id + '|' + [int](($_.MainWindowHandle -ne 0) -or $wp.ContainsKey($_.Id)) } }
+    elseif ($cmd -eq 'APPS') {
+      Init-Win; $nm = @{}; Get-Process | ForEach-Object { $nm[$_.Id] = $_.ProcessName }
+      foreach ($x in [KWin]::List()) { $i = $x.IndexOf('|'); $id = [int]$x.Substring(0, $i); $t = $x.Substring($i + 1); if ($t -and $nm.ContainsKey($id)) { $nm[$id] + '|' + $id + '|' + $t } } }
     elseif ($cmd -eq 'LIB') { Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.Path -match '\\\\(steamapps\\\\common|Epic Games|XboxGames)\\\\' } | ForEach-Object { $_.Path } }
     elseif ($cmd -eq 'LOL') { (Get-CimInstance Win32_Process -Filter "Name='LeagueClientUx.exe'" | Select-Object -First 1).CommandLine }
     elseif ($cmd -eq 'MEDIA') {
@@ -333,7 +364,8 @@ async function detect() {
   const cands = [];
   for (const l of lines) {
     const name = (csvRow(l)[0] || '').replace(/\.exe$/i, '');
-    const hit = games[name] || Object.entries(games).find(([k]) => k.toLowerCase() === name.toLowerCase())?.[1];
+    const own = config.customGames?.[name.toLowerCase()];
+    const hit = (own && !own.off ? [own.name, ''] : null) || (config.customGames?.[name.toLowerCase()]?.off ? null : games[name] || Object.entries(games).find(([k]) => k.toLowerCase() === name.toLowerCase())?.[1]);
     if (hit) cands.push([name, hit]);
   }
   // Sadece penceresi açık olan oyun sayılır: kapatılan oyunların arka planda kalan işlemi
@@ -388,7 +420,13 @@ async function detect() {
   return { game, detail, music, rich };
 }
 
+let presenceT = null, presenceBusy = false;
 async function presenceLoop() {
+  if (presenceBusy) return; presenceBusy = true;
+  try { await presenceLoop0(); } finally { presenceBusy = false; }
+  clearTimeout(presenceT); presenceT = setTimeout(presenceLoop, currentGame ? 10000 : 15000); // oyun yokken daha seyrek bak
+}
+async function presenceLoop0() {
   if (config.presenceKey) {
     const st = await detect();
     if (st.game !== currentGame) { currentGame = st.game; updateOverlay(); }
@@ -399,12 +437,38 @@ async function presenceLoop() {
       lastStatus = st.game ? `Oynuyor: ${st.game}${st.rich?.state ? ' · ' + st.rich.state : ''}` : st.music ? `Dinliyor: ${st.music.title}` : 'Etkinlik: boşta';
     } catch { lastStatus = 'Etkinlik: sunucuya ulaşılamadı'; }
   }
-  setTimeout(presenceLoop, currentGame ? 10000 : 15000); // oyun yokken daha seyrek bak
 }
 
 ipcMain.handle('kanka:presenceKey', (e, key) => {
   if (typeof key === 'string' && /^[a-f0-9]{20,80}$/.test(key) && key !== config.presenceKey) { config.presenceKey = key; saveConfig(); }
   return { ok: true };
+});
+// "Oyunum görünmüyor": açık pencereleri listele, kullanıcı seçip adını verir (Discord'daki "Ekle" gibi)
+const APP_SKIP = /^(explorer|kanka chat|electron|applicationframehost|systemsettings|textinputhost|shellexperiencehost|searchhost|startmenuexperiencehost|lockapp|taskmgr|cmd|powershell|windowsterminal|conhost|nvidia (share|overlay)|steamwebhelper|msedgewebview2)$/i;
+ipcMain.handle('kanka:apps', async () => {
+  if (process.platform !== 'win32') return [];
+  const out = await psq('APPS'); if (out === null) return null;
+  const seen = new Map();
+  for (const l of out.split(/\r?\n/)) {
+    const i = l.indexOf('|'), j = l.indexOf('|', i + 1); if (i < 0 || j < 0) continue;
+    const exe = l.slice(0, i).trim(), title = l.slice(j + 1).trim(); if (!exe || !title || APP_SKIP.test(exe) || +l.slice(i + 1, j) === process.pid) continue;
+    const k = exe.toLowerCase(); if (seen.has(k)) continue;
+    const own = config.customGames?.[k], known = own && !own.off ? own.name : (games[exe] || Object.entries(games).find(([x]) => x.toLowerCase() === k)?.[1])?.[0] || null;
+    seen.set(k, { exe, title: title.slice(0, 120), known, own: !!own && !own.off, current: currentGame && known === currentGame });
+  }
+  return [...seen.values()].sort((a, b) => (b.current - a.current) || a.title.localeCompare(b.title, 'tr'));
+});
+// Eklenen oyunlar: { exe, name } ekler/günceller; { exe, remove: true } kaldırır; { exe, off: true } bu programı oyun sayma
+ipcMain.handle('kanka:customGames', (e, p) => {
+  config.customGames ||= {};
+  if (p && typeof p.exe === 'string' && /^[\w .()+\-]{1,80}$/.test(p.exe)) {
+    const k = p.exe.toLowerCase();
+    if (p.remove) delete config.customGames[k];
+    else if (p.off) config.customGames[k] = { off: true };
+    else { const name = String(p.name || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 60); if (name) config.customGames[k] = { name, exe: p.exe }; }
+    saveConfig(); clearTimeout(presenceT); presenceT = setTimeout(presenceLoop, 800); // hemen yeniden bak
+  }
+  return Object.entries(config.customGames).map(([k, v]) => ({ exe: v.exe || k, name: v.name || null, off: !!v.off }));
 });
 ipcMain.handle('kanka:info', () => ({ version: app.getVersion(), platform: process.platform, connected: !!config.presenceKey, status: lastStatus }));
 ipcMain.on('kanka:titlebar', (e, color, symbol) => {

@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld('kankaDesktop', {
   setTitlebar: (color, symbol) => ipcRenderer.send('kanka:titlebar', color, symbol),
   setPresenceKey: key => ipcRenderer.invoke('kanka:presenceKey', key),
   info: () => ipcRenderer.invoke('kanka:info'),
+  // Algılanmayan oyunu elle ekleme: açık pencereler ve eklenen oyunlar
+  apps: () => ipcRenderer.invoke('kanka:apps'),
+  customGames: p => ipcRenderer.invoke('kanka:customGames', p || null),
   sources: () => ipcRenderer.invoke('kanka:sources'),
   autostart: p => ipcRenderer.invoke('kanka:autostart', p || null),
   pickSource: (id, audio) => ipcRenderer.invoke('kanka:pick', { id, audio }),
