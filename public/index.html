@@ -4331,6 +4331,23 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   #voicebar .vq svg { width: 16px; height: 14px; fill: currentColor; display: block; }
   #voicebar .vq.mid { color: #f0b232; } #voicebar .vq.bad { color: #ff5a5f; animation: pulse 1s infinite; }
   #voicebar .vq em, #voicebar .vq i { display: none; }
+  #voicebar .vq { cursor: pointer; border-radius: 6px; } #voicebar .vq:hover { background: var(--hover); }
+  #vq-pop { position: fixed; z-index: 90; width: 300px; padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 22px 50px rgba(0,0,0,.55); animation: popIn .18s var(--ease-out) both; --vq: #3fcf8e; }
+  #vq-pop.mid { --vq: #f0b232; } #vq-pop.bad { --vq: #ff5a5f; }
+  #vq-pop.sheet { left: 10px; right: 10px; bottom: 10px; width: auto; }
+  #vq-pop .vqp-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; } #vq-pop .vqp-h b { font-size: 15px; font-weight: 900; }
+  #vq-pop .vqp-st { font-size: 12px; font-weight: 800; color: var(--vq); }
+  #vq-pop .vqp-g { width: 100%; height: 74px; display: block; background: color-mix(in srgb, var(--vq) 6%, transparent); border-radius: 10px; }
+  #vq-pop .vqp-g path { fill: none; stroke: var(--vq); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  #vq-pop .vqp-g .gl line { stroke: var(--line); stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+  #vq-pop .vqp-ax { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--faint, var(--muted)); margin: 3px 2px 0; }
+  #vq-pop .vqp-empty { height: 74px; display: grid; place-items: center; font-size: 12px; color: var(--muted); background: var(--hover); border-radius: 10px; }
+  #vq-pop .vqp-sec { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+  #vq-pop .vqp-r, #vq-pop .vqp-p { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; } #vq-pop .vqp-r span, #vq-pop .vqp-p span { color: var(--muted); }
+  #vq-pop .vqp-r b, #vq-pop .vqp-p b { font-weight: 800; font-variant-numeric: tabular-nums; } #vq-pop .vqp-p b.mid { color: #f0b232; } #vq-pop .vqp-p b.bad { color: #ff5a5f; }
+  #vq-pop .vqp-p span { color: var(--ink); font-weight: 700; } #vq-pop .vqp-p em { font-style: normal; font-size: 11px; color: #f0b232; font-weight: 700; }
+  #vq-pop .vqp-k { font-size: 11px; font-weight: 900; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+  #vq-pop .vqp-note { margin-top: 10px; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   #voicebar .vc { margin-bottom: 10px; }
   #voicebar .btns button { min-height: 36px; display: grid; place-items: center; }
   #voicebar .btns button[hidden] { display: none; }
@@ -6246,7 +6263,7 @@ html.native input, html.native textarea, html.native [contenteditable], html.nat
     <div class="shead" id="side-head"></div>
     <div id="side-list"></div>
     <div id="me">
-      <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vtime" class="vtime"></span><span id="vq" class="vq" hidden><svg viewBox="0 0 16 14" aria-hidden="true"><rect x="0" y="9" width="3.4" height="5" rx="1"/><rect x="6.3" y="5" width="3.4" height="9" rx="1"/><rect x="12.6" y="0" width="3.4" height="14" rx="1"/></svg><em></em></span></div><div class="vc" id="vname"></div>
+      <div id="voicebar"><div class="vt"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6a8 8 0 0 1 0 12"/></svg>Sesli bağlı<span id="vtime" class="vtime"></span><span id="vq" class="vq" role="button" tabindex="0" aria-label="Ses bağlantısı ayrıntıları" hidden><svg viewBox="0 0 16 14" aria-hidden="true"><rect x="0" y="9" width="3.4" height="5" rx="1"/><rect x="6.3" y="5" width="3.4" height="9" rx="1"/><rect x="12.6" y="0" width="3.4" height="14" rx="1"/></svg><em></em></span></div><div class="vc" id="vname"></div>
         <div class="btns"><button type="button" class="vb-chat2" aria-label="Oda sohbeti" id="vb-chat" title="Bu sesli odanın yazı sohbeti"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></button><button id="vcam" title="Kamera" aria-label="Kamera"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></button><button id="vscreen" title="Ekran paylaş" aria-label="Ekran paylaş"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 10.5l3-3 3 3M12 7.5V13"/></svg></button><button id="var" title="Kanka Arena" aria-label="Kanka Arena" data-arcount=""><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="19" height="11" rx="5.5"/><path d="M7 10.5v4M5 12.5h4M15.5 11.5h.01M18 13.5h.01"/></svg></button><button id="vsb" title="Ses paneli" aria-label="Ses paneli" data-sbopen><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M15 15.5v3M17.25 14v6M19.5 16v2"/></svg></button><button class="leave" id="vleave" title="Ayrıl" aria-label="Sesli odadan ayrıl"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5c-1-1-1-2.5 0-3.5 4.7-4.2 12.3-4.2 17 0 1 1 1 2.5 0 3.5l-1.6 1.2c-.6.5-1.5.4-2-.2l-1-1.4a1.6 1.6 0 0 1-.3-1.3l.3-1.2c-2-.7-4.8-.7-6.8 0l.3 1.2c.1.5 0 1-.3 1.3l-1 1.4c-.5.6-1.4.7-2 .2z"/></svg></button><button id="vns" hidden title="Gürültü engelleme" aria-label="Gürültü engelleme"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h0"/></svg></button></div></div>
       <div class="row1"><div id="me-av"></div><div><div class="n" id="me-name"></div><div class="s" id="me-lvl"></div></div>
         <button class="ibtn mebtn" id="mute" title="Sustur" aria-label="Mikrofon"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><rect class="v-mic-body" x="9" y="2.5" width="6" height="11" rx="3"/><path class="v-mic-arc" d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></button><button class="ibtn mebtn" id="deaf" title="Hoparlörü kapat" aria-label="Hoparlörü kapat"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path class="v-hs-band" d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect class="v-hs-cup l" x="3" y="13.5" width="4.5" height="7" rx="2"/><rect class="v-hs-cup r" x="16.5" y="13.5" width="4.5" height="7" rx="2"/></svg></button><button class="ibtn" id="settings" title="Ayarlar" aria-label="Ayarlar"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/></svg></button></div>
@@ -14861,10 +14878,10 @@ let vqT = null, vqPrev = {}, micRecovering = false;
 const vqHist = {}; // kişi başına son gecikme ölçümleri
 async function vqTick() {
   const el = $('#vq'); if (!el) return;
-  if (!myVoice) { el.hidden = true; return; }
+  if (!myVoice) { el.hidden = true; if (vqPopOpen) closeVqPop(); return; }
   const list = Object.entries(peers); el.hidden = false;
-  if (!list.length) { el.className = 'vq good'; el.querySelector('em').textContent = ''; el.dataset.base = 'Odada şimdilik yalnızsın'; return; }
-  let lost = 0, recv = 0, bad = 0, jitMax = 0; const per = [];
+  if (!list.length) { el.className = 'vq good'; el.querySelector('em').textContent = ''; el.dataset.base = 'Odada şimdilik yalnızsın'; vqLast = { per: [], loss: 0, outLoss: null, jit: 0, lvl: 'good', bad: 0, alone: true }; vqPopDraw(); return; }
+  let lost = 0, recv = 0, bad = 0, jitMax = 0, outLoss = null; const per = [];
   for (const [sid, pc] of list) {
     if (['failed', 'disconnected'].includes(pc.connectionState)) bad++;
     try {
@@ -14872,6 +14889,7 @@ async function vqTick() {
       st.forEach(r => {
         if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') { pair = r; if (r.currentRoundTripTime != null) rtt = r.currentRoundTripTime * 1000; }
         if (r.type === 'remote-inbound-rtp' && r.kind === 'audio' && r.roundTripTime != null && rtt == null) rtt = r.roundTripTime * 1000;
+        if (r.type === 'remote-inbound-rtp' && r.kind === 'audio' && r.fractionLost != null) outLoss = Math.max(outLoss ?? 0, r.fractionLost * 100);
         if (r.type === 'inbound-rtp' && r.kind === 'audio' && r.jitter != null) jit = Math.max(jit, r.jitter * 1000);
         if (r.type === 'inbound-rtp' && r.kind === 'audio') { const k = sid + r.id, p = vqPrev[k] || { l: r.packetsLost || 0, n: r.packetsReceived || 0 }; lost += Math.max(0, (r.packetsLost || 0) - p.l); recv += Math.max(0, (r.packetsReceived || 0) - p.n); vqPrev[k] = { l: r.packetsLost || 0, n: r.packetsReceived || 0 }; }
       });
@@ -14889,12 +14907,62 @@ async function vqTick() {
   const worst = per[0], ms = worst?.ms || 0;
   const loss = recv + lost ? lost / (recv + lost) * 100 : 0;
   const lvl = bad ? 'bad' : ms > 250 || loss > 5 || jitMax > 100 ? 'bad' : ms > 120 || loss > 2 || jitMax > 40 ? 'mid' : 'good';
+  vqLast = { per, loss, outLoss, jit: Math.round(jitMax), lvl, bad, alone: false };
+  vqLog.push({ t: Date.now(), ms: per.length ? Math.round(per.reduce((a, p) => a + p.ms, 0) / per.length) : null, loss }); if (vqLog.length > 100) vqLog.shift();
+  vqPopDraw();
   el.className = 'vq ' + lvl;
   el.querySelector('em').textContent = bad ? 'yeniden bağlanıyor…' : ms ? ms + ' ms' : '';
   const why = worst && ms > 150 ? (worst.relay ? `\n${worst.name} ile bağlantı Kanka sunucusu üzerinden gidiyor (doğrudan bağlanılamadı), bu gecikmeyi artırır.` : videoKind === 'screen' && watchers.size ? '\nYayın açıkken yükleme hattın doluyor; gecikme artarsa yayın kalitesini düşür.' : `\nGecikme büyük ihtimalle ${worst.name} tarafının internetinden.`) : '';
   el.dataset.base = bad ? 'Bağlantı koptu, kendiliğinden yeniden bağlanıyor' : `${per.map(p => `${p.name}: ${p.ms} ms${p.jit ? ` · titreşim ${p.jit} ms` : ''}${p.relay ? ' (sunucu üzerinden)' : ''}`).join('\n')}\nPaket kaybı %${loss.toFixed(1)}${lvl === 'good' ? ' · bağlantı iyi' : lvl === 'mid' ? ' · bağlantı orta' : ' · bağlantı zayıf'}${why}`;
 }
-function vqStart() { clearInterval(vqT); vqPrev = {}; vqT = setInterval(vqTick, 3000); vqTick(); }
+function vqStart() { clearInterval(vqT); vqPrev = {}; vqLog.length = 0; srvLog.length = 0; vqT = setInterval(vqTick, 3000); vqTick(); }
+// ---- Ses bağlantısı penceresi (sinyal simgesine tıklayınca, Discord'daki gibi): ping grafiği ve ayrıntılar ----
+let vqLast = null, vqPopOpen = false;
+const vqLog = [], srvLog = []; // son ~5 dakika (3 sn'de bir)
+function srvPing() { const t0 = performance.now(); socket.timeout(4000).emit('vping', err => { if (err) return; srvLog.push({ t: Date.now(), ms: Math.round(performance.now() - t0) }); if (srvLog.length > 100) srvLog.shift(); vqPopDraw(); }); }
+function vqGraph(pts) {
+  const W = 268, H = 74, v = pts.filter(p => p.ms != null);
+  if (v.length < 2) return `<div class="vqp-empty">Grafik için birkaç saniye bekle…</div>`;
+  const max = Math.max(60, ...v.map(p => p.ms)) * 1.15, n = pts.length;
+  const x = i => (i / Math.max(1, n - 1)) * W, y = ms => H - (ms / max) * (H - 6) - 3;
+  let d = '', up = false; pts.forEach((p, i) => { if (p.ms == null) { up = false; return; } d += (up ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.ms).toFixed(1); up = true; });
+  const grid = [0.5, 1].map(f => `<line x1="0" x2="${W}" y1="${(H - (H - 6) * f - 3).toFixed(1)}" y2="${(H - (H - 6) * f - 3).toFixed(1)}"/>`).join('');
+  return `<svg class="vqp-g" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><g class="gl">${grid}</g><path d="${d}"/></svg><div class="vqp-ax"><span>${Math.round(max)} ms</span><span>son 5 dk</span></div>`;
+}
+function vqPopDraw() {
+  const box = $('#vq-pop'); if (!box || !vqPopOpen) return;
+  const q = vqLast || { per: [], loss: 0, jit: 0, lvl: 'good', alone: true }, s = srvLog[srvLog.length - 1]?.ms;
+  const sAvg = srvLog.length ? Math.round(srvLog.reduce((a, p) => a + p.ms, 0) / srvLog.length) : null;
+  const vAvgL = vqLog.filter(p => p.ms != null), vAvg = vAvgL.length ? Math.round(vAvgL.reduce((a, p) => a + p.ms, 0) / vAvgL.length) : null;
+  const useV = !q.alone && vAvgL.length, pts = useV ? vqLog : srvLog, last = useV ? vAvgL[vAvgL.length - 1]?.ms : s, avg = useV ? vAvg : sAvg;
+  const lab = q.bad ? 'Yeniden bağlanıyor' : q.lvl === 'good' ? 'Bağlantı iyi' : q.lvl === 'mid' ? 'Bağlantı orta' : 'Bağlantı zayıf';
+  const row = (k, v) => `<div class="vqp-r"><span>${k}</span><b>${v}</b></div>`;
+  box.className = 'vqp ' + (q.bad ? 'bad' : q.lvl);
+  box.innerHTML = `<div class="vqp-h"><b>Ses bağlantısı</b><span class="vqp-st">${lab}</span></div>
+    ${vqGraph(pts)}
+    <div class="vqp-sec">${row(useV ? 'Ortalama ping (kişilere)' : 'Ortalama ping', avg != null ? avg + ' ms' : '…')}${row('Son ping', last != null ? last + ' ms' : '…')}
+      ${row('Kanka sunucusu', s != null ? s + ' ms' : '…')}${q.alone ? '' : row('Gelen paket kaybı', '%' + (q.loss || 0).toFixed(1)) + (q.outLoss != null ? row('Giden paket kaybı', '%' + q.outLoss.toFixed(1)) : '') + row('Titreşim (jitter)', (q.jit || 0) + ' ms')}</div>
+    ${q.alone ? `<div class="vqp-note">Odada şimdilik yalnızsın. Biri gelince ses doğrudan ona gider, ping de kişi kişi burada görünür.</div>`
+      : `<div class="vqp-sec"><div class="vqp-k">Kişiler</div>${q.per.map(p => `<div class="vqp-p"><span>${esc(dn(p.name))}${p.relay ? ' <em title="Doğrudan bağlanılamadı, ses Kanka sunucusu üzerinden gidiyor">sunucu üzerinden</em>' : ''}</span><b class="${p.ms > 250 ? 'bad' : p.ms > 120 ? 'mid' : ''}">${p.ms} ms</b></div>`).join('') || '<div class="vqp-note">Bağlanıyor…</div>'}</div>`}
+    <div class="vqp-note">Ses kişiler arasında doğrudan (eşten eşe) gider; ping her kişiyle ayrı ölçülür. Yüksekse genelde o kişinin ya da senin internetinden olur.</div>`;
+}
+function openVqPop() {
+  if ($('#vq-pop')) return closeVqPop();
+  const a = $('#vq'); if (!a) return;
+  const box = document.createElement('div'); box.id = 'vq-pop'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Ses bağlantısı');
+  document.body.appendChild(box); vqPopOpen = true; srvPing(); vqPopDraw();
+  const r = a.getBoundingClientRect();
+  if (innerWidth < 640) box.classList.add('sheet');
+  else { box.style.left = Math.max(8, Math.min(innerWidth - 308, r.left - 140)) + 'px'; box.style.bottom = (innerHeight - r.top + 10) + 'px'; }
+  box._t = setInterval(srvPing, 3000);
+  setTimeout(() => document.addEventListener('pointerdown', vqOut, true));
+  document.addEventListener('keydown', vqEsc);
+}
+function closeVqPop() { const b = $('#vq-pop'); if (b) { clearInterval(b._t); b.remove(); } vqPopOpen = false; document.removeEventListener('pointerdown', vqOut, true); document.removeEventListener('keydown', vqEsc); }
+function vqOut(e) { if (!e.target.closest('#vq-pop, #vq')) closeVqPop(); }
+function vqEsc(e) { if (e.key === 'Escape') closeVqPop(); }
+document.addEventListener('click', e => { if (e.target.closest('#vq')) { e.preventDefault(); openVqPop(); } });
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('#vq')) { e.preventDefault(); openVqPop(); } });
 // Mikrofon çıkarılır ya da değişirse kendiliğinden yenisine geç
 function watchMic() { rawStream?.getAudioTracks().forEach(t => t.onended = () => { if (!document.hidden) micRecover('Mikrofon değişti, yenisine geçildi'); }); } // arka plandaysa dönünce toparlanır
 async function micRecover(msg) {
