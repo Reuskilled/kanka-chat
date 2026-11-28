@@ -14852,11 +14852,22 @@ const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'st
 async function joinVoiceNow(chId, keep = null) {
   if (myVoice === chId) return true;
   if (!navigator.mediaDevices?.getUserMedia) return toast('Tarayıcın mikrofon erişimini desteklemiyor (localhost ya da https gerekli).');
+  // Önce izin: yoksa mikrofon hiç açılmaz, bulunduğun odadan da çıkılmaz
+  const can = await new Promise(res => { const t = setTimeout(() => res({}), 4000); socket.emit('voiceCan', chId, x => { clearTimeout(t); res(x || {}); }); });
+  if (can.error) { toast(can.error); return false; }
+  const hadMic = !!localStream, prev = myVoice;
   try { if (!localStream) localStream = await getMic(); }
   catch { toast('Mikrofon izni verilmedi.'); return false; }
-  if (myVoice) leaveVoice(true);
   return new Promise(resolve => socket.emit('voiceJoin', chId, r => {
-    if (r.error) { toast(r.error); return resolve(false); }
+    if (r.error) { // girilemedi: eski odada kal; hiçbir odada değilken açtığımız mikrofonu kapat
+      toast(r.error);
+      if (!prev && !hadMic && !myVoice) { localStream?.getTracks().forEach(t => t.stop()); localStream = null; stopMic(); }
+      return resolve(false);
+    }
+    if (prev) { // sunucu eski odadan çıkardı; burada da eski bağlantıları kapat
+      if (KCALL && prev.startsWith('call:')) KCALL.end({ chId: prev.slice(5) });
+      srvMutedNow = false; cleanupVoice(); bgRaw = false;
+    }
     myVoice = chId; myVoiceAt = Date.now(); tickVoiceTimes();
     if (keep) { muted = keep.muted || keep.deaf; deaf = keep.deaf; deafWasMuted = keep.deafWasMuted; applyDeaf(); } else muted = false;
     if (r.stage) stageSt[chId] = r.stage;
