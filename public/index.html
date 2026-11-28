@@ -14873,7 +14873,7 @@ async function joinVoiceNow(chId, keep = null) {
     if (r.stage) stageSt[chId] = r.stage;
     { const f = vch(); if (f?.c.type === 'stage' && f.c.canManage && !r.stage?.speakers?.includes(S.me)) socket.emit('stageSpeaker', { name: S.me, on: true }, () => {});
       if (f && !canSpeakNow()) toast(f.c.type === 'stage' ? '🎧 Sahnede dinleyicisin. Konuşmak için ✋ el kaldır.' : '🎧 Bu odada sadece dinleyebilirsin'); }
-    applyMute(); startSpeakDetect(); watchMic(); vqStart(); renderCallBar(); if (!keep) playSound('join');
+    applyMute(); startSpeakDetect(); watchMic(); vqStart(); renderCallBar(); if (!keep && !chId.startsWith('call:')) playSound('join'); // aramada: arayana çevir sesi, açana bağlandı sesi çalar
     if (!keep) setTimeout(() => tip('voice', '#voicebar', 'Sesli odadasın 🎧', 'Buradan mikrofonunu kapatabilir, kamerayı açabilir, ekranını paylaşabilir ve gürültü engellemeyi yönetebilirsin.', 'right'), 900);
     r.peers.forEach(p => { peerNames[p.sid] = p.name; peerMedia[p.sid] = p.media || {}; makePeer(p.sid); });
     if (myVoice.startsWith('call:') && videoKind !== 'screen') { const sid = Object.keys(peers).find(s => peerMedia[s]?.screen); if (sid) watchStream(sid); }
@@ -15039,7 +15039,8 @@ function makePeer(sid) {
   return pc;
 }
 socket.on('voiceJoined', ({ sid, name }) => {
-  peerNames[sid] = name; playSound('join');
+  peerNames[sid] = name;
+  if (myVoice?.startsWith('call:')) { const first = callOutTimer; callOutStop(); playSound(first ? 'callOk' : 'join'); } else playSound('join');
   sendMedia();
   renderStage();
 });
@@ -15085,7 +15086,9 @@ socket.on('media', ({ sid, name, cam, screen, streamId, viewers, q, audio }) => 
   const was = peerMedia[sid]?.screen;
   peerNames[sid] = name; peerMedia[sid] = { cam, screen, streamId, viewers, q, audio };
   if (!screen && watching === sid) watching = null;
+  if (!screen && was) playSound('liveEnd');
   if (screen && !was) {
+    playSound('live');
     if (autoWatch === name) { autoWatch = null; watchStream(sid); }
     else if (myVoice?.startsWith('call:')) { if (videoKind !== 'screen' && watching !== sid) watchStream(sid); }
     else if (watching !== sid) toast(`${esc(name)} yayın başlattı · izlemek için yanındaki CANLI rozetine tıkla`);
@@ -15100,7 +15103,7 @@ function closePeer(sid) {
   document.getElementById('a-' + sid)?.remove(); document.getElementById('as-' + sid)?.remove(); dropMeter(sid); renderStage();
 }
 socket.on('voiceLeft', sid => {
-  closePeer(sid); playSound('leave');
+  closePeer(sid); playSound(myVoice?.startsWith('call:') && !Object.keys(peers).length ? 'callEnd' : 'leave');
   // Aramada tek kalınca görüşme hemen bitmez (karşı taraf bağlantı kopmasından ya da yanlışlıkla çıkıp dönebilir).
   // 5 dakika kimse gelmezse sunucu aramayı kapatır (voiceKicked).
   if (myVoice?.startsWith('call:') && !Object.keys(peers).length) {
@@ -17422,16 +17425,17 @@ function tagIntro() {
     <div class="actions"><button class="btns2" id="ti-no">Şimdi değil</button><button class="primary" id="ti-go">${tagIconHTML(d.i, 15)} Etiketi tak</button></div></div>`, 'tagi');
   $('#ti-no').onclick = closeModal; $('#ti-go').onclick = () => socket.emit('tagSet', id, r => { closeModal(); toast(r?.error || `${pxId ? '' : d.i + ' '}${d.t} etiketin takıldı`); });
 }
-function cleanupVoice(keepState) { Object.keys(peers).forEach(closePeer); myVoice = null; pttPageDown = pttHookDown = pttDown = false; pttSync(); myVoiceAt = 0; dmCallMin = false; dmCallSig = ''; dmCallEver = false; if (deaf && !keepState) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
+function cleanupVoice(keepState) { callOutStop(); Object.keys(peers).forEach(closePeer); myVoice = null; pttPageDown = pttHookDown = pttDown = false; pttSync(); myVoiceAt = 0; dmCallMin = false; dmCallSig = ''; dmCallEver = false; if (deaf && !keepState) { deaf = false; muted = deafWasMuted; applyDeaf(); } tickVoiceTimes(); setTimeout(() => { renderCallBar(); renderRail(); }, 0); clearInterval(vqT); vqTick(); pushOverlay(); }
 $('#vns').onclick = () => { const on = !NS_AI[nsMode()]; setNS(on ? (store.get('kanka-ns-ai') || 'gt') : (store.set('kanka-ns-ai', nsMode() === 'gt' ? null : nsMode()), 'std')); toast(on ? 'Gürültü engelleme açıldı. Klavye, fan ve arka plan sesleri bastırılır.' : 'Gürültü engelleme kapatıldı'); };
 renderNSBtn();
 function leaveVoice(switching) {
+  const wasCall = myVoice?.startsWith('call:'); callOutStop();
   if (KCALL && myVoice?.startsWith('call:')) KCALL.end({ chId: myVoice.slice(5) }); // iPhone arama ekranını da kapat
   srvMutedNow = false;
   socket.emit('voiceLeave'); cleanupVoice(); bgRaw = false;
   if (!switching) {
     stopVideo(true); localStream?.getTracks().forEach(t => t.stop()); localStream = null; stopMic(); stopSpeakDetect();
-    $('#voicebar').style.display = 'none'; playSound('leave'); voiceMediaSession(null);
+    $('#voicebar').style.display = 'none'; playSound(wasCall ? 'callEnd' : 'leave'); voiceMediaSession(null);
   }
   renderStage();
   if (S.view === 'server') renderSide();
@@ -17445,10 +17449,10 @@ function startCall(video) {
   joinVoice(callId).then(ok => {
     if (!ok) return;
     socket.emit('ring', { chId: chat.id, video });
-    outgoing = { chatId: chat.id, at: Date.now() };
+    outgoing = { chatId: chat.id, at: Date.now() }; callOutStart();
     toast(`${chat.group ? chat.name : chat.with} aranıyor…`);
     if (video) setTimeout(() => startVideo('cam'), 600);
-    setTimeout(() => { if (outgoing?.chatId === chat.id && Object.keys(peers).length === 0) { socket.emit('ringCancel', chat.id); outgoing = null; toast('Cevap yok'); leaveVoice(false); } }, 35000);
+    setTimeout(() => { if (outgoing?.chatId === chat.id && Object.keys(peers).length === 0) { socket.emit('ringCancel', chat.id); outgoing = null; callOutStop(); toast('Cevap yok'); leaveVoice(false); } }, 35000);
   });
 }
 function stopRing() { clearInterval(ringSound); ringSound = null; clearTimeout(ringTimer); $('#callcard')?.remove(); ringing = null; }
@@ -17464,12 +17468,12 @@ socket.on('ring', r => {
   $('#c-dec').onclick = () => { socket.emit('callDecline', r.chatId); stopRing(); };
   $('#c-acc').onclick = () => {
     stopRing(); openChat(r.chatId, r.from);
-    joinVoice(r.callId).then(ok => { if (ok && r.video) setTimeout(() => startVideo('cam'), 600); });
+    joinVoice(r.callId).then(ok => { if (ok) playSound('callOk'); if (ok && r.video) setTimeout(() => startVideo('cam'), 600); });
   };
   if (!document.hasFocus() && 'Notification' in window && Notification.permission === 'granted') new Notification(`${r.title} arıyor`, { body: r.video ? 'Görüntülü arama' : 'Sesli arama', icon: '/icon-192.png', tag: 'call' });
 });
 socket.on('ringCancel', ({ chatId }) => { KCALL?.end({ chId: chatId }); if (ringing?.chatId === chatId) { stopRing(); toast('Cevapsız arama'); } });
-socket.on('callDecline', ({ from, chatId }) => { if (outgoing?.chatId === chatId) { toast(`${from} aramayı reddetti`); if (!S.channel?.group) { outgoing = null; leaveVoice(false); } } });
+socket.on('callDecline', ({ from, chatId }) => { if (outgoing?.chatId === chatId) { callOutStop(); playSound('callEnd'); toast(`${from} aramayı reddetti`); if (!S.channel?.group) { outgoing = null; leaveVoice(false); } } });
 
 // --- Kamera / ekran paylaşımı ---
 // --- Kamera ve canlı yayın (Discord'daki "Yayın Başlat" gibi) ---
@@ -17562,7 +17566,7 @@ async function startVideo(kind) {
   try { stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } }); }
   catch { return toast('Kamera izni verilmedi'); }
   if (videoStream) stopVideo(true);
-  videoStream = stream; videoKind = 'cam';
+  videoStream = stream; videoKind = 'cam'; playSound('camOn');
   stream.getVideoTracks()[0].onended = () => { if (videoStream === stream) stopVideo(); };
   feedAll(); sendMedia(); updateVoiceBtns(); renderStage();
 }
@@ -17637,10 +17641,11 @@ async function goLive(o, sourceId) {
   videoStream = stream; videoKind = 'screen'; goCur = o; screenAudio = stream.getAudioTracks()[0] || null; watchers.clear();
   track.onended = () => { if (videoStream === stream) stopVideo(); };
   feedAll(); sendMedia(); updateVoiceBtns(); renderStage(); thumbLoop(true);
-  playSound('join');
+  playSound('live');
   toast(`Yayındasın · ${GO_Q[o.q][4]} ${GO_Q[o.q][5]}${o.audio && !screenAudio ? '<br><small>Ses paylaşılamadı, sadece görüntü gidiyor.</small>' : ''}`);
 }
 function stopVideo(silent) {
+  if (videoStream && !silent) playSound(videoKind === 'screen' ? 'liveEnd' : 'camOff');
   videoStream?.getTracks().forEach(t => t.stop());
   videoStream = null; videoKind = null; screenAudio = null; goCur = null; watchers.clear(); thumbLoop(false); closeLiveCard();
   for (const pc of Object.values(peers)) { pc._vsender?.replaceTrack(null).catch(() => {}); pc._ssender?.replaceTrack(null).catch(() => {}); }
@@ -17755,7 +17760,7 @@ function applyDeaf() {
 function toggleDeaf(on = !deaf) {
   if (on === deaf) return; deaf = on;
   if (deaf) { deafWasMuted = muted; muted = true; } else muted = deafWasMuted;
-  applyDeaf(); applyMute(); playSound(deaf ? 'leave' : 'join');
+  applyDeaf(); applyMute(); playSound(deaf ? 'deafen' : 'undeafen');
 }
 document.addEventListener('click', e => { if (e.target.closest('#deaf')) toggleDeaf(); });
 function applyMute() {
@@ -17782,7 +17787,7 @@ document.addEventListener('keyup', e => { if (e.code === pttKey()) pttSet(false)
 document.addEventListener('mousedown', e => { if (!pttPicking && myVoice && pttOn() && (e.button === 3 || e.button === 4) && pttKey() === (e.button === 3 ? 'Mouse4' : 'Mouse5')) { e.preventDefault(); pttSet(true); } }, true);
 document.addEventListener('mouseup', e => { if ((e.button === 3 || e.button === 4) && pttKey() === (e.button === 3 ? 'Mouse4' : 'Mouse5')) { e.preventDefault(); pttSet(false); } }, true);
 window.addEventListener('blur', () => pttSet(false)); // sayfa odağı gidince sayfa tuşu bırakılmış say; masaüstü dinleyicisi ayrıca devam eder
-$('#mute').onclick = () => { if (!canSpeakNow()) return toast(srvMutedNow ? 'Bir yetkili seni seste susturdu, kaldırana kadar konuşamazsın' : vch()?.c.type === 'stage' ? 'Sahnede konuşmak için ✋ el kaldır' : 'Bu odada konuşma iznin yok'); muted = !muted; applyMute(); };
+$('#mute').onclick = () => { if (!canSpeakNow()) return toast(srvMutedNow ? 'Bir yetkili seni seste susturdu, kaldırana kadar konuşamazsın' : vch()?.c.type === 'stage' ? 'Sahnede konuşmak için ✋ el kaldır' : 'Bu odada konuşma iznin yok'); muted = !muted; applyMute(); playSound(muted ? 'mute' : 'unmute'); };
 $('#vleave').onclick = () => leaveVoice(false);
 const streamOk = k => { const c = vch()?.c; if (k === 'cam' ? (c?.canVideo ?? c?.canStream) === false : c?.canStream === false) { toast(k === 'cam' ? 'Bu odada kamera açma iznin yok' : 'Bu odada ekran paylaşma iznin yok'); return false; } return true; };
 $('#vcam').onclick = () => streamOk('cam') && startVideo('cam');
@@ -18905,19 +18910,37 @@ window.kankaDesktop?.onUpdateReady?.(() => showUpdate('app'));
 // ================= Sesler =================
 let actx = null;
 const soundOn = () => store.get('kanka-sound') !== 'off';
+// Arayüz sesleri: hepsi Web Audio ile üretilir (dosya yok). Not: [frekans, başlangıç, süre, dalga, bitiş frekansı]
+const SND = {
+  msg: [[880, 0, .08]], mention: [[660, 0, .1], [990, .11, .14]], join: [[523, 0, .1], [784, .1, .14]], leave: [[784, 0, .1], [523, .1, .14]],
+  rec: [[1200, 0, .06]], reward: [[523, 0, .1], [659, .1, .1], [784, .2, .1], [1047, .3, .2]], ring: [[740, 0, .18], [880, .2, .18], [740, .5, .18], [880, .7, .18]],
+  mute: [[620, 0, .09, 'triangle', 380]], unmute: [[380, 0, .09, 'triangle', 640]],
+  deafen: [[523, 0, .08, 'triangle'], [349, .09, .14, 'triangle']], undeafen: [[349, 0, .08, 'triangle'], [523, .09, .14, 'triangle']],
+  live: [[784, 0, .07, 'triangle'], [1047, .07, .07, 'triangle'], [1568, .14, .22, 'triangle']], liveEnd: [[1319, 0, .08, 'triangle'], [880, .09, .18, 'triangle']],
+  camOn: [[740, 0, .06], [988, .07, .1]], camOff: [[988, 0, .06], [740, .07, .1]],
+  callOut: [[425, 0, 1, 'sine', null, .07]], // Türkiye çevir sesi: 1 sn ton, 3 sn sessizlik
+  callOk: [[659, 0, .08], [880, .09, .08], [1319, .18, .22]], callEnd: [[659, 0, .12], [523, .13, .12], [392, .26, .26]],
+};
 function playSound(kind) {
   if (!soundOn()) return;
   try {
     actx ||= new (window.AudioContext || window.webkitAudioContext)();
-    const notes = { msg: [[880, 0, .08]], mention: [[660, 0, .1], [990, .11, .14]], join: [[523, 0, .1], [784, .1, .14]], leave: [[784, 0, .1], [523, .1, .14]], rec: [[1200, 0, .06]], reward: [[523, 0, .1], [659, .1, .1], [784, .2, .1], [1047, .3, .2]], ring: [[740, 0, .18], [880, .2, .18], [740, .5, .18], [880, .7, .18]] }[kind] || [];
-    for (const [f, t, d] of notes) {
+    if (actx.state === 'suspended') actx.resume().catch(() => {});
+    for (const [f, t, d, type = 'sine', f2, vol = .12] of SND[kind] || []) {
       const o = actx.createOscillator(), g = actx.createGain();
-      o.type = 'sine'; o.frequency.value = f; o.connect(g); g.connect(actx.destination);
-      const st = actx.currentTime + t; g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(.12, st + .01); g.gain.exponentialRampToValueAtTime(.0001, st + d);
+      o.type = type; o.connect(g); g.connect(actx.destination);
+      const st = actx.currentTime + t; o.frequency.setValueAtTime(f, st); if (f2) o.frequency.exponentialRampToValueAtTime(f2, st + d);
+      g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(vol, st + .01);
+      if (d > .5) g.gain.setValueAtTime(vol, st + d - .05); // uzun ton (çevir sesi) düz çalsın
+      g.gain.exponentialRampToValueAtTime(.0001, st + d);
       o.start(st); o.stop(st + d + .02);
     }
   } catch {}
 }
+// Giden aramada karşı taraf açana kadar çevir sesi
+let callOutTimer = null;
+function callOutStart() { callOutStop(); playSound('callOut'); callOutTimer = setInterval(() => playSound('callOut'), 4000); }
+function callOutStop() { clearInterval(callOutTimer); callOutTimer = null; }
 
 // ================= Temalar =================
 const THEMES = {
