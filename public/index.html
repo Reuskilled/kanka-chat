@@ -2612,7 +2612,7 @@
   .fr-altin::before { background: linear-gradient(135deg, #fff1b8, #e2b04a 30%, #8a5a12 55%, #ffe08a 80%, #b9821f); box-shadow: 0 0 16px rgba(226,176,74,.55); }
   .fr-kurucu::before { background: conic-gradient(#ff8a4c, #ffb347, #ff6b3d, #ff8a4c); box-shadow: 0 0 14px rgba(255,138,76,.55); }
   .fr-kurucu::after { content: '🦝'; position: absolute; z-index: 3; left: 50%; bottom: calc(var(--s) * -.08); transform: translateX(-50%); font-size: calc(var(--s) * .2); line-height: 1; padding: 2px 5px; border-radius: 99px; background: #2b1d15; border: 2px solid #ff8a4c; }
-  /* Stüdyo şeffaf hareketli avatar çerçeveleri (9 koleksiyon: Gece Kedisi → Kor & Çelik) */
+  /* Stüdyo şeffaf hareketli avatar çerçeveleri (14 koleksiyon: Gece Kedisi → Zaman & Çark) */
   .pav.fr-gecekedi::before { background: radial-gradient(circle, rgba(244,143,177,.35), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
   .pav.fr-kitsune::before { background: radial-gradient(circle, rgba(0,229,255,.35), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
   .pav.fr-sakuramoon::before { background: radial-gradient(circle, rgba(249,168,212,.34), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.6s ease-in-out infinite; }
@@ -2622,8 +2622,13 @@
   .pav.fr-altinas::before { background: radial-gradient(circle, rgba(248,208,107,.38), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
   .pav.fr-kozmik::before { background: radial-gradient(circle, rgba(168,85,247,.38), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.5s ease-in-out infinite; }
   .pav.fr-korcelik::before { background: radial-gradient(circle, rgba(255,82,36,.40), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.0s ease-in-out infinite; }
-  :is(.pav.fr-gecekedi, .pav.fr-kitsune, .pav.fr-sakuramoon, .pav.fr-minikhayalet, .pav.fr-kankaasit, .pav.fr-ikizkoi, .pav.fr-altinas, .pav.fr-kozmik, .pav.fr-korcelik) .av { border: 0 !important; background-clip: padding-box; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
-  :is(.pav.fr-gecekedi, .pav.fr-kitsune, .pav.fr-sakuramoon, .pav.fr-minikhayalet, .pav.fr-kankaasit, .pav.fr-ikizkoi, .pav.fr-altinas, .pav.fr-kozmik, .pav.fr-korcelik)::after {
+  .pav.fr-yinyang::before { background: radial-gradient(circle, rgba(235,240,252,.34), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.6s ease-in-out infinite; }
+  .pav.fr-gunesay::before { background: radial-gradient(circle, rgba(255,198,68,.36), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.5s ease-in-out infinite; }
+  .pav.fr-buzalev::before { background: radial-gradient(circle, rgba(103,232,249,.36), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.2s ease-in-out infinite; }
+  .pav.fr-isikgolge::before { background: radial-gradient(circle, rgba(192,132,252,.38), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.5s ease-in-out infinite; }
+  .pav.fr-zamancark::before { background: radial-gradient(circle, rgba(232,184,88,.36), transparent 72%) !important; inset: calc(var(--s) * -.14) !important; animation: catGlow 3.4s ease-in-out infinite; }
+  :is(.pav.fr-gecekedi, .pav.fr-kitsune, .pav.fr-sakuramoon, .pav.fr-minikhayalet, .pav.fr-kankaasit, .pav.fr-ikizkoi, .pav.fr-altinas, .pav.fr-kozmik, .pav.fr-korcelik, .pav.fr-yinyang, .pav.fr-gunesay, .pav.fr-buzalev, .pav.fr-isikgolge, .pav.fr-zamancark) .av { border: 0 !important; background-clip: padding-box; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
+  :is(.pav.fr-gecekedi, .pav.fr-kitsune, .pav.fr-sakuramoon, .pav.fr-minikhayalet, .pav.fr-kankaasit, .pav.fr-ikizkoi, .pav.fr-altinas, .pav.fr-kozmik, .pav.fr-korcelik, .pav.fr-yinyang, .pav.fr-gunesay, .pav.fr-buzalev, .pav.fr-isikgolge, .pav.fr-zamancark)::after {
     content: ''; position: absolute; left: -36%; top: -36%; width: 172%; height: 172%;
     z-index: 4; pointer-events: none;
     background: url('/effects/cat_frame_midnight.webp?v=1') center/contain no-repeat;
@@ -2638,6 +2643,11 @@
   .pav.fr-altinas::after { background-image: url('/effects/gold_ace_frame.webp?v=1'); }
   .pav.fr-kozmik::after { background-image: url('/effects/cosmic_frame.webp?v=1'); }
   .pav.fr-korcelik::after { background-image: url('/effects/ember_frame.webp?v=1'); }
+  .pav.fr-yinyang::after { background-image: url('/effects/yinyang_frame.webp?v=1'); }
+  .pav.fr-gunesay::after { background-image: url('/effects/sunmoon_frame.webp?v=1'); }
+  .pav.fr-buzalev::after { background-image: url('/effects/frostflame_frame.webp?v=1'); }
+  .pav.fr-isikgolge::after { background-image: url('/effects/lightshadow_frame.webp?v=1'); }
+  .pav.fr-zamancark::after { background-image: url('/effects/chrono_frame.webp?v=1'); }
   .pav.fr-gecekedi:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(216,172,255,.55)); }
   .pav.fr-kitsune:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(0,229,255,.58)); }
   .pav.fr-sakuramoon:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(249,168,212,.58)); }
@@ -2647,10 +2657,15 @@
   .pav.fr-altinas:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(248,208,107,.62)); }
   .pav.fr-kozmik:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(168,85,247,.62)); }
   .pav.fr-korcelik:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(255,82,36,.64)); }
+  .pav.fr-yinyang:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(240,244,252,.58)); }
+  .pav.fr-gunesay:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(255,198,68,.62)); }
+  .pav.fr-buzalev:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(103,232,249,.62)); }
+  .pav.fr-isikgolge:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(192,132,252,.62)); }
+  .pav.fr-zamancark:hover::after { transform: scale(1.06); filter: drop-shadow(0 5px 14px rgba(232,184,88,.62)); }
   /* Sohbet mesajları, DM listesi (Sohbetler), üye listesi & sol alt avatar çerçeveleri (.on-dot::after ile çakışmaz) */
   .av.has-fr { position: relative; overflow: visible !important; border: 0 !important; }
   .av.has-fr > .av-fr { position: absolute; inset: -3px; border-radius: 50%; pointer-events: none; z-index: 3; }
-  .av.has-fr:not(.fr-gecekedi):not(.fr-kitsune):not(.fr-sakuramoon):not(.fr-minikhayalet):not(.fr-kankaasit):not(.fr-ikizkoi):not(.fr-altinas):not(.fr-kozmik):not(.fr-korcelik) > .av-fr {
+  .av.has-fr:not(.fr-gecekedi):not(.fr-kitsune):not(.fr-sakuramoon):not(.fr-minikhayalet):not(.fr-kankaasit):not(.fr-ikizkoi):not(.fr-altinas):not(.fr-kozmik):not(.fr-korcelik):not(.fr-yinyang):not(.fr-gunesay):not(.fr-buzalev):not(.fr-isikgolge):not(.fr-zamancark) > .av-fr {
     padding: 2.5px;
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude;
@@ -2662,7 +2677,7 @@
   .av.fr-altin > .av-fr { background: linear-gradient(135deg, #fff1b8, #e2b04a 30%, #8a5a12 55%, #ffe08a 80%, #b9821f); }
   .av.fr-kurucu > .av-fr { background: conic-gradient(#ff8a4c, #ffb347, #ff6b3d, #ff8a4c); }
   /* Boşta 0 GPU/CPU: liste ve sohbet çerçeveleri statik durur; sadece fare üstüne gelince (veya Market/profil vitrininde) canlanır */
-  :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik) > .av-fr {
+  :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik, .av.fr-yinyang, .av.fr-gunesay, .av.fr-buzalev, .av.fr-isikgolge, .av.fr-zamancark) > .av-fr {
     left: -36%; top: -36%; right: auto; bottom: auto; width: 172%; height: 172%;
     border-radius: 0; z-index: 4;
     background: url('/effects/cat_frame_midnight.png?v=2') center/contain no-repeat;
@@ -2676,6 +2691,11 @@
   .av.fr-altinas > .av-fr { background-image: url('/effects/gold_ace_frame.png?v=1'); }
   .av.fr-kozmik > .av-fr { background-image: url('/effects/cosmic_frame.png?v=1'); }
   .av.fr-korcelik > .av-fr { background-image: url('/effects/ember_frame.png?v=1'); }
+  .av.fr-yinyang > .av-fr { background-image: url('/effects/yinyang_frame.png?v=1'); }
+  .av.fr-gunesay > .av-fr { background-image: url('/effects/sunmoon_frame.png?v=1'); }
+  .av.fr-buzalev > .av-fr { background-image: url('/effects/frostflame_frame.png?v=1'); }
+  .av.fr-isikgolge > .av-fr { background-image: url('/effects/lightshadow_frame.png?v=1'); }
+  .av.fr-zamancark > .av-fr { background-image: url('/effects/chrono_frame.png?v=1'); }
   :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-gokkusagi > .av-fr,
   :is(.mk-fr-av, .mk-setmod) .av.fr-gokkusagi > .av-fr,
   .av.fr-gokkusagi:hover > .av-fr { animation: spin 4s linear infinite; }
@@ -2712,11 +2732,26 @@
   :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-korcelik > .av-fr,
   :is(.mk-fr-av, .mk-hero-live, .mk-bundle-stage, .mk-setmod) .av.fr-korcelik > .av-fr,
   .av.fr-korcelik:hover > .av-fr { background-image: url('/effects/ember_frame.webp?v=1'); }
-  :is(.mem, .room, .row, .vuser, .frow, #me-av):hover :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik) > .av-fr,
-  :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik):hover > .av-fr { transform: scale(1.06); }
-  .has-nb :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik) > .av-fr { left: -29%; top: -29%; width: 158%; height: 158%; }
+  :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-yinyang > .av-fr,
+  :is(.mk-fr-av, .mk-hero-live, .mk-bundle-stage, .mk-setmod) .av.fr-yinyang > .av-fr,
+  .av.fr-yinyang:hover > .av-fr { background-image: url('/effects/yinyang_frame.webp?v=1'); }
+  :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-gunesay > .av-fr,
+  :is(.mk-fr-av, .mk-hero-live, .mk-bundle-stage, .mk-setmod) .av.fr-gunesay > .av-fr,
+  .av.fr-gunesay:hover > .av-fr { background-image: url('/effects/sunmoon_frame.webp?v=1'); }
+  :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-buzalev > .av-fr,
+  :is(.mk-fr-av, .mk-hero-live, .mk-bundle-stage, .mk-setmod) .av.fr-buzalev > .av-fr,
+  .av.fr-buzalev:hover > .av-fr { background-image: url('/effects/frostflame_frame.webp?v=1'); }
+  :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-isikgolge > .av-fr,
+  :is(.mk-fr-av, .mk-hero-live, .mk-bundle-stage, .mk-setmod) .av.fr-isikgolge > .av-fr,
+  .av.fr-isikgolge:hover > .av-fr { background-image: url('/effects/lightshadow_frame.webp?v=1'); }
+  :is(.mem, .room, .row, .vuser, .frow, #me-av, .mk-card):hover .av.fr-zamancark > .av-fr,
+  :is(.mk-fr-av, .mk-hero-live, .mk-bundle-stage, .mk-setmod) .av.fr-zamancark > .av-fr,
+  .av.fr-zamancark:hover > .av-fr { background-image: url('/effects/chrono_frame.webp?v=1'); }
+  :is(.mem, .room, .row, .vuser, .frow, #me-av):hover :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik, .av.fr-yinyang, .av.fr-gunesay, .av.fr-buzalev, .av.fr-isikgolge, .av.fr-zamancark) > .av-fr,
+  :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik, .av.fr-yinyang, .av.fr-gunesay, .av.fr-buzalev, .av.fr-isikgolge, .av.fr-zamancark):hover > .av-fr { transform: scale(1.06); }
+  .has-nb :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik, .av.fr-yinyang, .av.fr-gunesay, .av.fr-buzalev, .av.fr-isikgolge, .av.fr-zamancark) > .av-fr { left: -29%; top: -29%; width: 158%; height: 158%; }
   :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) .av.has-fr > .av-fr { inset: -2px; padding: 1.8px; }
-  :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik) > .av-fr { left: -26%; top: -26%; width: 152%; height: 152%; }
+  :is(.vuser, .inter-tag, .ap-chip, .sg-g, .emo-by, #suggest) :is(.av.fr-gecekedi, .av.fr-kitsune, .av.fr-sakuramoon, .av.fr-minikhayalet, .av.fr-kankaasit, .av.fr-ikizkoi, .av.fr-altinas, .av.fr-kozmik, .av.fr-korcelik, .av.fr-yinyang, .av.fr-gunesay, .av.fr-buzalev, .av.fr-isikgolge, .av.fr-zamancark) > .av-fr { left: -26%; top: -26%; width: 152%; height: 152%; }
   .av.on-dot::after { z-index: 6; }
   .pav .pdot { z-index: 5; }
   @keyframes catGlow { 0%,100% { opacity: .45; transform: scale(1); } 50% { opacity: .9; transform: scale(1.06); } }
@@ -2891,7 +2926,12 @@
   .nb-altinas .nb-bg { background: linear-gradient(100deg, #120a0e 10%, #2a121c 54%, #471d22 84%, #6e4514 100%) !important; opacity: .95 !important; }
   .nb-kozmik .nb-bg { background: linear-gradient(100deg, #090616 10%, #1c103b 52%, #371b68 84%, #5e2a84 100%) !important; opacity: .95 !important; }
   .nb-korcelik .nb-bg { background: linear-gradient(100deg, #140909 10%, #30100d 52%, #5c1910 84%, #8f2d14 100%) !important; opacity: .95 !important; }
-  :is(.nb-gecekedi, .nb-kitsune, .nb-sakuramoon, .nb-minikhayalet, .nb-kankaasit, .nb-ikizkoi, .nb-altinas, .nb-kozmik, .nb-korcelik) .nb-vid { object-fit: contain; object-position: right center; opacity: .98; z-index: 1; }
+  .nb-yinyang .nb-bg { background: linear-gradient(100deg, #0b0c10 10%, #1a1d26 52%, #313542 84%, #4f5566 100%) !important; opacity: .96 !important; }
+  .nb-gunesay .nb-bg { background: linear-gradient(100deg, #0b1024 10%, #182346 50%, #382e4a 82%, #7c521c 100%) !important; opacity: .95 !important; }
+  .nb-buzalev .nb-bg { background: linear-gradient(100deg, #071928 10%, #0f324a 48%, #3c1f24 78%, #7a2912 100%) !important; opacity: .95 !important; }
+  .nb-isikgolge .nb-bg { background: linear-gradient(100deg, #12091c 10%, #26123b 50%, #441c5c 80%, #63491c 100%) !important; opacity: .95 !important; }
+  .nb-zamancark .nb-bg { background: linear-gradient(100deg, #0c0e18 10%, #192138 50%, #3b2d1c 82%, #6e4e1c 100%) !important; opacity: .95 !important; }
+  :is(.nb-gecekedi, .nb-kitsune, .nb-sakuramoon, .nb-minikhayalet, .nb-kankaasit, .nb-ikizkoi, .nb-altinas, .nb-kozmik, .nb-korcelik, .nb-yinyang, .nb-gunesay, .nb-buzalev, .nb-isikgolge, .nb-zamancark) .nb-vid { object-fit: contain; object-position: right center; opacity: .98; z-index: 1; }
   .nb-gecekedi .nb-scrim { background: linear-gradient(90deg, rgba(16,12,24,.76) 0%, rgba(16,12,24,.28) 46%, rgba(16,12,24,0) 74%) !important; }
   .nb-kitsune .nb-scrim { background: linear-gradient(90deg, rgba(8,12,24,.82) 0%, rgba(8,12,24,.34) 48%, rgba(8,12,24,0) 74%) !important; }
   .nb-sakuramoon .nb-scrim { background: linear-gradient(90deg, rgba(10,12,28,.80) 0%, rgba(10,12,28,.32) 48%, rgba(10,12,28,0) 74%) !important; }
@@ -2901,8 +2941,13 @@
   .nb-altinas .nb-scrim { background: linear-gradient(90deg, rgba(16,10,14,.82) 0%, rgba(16,10,14,.34) 48%, rgba(16,10,14,0) 74%) !important; }
   .nb-kozmik .nb-scrim { background: linear-gradient(90deg, rgba(10,6,22,.82) 0%, rgba(10,6,22,.34) 48%, rgba(10,6,22,0) 74%) !important; }
   .nb-korcelik .nb-scrim { background: linear-gradient(90deg, rgba(18,8,8,.82) 0%, rgba(18,8,8,.34) 48%, rgba(18,8,8,0) 74%) !important; }
-  :is(.nb-gecekedi, .nb-kitsune, .nb-sakuramoon, .nb-minikhayalet, .nb-kankaasit, .nb-ikizkoi, .nb-altinas, .nb-kozmik, .nb-korcelik):hover .nb-bg,
-  .nb-card:hover :is(.nb-gecekedi, .nb-kitsune, .nb-sakuramoon, .nb-minikhayalet, .nb-kankaasit, .nb-ikizkoi, .nb-altinas, .nb-kozmik, .nb-korcelik) .nb-bg { opacity: 1 !important; filter: brightness(1.1); animation: none !important; }
+  .nb-yinyang .nb-scrim { background: linear-gradient(90deg, rgba(11,12,16,.84) 0%, rgba(11,12,16,.36) 48%, rgba(11,12,16,0) 74%) !important; }
+  .nb-gunesay .nb-scrim { background: linear-gradient(90deg, rgba(10,14,32,.82) 0%, rgba(10,14,32,.34) 48%, rgba(10,14,32,0) 74%) !important; }
+  .nb-buzalev .nb-scrim { background: linear-gradient(90deg, rgba(8,18,30,.82) 0%, rgba(8,18,30,.34) 48%, rgba(8,18,30,0) 74%) !important; }
+  .nb-isikgolge .nb-scrim { background: linear-gradient(90deg, rgba(16,9,26,.82) 0%, rgba(16,9,26,.34) 48%, rgba(16,9,26,0) 74%) !important; }
+  .nb-zamancark .nb-scrim { background: linear-gradient(90deg, rgba(12,14,24,.82) 0%, rgba(12,14,24,.34) 48%, rgba(12,14,24,0) 74%) !important; }
+  :is(.nb-gecekedi, .nb-kitsune, .nb-sakuramoon, .nb-minikhayalet, .nb-kankaasit, .nb-ikizkoi, .nb-altinas, .nb-kozmik, .nb-korcelik, .nb-yinyang, .nb-gunesay, .nb-buzalev, .nb-isikgolge, .nb-zamancark):hover .nb-bg,
+  .nb-card:hover :is(.nb-gecekedi, .nb-kitsune, .nb-sakuramoon, .nb-minikhayalet, .nb-kankaasit, .nb-ikizkoi, .nb-altinas, .nb-kozmik, .nb-korcelik, .nb-yinyang, .nb-gunesay, .nb-buzalev, .nb-isikgolge, .nb-zamancark) .nb-bg { opacity: 1 !important; filter: brightness(1.1); animation: none !important; }
   .nb-card.lock { opacity: .55; cursor: not-allowed; }
   .nb-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .nb-cats button { padding: 4px 10px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: 11.5px; font-weight: 800; transition: all .14s; }
@@ -5374,6 +5419,51 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .mk-hero.t-ember .mk-hero-live:hover { border-color: rgba(255,152,64,.7); }
   .mk-hero.t-ember .mk-hb-pill { background: rgba(255,104,48,.16); border-color: rgba(255,126,64,.4); color: #ffedd5; }
   .mk-hero.t-ember .mk-hl-foot span:last-child { color: #ff8c42; }
+  .mk-hero.t-yinyang { border-color: rgba(232,236,246,.32); background: linear-gradient(128deg, #090a0d 0%, #171a22 50%, #2c313e 100%); }
+  .mk-hero.t-yinyang .mk-hero-bg { background: radial-gradient(50% 85% at 18% 22%, rgba(250,250,246,.16), transparent 64%), radial-gradient(46% 80% at 84% 24%, rgba(180,192,216,.14), transparent 64%), linear-gradient(180deg, rgba(9,10,13,.08) 0%, rgba(9,10,13,.84) 86%, #090a0d 100%); }
+  .mk-hero.t-yinyang .mk-kicker { background: rgba(250,250,246,.14); border-color: rgba(250,250,246,.42); color: #f8fafc; }
+  .mk-hero.t-yinyang .mk-hero-l h2 { background: linear-gradient(180deg, #ffffff 20%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mk-hero.t-yinyang .mk-hero-btn { background: linear-gradient(135deg, #fcfcf8, #cbd5e1); color: #090a0d; box-shadow: 0 8px 24px rgba(255,255,255,.22); }
+  .mk-hero.t-yinyang .mk-hero-live { border-color: rgba(240,244,252,.28); background: rgba(11,12,16,.84); }
+  .mk-hero.t-yinyang .mk-hero-live:hover { border-color: rgba(255,255,255,.65); }
+  .mk-hero.t-yinyang .mk-hb-pill { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.34); color: #f8fafc; }
+  .mk-hero.t-yinyang .mk-hl-foot span:last-child { color: #e2e8f0; }
+  .mk-hero.t-sunmoon { border-color: rgba(255,198,68,.32); background: linear-gradient(128deg, #090d20 0%, #182144 48%, #3c2c38 100%); }
+  .mk-hero.t-sunmoon .mk-hero-bg { background: radial-gradient(50% 85% at 18% 22%, rgba(255,192,58,.22), transparent 64%), radial-gradient(48% 82% at 84% 24%, rgba(142,194,255,.22), transparent 64%), linear-gradient(180deg, rgba(9,13,32,.08) 0%, rgba(9,13,32,.84) 86%, #090d20 100%); }
+  .mk-hero.t-sunmoon .mk-kicker { background: rgba(255,198,68,.16); border-color: rgba(255,212,108,.45); color: #fef3c7; }
+  .mk-hero.t-sunmoon .mk-hero-l h2 { background: linear-gradient(180deg, #fffbeb 15%, #fcd34d 55%, #bfdbfe 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mk-hero.t-sunmoon .mk-hero-btn { background: linear-gradient(135deg, #ffbe3b, #bfdbfe); color: #0a0f24; box-shadow: 0 8px 24px rgba(255,190,59,.34); }
+  .mk-hero.t-sunmoon .mk-hero-live { border-color: rgba(255,198,68,.32); background: rgba(10,14,32,.82); }
+  .mk-hero.t-sunmoon .mk-hero-live:hover { border-color: rgba(191,219,254,.68); }
+  .mk-hero.t-sunmoon .mk-hb-pill { background: rgba(255,198,68,.14); border-color: rgba(255,198,68,.38); color: #fef3c7; }
+  .mk-hero.t-sunmoon .mk-hl-foot span:last-child { color: #fcd34d; }
+  .mk-hero.t-frostflame { border-color: rgba(103,232,249,.32); background: linear-gradient(128deg, #061626 0%, #102a40 46%, #451c16 100%); }
+  .mk-hero.t-frostflame .mk-hero-bg { background: radial-gradient(50% 85% at 18% 22%, rgba(103,232,249,.24), transparent 64%), radial-gradient(48% 82% at 84% 24%, rgba(255,92,28,.24), transparent 64%), linear-gradient(180deg, rgba(6,22,38,.08) 0%, rgba(6,22,38,.84) 86%, #061626 100%); }
+  .mk-hero.t-frostflame .mk-kicker { background: rgba(103,232,249,.16); border-color: rgba(103,232,249,.45); color: #cffafe; }
+  .mk-hero.t-frostflame .mk-hero-l h2 { background: linear-gradient(90deg, #cffafe 0%, #67e8f9 48%, #ff8c42 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mk-hero.t-frostflame .mk-hero-btn { background: linear-gradient(135deg, #67e8f9, #ff6b2b); color: #09121e; box-shadow: 0 8px 24px rgba(103,232,249,.32); }
+  .mk-hero.t-frostflame .mk-hero-live { border-color: rgba(103,232,249,.32); background: rgba(8,18,30,.82); }
+  .mk-hero.t-frostflame .mk-hero-live:hover { border-color: rgba(255,107,43,.68); }
+  .mk-hero.t-frostflame .mk-hb-pill { background: rgba(103,232,249,.14); border-color: rgba(103,232,249,.38); color: #cffafe; }
+  .mk-hero.t-frostflame .mk-hl-foot span:last-child { color: #67e8f9; }
+  .mk-hero.t-lightshadow { border-color: rgba(192,132,252,.34); background: linear-gradient(128deg, #10081a 0%, #241238 48%, #3c261d 100%); }
+  .mk-hero.t-lightshadow .mk-hero-bg { background: radial-gradient(50% 85% at 18% 22%, rgba(248,206,98,.22), transparent 64%), radial-gradient(48% 82% at 84% 24%, rgba(168,85,247,.26), transparent 64%), linear-gradient(180deg, rgba(16,8,26,.08) 0%, rgba(16,8,26,.84) 86%, #10081a 100%); }
+  .mk-hero.t-lightshadow .mk-kicker { background: rgba(248,206,98,.16); border-color: rgba(248,206,98,.44); color: #fef3c7; }
+  .mk-hero.t-lightshadow .mk-hero-l h2 { background: linear-gradient(90deg, #fffbeb 0%, #f8ce62 50%, #d8b4fe 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mk-hero.t-lightshadow .mk-hero-btn { background: linear-gradient(135deg, #f8ce62, #c084fc); color: #12081e; box-shadow: 0 8px 24px rgba(192,132,252,.34); }
+  .mk-hero.t-lightshadow .mk-hero-live { border-color: rgba(192,132,252,.34); background: rgba(16,9,26,.82); }
+  .mk-hero.t-lightshadow .mk-hero-live:hover { border-color: rgba(248,206,98,.68); }
+  .mk-hero.t-lightshadow .mk-hb-pill { background: rgba(192,132,252,.15); border-color: rgba(192,132,252,.4); color: #f3e8ff; }
+  .mk-hero.t-lightshadow .mk-hl-foot span:last-child { color: #f8ce62; }
+  .mk-hero.t-chrono { border-color: rgba(232,184,88,.34); background: linear-gradient(128deg, #0b0d18 0%, #182038 48%, #362816 100%); }
+  .mk-hero.t-chrono .mk-hero-bg { background: radial-gradient(50% 85% at 18% 22%, rgba(96,165,250,.22), transparent 64%), radial-gradient(48% 82% at 84% 24%, rgba(232,184,88,.22), transparent 64%), linear-gradient(180deg, rgba(11,13,24,.08) 0%, rgba(11,13,24,.84) 86%, #0b0d18 100%); }
+  .mk-hero.t-chrono .mk-kicker { background: rgba(232,184,88,.16); border-color: rgba(232,184,88,.44); color: #fef3c7; }
+  .mk-hero.t-chrono .mk-hero-l h2 { background: linear-gradient(180deg, #fffbeb 15%, #e8b858 55%, #93c5fd 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mk-hero.t-chrono .mk-hero-btn { background: linear-gradient(135deg, #e8b858, #93c5fd); color: #0b0d18; box-shadow: 0 8px 24px rgba(232,184,88,.32); }
+  .mk-hero.t-chrono .mk-hero-live { border-color: rgba(232,184,88,.34); background: rgba(12,14,24,.82); }
+  .mk-hero.t-chrono .mk-hero-live:hover { border-color: rgba(147,197,253,.68); }
+  .mk-hero.t-chrono .mk-hb-pill { background: rgba(232,184,88,.14); border-color: rgba(232,184,88,.38); color: #fef3c7; }
+  .mk-hero.t-chrono .mk-hl-foot span:last-child { color: #e8b858; }
   .mk-hero-sw {
     display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 4px; border-radius: 16px; max-width: 100%;
     background: rgba(6,8,14,.62); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(10px);
@@ -5550,6 +5640,11 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .mk-pill.gold { background: linear-gradient(135deg, #f8d06b, #e09f3e); color: #160d06; border-color: transparent; }
   .mk-pill.cosmic { background: linear-gradient(135deg, #c084fc, #ffb84d); color: #0e061c; border-color: transparent; }
   .mk-pill.ember { background: linear-gradient(135deg, #ff4526, #ffb347); color: #1a0704; border-color: transparent; }
+  .mk-pill.mono { background: linear-gradient(135deg, #fcfcf8, #cbd5e1); color: #090a0d; border-color: transparent; }
+  .mk-pill.eclipse { background: linear-gradient(135deg, #ffbe3b, #bfdbfe); color: #0a0f24; border-color: transparent; }
+  .mk-pill.dual { background: linear-gradient(135deg, #67e8f9, #ff6b2b); color: #09121e; border-color: transparent; }
+  .mk-pill.seraph { background: linear-gradient(135deg, #f8ce62, #c084fc); color: #12081e; border-color: transparent; }
+  .mk-pill.chrono { background: linear-gradient(135deg, #e8b858, #93c5fd); color: #0b0d18; border-color: transparent; }
   .mk-pill.ok { background: rgba(76,195,138,.22); border-color: rgba(76,195,138,.5); color: #6ef0b0; }
   .mk-peek {
     position: absolute; right: 9px; bottom: 9px; z-index: 5; padding: 4px 9px; border-radius: 8px;
@@ -5572,6 +5667,11 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .mk-tag-st.gold { background: rgba(248,208,107,.18); color: #fef0c7; }
   .mk-tag-st.cosmic { background: rgba(192,132,252,.18); color: #f3e8ff; }
   .mk-tag-st.ember { background: rgba(255,104,48,.18); color: #ffedd5; }
+  .mk-tag-st.mono { background: rgba(248,250,252,.16); color: #f8fafc; }
+  .mk-tag-st.eclipse { background: rgba(255,198,68,.18); color: #fef3c7; }
+  .mk-tag-st.dual { background: rgba(103,232,249,.18); color: #cffafe; }
+  .mk-tag-st.seraph { background: rgba(192,132,252,.18); color: #f3e8ff; }
+  .mk-tag-st.chrono { background: rgba(232,184,88,.18); color: #fef3c7; }
   .mk-card.mk-bundle.t-kitsune { border-color: rgba(0,229,255,.42); background: linear-gradient(180deg, #0d1b30 0%, #10131e 100%); box-shadow: 0 12px 32px rgba(0,229,255,.14); }
   .mk-card.mk-bundle.t-kitsune:hover { border-color: #00e5ff; box-shadow: 0 18px 42px rgba(0,229,255,.26); }
   .mk-card.mk-bundle.t-sakura { border-color: rgba(249,168,212,.42); background: linear-gradient(180deg, #1b1734 0%, #131122 100%); box-shadow: 0 12px 32px rgba(249,168,212,.14); }
@@ -5588,6 +5688,16 @@ img.ic.chemo{object-fit:contain;border-radius:4px}
   .mk-card.mk-bundle.t-cosmic:hover { border-color: #c084fc; box-shadow: 0 18px 42px rgba(192,132,252,.3); }
   .mk-card.mk-bundle.t-ember { border-color: rgba(255,96,42,.46); background: linear-gradient(180deg, #2e110d 0%, #160a09 100%); box-shadow: 0 12px 32px rgba(255,72,36,.16); }
   .mk-card.mk-bundle.t-ember:hover { border-color: #ff6b35; box-shadow: 0 18px 42px rgba(255,96,42,.3); }
+  .mk-card.mk-bundle.t-yinyang { border-color: rgba(235,240,252,.42); background: linear-gradient(180deg, #1b1e28 0%, #0d0e13 100%); box-shadow: 0 12px 32px rgba(255,255,255,.10); }
+  .mk-card.mk-bundle.t-yinyang:hover { border-color: #f8fafc; box-shadow: 0 18px 42px rgba(255,255,255,.22); }
+  .mk-card.mk-bundle.t-sunmoon { border-color: rgba(255,198,68,.44); background: linear-gradient(180deg, #1a2142 0%, #101224 100%); box-shadow: 0 12px 32px rgba(255,198,68,.15); }
+  .mk-card.mk-bundle.t-sunmoon:hover { border-color: #fcd34d; box-shadow: 0 18px 42px rgba(255,198,68,.28); }
+  .mk-card.mk-bundle.t-frostflame { border-color: rgba(103,232,249,.44); background: linear-gradient(180deg, #12283d 0%, #1d1212 100%); box-shadow: 0 12px 32px rgba(103,232,249,.15); }
+  .mk-card.mk-bundle.t-frostflame:hover { border-color: #67e8f9; box-shadow: 0 18px 42px rgba(255,107,43,.28); }
+  .mk-card.mk-bundle.t-lightshadow { border-color: rgba(192,132,252,.44); background: linear-gradient(180deg, #25133b 0%, #140c1e 100%); box-shadow: 0 12px 32px rgba(192,132,252,.16); }
+  .mk-card.mk-bundle.t-lightshadow:hover { border-color: #f8ce62; box-shadow: 0 18px 42px rgba(248,206,98,.28); }
+  .mk-card.mk-bundle.t-chrono { border-color: rgba(232,184,88,.44); background: linear-gradient(180deg, #1b2238 0%, #141219 100%); box-shadow: 0 12px 32px rgba(232,184,88,.15); }
+  .mk-card.mk-bundle.t-chrono:hover { border-color: #e8b858; box-shadow: 0 18px 42px rgba(147,197,253,.28); }
 
   /* Kart içi canlı mini önizlemeler */
   .mk-mini-pf {
@@ -7392,7 +7502,7 @@ function showSettings(tab) {
         preview();
       });
     } else if (studioTab === 'effect') {
-      const colEfs = ['cat_midnight', 'kitsune_cyber', 'sakura_moon', 'ghost_wisp', 'acid_volt', 'koi_ripple', 'gold_ace', 'cosmic_orbit', 'ember_blade'];
+      const colEfs = ['cat_midnight', 'kitsune_cyber', 'sakura_moon', 'ghost_wisp', 'acid_volt', 'koi_ripple', 'gold_ace', 'cosmic_orbit', 'ember_blade', 'yin_yang', 'sun_moon', 'frost_flame', 'light_shadow', 'chrono_gear'];
       const ownerEfs = PEFFECTS_OWNER.filter(ef => !colEfs.includes(ef[0]) || isPisagoMe());
       const ownerBlock = S.staff === 'owner' ? `<div class="pe-sec-h"><span>Özel &amp; 3D VFX Efektler</span><em>KURUCU ÖZEL</em></div>
         <div class="peffects pe-3d">${ownerEfs.map(ef => {
@@ -9682,6 +9792,11 @@ const SPARK_HIDE = STORE_APP && !PLAY_BILL;
 // ---------- Market (tam genişlik koleksiyon vitrini: canlı önizleme, arama ve filtreleme; fiyat/satın alma yok) ----------
 const MARKET_IC = 'tag';
 const PFX_POSTER_MAP = {
+  yin_yang: '/effects/yinyang_profile_poster.webp?v=1',
+  sun_moon: '/effects/sunmoon_profile_poster.webp?v=1',
+  frost_flame: '/effects/frostflame_profile_poster.webp?v=1',
+  light_shadow: '/effects/lightshadow_profile_poster.webp?v=1',
+  chrono_gear: '/effects/chrono_profile_poster.webp?v=1',
   acid_volt: '/effects/acid_profile_poster.webp?v=1',
   koi_ripple: '/effects/koi_profile_poster.webp?v=1',
   gold_ace: '/effects/gold_ace_profile_poster.webp?v=1',
@@ -9693,8 +9808,83 @@ const PFX_POSTER_MAP = {
   cat_midnight: '/effects/cat_profile_poster.webp?v=1',
   dragon_crimson: '/effects/dragon_inferno_poster.webp?v=1',
 };
-let mkTab = 'all', mkQuery = '', mkHeroCol = 'kankaasit';
+let mkTab = 'all', mkQuery = '', mkHeroCol = 'yinyang';
 const MK_COLLECTIONS = {
+  yinyang: {
+    id: 'yinyang', cls: 't-yinyang', icon: '☯️', tab: '☯️ Yin & Yang',
+    kicker: '☯️ DENGE KOLEKSİYONU · 3 PARÇA',
+    title: 'YİN & YANG KOLEKSİYONU',
+    lead: 'Siyah Çin mürekkebi ve saf inci ışığının kusursuz simetrisi, ağır ağır dönen Yin-Yang mührü ve karşıt enerji küreleri — zamansız ve tam uyumlu 3\'lü koleksiyon.',
+    short: 'Yin & Yang · Canlı Önizleme',
+    effId: 'yin_yang', frId: 'yinyang', nbId: 'yinyang', bundleKey: 'bundle:yinyang',
+    accent: '#e2e8f0', badgeCls: 'mono', banBg: 'linear-gradient(135deg,#0d0f14,#2c313f)',
+    bio: 'Siyah mürekkep ve inci ışığı fırça şeritleri karşıt kenarlardan akıp dönen Yin-Yang mühründe birleşir.',
+    chatLine: 'Yin & Yang 3\'lü denge seti sohbet, profil ve üye listesinde tam uyumlu! ☯️',
+    effDesc: 'Siyah mürekkep ve beyaz ışık fırça şeritleri kenarlardan akarak dönen Yin-Yang mühürleriyle buluşup damlalar halinde dağılır.',
+    nbDesc: 'Üye listesinde fare üstüne gelince siyah-beyaz mürekkep dalgaları dönen Yin-Yang mührünün etrafında süzülür.',
+    frDesc: 'Yarısı siyah mürekkep yarısı inci beyazı dönen halka, karşıt yörüngeli iki küre ve dönen Yin-Yang rozetiyle hareketli çerçeve.',
+    bundleDesc: 'Yin & Yang koleksiyonunun 3 uyumlu parçası bir arada: Denge Halkası Çerçevesi, Mürekkep & Işık Profil Efekti ve Canlı İsim Plakası.',
+  },
+  gunesay: {
+    id: 'gunesay', cls: 't-sunmoon', icon: '☀️', tab: '☀️ Güneş & Ay',
+    kicker: '☀️ GÖKSEL DENGE · 3 PARÇA',
+    title: 'GÜNEŞ & AY KOLEKSİYONU',
+    lead: 'Sıcak altın güneş ışınları, gümüş ay hilali ve tam güneş tutulması koronası — gündüz ile gecenin buluştuğu tam uyumlu 3\'lü koleksiyon.',
+    short: 'Güneş & Ay · Canlı Önizleme',
+    effId: 'sun_moon', frId: 'gunesay', nbId: 'gunesay', bundleKey: 'bundle:gunesay',
+    accent: '#fcd34d', badgeCls: 'eclipse', banBg: 'linear-gradient(135deg,#131b3a,#4a3328)',
+    bio: 'Sol kenardan altın güneş ışığı, sağ kenardan gümüş ay yıldızları akıp sağ üstte parlayan tam tutulma halkasında birleşir.',
+    chatLine: 'Güneş & Ay 3\'lü seti sohbet, profil ve üye listesinde tam uyumlu! ☀️🌙',
+    effDesc: 'Altın güneş ışınları ve gümüş ay yıldızları iki kenardan yükselip sağ üstte parlayan tam tutulma koronasında buluşur.',
+    nbDesc: 'Üye listesinde fare üstüne gelince gümüş hilal ve parlayan güneş tutulması koronası yıldızlarla birlikte canlanır.',
+    frDesc: 'Üst yarısı altın güneş ışınlı, alt yarısı gümüş hilalli ikiz gökyüzü çerçevesi.',
+    bundleDesc: 'Güneş & Ay koleksiyonunun 3 uyumlu parçası bir arada: Göksel İkiz Çerçeve, Tutulma Profil Efekti ve Canlı İsim Plakası.',
+  },
+  buzalev: {
+    id: 'buzalev', cls: 't-frostflame', icon: '❄️', tab: '❄️ Buz & Alev',
+    kicker: '❄️ ELEMENT DENGESİ · 3 PARÇA',
+    title: 'BUZ & ALEV KOLEKSİYONU',
+    lead: 'Sol kenardan büyüyen keskin buzul kristalleri, sağ kenardan yükselen canlı alevler ve uçlarda çarpışan element kıvılcımları — zıt enerjili 3\'lü koleksiyon.',
+    short: 'Buz & Alev · Canlı Önizleme',
+    effId: 'frost_flame', frId: 'buzalev', nbId: 'buzalev', bundleKey: 'bundle:buzalev',
+    accent: '#67e8f9', badgeCls: 'dual', banBg: 'linear-gradient(135deg,#0b2538,#521b12)',
+    bio: 'Solda dönen kar taneleri ve buz kristalleri, sağda dans eden kor alevleri ve kıvılcımlar üst ve altta buluşur.',
+    chatLine: 'Buz & Alev 3\'lü element seti sohbet, profil ve üye listesinde tam uyumlu! ❄️🔥',
+    effDesc: 'Sol kenarda keskin buz kristalleri ve kar taneleri, sağ kenarda canlı alevler ve kıvılcımlar parlayıp iki uçta çarpışır.',
+    nbDesc: 'Üye listesinde fare üstüne gelince dönen buz kristali ile yükselen alevler kıvılcımlar saçarak karşılaşır.',
+    frDesc: 'Sol yarısı keskin buz kristali ve kar taneli, sağ yarısı canlı alevli çift element avatar çerçevesi.',
+    bundleDesc: 'Buz & Alev koleksiyonunun 3 uyumlu parçası bir arada: Çift Element Çerçevesi, Buz & Alev Profil Efekti ve Canlı İsim Plakası.',
+  },
+  isikgolge: {
+    id: 'isikgolge', cls: 't-lightshadow', icon: '🪽', tab: '🪽 Işık & Gölge',
+    kicker: '🪽 IŞIK & KARANLIK · 3 PARÇA',
+    title: 'IŞIK & GÖLGE KOLEKSİYONU',
+    lead: 'Süzülerek düşen beyaz-altın melek tüyleri, yükselen mor-siyah gölge tüyleri ve parlayan altın hale — çarpıcı kontrastlı 3\'lü koleksiyon.',
+    short: 'Işık & Gölge · Canlı Önizleme',
+    effId: 'light_shadow', frId: 'isikgolge', nbId: 'isikgolge', bundleKey: 'bundle:isikgolge',
+    accent: '#f8ce62', badgeCls: 'seraph', banBg: 'linear-gradient(135deg,#24113a,#4a3316)',
+    bio: 'Üstten beyaz-altın melek tüyleri ve altın hale süzülürken, alttan koyu mor-siyah gölge tüyleri yükselir.',
+    chatLine: 'Işık & Gölge 3\'lü seti sohbet, profil ve üye listesinde tam uyumlu! 🪽🖤',
+    effDesc: 'Üst kenardan beyaz-altın melek tüyleri süzülüp düşerken alt kenardan koyu mor-siyah gölge tüyleri yükselir.',
+    nbDesc: 'Üye listesinde fare üstüne gelince altın hale altında çapraz melek ve gölge tüyleri havada süzülür.',
+    frDesc: 'Üstte yüzen altın hale, solda beyaz-altın melek kanadı, sağda mor-siyah gölge kanadıyla hareketli çerçeve.',
+    bundleDesc: 'Işık & Gölge koleksiyonunun 3 uyumlu parçası bir arada: Hale & Kanat Çerçevesi, Zıt Tüyler Profil Efekti ve Canlı İsim Plakası.',
+  },
+  zamancark: {
+    id: 'zamancark', cls: 't-chrono', icon: '⏳', tab: '⏳ Zaman & Çark',
+    kicker: '⏳ ANTİK SAAT · 3 PARÇA',
+    title: 'ZAMAN & ÇARK KOLEKSİYONU',
+    lead: 'Birbirine geçmiş dönen pirinç saat çarkları, parlayan kum saati ve zamanı geri saran yıldız kumu — gizemli antik mekanizmalı 3\'lü koleksiyon.',
+    short: 'Zaman & Çark · Canlı Önizleme',
+    effId: 'chrono_gear', frId: 'zamancark', nbId: 'zamancark', bundleKey: 'bundle:zamancark',
+    accent: '#e8b858', badgeCls: 'chrono', banBg: 'linear-gradient(135deg,#151e36,#3e2b14)',
+    bio: 'Köşelerde antik pirinç saat çarkları döner, kum saatinden dökülen altın zaman kumu sonunda yukarı doğru geri akar.',
+    chatLine: 'Zaman & Çark 3\'lü seti sohbet, profil ve üye listesinde tam uyumlu! ⏳⚙️',
+    effDesc: 'Köşelerde dönen pirinç saat çarkları ve kum saatinden dökülen altın tanecikler sonunda zamanı geri sarar gibi yukarı yükselir.',
+    nbDesc: 'Üye listesinde fare üstüne gelince birbirine geçmiş pirinç saat çarkları döner ve kum saatinden parlayan kum dökülür.',
+    frDesc: 'Saat kadranlı antik pirinç halka, sol altta dönen ikiz çarklar ve sağ üstte akan kum saatiyle hareketli çerçeve.',
+    bundleDesc: 'Zaman & Çark koleksiyonunun 3 uyumlu parçası bir arada: Antik Saat Çerçevesi, Zaman Akışı Profil Efekti ve Canlı İsim Plakası.',
+  },
   kankaasit: {
     id: 'kankaasit', cls: 't-acid', icon: '⚡', tab: '⚡ Kanka Asit',
     kicker: '⚡ İMZA KOLEKSİYON · 3 PARÇA',
@@ -13169,7 +13359,7 @@ document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === 
 // ================= Profil 2.0 =================
 const dn = n => uNicks[n] || S.users[n]?.displayName || n;
 const isPisagoMe = () => (S.me || '').toLowerCase() === 'pisago';
-const FRAMES = [['none', 'Yok', 0], ['kankaasit', 'Kanka Asit', -2], ['ikizkoi', 'İkiz Koi', -2], ['altinas', 'Altın As', -2], ['kozmik', 'Kozmik Yörünge', -2], ['korcelik', 'Kor & Çelik', -2], ['minikhayalet', 'Minik Hayalet', -2], ['sakuramoon', 'Ay & Sakura', -2], ['kitsune', 'Siber Tilki', -2], ['gecekedi', 'Gece Kedisi', -2], ['halka', 'Halka', 2], ['gokkusagi', 'Gökkuşağı', 5], ['ates', 'Ateş', 10], ['neon', 'Neon', 15], ['altin', 'Altın', 25], ['kurucu', 'Kurucu', -1]];
+const FRAMES = [['none', 'Yok', 0], ['yinyang', 'Yin & Yang', -2], ['gunesay', 'Güneş & Ay', -2], ['buzalev', 'Buz & Alev', -2], ['isikgolge', 'Işık & Gölge', -2], ['zamancark', 'Zaman & Çark', -2], ['kankaasit', 'Kanka Asit', -2], ['ikizkoi', 'İkiz Koi', -2], ['altinas', 'Altın As', -2], ['kozmik', 'Kozmik Yörünge', -2], ['korcelik', 'Kor & Çelik', -2], ['minikhayalet', 'Minik Hayalet', -2], ['sakuramoon', 'Ay & Sakura', -2], ['kitsune', 'Siber Tilki', -2], ['gecekedi', 'Gece Kedisi', -2], ['halka', 'Halka', 2], ['gokkusagi', 'Gökkuşağı', 5], ['ates', 'Ateş', 10], ['neon', 'Neon', 15], ['altin', 'Altın', 25], ['kurucu', 'Kurucu', -1]];
 const frameOpen = (u, f) => f[0] === 'none' || (f[2] === -2 ? (u?.name || S.me || '').toLowerCase() === 'pisago' : f[2] < 0 ? !!u.kurucu : (u.level || 1) >= f[2]);
 const SOCIAL_META = {
   instagram: ['Instagram', '#e1306c', h => `https://instagram.com/${h}`], tiktok: ['TikTok', '#25f4ee', h => `https://www.tiktok.com/@${h}`],
@@ -13191,6 +13381,11 @@ const PEFFECTS = [
   ['sparkles', 'Prizma', '✧', 'linear-gradient(135deg,#181429,#26240c)', '#fde047'],
 ];
 const PEFFECTS_OWNER = [
+  ['yin_yang', 'Yin & Yang', '☯️', '#0b0c10', '#e2e8f0', '/effects/yinyang_profile_poster.webp?v=1', ''],
+  ['sun_moon', 'Güneş & Ay', '☀️', '#0b1024', '#fcd34d', '/effects/sunmoon_profile_poster.webp?v=1', ''],
+  ['frost_flame', 'Buz & Alev', '❄️', '#091826', '#67e8f9', '/effects/frostflame_profile_poster.webp?v=1', ''],
+  ['light_shadow', 'Işık & Gölge', '🪽', '#140a20', '#f8ce62', '/effects/lightshadow_profile_poster.webp?v=1', ''],
+  ['chrono_gear', 'Zaman & Çark', '⏳', '#0d101c', '#e8b858', '/effects/chrono_profile_poster.webp?v=1', ''],
   ['acid_volt', 'Kanka Asit', '⚡', '#0a1208', '#b8ff2c', '/effects/acid_profile_poster.webp?v=1', ''],
   ['koi_ripple', 'İkiz Koi', '🌊', '#081529', '#74e8f5', '/effects/koi_profile_poster.webp?v=1', ''],
   ['gold_ace', 'Altın As', '🃏', '#140b0f', '#f8d06b', '/effects/gold_ace_profile_poster.webp?v=1', ''],
@@ -13213,6 +13408,11 @@ const PFX_3D_MAP = { dragon_crimson: 0, dragon_jade: 1, dragon_frost: 2, vfx_bla
 const NB_CATS = [['all', 'Tümü'], ['fire', 'Ateş & Kor'], ['ice', 'Buz & Su'], ['space', 'Uzay'], ['neon', 'Neon & Siber'], ['soft', 'Yumuşak']];
 const NAME_BANNERS = [
   { id: 'none', cat: 'all', name: 'Yok', svg: '' },
+  { id: 'yinyang', cat: 'soft', name: 'Yin & Yang', tag: 'YAKINDA', soon: true, vid: '/effects/yinyang_nameplate.webm?v=1', poster: '/effects/yinyang_nameplate_poster.webp?v=1', svg: '' },
+  { id: 'gunesay', cat: 'space', name: 'Güneş & Ay', tag: 'YAKINDA', soon: true, vid: '/effects/sunmoon_nameplate.webm?v=1', poster: '/effects/sunmoon_nameplate_poster.webp?v=1', svg: '' },
+  { id: 'buzalev', cat: 'fire', name: 'Buz & Alev', tag: 'YAKINDA', soon: true, vid: '/effects/frostflame_nameplate.webm?v=1', poster: '/effects/frostflame_nameplate_poster.webp?v=1', svg: '' },
+  { id: 'isikgolge', cat: 'soft', name: 'Işık & Gölge', tag: 'YAKINDA', soon: true, vid: '/effects/lightshadow_nameplate.webm?v=1', poster: '/effects/lightshadow_nameplate_poster.webp?v=1', svg: '' },
+  { id: 'zamancark', cat: 'space', name: 'Zaman & Çark', tag: 'YAKINDA', soon: true, vid: '/effects/chrono_nameplate.webm?v=1', poster: '/effects/chrono_nameplate_poster.webp?v=1', svg: '' },
   { id: 'kankaasit', cat: 'neon', name: 'Kanka Asit', tag: 'YAKINDA', soon: true, vid: '/effects/acid_volt_nameplate.webm?v=1', poster: '/effects/acid_nameplate_poster.webp?v=1', svg: '' },
   { id: 'ikizkoi', cat: 'ice', name: 'İkiz Koi', tag: 'YAKINDA', soon: true, vid: '/effects/koi_ripple_nameplate.webm?v=1', poster: '/effects/koi_nameplate_poster.webp?v=1', svg: '' },
   { id: 'altinas', cat: 'fire', name: 'Altın As', tag: 'YAKINDA', soon: true, vid: '/effects/gold_ace_nameplate.webm?v=1', poster: '/effects/gold_ace_nameplate_poster.webp?v=1', svg: '' },
@@ -13639,6 +13839,11 @@ const PFX_VIDEO_MAP = {
   gold_ace: { loop: '/effects/gold_ace_effect.webm?v=1', screen: false },
   cosmic_orbit: { loop: '/effects/cosmic_orbit_effect.webm?v=1', screen: false },
   ember_blade: { loop: '/effects/ember_blade_effect.webm?v=1', screen: false },
+  yin_yang: { loop: '/effects/yinyang_effect.webm?v=1', screen: false },
+  sun_moon: { loop: '/effects/sunmoon_effect.webm?v=1', screen: false },
+  frost_flame: { loop: '/effects/frostflame_effect.webm?v=1', screen: false },
+  light_shadow: { loop: '/effects/lightshadow_effect.webm?v=1', screen: false },
+  chrono_gear: { loop: '/effects/chrono_effect.webm?v=1', screen: false },
 };
 function mountVideoProfileEffect(el, cfg) {
   if (!el || !cfg || (!cfg.loop && !cfg.intro)) return false;

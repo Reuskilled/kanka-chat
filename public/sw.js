@@ -1,5 +1,5 @@
 // Kanka Chat service worker: uygulama dosyalarını ve resimleri önbellekte tutar; sunucuya ulaşılamazsa bekleme sayfası gösterir
-const CACHE = 'kanka-v282';
+const CACHE = 'kanka-v283';
 const SHELL = ['/app', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
