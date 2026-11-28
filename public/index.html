@@ -6819,7 +6819,7 @@ function veliGate() {
   $('#veli-out').onclick = () => logout();
   $('#veli-ok').onclick = () => socket.emit('veliOnay', {}, r => { if (r?.error) return toast(r.error); closeModal(); toast('Teşekkürler 🙏', null, false, { type: 'ok' }); });
 }
-const YAS_KEY = 'kanka-yas2', minorLocked = () => { const t = +store.get(YAS_KEY) || 0; return t && Date.now() - t < 30 * 864e5; };
+const YAS_KEY = 'kanka-yas2', minorLocked = () => { const t = +store.get(YAS_KEY) || 0; return t && Date.now() - t < 864e5; }; // 15 yaş altı tarih girilince bu tarayıcıda kayıt 24 saat kapalı
 function renderAuth(mode = authMode, keep) {
   if (mode === 'register' && minorLocked()) mode = 'minor';
   authMode = mode;
@@ -6849,7 +6849,7 @@ function renderAuth(mode = authMode, keep) {
       ${needCode ? `<div class="await"><span>Kodun yok mu?</span><button type="button" class="alink" id="a-wait">Bekleme listesine katıl →</button></div>` : ''}`;
   }
   else if (mode === 'minor') h = `<div class="abig">${ic('shield')}</div><h1>Şu an hesap açamazsın</h1><p>Kanka Chat <b>15 yaş ve üzeri</b> içindir. Girdiğin doğum tarihine göre henüz 15 yaşında değilsin, bu yüzden hesap oluşturulamadı.</p>
-    <ul class="a-tips"><li>Doğum tarihini yanlış girdiysen <b>kankahq1@gmail.com</b> adresine yaz, yardımcı olalım.</li><li>Zaten bir hesabın varsa giriş yapabilirsin.</li></ul>
+    <ul class="a-tips"><li>Doğum tarihini yanlış girdiysen <b>24 saat sonra</b> yeniden kayıt olabilirsin. Sorun olursa <b>kankahq1@gmail.com</b> adresine yaz.</li><li>Zaten bir hesabın varsa giriş yapabilirsin.</li></ul>
     <button type="button" class="primary" data-m="login">Giriş ekranına dön</button>`;
   else if (mode === 'forgot') h = `<h1>Şifreni mi unuttun?</h1><p>Kullanıcı adını ya da e-postanı yaz, sıfırlama linkini e-postana gönderelim.</p>
     ${afield('a-who', 'Kullanıcı adı ya da e-posta', 'mail', 'text', 'maxlength="190" autocomplete="username"')}
