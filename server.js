@@ -8113,21 +8113,30 @@ io.on('connection', socket => {
     if (typeof ch !== 'string' || typeof old !== 'string' || old.length > 40 || myVoice) return cb({ error: 'geçersiz' });
     joinVoice(ch, cb, old);
   });
+  // Sesli odaya girme izni: hata metni ya da null. consume=false iken yetkili taşıma izni (voicePass) harcanmaz (ön kontrol için)
+  function voiceDeny(chId, consume) {
+    const isCall = typeof chId === 'string' && chId.startsWith('call:');
+    const f = isCall ? null : findChannel(chId);
+    if (!me) return 'Erişim yok';
+    if (isCall && chatMinorBlock(me, chId.slice(5))) return chatMinorBlock(me, chId.slice(5));
+    if (isCall ? !canAccess(me, chId.slice(5)) || !isPrivateChat(chId.slice(5)) : (!f || !voiceLike(f.c.type) || !(f.s.public || f.s.members.includes(me)) || f.s.bans?.[me] || !seesChannel(f.s, f.c, me))) return 'Erişim yok';
+    if (f && !chPerm(f.s, f.c, me, 'connect')) {
+      const pass = voicePass.get(socket.id);
+      if (!pass || pass.ch !== chId || pass.until < Date.now()) return 'Bu sesli odaya bağlanma iznin yok';
+      if (consume) voicePass.delete(socket.id);
+    }
+    if (f && timedOut(f.s, me)) return 'Susturulduğun için sesli odalara giremezsin';
+    if (f && !f.s.public && f.s.welcome?.enabled && f.s.owner !== me && !f.s.accepted?.[me]) return f.s.applications?.[me]?.st === 'bekliyor' ? 'Katılım başvurun onay bekliyor' : 'Önce sunucu kurallarını kabul etmelisin';
+    { const sb = f && secBlock(f.s, me); if (sb) return sb; }
+    if (f?.c.limit && myVoice !== chId && (voice.get(chId)?.size || 0) >= f.c.limit && !can(f.s, me, 'manageChannels') && f.s.owner !== me) return `Oda dolu (${f.c.limit}/${f.c.limit})`;
+    return null;
+  }
+  // İstemci mikrofonu açmadan önce sorar: izin yoksa mikrofona hiç dokunulmaz
+  socket.on('voiceCan', (chId, cb = () => {}) => { if (typeof cb === 'function') cb({ error: voiceDeny(chId, false) }); });
   function joinVoice(chId, cb, old) {
     const isCall = typeof chId === 'string' && chId.startsWith('call:');
     const f = isCall ? null : findChannel(chId);
-    if (!me) return cb({ error: 'Erişim yok' });
-    if (isCall && chatMinorBlock(me, chId.slice(5))) return cb({ error: chatMinorBlock(me, chId.slice(5)) });
-    if (isCall ? !canAccess(me, chId.slice(5)) || !isPrivateChat(chId.slice(5)) : (!f || !voiceLike(f.c.type) || !(f.s.public || f.s.members.includes(me)) || f.s.bans?.[me] || !seesChannel(f.s, f.c, me))) return cb({ error: 'Erişim yok' });
-    if (f && !chPerm(f.s, f.c, me, 'connect')) {
-      const pass = voicePass.get(socket.id);
-      if (!pass || pass.ch !== chId || pass.until < Date.now()) return cb({ error: 'Bu sesli odaya bağlanma iznin yok' });
-      voicePass.delete(socket.id);
-    }
-    if (f && timedOut(f.s, me)) return cb({ error: 'Susturulduğun için sesli odalara giremezsin' });
-    if (f && !f.s.public && f.s.welcome?.enabled && f.s.owner !== me && !f.s.accepted?.[me]) return cb({ error: f.s.applications?.[me]?.st === 'bekliyor' ? 'Katılım başvurun onay bekliyor' : 'Önce sunucu kurallarını kabul etmelisin' });
-    { const sb = f && secBlock(f.s, me); if (sb) return cb({ error: sb }); }
-    if (f?.c.limit && myVoice !== chId && (voice.get(chId)?.size || 0) >= f.c.limit && !can(f.s, me, 'manageChannels') && f.s.owner !== me) return cb({ error: `Oda dolu (${f.c.limit}/${f.c.limit})` });
+    { const e = voiceDeny(chId, true); if (e) return cb({ error: e }); }
     leaveVoice();
     const room = voice.get(chId) || new Map();
     const peers = [...room].map(([sid, name]) => ({ sid, name, media: voiceMedia.get(sid) || null, old: io.sockets.sockets.get(sid)?.data?.vold || null }));
