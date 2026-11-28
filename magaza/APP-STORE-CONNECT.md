@@ -4,12 +4,17 @@ App Store Connect'e girilecek her şey burada. Mağaza metinleri `fastlane/metad
 
 ## 1. Gönderimden önce (sırayla)
 
-1. **Gerçek iPhone'da test:** sesli oda, özel arama, gelen arama ekranı (CallKit), bildirimler, fotoğraf gönderme, hesap silme.
-2. **APNs:** Yönetim paneli › Mobil bildirimler'e Apple'dan aldığın `.p8` anahtarını yükle. Aynı anahtar hem normal bildirimler hem gelen aramalar (VoIP, `com.kanka.chat.voip`) için çalışır, ayrı sertifika gerekmez.
-3. **Xcode:** Signing & Capabilities'te *Push Notifications* ve *Background Modes › Voice over IP + Remote notifications* açık olmalı (Info.plist'te var). Archive alırken `aps-environment` production olur.
-4. **Universal link:** Team ID artık 2. adımda yüklediğin APNs anahtarındaki Team ID'den otomatik alınıyor (istersen VDS'te `IOS_TEAM_ID` ile ezebilirsin). Anahtarı yükledikten sonra tarayıcıda `kankahq.com/.well-known/apple-app-site-association` adresini açıp JSON göründüğünü kontrol et.
-5. **Demo hesap** (aşağıda, 4. bölüm).
-6. **Ülkeler:** Pricing and Availability › sadece **Türkiye**. ABD/AB yaş doğrulama yasaları ve Çin'in şifreli mesajlaşma beyanı böylece ilk sürüme uygulanmaz.
+Telefon uygulaması artık `Reuskilled/kanka-chat-mobile` (Expo / React Native). iOS derlemesini GitHub Actions (`ios.yml`) yapıyor: sırlar tanımlıysa imzalı IPA üretip TestFlight'a kendisi yüklüyor. Xcode'u elle açmaya gerek yok.
+
+1. **Apple Developer üyeliği** (bireysel, 99 $/yıl). Satıcı adı olarak sahibinin adı soyadı görünür.
+2. **App Store Connect › Uygulamalar › Yeni uygulama:** platform iOS, ad `Kanka Chat`, birincil dil Türkçe, paket kimliği `com.kanka.chat`, SKU `kankachat`.
+3. **App Store Connect API anahtarı** (Users and Access › Integrations › App Store Connect API, rol *App Manager*). `.p8` dosyası, Key ID ve Issuer ID GitHub sırlarına girer: `ASC_KEY` (p8 dosyasının içeriği), `ASC_KEY_ID`, `ASC_ISSUER_ID`, `APPLE_TEAM_ID`. `IOS_DIST_KEY` dağıtım sertifikasının özel anahtarıdır (PEM): Claude üretip verir, sertifikayı CI Apple'da kendisi oluşturur. **Bu dosyanın ve `.p8` anahtarlarının yedeğini parola yöneticisinde tut** (Android'de yükleme anahtarı böyle kayboldu).
+4. **APNs anahtarı** (Certificates, IDs & Profiles › Keys › Apple Push Notifications service). `.p8` dosyasını Yönetim paneli › Mobil bildirimler'e yükle. Team ID buradan otomatik alınır ve `kankahq.com/.well-known/apple-app-site-association` çalışmaya başlar (universal link).
+5. **TestFlight'ta gerçek iPhone testi:** giriş, sesli oda (hoparlör / kulaklık / Bluetooth), özel sesli ve görüntülü arama, bildirimler, fotoğraf ve sesli mesaj gönderme, birlikte izle, Face ID kilidi, hesap silme.
+6. **Demo hesap** (aşağıda, 4. bölüm).
+7. **Ülkeler:** Pricing and Availability › sadece **Türkiye**. ABD/AB yaş doğrulama yasaları ve Fransa'nın şifreleme belgesi böylece ilk sürüme uygulanmaz.
+
+Henüz yok (ilk sürüm için gerekmiyor): CallKit / PushKit (uygulama kapalıyken telefonun kendi arama ekranı) ve iOS ekran paylaşımı. Mağaza metninde ve inceleme notlarında bunlardan bahsetme.
 
 ## 2. Uygulama bilgileri
 
@@ -30,7 +35,16 @@ Açıklama, anahtar kelimeler, tanıtım metni: `fastlane/metadata/tr/`. **Mağa
 
 ## 3. Şifreleme (Export Compliance)
 
-`ITSAppUsesNonExemptEncryption = false` (Info.plist'te). Gerekçe: özel mesaj şifrelemesi iOS'un kendi şifreleme kütüphanesini (WKWebView içinde Web Crypto) standart algoritmalarla kullanır, özel/standart dışı algoritma yok. App Store Connect sorarsa: *"Yalnızca işletim sisteminin sağladığı standart şifrelemeyi kullanıyor"* seçeneği.
+`app.json`'da `usesNonExemptEncryption: true` (ITSAppUsesNonExemptEncryption = YES). Özel mesajlar uçtan uca şifreleniyor (standart algoritmalar: ECDH + AES-GCM). App Store Connect'in sorduğu sorulara cevaplar:
+
+| Soru | Cevap |
+|---|---|
+| Uygulama şifreleme kullanıyor mu? | Evet |
+| Apple'ın işletim sistemindeki şifrelemeye ek olarak ya da onun yerine standart algoritmalar kullanıyor mu? | Evet (standart algoritmalar) |
+| Özel / standart dışı algoritma var mı? | Hayır |
+| Fransa'da yayınlanacak mı? | Hayır (sadece Türkiye) |
+
+ABD ihracat kuralları açısından bu "kitlesel pazar" (5D992.c) yazılımıdır. Her yıl Şubat başında ABD Ticaret Bakanlığı'na (BIS) kısa bir öz-sınıflandırma raporu e-postayla gönderilmesi gerekebilir. Zamanı gelince Claude'dan iste.
 
 ## 4. Demo hesap (inceleme için zorunlu)
 
@@ -53,10 +67,11 @@ DEMO ACCOUNTS (no 2FA)
 Sign in with Account 1 on the device and Account 2 on the web at https://kankahq.com/app to test messaging and calls between them.
 
 NATIVE FEATURES
-  - Incoming private calls use CallKit + PushKit: from Account 2 on the web, open the DM with Account 1 and press the call button; the device shows the native incoming-call screen even when the app is closed.
-  - Push notifications (APNs) for private messages, mentions and friend requests.
-  - Native audio session: speaker / earpiece / Bluetooth route selection in voice rooms.
-  - Universal links for kankahq.com invite and channel links.
+  - Native React Native app (not a web wrapper): voice rooms and private voice/video calls over WebRTC, with speaker / earpiece / Bluetooth route selection.
+  - Push notifications (APNs) for private messages, mentions, calls and friend requests.
+  - Face ID app lock (optional, Profile -> Hesap ve güvenlik).
+  - Watch-together: in a private message, paste a YouTube link and choose "+ -> Birlikte izle"; playback stays in sync for both users (official YouTube embed).
+  - Universal links for kankahq.com invite links.
 
 USER-GENERATED CONTENT (Guideline 1.2)
   - Users must accept the Terms (https://kankahq.com/kosullar), which state zero tolerance for objectionable content, before registering.
@@ -65,10 +80,10 @@ USER-GENERATED CONTENT (Guideline 1.2)
   - Server moderators can delete messages, mute, kick and ban; an automatic moderation filter is available.
 
 ACCOUNT DELETION (Guideline 5.1.1(v))
-  Settings (gear icon) -> Hesap (Account) -> "Hesabı kalıcı olarak sil" (Delete account permanently).
+  "Sen" (Profile) tab -> scroll down -> "Hesabı sil" (Delete account).
 
 AGE
-  Minimum age 13 (date of birth asked at sign-up). Users under 18 must confirm guardian consent.
+  Minimum age 15 (date of birth asked at sign-up, required by Turkish law 5651). Users under 18 must confirm guardian consent.
 
 No in-app purchases. No ads. No third-party analytics or tracking SDKs.
 Contact: kankahq1@gmail.com
@@ -92,7 +107,7 @@ Contact: kankahq1@gmail.com
 | Diğer veriler (doğum tarihi: yaş sınırı ve veli onayı) | Evet | Evet | Uygulama işlevi |
 
 Toplanmayanlar: konum, kişiler, sağlık, finans, tarama geçmişi, arama geçmişi, hassas bilgi, çökme verisi.
-`ios/App/App/PrivacyInfo.xcprivacy` bu tabloyla birebir aynı. Biri değişirse ikisi de değişmeli, `kankahq.com/gizlilik` de.
+`app.json` › `ios.privacyManifests` bu tabloyla birebir aynı. Biri değişirse ikisi de değişmeli, `kankahq.com/gizlilik` de.
 
 ## 7. Yaş derecelendirmesi (2026 anketi)
 
@@ -102,11 +117,11 @@ Toplanmayanlar: konum, kişiler, sağlık, finans, tarama geçmişi, arama geçm
 | Kullanıcılar arası mesajlaşma ve sohbet | Evet |
 | Kısıtlamasız web erişimi | Hayır (sadece kankahq.com açılır) |
 | Şiddet, cinsellik, kumar, alkol/uyuşturucu, korku | Yok |
-| Yaş doğrulama / ebeveyn denetimi | Uygulama içinde yaş kapısı (13+), 18 altına veli onayı |
+| Yaş doğrulama / ebeveyn denetimi | Uygulama içinde yaş kapısı (15+), 18 altına veli onayı |
 | Paylaşılan konum | Hayır |
 | Flört / ilişki | Hayır |
 
-Beklenen derece: **13+** (kullanıcı içeriği ve yabancılarla sohbet nedeniyle). Apple 16+ önerirse kabul et, bu uygulamanın kendi yaş kuralını (15+, 5651 sayılı Kanun) değiştirmez.
+Beklenen derece: **13+** ya da **16+** (kullanıcı içeriği ve yabancılarla sohbet nedeniyle). Hangisini önerirse kabul et; uygulamanın kendi yaş kuralı (15+, 5651 sayılı Kanun) ayrıca uygulama içinde işliyor.
 
 ## 8. Ret gelirse
 
