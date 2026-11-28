@@ -3170,6 +3170,10 @@
   .adob .adob-l { flex: 1; min-width: 0; font-size: 14.5px; color: var(--muted); white-space: nowrap; }
   .adob select { flex: none; padding: 8px 6px; margin: 4px 0; border-radius: 9px; border: 1px solid rgba(255,255,255,.09); background: #121218; color: var(--ink); font: inherit; font-size: 13.5px; cursor: pointer; }
   .adob select:focus { outline: none; border-color: var(--accent); }
+  .bulk-st { margin: 4px 0 14px; padding: 12px 14px; border-radius: 12px; background: #17171d; border: 1px solid rgba(255,255,255,.07); display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
+  .bulk-st.run { border-color: color-mix(in srgb, var(--accent) 45%, transparent); } .bulk-st.pause { border-color: #fbbf2466; }
+  .bulk-st small { color: var(--muted); } .bulk-st span { color: var(--ink); }
+  .bulk-bar { height: 8px; border-radius: 4px; background: #262630; overflow: hidden; } .bulk-bar i { display: block; height: 100%; background: var(--accent); }
   .adob { flex-wrap: wrap; padding: 6px 12px 8px; } .adob .adob-l { flex-basis: calc(100% - 30px); padding-top: 6px; } .adob select { flex: 1; }
   .afield > .ic { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; transition: color .15s; }
   .afield input { flex: 1; min-width: 0; padding: 13px 0; background: none; border: 0; outline: none; font-size: 14.5px; color: var(--ink); }
@@ -21241,10 +21245,48 @@ function adminPanel(el, sub = 'overview') {
         <div><label>Uygulama şifresi</label><input class="field" id="m-pass" type="password" placeholder="${c.hasPass ? '•••• kayıtlı (değiştirmek için yaz)' : 'abcd efgh ijkl mnop'}" style="margin:0"></div></div>
       <div class="st-field"><label>Site adresi (e-postadaki linkler buna gider)</label><input class="field" id="m-url" value="${esc(c.url && !/sslip/.test(c.url) ? c.url : PUB)}"></div>
       <details class="adm-adv"><summary>Gmail dışı bir SMTP kullan</summary><div class="st-field st-2"><div><label>SMTP sunucusu</label><input class="field" id="m-host" value="${esc(c.host || '')}" placeholder="boş = Gmail" style="margin:0"></div><div><label>Port</label><input class="field" id="m-port" type="number" value="${c.port || 465}" style="margin:0"></div></div></details>
-      <div class="rowb" style="justify-content:flex-start"><button class="primary" id="m-save" style="width:auto;padding:11px 20px">Kaydet</button><button class="btns2" id="m-test">${ic('send')} Test e-postası gönder</button></div></div>`;
+      <div class="rowb" style="justify-content:flex-start"><button class="primary" id="m-save" style="width:auto;padding:11px 20px">Kaydet</button><button class="btns2" id="m-test">${ic('send')} Test e-postası gönder</button></div></div>
+      <div class="adm-box" id="bulk-box"><p class="hint">Yükleniyor…</p></div>`;
+    bulkBox(el);
     $('#m-save').onclick = () => socket.emit('adminMail', { set: { user: $('#m-user').value, pass: $('#m-pass').value, url: $('#m-url').value, host: $('#m-host').value, port: $('#m-port').value } }, x => x.error ? toast(x.error) : (toast('Kaydedildi'), adminPanel(el, 'mail')));
     $('#m-test').onclick = () => { $('#m-test').classList.add('busy'); socket.emit('adminMail', { test: true }, x => { $('#m-test')?.classList.remove('busy'); toast(x.error ? x.error : `Test e-postası ${x.to} adresine gönderildi 🎉`, null, false, { type: x.error ? 'err' : 'ok' }); adminPanel(el, 'mail'); }); };
   });
+}
+
+// Toplu duyuru e-postası: taslak, kendine test, kitle seçimi, ilerleme
+const BULK_DRAFT = 'kanka-bulk-draft';
+function bulkBox(el) {
+  const box = $('#bulk-box'); if (!box) return;
+  socket.emit('adminBulk', {}, r => socket.emit('adminBulk', { act: 'count' }, c => {
+    if (!$('#bulk-box')) return;
+    if (r.error) return box.innerHTML = `<p class="hint">${esc(r.error)}</p>`;
+    const j = r.job, run = j && !j.done, d = (() => { try { return JSON.parse(store.get(BULK_DRAFT) || '{}'); } catch { return {}; } })();
+    const when = x => new Date(x).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const prog = j ? `<div class="bulk-st ${run ? (j.paused ? 'pause' : 'run') : 'done'}"><b>${run ? (j.paused ? '⏸ Durduruldu' : '📤 Gönderiliyor') : '✅ Bitti'} · ${esc(j.subject)}</b>
+      <div class="bulk-bar"><i style="width:${j.total ? Math.round((j.sent + j.fail + j.skip) / j.total * 100) : 0}%"></i></div>
+      <span>${j.sent} gönderildi · ${j.fail} hata · ${j.skip} atlandı · ${j.left} kaldı / ${j.total}${run ? ` · bugün ${j.today}/${r.day}` : ''}</span>
+      <small>${esc(j.by)} · ${when(j.at)}${j.done ? ' → ' + when(j.done) : ''}${run && j.today >= r.day ? ' · bugünlük sınır doldu, yarın kendiliğinden devam eder' : ''}</small>
+      ${run ? `<div class="rowb" style="justify-content:flex-start;margin-top:8px"><button class="btns2" id="b-pause">${j.paused ? 'Devam ettir' : 'Durdur'}</button><button class="btns2" id="b-cancel" style="color:#f87171">İptal et</button></div>` : ''}</div>` : '';
+    const aud = r.aud || {};
+    box.innerHTML = `<h4 style="margin:0 0 6px">${ic('send')}Toplu duyuru e-postası</h4>
+      <p class="hint" style="margin:0 0 10px">E-postalar tek tek, ${Math.round((r.gap || 15000) / 1000)} saniye arayla ve günde en fazla ${r.day} tane gider (Gmail sınırı). Her e-postanın altında "duyurulardan çık" linki olur. Botlar, kapatılmış hesaplar ve çıkanlar (${c.off || 0} kişi) atlanır.</p>
+      ${prog}
+      ${run ? '' : `<div class="st-field"><label>Konu</label><input class="field" id="b-subj" maxlength="120" value="${esc(d.subject || '')}" placeholder="Kanka Chat Play Store testine katılır mısın?"></div>
+      <div class="st-field"><label>Başlık (e-postanın içinde)</label><input class="field" id="b-title" maxlength="120" value="${esc(d.title || '')}" placeholder="Test ekibimize katıl"></div>
+      <div class="st-field"><label>Metin <small style="opacity:.6">**kalın** · {ad} = kullanıcı adı</small></label><textarea class="field" id="b-body" rows="9" maxlength="4000" placeholder="Merhaba {ad}, …">${esc(d.body || '')}</textarea></div>
+      <div class="st-field st-2"><div><label>Buton yazısı (isteğe bağlı)</label><input class="field" id="b-btn" maxlength="40" value="${esc(d.btn || '')}" style="margin:0"></div><div><label>Buton linki</label><input class="field" id="b-url" value="${esc(d.url || '')}" placeholder="https://" style="margin:0"></div></div>
+      <div class="st-field"><label>Kime</label><select class="field" id="b-aud">${Object.entries(aud).map(([k, t]) => `<option value="${k}" ${d.aud === k ? 'selected' : ''}>${t} (${c.counts?.[k] ?? '?'} kişi)</option>`).join('')}</select></div>
+      <div class="rowb" style="justify-content:flex-start"><button class="btns2" id="b-test">${ic('send')} Kendime test gönder</button><button class="primary" id="b-start" style="width:auto;padding:11px 20px">Gönderimi başlat</button></div>`}`;
+    const draft = () => ({ subject: $('#b-subj').value, title: $('#b-title').value, body: $('#b-body').value, btn: $('#b-btn').value, url: $('#b-url').value, aud: $('#b-aud').value });
+    box.querySelectorAll('input,textarea,select').forEach(x => x.oninput = x.onchange = () => store.set(BULK_DRAFT, JSON.stringify(draft())));
+    if ($('#b-test')) $('#b-test').onclick = () => { const b = $('#b-test'); b.classList.add('busy'); socket.emit('adminBulk', { act: 'test', ...draft() }, x => { b.classList.remove('busy'); toast(x.error || `Test e-postası ${x.to} adresine gitti, gelen kutuna bak`, null, false, { type: x.error ? 'err' : 'ok' }); }); };
+    if ($('#b-start')) $('#b-start').onclick = () => { const dr = draft(), n = c.counts?.[dr.aud] ?? 0;
+      if (!confirm(`"${dr.subject}" konulu e-posta ${n} kişiye gönderilecek.\n\nGünde en fazla ${r.day} tane gittiği için ${Math.max(1, Math.ceil(n / r.day))} günde biter. Gönderim başladıktan sonra durdurabilirsin ama gidenler geri alınamaz.\n\nKendine test e-postası gönderip kontrol ettin mi?`)) return;
+      socket.emit('adminBulk', { act: 'start', ...dr }, x => { if (x.error) return toast(x.error, null, false, { type: 'err' }); store.set(BULK_DRAFT, null); toast('Gönderim başladı'); bulkBox(el); }); };
+    if ($('#b-pause')) $('#b-pause').onclick = () => socket.emit('adminBulk', { act: j.paused ? 'resume' : 'stop' }, () => bulkBox(el));
+    if ($('#b-cancel')) $('#b-cancel').onclick = () => { if (confirm('Kalan kişilere gönderilmeyecek. Emin misin?')) socket.emit('adminBulk', { act: 'cancel' }, () => bulkBox(el)); };
+    if (run) setTimeout(() => { if ($('#bulk-box') && !document.activeElement?.closest?.('#bulk-box')) bulkBox(el); }, 10000);
+  }));
 }
 
 
