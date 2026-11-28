@@ -52,6 +52,19 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#0b0b0d;font-fam
 #cta{position:absolute;left:50%;top:1080px;width:780px;margin-left:-390px;height:150px;border-radius:80px;background:#D4FF00;color:#111;display:flex;align-items:center;justify-content:center;font-size:76px;font-weight:900;box-shadow:0 30px 90px #D4FF0055}
 #s5 .c{position:absolute;left:0;right:0;top:1290px;text-align:center;font-size:50px;font-weight:800;color:#9a9a92}
 #logo{position:absolute;left:50%;top:1500px;width:150px;margin-left:-75px;border-radius:34px}
+
+/* yeni giriş: kelime başına sert kesme */
+#intro{position:absolute;inset:0;overflow:hidden}
+.ib{position:absolute;left:-40px;right:-40px;top:-60px;bottom:-60px;background-size:cover;background-position:center}
+.ib::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,#000a,#0006 40%,#000c)}
+.iw{position:absolute;left:0;right:0;top:50%;text-align:center;font-weight:900;text-transform:uppercase;letter-spacing:-6px;line-height:.9;
+  text-shadow:0 10px 0 #000,0 0 60px #000c;-webkit-text-stroke:4px #000;paint-order:stroke fill}
+#iw1{font-size:250px;color:#fff;margin-top:-125px}
+#iw2{font-size:124px;color:#D4FF00;margin-top:-110px;letter-spacing:-6px}
+#iw2 small{display:block;font-size:110px;color:#fff;letter-spacing:-3px;margin-bottom:10px}
+#iw3{font-size:230px;color:#fff;top:200px}
+#ilogo{position:absolute;left:50%;top:460px;width:220px;height:220px;margin-left:-110px;border-radius:70px;box-shadow:0 0 120px #D4FF0088}
+#iyap{position:absolute;inset:0;background:radial-gradient(900px 900px at 50% 30%,#D4FF0033,transparent 65%)}
 #flash{background:#fff;opacity:0}
 </style></head><body>
 <div class="S" id="bg"></div><div class="S" id="grain"></div>
@@ -70,6 +83,15 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#0b0b0d;font-fam
   <div id="warn">300 dolunca<br><b>bir daha verilmeyecek</b></div></div>
 <div id="s5"><div class="a big">KAÇINCI<br><span class="lime">OLACAKSIN?</span></div><div class="b">👀</div>
   <div id="cta">kankahq.com</div><div class="c">ücretsiz · telefon, web, masaüstü</div><img id="logo" src="k/logo.png"></div>
+<div id="intro">
+  <div class="ib" id="ib1" style="background-image:url(e2/vid-1-kamera.jpg)"></div>
+  <div class="ib" id="ib2" style="background-image:url(e2/vm-kanal.jpg)"></div>
+  <div id="iyap"></div>
+  <div class="iw" id="iw1">KENDİ</div>
+  <div class="iw" id="iw2"><small>KENDİ</small>DISCORD'UMUZU</div>
+  <img id="ilogo" src="k/logo.png">
+  <div class="iw" id="iw3">YAPTIK!</div>
+</div>
 <div class="S" id="flash"></div>
 <script>
 const TOT=22.5;
@@ -91,16 +113,29 @@ function setT(t){
   document.body.style.setProperty('--tc',t<S3?'#D4FF00':t<S4?'#b07cff':t<S5?'#ff5a7a':'#D4FF00');
   // S1: 0-3
   const o1=t<S2-.2?1:1-eo((t-(S2-.2))/.2);
-  show('s1',o1);show('phones',o1);
+  show('s1',0);show('phones',t>=W3?o1:0);$('intro').style.display=t<S2?'block':'none';
+  if(t<S2){
+    const shake=(t0,a)=>t>=t0&&t<t0+.22?Math.sin((t-t0)*95)*a*(1-(t-t0)/.22):0;
+    const c=t<W2?1:t<W3?2:3;
+    $('ib1').style.display=c===1?'block':'none';$('ib2').style.display=c===2?'block':'none';$('iyap').style.display=c===3?'block':'none';
+    const z1=1.25-.2*eo((t-W1)/.9),z2=1.3-.25*eo((t-W2)/.9);
+    $('ib1').style.transform=`scale(${z1}) translateX(${shake(W1,24)}px)`;$('ib2').style.transform=`scale(${z2}) rotate(-2deg) translateX(${shake(W2,24)}px)`;
+    const pk=(t0)=>{const p=cl((t-t0)/.13);return 1.2-.2*eo(p)};
+    $('iw1').style.display=c===1?'block':'none';$('iw1').style.transform=`scale(${pk(W1)}) rotate(-3deg)`;
+    $('iw2').style.display=c===2?'block':'none';$('iw2').style.transform=`scale(${pk(W2)}) rotate(3deg)`;
+    $('iw3').style.display=c===3?'block':'none';$('iw3').style.transform=`translateX(${shake(W3,30)}px) scale(${pk(W3)})`;
+    $('ilogo').style.display=c===3?'block':'none';const lp=back((t-W3)/.3);$('ilogo').style.transform=`scale(${lp}) rotate(${(1-cl((t-W3)/.3))*-30}deg)`;
+    $('intro').style.opacity=t>S2-.15?1-cl((t-(S2-.15))/.15):1;
+  }
   if(o1>0){
     slam($('w1'),W1,t);slam($('w2'),W2,t);slam($('w3'),W3,t);
     const sh=t>=W3&&t<W3+.25?Math.sin(t*90)*14*(1-(t-W3)/.25):0,up=eo((t-(W2+.3))/.5);$('s1').style.transform=`translate(${sh}px,${(1-up)*560}px)`;
-    const P0=W2+.3,pp=eo((t-P0)/.6);$('phones').style.opacity=t<P0?0:o1;const _=0,fl2=Math.sin(t*2.2)*8;
+    const P0=W3+.05,pp=eo((t-P0)/.35);$('phones').style.opacity=t<P0?0:o1;const _=0,fl2=Math.sin(t*2.2)*8;
     $('p2').style.cssText+=`;left:345px;top:${60+(1-pp)*900+fl2}px;transform:scale(1.05)`;
-    $('p1').style.cssText+=`;left:70px;top:${150+(1-eo((t-P0-.1)/.6))*900-fl2}px;transform:rotate(-9deg) scale(.92)`;
-    $('p3').style.cssText+=`;left:620px;top:${150+(1-eo((t-P0-.2)/.6))*900+fl2}px;transform:rotate(9deg) scale(.92)`;
+    $('p1').style.cssText+=`;left:70px;top:${150+(1-eo((t-P0-.05)/.35))*900-fl2}px;transform:rotate(-9deg) scale(.92)`;
+    $('p3').style.cssText+=`;left:620px;top:${150+(1-eo((t-P0-.1)/.35))*900+fl2}px;transform:rotate(9deg) scale(.92)`;
   }
-  flash(W1,.6);flash(W3,.4);
+  flash(W2,.35,.1);flash(W3,.7,.18);
   // S2: 3-6 özellikler
   const in2=t>=S2-.1&&t<FE+.1;show('s2',in2?cl((t-(S2-.1))/.1)*(t>FE-.05?1-cl((t-(FE-.05))/.15):1):0);
   if(in2){let i=0;for(let k=0;k<4;k++)if(t>=FT[k])i=k;const lt=t-FT[i],p=back(lt/.22);
