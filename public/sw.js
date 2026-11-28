@@ -1,25 +1,38 @@
-// Kanka Chat service worker: uygulama kabuğunu önbellekte tutar, çevrimdışıyken de açılır
-const CACHE = 'kanka-v277';
+// Kanka Chat service worker: uygulama dosyalarını ve resimleri önbellekte tutar; sunucuya ulaşılamazsa bekleme sayfası gösterir
+const CACHE = 'kanka-v278';
 const SHELL = ['/app', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
+// Önbelleğe yazma: sadece tam (200) ve küçük yanıtlar. Parça (Range/206) yanıtlar, video/ses ve yarıda kesilen indirmeler
+// Cache.put'ta hata veriyordu (konsolda "Cache.put() encountered a network error"); hata yakalanır, uygulama etkilenmez.
+const MEDIA = /^(video|audio)\//;
+function keep(req, res) {
+  if (!res || res.status !== 200 || res.type !== 'basic' || req.headers.has('range')) return;
+  const t = res.headers.get('content-type') || '', n = +res.headers.get('content-length') || 0;
+  if (MEDIA.test(t) || n > 8e6) return;
+  const c = res.clone(); caches.open(CACHE).then(x => x.put(req, c)).catch(() => {});
+}
+const cacheFirst = e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => { keep(e.request, res); return res; })));
+// Sunucuya ulaşılamazsa (yeniden başlarken ya da internet gidince) tarayıcının hata sayfası yerine bu sayfa çıkar ve kendi kendine yeniden dener
+const offline = () => new Response(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kanka Chat</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#09090b;color:#f4f4f5;font-family:Segoe UI,Arial,sans-serif;text-align:center}.c{padding:24px}.d{width:42px;height:42px;margin:0 auto 18px;border-radius:50%;border:4px solid #26262c;border-top-color:#d4ff00;animation:r 1s linear infinite}@keyframes r{to{transform:rotate(1turn)}}h1{font-size:20px;margin:0 0 8px}p{color:#a1a1aa;margin:0;font-size:14.5px}</style></head>
+<body><div class="c"><div class="d"></div><h1>Kanka'ya bağlanılıyor…</h1><p>Sunucu birkaç saniyeliğine yeniden başlıyor olabilir ya da internetin gitmiş olabilir.<br>Bağlantı gelince sayfa kendiliğinden açılır.</p></div>
+<script>let n=0;const t=()=>fetch(location.href,{cache:'no-store'}).then(r=>{if(r.ok)location.reload();else throw 0}).catch(()=>setTimeout(t,Math.min(15000,2000+n++*1000)));setTimeout(t,2000);addEventListener('online',()=>location.reload());</script></body></html>`,
+  { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (e.request.method !== 'GET' || u.origin !== location.origin || u.pathname.startsWith('/socket.io')) return;
-  if (u.pathname.startsWith('/_k/')) { // uygulama paketi: adı içeriğe göre değişir, önbellekteki hep doğru
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => { if (res.ok) { const c = res.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); } return res; })));
-    return;
-  }
+  if (u.pathname.startsWith('/_k/')) return cacheFirst(e); // uygulama paketi: adı içeriğe göre değişir, önbellekteki hep doğru
   if (u.pathname.startsWith('/uploads/') || u.pathname.startsWith('/gimg') || /^\/fonts\/.+\.woff2$/.test(u.pathname)) { // resimler ve yazı tipleri: önce önbellek
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => { if (res.ok) { const c = res.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); } return res; })));
-    return;
+    if (e.request.headers.has('range')) return; // video/ses parça parça gelir: tarayıcıya bırak
+    return cacheFirst(e);
   }
-  e.respondWith(fetch(e.request).then(res => { // diğerleri: önce ağ, olmazsa önbellek
-    if (res.ok) { const c = res.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); }
-    return res;
-  }).catch(() => caches.match(e.request).then(r => r || (e.request.mode === 'navigate' ? caches.match('/app') : undefined))));
+  const nav = e.request.mode === 'navigate';
+  e.respondWith(fetch(e.request).then(res => { keep(e.request, res); return res; }) // diğerleri: önce ağ, olmazsa önbellek
+    // Sayfa açılışı sunucusuz çalışamaz (Socket.IO gerekir): önbellekteki kabuk yerine bekleme sayfası. Diğerleri önbellekten.
+    .catch(() => nav ? offline() : caches.match(e.request).then(r => r || Response.error())));
 });
 // Telefona bildirim: uygulama kapalıyken sunucudan gelir
 // Uçtan uca şifreli mesaj: sunucu içeriği bilmez; önizleme bu cihazda kayıtlı sohbet anahtarıyla burada açılır
