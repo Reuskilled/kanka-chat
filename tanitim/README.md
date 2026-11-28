@@ -16,5 +16,6 @@ ffmpeg -i out/yk2-v.mp4 -i out/yk2.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a
 - `beta50.html` + `mixb50.py`: "Kendi Discord'umuzu yaptık" → Beta Tester rozeti için 50 yer kaldı (15 sn)
 - `beta50s.html` + `mixb50s.py`: aynı videonun ElevenLabs seslendirmeli sürümü (22,5 sn). Sahne zamanları dosyanın başındaki sabitlerde; ses `sidechaincompress` ile müziğin üstüne bindirilir
 - `beta50v.html` (+ `b50kod.js`): beta 50'nin ikinci tarzı: gerçek kod akışı, ekran kaydı görünümü, CapCut tarzı altyazı. Ses: `mixb50s.py` + seslendirme (beta50s ile aynı zamanlar)
+- `beta50p.html` + `mix8.py`: beta 50'nin 8-bit sürümü. 270×480 çizilir, `node r8.js v beta50p` piksel piksel 1080×1920'ye büyütür. Yazı tipi `fonts/` (Press Start 2P, OFL); fontta İ olmadığı için noktası CSS ile çiziliyor
 - `k/` logo, `e2/` telefon uygulaması ekran görüntüleri, `f2/` eski web ekranları
 - #1'in `rr/` ekran görüntüleri büyük olduğu için repoda yok.
