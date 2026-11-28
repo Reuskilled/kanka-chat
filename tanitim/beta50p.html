@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<!-- Beta 50, 8-bit sürüm. 270x480 çizilir (r8.js ile 1080x1920'ye piksel piksel büyütülür). Seslendirme zamanları beta50s ile aynı.
+     Başlık ekranı → "?" blokları (özellikler) → sandıktan ITEM GET (rozet) → boss barı gibi kontenjan → CONTINUE? -->
+<style>
+@font-face{font-family:P;src:url(fonts/press-start-2p-latin-ext-400-normal.woff2);unicode-range:U+0100-024F}
+@font-face{font-family:P;src:url(fonts/press-start-2p-latin-400-normal.woff2)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:270px;height:480px;overflow:hidden;background:#000;font-family:P,monospace;color:#fcfcfc;-webkit-font-smoothing:none;font-smooth:never;image-rendering:pixelated}
+img,canvas{image-rendering:pixelated}
+#game{position:absolute;inset:0;overflow:hidden}
+.L{position:absolute;inset:0;overflow:hidden;display:none}
+.e{font-family:'Noto Color Emoji';line-height:1}
+/* başlık */
+#title{background:#0f0f2b}
+#stars i{position:absolute;width:2px;height:2px;background:#fcfcfc}
+.tw{position:absolute;left:0;right:0;text-align:center;text-shadow:2px 2px 0 #e83030,4px 4px 0 #000}
+#t1{top:110px;font-size:24px}#t2{top:150px;font-size:16px;color:#b8f400}#t3{top:180px;font-size:32px;color:#fcb800}
+#tlogo{position:absolute;left:111px;top:250px;width:48px;height:48px}
+#press{position:absolute;left:0;right:0;top:350px;text-align:center;font-size:8px}
+#copy{position:absolute;left:0;right:0;top:450px;text-align:center;font-size:8px;color:#7c7c7c}
+/* platform */
+#plat{background:#5c94fc}
+.cloud{position:absolute;height:12px;background:#fcfcfc;box-shadow:4px -6px 0 -2px #fcfcfc,12px -8px 0 -2px #fcfcfc}
+#world{position:absolute;left:0;top:0;height:480px;width:2000px}
+#ground{position:absolute;left:0;top:360px;width:2000px;height:120px;background:
+  linear-gradient(#000 0 2px,transparent 2px) 0 6px/16px 16px,linear-gradient(90deg,#000 0 2px,transparent 2px) 0 6px/16px 16px,#c84c0c}
+#ground::before{content:'';position:absolute;left:0;right:0;top:0;height:6px;background:#00a800;box-shadow:0 2px 0 #005800}
+.blk{position:absolute;top:260px;width:16px;height:16px;background:#fcb800;box-shadow:inset -2px -2px 0 #c84c0c,inset 2px 2px 0 #fce0a8;color:#c84c0c;font-size:8px;line-height:16px;text-align:center}
+.blk.used{background:#985828;box-shadow:inset -2px -2px 0 #503000,inset 2px 2px 0 #c88850;color:transparent}
+.item{position:absolute;top:240px;left:0;width:20px;margin-left:-2px;text-align:center;font-size:20px}
+#flab{position:absolute;left:0;right:0;top:120px;text-align:center;font-size:12px;color:#fcfcfc;text-shadow:2px 2px 0 #000}
+#plus{position:absolute;font-size:8px;color:#fcb800;text-shadow:1px 1px 0 #000}
+.pipe{position:absolute;top:328px;width:28px;height:32px;background:#00a800;box-shadow:inset 4px 0 0 #80d010,inset -4px 0 0 #005800}
+.pipe::before{content:'';position:absolute;left:-3px;top:0;width:34px;height:10px;background:#00a800;box-shadow:inset 4px 0 0 #80d010,inset -4px 0 0 #005800,0 2px 0 #000}
+/* zindan */
+#dun{background:#1c1028}
+#wall{position:absolute;inset:0;background:linear-gradient(#000 0 2px,transparent 2px) 0 0/24px 12px,linear-gradient(90deg,#000 0 2px,transparent 2px) 0 0/24px 12px,#3c2050;opacity:.9}
+#floor{position:absolute;left:0;right:0;top:360px;bottom:0;background:linear-gradient(#000 0 2px,transparent 2px) 0 0/16px 8px,#504060}
+#rays{position:absolute;left:135px;top:330px;width:0;height:0}
+#rays i{position:absolute;left:-2px;bottom:0;width:4px;height:200px;background:linear-gradient(#fcfc0000,#fcf8a8);transform-origin:50% 100%}
+#chest{position:absolute;left:119px;top:330px;width:32px;height:30px}
+#chest .b{position:absolute;left:0;bottom:0;width:32px;height:18px;background:#985828;box-shadow:inset 0 -2px 0 #503000,inset 0 6px 0 #c88850}
+#chest .lid{position:absolute;left:0;top:0;width:32px;height:12px;background:#c88850;box-shadow:inset 0 2px 0 #fce0a8,inset 0 -2px 0 #503000;transform-origin:0 100%}
+#chest .lock{position:absolute;left:13px;top:10px;width:6px;height:6px;background:#fcb800}
+#bdg{position:absolute;left:119px;top:280px;width:32px;height:32px;border-radius:50%;background:#9878f8;box-shadow:0 0 0 2px #fcfcfc,0 0 0 4px #000;display:grid;place-items:center;font-size:18px}
+#iget{position:absolute;left:0;right:0;top:110px;text-align:center}
+#iget .a{font-size:16px;color:#fcb800;text-shadow:2px 2px 0 #e83030}
+#iget .b{margin-top:12px;font-size:10px;color:#fcfcfc}
+#iget .c{margin-top:8px;font-size:8px;color:#b8a8f8}
+#bang{position:absolute;font-size:16px;color:#fcb800;text-shadow:2px 2px 0 #000}
+/* boss barı */
+#boss{background:#000}
+#bh{position:absolute;left:14px;right:14px;top:56px;font-size:8px;display:flex;justify-content:space-between}
+#bar{position:absolute;left:14px;right:14px;top:70px;height:16px;border:2px solid #fcfcfc;background:#3c0000;padding:2px}
+#barf{height:100%;background:repeating-linear-gradient(90deg,#b8f400 0 6px,#80b000 6px 8px)}
+#grid{position:absolute;left:35px;top:110px;width:200px;display:grid;grid-template-columns:repeat(20,8px);gap:2px}
+#grid i{width:8px;height:8px;background:#3c3c3c}
+#grid i.f{background:#7c7c7c;box-shadow:inset -2px -2px 0 #4c4c4c}
+#grid i.l{background:#b8f400;box-shadow:inset -2px -2px 0 #80b000}
+#gl{position:absolute;left:0;right:0;top:268px;text-align:center;font-size:8px;color:#bcbcbc}
+#b50{position:absolute;left:0;right:0;top:160px;text-align:center;font-size:72px;color:#b8f400;text-shadow:4px 4px 0 #e83030,8px 8px 0 #000;z-index:2}
+#b50y{position:absolute;left:0;right:0;top:248px;text-align:center;font-size:16px;z-index:2;text-shadow:2px 2px 0 #000}
+#gover{position:absolute;left:0;right:0;top:300px;text-align:center;font-size:8px;line-height:14px}
+#gover b{font-weight:normal;color:#e83030;font-size:12px}
+/* devam */
+#cont{background:#000}
+#ct{position:absolute;left:0;right:0;top:80px;text-align:center;font-size:20px}
+#cn{position:absolute;left:0;right:0;top:120px;text-align:center;font-size:48px;color:#fcb800}
+#ins{position:absolute;left:0;right:0;top:200px;text-align:center;font-size:8px;color:#bcbcbc}
+#url{position:absolute;left:30px;right:30px;top:222px;height:30px;border:2px solid #fcfcfc;background:#000;font-size:12px;line-height:26px;padding-left:8px;color:#b8f400}
+#url i{display:inline-block;width:8px;height:12px;background:#b8f400;vertical-align:-2px}
+#free{position:absolute;left:0;right:0;top:268px;text-align:center;font-size:8px;color:#7c7c7c;line-height:14px}
+#clogo{position:absolute;left:111px;top:300px;width:48px;height:48px}
+#coin{position:absolute;left:131px;width:8px;height:12px;border-radius:4px;background:#fcb800;box-shadow:inset -2px 0 0 #c84c0c}
+/* ortak */
+.hero{position:absolute;width:20px;height:24px}
+#hud{position:absolute;left:0;right:0;top:0;height:40px;padding:8px 10px 0;font-size:8px;line-height:12px;display:flex;justify-content:space-between;text-shadow:1px 1px 0 #000;z-index:5}
+#box{position:absolute;left:6px;right:6px;top:398px;height:74px;background:#000;border:2px solid #fcfcfc;box-shadow:0 0 0 2px #000,inset 0 0 0 2px #000,inset 0 0 0 4px #7c7c7c;z-index:6;padding:16px 10px 0;font-size:8px;line-height:14px}
+#who{position:absolute;left:10px;top:-8px;background:#000;padding:0 4px;color:#b8f400;font-size:8px;line-height:12px}
+#txt b{font-weight:normal;color:#b8f400}
+#tri{position:absolute;right:8px;bottom:6px;font-size:8px}
+#iris{position:absolute;inset:0;z-index:20;pointer-events:none}
+i.I{font-style:normal;position:relative}i.I::after{content:'';position:absolute;left:37.5%;top:-25%;width:25%;height:20%;background:currentColor}
+#flash{position:absolute;inset:0;background:#fcfcfc;opacity:0;z-index:30}
+#scan{position:absolute;inset:0;z-index:25;background:repeating-linear-gradient(#0000 0 3px,#0003 3px 4px);pointer-events:none}
+</style></head><body>
+<div id="game">
+ <div class="L" id="title"><div id="stars"></div><div class="tw" id="t1">KENDİ</div><div class="tw" id="t2">DISCORD'UMUZU</div><div class="tw" id="t3">YAPTIK!</div>
+   <img id="tlogo"><div id="press">PRESS START</div><div id="copy">© 2026 KANKA CHAT</div></div>
+ <div class="L" id="plat"><div class="cloud" style="left:30px;top:70px;width:28px"></div><div class="cloud" style="left:190px;top:100px;width:36px"></div>
+   <div id="world"><div id="ground"></div></div><div id="flab"></div><div id="plus"></div></div>
+ <div class="L" id="dun"><div id="wall"></div><div id="floor"></div><div id="rays"></div>
+   <div id="chest"><div class="b"></div><div class="lid"></div><div class="lock"></div></div><div id="bdg" class="e">🧪</div>
+   <div id="iget"><div class="a">ITEM GET!</div><div class="b">BETA TESTER ROZETİ</div><div class="c">İLK 300 KİŞİYE ÖZEL</div></div><div id="bang">!</div></div>
+ <div class="L" id="boss"><div id="bh"><span>BETA ROZETİ</span><span id="hp">300/300</span></div><div id="bar"><div id="barf"></div></div>
+   <div id="grid"></div><div id="gl"></div><div id="b50">50</div><div id="b50y">YER KALDI!</div>
+   <div id="gover">300 DOLUNCA<br><b>GAME OVER</b><br>BİR DAHA VERİLMEYECEK</div></div>
+ <div class="L" id="cont"><div id="ct">CONTINUE?</div><div id="cn">9</div><div id="ins">INSERT COIN ▼</div><div id="url"></div><div id="coin"></div>
+   <div id="free">ÜCRETSİZ<br>TELEFON · WEB · MASAÜSTÜ</div><img id="clogo"></div>
+ <canvas class="hero" id="hero" width="10" height="12"></canvas>
+ <div id="hud"><div>KANKA<br><span id="sc">000000</span></div><div><span class="e" style="font-size:8px">🪙</span>×<span id="co">00</span></div><div>DÜNYA<br><span id="wd">1-1</span></div></div>
+ <div id="box"><div id="who">KANKA</div><div id="txt"></div><div id="tri">▼</div></div>
+ <canvas id="iris" width="270" height="480"></canvas>
+</div>
+<div id="scan"></div><div id="flash"></div>
+<script>
+const TOT=22.5;
+const W2=1.14,W3=2.3,S2=3.24,S3=8.0,BR=9.4,BT=11.0,S4=12.5,DROP=15.15,WARN=16.38,S5=18.33,CTA=19.58;
+const FT=[3.24,4.31,4.98,6.0,7.14];
+const ITEMS=[['🎙️','SESLİ ODALAR'],['📹','KAMERA'],['🖥️','EKRAN PAYLAŞIMI'],['🔊','SESLİ MESAJ'],['🃏','OYUNLAR']];
+const MARKS=[{t:0,k:'t1'},{t:W2,k:'t2'},{t:W3,k:'t3'},{t:2.95,k:'start'}];
+FT.forEach((t,i)=>{MARKS.push({t:t-.05,k:'jump',i},{t:t+.12,k:'coin',i})});
+MARKS.push({t:S3,k:'dun'},{t:BR,k:'open'},{t:BT,k:'get'},{t:S4,k:'boss'},{t:DROP,k:'drop'},{t:WARN,k:'warn'},{t:S5,k:'cont'},{t:CTA,k:'ins'});
+for(let i=0;i<11;i++)MARKS.push({t:CTA+i*.08,k:'type'});
+// diyalog: seslendirmeyle kelime kelime
+const CAP=[
+ [['SESLİ',3.24],['ODALAR,',3.7]],[['KAMERA,',4.31]],[['EKRAN',4.98],['PAYLAŞIMI,',5.35]],[['SESLİ',6.0],['MESAJ,',6.4]],[['OYUNLAR.',7.14]],
+ [['AMA',8.0],['ASIL',8.3],['OLAY',8.6],['ŞU:',8.9]],[['İLK',9.4],['<b>300</b>',9.65],['KİŞİYE',10.1],['ÖZEL',10.55]],[['<b>BETA',11.0],['TESTER</b>',11.3],['ROZETİ.',11.75]],
+ [['<b>250</b>',12.52],['KİŞİ',13.05],['KAPTI',13.35],['BİLE.',13.65]],[['SADECE...',14.21]],[['<b>50</b>',15.15],['YER',15.5],['KALDI!',15.8]],
+ [['DOLUNCA',16.38],['BİR',16.95],['DAHA',17.2],['VERİLMEYECEK.',17.45]],[['KAÇINCI',18.33],['OLACAKSIN?',18.75]],[['<b>KANKAHQ.COM</b>',CTA]]];
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const eo=x=>1-Math.pow(1-cl(x),3);
+const q=v=>Math.round(v); // piksele yapıştır
+// karakter (10x12, 2 kat)
+const PAL={L:'#b8f400',S:'#fcb898',H:'#503000',E:'#000',B:'#3cbcfc',P:'#5050a0',K:'#503000'};
+const FR={
+ a:['...LLLL...','..LLLLLLL.','..HSSES...','..SSSSSS..','...SSSS...','..BBBBBB..','.SBBBBBBS.','.SBBBBBBS.','..BBBBBB..','..PPPPPP..','..PP..PP..','.KK....KK.'],
+ b:['...LLLL...','..LLLLLLL.','..HSSES...','..SSSSSS..','...SSSS...','..BBBBBB..','..BBBBBBS.','.SBBBBBB..','..BBBBBB..','..PPPPPP..','...PPPP...','...KKKK...'],
+ j:['S..LLLL..S','S.LLLLLLLS','S.HSSES..S','.SSSSSSSS.','...SSSS...','..BBBBBB..','..BBBBBB..','..BBBBBB..','..BBBBBB..','..PPPPPP..','..PP..PP..','.KK....KK.'],
+ u:['S..LLLL..S','S.LLLLLLLS','S.HSSES..S','SSSSSSSSSS','...SSSS...','..BBBBBB..','..BBBBBB..','..BBBBBB..','..BBBBBB..','..PPPPPP..','..PP..PP..','.KK....KK.']};
+const hc=$('hero').getContext('2d');
+function drawHero(f,flip){hc.clearRect(0,0,10,12);FR[f].forEach((r,y)=>[...r].forEach((c,x)=>{if(c!=='.'){hc.fillStyle=PAL[c];hc.fillRect(flip?9-x:x,y,1,1)}}))}
+// logo: 48 piksele indir
+const lg=new Image();lg.src='k/logo.png';lg.onload=()=>{const c=document.createElement('canvas');c.width=c.height=24;const x=c.getContext('2d');x.imageSmoothingEnabled=true;x.drawImage(lg,0,0,24,24);const u=c.toDataURL();$('tlogo').src=u;$('clogo').src=u};
+// yıldızlar
+let sd=7;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
+const ST=[...Array(60)].map(()=>[rnd()*270,rnd()*480,rnd()<.3?2:1]);$('stars').innerHTML=ST.map(()=>'<i></i>').join('');const SI=[...$('stars').children];
+// bloklar ve borular
+const BX=i=>70+130*i;
+const W=$('world');ITEMS.forEach((it,i)=>{W.insertAdjacentHTML('beforeend',`<div class="blk" id="bk${i}" style="left:${BX(i)}px">?</div><div class="item e" id="it${i}" style="left:${BX(i)}px">${it[0]}</div>`)});
+[[140],[400],[660],[920]].forEach(([x])=>W.insertAdjacentHTML('beforeend',`<div class="pipe" style="left:${x}px"></div>`));
+// 300 kare
+$('grid').innerHTML='<i></i>'.repeat(300);const GI=[...$('grid').children];
+// ışınlar
+for(let i=0;i<12;i++)$('rays').insertAdjacentHTML('beforeend','<i></i>');const RI=[...$('rays').children];
+const ic=$('iris').getContext('2d');
+function iris(r){ic.clearRect(0,0,270,480);if(r>=330)return;ic.fillStyle='#000';ic.fillRect(0,0,270,480);ic.globalCompositeOperation='destination-out';
+  // pikselli daire
+  const s=4;for(let y=0;y<480;y+=s)for(let x=0;x<270;x+=s){const dx=x+2-135,dy=y+2-260;if(dx*dx+dy*dy<r*r)ic.fillRect(x,y,s,s)}ic.globalCompositeOperation='source-over'}
+const TI=x=>String(x).replace(/İ/g,'<i class=I>I</i>');
+function fixI(el){const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);const ns=[];while(w.nextNode())if(w.currentNode.nodeValue.includes('İ'))ns.push(w.currentNode);
+  ns.forEach(n=>{const sp=document.createElement('span');sp.innerHTML=TI(n.nodeValue);n.replaceWith(sp)})}
+fixI(document.body);
+const pad=(n,l)=>String(n).padStart(l,'0');
+let lastCap=-1;
+function setT(t){
+  let fl=0;const flash=(t0,a,d=.1)=>{const x=t-t0;if(x>=0&&x<d)fl=Math.max(fl,a)};
+  const show=(id,on)=>{$(id).style.display=on?'block':'none'};
+  const hero=$('hero');let hx=-99,hy=0,hf='a',flip=false;
+  let shx=0;const shake=(t0,a,d=.2)=>{if(t>=t0&&t<t0+d)shx+=(Math.floor((t-t0)*30)%2?a:-a)};
+  // 1) başlık
+  show('title',t<S2);
+  if(t<S2){
+    SI.forEach((s,i)=>{const st=ST[i];s.style.left=q(st[0])+'px';s.style.top=q((st[1]+t*(st[2]===2?120:50))%480)+'px';s.style.width=s.style.height=st[2]+'px'});
+    [['t1',0,110],['t2',W2,150],['t3',W3,180]].forEach(([id,t0,y])=>{const e=$(id);e.style.display=t>=t0?'block':'none';const p=cl((t-t0)/.15);
+      const b=p<1?-80*(1-p):(t-t0<.3?-6*Math.sin((t-t0-.15)/.15*Math.PI):0);e.style.top=q(y+b)+'px'});
+    $('tlogo').style.display=t>=W3+.1?'block':'none';$('tlogo').style.top=q(250-(t<W3+.4?Math.sin((t-W3-.1)/.3*Math.PI)*12:0))+'px';
+    $('press').style.display=t>=W3+.2&&(t<2.95?Math.floor(t*3)%2===0:Math.floor(t*16)%2===0)?'block':'none';
+    shake(0,2);shake(W2,2);shake(W3,4,.3);
+  }
+  flash(0,.6,.07);flash(W3,1,.1);
+  // 2) platform
+  show('plat',t>=S2&&t<S3);
+  let coins=0,score=0;
+  FT.forEach((ft,i)=>{if(t>=ft+.12){coins++;score+=100}});if(t>=BT)score+=1000;if(t>=DROP)score+=500;
+  if(t>=S2&&t<S3){
+    // dünya kayması: blok i, karakterin tam üstüne FT[i]'de gelir
+    let off=0;for(let i=0;i<5;i++){if(t>=FT[i]+.35){const nx=i<4?FT[i+1]-.05:S3;off=130*i+130*cl((t-FT[i]-.35)/(nx-FT[i]-.35))}else if(t>=FT[i]-.05)off=130*i}
+    W.style.transform=`translateX(${-q(off)}px)`;
+    hx=65;hy=336;let moving=false;
+    let jumping=false;FT.forEach((ft,i)=>{const d=t-(ft-.05);if(d>=0&&d<.4){jumping=true;const p=d/.4;hy=336-q(60*Math.sin(p*Math.PI))}});
+    for(let i=0;i<5;i++){const nx=i<4?FT[i+1]-.05:S3;if(t>=FT[i]+.35&&t<nx)moving=true}
+    hf=jumping?'j':moving?(Math.floor(t*10)%2?'a':'b'):'a';
+    ITEMS.forEach((it,i)=>{const bk=$('bk'+i),im=$('it'+i),d=t-(FT[i]+.12);bk.className='blk'+(d>=0?' used':'');
+      bk.style.top=(260-(d>=0&&d<.1?4:0))+'px';im.style.display=d>=0?'block':'none';im.style.top=q(240-Math.min(30,d*200)+Math.sin(t*6+i)*2)+'px'});
+    let cur=-1;FT.forEach((ft,i)=>{if(t>=ft+.12)cur=i});
+    const fl2=$('flab');fl2.innerHTML=cur>=0?TI(ITEMS[cur][1]+'!'):'';fl2.style.top=q(120-(cur>=0&&t-FT[cur]-.12<.1?6:0))+'px';
+    const pl=$('plus');const pd=cur>=0?t-FT[cur]-.12:9;pl.style.display=pd<.6?'block':'none';pl.textContent='+100';pl.style.left='72px';pl.style.top=q(250-pd*60)+'px';
+  }
+  // 3) zindan
+  show('dun',t>=S3&&t<S4);
+  if(t>=S3&&t<S4){
+    hx=70;hy=336;hf=t>=BT?'u':'a';
+    const ch=$('chest');ch.style.left=q(119+(t<BR&&t>S3+.6?(Math.floor(t*20)%2?2:-2):0))+'px';
+    const op=cl((t-BR)/.15);ch.querySelector('.lid').style.transform=`rotate(${-q(op*100)}deg)`;ch.querySelector('.lock').style.display=t<BR?'block':'none';
+    RI.forEach((r,i)=>{r.style.display=t>=BR?'block':'none';r.style.transform=`rotate(${i*30+t*40}deg)`;r.style.opacity=.5});
+    // rozet: sandıktan yükselir, BT'de karakterin başının üstüne gider
+    const bd=$('bdg');bd.style.display=t>=BR?'grid':'none';
+    if(t<BT){bd.style.left='119px';bd.style.top=q(320-eo((t-BR)/.6)*60)+'px'}
+    else{const p=eo((t-BT)/.25);bd.style.left=q(119+(64-119)*p)+'px';bd.style.top=q(260+(296-260)*p)+'px'}
+    const ig=$('iget');ig.style.display=t>=BT?'block':'none';ig.querySelector('.a').style.visibility=Math.floor((t-BT)*6)%2&&t<BT+1?'hidden':'visible';
+    const bg=$('bang');bg.style.display=t>=S3+.6&&t<BR?'block':'none';bg.style.left='72px';bg.style.top=q(312-(Math.floor(t*6)%2?2:0))+'px';
+    shake(BR,3);
+  }
+  flash(BR,.8,.1);flash(BT,.6,.07);
+  // 4) boss barı
+  show('boss',t>=S4&&t<S5);
+  if(t>=S4&&t<S5){
+    const taken=Math.round(250*eo((t-S4-.2)/1.4)),left=300-taken;
+    $('barf').style.width=(left/300*100)+'%';$('barf').style.background=left<=50?(Math.floor(t*8)%2?'#e83030':'#fc7460'):'repeating-linear-gradient(90deg,#b8f400 0 6px,#80b000 6px 8px)';
+    $('hp').textContent=`${left}/300`;
+    GI.forEach((g,k)=>{g.className=k<taken?'f':(t>=DROP&&(Math.floor(t*4)+k)%2?'l':'')});
+    $('gl').innerHTML=TI(`${taken} KİŞİ KAPTI`);
+    const b5=$('b50');b5.style.display=t>=DROP?'block':'none';b5.style.color=Math.floor((t-DROP)*6)%2?'#fcfcfc':'#b8f400';
+    b5.style.top=q(160-(t-DROP<.12?(1-(t-DROP)/.12)*120:0))+'px';
+    $('b50y').style.display=t>=DROP+.35?'block':'none';
+    $('grid').style.opacity=t>=DROP?.35:1;$('gl').style.opacity=t>=DROP?0:1;
+    const go=$('gover');go.style.display=t>=WARN?'block':'none';go.querySelector('b').style.visibility=Math.floor(t*4)%2?'visible':'hidden';
+    shake(DROP,4,.3);shake(WARN,2);
+  }
+  flash(DROP,1,.1);
+  // 5) devam
+  show('cont',t>=S5);
+  if(t>=S5){
+    const n=Math.max(0,9-Math.floor((t-S5)/.5));$('cn').textContent=t<CTA?n:'';$('ct').textContent=t<CTA?'CONTINUE?':'KAÇINCI OLACAKSIN?';
+    $('ct').style.fontSize=t<CTA?'20px':'12px';$('ct').style.top=t<CTA?'80px':'110px';$('ct').style.color=t<CTA?'#fcfcfc':'#fcb800';
+    const U='kankahq.com',nc=Math.round(cl((t-CTA)/.88)*U.length);
+    $('url').innerHTML=U.slice(0,nc)+(Math.floor(t*3)%2?'<i></i>':'');$('url').style.display=t>=CTA?'block':'none';
+    $('ins').style.display=t>=S5+.3?'block':'none';$('ins').style.visibility=Math.floor(t*3)%2?'visible':'hidden';
+    const cd=t-(S5+.2);$('coin').style.display=cd>0&&cd<1.2?'block':'none';$('coin').style.top=q(-12+Math.min(cd/1.2,1)*200)+'px';
+    $('free').style.display=t>=CTA+1.1?'block':'none';$('clogo').style.display=t>=CTA+1.4?'block':'none';
+    hx=t>=CTA+1.4?125:-99;hy=360;hf=Math.floor(t*4)%2?'u':'a';
+  }
+  // karakter
+  if(hx>-50){hero.style.display='block';drawHero(hf,flip);hero.style.left=q(hx+shx)+'px';hero.style.top=q(hy)+'px';}else hero.style.display='none';
+  // HUD
+  const hud=$('hud');hud.style.display=t>=S2&&t<S5?'flex':'none';$('sc').textContent=pad(score,6);$('co').textContent=pad(coins,2);
+  $('wd').textContent=t<S3?'1-1':t<S4?'1-2':'BOSS';
+  // diyalog
+  const box=$('box');box.style.display=t>=S2?'block':'none';
+  let ci=-1;for(let k=0;k<CAP.length;k++)if(t>=CAP[k][0][1])ci=k;
+  if(ci>=0){const g=CAP[ci];let s='';g.forEach(w=>{if(t>=w[1]){const hl=/<\/?b>/.test(w[0]),plain=w[0].replace(/<\/?b>/g,'');const n=Math.min(plain.length,Math.floor((t-w[1])*40)+1);
+      const txt=plain.slice(0,n);s+=(hl?`<b>${txt}</b>`:txt)+' '}});
+    $('txt').innerHTML=s.replace(/İ/g,'<i class=I>I</i>');}
+  $('tri').style.visibility=Math.floor(t*3)%2?'visible':'hidden';
+  // sarsıntı (sahne katmanı)
+  ['title','plat','dun','boss','cont'].forEach(id=>$(id).style.transform=`translateX(${shx}px)`);
+  // iris geçişleri
+  let r=999;[S2,S3,S4,S5].forEach(b=>{const d=Math.abs(t-b);if(d<.2)r=Math.min(r,d/.2*330)});iris(r);
+  $('flash').style.opacity=fl;
+}
+setT(0);
+</script></body></html>
