@@ -354,7 +354,7 @@
 
   <div class="card">
     <h1>Kanka için bot yaz</h1>
-    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.9, kanka.py 1.8</div>
+    <div class="meta">API sürümü 1 · Kütüphaneler: kanka.js 1.9, kanka.py 1.9</div>
     <a class="comm-cta" href="/gelistirici-topluluk"><b>💬 Kanka Geliştiriciler sunucusu</b><span>Soru sor, API duyurularını takip et, botunu tanıt. Katıl →</span></a>
 
     <!-- ===== CANLI İNTERAKTİF BOT PLAYGROUND ===== -->
@@ -555,8 +555,9 @@ bot.form('basvuru', e => e.cevapla({ icerik: 'Başvurun alındı, teşekkürler!
 bot.form('karsilama', e => { const g = e.secilenler.gorsel; /* g.id'yi kaydet, kartta resim: g.id */ });</pre>
 
     <h3 id="muzik">Sesli odada çalma (müzik botu)</h3>
-    <p>Bot sesli odaya girip ses çalabilir. Ses bottan dinleyenlere <b>doğrudan</b> gider (WebRTC); Kanka sunucusu sadece bağlantıyı kurar. Bu yüzden botun çalıştığı bilgisayarda iki şey gerekir: <code>ffmpeg</code> (şarkıyı çözmek için) ve <code>npm i werift</code> (sesi göndermek için). Botun o odada <b>bağlanma</b> ve <b>konuşma</b> izni olmalı. Şimdilik kanka.js'te var.</p>
-<pre>const ses = await bot.sesliOdayaKatil(odaId);
+    <p>Bot sesli odaya girip ses çalabilir. Ses bottan dinleyenlere <b>doğrudan</b> gider (WebRTC); Kanka sunucusu sadece bağlantıyı kurar. Botun çalıştığı bilgisayarda <code>ffmpeg</code> (şarkıyı çözmek için) ve sesi gönderen kütüphane gerekir: JavaScript'te <code>npm i werift</code>, Python'da <code>pip install aiortc</code>. Botun o odada <b>bağlanma</b> ve <b>konuşma</b> izni olmalı.</p>
+    <div class="tabs" data-g="muzik"><button class="on" data-t="js">JavaScript</button><button data-t="py">Python</button></div>
+<pre data-g="muzik" data-t="js">const ses = await bot.sesliOdayaKatil(odaId);
 await ses.cal('sarki.mp3');                 // dosya yolu, https adresi ya da okunabilir akış (stream)
 ses.siraya('a.mp3'); ses.siraya('b.mp3');   // sırayla çalar
 ses.gec(); ses.duraklat(); ses.devam(); ses.durdur();
@@ -564,9 +565,22 @@ console.log(ses.durum);   // { kisi, kuyruk, gonderilen, eksik, atlanan, bellekM
 ses.cal('radyo.mp3', { ses: 0.5, baslangic: 30 }); // ses düzeyi, kaçıncı saniyeden
 ses.on('bitti', x => ...); ses.on('kisiKatildi', k => ...); ses.on('ayrildi', x => ...); // x.sebep: "sahip seni sesli odadan çıkardı" vb.
 bot.sestenAyril();</pre>
+<pre data-g="muzik" data-t="py" hidden>ses = await bot.sesli_odaya_katil(oda_id)
+await ses.cal("sarki.mp3")                  # dosya yolu ya da https adresi; şarkı bitince döner
+ses.siraya("a.mp3"); ses.siraya("b.mp3")    # sırayla çalar (await gerekmez)
+ses.gec(); ses.duraklat(); ses.devam(); ses.durdur()
+print(ses.durum)   # { kisi, kuyruk, gonderilen, eksik, atlanan }
+ses.cal("radyo.mp3", ses=0.5, baslangic=30) # await etmezsen arka planda çalar
+
+@ses.olay("bitti")
+async def bitti(x): print("bitti:", x["kaynak"])
+# diğer olaylar: basladi, kisi_katildi, kisi_ayrildi, susturma, ayrildi (x["sebep"]), hata
+
+await bot.sesten_ayril()</pre>
+    <p class="hint">Python'da sesli oda olaylarını da almak için niyetlere <code>"ses"</code> ekle: <code>kanka.Bot(token, niyetler=["mesajlar", "ses"])</code>.</p>
     <ul><li>Bir bot aynı anda bir sesli odada olur; başka odaya girince eskisinden çıkar. Sahne odalarına giremez.</li>
       <li>Yetkililer botu da diğer üyeler gibi sesten çıkarabilir, taşıyabilir ve susturabilir. Susturulunca ses gitmez (<code>susturma</code> olayı gelir).</li>
-      <li>Bağlantı koparsa bot sesten düşer; kanka.js yeniden bağlanınca odaya kendiliğinden döner ve çalmaya devam eder.</li>
+      <li>Bağlantı koparsa bot sesten düşer; kanka.js ve kanka.py yeniden bağlanınca odaya kendiliğinden döner ve çalmaya devam eder.</li>
       <li>Ses her dinleyiciye ayrı gönderildiği için kalabalık odalarda botun internet yükü artar (dinleyici başına yaklaşık 100 kbps).</li></ul>
 
     <h2 id="olaylar">6. Olaylar</h2>
@@ -606,7 +620,7 @@ print(await bot.durumu_getir())</pre>
     <p>Etkinlik türleri: <code>oynuyor</code>, <code>dinliyor</code>, <code>izliyor</code>, <code>yayinda</code> (ya da <code>yayın</code>, <code>canlı</code>), <code>yarisiyor</code>, <code>ozel</code> (önüne bir şey eklenmez). Bilinmeyen tür artık hata verir. Yazı en fazla 80 karakter; durum dakikada en fazla 10 kez değişir. Durum ve yazı, bot ağ geçidine bağlıyken görünür; bağlı değilken bot çevrimdışı görünür.</p>
     <p>Kütüphane kullanmıyorsan: <code>PATCH /api/v1/ben/durum</code> ile <code>{ "durum": "bosta", "aktivite": { "tur": "izliyor", "ad": "YouTube" } }</code>, ya da ağ geçidinde <code>{ "op": 3, "d": { ... } }</code> gönder (cevap olarak <code>DURUM_GUNCELLENDI</code> gelir). Tanıtırken (<code>op 2</code>) <code>d.durum</code> da verebilirsin. Discord'daki <code>{ status: 'dnd', activities: [{ name, type }] }</code> biçimi de kabul edilir.</p>
 
-    <h2 id="kutuphane">Kütüphane rehberi (kanka.js / kanka.py 1.8)</h2>
+    <h2 id="kutuphane">Kütüphane rehberi (kanka.js / kanka.py 1.9)</h2>
     <p>Python'da adlar alt çizgilidir (<code>bot.topluSil</code> → <code>bot.toplu_sil</code>) ve hepsi <code>await</code> ile çağrılır.</p>
     <table><tr><th>Ne</th><th>Nasıl (kanka.js)</th></tr>
       <tr><td>Mesaj gönder / DM</td><td><code>bot.gonder(oda, 'selam')</code>, <code>bot.gonder(oda, new Kart().baslik('...'))</code>, <code>bot.dm('ahmet', '...')</code></td></tr>
