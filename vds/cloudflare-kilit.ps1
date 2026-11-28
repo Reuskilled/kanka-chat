@@ -37,4 +37,4 @@ if ($c -ne 'evet') { Write-Host 'Vazgeçildi.'; exit }
 Get-NetFirewallRule -DisplayName $ad -ErrorAction SilentlyContinue | Remove-NetFirewallRule
 New-NetFirewallRule -DisplayName $ad -Direction Inbound -Action Allow -Protocol TCP -LocalPort 80,443 -RemoteAddress $cf | Out-Null
 foreach ($r in $acik) { Disable-NetFirewallRule -Name $r.Name; Set-NetFirewallRule -Name $r.Name -NewDisplayName ('Kanka devre disi: ' + $r.DisplayName) }
-Write-Host 'Tamam: 80/443 artık sadece Cloudflare''den gelen bağlantılara açık. Sesli sohbet (TURN 3478 + 50000-50200 UDP) etkilenmez.' -ForegroundColor Green
+Write-Host 'Tamam: 80/443 artık sadece Cloudflare''den gelen bağlantılara açık. Sesli sohbet (TURN 3478 + 50000-50999 UDP) etkilenmez.' -ForegroundColor Green
