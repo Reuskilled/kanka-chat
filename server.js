@@ -962,6 +962,10 @@ setInterval(() => { const now = Date.now(); for (const [k, v] of limits) if (!v.
 // ---------- TURN: farklı ağlardaki kişiler sesli odada birbirini duysun ----------
 const TURN_FILE = path.join(DATA_DIR, 'turn.json');
 let turnInfo = null, turnStats = () => null;
+// Röle portları: her sesli bağlantı (iki kişi arası ya da bot → dinleyici) TURN'de bir port tutar. Odada N kişi varsa N×(N-1) bağlantı olur;
+// eskiden 201 port (50000-50200) vardı ve 15 kişilik bir oda tek başına doldurabiliyordu → yeni gelen 508 alıyordu. Şimdi 1000 port.
+const TURN_MIN = +process.env.TURN_MIN_PORT || 50000, TURN_MAX = +process.env.TURN_MAX_PORT || 50999;
+const turnLog = { fails: [], peak: 0, lastWarn: 0 };
 async function startTurn(attempt = 1) {
   if (process.env.TURN === 'off' || (process.platform !== 'win32' && process.env.TURN !== 'on')) return;
   try {
@@ -977,8 +981,11 @@ async function startTurn(attempt = 1) {
       const { execFileSync } = require('child_process');
       try { execFileSync('netsh', ['advfirewall', 'firewall', 'show', 'rule', 'name=Kanka Chat TURN'], { stdio: 'ignore' }); }
       catch { try { execFileSync('netsh', ['advfirewall', 'firewall', 'add', 'rule', 'name=Kanka Chat TURN', 'dir=in', 'action=allow', 'protocol=UDP', 'localport=3478,50000-50200'], { stdio: 'ignore' }); } catch {} }
+      const rn = `name=Kanka Chat TURN ${TURN_MIN}-${TURN_MAX}`; // genişletilmiş röle aralığı (ayrı kural, eskisi de kalır)
+      try { execFileSync('netsh', ['advfirewall', 'firewall', 'show', 'rule', rn], { stdio: 'ignore' }); }
+      catch { try { execFileSync('netsh', ['advfirewall', 'firewall', 'add', 'rule', rn, 'dir=in', 'action=allow', 'protocol=UDP', `localport=${TURN_MIN}-${TURN_MAX}`], { stdio: 'ignore' }); console.log('TURN: güvenlik duvarında', TURN_MIN + '-' + TURN_MAX, 'açıldı'); } catch (e) { console.error('TURN güvenlik duvarı kuralı eklenemedi:', e.message); } }
     }
-    const server = new Turn({ authMech: 'long-term', credentials: { [cfg.user]: cfg.pass }, realm: 'kanka', listeningPort: 3478, minPort: 50000, maxPort: 50200, externalIps: ip, debugLevel: 'OFF' });
+    const server = new Turn({ authMech: 'long-term', credentials: { [cfg.user]: cfg.pass }, realm: 'kanka', listeningPort: 3478, minPort: TURN_MIN, maxPort: TURN_MAX, externalIps: ip, debugLevel: 'OFF' });
     // node-turn 0.0.6 hatası: yenileme (Refresh) isteği tanımsız ayar adlarını (defaultLifetime, maxAllocateTimeout) okuyor,
     // süre NaN çıkıyor ve ayrılan röle 1 ms sonra siliniyor. Sonuç: TURN üzerinden giden sesli görüşme ilk yenilemede
     // (birkaç dakika sonra) kopuyordu. Günlükteki "TimeoutNaNWarning" bundandı.
@@ -988,6 +995,27 @@ async function startTurn(attempt = 1) {
       const Alloc = require('node-turn/lib/allocation'), upd = Alloc.prototype.update;
       if (!upd.kankaFix) { Alloc.prototype.update = function (l) { return upd.call(this, l === 0 ? 0 : Number.isFinite(+l) && +l > 0 ? +l : this.lifetime); }; Alloc.prototype.update.kankaFix = true; }
     } catch (e) { console.error('TURN yaması uygulanamadı:', e.message); }
+    // node-turn'ün port seçimi: rastgele port dener, doluysa aynı soketi yeniden bağlamaya çalışır (Windows'ta bu başarısız olabiliyor)
+    // ve çakışmada hiç boş port denemeden 508 dönebiliyordu. Yerine: kullanımdaki portları bil, sırayla boş olanı dene, her denemede yeni soket.
+    try {
+      const AllocM = require('node-turn/lib/methods/allocate'), dgram = require('dgram');
+      let next = TURN_MIN;
+      const used = () => { const u = new Set(); for (const a of Object.values(server.allocations)) for (const sk of a?.sockets || []) { try { u.add(sk.address().port); } catch {} } return u; };
+      const bindOne = (addr, port) => new Promise((ok, no) => { const sk = dgram.createSocket(String(addr).includes(':') ? 'udp6' : 'udp4');
+        sk.once('listening', () => { sk.removeAllListeners('error'); ok(sk); }); sk.once('error', e => { try { sk.close(); } catch {} no(e); }); sk.bind({ address: addr, port, exclusive: true }); });
+      const pick = async (addr, even) => {
+        const u = used(), n = TURN_MAX - TURN_MIN + 1;
+        for (let i = 0; i < n; i++) {
+          const port = TURN_MIN + ((next - TURN_MIN + i) % n); if (u.has(port) || (even && port % 2)) continue;
+          try { const sk = await bindOne(addr, port); next = port + 1 > TURN_MAX ? TURN_MIN : port + 1; return [sk]; } catch {}
+        }
+        const now = Date.now(); turnLog.fails.push(now); turnLog.fails = turnLog.fails.filter(t => t > now - 864e5).slice(-5000);
+        if (now - turnLog.lastWarn > 600e3) { turnLog.lastWarn = now; console.error(`TURN dolu: ${Object.keys(server.allocations).length} röle açık, ${n} port; yeni bağlantılar 508 alıyor`); }
+        throw new Error('no available port in range');
+      };
+      AllocM.prototype.allocateUdp = function (msg) { return pick(this.getRelayIp(msg), false); };
+      AllocM.prototype.allocateUdpEven = function (msg) { return pick(this.getRelayIp(msg), true); }; // R bitiyle port ayırma (rezervasyon) desteklenmez, tek port verilir
+    } catch (e) { console.error('TURN port ayırıcı yaması uygulanamadı:', e.message); }
     // node-turn 0.0.6 hatası: bir röle (allocation) silindiğinde (süre doldu, istemci kapattı ya da aynı adresten yenisi geldi)
     // açtığı UDP soketini kapatmıyor. 50000-50200 arasındaki 201 port, sunucu açıldıktan sonraki 201. bağlantıda doluyor ve
     // her yeni istek 508 Insufficient Capacity alıyordu: farklı ağdaki kullanıcılar ve genel IP'si olmayan botlar sese bağlanamıyordu.
@@ -999,7 +1027,8 @@ async function startTurn(attempt = 1) {
     });
     // Yedek süpürge: süresi dolduğu halde kalmış röle olursa (zamanlayıcı kaçarsa) kapat
     setInterval(() => { const now = Date.now(); for (const [k, a] of Object.entries(server.allocations)) if (a?.timeToExpiry && a.timeToExpiry + 60e3 < now) delete server.allocations[k]; }, 60e3).unref();
-    turnStats = () => ({ relays: Object.keys(server.allocations).length, ports: 201 });
+    turnStats = () => { const relays = Object.keys(server.allocations).length; turnLog.peak = Math.max(turnLog.peak, relays); return { relays, ports: TURN_MAX - TURN_MIN + 1, peak: turnLog.peak, fails24: turnLog.fails.filter(t => t > Date.now() - 864e5).length }; };
+    setInterval(() => turnStats(), 30e3).unref(); // en yüksek doluluğu takip et
     server.start();
     turnInfo = { urls: [`turn:${ip}:3478?transport=udp`], username: cfg.user, credential: cfg.pass };
     console.log('TURN sunucusu çalışıyor:', ip + ':3478');
@@ -6027,7 +6056,7 @@ io.on('connection', socket => {
     const inVoice = new Set(); for (const [, m] of voice) for (const n of m.values()) inVoice.add(n);
     const newest = [...us].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 8).map(u => ({ name: u.name, at: u.createdAt || 0, invitedBy: u.invitedBy || null }));
     cb({ ok: true, users: us.length, online: on.length, new1: us.filter(u => (u.createdAt || 0) > day).length, new7: us.filter(u => (u.createdAt || 0) > now - 7 * 864e5).length,
-      servers: db.servers.filter(s => !s.public).length, msgsToday, voice: inVoice.size, reports: db.reports.filter(r => r.status === 'open').length, banned: us.filter(isBanned).length,
+      servers: db.servers.filter(s => !s.public).length, msgsToday, voice: inVoice.size, turn: turnStats(), reports: db.reports.filter(r => r.status === 'open').length, banned: us.filter(isBanned).length,
       warned: us.filter(u => (u.siteWarns || []).some(w => w.at > now - 30 * 864e5)).length, newest, rank: staffRank(me), sources: (() => {
         const m = new Map(); for (const u of us) { if ((u.createdAt || 0) < now - 30 * 864e5) continue; const k = srcLabel(u.src), r = m.get(k) || { k, n: 0, act: 0, ad: !!(u.src?.g || /google/i.test(u.src?.s || '')) };
           r.n++; if ((u.msgs || 0) > 0 || Object.keys(u.vmin || {}).length) r.act++; m.set(k, r); }
