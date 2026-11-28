@@ -31,7 +31,7 @@ Henüz yok (ilk sürüm için gerekmiyor): CallKit / PushKit (uygulama kapalıyk
 
 Açıklama, anahtar kelimeler, tanıtım metni: `fastlane/metadata/tr/`. **Mağaza metninde, ekran görüntülerinde ve uygulama adında "Discord" ve "VPN" geçmez** (Apple 2.3).
 
-**Ekran görüntüleri** (6.9" ve 6.5" iPhone): uygulama kullanılırken çekilmiş gerçek ekranlar. Giriş ekranı olmasın. Öneri: 1) sunucu ve sohbet, 2) sesli oda, 3) özel mesajlar, 4) gelen arama ekranı, 5) profil ve rozetler. Kişisel bilgi görünmeyen bir test sunucusunda çek.
+**Ekran görüntüleri:** hazır, `fastlane/screenshots/tr/` içinde. 6,9 inç (1320×2868) ve 6,5 inç (1284×2778), her biri 6 ekran: sunucu, sesli oda, sohbet, özel mesajlar, Arena, profil. App Store Connect'e sırasıyla sürükle. Yeni özellik eklenince `tanitim` dışında, web önizlemesinden tekrar çekilip aynı çerçeveyle üretilebilir.
 
 ## 3. Şifreleme (Export Compliance)
 
