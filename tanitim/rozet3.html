@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<!-- Rozet 3: "Sende kaç tane var?" 16 rozet, kolaydan efsaneviye. 16 sn, 120 BPM, son kare = ilk kare (döngü). -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0b0b0d;font-family:'Inter Display','Inter',sans-serif;color:#f6f6f2}
+.S{position:absolute;inset:0}
+#bg{background:radial-gradient(900px 900px at 50% 40%,var(--tc,#D4FF00)22,transparent 65%)}
+#grain{background-image:radial-gradient(#ffffff07 1px,transparent 1px);background-size:6px 6px}
+.big{font-weight:900;letter-spacing:-3px;line-height:.9;text-align:center;text-transform:uppercase}
+.lime{color:#D4FF00}
+#top{position:absolute;left:0;right:0;top:150px;text-align:center;font-weight:900;font-size:46px;letter-spacing:6px;color:#9a9a92}
+#top b{color:#D4FF00}
+/* kanca */
+#hook{position:absolute;left:0;right:0;top:380px;height:800px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#hook .l1{font-size:150px}
+#hook .l2{font-size:210px;color:#D4FF00}
+#hook .l3{font-size:150px}
+#say{margin-top:46px;font-size:56px;font-weight:900;padding:18px 44px;border-radius:60px;background:#D4FF00;color:#111;letter-spacing:1px}
+/* rozet kartı */
+#card{position:absolute;left:0;right:0;top:330px;height:880px;display:flex;flex-direction:column;align-items:center}
+#tier{font-size:40px;font-weight:900;letter-spacing:8px;padding:12px 30px;border-radius:40px;border:4px solid var(--tc);color:var(--tc)}
+#disc{position:relative;width:440px;height:440px;margin-top:40px}
+#disc .glow{position:absolute;inset:-110px;border-radius:50%;background:radial-gradient(circle,var(--tc) 0%,transparent 62%);opacity:.35}
+#disc .ring{position:absolute;inset:0;border-radius:50%;padding:20px;background:conic-gradient(from var(--a,0deg),var(--tc),#ffffff,var(--tc),#00000088,var(--tc))}
+#disc .in{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#2a2a30,#101013 70%);display:grid;place-items:center;box-shadow:inset 0 0 60px #000c}
+#emo{font-size:230px;line-height:1;font-family:'Noto Color Emoji'}
+#name{margin-top:44px;font-size:92px;font-weight:900;letter-spacing:-2px;text-align:center}
+#cond{margin-top:14px;font-size:46px;font-weight:700;color:#b9b9b1;text-align:center;padding:0 80px;line-height:1.2}
+#lockst{position:absolute;left:50%;top:640px;width:860px;margin-left:-430px;white-space:nowrap;text-align:center;font-size:74px;font-weight:900;color:#ff4d4d;border:10px solid #ff4d4d;border-radius:26px;padding:10px 0;background:#0b0b0dd9;letter-spacing:2px}
+/* son */
+#end{position:absolute;left:0;right:0;top:380px;height:800px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#end .n{font-size:300px;color:#D4FF00}
+#end .q{font-size:116px}
+#end .c{margin-top:40px;font-size:60px;font-weight:900;color:#111;background:#D4FF00;padding:18px 46px;border-radius:60px}
+/* ızgara */
+#grid{position:absolute;left:50%;top:1190px;width:640px;margin-left:-320px;display:grid;grid-template-columns:repeat(4,130px);gap:30px 40px}
+.sl{position:relative;width:130px;height:130px}
+.sl .r{position:absolute;inset:0;border-radius:50%;border:6px solid #2a2a30;background:#141417}
+.sl .on{position:absolute;inset:0;border-radius:50%;border:6px solid var(--c);background:radial-gradient(circle at 35% 30%,#2a2a30,#121215);display:grid;place-items:center;font-size:72px;font-family:'Noto Color Emoji';box-shadow:0 0 40px var(--c)}
+.sl .lk{position:absolute;inset:0;display:grid;place-items:center;font-size:54px;font-family:'Noto Color Emoji';filter:grayscale(1);opacity:.35}
+#url{position:absolute;left:0;right:0;top:1835px;text-align:center;font-size:40px;font-weight:900;color:#6e6e68;letter-spacing:3px}
+#flash{background:#fff;opacity:0}
+</style></head><body>
+<div class="S" id="bg"></div><div class="S" id="grain"></div>
+<div id="top"></div>
+<div id="hook"><div class="big l1">SENDE</div><div class="big l2">KAÇ TANE</div><div class="big l3">VAR?</div><div id="say">say bakalım 👇</div></div>
+<div id="card"><div id="tier"></div><div id="disc"><div class="glow"></div><div class="ring"><div class="in"><div id="emo"></div></div></div></div><div id="name"></div><div id="cond"></div></div>
+<div id="lockst">ARTIK ALINAMAZ 🔒</div>
+<div id="end"><div class="big n">16</div><div class="big q">KAÇ TANESİ<br>SENDE?</div><div class="c">yoruma yaz 👇</div></div>
+<div id="grid"></div>
+<div id="url">kankahq.com</div>
+<div class="S" id="flash"></div>
+<script>
+const G='#8ff05a',B='#5ab8ff',Y='#ffcf4a';
+// Gerçek rozetler (server.js BADGES), kolaydan zora
+const BD=[
+ ['🐣','Çaylak','Başlangıç rehberini bitir',G],
+ ['💬','Geveze','100 mesaj at',G],
+ ['🦉','Gece kuşu','Gece 00:00-05:00 arası yaz',G],
+ ['🦋','Sosyal kelebek','5 arkadaş edin',G],
+ ['🏰','Kurucu','Bir sunucu kur',G],
+ ['⭕','XOX şampiyonu','3 XOX oyunu kazan',G],
+ ['🔥','Ateşli seri','7 gün üst üste gir',B],
+ ['👑','Efsane','1000 mesaj at',B],
+ ['🧪','Beta Tester','Betadaki ilk 300 kişiden biri ol',B],
+ ['🤖','Bot Geliştirici','Bot sisteminin beta geliştiricisi ol',B],
+ ['🤝','Kanka Partner','Partner sunucunun sahibi ol',B],
+ ['⭐','Yıldız Sunucu','Sunucunu Yıldız kademesine çıkar',B],
+ ['🏆','Arena Şampiyonu','Arena sıralamasında ilk 10’a gir',Y],
+ ['🛡️','Kanka Ekibi','Moderasyon ekibine katıl',Y],
+ ['🐞','Hata Avcısı','Önemli bir hata bul, ekibe bildir',Y],
+ ['🌱','Erken kanka','Sadece ilk 100 üye',Y],
+];
+const TIER={[G]:'YAYGIN',[B]:'NADİR',[Y]:'EFSANEVİ'};
+const TOT=16, BEAT=.5;
+// her rozetin geliş zamanı: 12 tanesi yarım vuruş arayla (2-8 sn), son 4 efsanevi 1'er sn (8-12 sn)
+const AT=BD.map((_,i)=>i<12?2+i*.5:8+(i-12)*1);
+const DUR=i=>i<12?.5:1;
+const RELOCK=i=>14+(15-i)*.09; // sonda tersten kilitlenir: 14.0-15.4
+const grid=document.getElementById('grid');
+BD.forEach((b,i)=>{const d=document.createElement('div');d.className='sl';d.innerHTML=`<div class="r"></div><div class="lk">🔒</div><div class="on" style="--c:${b[3]}">${b[0]}</div>`;grid.appendChild(d)});
+const SL=[...grid.children];
+const MARKS=[{t:0,k:'hit'}];
+BD.forEach((b,i)=>MARKS.push({t:AT[i],k:i<12?'pop':(i===15?'lock':'leg'),i}));
+MARKS.push({t:12,k:'end'});
+BD.forEach((b,i)=>MARKS.push({t:RELOCK(i),k:'tick',i}));
+MARKS.push({t:14,k:'rise'});
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const eo=x=>1-Math.pow(1-cl(x),3);
+const back=x=>{x=cl(x);const c=1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+function setT(t){
+  t=((t%TOT)+TOT)%TOT;
+  // hangi rozet ekranda
+  let cur=-1;for(let i=0;i<16;i++)if(t>=AT[i]&&t<AT[i]+DUR(i))cur=i;
+  const phase=t<2?'hook':t<12?'run':t<14.6?'end':'hook2';
+  // üst satır
+  const top=$('top');
+  if(phase==='run'&&cur>=0)top.innerHTML=`ROZET <b>${cur+1}</b>/16`;
+  else top.innerHTML=`KANKA CHAT'TE <b>16</b> ROZET VAR`;
+  // kanca (başta ve sonda aynı)
+  const hk=$('hook');
+  let ho=0,hs=1;
+  if(t<2){ho=1;hs=1+.03*Math.sin(t*Math.PI*4)*(t<1.9?1:0)}
+  if(t>=14.6){const p=eo((t-14.6)/.6);ho=p;hs=.85+.15*p;if(t>=15.2)hs=1+.03*Math.sin((t-16)*Math.PI*4)}
+  // t=0'a tam eşit kare: 16'ya yaklaşırken sallanma sıfır fazda biter
+  hk.style.opacity=ho;hk.style.transform=`scale(${hs})`;
+  $('say').style.transform=`scale(${1+.06*Math.abs(Math.sin(t*Math.PI*2))})`;
+  // kart
+  const card=$('card');
+  if(phase==='run'&&cur>=0){
+    const b=BD[cur],lt=t-AT[cur],d=DUR(cur);
+    document.body.style.setProperty('--tc',b[3]);
+    $('tier').textContent=TIER[b[3]];$('emo').textContent=b[0];$('name').textContent=b[1];$('cond').textContent=b[2];
+    const p=back(lt/(cur<12?.18:.3));
+    card.style.opacity=1;card.style.transform=`translateY(${(1-p)*60}px) scale(${.8+.2*p})`;
+    $('disc').style.transform=`rotate(${(1-p)*-25}deg)`;
+    $('disc').querySelector('.ring').style.setProperty('--a',(t*240)+'deg');
+    $('name').style.color=b[3]===Y?Y:'#f6f6f2';
+  }else{card.style.opacity=0;document.body.style.setProperty('--tc','#D4FF00')}
+  // erken kanka damgası
+  const ls=$('lockst'),lt=t-(AT[15]+.35);
+  if(cur===15&&lt>0){const p=cl(lt/.12);ls.style.opacity=1;ls.style.transform=`rotate(-8deg) scale(${1.8-.8*p})`}else ls.style.opacity=0;
+  // son ekran
+  const en=$('end');
+  if(t>=12&&t<14.6){const p=back((t-12)/.35),q=t>14?1-eo((t-14)/.6):1;en.style.opacity=q;en.style.transform=`scale(${.7+.3*p})`;
+    en.querySelector('.c').style.transform=`scale(${1+.06*Math.abs(Math.sin(t*Math.PI*2))})`}else en.style.opacity=0;
+  // ızgara
+  SL.forEach((s,i)=>{
+    const on=s.querySelector('.on'),lk=s.querySelector('.lk');
+    let v=0,sc=1;
+    if(t>=AT[i]){const p=back((t-AT[i])/.22);v=cl(p,0,1.2);sc=.4+.6*p}
+    if(t>=RELOCK(i)){const p=eo((t-RELOCK(i))/.12);v=1-p;sc=1-.4*p}
+    if(t>=12&&t<14){sc*=1+.06*Math.max(0,Math.sin((t-12)*Math.PI*2-i*.4))}
+    on.style.opacity=cl(v);on.style.transform=`scale(${sc})`;lk.style.opacity=.35*(1-cl(v));
+    s.style.transform=(cur===i)?'translateY(-10px)':'none';
+  });
+  // flaş: efsanevi geliş ve son ekran
+  let f=0;for(let i=12;i<16;i++){const d=t-AT[i];if(d>=0&&d<.15)f=Math.max(f,.55*(1-d/.15))}
+  if(t>=12&&t<12.15)f=Math.max(f,.5*(1-(t-12)/.15));
+  $('flash').style.opacity=f;
+}
+setT(0);
+</script></body></html>
