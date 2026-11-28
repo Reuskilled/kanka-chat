@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<!-- "Kanka artık cebinde": telefon uygulaması kapalı testi + 📱 Cep Öncüsü rozeti. 21 sn, 1080×1920.
+     Kanca (titreyen telefon) → 5 özellik ekranı → rozet açılışı (holografik madalya) → "bir daha verilmeyecek" → e-postayla başvuru. -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#07070a;font-family:'Inter Display','Inter',sans-serif;color:#fff}
+.L{position:absolute;inset:0;overflow:hidden;display:none}
+/* arka plan */
+#bg{position:absolute;inset:0;background:radial-gradient(1200px 900px at 50% 40%,#1b2a06 0%,#07070a 70%)}
+#grid{position:absolute;inset:-200px;background-image:linear-gradient(#ffffff0a 2px,transparent 2px),linear-gradient(90deg,#ffffff0a 2px,transparent 2px);background-size:120px 120px;transform:perspective(900px) rotateX(58deg) translateY(300px)}
+/* telefon */
+#phone{position:absolute;left:50%;top:50%;width:640px;height:1300px;margin:-650px 0 0 -320px;border-radius:96px;background:#111;padding:22px;
+  box-shadow:0 0 0 6px #2a2a2e,0 0 0 9px #0a0a0a,0 60px 140px #000c,0 0 160px #D4FF0022;transform-origin:50% 50%}
+#scr{position:relative;width:100%;height:100%;border-radius:76px;overflow:hidden;background:#D4FF00}
+#scr .s{position:absolute;inset:0;background-size:100% auto;background-position:top center;background-repeat:no-repeat;background-color:#0b0b0e;display:none}
+#scr .sp{position:absolute;inset:0;display:grid;place-items:center;background:#D4FF00}
+#scr .sp img{width:240px;height:240px;border-radius:56px;box-shadow:0 30px 70px #0004}
+#notch{position:absolute;left:50%;top:22px;width:190px;height:54px;margin-left:-95px;border-radius:30px;background:#000;z-index:3}
+#glare{position:absolute;inset:22px;border-radius:76px;background:linear-gradient(115deg,transparent 40%,#ffffff1c 48%,transparent 56%);z-index:2;pointer-events:none}
+.stk{position:absolute;font-family:'Noto Color Emoji';line-height:1;z-index:6;font-size:190px;
+  filter:drop-shadow(5px 0 0 #fff) drop-shadow(-5px 0 0 #fff) drop-shadow(0 5px 0 #fff) drop-shadow(0 -5px 0 #fff) drop-shadow(0 18px 24px #0008)}
+#ring{position:absolute;left:50%;top:50%;width:0;height:0;z-index:0}
+#ring i{position:absolute;left:-420px;top:-420px;width:840px;height:840px;border-radius:50%;border:6px solid #D4FF00}
+/* rozet sahnesi */
+#rz{background:#050507}
+#rzbg{position:absolute;inset:-80px;background:conic-gradient(from var(--a,0deg) at 50% 42%,#0b0b10,#1a1030,#0b2030,#0b0b10,#1d2a06,#0b0b10);filter:blur(10px)}
+#rays{position:absolute;left:50%;top:42%;width:2600px;height:2600px;margin:-1300px 0 0 -1300px;background:repeating-conic-gradient(from var(--r,0deg),#D4FF0012 0 6deg,transparent 6deg 15deg);border-radius:50%;
+  -webkit-mask:radial-gradient(circle,#000 0,#000 25%,transparent 62%);mask:radial-gradient(circle,#000 0,#000 25%,transparent 62%)}
+#noti{position:absolute;left:36px;right:36px;top:70px;border-radius:46px;background:#2a2a2ee8;backdrop-filter:blur(30px);padding:30px 34px;display:flex;gap:26px;align-items:center;box-shadow:0 30px 80px #000a;z-index:8}
+#noti img{width:110px;height:110px;border-radius:26px}
+#noti .h{display:flex;justify-content:space-between;font:700 30px 'Inter';color:#aaa}
+#noti .t{font:800 40px 'Inter';margin-top:6px}
+#noti .b{font:500 33px 'Inter';color:#ddd;margin-top:4px}
+/* madalya */
+#medal{position:absolute;left:50%;top:42%;width:720px;height:720px;margin:-360px 0 0 -360px;overflow:visible;z-index:5;transform-style:preserve-3d}
+#medal .seal{position:absolute;inset:0;background:conic-gradient(from var(--h,0deg),#ff8ad8,#8ad8ff,#b6ff8a,#fff38a,#ffb38a,#ff8ad8);
+  clip-path:polygon(50% 0%,57.6% 6.8%,67.1% 3.4%,71.8% 12.4%,81.9% 12.4%,83.4% 22.4%,92.6% 26.6%,90.6% 36.5%,97.6% 43.8%,92.2% 52.4%,95.1% 62.1%,86.5% 67.4%,85.4% 77.5%,75.5% 79.4%,70.6% 88.3%,61.1% 85.8%,53.4% 92.4%,45.9% 85.6%,36.4% 89%,31.7% 80%,21.6% 80%,20.1% 70%,10.9% 65.8%,12.9% 55.9%,5.9% 48.6%,11.3% 40%,8.4% 30.3%,17% 25%,18.1% 14.9%,28% 13%,32.9% 4.1%,42.4% 6.6%);
+  filter:drop-shadow(0 30px 50px #000c)}
+#medal .rim{position:absolute;left:110px;top:100px;width:500px;height:500px;border-radius:50%;background:linear-gradient(145deg,#f7ff9e,#D4FF00 35%,#6e8a00 70%,#e9ff6a);box-shadow:inset 0 0 0 4px #ffffff88,0 12px 30px #0008}
+#medal .face{position:absolute;left:136px;top:126px;width:448px;height:448px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#2b2b3a,#0c0c14 70%);overflow:hidden;box-shadow:inset 0 10px 40px #000}
+#medal .arc{position:absolute;left:0;top:0;width:448px;height:448px}
+#medal .ph{position:absolute;left:50%;top:118px;width:136px;height:232px;margin-left:-68px;border-radius:30px;background:#0a0a0a;border:7px solid #e8e8ee;box-shadow:0 12px 30px #000a}
+#medal .ph .sc{position:absolute;inset:7px;border-radius:18px;background:linear-gradient(160deg,#e9ff5a,#b8de00);display:grid;place-items:center}
+#medal .ph .sc img{width:80px;height:80px;border-radius:20px}
+#medal .ph .nt{position:absolute;left:50%;top:10px;width:46px;height:12px;margin-left:-23px;border-radius:6px;background:#0a0a0a}
+#medal .ph .bub{position:absolute;right:-56px;top:20px;width:74px;height:74px;border-radius:50%;background:#ff3b5c;border:6px solid #fff;font:900 36px 'Inter Display';display:grid;place-items:center}
+#medal .shine{position:absolute;left:110px;top:100px;width:500px;height:500px;background-size:300% 100%;background:linear-gradient(115deg,transparent 35%,#ffffff55 47%,#ffffffaa 50%,#ffffff55 53%,transparent 65%);mix-blend-mode:overlay;border-radius:50%}
+#medal .st{position:absolute;font-size:44px;color:#fff;text-shadow:0 0 16px #fff}
+#rib{position:absolute;left:50%;top:600px;width:760px;margin-left:-380px;height:132px;z-index:6;transform:rotate(-3deg)}
+#rib .m{position:absolute;left:60px;right:60px;top:0;bottom:0;background:linear-gradient(180deg,#ff4d6d,#d6143a);border:6px solid #fff;border-radius:18px;display:grid;place-items:center;font:900 76px 'Inter Display';letter-spacing:2px;box-shadow:0 18px 40px #000a;z-index:2}
+#rib .e{position:absolute;top:34px;width:120px;height:96px;background:#a10f2c;border:6px solid #fff;z-index:1}
+#rib .e.l{left:0;clip-path:polygon(0 0,100% 0,100% 100%,0 100%,28% 50%)}
+#rib .e.r{right:0;clip-path:polygon(0 0,100% 0,72% 50%,100% 100%,0 100%)}
+#spark{position:absolute;left:50%;top:42%;width:0;height:0;z-index:4}
+#spark i{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff}
+#conf{position:absolute;inset:0;z-index:7;pointer-events:none}
+#conf i{position:absolute;width:22px;height:34px;border-radius:4px}
+/* profil rozet satırı */
+#prof{position:absolute;left:60px;right:60px;top:1330px;border-radius:40px;background:#151519f2;padding:34px 40px;z-index:6;box-shadow:0 30px 80px #000b}
+#prof .u{display:flex;align-items:center;gap:22px;font:800 44px 'Inter'}
+#prof .u img{width:96px;height:96px;border-radius:50%}
+#prof .u small{display:block;font:600 30px 'Inter';color:#9a9aa2}
+#prof .bd{display:flex;gap:18px;margin-top:28px}
+#prof .bd span{width:104px;height:104px;border-radius:28px;background:#24242a;display:grid;place-items:center;font-family:'Noto Color Emoji';font-size:56px}
+#prof .bd span.n{background:linear-gradient(145deg,#f7ff9e,#D4FF00);box-shadow:0 0 0 5px #fff,0 0 40px #D4FF00aa}
+#lock{position:absolute;left:50%;top:1010px;z-index:9;transform-origin:50% 50%}
+#lock div{margin-left:-50%;white-space:nowrap;font:900 92px 'Inter Display';color:#ff3b5c;border:12px solid #ff3b5c;border-radius:30px;padding:10px 40px;background:#0009;letter-spacing:2px}
+/* e-posta */
+#mail{background:#0b0b0e}
+#mcard{position:absolute;left:50px;right:50px;top:380px;border-radius:50px;background:#18181d;box-shadow:0 40px 100px #000c;overflow:hidden}
+#mcard .hd{padding:40px 50px;border-bottom:2px solid #26262c;font:800 46px 'Inter';display:flex;align-items:center;gap:20px}
+#mcard .hd span{font-family:'Noto Color Emoji'}
+#mcard .row{padding:30px 50px;border-bottom:2px solid #26262c;font:600 40px 'Inter';color:#9a9aa2;display:flex;gap:20px;white-space:nowrap}
+#mcard .row b{color:#fff;font-weight:700}
+#mcard .car{display:inline-block;width:4px;height:46px;background:#4a9dff;vertical-align:middle}
+#mcard ul{list-style:none;padding:30px 50px 46px}
+#mcard li{display:flex;align-items:center;gap:26px;font:700 46px 'Inter';padding:18px 0}
+#mcard li i{width:64px;height:64px;border-radius:50%;border:5px solid #3a3a42;display:grid;place-items:center;font-style:normal;font:900 38px 'Inter';color:#111}
+#mcard li.on i{background:#D4FF00;border-color:#D4FF00}
+#send{position:absolute;left:50px;right:50px;top:1320px;height:150px;border-radius:75px;background:#D4FF00;color:#111;display:grid;place-items:center;font:900 64px 'Inter Display'}
+#foot{position:absolute;left:0;right:0;top:1540px;text-align:center;font:800 46px 'Inter';color:#9a9aa2}
+#foot b{color:#D4FF00}
+/* altyazı */
+#cap{position:absolute;left:50px;right:50px;text-align:center;z-index:20;font:900 104px/1.05 'Inter Display';letter-spacing:-2px}
+#cap span{display:inline-block;margin:0 14px;-webkit-text-stroke:16px #000;paint-order:stroke fill;filter:drop-shadow(0 9px 0 #000)}
+#cap span.on{color:#D4FF00}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:30}
+</style></head><body>
+<div class="L" id="ph"><div id="bg"></div><div id="grid"></div><div id="ring"><i></i></div>
+  <div id="phone"><div id="scr">
+    <div class="sp"><img src="k/logo.png"></div>
+    <div class="s" style="background-image:url(e2/ses-4-gelen.jpg)"></div>
+    <div class="s" style="background-image:url(e2/ses-1-oda.jpg)"></div>
+    <div class="s" style="background-image:url(e2/vid-1-kamera.jpg)"></div>
+    <div class="s" style="background-image:url(e2/vm-kanal.jpg)"></div>
+    <div class="s" style="background-image:url(e2/ar-pisti-1.jpg)"></div>
+    <div class="s" style="background-image:url(e2/mob-9-rr.jpg)"></div>
+  </div><div id="notch"></div><div id="glare"></div></div>
+  <div class="stk" id="stk"></div>
+</div>
+<div class="L" id="rz"><div id="rzbg"></div><div id="rays"></div>
+  <div id="noti"><img src="k/logo.png"><div style="flex:1"><div class="h"><span>KANKA CHAT</span><span>şimdi</span></div><div class="t">📱 Yeni rozet: Cep Öncüsü</div><div class="b">Telefon uygulamasını ilk deneyenlerdensin!</div></div></div>
+  <div id="spark"></div>
+  <div id="medal"><div class="seal"></div><div class="rim"></div>
+    <div class="face">
+      <svg class="arc" viewBox="0 0 448 448"><defs><path id="ap" d="M40,224 A184,184 0 0 1 408,224"/></defs>
+        <text font-family="Inter Display" font-weight="900" font-size="30" letter-spacing="6" fill="#D4FF00"><textPath href="#ap" startOffset="50%" text-anchor="middle">KANKA · TELEFON · 2026</textPath></text></svg>
+      <div class="ph"><div class="sc"><img src="k/logo.png"></div><div class="nt"></div><div class="bub">1</div></div>
+      <span class="st" style="left:70px;top:250px">✦</span><span class="st" style="left:350px;top:270px;font-size:34px">✦</span><span class="st" style="left:330px;top:360px;font-size:26px">✦</span>
+    </div>
+    <div class="shine"></div>
+    <div id="rib"><div class="e l"></div><div class="e r"></div><div class="m">CEP ÖNCÜSÜ</div></div></div>
+  <div id="conf"></div>
+  <div id="prof"><div class="u"><img src="k/logo.png"><div>senin_adın<small>Rozetler</small></div></div>
+    <div class="bd"><span>🧪</span><span>🌱</span><span>🔥</span><span>🦋</span><span class="n">📱</span></div></div>
+  <div id="lock"><div>🔒 SADECE TESTTE</div></div>
+</div>
+<div class="L" id="mail">
+  <div id="mcard"><div class="hd"><span>✉️</span>Yeni e-posta</div>
+    <div class="row">Kime: <b id="to"></b><span class="car" id="car"></span></div>
+    <div class="row">Konu: <b>Kapalı test başvurusu</b></div>
+    <ul><li id="l1"><i>✓</i>Kullanıcı adın</li><li id="l2"><i>✓</i>Google e-postan</li><li id="l3"><i>✓</i>Telefon modelin</li></ul></div>
+  <div id="send">Gönder ➜</div>
+  <div id="foot">Seçilenlere Play Store’dan <b>davet</b> geliyor</div>
+</div>
+<div id="cap"></div>
+<div id="flash"></div>
+<script>
+const TOT=21;
+const H1=.55,H2=1.1,F0=2.6,FT=[2.6,3.9,5.2,6.5,7.8],B0=9.1,NOT=10.2,MED=10.8,PRO=13.6,LOCK=15.0,M0=17.0,MT=17.4;
+const MARKS=[{t:0,k:'slam'},{t:H1,k:'slam'},{t:H2,k:'slam2'},{t:F0-.2,k:'whoosh'}];
+FT.forEach((t,i)=>MARKS.push({t,k:'swipe',i}));
+MARKS.push({t:B0,k:'rise'},{t:MED,k:'badge'},{t:PRO,k:'tick'},{t:LOCK,k:'drop'},{t:M0,k:'cta'});
+const CAP=[
+ [['KANKA',0]],[['ARTIK',H1]],[['CEBİNDE',H2]],
+ [['Sesli',2.6],['odalar',2.95]],[['Kamera',3.9],['ve',4.3],['ekran',4.5]],[['Sesli',5.2],['mesaj',5.55]],[['Arkadaşlarla',6.5],['oyun',7.0]],[['Hepsi',7.8],['cebinde.',8.15]],
+ [['Ama',9.1],['asıl',9.4],['olay',9.7],['şu:',9.95]],
+ [['Mağazaya',11.4],['çıkmadan',11.85]],[['deneyenlere',12.35]],[['özel',12.95],['rozet!',13.2]],
+ [['Profilinde',13.6],['ömür',14.15],['boyu',14.45]],
+ [['Mağaza',15.0],['açılınca',15.35]],[['bir',15.85],['daha',16.05],['verilmeyecek',16.3]],
+ [['Kapalı',17.0],['teste',17.4],['katıl',17.75]],[['Hemen',19.4],['yaz!',19.75]]];
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const eo=x=>1-Math.pow(1-cl(x),3);
+const back=x=>{x=cl(x);const c=1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const shake=(t,t0,a,d=.22)=>t>=t0&&t<t0+d?Math.sin((t-t0)*95)*a*(1-(t-t0)/d):0;
+for(let i=0;i<22;i++)$('spark').appendChild(document.createElement('i'));const SP=[...$('spark').children];
+const CC=['#D4FF00','#ff4d6d','#8ad8ff','#fff38a','#b6ff8a','#ff8ad8'];
+for(let i=0;i<60;i++){const c=document.createElement('i');c.style.background=CC[i%6];$('conf').appendChild(c)}const CF=[...$('conf').children];
+const rnd=k=>{const x=Math.sin(k*999.1)*43758.5;return x-Math.floor(x)};
+let lastCap=-1;
+function setT(t){
+  let fl=0;const flash=(t0,a,d=.14)=>{const x=t-t0;if(x>=0&&x<d)fl=Math.max(fl,a*(1-x/d))};
+  const show=(id,on)=>{$(id).style.display=on?'block':'none'};
+  // 1-2) telefon: kanca + özellikler
+  show('ph',t<B0);
+  if(t<B0){
+    const ph=$('phone'),scr=[...$('scr').children];
+    let idx=0;if(t>=F0){for(let k=0;k<5;k++)if(t>=FT[k])idx=k+2}else if(t>=H2)idx=1;
+    scr.forEach((s,k)=>s.style.display=k===idx?(k===0?'grid':'block'):'none');
+    let tr='';
+    if(t<F0){ // yukarıdan düşer, sonra çalarak titrer
+      const d=back(t/.45), y=(1-d)*-1800, ring=t>=H2?Math.sin(t*70)*7*(Math.floor(t*4)%2):0;
+      const z=1.05+.05*Math.sin(t*3);
+      tr=`translateY(${y}px) rotate(${(1-cl(t/.45))*-18+ring}deg) scale(${z}) translateX(${shake(t,H1,24)+shake(t,H2,30)}px)`;
+      const rg=$('ring').firstChild,rp=((t-H2)%0.6)/0.6;rg.style.display=t>=H2?'block':'none';rg.style.transform=`scale(${.75+rp*.6})`;rg.style.opacity=1-rp;
+    } else {
+      const k=idx-2,lt=t-FT[k],tilt=[-10,9,-8,10,-6][k];
+      const pin=eo(lt/.28);
+      tr=`perspective(2000px) rotateY(${tilt*(1-pin)*2+tilt*.35}deg) rotateZ(${(k%2?1:-1)*2}deg) scale(${.86+.06*eo(lt/1.3)+.05*(1-pin)}) translateX(${(k%2?1:-1)*(1-pin)*500}px)`;
+      $('ring').firstChild.style.display='none';
+    }
+    ph.style.transform=tr;
+    $('glare').style.background=`linear-gradient(115deg,transparent ${20+((t*40)%90)}%,#ffffff22 ${28+((t*40)%90)}%,transparent ${36+((t*40)%90)}%)`;
+    $('grid').style.transform=`perspective(900px) rotateX(58deg) translateY(${300+(t*160)%120}px)`;
+    const stk=$('stk');
+    if(t>=F0){const k=idx-2,lt=t-FT[k],ST=['🎙️','📹','🔊','🃏','🏠'],SX=[[760,330],[60,420],[780,520],[70,380],[790,420]];
+      stk.style.display='block';stk.textContent=ST[k];stk.style.left=SX[k][0]+'px';stk.style.top=SX[k][1]+'px';
+      stk.style.transform=`scale(${back(lt/.25)}) rotate(${(k%2?-1:1)*(14-10*eo(lt/.4))}deg)`;
+    } else if(t>=H2){stk.style.display='block';stk.textContent='📱';stk.style.left='770px';stk.style.top='300px';stk.style.transform=`scale(${back((t-H2)/.25)}) rotate(${12+Math.sin(t*20)*6}deg)`;}
+    else stk.style.display='none';
+  }
+  flash(0,.3,.1);flash(H1,.3,.1);flash(H2,.6,.18);FT.forEach(x=>flash(x,.18,.08));
+  // 3-4) rozet
+  show('rz',t>=B0&&t<M0);
+  if(t>=B0&&t<M0){
+    $('rzbg').style.setProperty('--a',(t*20)+'deg');$('rays').style.setProperty('--r',(t*14)+'deg');
+    $('rays').style.opacity=cl((t-MED)/.4);
+    const n=$('noti'),nin=eo((t-NOT)/.3),nout=t>MED+1.4?eo((t-(MED+1.4))/.3):0;
+    n.style.transform=`translateY(${t<NOT?-420:(-420*(1-nin)-420*nout)}px) translateX(${shake(t,NOT+.05,14)}px)`;
+    const m=$('medal'),rib=$('rib');const on=t>=MED;m.style.display=on?'block':'none';
+    if(on){
+      const p=back((t-MED)/.4);
+      // profile geçince küçülüp yukarı çıkar
+      const sh=eo((t-PRO)/.5), sc=p*(1.12-.5*sh), y=-sh*230;
+      const wob=Math.sin((t-MED)*2.2)*22*(1-cl((t-MED-3)/1.5)*.4);
+      m.style.transform=`translateY(${y}px) perspective(1600px) rotateY(${wob+(1-cl((t-MED)/.45))*-200}deg) scale(${sc})`;
+      m.querySelector('.seal').style.setProperty('--h',(t*90)+'deg');
+      const sx=((t-MED)*0.7)%1.6;m.querySelector('.shine').style.backgroundPosition=`${(1-sx/1.6)*300-100}% 0`;
+      rib.style.transform=`rotate(-3deg) scale(${back((t-MED-.25)/.35)})`;
+    }
+    const sx=t-MED;SP.forEach((s,k)=>{const ang=k/22*Math.PI*2,r=eo(sx/.7)*520+k%3*40;s.style.display=sx>0&&sx<.8?'block':'none';
+      s.style.transform=`translate(${Math.cos(ang)*r}px,${Math.sin(ang)*r}px) scale(${1-cl(sx/.8)})`;s.style.background=k%2?'#D4FF00':'#fff'});
+    CF.forEach((c,k)=>{const ct=t-MED;if(ct<0||ct>3){c.style.display='none';return}c.style.display='block';
+      const x0=540+(rnd(k)-.5)*300,vx=(rnd(k+7)-.5)*1900,vy=-1500-rnd(k+3)*1300;
+      c.style.left=(x0+vx*ct)+'px';c.style.top=(800+vy*ct+1900*ct*ct)+'px';c.style.transform=`rotate(${ct*(300+k*13)}deg) scaleX(${Math.cos(ct*(8+k%5))})`});
+    const pr=$('prof');pr.style.display=t>=PRO?'block':'none';
+    if(t>=PRO){pr.style.transform=`translateY(${(1-eo((t-PRO)/.4))*900}px)`;
+      const nb=pr.querySelector('.n');const pop=t>=PRO+.6?back((t-PRO-.6)/.3):0;nb.style.transform=`scale(${pop})`;}
+    const lk=$('lock');lk.style.display=t>=LOCK+.85?'block':'none';
+    if(t>=LOCK+.85){const p=cl((t-LOCK-.85)/.16);lk.style.transform=`scale(${2.6-1.6*eo(p)}) rotate(-8deg)`;lk.style.opacity=p;}
+    $('rz').style.transform=`translateX(${shake(t,MED,22)+shake(t,LOCK+.85,20)}px)`;
+  }
+  flash(NOT,.2,.1);flash(MED,.75,.22);flash(LOCK+.85,.4,.14);
+  // 5) e-posta
+  show('mail',t>=M0);
+  if(t>=M0){
+    $('mail').style.transform=`translateY(${(1-eo((t-M0)/.3))*300}px)`;
+    const U='kankahq1@gmail.com',nc=Math.round(cl((t-MT)/1.1)*U.length);$('to').textContent=U.slice(0,nc);
+    $('car').style.opacity=(Math.floor(t*3)%2||t<MT+1.1)?1:0;
+    ['l1','l2','l3'].forEach((id,k)=>{const at=MT+1.3+k*.35;$(id).className=t>=at?'on':'';$(id).querySelector('i').style.transform=`scale(${t>=at?back((t-at)/.2):1})`});
+    const sd=$('send');sd.style.transform=`scale(${t>=19.4?1+.06*Math.abs(Math.sin((t-19.4)*5)):1})`;
+  }
+  flash(M0,.3,.1);
+  // altyazı
+  let ci=-1;for(let k=0;k<CAP.length;k++)if(t>=CAP[k][0][1])ci=k;
+  if(t>=NOT&&t<11.4)ci=-1;
+  const cap=$('cap');
+  if(ci>=0){
+    const g=CAP[ci];
+    if(ci!==lastCap){cap.innerHTML=g.map(w=>`<span>${w[0]}</span>`).join(' ');lastCap=ci}
+    const sp=[...cap.children];let on=0;g.forEach((w,k)=>{if(t>=w[1])on=k});
+    sp.forEach((s,k)=>{s.className=k===on?'on':'';const st=g[k][1];s.style.opacity=t>=st?1:0;s.style.transform=`scale(${t>=st?(k===on?1.12:1)*(.85+.15*back((t-st)/.12)):.5})`});
+    const y=t<F0?150:t<B0?1560:t<PRO?1440:t<M0?170:150;
+    cap.style.top=y+'px';cap.style.fontSize=(t<F0?150:t<B0?96:104)+'px';cap.style.display='block';
+  } else {cap.style.display='none';lastCap=-1}
+  $('flash').style.opacity=fl;
+}
+setT(0);
+</script></body></html>
