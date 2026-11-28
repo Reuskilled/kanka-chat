@@ -4659,7 +4659,7 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .ar-g-arr { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: rgba(255,255,255,.05); color: #9ba3b4; transition: transform .2s, background .2s, color .2s; }
   .ar-g:not(:disabled):hover .ar-g-arr { transform: translateX(2px); background: var(--accent); color: #0b0c10; }
   .ar-empty { grid-column: 1 / -1; padding: 26px; text-align: center; border-radius: 12px; border: 1px dashed rgba(255,255,255,.1); color: #838a98; font-size: 13px; }
-  .ar-g-bilardo { --g1: #0f6b3b; --g2: #0a3a22; } .ar-g-dart { --g1: #8a1f1f; --g2: #3a0e0e; } .ar-g-pisti { --g1: #1e3a8a; --g2: #0f1d45; } .ar-g-kart { --g1: #7c3aed; --g2: #c2410c; } .ar-g-bilek { --g1: #b45309; --g2: #451a03; } .ar-g-hokey { --g1: #0e7490; --g2: #082f49; } .ar-g-asmaca { --g1: #4d7c0f; --g2: #1a2e05; }
+  .ar-g-bilardo { --g1: #0f6b3b; --g2: #0a3a22; } .ar-g-dart { --g1: #8a1f1f; --g2: #3a0e0e; } .ar-g-pisti { --g1: #1e3a8a; --g2: #0f1d45; } .ar-g-kart { --g1: #7c3aed; --g2: #c2410c; } .ar-g-bilek { --g1: #b45309; --g2: #451a03; } .ar-g-hokey { --g1: #0e7490; --g2: #082f49; } .ar-g-asmaca { --g1: #4d7c0f; --g2: #1a2e05; } .ar-g-satranc { --g1: #78502c; --g2: #2b1a0c; } .ar-g-okey { --g1: #1d6b45; --g2: #0b2a1b; }
   .ar-lobby { max-width: 780px; margin: 0 auto; width: 100%; gap: 18px; justify-content: flex-start; }
   .ar-lhero { position: relative; min-height: 156px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 22px 24px; border-radius: 16px; background: #12151d; border: 1px solid rgba(255,255,255,.09); overflow: hidden; box-shadow: 0 14px 36px rgba(0,0,0,.42); flex-shrink: 0; }
   .ar-lhero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 45%; opacity: .55; filter: brightness(.85) contrast(1.06); pointer-events: none; }
@@ -4822,6 +4822,59 @@ body.has-tb.has-eb #toasts,body.has-tb.has-eb #updbar{top:86px}
   .kk-dir { font-size: 28px; color: var(--muted); }
   .kk-acts { min-height: 34px; display: flex; align-items: center; } .kk-acts .mine { color: var(--accent); font-weight: 700; font-size: 13.5px; }
   .kk-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 100%; padding: 0 8px; } .kk-hand .kk { --w: clamp(46px, 11vw, 62px); }
+  /* satranç */
+  .sc-cq { width: 100%; height: 100%; container: sc / size; }
+  .sc-wrap { --sz: min(calc(100cqh - 64px), calc(100cqw - 200px), 640px); width: 100%; height: 100%; display: flex; gap: 16px; align-items: center; justify-content: center; }
+  .sc-bw { display: flex; flex-direction: column; gap: 6px; }
+  .sc-who { display: flex; align-items: center; gap: 8px; min-height: 22px; font-size: 13px; font-weight: 700; color: var(--muted); } .sc-who b { color: var(--ink); } .sc-who .sc-capl { font-size: 17px; letter-spacing: -2px; color: var(--ink); opacity: .85; } .sc-who em { font-style: normal; color: #4cc38a; font-size: 12px; }
+  .sc-who.turn b::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: 1px; }
+  .sc-board { position: relative; width: var(--sz); height: var(--sz); display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border-radius: 6px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.4); touch-action: none; user-select: none; }
+  .sc-sq { position: relative; display: grid; place-items: center; border: 0; padding: 0; margin: 0; background: #f0d9b5; color: #b58863; font: inherit; cursor: default; border-radius: 0; }
+  .sc-sq.dk { background: #b58863; color: #f0d9b5; }
+  .sc-sq.lm::before { content: ''; position: absolute; inset: 0; background: rgba(205, 210, 80, .5); }
+  .sc-sq.sel::before { content: ''; position: absolute; inset: 0; background: rgba(20, 85, 30, .45); }
+  .sc-sq.chk { background: radial-gradient(circle, #ff3b30 0%, rgba(231, 0, 0, .55) 40%, transparent 75%), #b58863; }
+  .sc-sq.mv::after { content: ''; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: rgba(20, 85, 30, .5); }
+  .sc-sq.mv.cap::after { width: 86%; height: 86%; background: none; border: calc(var(--sz) / 90) solid rgba(20, 85, 30, .55); box-sizing: border-box; }
+  .sc-sq.can, .sc-sq.mv { cursor: pointer; } .sc-sq.mv:hover::before { content: ''; position: absolute; inset: 0; background: rgba(20, 85, 30, .3); }
+  .sc-sq:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; z-index: 2; }
+  .sc-p { position: relative; z-index: 1; font-size: calc(var(--sz) / 8 * .82); line-height: 1; pointer-events: none; }
+  .sc-p.w { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 1px 2px rgba(0,0,0,.6); -webkit-text-stroke: .6px #1a1a1a; }
+  .sc-p.b { color: #16161a; text-shadow: 0 1px 1px rgba(255,255,255,.25); }
+  .sc-sq.drag .sc-p { opacity: .35; }
+  .sc-co { position: absolute; font-size: calc(var(--sz) / 50); font-weight: 800; line-height: 1; pointer-events: none; z-index: 1; } .sc-co.r { top: 3px; left: 3px; } .sc-co.f { bottom: 2px; right: 4px; }
+  .sc-promo { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: rgba(0,0,0,.55); }
+  .sc-promo div { display: flex; gap: 6px; padding: 10px; border-radius: 14px; background: var(--card); box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+  .sc-promo button { width: calc(var(--sz) / 8); height: calc(var(--sz) / 8); border-radius: 10px; background: #f0d9b5; display: grid; place-items: center; } .sc-promo button:hover { background: #ffe9c4; }
+  .sc-panel { width: clamp(150px, 24cqw, 220px); flex: none; display: flex; flex-direction: column; gap: 10px; min-height: 0; height: calc(var(--sz) + 56px); }
+  .sc-ev { min-height: 20px; font-size: 13.5px; font-weight: 700; color: var(--muted); } .sc-ev b { color: var(--ink); } .sc-ev .chk { color: #ff6b6b; }
+  .sc-hist { flex: 1; min-height: 60px; overflow: auto; margin: 0; padding: 6px 0; list-style: none; border-radius: 12px; background: var(--card); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .sc-hist li { display: grid; grid-template-columns: 34px 1fr 1fr; padding: 3px 10px; } .sc-hist li:nth-child(odd) { background: rgba(255,255,255,.03); } .sc-hist li i { font-style: normal; color: var(--muted); } .sc-hist li span.last { color: var(--accent); font-weight: 800; }
+  .sc-acts { display: flex; flex-direction: column; gap: 6px; } .sc-acts .row { display: flex; gap: 6px; } .sc-acts button { flex: 1; } .sc-acts p { margin: 0; font-size: 13px; font-weight: 700; }
+  .sc-panel { max-height: calc(var(--sz) + 60px); }
+  @container sc (orientation: portrait) { .sc-wrap { --sz: min(calc(100cqh - 200px), calc(100cqw - 8px)); flex-direction: column; gap: 8px; } .sc-panel { width: var(--sz); align-self: center; max-height: 128px; } .sc-hist { display: flex; flex-wrap: wrap; gap: 2px 0; } .sc-hist li { display: inline-flex; gap: 6px; padding: 2px 8px; background: none !important; } }
+  /* okey */
+  .ok-cq { width: 100%; height: 100%; container: ok / size; }
+  .ok-wrap { --tw: clamp(24px, min(calc((100cqw - 70px) / 9), 9cqh), 50px); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: clamp(4px, 2cqh, 12px); position: relative; }
+  .ok-t { --w: 40px; position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: calc(var(--w) * .12); width: var(--w); height: calc(var(--w) * 1.42); border-radius: 7px; background: linear-gradient(#fffdf6, #efe7d2); box-shadow: 0 2px 0 #c9bd9c, 0 4px 8px rgba(0,0,0,.35); font-weight: 900; font-size: calc(var(--w) * .58); line-height: 1; flex: none; user-select: none; }
+  .ok-t i { width: calc(var(--w) * .22); height: calc(var(--w) * .22); border-radius: 50%; margin-top: calc(var(--w) * .12); background: currentColor; opacity: .9; }
+  .ok-c0 { color: #d39200; } .ok-c1 { color: #1d5fd1; } .ok-c2 { color: #1b1b1f; } .ok-c3 { color: #d42a2a; }
+  .ok-t.ok-f { color: #1f8a4c; } .ok-t.ok-f b { font-size: calc(var(--w) * .62); }
+  .ok-t.joker::after { content: '★'; position: absolute; right: 3px; bottom: 2px; font-size: calc(var(--w) * .26); color: #1f8a4c; }
+  .ok-t.back { background: linear-gradient(#2a8a5a, #1d6b45); box-shadow: 0 2px 0 #134a30, 0 4px 8px rgba(0,0,0,.35); }
+  .ok-t.empty { background: transparent; box-shadow: none; border: 2px dashed var(--line); }
+  .ok-opps { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .ok-o { display: flex; align-items: center; gap: 6px; padding: 3px 4px 3px 10px; border-radius: 10px; background: var(--card); font-size: 12px; font-weight: 700; color: var(--muted); } .ok-o .ok-t { --w: 20px; } .ok-o.turn { color: var(--accent); }
+  .ok-mid { display: flex; align-items: flex-end; gap: clamp(10px, 4cqw, 22px); padding: clamp(6px, 2.4cqh, 14px) clamp(10px, 3cqw, 20px); border-radius: 22px; background: radial-gradient(ellipse at center, #1c5e3d, #0f3d26); box-shadow: inset 0 0 30px rgba(0,0,0,.4); }
+  .ok-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; } .ok-slot small { color: #bbf7d0; font-size: 11.5px; font-weight: 700; } .ok-slot .ok-t { --w: calc(var(--tw) * .9); }
+  .ok-slot button { padding: 0; border-radius: 8px; background: none; } .ok-slot button:disabled { cursor: default; } .ok-slot button:not(:disabled) { cursor: pointer; } .ok-slot button:not(:disabled) .ok-t { box-shadow: 0 0 0 3px var(--accent), 0 6px 14px rgba(0,0,0,.4); } .ok-slot button:not(:disabled):hover .ok-t { transform: translateY(-4px); }
+  .ok-deck .ok-t { display: grid; place-items: center; padding: 0; color: #d7ffe8; font-size: 14px; }
+  .ok-ev { min-height: 22px; font-size: 13.5px; font-weight: 700; color: var(--muted); display: flex; align-items: center; gap: 6px; } .ok-ev b { color: var(--ink); } .ok-ev .ok-t { --w: 20px; }
+  .ok-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; min-height: 32px; align-items: center; } .ok-acts button { padding: 6px 12px; } .ok-acts .mine { color: var(--accent); font-weight: 700; font-size: 13.5px; }
+  .ok-rack { display: grid; grid-template-columns: repeat(var(--cols, 8), auto); gap: 5px 3px; padding: clamp(6px, 2cqh, 12px) 12px clamp(8px, 2.4cqh, 14px); border-radius: 14px; background: linear-gradient(#a8743f, #7d522a); box-shadow: inset 0 -6px 0 #5e3c1d, 0 8px 20px rgba(0,0,0,.35); touch-action: none; justify-content: center; }
+  .ok-rack .ok-t { --w: var(--tw); cursor: grab; transition: transform .1s; } .ok-rack .ok-t.sel { transform: translateY(-10px); box-shadow: 0 0 0 3px var(--accent), 0 8px 14px rgba(0,0,0,.4); }
+  .ok-rack .ok-t.new { animation: cardDrop .3s var(--ease-out); } .ok-rack .ok-t.drag { opacity: .5; } .ok-rack .ok-t:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .ok-win { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; } .ok-win .ok-t { --w: 30px; }
   /* harf tahmin */
   .hm-wrap { width: 100%; max-width: 720px; height: 100%; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
   .hm-top { display: flex; align-items: center; gap: 18px; } .hm-svg { width: 130px; flex: none; fill: none; stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; } .hm-svg .hm-g { stroke: var(--muted); }
@@ -15609,7 +15662,7 @@ function sbAddForm(srv) {
   };
 }
 // ================= Kanka Arena =================
-// Sesli odalarda oyun lobileri: bilardo, dart, Pişti, Kanka Kart, bilek güreşi, masa hokeyi, harf tahmin.
+// Sesli odalarda oyun lobileri: bilardo, dart, Pişti, Kanka Kart, bilek güreşi, masa hokeyi, harf tahmin, satranç, okey.
 // Oyun durumu sunucuda; burada sadece çizim ve girdi var.
 const AR_INFO = {
   bilardo: ['🎱', 'Bilardo', '8 top. Kendi grubunu sok, en son 8 numarayı.', '2 kişi'],
@@ -15619,6 +15672,8 @@ const AR_INFO = {
   bilek: ['💪', 'Bilek Güreşi', 'A ve D\'ye sırayla bas, güç topla. Güç düşünce tam zamanında boşluğa bas. 3 turun 2\'sini alan kazanır.', '2 kişi'],
   hokey: ['🏒', 'Masa Hokeyi', 'Pakı rakibin kalesine sok. 7 gol alan kazanır.', '2 kişi'],
   asmaca: ['🔤', 'Harf Tahmin', 'Sırayla harf söyle, kelimeyi bil, puanları topla.', '2-8 kişi'],
+  satranc: ['♟️', 'Satranç', 'Klasik satranç: rok, geçerken alma, terfi. Şah mat eden kazanır.', '2 kişi'],
+  okey: ['🀄', 'Okey', 'Taşları ıstakanda diz, seri ya da çifte ile elini ilk bitiren kazanır.', '2-4 kişi'],
 };
 const AR = { el: null, view: 'hub', lobby: null, lobbies: {}, mounted: null, topGame: '', rt: null, q: '' };
 const AR_ART = k => `/arena/${AR_INFO[k] ? k : 'bilardo'}.jpg`;
@@ -15819,7 +15874,7 @@ function arLobbyWire(box) {
 // Oyun ekranı: üstte oyuncular, ortada oyun, altta sıra/süre. Bitince sonuç kartı.
 function arScores(L) {
   const g = L.g || {}, o = {};
-  for (const n of L.ps || []) o[n] = L.game === 'pisti' ? `${g.score?.[n] ?? 0} puan` : L.game === 'kart' ? `${g.counts?.[n] ?? 0} kart` : L.game === 'asmaca' ? `${g.scores?.[n] ?? 0} puan` : L.game === 'dart' ? `${g.score?.[n] ?? ''}`
+  for (const n of L.ps || []) o[n] = L.game === 'pisti' ? `${g.score?.[n] ?? 0} puan` : L.game === 'kart' ? `${g.counts?.[n] ?? 0} kart` : L.game === 'asmaca' ? `${g.scores?.[n] ?? 0} puan` : L.game === 'satranc' ? (n === g.white ? 'Beyaz' : 'Siyah') : L.game === 'okey' ? `${g.counts?.[n] ?? 0} taş` : L.game === 'dart' ? `${g.score?.[n] ?? ''}`
     : L.game === 'bilardo' ? (g.groups ? `${g.groups[n] === 'duz' ? 'Düz' : 'Çizgili'} · ${g.left?.[n]} kaldı` : 'Masa açık') : L.game === 'bilek' ? `${g.wins?.[n] ?? 0} tur` : L.game === 'hokey' ? `${g.sc?.[(L.ps || []).indexOf(n)] ?? 0} gol` : '';
   return o;
 }
@@ -15945,6 +16000,139 @@ AR_R.kart = {
       if (hand[i][0] === 'w') { const r = b.getBoundingClientRect(); ctxMenu(r.left, r.top - 170, ['r', 'y', 'g', 'b'].map(c => ({ t: CN[c], icon: 'sparkle', act: () => arMove({ i, color: c }) })), 'Renk seç'); }
       else arMove({ i });
     });
+  },
+};
+// ---- Satranç ----
+const SC_G = { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' }, SC_AD = { K: 'şah', Q: 'vezir', R: 'kale', B: 'fil', N: 'at', P: 'piyon' }, SC_VAL = { Q: 9, R: 5, B: 3, N: 3, P: 1 };
+const scSq = s => 'abcdefgh'[s % 8] + ((s >> 3) + 1);
+const scPc = p => `<span class="sc-p ${p[0]}">${SC_G[p[1]]}︎</span>`;
+AR_R.satranc = {
+  mount(el, st) {
+    el.innerHTML = `<div class="sc-cq"><div class="sc-wrap"><div class="sc-bw"><div class="sc-who" id="sc-top"></div><div class="sc-board" id="sc-b" role="grid" aria-label="Satranç tahtası"></div><div class="sc-who" id="sc-bot"></div></div>
+      <div class="sc-panel"><div class="sc-ev" id="sc-ev" aria-live="polite"></div><ol class="sc-hist" id="sc-h" aria-label="Hamleler"></ol><div class="sc-acts" id="sc-a"></div></div></div></div>`;
+    const b = $('#sc-b'); st.sel = -1;
+    const sqOf = e => { const t = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('[data-sq]'); return t && b.contains(t) ? +t.dataset.sq : -1; };
+    b.onpointerdown = e => {
+      const s = sqOf(e), g = st.g; if (s < 0 || !g) return;
+      if (st.sel >= 0 && g.legal[st.sel]?.includes(s)) { AR_R.satranc.go(st, st.sel, s); return; }
+      if (g.legal[s]) { st.sel = s; st.drag = s; b.setPointerCapture(e.pointerId); AR_R.satranc.draw(st); } else if (st.sel >= 0) { st.sel = -1; AR_R.satranc.draw(st); }
+    };
+    b.onpointerup = e => { const from = st.drag; st.drag = -1; if (from == null || from < 0) return; const s = sqOf(e); if (s >= 0 && s !== from && st.g?.legal[from]?.includes(s)) AR_R.satranc.go(st, from, s); else AR_R.satranc.draw(st); };
+    b.onkeydown = e => { // ok tuşlarıyla gez, Enter ile seç/oyna
+      const s = +e.target.dataset?.sq; if (Number.isNaN(s)) return; const fl = st.g?.my === 'b', d = { ArrowUp: 8, ArrowDown: -8, ArrowLeft: -1, ArrowRight: 1 }[e.key];
+      if (d != null) { e.preventDefault(); const n = s + (fl ? -d : d); if (n >= 0 && n < 64 && Math.abs((n % 8) - (s % 8)) <= 1) b.querySelector(`[data-sq="${n}"]`)?.focus(); return; }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const g = st.g; if (st.sel >= 0 && g.legal[st.sel]?.includes(s)) AR_R.satranc.go(st, st.sel, s); else { st.sel = g.legal[s] ? s : -1; AR_R.satranc.draw(st); b.querySelector(`[data-sq="${s}"]`)?.focus(); } }
+    };
+  },
+  go(st, f, t) {
+    const g = st.g, p = g.b[f]; st.sel = -1;
+    if (p?.[1] === 'P' && (t >> 3 === 7 || t >> 3 === 0)) { // terfi: taşı seç
+      AR_R.satranc.draw(st, { f, t });
+      const box = document.createElement('div'); box.className = 'sc-promo'; box.innerHTML = `<div role="dialog" aria-label="Piyon ne olsun?">${'QRBN'.split('').map(q => `<button data-q="${q}" aria-label="${SC_AD[q]}">${scPc(g.my + q)}</button>`).join('')}</div>`;
+      box.onpointerdown = e => { e.stopPropagation(); const q = e.target.closest('[data-q]')?.dataset.q; box.remove(); if (q) arMove({ f, t, promo: q }); else AR_R.satranc.draw(st); };
+      $('#sc-b').appendChild(box); box.querySelector('button').focus(); return;
+    }
+    AR_R.satranc.draw(st, { f, t }); arMove({ f, t }, r => { if (r?.error) AR_R.satranc.draw(st); }); buzz(8);
+  },
+  draw(st, ghost) {
+    const g = st.g, b = $('#sc-b'); if (!g || !b) return;
+    const fl = g.my === 'b', board = ghost ? g.b.slice() : g.b; if (ghost) { board[ghost.t] = board[ghost.f]; board[ghost.f] = null; }
+    const tg = st.sel >= 0 ? g.legal[st.sel] || [] : [], focus = document.activeElement?.dataset?.sq;
+    let h = '';
+    for (let row = 0; row < 8; row++) for (let col = 0; col < 8; col++) {
+      const r = fl ? row : 7 - row, f = fl ? 7 - col : col, s = r * 8 + f, p = board[s], cls = ['sc-sq'];
+      if ((r + f) % 2 === 0) cls.push('dk');
+      if (g.last && (s === g.last.f || s === g.last.t) && !ghost) cls.push('lm'); if (ghost && (s === ghost.f || s === ghost.t)) cls.push('lm');
+      if (s === st.sel) cls.push('sel'); if (s === g.check && !ghost) cls.push('chk'); if (tg.includes(s)) cls.push('mv', p ? 'cap' : ''); if (g.legal[s]) cls.push('can');
+      h += `<button class="${cls.join(' ')}" data-sq="${s}" tabindex="${s === (focus != null ? +focus : fl ? 63 : 0) ? 0 : -1}" aria-label="${scSq(s)}${p ? ` ${p[0] === 'w' ? 'beyaz' : 'siyah'} ${SC_AD[p[1]]}` : ''}${tg.includes(s) ? ', gidilebilir' : ''}">${col === 0 ? `<span class="sc-co r">${r + 1}</span>` : ''}${row === 7 ? `<span class="sc-co f">${'abcdefgh'[f]}</span>` : ''}${p ? scPc(p) : ''}</button>`;
+    }
+    b.innerHTML = h; if (focus != null) b.querySelector(`[data-sq="${focus}"]`)?.focus({ preventScroll: true });
+  },
+  update(L, st) {
+    const g = L.g; st.g = g; if (st.sel >= 0 && !g.legal[st.sel]) st.sel = -1;
+    if (!g.my) g.my = 'w';
+    AR_R.satranc.draw(st);
+    const mat = c => g.cap[c].reduce((a, p) => a + (SC_VAL[p] || 0), 0), who = c => { const n = c === 'w' ? g.white : g.black, d = mat(c) - mat(c === 'w' ? 'b' : 'w'), caps = [...g.cap[c]].sort((a, b) => (SC_VAL[b] || 0) - (SC_VAL[a] || 0));
+      return `<b>${esc(dn(n))}</b><span>${c === 'w' ? 'Beyaz' : 'Siyah'}</span><span class="sc-capl">${caps.map(p => SC_G[p] + '︎').join('')}</span>${d > 0 ? `<em>+${d}</em>` : ''}`; };
+    const top = g.my === 'b' ? 'w' : 'b', bot = top === 'w' ? 'b' : 'w', live = L.state === 'play';
+    $('#sc-top').innerHTML = who(top); $('#sc-top').classList.toggle('turn', live && g.side === top);
+    $('#sc-bot').innerHTML = who(bot); $('#sc-bot').classList.toggle('turn', live && g.side === bot);
+    const H = g.hist, rows = []; for (let i = 0; i < H.length; i += 2) rows.push(`<li><i>${i / 2 + 1}.</i><span class="${i === H.length - 1 ? 'last' : ''}">${esc(H[i])}</span><span class="${i + 1 === H.length - 1 ? 'last' : ''}">${esc(H[i + 1] || '')}</span></li>`);
+    const hl = $('#sc-h'); hl.innerHTML = rows.join('') || '<li><i></i><span style="color:var(--muted)">Beyaz başlar</span></li>'; hl.scrollTop = hl.scrollHeight;
+    const ev = g.ev; if (st.evSeq !== L.seq) { st.evSeq = L.seq;
+      $('#sc-ev').innerHTML = g.check >= 0 && live ? `<span class="chk">${g.turn === S.me ? 'Şahın tehdit altında!' : 'Şah!'}</span>` : ev?.offer ? `${esc(dn(ev.offer))} beraberlik teklif etti` : ev?.declined ? `${esc(dn(ev.declined))} teklifi reddetti` : ev?.san ? `${esc(dn(ev.by))}: <b>${esc(ev.san)}</b>` : '';
+      if (ev?.san && ev.by !== S.me) buzz(ev.check ? 30 : 8); }
+    const a = $('#sc-a'), mine = arMine() && live;
+    if (!mine) { a.innerHTML = ''; return; }
+    const off = g.offer;
+    a.innerHTML = off && off !== S.me ? `<p>${esc(dn(off))} beraberlik istiyor</p><div class="row"><button class="primary" data-sa="accept">Kabul et</button><button class="btns2" data-sa="decline">Reddet</button></div>`
+      : `<div class="row"><button class="btns2" data-sa="offer" ${off ? 'disabled' : ''}>${off ? 'Teklif gönderildi' : 'Beraberlik teklif et'}</button></div><div class="row"><button class="btns2 danger" data-sa="resign">${st.sure ? 'Emin misin? Pes et' : 'Pes et'}</button></div>`;
+    a.querySelectorAll('[data-sa]').forEach(x => x.onclick = () => { const k = x.dataset.sa;
+      if (k === 'resign') { if (!st.sure) { st.sure = true; clearTimeout(st.sureT); st.sureT = setTimeout(() => { st.sure = false; AR.lobby && AR_R.satranc.update(AR.lobby, st); }, 3000); return AR_R.satranc.update(L, st); } return arMove({ resign: true }); }
+      arMove({ draw: k }); });
+  },
+  unmount(st) { clearTimeout(st.sureT); },
+};
+// ---- Okey ----
+const OK_RENK = ['Sarı', 'Mavi', 'Siyah', 'Kırmızı'];
+const okIsJ = (t, g) => !t.f && t.c === g.okey.c && t.n === g.okey.n;
+const okName = (t, g) => t.f ? 'sahte okey' : `${OK_RENK[t.c].toLocaleLowerCase('tr')} ${t.n}${g && okIsJ(t, g) ? ', okey' : ''}`;
+const okH = (t, g, cls = '', attr = '') => !t ? `<span class="ok-t empty ${cls}"></span>` : t.f ? `<span class="ok-t ok-f ${cls}" ${attr} aria-label="sahte okey"><b>♣</b></span>`
+  : `<span class="ok-t ok-c${t.c} ${g && okIsJ(t, g) ? 'joker' : ''} ${cls}" ${attr} aria-label="${okName(t, g)}">${t.n}<i></i></span>`;
+AR_R.okey = {
+  mount(el, st) {
+    el.innerHTML = `<div class="ok-cq"><div class="ok-wrap"><div class="ok-opps" id="ok-o"></div><div class="ok-mid"><div class="ok-slot" id="ok-left"></div><div class="ok-slot"><button class="ok-deck" id="ok-deck" aria-label="Ortadan taş çek"><span class="ok-t back"></span></button><small id="ok-dn"></small></div><div class="ok-slot" id="ok-g"></div><div class="ok-slot" id="ok-mine"></div></div>
+      <div class="ok-ev" id="ok-ev" aria-live="polite"></div><div class="ok-acts" id="ok-a"></div><div class="ok-rack" id="ok-r" aria-label="Istakan"></div></div></div>`;
+    st.order = []; st.sel = null; st.seen = new Set();
+    const r = $('#ok-r'), idOf = e => { const t = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('[data-id]'); return t && r.contains(t) ? +t.dataset.id : null; };
+    r.onpointerdown = e => { const id = idOf(e); if (id == null) return; st.drag = { id, x: e.clientX, y: e.clientY, moved: false }; r.setPointerCapture(e.pointerId); };
+    r.onpointermove = e => { const d = st.drag; if (!d) return; if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 6) return; d.moved = true;
+      const over = idOf(e); if (over == null || over === d.id) return; const o = st.order, a = o.indexOf(d.id), b = o.indexOf(over); o.splice(a, 1); o.splice(b, 0, d.id); AR_R.okey.rack(st); };
+    r.onpointerup = () => { const d = st.drag; st.drag = null; if (!d) return; if (!d.moved) { st.sel = st.sel === d.id ? null : d.id; } AR_R.okey.rack(st); AR_R.okey.acts(st); };
+    r.ondblclick = e => { const id = +e.target.closest('[data-id]')?.dataset.id; const g = st.g; if (!Number.isNaN(id) && g?.turn === S.me && g.phase === 'discard') arMove({ discard: id }); };
+    r.onkeydown = e => { const id = +e.target.closest('[data-id]')?.dataset.id; if (Number.isNaN(id)) return; const o = st.order, i = o.indexOf(id);
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); st.sel = st.sel === id ? null : id; AR_R.okey.rack(st); AR_R.okey.acts(st); r.querySelector(`[data-id="${id}"]`)?.focus(); }
+      else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && e.altKey) { e.preventDefault(); const j = i + (e.key === 'ArrowLeft' ? -1 : 1); if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]]; AR_R.okey.rack(st); r.querySelector(`[data-id="${id}"]`)?.focus(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); r.querySelector(`[data-id="${o[i + (e.key === 'ArrowLeft' ? -1 : 1)]}"]`)?.focus(); } };
+  },
+  rack(st) {
+    const g = st.g, r = $('#ok-r'); if (!g?.hand) { r.hidden = true; return; } r.hidden = false;
+    const by = Object.fromEntries(g.hand.map(t => [t.id, t])), focus = document.activeElement?.dataset?.id;
+    r.style.setProperty('--cols', Math.max(7, Math.ceil(st.order.length / 2)));
+    r.innerHTML = st.order.map(id => okH(by[id], g, `${st.sel === id ? 'sel' : ''} ${st.drag?.moved && st.drag.id === id ? 'drag' : ''} ${!st.seen.has(id) ? 'new' : ''}`, `data-id="${id}" role="button" tabindex="0"`)).join('');
+    st.order.forEach(id => st.seen.add(id));
+    if (focus != null) r.querySelector(`[data-id="${focus}"]`)?.focus({ preventScroll: true });
+  },
+  sort(st, how) { const g = st.g, by = Object.fromEntries(g.hand.map(t => [t.id, t])), v = t => t.f ? g.okey : t, J = t => okIsJ(t, g) ? 1 : 0;
+    st.order.sort((a, b) => { const A = by[a], B = by[b]; if (J(A) !== J(B)) return J(A) - J(B); const x = v(A), y = v(B); return how === 'seri' ? x.c - y.c || x.n - y.n : x.n - y.n || x.c - y.c; }); AR_R.okey.rack(st); },
+  acts(st) {
+    const g = st.g, a = $('#ok-a'), L = AR.lobby; if (!g) return;
+    const my = g.turn === S.me && L?.state === 'play', can = my && g.phase === 'discard' && st.sel != null;
+    a.innerHTML = !g.hand ? '' : `${my ? `<span class="mine">${g.phase === 'draw' ? 'Ortadan çek ya da soldakini al' : st.sel == null ? 'Atacağın taşı seç' : ''}</span>` : ''}
+      ${my && g.phase === 'discard' ? `<button class="primary" id="ok-at" ${can ? '' : 'disabled'}>Taşı at</button><button class="btns2" id="ok-fin" ${can ? '' : 'disabled'} title="Seçtiğin taşı atıp elini aç">Bitir</button>` : ''}
+      <button class="btns2" id="ok-s1">Seri diz</button><button class="btns2" id="ok-s2">Çift diz</button>`;
+    $('#ok-at') && ($('#ok-at').onclick = () => { const id = st.sel; arMove({ discard: id }, r => { if (!r?.error) st.sel = null; }); });
+    $('#ok-fin') && ($('#ok-fin').onclick = () => arMove({ finish: st.sel }));
+    $('#ok-s1').onclick = () => AR_R.okey.sort(st, 'seri'); $('#ok-s2').onclick = () => AR_R.okey.sort(st, 'cift');
+  },
+  update(L, st) {
+    const g = L.g; st.g = g; const live = L.state === 'play', my = g.turn === S.me && live;
+    if (g.hand) { const ids = new Set(g.hand.map(t => t.id)); st.order = st.order.filter(id => ids.has(id)); for (const t of g.hand) if (!st.order.includes(t.id)) st.order.push(t.id); if (st.sel != null && !ids.has(st.sel)) st.sel = null;
+      if (!st.sorted) { st.sorted = true; AR_R.okey.sort(st, 'seri'); } }
+    const others = L.ps.filter(n => n !== S.me);
+    $('#ok-o').innerHTML = others.filter(n => n !== g.left).map(n => `<div class="ok-o ${g.turn === n ? 'turn' : ''}" title="${esc(dn(n))} en son bunu attı">${esc(dn(n))}${okH(g.disc[n]?.top, g)}</div>`).join('');
+    const lp = g.left && g.disc[g.left], canLeft = my && g.phase === 'draw' && lp?.top;
+    $('#ok-left').innerHTML = g.hand ? `<button id="ok-take" ${canLeft ? '' : 'disabled'} aria-label="Soldaki taşı al${lp?.top ? ': ' + okName(lp.top, g) : ''}">${okH(lp?.top, g)}</button><small>${g.left ? esc(dn(g.left)) + (lp?.top ? ' attı' : '') : 'Soldan al'}</small>` : '';
+    $('#ok-take') && ($('#ok-take').onclick = () => arMove({ draw: 'left' }));
+    $('#ok-deck').disabled = !(my && g.phase === 'draw' && g.deck); $('#ok-deck').onclick = () => arMove({ draw: 'deck' });
+    $('#ok-dn').textContent = `${g.deck} taş`;
+    $('#ok-g').innerHTML = `${okH(g.gost, null)}<small>Gösterge · okey ${OK_RENK[g.okey.c]} ${g.okey.n}</small>`;
+    $('#ok-mine').innerHTML = g.hand ? `${okH(g.disc[S.me]?.top, g)}<small>Attığın</small>` : '';
+    const ev = g.ev; if (st.evSeq !== L.seq) { st.evSeq = L.seq;
+      $('#ok-ev').innerHTML = !ev ? '' : ev.left ? `${esc(dn(ev.left))} oyundan ayrıldı` : ev.drew ? `<b>${esc(dn(ev.by))}</b> ortadan çekti` : ev.took ? `<b>${esc(dn(ev.by))}</b> soldan aldı ${okH(ev.took, g)}` : ev.threw ? `<b>${esc(dn(ev.by))}</b> attı ${okH(ev.threw, g)}` : '';
+      if (my && ev?.by !== S.me) buzz(15); }
+    if (g.win) $('#ok-ev').innerHTML = `<b>${esc(dn(g.win.by))}</b> bitirdi:<div class="ok-win">${g.win.hand.map(t => okH(t, g)).join('')}</div>`;
+    AR_R.okey.rack(st); AR_R.okey.acts(st);
   },
 };
 AR_R.asmaca = {

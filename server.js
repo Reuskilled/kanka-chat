@@ -4428,7 +4428,222 @@ const HOKEY = {
   view(st) { const k = st.k; return { k: [r3(k.x), r3(k.y)], kv: [r3(k.vx), r3(k.vy)], p: st.pd.map(pd => [r3(pd.x), r3(pd.y)]), sc: st.sc, pause: st.pause > 0, last: st.last, win: HOK.WIN, ev: st.ev }; },
   leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
 };
-const ARENA_GAMES = { bilardo: BILARDO, dart: DART, pisti: PISTI, kart: KART, bilek: BILEK, hokey: HOKEY, asmaca: ASMACA };
+// ---------- Satranç ----------
+// Kare numarası = sıra*8 + sütun (a1 = 0, h8 = 63). Taşlar 'wK', 'bP' gibi. ps[0] beyaz.
+const SAT_N = [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]], SAT_D = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+const SAT_TR = { K: 'Ş', Q: 'V', R: 'K', B: 'F', N: 'A' };
+const satAt = (f, r) => f >= 0 && f < 8 && r >= 0 && r < 8 ? r * 8 + f : -1;
+const satSq = s => 'abcdefgh'[s % 8] + ((s >> 3) + 1);
+function satAttacked(b, sq, by) {
+  const f = sq % 8, r = sq >> 3, pr = by === 'w' ? r - 1 : r + 1;
+  for (const df of [-1, 1]) { const s = satAt(f + df, pr); if (s >= 0 && b[s] === by + 'P') return true; }
+  for (const [df, dr] of SAT_N) { const s = satAt(f + df, r + dr); if (s >= 0 && b[s] === by + 'N') return true; }
+  for (const [df, dr] of SAT_D) {
+    const s = satAt(f + df, r + dr); if (s >= 0 && b[s] === by + 'K') return true;
+    const diag = df && dr; let x = f + df, y = r + dr;
+    while (x >= 0 && x < 8 && y >= 0 && y < 8) { const p = b[y * 8 + x]; if (p) { if (p[0] === by && (p[1] === 'Q' || p[1] === (diag ? 'B' : 'R'))) return true; break; } x += df; y += dr; }
+  }
+  return false;
+}
+function satPseudo(st, side) {
+  const b = st.b, ms = [], opp = side === 'w' ? 'b' : 'w';
+  for (let s = 0; s < 64; s++) {
+    const p = b[s]; if (!p || p[0] !== side) continue; const f = s % 8, r = s >> 3, t = p[1], add = (to, x) => ms.push({ f: s, t: to, ...x });
+    if (t === 'P') {
+      const d = side === 'w' ? 1 : -1, last = side === 'w' ? 7 : 0, push = (to, x) => { if ((to >> 3) === last) for (const q of 'QRBN') add(to, { ...x, promo: q }); else add(to, x); };
+      const one = satAt(f, r + d);
+      if (one >= 0 && !b[one]) { push(one); const two = satAt(f, r + 2 * d); if (r === (side === 'w' ? 1 : 6) && !b[two]) add(two, { dbl: 1 }); }
+      for (const df of [-1, 1]) { const c = satAt(f + df, r + d); if (c < 0) continue; if (b[c] && b[c][0] === opp) push(c); else if (c === st.ep) add(c, { ep: 1 }); }
+    } else if (t === 'N' || t === 'K') {
+      for (const [df, dr] of t === 'N' ? SAT_N : SAT_D) { const to = satAt(f + df, r + dr); if (to >= 0 && (!b[to] || b[to][0] === opp)) add(to); }
+      if (t === 'K' && s === (side === 'w' ? 4 : 60) && !satAttacked(b, s, opp)) {
+        if (st.castle[side + 'K'] && !b[s + 1] && !b[s + 2] && b[s + 3] === side + 'R' && !satAttacked(b, s + 1, opp) && !satAttacked(b, s + 2, opp)) add(s + 2, { castle: 'K' });
+        if (st.castle[side + 'Q'] && !b[s - 1] && !b[s - 2] && !b[s - 3] && b[s - 4] === side + 'R' && !satAttacked(b, s - 1, opp) && !satAttacked(b, s - 2, opp)) add(s - 2, { castle: 'Q' });
+      }
+    } else {
+      for (const [df, dr] of SAT_D) {
+        if (t === 'B' && !(df && dr) || t === 'R' && df && dr) continue;
+        let x = f + df, y = r + dr;
+        while (x >= 0 && x < 8 && y >= 0 && y < 8) { const to = y * 8 + x; if (b[to]) { if (b[to][0] === opp) add(to); break; } add(to); x += df; y += dr; }
+      }
+    }
+  }
+  return ms;
+}
+function satApply(b, m, side) {
+  const nb = b.slice(), p = nb[m.f]; nb[m.f] = null;
+  if (m.ep) nb[m.t + (side === 'w' ? -8 : 8)] = null;
+  nb[m.t] = m.promo ? side + m.promo : p;
+  if (m.castle === 'K') { nb[m.f + 1] = nb[m.f + 3]; nb[m.f + 3] = null; }
+  if (m.castle === 'Q') { nb[m.f - 1] = nb[m.f - 4]; nb[m.f - 4] = null; }
+  return nb;
+}
+const satLegal = (st, side) => satPseudo(st, side).filter(m => { const nb = satApply(st.b, m, side); return !satAttacked(nb, nb.indexOf(side + 'K'), side === 'w' ? 'b' : 'w'); });
+function satNoMaterial(b) { // mat yapacak taş kalmadı: K-K, K+F/A - K, aynı renk kareli filler
+  const rest = b.map((p, s) => p && p[1] !== 'K' ? [p, s] : null).filter(Boolean);
+  if (rest.some(([p]) => 'PQR'.includes(p[1]))) return false;
+  if (rest.length <= 1) return true;
+  return rest.every(([p]) => p[1] === 'B') && new Set(rest.map(([, s]) => ((s >> 3) + s) % 2)).size === 1;
+}
+const SATRANC = {
+  ad: 'Satranç', emoji: '♟️', min: 2, max: 2, turnSec: 150,
+  init(ps) {
+    const b = Array(64).fill(null), back = 'RNBQKBNR';
+    for (let f = 0; f < 8; f++) { b[f] = 'w' + back[f]; b[8 + f] = 'wP'; b[48 + f] = 'bP'; b[56 + f] = 'b' + back[f]; }
+    const st = { ps, b, side: 'w', castle: { wK: 1, wQ: 1, bK: 1, bQ: 1 }, ep: -1, half: 0, hist: [], last: null, rep: {}, offer: null, cap: { w: [], b: [] }, ev: null };
+    st.rep[SATRANC.key(st)] = 1; return st;
+  },
+  key: st => st.b.map(p => p || '-').join('') + st.side + Object.entries(st.castle).filter(([, v]) => v).map(([k]) => k).join('') + st.ep,
+  sideOf: (st, p) => st.ps[0] === p ? 'w' : st.ps[1] === p ? 'b' : null,
+  cur: st => st.ps[st.side === 'w' ? 0 : 1],
+  move(st, p, mv) {
+    const me = SATRANC.sideOf(st, p); if (!me) return 'Bu oyunda değilsin';
+    const other = st.ps[me === 'w' ? 1 : 0];
+    if (mv?.resign) { st.over = { rank: [other, p], forfeit: p, why: 'Rakip pes etti' }; return; }
+    if (mv?.draw === 'offer') { if (st.offer) return 'Zaten bir beraberlik teklifi var'; st.offer = p; st.ev = { offer: p }; return; }
+    if (mv?.draw === 'accept') { if (!st.offer || st.offer === p) return 'Kabul edilecek teklif yok'; st.over = { rank: [st.ps[0], st.ps[1]], draw: true, why: 'Anlaşmalı beraberlik' }; return; }
+    if (mv?.draw === 'decline') { if (!st.offer || st.offer === p) return 'Reddedilecek teklif yok'; st.offer = null; st.ev = { declined: p }; return; }
+    if (st.side !== me) return 'Sıra sende değil';
+    const f = mv?.f | 0, t = mv?.t | 0, pr = String(mv?.promo || 'Q').toUpperCase(), promo = 'QRBN'.includes(pr) && pr.length === 1 ? pr : 'Q';
+    const legal = satLegal(st, me), m = legal.find(x => x.f === f && x.t === t && (!x.promo || x.promo === promo));
+    if (!m) return 'Bu hamle olmaz';
+    const piece = st.b[f], took = m.ep ? (me === 'w' ? 'bP' : 'wP') : st.b[t];
+    // Kısa notasyon (Türkçe harflerle): aynı kareye gidebilen ikinci taş varsa çıkış sütunu/sırası eklenir
+    let san;
+    if (m.castle) san = m.castle === 'K' ? 'O-O' : 'O-O-O';
+    else if (piece[1] === 'P') san = (took ? 'abcdefgh'[f % 8] + 'x' : '') + satSq(t) + (m.promo ? '=' + SAT_TR[m.promo] : '');
+    else {
+      const twins = legal.filter(x => x.t === t && x.f !== f && st.b[x.f] === piece);
+      const dis = !twins.length ? '' : twins.every(x => x.f % 8 !== f % 8) ? 'abcdefgh'[f % 8] : twins.every(x => x.f >> 3 !== f >> 3) ? String((f >> 3) + 1) : satSq(f);
+      san = SAT_TR[piece[1]] + dis + (took ? 'x' : '') + satSq(t);
+    }
+    st.b = satApply(st.b, m, me);
+    if (took) st.cap[me].push(took[1]);
+    if (piece[1] === 'K') st.castle[me + 'K'] = st.castle[me + 'Q'] = 0;
+    for (const [sq, k] of [[0, 'wQ'], [7, 'wK'], [56, 'bQ'], [63, 'bK']]) if (f === sq || t === sq) st.castle[k] = 0;
+    st.ep = m.dbl ? (f + t) / 2 : -1;
+    st.half = piece[1] === 'P' || took ? 0 : st.half + 1;
+    st.side = me === 'w' ? 'b' : 'w'; st.offer = null;
+    const k = SATRANC.key(st); st.rep[k] = (st.rep[k] || 0) + 1;
+    const replies = satLegal(st, st.side), check = satAttacked(st.b, st.b.indexOf(st.side + 'K'), me);
+    san += check ? (replies.length ? '+' : '#') : '';
+    st.hist.push(san); st.last = { f, t }; st.ev = { by: p, san, took: took ? took[1] : null, check };
+    if (!replies.length) st.over = check ? { rank: [p, other], why: 'Şah mat' } : { rank: [p, other], draw: true, why: 'Pat' };
+    else if (st.half >= 100) st.over = { rank: [p, other], draw: true, why: '50 hamle kuralı' };
+    else if (st.rep[k] >= 3) st.over = { rank: [p, other], draw: true, why: 'Üç kez aynı konum' };
+    else if (satNoMaterial(st.b)) st.over = { rank: [p, other], draw: true, why: 'Mat edecek taş kalmadı' };
+  },
+  view(st, me) {
+    const side = SATRANC.sideOf(st, me), turn = SATRANC.cur(st), legal = {};
+    if (side && side === st.side && !st.over) for (const m of satLegal(st, side)) (legal[m.f] ||= []).includes(m.t) || legal[m.f].push(m.t);
+    const inCheck = satAttacked(st.b, st.b.indexOf(st.side + 'K'), st.side === 'w' ? 'b' : 'w');
+    return { b: st.b, side: st.side, turn, white: st.ps[0], black: st.ps[1], my: side, legal, last: st.last, check: inCheck ? st.b.indexOf(st.side + 'K') : -1, hist: st.hist, cap: st.cap, offer: st.offer, ev: st.ev, why: st.over?.why || null };
+  },
+  leave(st, p) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; },
+};
+// ---------- Okey ----------
+// 106 taş: 4 renk × 1-13 × 2 + 2 sahte okey. Gösterge açılır; göstergenin bir fazlası (aynı renk, 13'ten sonra 1) okeydir ve her taşın yerine geçer.
+// Sahte okey, okeyin gerçek değeri olarak kullanılır. Bitirmek: 14 taşın hepsi per (aynı renk sıralı 3+, 12-13-1 olur) ya da
+// aynı sayı farklı renk 3-4'lü gruplara girer veya 7 çift olur. Diziliş kontrolü sunucuda otomatik yapılır.
+const OKEY_RENK = ['Sarı', 'Mavi', 'Siyah', 'Kırmızı'];
+const okTile = id => id >= 104 ? { id, f: 1 } : { id, c: Math.floor(id / 26), n: Math.floor((id % 26) / 2) + 1 };
+function okeyCover(codes, W) { // codes: [renk*13 + (sayı-1)] listesi; W: okey (joker) sayısı. Gruplara girebilen en çok taş sayısı
+  const cnt = Array(52).fill(0); for (const c of codes) cnt[c]++;
+  const memo = new Map();
+  const go = w => {
+    let i = cnt.findIndex(x => x > 0); if (i < 0) return 0;
+    const key = cnt.join('') + ':' + w; if (memo.has(key)) return memo.get(key);
+    let best = 0; cnt[i]--; best = go(w); cnt[i]++; // bu taş boşta kalsın
+    const col = Math.floor(i / 13), n = i % 13;
+    // Aynı sayı, farklı renk (3-4)
+    const others = [0, 1, 2, 3].filter(c => c !== col);
+    for (let mask = 0; mask < 8; mask++) {
+      const pick = others.filter((_, k) => mask >> k & 1); if (pick.some(c => !cnt[c * 13 + n])) continue;
+      for (let jw = 0; jw <= w; jw++) { const size = 1 + pick.length + jw; if (size < 3 || size > 4) continue;
+        cnt[i]--; pick.forEach(c => cnt[c * 13 + n]--); const v = size + go(w - jw); cnt[i]++; pick.forEach(c => cnt[c * 13 + n]++); if (v > best) best = v; }
+    }
+    // Per: aynı renk ardışık; i taşı serinin içinde. Değer 0-12, 13 = 1'in 13'ten sonraki hali
+    for (const pos of n === 0 ? [0, 13] : [n]) for (let s = Math.max(0, pos - 12); s <= pos; s++) {
+      const walk = (v, w2, len) => {
+        if (v > 13 || v === 13 && s === 0) return;
+        const real = v === 13 ? col * 13 : col * 13 + v, opts = [];
+        if (v === pos) opts.push('i'); else { if (cnt[real] > 0) opts.push('r'); if (w2 > 0) opts.push('w'); }
+        for (const o of opts) {
+          if (o === 'r') cnt[real]--; if (o === 'i') cnt[i]--;
+          const ww = o === 'w' ? w2 - 1 : w2, L = len + 1;
+          if (L >= 3 && v >= pos) { const val = L + go(ww); if (val > best) best = val; }
+          walk(v + 1, ww, L);
+          if (o === 'r') cnt[real]++; if (o === 'i') cnt[i]++;
+        }
+      };
+      walk(s, w, 0);
+    }
+    memo.set(key, best); return best;
+  };
+  return go(W);
+}
+function okeyPairs(codes, W) { const c = {}; for (const x of codes) c[x] = (c[x] || 0) + 1; let p = 0, single = 0; for (const v of Object.values(c)) { p += v >> 1; single += v & 1; } const j = Math.min(W, single); return p + j + Math.floor((W - j) / 2); }
+const OKEY = {
+  ad: 'Okey', emoji: '🀄', min: 2, max: 4, turnSec: 50,
+  init(ps) {
+    const ids = shuffle([...Array(106).keys()]);
+    const gost = ids.splice(ids.findIndex(id => id < 104), 1)[0], g = okTile(gost), okey = { c: g.c, n: g.n === 13 ? 1 : g.n + 1 };
+    const hands = Object.fromEntries(ps.map((p, k) => [p, ids.splice(0, k === 0 ? 15 : 14)]));
+    return { ps, deck: ids, hands, disc: Object.fromEntries(ps.map(p => [p, []])), gost, okey, turn: 0, phase: 'discard', ev: null };
+  },
+  cur: st => st.ps[st.turn],
+  isOkey: (st, t) => !t.f && t.c === st.okey.c && t.n === st.okey.n,
+  eval(st, ids) { // [kaplanan, çift sayısı]
+    const codes = [], W = ids.filter(id => OKEY.isOkey(st, okTile(id))).length;
+    for (const id of ids) { const t = okTile(id); if (OKEY.isOkey(st, t)) continue; const v = t.f ? st.okey : t; codes.push(v.c * 13 + v.n - 1); }
+    return [okeyCover(codes, W), okeyPairs(codes, W)];
+  },
+  prevOf: (st, i) => st.ps[(i - 1 + st.ps.length) % st.ps.length],
+  move(st, p, mv) {
+    const i = st.ps.indexOf(p); if (i !== st.turn) return 'Sıra sende değil';
+    const hand = st.hands[p];
+    if (mv?.draw) {
+      if (st.phase !== 'draw') return 'Önce bir taş at';
+      if (mv.draw === 'left') { const pile = st.disc[OKEY.prevOf(st, i)]; if (!pile.length) return 'Solunda taş yok'; hand.push(pile.pop()); st.ev = { by: p, took: hand[hand.length - 1] }; }
+      else { if (!st.deck.length) return 'Ortada taş kalmadı'; hand.push(st.deck.shift()); st.ev = { by: p, drew: 1 }; }
+      st.phase = 'discard'; st.drawn = hand[hand.length - 1]; return;
+    }
+    const id = mv?.discard ?? mv?.finish; if (typeof id !== 'number' || !hand.includes(id)) return 'Bu taş elinde yok';
+    if (st.phase !== 'discard') return 'Önce taş çek';
+    const rest = hand.filter(x => x !== id);
+    if (mv.finish !== undefined) {
+      const [cov, pairs] = OKEY.eval(st, rest);
+      if (cov < rest.length && pairs < 7) return `Elin bitmiyor: ${Math.min(rest.length - cov, 14 - 2 * pairs)} taş açıkta kalıyor`;
+      st.hands[p] = rest; st.disc[p].push(id);
+      const others = st.ps.filter(x => x !== p).map(x => [x, OKEY.eval(st, st.hands[x])[0]]).sort((a, b) => b[1] - a[1]);
+      st.over = { rank: [p, ...others.map(([x]) => x)], why: `${pairs >= 7 && cov < rest.length ? 'Çifteden' : 'Seriyle'} bitti${OKEY.isOkey(st, okTile(id)) ? ', okey atılarak' : ''}` };
+      st.win = { by: p, hand: rest, pairs: pairs >= 7 && cov < rest.length }; return;
+    }
+    st.hands[p] = rest; st.disc[p].push(id); st.ev = { by: p, threw: id }; st.drawn = null;
+    st.turn = (st.turn + 1) % st.ps.length; st.phase = 'draw';
+    if (!st.deck.length) { // ortadaki taşlar bitti: el berabere, en çok taşı dizili olan önde
+      const r = st.ps.map(x => [x, OKEY.eval(st, st.hands[x])[0]]).sort((a, b) => b[1] - a[1]);
+      st.over = { rank: r.map(([x]) => x), draw: r[0][1] === r[1][1], why: 'Ortada taş kalmadı' };
+    }
+  },
+  view(st, me) {
+    const i = st.ps.indexOf(me), T = okTile;
+    return { turn: st.ps[st.turn], phase: st.phase, deck: st.deck.length, gost: T(st.gost), okey: st.okey,
+      hand: i >= 0 ? st.hands[me].map(T) : null, drawn: i >= 0 ? st.drawn ?? null : null,
+      counts: Object.fromEntries(st.ps.map(p => [p, st.hands[p].length])),
+      disc: Object.fromEntries(st.ps.map(p => [p, { top: st.disc[p].length ? T(st.disc[p][st.disc[p].length - 1]) : null, n: st.disc[p].length }])),
+      left: i >= 0 ? OKEY.prevOf(st, i) : null, ev: st.ev ? { ...st.ev, threw: st.ev.threw !== undefined ? T(st.ev.threw) : undefined, took: st.ev.took !== undefined ? T(st.ev.took) : undefined } : null,
+      win: st.win ? { by: st.win.by, hand: st.win.hand.map(T), pairs: st.win.pairs } : null, why: st.over?.why || null };
+  },
+  leave(st, p) {
+    if (st.ps.length <= 2) { st.over = { rank: [...st.ps.filter(x => x !== p), p], forfeit: p }; return; }
+    const i = st.ps.indexOf(p); st.deck.push(...st.hands[p]); delete st.hands[p]; st.ps.splice(i, 1);
+    st.deck.push(...st.disc[p]); delete st.disc[p]; st.deck = shuffle(st.deck);
+    if (i < st.turn) st.turn--; else if (i === st.turn) { st.turn %= st.ps.length; st.phase = st.hands[st.ps[st.turn]].length > 14 ? 'discard' : 'draw'; }
+    st.ev = { left: p };
+  },
+};
+const ARENA_GAMES = { bilardo: BILARDO, dart: DART, pisti: PISTI, kart: KART, bilek: BILEK, hokey: HOKEY, asmaca: ASMACA, satranc: SATRANC, okey: OKEY };
 // ---------- Lobi yönetimi ----------
 const arenaInVoice = (ch, n) => [...(voice.get(ch)?.values() || [])].includes(n);
 function arenaView(L, viewer) {
