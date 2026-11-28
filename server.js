@@ -220,7 +220,7 @@ app.get('/discord-alternatifi', (req, res) => res.redirect(301, '/sesli-sohbet' 
 app.get('/.well-known/assetlinks.json', (req, res) => { const fp = String(process.env.ANDROID_SHA256 || '').split(',').map(x => x.trim()).filter(Boolean); if (!fp.length) return res.status(404).end();
   res.json([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: process.env.ANDROID_PACKAGE || 'com.kanka.chat', sha256_cert_fingerprints: fp } }]); });
 app.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (req, res) => { const team = String(process.env.IOS_TEAM_ID || npCfg.apns?.teamId || '').trim(); if (!team) return res.status(404).end(); // Team ID: ortam değişkeni ya da Yönetim › Mobil bildirimler'deki APNs ayarı
-  res.type('application/json').send(JSON.stringify({ applinks: { details: [{ appIDs: [`${team}.${process.env.IOS_BUNDLE || npCfg.apns?.bundle || 'com.kanka.chat'}`], components: ['/davet/*', '/s/*', '/app*', '/bot-ekle/*'].map(p => ({ '/': p })) }] } })); });
+  res.type('application/json').send(JSON.stringify({ applinks: { details: [{ appIDs: [`${team}.${process.env.IOS_BUNDLE || npCfg.apns?.bundle || 'com.kanka.chat'}`], components: ['/davet/*', '/kod/*', '/s/*', '/app*', '/bot-ekle/*'].map(p => ({ '/': p })) }] } })); });
 app.get('/davet/:code', (req, res) => res.redirect('/app?davet=' + encodeURIComponent(req.params.code)));
 // Özel davet linki (Discord'daki discord.gg/isim gibi): kankahq.com/isim.
 const vanityOf = slug => db.servers.find(x => x.vanity && x.vanity === String(slug || '').toLowerCase() && vanityOk(x));
