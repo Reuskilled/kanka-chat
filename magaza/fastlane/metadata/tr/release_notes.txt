@@ -1,1 +1,1 @@
-İlk sürüm: sunucular, sesli odalar, özel mesajlar ve gelen arama ekranı.
+İlk sürüm: sunucular, sesli odalar, görüntülü arama, özel mesajlar, Kanka Arena oyunları ve birlikte izle.
