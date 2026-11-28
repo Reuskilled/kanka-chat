@@ -67,12 +67,13 @@ try {
   if (-not (Test-Path "$Dst\caddy.exe")) {
     Invoke-WebRequest 'https://caddyserver.com/api/download?os=windows&arch=amd64' -OutFile "$Dst\caddy.exe" -UseBasicParsing
   }
+  # IP adresi hiçbir dosyaya yazılmaz: alan adı dışında gelen her http isteği alan adına yönlenir
   @"
-$Domain, 185-208-172-60.sslip.io {
+$Domain {
 	encode gzip
 	reverse_proxy 127.0.0.1:3000
 }
-http://185.208.172.60 {
+http:// {
 	redir https://$Domain{uri}
 }
 "@ | Set-Content -Encoding ASCII "$Dst\Caddyfile"
