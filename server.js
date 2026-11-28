@@ -351,6 +351,21 @@ app.post('/guvenlik/:tur', (req, res) => {
   secLog(r.x.kind === 'kilit' ? 'hesap-kilitlendi' : 'eposta-geri-alindi', u.name, 'e-postadaki güvenlik linkiyle');
   save(); res.redirect(303, '/login?sifirla=' + resetToken(u.name, 1));
 });
+// ---- Duyuru e-postalarından çıkma: her mailin altındaki link. GET onay sayfası, işlem POST ile ----
+const mailOffGet = req => { const n = String(req.query.u || ''), t = String(req.query.t || ''), u = db.users[n]; return u && u.mailTok && /^[a-f0-9]{32}$/.test(t) && crypto.timingSafeEqual(Buffer.from(t), Buffer.from(u.mailTok)) ? u : null; };
+app.get('/eposta-iptal', (req, res) => {
+  res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+  const u = mailOffGet(req); if (!u) return res.status(410).send(secPage('Link geçersiz', 'Bu link geçersiz. Hâlâ e-posta alıyorsan <b>kankahq1@gmail.com</b> adresine yaz.'));
+  if (u.mailOff) return res.send(secPage('Zaten çıktın', 'Kanka Chat duyuru e-postalarını artık almıyorsun. Şifre sıfırlama gibi hesap güvenliği e-postaları gelmeye devam eder.'));
+  res.send(secPage('Duyuru e-postalarından çık', `<b>${escH(u.name)}</b> hesabına Kanka Chat duyuru e-postaları gönderilmeyecek. Şifre sıfırlama gibi hesap güvenliği e-postaları gelmeye devam eder.`, 'Duyurulardan çık'));
+});
+app.post('/eposta-iptal', (req, res) => {
+  res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+  if (limited('moff|' + reqIp(req), 30, 3600e3)) return res.status(429).send(secPage('Çok fazla deneme', 'Biraz sonra tekrar dene.'));
+  const u = mailOffGet(req); if (!u) return res.status(410).send(secPage('Link geçersiz', 'Bu link geçersiz.'));
+  u.mailOff = Date.now(); save();
+  res.send(secPage('Tamam, çıktın', 'Kanka Chat duyuru e-postalarını artık almayacaksın. Fikrini değiştirirsen <b>kankahq1@gmail.com</b> adresine yazman yeterli.'));
+});
 app.get('/api/yedek/:name', (req, res) => {
   const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), who = sessGet(tok);
   if (!who || !siteAdmin(who)) return res.status(403).json({ error: 'Yetkin yok' });
@@ -3331,6 +3346,38 @@ async function sendMail(to, subject, html, attachments, kind = 'diğer') {
     return false;
   }
 }
+
+// ---- Toplu duyuru e-postası (yönetim paneli > E-posta) ----
+// Gmail günde ~500 e-posta izin veriyor ve hızlı toplu gönderimi spam sayıp hesabı kilitleyebiliyor (o zaman şifre sıfırlama da durur).
+// Bu yüzden: tek tek, aralıklı, günde en fazla BULK_DAY tane. Kalan ertesi gün kendiliğinden devam eder; kuyruk data.json'da, yeniden başlatmada kaldığı yerden sürer.
+const BULK_DAY = 400, BULK_GAP = +process.env.BULK_GAP_MS || 15e3;
+const bulkAud = { all: 'Herkes', active: 'Son 30 günde girenler', sleep: '30 günden uzun süredir girmeyenler' };
+const bulkOk = u => !!u && !u.bot && u.name !== BOT_NAME && u.name !== 'Claude' && EMAIL_RE.test(u.email || '') && !u.mailOff && !isBanned(u) && !u15Closed(u);
+const bulkPick = aud => Object.values(db.users).filter(u => bulkOk(u) && (aud === 'active' ? (u.seen || 0) > Date.now() - 30 * 864e5 : aud === 'sleep' ? (u.seen || 0) <= Date.now() - 30 * 864e5 : true)).map(u => u.name);
+const mailTokOf = u => (u.mailTok ||= crypto.randomBytes(16).toString('hex'));
+// Yönetimin yazdığı düz metin: HTML kaçırılır, **kalın** ve satır sonları desteklenir, {ad} kişinin kullanıcı adı olur
+const bulkText = (t, name) => escH(String(t || '')).replace(/\{ad\}/g, escH(name)).replace(/\*\*(.+?)\*\*/g, '<b style="color:#fff">$1</b>').replace(/\r?\n/g, '<br>');
+function bulkHtml(j, u) {
+  const off = `${baseUrl()}/eposta-iptal?u=${encodeURIComponent(u.name)}&t=${mailTokOf(u)}`;
+  // Alttaki standart not yerine: neden aldığı ve duyurulardan çıkma linki
+  return mailHtml(bulkText(j.title, u.name), bulkText(j.body, u.name), j.btn || null, j.url || null)
+    .replace(/<p style="font-size:12px;color:#8c7b6f;margin-top:18px">[\s\S]*?<\/p>/, `<p style="font-size:12px;line-height:1.6;color:#8c7b6f;margin-top:18px">Bu e-postayı Kanka Chat hesabın (<b>${escH(u.name)}</b>) olduğu için aldın. Duyuru e-postaları almak istemiyorsan <a href="${off}" style="color:#ff8a4c">buradan çıkabilirsin</a>.</p>`);
+}
+let bulkBusy = false;
+async function bulkTick() {
+  const j = db.bulkMail; if (!j || j.done || j.paused || bulkBusy || !getMailer() || mailDown()) return;
+  const d = ymd(); if (j.day?.d !== d) j.day = { d, n: 0 };
+  if (j.day.n >= BULK_DAY) return; // bugünlük sınır doldu, yarın devam
+  const name = j.queue.shift();
+  if (!name) { j.done = Date.now(); save(); for (const n of onlineNames()) if (siteAdmin(n)) io.to('user:' + n).emit('toast', `📧 Toplu e-posta bitti: ${j.sent} gönderildi${j.fail ? `, ${j.fail} hata` : ''}`); return; }
+  const u = db.users[name];
+  if (!bulkOk(u)) { j.skip++; return save(); } // bu arada çıktıysa ya da hesap kapandıysa atla
+  bulkBusy = true;
+  try { const ok = await sendMail(u.email, j.subject, bulkHtml(j, u), null, 'duyuru'); if (ok) { j.sent++; j.day.n++; } else { j.fail++; j.failed.push(name); if (j.failed.length > 200) j.failed.shift(); } }
+  finally { bulkBusy = false; save(); }
+}
+setInterval(() => { bulkTick().catch(e => console.error('Toplu e-posta:', e.message)); }, BULK_GAP);
+const bulkView = () => { const j = db.bulkMail; return j ? { id: j.id, subject: j.subject, aud: j.aud, by: j.by, at: j.at, total: j.total, sent: j.sent, fail: j.fail, skip: j.skip, left: j.queue.length, today: j.day?.d === ymd() ? j.day.n : 0, done: j.done || null, paused: !!j.paused } : null; };
 const findUserBy = who => { who = clean(who, 190).toLowerCase(); return who && (Object.values(db.users).find(u => !u.bot && u.name.toLowerCase() === who || (u.email && u.email === who)) || Object.values(db.users).find(u => (u.oldNames || []).some(o => o.n.toLowerCase() === who && Date.now() - o.at < NAME_HOLD))); }; // eski adla da giriş (ayrılma süresi içinde)
 // ---------- Kullanıcı adı değiştirme ----------
 const NAME_HOLD = 14 * 864e5, NAME_COOLDOWN = 7 * 864e5;
@@ -5841,6 +5888,34 @@ io.on('connection', socket => {
     const noMail = Object.values(db.users).filter(u => !u.email && !u.bot && u.name !== 'Claude' && u.name !== BOT_NAME).length;
     const health = { lastOk: mailHealth.lastOk, lastErr: mailHealth.lastErrAt > mailHealth.lastOk ? mailHealth.lastErr : '', lastErrAt: mailHealth.lastErrAt, noMail, total: Object.keys(db.users).length, log: (db.mailLog || []).slice(-15).reverse() };
     cb({ ok: true, health, cfg: mailCfg ? { user: mailCfg.user, host: mailCfg.host || '', port: mailCfg.port || 465, url: mailCfg.url || baseUrl(), hasPass: !!mailCfg.pass } : { url: baseUrl() }, ready: !!getMailer() && mailCfg?.ok === true, unverified: !!getMailer() && mailCfg?.ok !== true, failed: mailCfg?.ok === false });
+  });
+  socket.on('adminBulk', async ({ act, subject, title, body, btn, url, aud } = {}, cb = () => {}) => {
+    if (!SA(cb)) return;
+    const j = db.bulkMail;
+    if (act === 'stop' || act === 'resume') { if (!j || j.done) return cb({ error: 'Süren bir gönderim yok' }); j.paused = act === 'stop'; save(); return cb({ ok: true, job: bulkView() }); }
+    if (act === 'cancel') { if (j && !j.done) { j.done = Date.now(); j.cancelled = true; j.queue = []; save(); } return cb({ ok: true, job: bulkView() }); }
+    if (!act) return cb({ ok: true, job: bulkView(), aud: bulkAud, day: BULK_DAY, gap: BULK_GAP });
+    if (act === 'count') return cb({ ok: true, counts: Object.fromEntries(Object.keys(bulkAud).map(k => [k, bulkPick(k).length])), off: Object.values(db.users).filter(u => u.mailOff).length });
+    const draft = { subject: clean(subject, 120), title: clean(title, 120), body: String(body ?? '').slice(0, 4000).replace(/\r/g, ''), btn: clean(btn, 40), url: clean(url, 300) };
+    if (!draft.subject || !draft.title || !draft.body.trim()) return cb({ error: 'Konu, başlık ve metin boş olamaz' });
+    if (draft.btn && !/^https:\/\/[^\s"<>]+$/.test(draft.url)) return cb({ error: 'Buton linki https:// ile başlamalı' });
+    if (!draft.btn) draft.url = '';
+    if (act === 'test') {
+      const u = db.users[me]; if (!EMAIL_RE.test(u?.email || '')) return cb({ error: 'Hesabında e-posta yok' });
+      if (!getMailer()) return cb({ error: 'E-posta kurulu değil' });
+      const ok = await sendMail(u.email, '[TEST] ' + draft.subject, bulkHtml(draft, u), null, 'duyuru-test');
+      return cb(ok ? { ok: true, to: u.email } : { error: 'Gönderilemedi, aşağıdaki son hataya bak' });
+    }
+    if (act === 'start') {
+      if (j && !j.done) return cb({ error: 'Önce süren gönderimi bitir ya da iptal et' });
+      if (!getMailer() || mailCfg?.ok !== true) return cb({ error: 'Önce e-postayı kurup test et' });
+      if (!bulkAud[aud]) return cb({ error: 'Kime gideceğini seç' });
+      const queue = bulkPick(aud); if (!queue.length) return cb({ error: 'Gönderilecek kimse yok' });
+      db.bulkMail = { id: crypto.randomBytes(4).toString('hex'), ...draft, aud, by: me, at: Date.now(), total: queue.length, queue, sent: 0, fail: 0, skip: 0, failed: [], day: { d: ymd(), n: 0 } };
+      staffLog(me, 'Toplu e-posta başlattı', '', `${queue.length} kişi · ${draft.subject}`); save();
+      return cb({ ok: true, job: bulkView() });
+    }
+    cb({ error: 'Geçersiz işlem' });
   });
   // ---- Yönetim paneli: kullanıcılar, ekip, istatistik, kayıtlar ----
   const SM = cb => { if (siteMod(me)) return true; cb({ error: 'Sadece Kanka ekibi' }); return false; };
