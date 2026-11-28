@@ -7346,7 +7346,7 @@ function showSettings(tab) {
       <label class="switch">:) ;) :D gibi ifadeleri emojiye çevir<input type="checkbox" id="p-emo" ${emoOn() ? 'checked' : ''}></label>
       <label class="switch">Bas-konuş (sesli odada tuşa basılı tutunca konuşursun)<input type="checkbox" id="p-ptt" ${store.get('kanka-ptt') === 'on' ? 'checked' : ''}></label>
       <div class="st-row" style="display:flex;align-items:center;gap:10px;margin-top:6px"><span>Bas-konuş tuşu</span><button class="btns2" id="p-pttkey">${esc(pttKeyName())}</button><small class="muted">${window.kankaDesktop ? 'Uygulama arka plandayken (oyunda) da çalışır' : 'Tarayıcıda sadece Kanka sekmesi açıkken çalışır'}</small></div></div></div>`,
-    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Ses cihazları</label><div class="devbox" id="st-dev"></div><button class="btns2" id="st-mic" style="margin-top:10px">${ic('mic')} Mikrofonu test et</button></div><div class="st-field"><label>Başlangıç rehberi</label><button class="btns2" id="st-onb">${ic('sprout')} Rehberi baştan göster</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
+    notif: () => `<div class="st-page"><h3>Bildirimler ve ses</h3><div class="st-field"><label>Ses cihazları</label><div class="devbox" id="st-dev"></div><button class="btns2" id="st-mic" style="margin-top:10px">${ic('mic')} Mikrofonu test et</button></div><div class="st-field"><label>Zil sesi</label><div class="seg" id="st-zil">${Object.entries(ZIL).map(([k, z]) => `<button data-zil="${k}" class="${zil() === z ? 'on' : ''}">${z.ad}</button>`).join('')}</div><p class="hint" style="margin-top:6px">Seçince çalar. Gelen aramada bu melodi çalar, ararken karşı taraf açana kadar da buna uygun bekleme sesi duyarsın.</p><button class="btns2" id="st-zilout" style="margin-top:4px">${ic('phoneCall')} Bekleme sesini dinle</button></div><div class="st-field"><label>Başlangıç rehberi</label><button class="btns2" id="st-onb">${ic('sprout')} Rehberi baştan göster</button></div>${window.kankaDesktop ? `<div class="st-field"><label>Uygulama</label>
         <label class="switch">Bilgisayar açılınca Kanka Chat'i başlat<input type="checkbox" id="as-on"></label>
         <label class="switch">Açılışta simge durumunda başlasın (saatin yanında)<input type="checkbox" id="as-hid"></label>
         <p class="hint" id="as-note">${window.kankaDesktop.autostart ? '' : 'Bu ayar Kanka Chat 1.0.6 ile geliyor. Şimdilik saatin yanındaki simgeye sağ tıklayıp "Bilgisayar açılınca başlat"ı işaretleyebilirsin.'}</p></div>` : ''}${overlaySettingsHTML()}<div class="st-field"><label>Gürültü engelleme (mikrofon)</label>
@@ -7588,7 +7588,9 @@ function showSettings(tab) {
         $('#as-hid').onchange = e => A({ hidden: e.target.checked }).then(() => toast(e.target.checked ? 'Açılışta saatin yanında, arka planda başlayacak' : 'Açılışta pencere açık başlayacak'));
       }
     }
-    if (t === 'notif') { devPanel($('#st-dev'), ['in', 'out']); $('#st-mic').onclick = () => micTest(null, () => showSettings('notif')); $('#st-onb').onclick = onbRestart; }
+    if (t === 'notif') { devPanel($('#st-dev'), ['in', 'out']);
+      $('#st-zil')?.querySelectorAll('[data-zil]').forEach(b => b.onclick = () => { store.set('kanka-zil', b.dataset.zil === 'kanka' ? null : b.dataset.zil); $('#st-zil').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); if (!soundOn()) return toast('Bildirim sesleri kapalı (Görünüm › Bildirim sesleri)'); playSound('ring'); });
+      if ($('#st-zilout')) $('#st-zilout').onclick = () => { if (!soundOn()) return toast('Bildirim sesleri kapalı (Görünüm › Bildirim sesleri)'); playSound('callOut'); }; $('#st-mic').onclick = () => micTest(null, () => showSettings('notif')); $('#st-onb').onclick = onbRestart; }
     if (t === 'notif') $('#st-main').querySelectorAll('input[name=ns]').forEach(r => r.onchange = () => { setNS(r.value); toast('Gürültü engelleme ayarlandı'); });
     if (t === 'act') wireActPage(); else window.onMyActivity = null;
     if (t === 'look') {
@@ -17463,7 +17465,7 @@ socket.on('ring', r => {
   card.innerHTML = `${r.chatId.startsWith('g:') ? `<div class="gav av" style="width:88px;height:88px;margin:0 auto 12px">${ic('users')}</div>` : av(r.from)}<h3>${esc(r.title)}</h3><p>${r.video ? 'Görüntülü' : 'Sesli'} arıyor…${r.chatId.startsWith('g:') ? ` · ${esc(r.from)}` : ''}</p>
     <div class="cbtns"><div><button class="dec" id="c-dec" aria-label="Reddet">${ic('hangup')}</button><small>Reddet</small></div><div><button class="acc" id="c-acc" aria-label="Kabul et">${ic(r.video ? 'video' : 'phoneCall')}</button><small>Kabul et</small></div></div>`;
   document.body.appendChild(card);
-  if (!isDnd()) { playSound('ring'); ringSound = setInterval(() => playSound('ring'), 1600); } // rahatsız etmeyin: arama kartı görünür ama çalmaz
+  if (!isDnd()) { playSound('ring'); ringSound = setInterval(() => playSound('ring'), zil().gap); } // rahatsız etmeyin: arama kartı görünür ama çalmaz
   ringTimer = setTimeout(stopRing, 32000);
   $('#c-dec').onclick = () => { socket.emit('callDecline', r.chatId); stopRing(); };
   $('#c-acc').onclick = () => {
@@ -18910,36 +18912,53 @@ window.kankaDesktop?.onUpdateReady?.(() => showUpdate('app'));
 // ================= Sesler =================
 let actx = null;
 const soundOn = () => store.get('kanka-sound') !== 'off';
-// Arayüz sesleri: hepsi Web Audio ile üretilir (dosya yok). Not: [frekans, başlangıç, süre, dalga, bitiş frekansı]
+// Arayüz sesleri: hepsi Web Audio ile üretilir (dosya yok). Not: [frekans, başlangıç, süre, dalga, bitiş frekansı, ses]
+// dalga: sine / triangle / square / 'mar' (marimba: üst harmonikleri hızla sönen tok vuruş)
 const SND = {
   msg: [[880, 0, .08]], mention: [[660, 0, .1], [990, .11, .14]], join: [[523, 0, .1], [784, .1, .14]], leave: [[784, 0, .1], [523, .1, .14]],
-  rec: [[1200, 0, .06]], reward: [[523, 0, .1], [659, .1, .1], [784, .2, .1], [1047, .3, .2]], ring: [[740, 0, .18], [880, .2, .18], [740, .5, .18], [880, .7, .18]],
+  rec: [[1200, 0, .06]], reward: [[523, 0, .1], [659, .1, .1], [784, .2, .1], [1047, .3, .2]],
   mute: [[620, 0, .09, 'triangle', 380]], unmute: [[380, 0, .09, 'triangle', 640]],
   deafen: [[523, 0, .08, 'triangle'], [349, .09, .14, 'triangle']], undeafen: [[349, 0, .08, 'triangle'], [523, .09, .14, 'triangle']],
   live: [[784, 0, .07, 'triangle'], [1047, .07, .07, 'triangle'], [1568, .14, .22, 'triangle']], liveEnd: [[1319, 0, .08, 'triangle'], [880, .09, .18, 'triangle']],
   camOn: [[740, 0, .06], [988, .07, .1]], camOff: [[988, 0, .06], [740, .07, .1]],
-  callOut: [[425, 0, 1, 'sine', null, .07]], // Türkiye çevir sesi: 1 sn ton, 3 sn sessizlik
-  callOk: [[659, 0, .08], [880, .09, .08], [1319, .18, .22]], callEnd: [[659, 0, .12], [523, .13, .12], [392, .26, .26]],
+  callOk: [[659, 0, .1, 'mar'], [880, .1, .1, 'mar'], [1319, .2, .5, 'mar']], callEnd: [[659, 0, .14, 'mar'], [523, .14, .14, 'mar'], [392, .28, .5, 'mar']],
 };
+// Zil sesleri (Ayarlar › Bildirimler ve ses). ring: gelen arama (her döngüde bir kez), out: arayanın duyduğu bekleme sesi
+const ZIL = {
+  kanka: { ad: 'Kanka', ring: [[659, 0, .3, 'mar'], [784, .14, .3, 'mar'], [988, .28, .3, 'mar'], [1319, .42, .5, 'mar'], [1175, .74, .3, 'mar'], [988, .88, .7, 'mar']], gap: 2000,
+    out: [[523, 0, .5, 'mar', null, .09], [659, .2, .7, 'mar', null, .09]], ogap: 3000 },
+  pop: { ad: 'Pop', ring: [[880, 0, .09, 'triangle'], [1175, .1, .09, 'triangle'], [880, .2, .09, 'triangle'], [1175, .3, .09, 'triangle'], [1568, .45, .25, 'triangle'], [1319, .75, .3, 'triangle']], gap: 1800,
+    out: [[784, 0, .12, 'triangle', null, .07], [988, .16, .25, 'triangle', null, .07]], ogap: 2800 },
+  retro: { ad: 'Retro', ring: [[1047, 0, .07, 'square', null, .05], [1319, .08, .07, 'square', null, .05], [1568, .16, .07, 'square', null, .05], [2093, .24, .12, 'square', null, .05], [1047, .5, .07, 'square', null, .05], [1319, .58, .07, 'square', null, .05], [1568, .66, .07, 'square', null, .05], [2093, .74, .14, 'square', null, .05]], gap: 1600,
+    out: [[523, 0, .1, 'square', null, .04], [784, .14, .16, 'square', null, .04]], ogap: 2600 },
+  klasik: { ad: 'Klasik', ring: [[740, 0, .18], [880, .2, .18], [740, .5, .18], [880, .7, .18]], gap: 1600, out: [[425, 0, 1, 'sine', null, .07]], ogap: 4000 },
+};
+const zil = () => ZIL[store.get('kanka-zil')] || ZIL.kanka;
+function tone(f, st, d, type = 'sine', f2, vol = .12) {
+  const parts = type === 'mar' ? [[1, 1, 1], [3.93, .32, 3.5], [9.2, .1, 8]] : [[1, 1, 1]]; // [oran, ses, sönme hızı]
+  for (const [r, a, k] of parts) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type === 'mar' ? 'sine' : type; o.connect(g); g.connect(actx.destination);
+    o.frequency.setValueAtTime(f * r, st); if (f2) o.frequency.exponentialRampToValueAtTime(f2 * r, st + d);
+    const v = vol * a, end = st + d / k;
+    g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(v, st + (type === 'mar' ? .004 : .01));
+    if (d > .5 && type !== 'mar') g.gain.setValueAtTime(v, st + d - .05); // uzun düz ton (klasik çevir sesi)
+    g.gain.exponentialRampToValueAtTime(.0001, Math.max(st + .02, end));
+    o.start(st); o.stop(end + .02);
+  }
+}
 function playSound(kind) {
   if (!soundOn()) return;
   try {
     actx ||= new (window.AudioContext || window.webkitAudioContext)();
     if (actx.state === 'suspended') actx.resume().catch(() => {});
-    for (const [f, t, d, type = 'sine', f2, vol = .12] of SND[kind] || []) {
-      const o = actx.createOscillator(), g = actx.createGain();
-      o.type = type; o.connect(g); g.connect(actx.destination);
-      const st = actx.currentTime + t; o.frequency.setValueAtTime(f, st); if (f2) o.frequency.exponentialRampToValueAtTime(f2, st + d);
-      g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(vol, st + .01);
-      if (d > .5) g.gain.setValueAtTime(vol, st + d - .05); // uzun ton (çevir sesi) düz çalsın
-      g.gain.exponentialRampToValueAtTime(.0001, st + d);
-      o.start(st); o.stop(st + d + .02);
-    }
+    const list = kind === 'ring' ? zil().ring : kind === 'callOut' ? zil().out : SND[kind] || [];
+    for (const [f, t, d, type, f2, vol] of list) tone(f, actx.currentTime + t, d, type, f2, vol);
   } catch {}
 }
 // Giden aramada karşı taraf açana kadar çevir sesi
 let callOutTimer = null;
-function callOutStart() { callOutStop(); playSound('callOut'); callOutTimer = setInterval(() => playSound('callOut'), 4000); }
+function callOutStart() { callOutStop(); playSound('callOut'); callOutTimer = setInterval(() => playSound('callOut'), zil().ogap); }
 function callOutStop() { clearInterval(callOutTimer); callOutTimer = null; }
 
 // ================= Temalar =================
