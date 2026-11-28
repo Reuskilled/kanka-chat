@@ -961,7 +961,7 @@ setInterval(() => { const now = Date.now(); for (const [k, v] of limits) if (!v.
 
 // ---------- TURN: farklı ağlardaki kişiler sesli odada birbirini duysun ----------
 const TURN_FILE = path.join(DATA_DIR, 'turn.json');
-let turnInfo = null;
+let turnInfo = null, turnStats = () => null;
 async function startTurn(attempt = 1) {
   if (process.env.TURN === 'off' || (process.platform !== 'win32' && process.env.TURN !== 'on')) return;
   try {
@@ -988,6 +988,18 @@ async function startTurn(attempt = 1) {
       const Alloc = require('node-turn/lib/allocation'), upd = Alloc.prototype.update;
       if (!upd.kankaFix) { Alloc.prototype.update = function (l) { return upd.call(this, l === 0 ? 0 : Number.isFinite(+l) && +l > 0 ? +l : this.lifetime); }; Alloc.prototype.update.kankaFix = true; }
     } catch (e) { console.error('TURN yaması uygulanamadı:', e.message); }
+    // node-turn 0.0.6 hatası: bir röle (allocation) silindiğinde (süre doldu, istemci kapattı ya da aynı adresten yenisi geldi)
+    // açtığı UDP soketini kapatmıyor. 50000-50200 arasındaki 201 port, sunucu açıldıktan sonraki 201. bağlantıda doluyor ve
+    // her yeni istek 508 Insufficient Capacity alıyordu: farklı ağdaki kullanıcılar ve genel IP'si olmayan botlar sese bağlanamıyordu.
+    // Çözüm: röle kaydı silinince ya da üzerine yazılınca soketini ve zamanlayıcısını kapat.
+    const freeAlloc = a => { if (!a || a.kankaFreed) return; a.kankaFreed = true; clearTimeout(a.timer); for (const sk of a.sockets || []) { try { sk.removeAllListeners('message'); sk.close(); } catch {} } };
+    server.allocations = new Proxy({}, {
+      set(t, k, v) { const o = t[k]; if (o && o !== v) freeAlloc(o); t[k] = v; return true; },
+      deleteProperty(t, k) { freeAlloc(t[k]); delete t[k]; return true; },
+    });
+    // Yedek süpürge: süresi dolduğu halde kalmış röle olursa (zamanlayıcı kaçarsa) kapat
+    setInterval(() => { const now = Date.now(); for (const [k, a] of Object.entries(server.allocations)) if (a?.timeToExpiry && a.timeToExpiry + 60e3 < now) delete server.allocations[k]; }, 60e3).unref();
+    turnStats = () => ({ relays: Object.keys(server.allocations).length, ports: 201 });
     server.start();
     turnInfo = { urls: [`turn:${ip}:3478?transport=udp`], username: cfg.user, credential: cfg.pass };
     console.log('TURN sunucusu çalışıyor:', ip + ':3478');
