@@ -1,4 +1,4 @@
-"""kanka.py: Kanka Chat bot kütüphanesi (Python 3.9+, gereksinim: aiohttp)
+"""kanka.py: Kanka Chat bot kütüphanesi (Python 3.9+, gereksinim: aiohttp · sesli oda için: aiortc ve ffmpeg)
 
 Belgeler: https://kankahq.com/gelistirici
 
@@ -15,7 +15,7 @@ import asyncio, time, random, hashlib, hmac, json, re, os
 from urllib.parse import quote
 import aiohttp
 
-SURUM = "1.8.0"
+SURUM = "1.9.0"
 
 
 class KankaHata(Exception):
@@ -172,6 +172,7 @@ class Bot:
         self._durum = dict(durum) if durum else None; self._hd = hata_ayikla; self._bekleyenler = []
         self.komutlar = {}; self.sunucu_komutlari = {}; self._butonlar = []; self._secimler = []; self._formlar = []; self._olaylar = {}
         self.ben = None; self.sunucular = {}; self._oturum = None; self._oturum_id = None; self._sira = 0
+        self._ws = None; self._ses = None; self._ses_bekle = None
 
     # ---------- REST ----------
     async def api(self, yontem, yol, veri=None):
@@ -345,6 +346,32 @@ class Bot:
     async def yasaklar(self, sunucu): return (await self.api("GET", f"/sunucular/{sunucu}/yasaklar"))["yasaklar"]
     async def susturma_kaldir(self, sunucu, kisi): return await self.api("DELETE", f"/sunucular/{sunucu}/uyeler/{kisi}/sustur")
 
+    # ---------- Ses (müzik botu vb.) ----------
+    async def _gonder(self, veri):
+        if self._ws is None or self._ws.closed: return False
+        try: await self._ws.send_json(veri); return True
+        except Exception: return False
+    async def sesli_odaya_katil(self, oda):
+        """Sesli odaya gir. Ses bottan kullanıcılara doğrudan gider (WebRTC). Gerekenler: pip install aiortc ve bilgisayarda ffmpeg.
+            ses = await bot.sesli_odaya_katil(oda_id)
+            await ses.cal("sarki.mp3")            # dosya, https adresi; şarkı bitince döner
+            ses.siraya("a.mp3"); ses.siraya("b.mp3"); ses.gec()
+        Bir bot aynı anda bir sesli odada olur. Bağlantı koparsa yeniden bağlanınca odaya kendiliğinden döner."""
+        if self._ws is None or not self.ben: raise KankaHata('Önce bağlan: sesli_odaya_katil "hazir" olayından sonra kullanılabilir')
+        _aiortc()  # kurulu değilse hemen anlaşılır hata ver
+        if self._ses is None: self._ses = SesBaglantisi(self)
+        ses = self._ses; ses._istenen = oda
+        f = asyncio.get_running_loop().create_future(); self._ses_bekle = f
+        await self._gonder({"op": 4, "d": {"oda": oda}})
+        try: return await asyncio.wait_for(f, 15)
+        except asyncio.TimeoutError: raise KankaHata("Sese girilemedi: zaman aşımı", 408)
+        finally:
+            if self._ses_bekle is f: self._ses_bekle = None
+    async def sesten_ayril(self):
+        """Sesten çık (çalan şarkı durur)"""
+        if self._ses: self._ses.durdur(); await self._ses._hepsini_kapat(); self._ses._istenen = None; self._ses.oda = None
+        await self._gonder({"op": 4, "d": {"oda": None}})
+
     # ---------- Yardımcılar ----------
     def yaziyor_ken(self, oda, sure=None):
         """İş sürerken "yazıyor…" göster:  async with bot.yaziyor_ken(oda): ...
@@ -404,7 +431,7 @@ class Bot:
         return kaydet
     def olay(self, ad):
         """Olaylar: hazir, mesaj, mesaj_duzenlendi, mesaj_silindi, uye_katildi, uye_ayrildi, uye_guncellendi, tepki, tepki_kaldirildi,
-        sunucuya_eklendi, sunucudan_cikarildi, etkilesim, durum, hata"""
+        sunucuya_eklendi, sunucudan_cikarildi, etkilesim, durum, ses_durumu, hata"""
         def kaydet(fn): self._olaylar.setdefault(ad, []).append(fn); return fn
         return kaydet
     async def _yay(self, ad, *a):
@@ -440,7 +467,7 @@ class Bot:
 
     async def _baglan(self):
         async with self._oturum.ws_connect(self.adres.replace("http", "ws", 1) + "/bot/gateway", heartbeat=None) as ws:
-            nabiz = None
+            nabiz = None; self._ws = ws
             async for m in ws:
                 if m.type != aiohttp.WSMsgType.TEXT: break
                 p = json.loads(m.data)
@@ -466,7 +493,14 @@ class Bot:
     async def _olay(self, t, d):
         if t == "HAZIR":
             self._oturum_id = d["oturum"]; self.ben = d["bot"]; self.sunucular = {s["id"]: s for s in d["sunucular"]}
+            if self._ses and self._ses.oda: asyncio.get_running_loop().call_later(0.5, lambda: asyncio.ensure_future(self._gonder({"op": 4, "d": {"oda": self._ses.oda}})))  # yeniden bağlanınca sese dön
             return await self._yay("hazir")
+        if t.startswith("SES_") and t != "SES_DURUMU":
+            if self._ses: await self._ses._olay(t, d)
+            return
+        if t == "HATA" and isinstance(d, dict) and d.get("islem") == "ses" and self._ses_bekle and not self._ses_bekle.done():
+            self._ses_bekle.set_exception(KankaHata(d.get("hata") or "Sese girilemedi", 400, d)); return
+        if t == "DEVAM_EDILDI" and self._ses and self._ses.oda: await self._gonder({"op": 4, "d": {"oda": self._ses.oda}})
         adlar = {"MESAJ_DUZENLENDI": "mesaj_duzenlendi", "MESAJ_SILINDI": "mesaj_silindi", "TEPKI_EKLENDI": "tepki", "TEPKI_KALDIRILDI": "tepki_kaldirildi", "SUNUCUYA_EKLENDI": "sunucuya_eklendi", "SUNUCUDAN_CIKARILDI": "sunucudan_cikarildi", "ODA_OLUSTU": "oda_olustu", "ODA_GUNCELLENDI": "oda_guncellendi", "ODA_SILINDI": "oda_silindi", "ROL_OLUSTU": "rol_olustu", "ROL_GUNCELLENDI": "rol_guncellendi", "ROL_SILINDI": "rol_silindi", "SES_DURUMU": "ses_durumu", "ENERGY_GONDERILDI": "energy_gonderildi", "ENERGY_GERI_CEKILDI": "energy_geri_cekildi"}
         if t == "MESAJ_GELDI":
             if d.get("yazar") and self.ben and d["yazar"]["ad"] == self.ben["ad"]: return
@@ -496,3 +530,252 @@ class Bot:
                     if not e.cevaplandi:
                         try: await e.cevapla("⚠️ Bir şeyler ters gitti.", gizli=True)
                         except Exception: pass
+
+
+# ---------- Ses bağlantısı (kanka.js'teki SesBaglantisi'nin Python karşılığı) ----------
+# Bot kullanıcılara sadece GÖNDERİR (sendonly). Şarkıyı ffmpeg 48 kHz stereo PCM'e çözer; tek bir zamanlayıcı her 20 ms'de
+# bir kare üretip bütün dinleyicilere dağıtır (her dinleyicinin kendi Opus kodlaması aiortc'de). Kimse yokken de zaman akar.
+_AIORTC = None
+def _aiortc():
+    global _AIORTC
+    if _AIORTC: return _AIORTC
+    try:
+        import aiortc, av, fractions
+        from aiortc.sdp import candidate_from_sdp
+        _AIORTC = (aiortc, av, fractions, candidate_from_sdp)
+    except ImportError:
+        raise KankaHata("Ses için aiortc gerekli: pip install aiortc (bilgisayarda ffmpeg de kurulu olmalı)")
+    return _AIORTC
+
+_ORNEK, _KARE = 48000, 960          # 20 ms
+_KARE_BAYT = _KARE * 2 * 2          # stereo, 16 bit
+_SESSIZ = bytes(_KARE_BAYT)
+_KUYRUK_UST = 150                   # 3 sn ön bellek
+
+
+def _es_izi_sinifi():
+    aiortc, av, fractions, _ = _aiortc()
+    class EsIzi(aiortc.MediaStreamTrack):
+        kind = "audio"
+        def __init__(self):
+            super().__init__(); self.q = asyncio.Queue(maxsize=25); self.pts = 0
+        async def recv(self):
+            veri = await self.q.get()
+            f = av.AudioFrame(format="s16", layout="stereo", samples=_KARE); f.planes[0].update(veri)
+            f.sample_rate = _ORNEK; f.pts = self.pts; f.time_base = fractions.Fraction(1, _ORNEK); self.pts += _KARE
+            return f
+        def ver(self, veri):
+            if self.q.full():
+                try: self.q.get_nowait()
+                except asyncio.QueueEmpty: pass
+            self.q.put_nowait(veri)
+    return EsIzi
+
+
+class SesBaglantisi:
+    """bot.sesli_odaya_katil() döndürür. Olaylar: @ses.olay("bitti") · basladi · baglandi · tasindi · kisi_katildi · kisi_ayrildi · susturma · ayrildi · hata"""
+    def __init__(self, bot):
+        self.bot = bot; self.oda = None; self.sunucu = None; self.sid = None; self.ice = []; self.esler = {}; self._izler = {}; self._kisiler = set()
+        self.sira = []; self.susturuldu = False; self.duraklatildi = False; self.caliyor = None; self._istenen = None; self._olaylar = {}
+        self.sayac = {"gonderilen": 0, "eksik": 0, "atlanan": 0}
+        self._pompa = None; self._bakim = None
+
+    # olaylar
+    def olay(self, ad):
+        def kaydet(fn): self._olaylar.setdefault(ad, []).append(fn); return fn
+        return kaydet
+    def _yay(self, ad, *a):
+        for fn in self._olaylar.get(ad, []):
+            async def calistir(fn=fn):
+                try: await fn(*a)
+                except Exception as e: print(f"[kanka] ses {ad} işleyicisinde hata: {e!r}")
+            asyncio.ensure_future(calistir())
+
+    @property
+    def kisi_sayisi(self): return len(self.esler)
+    @property
+    def durum(self):
+        """Anlık durum: { kisi, kuyruk, gonderilen, eksik, atlanan }"""
+        return {"kisi": len(self.esler), "kuyruk": len(self.caliyor["kuyruk"]) if self.caliyor else 0, **self.sayac}
+
+    # ---- eşler ----
+    async def _sinyal(self, kime, veri): await self.bot._gonder({"op": 5, "d": {"kime": kime, "veri": veri}})
+    def _es(self, sid):
+        if sid in self.esler: return self.esler[sid]
+        aiortc = _aiortc()[0]
+        sunucular = []
+        for x in self.ice or []:
+            urls = x.get("urls"); urls = urls if isinstance(urls, list) else [urls]
+            sunucular.append(aiortc.RTCIceServer(urls=urls, username=x.get("username"), credential=x.get("credential")))
+        pc = aiortc.RTCPeerConnection(aiortc.RTCConfiguration(iceServers=sunucular))
+        iz = _es_izi_sinifi()()
+        pc.addTransceiver(iz, direction="sendonly")
+        pc._yapiyor = False; pc._yoksay = False; pc._acildi = time.monotonic(); pc._durum = "new"; pc._durum_zamani = time.monotonic()
+        self.esler[sid] = pc; self._izler[sid] = iz
+        @pc.on("connectionstatechange")
+        async def _durum_degisti():
+            pc._durum = pc.connectionState; pc._durum_zamani = time.monotonic(); self.bot._log("ses", sid, pc.connectionState)
+            if pc.connectionState in ("failed", "closed"): await self._kapat(sid, pc)
+        return pc
+    async def _teklif(self, sid):
+        pc = self._es(sid)
+        try:
+            pc._yapiyor = True
+            await pc.setLocalDescription(await pc.createOffer())  # aiortc adayları SDP'nin içine koyar (ayrı ICE yok)
+            if self.esler.get(sid) is pc: await self._sinyal(sid, {"sdp": {"type": pc.localDescription.type, "sdp": pc.localDescription.sdp}})
+        except Exception as e: self.bot._log("ses teklif hatası", repr(e))
+        finally: pc._yapiyor = False
+    async def _kapat(self, sid, sadece=None):
+        pc = self.esler.get(sid)
+        if pc is None or (sadece is not None and pc is not sadece): return
+        self.esler.pop(sid, None); self._izler.pop(sid, None)
+        try: await pc.close()
+        except Exception: pass
+    async def _hepsini_kapat(self):
+        for sid in list(self.esler): await self._kapat(sid)
+    async def _temizle(self):
+        """Askıda kalan eşler: 15 sn kopuk ya da 30 sn'de bağlanamamış → kapat, kişi hâlâ odadaysa yeniden dene"""
+        while True:
+            await asyncio.sleep(5); t = time.monotonic()
+            for sid, pc in list(self.esler.items()):
+                if (pc._durum == "disconnected" and t - pc._durum_zamani > 15) or (pc._durum in ("new", "connecting") and t - pc._acildi > 30):
+                    self.bot._log("ses", sid, "askıda kaldı, kapatıldı"); await self._kapat(sid, pc)
+                    if self.oda and sid in self._kisiler: asyncio.ensure_future(self._teklif(sid))
+
+    async def _olay(self, t, d):
+        aday_coz = _aiortc()[3]
+        if t == "SES_BAGLANDI":
+            await self._hepsini_kapat(); self.oda = d["oda"]; self.sunucu = d.get("sunucu"); self.sid = d.get("sid"); self.ice = d.get("ice") or []
+            self._kisiler = {k["sid"] for k in d.get("kisiler") or []}
+            if self._pompa is None or self._pompa.done(): self._pompa = asyncio.ensure_future(self._pompala())
+            if self._bakim is None or self._bakim.done(): self._bakim = asyncio.ensure_future(self._temizle())
+            for k in d.get("kisiler") or []: asyncio.ensure_future(self._teklif(k["sid"]))
+            f = self.bot._ses_bekle
+            if f and not f.done(): f.set_result(self)
+            return self._yay("tasindi" if d.get("tasindi") else "baglandi", d)
+        if t == "SES_SINYAL":
+            kimden, veri = d.get("kimden"), d.get("veri")
+            if not veri or not self.oda: return
+            pc = self.esler.get(kimden)
+            if pc is None:
+                if not (veri.get("sdp") or {}).get("type") == "offer": return  # ayrılmış kişiden geç gelen sinyal yeni bağlantı açmasın
+                pc = self._es(kimden)
+            try:
+                if veri.get("sdp"):
+                    sdp = veri["sdp"]; carpisma = sdp["type"] == "offer" and (pc._yapiyor or pc.signalingState != "stable")
+                    pc._yoksay = carpisma
+                    if carpisma: return  # bot "kaba" taraf: çakışmada kendi teklifinde kalır
+                    await pc.setRemoteDescription(_aiortc()[0].RTCSessionDescription(sdp=sdp["sdp"], type=sdp["type"]))
+                    if sdp["type"] == "offer" and self.esler.get(kimden) is pc:
+                        await pc.setLocalDescription(await pc.createAnswer())
+                        await self._sinyal(kimden, {"sdp": {"type": pc.localDescription.type, "sdp": pc.localDescription.sdp}})
+                elif veri.get("ice") and not pc._yoksay:
+                    c = veri["ice"]; metin = (c.get("candidate") or "").strip()
+                    if metin:
+                        aday = aday_coz(metin.split(":", 1)[1] if metin.startswith("candidate:") else metin)
+                        aday.sdpMid = c.get("sdpMid"); aday.sdpMLineIndex = c.get("sdpMLineIndex")
+                        await pc.addIceCandidate(aday)
+            except Exception as e: self.bot._log("ses sinyal hatası", repr(e))
+            return
+        if t == "SES_KISI_KATILDI": self._kisiler.add(d.get("sid")); return self._yay("kisi_katildi", d)
+        if t == "SES_KISI_AYRILDI": self._kisiler.discard(d.get("sid")); await self._kapat(d.get("sid")); return self._yay("kisi_ayrildi", d)
+        if t == "SES_KISI_YENILENDI":
+            if d.get("eski"): await self._kapat(d["eski"])
+            return
+        if t == "SES_SUSTURMA": self.susturuldu = bool(d.get("susturuldu")); return self._yay("susturma", d)
+        if t == "SES_AYRILDI":
+            await self._hepsini_kapat(); o = self.oda; self.oda = None; self.durdur()
+            return self._yay("ayrildi", {"oda": o, "sebep": d.get("sebep")})
+
+    # ---- zamanlayıcı: her 20 ms bir kare ----
+    async def _pompala(self):
+        bas = time.monotonic(); n = 0
+        while True:
+            n += 1; hedef = bas + n * 0.02; bekle = hedef - time.monotonic()
+            if bekle > 0: await asyncio.sleep(bekle)
+            elif bekle < -0.2:  # takıldık: eski kareleri atla, canlıya dön
+                at = int(-bekle / 0.02) - 2; n += at
+                c = self.caliyor
+                for _ in range(at):
+                    if c and c["kuyruk"]: c["kuyruk"].popleft(); self.sayac["atlanan"] += 1
+            kare = self._kare()
+            if not self.esler: continue
+            if kare is None or self.susturuldu: kare = _SESSIZ
+            else: self.sayac["gonderilen"] += 1
+            for iz in list(self._izler.values()): iz.ver(kare)
+    def _kare(self):
+        c = self.caliyor
+        if c is None or self.duraklatildi: return None
+        if c["kuyruk"]:
+            k = c["kuyruk"].popleft()
+            if len(c["kuyruk"]) < 50: c["devam"].set()
+            c["basladi"] = True; return k
+        if c["bitti"]: asyncio.ensure_future(self._bitir(c)); return None
+        if c["basladi"]: self.sayac["eksik"] += 1  # kaynak yetişemedi: sessizlik
+        return None
+
+    # ---- çalma ----
+    def cal(self, kaynak, ses=1.0, baslangic=0, ffmpeg=None):
+        """Çal. kaynak: dosya yolu ya da http(s) adresi (ffmpeg'in açabildiği her şey).
+        ses: ses düzeyi (0-2) · baslangic: kaçıncı saniyeden · ffmpeg: ffmpeg'in yolu (yoksa FFMPEG_PATH ya da "ffmpeg")
+        Döner: şarkı bitince ya da durdurulunca biten bir görev. await ses.cal(...) dersen şarkının bitmesini bekler."""
+        self.durdur(sira_kalsin=True)
+        c = {"kaynak": kaynak, "kuyruk": __import__("collections").deque(), "bitti": False, "basladi": False, "son": False, "durduruldu": False,
+             "devam": asyncio.Event(), "bitis": asyncio.get_running_loop().create_future(), "p": None}
+        c["devam"].set(); self.caliyor = c
+        c["gorev"] = asyncio.ensure_future(self._oku(c, kaynak, ses, baslangic, ffmpeg))
+        self._yay("basladi", {"kaynak": kaynak})
+        return c["bitis"]
+    async def _oku(self, c, kaynak, sv, baslangic, ff):
+        ff = ff or os.environ.get("FFMPEG_PATH") or "ffmpeg"
+        sv = max(0.0, min(2.0, float(sv if sv is not None else 1)))
+        af = ["-af", f"volume={sv}" + (",alimiter=limit=0.95" if sv > 1 else "")] if sv != 1 else []
+        ag = ["-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5"] if re.match(r"^https?:", str(kaynak), re.I) else []
+        args = [ff, "-hide_banner", "-loglevel", "error", *(["-ss", str(baslangic)] if baslangic else []), *ag, "-i", str(kaynak), "-vn", *af, "-ac", "2", "-ar", str(_ORNEK), "-f", "s16le", "pipe:1"]
+        try:
+            p = c["p"] = await asyncio.create_subprocess_exec(*args, stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        except FileNotFoundError:
+            c["bitti"] = True; self._yay("hata", KankaHata("ffmpeg bulunamadı: bilgisayarına ffmpeg kur (ya da ffmpeg= ile yolunu ver)")); return
+        artik = b""
+        try:
+            while not c["son"]:
+                if len(c["kuyruk"]) > _KUYRUK_UST: c["devam"].clear(); await c["devam"].wait(); continue
+                parca = await p.stdout.read(_KARE_BAYT * 10)
+                if not parca: break
+                artik += parca
+                while len(artik) >= _KARE_BAYT: c["kuyruk"].append(artik[:_KARE_BAYT]); artik = artik[_KARE_BAYT:]
+        finally:
+            c["bitti"] = True
+            kod = await p.wait() if not c["son"] else None
+            if kod and not c["durduruldu"] and not c["kuyruk"]:
+                hata = (await p.stderr.read()).decode(errors="ignore").strip()[-300:]
+                self._yay("hata", KankaHata("ffmpeg: " + (hata or f"çalınamadı (kod {kod})")))
+    async def _bitir(self, c, durduruldu=False):
+        if c["son"]: return
+        c["son"] = True; c["devam"].set(); c["kuyruk"].clear()
+        try:
+            if c["p"] and c["p"].returncode is None: c["p"].kill()
+        except ProcessLookupError: pass
+        if self.caliyor is c: self.caliyor = None
+        if not c["bitis"].done(): c["bitis"].set_result({"durduruldu": durduruldu})
+        if not durduruldu:
+            self._yay("bitti", {"kaynak": c["kaynak"]})
+            if self.sira: s = self.sira.pop(0); self.cal(s[0], **s[1])
+    def siraya(self, kaynak, **ayar):
+        """Sıraya ekle; bir şey çalmıyorsa hemen başlar. Döner: sıradaki yeri (0 = hemen çalıyor)"""
+        if self.caliyor is None: self.cal(kaynak, **ayar); return 0
+        self.sira.append((kaynak, ayar)); return len(self.sira)
+    def gec(self):
+        """Sonraki şarkıya geç"""
+        c = self.caliyor
+        if c: c["durduruldu"] = True; asyncio.ensure_future(self._bitir(c, True)); self.caliyor = None
+        if self.sira: s = self.sira.pop(0); self.cal(s[0], **s[1])
+    def duraklat(self): self.duraklatildi = True
+    def devam(self): self.duraklatildi = False
+    def durdur(self, sira_kalsin=False):
+        """Çalanı durdur (sıra da temizlenir)"""
+        c = self.caliyor
+        if c: c["durduruldu"] = True; asyncio.ensure_future(self._bitir(c, True)); self.caliyor = None
+        if not sira_kalsin: self.sira = []
+        self.duraklatildi = False
+    async def ayril(self): await self.bot.sesten_ayril()
