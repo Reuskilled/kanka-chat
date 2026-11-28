@@ -25,7 +25,7 @@ Bu başlığa sadece bağlantı gerçekten Cloudflare'in IP aralığından geliy
 
 ## 3. Sunucu IP'sini gizle (önemli)
 Cloudflare sadece saldırgan gerçek IP'yi bilmiyorsa işe yarar.
-- Şu anki IP (185.208.172.60) README'de, Caddyfile'da ve geçmiş DNS kayıtlarında görünüyor. Mümkünse sağlayıcıdan
+- Şu anki IP; DNS'te, git geçmişinde ve DNS geçmişi tutan sitelerde görünüyor. Mümkünse sağlayıcıdan
   **yeni bir IP** al, DNS'te sadece Cloudflare'e yaz, hiçbir yerde paylaşma.
 - Site Cloudflare üzerinden sorunsuz açıldıktan sonra yönetici PowerShell'de `cloudflare-kilit.ps1` çalıştır.
   Bu betik 80/443 portlarını sadece Cloudflare'e açar. Geri almak için betiği `-GeriAl` ile çalıştırman yeterli.

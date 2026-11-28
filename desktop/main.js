@@ -15,14 +15,14 @@ const fs = require('fs');
 process.on('uncaughtException', e => { try { console.error('[kanka] hata:', e?.stack || e); } catch {} });
 
 const DEFAULT_SERVER = 'https://kankahq.com';
-const OLD_SERVERS = ['https://185-208-172-60.sslip.io'];
+const isOldServer = u => /^https:\/\/[\d-]+\.sslip\.io\/?$/.test(String(u || '')); // eski sürümlerin bağlandığı geçici adres
 const CONFIG = () => path.join(app.getPath('userData'), 'ayarlar.json');
 let config = { server: DEFAULT_SERVER, presenceKey: null, startHidden: false };
 // Windows'ta pencere kısmen kapalıyken ayarlar ekranının bozuk çizilmesini önler
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
 try { Object.assign(config, JSON.parse(fs.readFileSync(CONFIG(), 'utf8'))); } catch {}
 // Eski sürümler yerel sunucuya bağlıydı: kullanıcı adresi kendisi seçmediyse yeni sunucuya geç
-if ((!config.serverChosen || OLD_SERVERS.includes(config.server)) && config.server !== DEFAULT_SERVER) { config.server = DEFAULT_SERVER; config.presenceKey = null; }
+if ((!config.serverChosen || isOldServer(config.server)) && config.server !== DEFAULT_SERVER) { config.server = DEFAULT_SERVER; config.presenceKey = null; }
 const saveConfig = () => { try { fs.writeFileSync(CONFIG(), JSON.stringify(config, null, 2)); } catch {} };
 // Bu bilgisayarın kimliği: aynı hesap birden fazla bilgisayarda açıkken sunucu bildirimleri karıştırmasın
 if (!config.devId) { config.devId = require('crypto').randomBytes(8).toString('hex'); saveConfig(); }
