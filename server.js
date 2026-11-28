@@ -2612,7 +2612,10 @@ const BADGES = {
   partner: ['🤝', 'Kanka Partner', 'Kanka\'nın iş birliği yaptığı bir sunucunun sahibi'],
   yildiz: ['⭐', 'Yıldız Sunucu', 'Yıldız kademesine ulaşmış bir sunucunun sahibi'],
   arena: ['🏆', 'Arena Şampiyonu', 'Kanka Arena genel sıralamasında ilk 10'],
+  mobil: ['📱', 'Cep Öncüsü', 'Telefon uygulamasını mağazaya çıkmadan önce deneyen ilk kankalardan'],
 };
+// Cep Öncüsü: telefon uygulamasına (Android/iPhone) mağaza açılışından önce giriş yapan herkes alır. Açılışta MOBIL_ONCU_KAPALI=1 ile kapatılır.
+const mobilOncuAcik = () => process.env.MOBIL_ONCU_KAPALI !== '1';
 // Elle verilen rozetler (Kanka ekibi verir): u.awards = { avci: { by, time } }
 const AWARDS = ['avci'];
 // Katılım sırası: Claude ve bot hesapları sayılmaz; kayıt tarihi olmayan eski hesaplar en başta, kendi kayıt sıralarıyla
@@ -2637,6 +2640,7 @@ function badgesOf(u) {
   if ((u.xoxWins || 0) >= 3) b.push('xox');
   if ((u.streak?.best || 0) >= 7) b.push('seri7');
   if (db.servers.some(s => s.owner === u.name && !s.public)) b.push('kurucu');
+  if (u.mobilOncu) b.push('mobil');
   if (db.servers.some(s => s.owner === u.name && s.badges?.partner)) b.push('partner');
   if (db.servers.some(s => s.owner === u.name && s.badges?.yildiz)) b.push('yildiz');
   if ((u.friends || []).length >= 5) b.push('sosyal');
@@ -5427,6 +5431,8 @@ io.on('connection', socket => {
     { const u0 = db.users[name]; if (u0 && !u0.bot) { seenAdd(u0, dH, iH); save(); } }
     me = name;
     socket.join('user:' + name);
+    { const u0 = db.users[name]; if (u0 && !u0.bot && !u0.mobilOncu && mobilOncuAcik() && socket.handshake.auth?.app === 'mobil' && /^KankaApp\/\S+ \((Android|iPhone)\)/.test(String(socket.handshake.headers['user-agent'] || ''))) {
+      u0.mobilOncu = Date.now(); save(); setTimeout(() => { io.to('user:' + name).emit('toast', `🎉 Yeni rozet 📱 Cep Öncüsü! Telefon uygulamasını ilk deneyenlerdensin`); pushUsers(); }, 3000); } }
     online.set(socket.id, name); onSetCache.t = 0; if (isMobileUA(socket.handshake.headers['user-agent'])) mobileSockets.add(socket.id); if (/Electron\//.test(socket.handshake.headers['user-agent'] || '')) desktopSockets.add(socket.id);
     pushPresence();
     { const ua = String(socket.handshake.headers['user-agent'] || ''), pf = /Electron\//.test(ua) ? 'app' : /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Android/.test(ua) ? 'android' : /Mobi/.test(ua) ? 'mob' : 'web';
