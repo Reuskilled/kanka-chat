@@ -15,5 +15,6 @@ ffmpeg -i out/yk2-v.mp4 -i out/yk2.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a
 - `rozet3.html` + `mixr3.py`: "Sende kaç tane var?" 16 rozet, 16 sn döngü (son kare = ilk kare, ses kuyrukları başa sarılır)
 - `beta50.html` + `mixb50.py`: "Kendi Discord'umuzu yaptık" → Beta Tester rozeti için 50 yer kaldı (15 sn)
 - `beta50s.html` + `mixb50s.py`: aynı videonun ElevenLabs seslendirmeli sürümü (22,5 sn). Sahne zamanları dosyanın başındaki sabitlerde; ses `sidechaincompress` ile müziğin üstüne bindirilir
+- `beta50v.html` (+ `b50kod.js`): beta 50'nin ikinci tarzı: gerçek kod akışı, ekran kaydı görünümü, CapCut tarzı altyazı. Ses: `mixb50s.py` + seslendirme (beta50s ile aynı zamanlar)
 - `k/` logo, `e2/` telefon uygulaması ekran görüntüleri, `f2/` eski web ekranları
 - #1'in `rr/` ekran görüntüleri büyük olduğu için repoda yok.

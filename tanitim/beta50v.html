@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<!-- Beta 50, seslendirmeli, "telefondan çekilmiş" dil: gerçek kod akışı → uygulama açılışı → tam ekran ekran kaydı,
+     CapCut tarzı kelime kelime altyazı, çıkartma emojiler, bildirimle gelen rozet, 300 noktalı kontenjan, tarayıcıda adres. 22,5 sn. -->
+<script src="b50kod.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000;font-family:'Inter Display','Inter',sans-serif;color:#fff}
+.L{position:absolute;inset:0;overflow:hidden;display:none}
+/* kod */
+#code{background:#0d1117}
+#tabs{position:absolute;left:0;right:0;top:0;height:120px;background:#010409;border-bottom:2px solid #21262d;display:flex;align-items:flex-end;padding-left:30px;z-index:2}
+#tabs div{height:84px;padding:0 34px;display:flex;align-items:center;gap:14px;font:600 32px 'DejaVu Sans Mono',monospace;color:#8b949e}
+#tabs .on{background:#0d1117;color:#e6edf3;border-top:4px solid #D4FF00}
+#lines{position:absolute;left:0;right:0;top:120px;will-change:transform}
+#lines div{height:44px;white-space:pre;font:500 29px/44px 'DejaVu Sans Mono',monospace;color:#c9d1d9}
+#lines b{display:inline-block;width:120px;text-align:right;padding-right:26px;color:#484f58;font-weight:400}
+#lines .k{color:#ff7b72;font-style:normal}#lines .s{color:#a5d6ff;font-style:normal}#lines .c{color:#8b949e;font-style:normal}
+#cnt{position:absolute;right:40px;top:150px;z-index:3;font:900 100px 'Inter Display';color:#D4FF00;background:#000c;padding:10px 26px;border-radius:20px;border:3px solid #D4FF0055}
+#cnt small{display:block;font-size:30px;color:#9aa;letter-spacing:3px;font-weight:800}
+#rgb{position:absolute;inset:0;mix-blend-mode:screen;pointer-events:none}
+/* açılış ekranı */
+#splash{background:#D4FF00}
+#splash img{position:absolute;left:50%;top:50%;width:360px;height:360px;margin:-260px 0 0 -180px;border-radius:84px;box-shadow:0 40px 100px #0005}
+#splash .n{position:absolute;left:0;right:0;top:1100px;text-align:center;font:900 92px 'Inter Display';color:#111;letter-spacing:-3px}
+/* ekran kaydı */
+#rec .shot{position:absolute;left:0;top:0;width:1080px;height:2338px;background-size:100% 100%;will-change:transform;display:none}
+#recdot{position:absolute;left:40px;top:40px;z-index:5;display:flex;align-items:center;gap:12px;background:#000a;padding:10px 22px;border-radius:30px;font:800 30px 'Inter'}
+#recdot i{width:22px;height:22px;border-radius:50%;background:#ff3b30}
+.stk{position:absolute;font-family:'Noto Color Emoji';line-height:1;z-index:4;
+  filter:drop-shadow(5px 0 0 #fff) drop-shadow(-5px 0 0 #fff) drop-shadow(0 5px 0 #fff) drop-shadow(0 -5px 0 #fff) drop-shadow(0 18px 24px #0008)}
+/* rozet + kontenjan */
+#bgprof{position:absolute;inset:-60px;background:url(e2/mob-8-profil.jpg) center top/1200px auto;filter:blur(22px) brightness(.45) saturate(1.3)}
+#noti{position:absolute;left:36px;right:36px;top:60px;border-radius:46px;background:#2a2a2ee6;backdrop-filter:blur(30px);padding:30px 34px;display:flex;gap:26px;align-items:center;box-shadow:0 30px 80px #000a;z-index:3}
+#noti img{width:110px;height:110px;border-radius:26px}
+#noti .h{display:flex;justify-content:space-between;font:700 30px 'Inter';color:#aaa}
+#noti .t{font:800 40px 'Inter';margin-top:6px}
+#noti .b{font:500 34px 'Inter';color:#ddd;margin-top:4px}
+#sticker{position:absolute;left:50%;top:560px;width:560px;height:560px;margin-left:-280px;z-index:2}
+#sticker .die{position:absolute;inset:0;border-radius:50%;background:#fff;box-shadow:0 30px 70px #000b}
+#sticker .holo{position:absolute;inset:22px;border-radius:50%;background:conic-gradient(from var(--a,0deg),#ff9ad5,#9ad0ff,#b8ff9a,#ffe59a,#ff9ad5);display:grid;place-items:center}
+#sticker .holo i{font-style:normal;font-size:290px;font-family:'Noto Color Emoji';filter:drop-shadow(0 12px 18px #0006)}
+#sticker .lbl{position:absolute;left:50%;bottom:-40px;transform:translateX(-50%) rotate(-4deg);white-space:nowrap;background:#111;color:#fff;font:900 52px 'Inter Display';padding:14px 34px;border-radius:20px;border:6px solid #fff}
+#spark{position:absolute;left:50%;top:840px;width:0;height:0;z-index:1}
+#spark i{position:absolute;width:16px;height:16px;border-radius:50%;background:#fff}
+#sheet{position:absolute;left:0;right:0;bottom:0;height:1140px;border-radius:56px 56px 0 0;background:#151518;box-shadow:0 -30px 80px #000a;z-index:3}
+#sheet .grab{width:120px;height:12px;border-radius:6px;background:#3a3a40;margin:26px auto 0}
+#sheet .h{margin:44px 60px 0;display:flex;align-items:center;gap:22px;font:800 48px 'Inter'}
+#sheet .h span{font-family:'Noto Color Emoji';font-size:64px}
+#sheet .s{margin:10px 60px 0;font:600 34px 'Inter';color:#9a9aa2}
+#dots{position:absolute;left:60px;top:290px;width:960px;display:grid;grid-template-columns:repeat(20,1fr);gap:10px 10px}
+#dots i{display:block;width:34px;height:34px;border-radius:50%;background:#2a2a30}
+#dots i.f{background:#6b6b75}
+#dots i.l{background:#D4FF00;box-shadow:0 0 18px #D4FF00aa}
+#sheet .bot{position:absolute;left:60px;right:60px;top:950px;display:flex;justify-content:space-between;font:800 40px 'Inter'}
+#sheet .bot .w{color:#ff5a6a}
+#big50{position:absolute;left:50%;top:90px;z-index:4;transform-origin:50% 50%}
+#big50 .d{position:relative;font:900 380px/1 'Inter Display';letter-spacing:-18px;color:#D4FF00;-webkit-text-stroke:22px #fff;paint-order:stroke fill;filter:drop-shadow(0 24px 30px #000a);margin-left:-50%}
+#big50 .y{position:absolute;left:50%;top:330px;transform:translateX(-50%) rotate(6deg);white-space:nowrap;background:#ff3b5c;color:#fff;font:900 64px 'Inter Display';padding:10px 30px;border-radius:18px;border:6px solid #fff}
+/* tarayıcı */
+#web{background:#111}
+#bar{position:absolute;left:40px;right:40px;top:120px;height:120px;border-radius:60px;background:#2a2a2e;display:flex;align-items:center;padding:0 44px;gap:20px;font:600 50px 'Inter'}
+#bar .lk{font-family:'Noto Color Emoji';font-size:38px;opacity:.7}
+#bar .car{width:4px;height:58px;background:#4a9dff}
+#page{position:absolute;left:40px;right:40px;top:290px;bottom:60px;border-radius:40px;overflow:hidden;background:#D4FF00}
+#page img{position:absolute;left:50%;top:300px;width:300px;height:300px;margin-left:-150px;border-radius:70px}
+#page .t{position:absolute;left:0;right:0;top:680px;text-align:center;font:900 100px 'Inter Display';color:#111;letter-spacing:-3px}
+#page .u{position:absolute;left:0;right:0;top:800px;text-align:center;font:700 40px 'Inter';color:#333}
+#prog{position:absolute;left:40px;top:262px;height:8px;background:#4a9dff;border-radius:4px}
+/* altyazı */
+#cap{position:absolute;left:60px;right:60px;text-align:center;z-index:20;font:900 96px/1.05 'Inter Display';letter-spacing:-2px}
+#cap span{display:inline-block;margin:0 14px;-webkit-text-stroke:14px #000;paint-order:stroke fill;filter:drop-shadow(0 8px 0 #000)}
+#cap span.on{color:#D4FF00}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:30}
+</style></head><body>
+<div class="L" id="code"><div id="tabs"><div class="on">server.js</div><div>index.html</div><div>kanka.ts</div></div>
+  <div id="lines"></div><div id="cnt"><small>SATIR KOD</small><span>0</span></div><div id="rgb"></div></div>
+<div class="L" id="splash"><img src="k/logo.png"><div class="n">Kanka Chat</div></div>
+<div class="L" id="rec">
+  <div class="shot" style="background-image:url(e2/ses-1-oda.jpg)"></div>
+  <div class="shot" style="background-image:url(e2/vid-1-kamera.jpg)"></div>
+  <div class="shot" style="background-image:url(e2/vid-1-kamera.jpg)"></div>
+  <div class="shot" style="background-image:url(e2/vm-kanal.jpg)"></div>
+  <div class="shot" style="background-image:url(e2/ar-pisti-1.jpg)"></div>
+  <div id="recdot"><i></i>REC</div>
+  <div class="stk" id="stk"></div>
+</div>
+<div class="L" id="rz"><div id="bgprof"></div>
+  <div id="noti"><img src="k/logo.png"><div style="flex:1"><div class="h"><span>KANKA CHAT</span><span>şimdi</span></div><div class="t">🧪 Yeni rozet: Beta Tester</div><div class="b">İlk 300 kişiye özel. Profiline eklendi.</div></div></div>
+  <div id="spark"></div>
+  <div id="sticker"><div class="die"></div><div class="holo"><i>🧪</i></div><div class="lbl">BETA TESTER</div></div>
+  <div id="sheet"><div class="grab"></div><div class="h"><span>🧪</span>Beta Tester kontenjanı</div><div class="s">İlk 300 kişiye özel rozet</div>
+    <div id="dots"></div><div class="bot"><span id="dc">0 / 300</span><span class="w" id="dw"></span></div></div>
+  <div id="big50"><div class="d">50</div><div class="y">YER KALDI</div></div>
+</div>
+<div class="L" id="web"><div id="bar"><span class="lk">🔒</span><span id="url"></span><span class="car" id="car"></span></div><div id="prog"></div>
+  <div id="page"><img src="k/logo.png"><div class="t">Kanka Chat</div><div class="u">ücretsiz · telefon, web, masaüstü</div></div></div>
+<div id="cap"></div>
+<div id="flash"></div>
+<script>
+const TOT=22.5;
+const W2=1.14,W3=2.3,S2=3.24,S3=8.0,BR=9.4,BT=11.0,S4=12.5,DROP=15.15,WARN=16.38,S5=18.33,CTA=19.58;
+const FT=[3.24,4.31,4.98,6.0,7.14];
+// ses efektleri (müzik dosyası aynı zamanlarla üretiliyor)
+const MARKS=[{t:0,k:'slam'},{t:W2,k:'slam'},{t:W3,k:'slam2'},{t:W3+.4,k:'whoosh'}];
+[3.24,4.31,6.0,7.14].forEach((t,i)=>MARKS.push({t,k:'swipe',i}));
+MARKS.push({t:S3,k:'rise'},{t:BR,k:'badge'},{t:S4,k:'tick'},{t:DROP,k:'drop'},{t:S5,k:'cta'});
+// altyazı: [kelime, başlangıç]; her grup bir sonrakine kadar ekranda
+const CAP=[
+ [['Kendi',0]],[["Discord'umuzu",W2]],[['yaptık!',W3]],
+ [['Sesli',3.24],['odalar,',3.7]],[['kamera,',4.31]],[['ekran',4.98],['paylaşımı,',5.35]],[['sesli',6.0],['mesaj,',6.4]],[['oyunlar.',7.14]],
+ [['Ama',8.0],['asıl',8.3],['olay',8.6],['şu:',8.9]],[['ilk',9.4],['300',9.65],['kişiye',10.1],['özel',10.55]],[['Beta',11.0],['Tester',11.3],['rozeti.',11.75]],
+ [['250',12.52],['kişi',13.05],['kaptı',13.35],['bile.',13.65]],[['Sadece...',14.21]],[['50',15.15],['yer',15.5],['kaldı!',15.8]],
+ [['Dolunca',16.38],['bir',16.95],['daha',17.2],['verilmeyecek.',17.45]],[['Kaçıncı',18.33],['olacaksın?',18.75]],[['kankahq.com',CTA]]];
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const eo=x=>1-Math.pow(1-cl(x),3);
+const back=x=>{x=cl(x);const c=1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const shake=(t,t0,a,d=.22)=>t>=t0&&t<t0+d?Math.sin((t-t0)*95)*a*(1-(t-t0)/d):0;
+// kod satırları
+$('lines').innerHTML=KOD.map((l,i)=>`<div><b>${2571+i}</b>${l}</div>`).join('');
+// 300 nokta
+$('dots').innerHTML='<i></i>'.repeat(300);const DOTS=[...$('dots').children];
+// kıvılcımlar
+for(let i=0;i<18;i++){const s=document.createElement('i');$('spark').appendChild(s)}
+const SP=[...$('spark').children];
+const fmt=n=>n.toLocaleString('tr-TR');
+let lastCap=-1;
+function setT(t){
+  let fl=0;const flash=(t0,a,d=.14)=>{const x=t-t0;if(x>=0&&x<d)fl=Math.max(fl,a*(1-x/d))};
+  const show=(id,on)=>{$(id).style.display=on?'block':'none'};
+  // 1) kod akışı 0 - 2.3
+  show('code',t<W3);
+  if(t<W3){
+    const p=t/W3, off=Math.pow(p,2.4)*(KOD.length-30)*44;
+    $('lines').style.transform=`translateY(${-off}px)`;
+    const sp=2.4*Math.pow(p,1.4)*(KOD.length-30)*44/W3/30; // kare başına px
+    $('lines').style.filter=`blur(${cl(sp/40,0,6)}px)`;
+    $('cnt').querySelector('span').textContent=fmt(Math.round(30180*Math.pow(p,2.2)));
+    $('cnt').style.transform=`scale(${1+.08*cl((t-W2)/.1)*(1-cl((t-W2-.1)/.2))})`;
+    // kelimelerde sert itme
+    const k=t<W2?0:1, z=1+.06*(1-eo((t-(k?W2:0))/.3));
+    $('code').style.transform=`scale(${z}) translateX(${shake(t,0,20)+shake(t,W2,26)}px)`;
+    // yaptık'tan hemen önce RGB kayması
+    const g=cl((t-(W3-.25))/.25);
+    $('rgb').style.background=g>0?`linear-gradient(90deg,#ff003c${Math.round(g*60).toString(16).padStart(2,'0')},transparent 30%,transparent 70%,#00e5ff${Math.round(g*60).toString(16).padStart(2,'0')})`:'none';
+    $('lines').style.marginLeft=(g>0?Math.sin(t*120)*g*30:0)+'px';
+  }
+  flash(0,.35,.1);flash(W2,.3,.1);
+  // 2) açılış ekranı 2.3 - 3.24
+  show('splash',t>=W3&&t<S2);
+  if(t>=W3&&t<S2){const p=back((t-W3)/.3);$('splash').querySelector('img').style.transform=`scale(${p}) rotate(${(1-cl((t-W3)/.3))*-25}deg)`;
+    $('splash').querySelector('.n').style.transform=`translateY(${(1-eo((t-W3-.15)/.25))*80}px)`;$('splash').querySelector('.n').style.opacity=eo((t-W3-.15)/.25);
+    $('splash').style.transform=`translateX(${shake(t,W3,30)}px)`;}
+  flash(W3,.8,.2);
+  // 3) ekran kaydı 3.24 - 8.0
+  show('rec',t>=S2&&t<S3);
+  if(t>=S2&&t<S3){
+    let i=0;for(let k=0;k<5;k++)if(t>=FT[k])i=k;
+    const sh=[...$('rec').querySelectorAll('.shot')];sh.forEach((s,k)=>s.style.display=k===i?'block':'none');
+    const lt=t-FT[i],dur=(i<4?FT[i+1]:S3)-FT[i],p=lt/dur;
+    // her ekranda ilgili yere yakınlaş: [başlangıç ölçek, bitiş ölçek, odak y (px, 2338 boyunda)]
+    const Z=[[1.0,1.18,330],[1.0,1.12,600],[1.35,1.6,2210],[1.0,1.15,900],[1.0,1.15,700]][i];
+    const sc=Z[0]+(Z[1]-Z[0])*eo(p)+.08*(1-eo(lt/.18)); // kesmede küçük itme
+    const fy=Z[2], ty=960-fy*sc;
+    sh[i].style.transform=`translate(${540-540*sc+shake(t,FT[i],18)}px,${Math.min(0,Math.max(1920-2338*sc,ty))}px) scale(${sc})`;
+    sh[i].style.transformOrigin='0 0';
+    const ST=['🎙️','📹','🖥️','🔊','🃏'],SX=[[700,260],[90,300],[720,300],[760,360],[80,320]];
+    const stk=$('stk');stk.textContent=ST[i];const sp=back(lt/.25);
+    stk.style.cssText+=`;left:${SX[i][0]}px;top:${SX[i][1]}px;font-size:200px;transform:scale(${sp}) rotate(${(i%2?-1:1)*(12-10*eo(lt/.4))}deg)`;
+  }
+  // 4) rozet + kontenjan 8.0 - 18.33
+  show('rz',t>=S3&&t<S5);
+  if(t>=S3&&t<S5){
+    $('bgprof').style.transform=`scale(${1.05+.05*eo((t-S3)/4)})`;
+    // bildirim
+    const n=$('noti');const nin=eo((t-BR)/.3),nout=t>S4-.3?eo((t-(S4-.3))/.3):0;
+    n.style.transform=`translateY(${t<BR?-400:(-400*(1-nin)-400*nout)}px) translateX(${shake(t,BR+.05,14)}px)`;
+    // çıkartma
+    const st=$('sticker'),a=t>=BT-.3&&t<S4;st.style.display=a?'block':'none';
+    if(a){const p=back((t-(BT-.3))/.35);st.style.transform=`scale(${p}) rotate(${-8+(1-cl((t-BT+.3)/.35))*-30}deg)`;
+      st.querySelector('.holo').style.setProperty('--a',(t*160)+'deg');
+      st.style.opacity=t>S4-.2?1-cl((t-(S4-.2))/.2):1;}
+    // kıvılcım
+    const sx=t-(BT-.3);SP.forEach((s,k)=>{const ang=k/18*Math.PI*2,r=eo(sx/.6)*380+k%3*30;s.style.display=sx>0&&sx<.7?'block':'none';
+      s.style.transform=`translate(${Math.cos(ang)*r}px,${Math.sin(ang)*r}px) scale(${1-cl(sx/.7)})`;s.style.background=k%2?'#D4FF00':'#fff'});
+    // kontenjan sayfası
+    const sh=$('sheet'),sin=eo((t-S4)/.35);sh.style.display=t>=S4?'block':'none';
+    sh.style.transform=`translateY(${(1-sin)*1200}px) translateX(${shake(t,WARN,16)}px)`;
+    const filled=Math.round(250*eo((t-S4-.2)/1.4));
+    DOTS.forEach((d,k)=>{d.className=k<filled?'f':(t>=DROP&&k>=250?((Math.floor((t-DROP)*4)+k)%2?'l':''):'')});
+    $('dc').textContent=`${filled} / 300 doldu`;$('dw').textContent=t>=WARN?'dolunca kapanıyor 🔒':'';
+    // dev 50
+    const b=$('big50');b.style.display=t>=DROP?'block':'none';
+    if(t>=DROP){const p=cl((t-DROP)/.14);b.style.transform=`translateX(0) scale(${2.4-1.4*eo(p)+.03*Math.abs(Math.sin((t-DROP)*Math.PI*2))}) rotate(-6deg)`;}
+  }
+  flash(BR,.25,.1);flash(BT-.3,.5,.16);flash(DROP,.6,.18);
+  // 5) tarayıcı 18.33 - 22.5
+  show('web',t>=S5);
+  if(t>=S5){const U='kankahq.com',nch=Math.round(cl((t-CTA)/.9)*U.length);$('url').textContent=U.slice(0,nch);
+    $('car').style.opacity=(Math.floor(t*3)%2||t<CTA+1)?1:0;
+    const ld=cl((t-(CTA+1.05))/.5);$('prog').style.width=(ld*(1000))+'px';$('prog').style.opacity=ld<1?1:0;
+    const pg=$('page');pg.style.opacity=t>=CTA+1.3?1:.0;
+    pg.querySelector('img').style.transform=`scale(${back((t-CTA-1.3)/.3)})`;
+    $('web').style.transform=`translateY(${(1-eo((t-S5)/.3))*200}px)`;}
+  flash(S5,.3,.1);
+  // altyazı
+  let ci=-1;for(let k=0;k<CAP.length;k++)if(t>=CAP[k][0][1])ci=k;
+  const cap=$('cap');
+  if(ci>=0){
+    const g=CAP[ci];
+    if(ci!==lastCap){cap.innerHTML=g.map(w=>`<span>${w[0]}</span>`).join(' ');lastCap=ci}
+    const sp=[...cap.children];let on=0;g.forEach((w,k)=>{if(t>=w[1])on=k});
+    sp.forEach((s,k)=>{s.className=k===on?'on':'';const st=g[k][1];s.style.opacity=t>=st?1:0;s.style.transform=`scale(${t>=st?(k===on?1.12:1)*(.85+.15*back((t-st)/.12)):.5})`});
+    // yer: bölüme göre
+    const y=t<S2?1260:t<S3?1300:t<S4?1480:t<S5?610:1500;
+    cap.style.top=y+'px';
+    const big=t<S2?1.25:1;cap.style.fontSize=(96*big)+'px';
+  }
+  $('flash').style.opacity=fl;
+}
+setT(0);
+</script></body></html>
